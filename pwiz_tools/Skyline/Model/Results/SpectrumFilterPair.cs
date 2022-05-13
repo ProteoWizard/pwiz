@@ -579,30 +579,25 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset) :
-            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset)
-        {
-        }
-
         public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset)
         {
             TargetMz = targetMz;
             FilterWidth = filterWidth;
             HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
+            PrecursorExtraInfos = new List<HashedPrecursorExtraInfo>();
         }
 
         public SignedMz TargetMz { get; private set; }
         public double FilterWidth { get; private set; }
         public int FilterId { get; set; }
         public double HighEnergyIonMobilityValueOffset { get; private set; }
-
+        public List<HashedPrecursorExtraInfo> PrecursorExtraInfos { get; }
 
         #region object overrides
 
         protected bool Equals(SpectrumProductFilter other)
         {
             return TargetMz.Equals(other.TargetMz) && FilterWidth.Equals(other.FilterWidth) &&
-                   FilterId == other.FilterId && 
                    Equals(HighEnergyIonMobilityValueOffset, other.HighEnergyIonMobilityValueOffset);
         }
 
@@ -620,7 +615,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 var hashCode = TargetMz.GetHashCode();
                 hashCode = (hashCode*397) ^ FilterWidth.GetHashCode();
-                hashCode = (hashCode*397) ^ FilterId;
                 hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
                 return hashCode;
             }

@@ -626,10 +626,12 @@
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\MoleculeNameAndAccessions.cs" />
+    <Compile Include="Model\PrecursorExtraInfo.cs" />
     <Compile Include="Model\Proteome\ProteinAssociation.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
+    <Compile Include="Model\Results\ProductFilterId.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
@@ -650,6 +652,7 @@
     <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumSelector.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
+    <Compile Include="Model\Results\StructureHash.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

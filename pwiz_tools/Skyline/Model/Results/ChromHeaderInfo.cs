@@ -159,6 +159,8 @@ namespace pwiz.Skyline.Model.Results
         private float _startTime;
         private float _endTime;
         private float _collisionalCrossSection;
+        private HashValue16 _precursorHash;
+
         /////////////////////////////////////////////////////////////////////
 
         [Flags]
@@ -380,6 +382,11 @@ namespace pwiz.Skyline.Model.Results
             get { return new SignedMz(_precursor, NegativeCharge); }
         }
 
+        public HashValue16 PrecursorHash
+        {
+            get { return _precursorHash; }
+        }
+
         public float? CollisionalCrossSection
         {
             get
@@ -553,7 +560,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 56;
             }
-            return 72;
+            if (cacheFormatVersion < CacheFormatVersion.Sixteen)
+            {
+                return 72;
+            }
+            return 88;
         }
     }
 
@@ -1935,6 +1946,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HasCalculatedMzs { get; private set; }
         public bool HasScanIds { get; private set; }
         public bool IsEmpty { get; private set; }
+        public HashValue16 PrecursorExtraHash { get; private set; }
 
         public double? OptionalMinTime
         {
@@ -1969,6 +1981,11 @@ namespace pwiz.Skyline.Model.Results
                 im._optionalMaxTime = end;
                 im._hasOptionalTimes = true;
             });
+        }
+
+        public ChromKey ChangePrecursorExtraHash(HashValue16 hash)
+        {
+            return ChangeProp(ImClone(this), im => im.PrecursorExtraHash = hash);
         }
 
         /// <summary>
@@ -2167,7 +2184,8 @@ namespace pwiz.Skyline.Model.Results
                 HasCalculatedMzs.Equals(other.HasCalculatedMzs) &&
                 HasScanIds.Equals(other.HasScanIds) &&
                 OptionalMinTime.Equals(other.OptionalMinTime) &&
-                OptionalMaxTime.Equals(other.OptionalMaxTime);
+                OptionalMaxTime.Equals(other.OptionalMaxTime) &&
+                Equals(PrecursorExtraHash, other.PrecursorExtraHash);
         }
 
         public override bool Equals(object obj)
@@ -2192,6 +2210,7 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode*397) ^ HasScanIds.GetHashCode();
                 hashCode = (hashCode*397) ^ OptionalMinTime.GetHashCode();
                 hashCode = (hashCode*397) ^ OptionalMaxTime.GetHashCode();
+                hashCode = (hashCode*397) ^ PrecursorExtraHash.GetHashCode();
                 return hashCode;
             }
         }

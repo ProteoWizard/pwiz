@@ -159,6 +159,17 @@ message SkylineDocumentProto {
 		repeated LinkedIon children = 5;
 		bool orphan = 7;
 	}
+
+	message PrecursorExtraInfo {
+		message PrecursorIon {
+			int32 msLevel = 1;
+			double mz = 2;
+		}
+		repeated PrecursorIon precursorIons = 1;
+		string scanDescription = 2;
+		double collisionEnergy = 3;
+		double scanWindowWidth = 4;
+	}
 }
 
 message LibraryKeyProto
