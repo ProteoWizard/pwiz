@@ -236,14 +236,8 @@ namespace pwiz.Skyline.Model
         public MassType PrecursorMzMassType { get; private set; } // What kind of mass was used to calculate Mz?
         public SignedMz PrecursorMz { get; private set; }
 
-        public HashValue16 PrecursorHash { get; private set; }
-
         public PrecursorExtraInfo PrecursorExtraInfo { get; private set; }
 
-        public TransitionGroupDocNode ChangePrecursorHash(HashValue16 hash)
-        {
-            return ChangeProp(ImClone(this), im => im.PrecursorHash = hash);
-        }
         public PrecursorKey PrecursorKey
         {
             get
@@ -3096,7 +3090,7 @@ namespace pwiz.Skyline.Model
                         Equals(obj.CustomMolecule, CustomMolecule) &&
                         Equals(obj.ExplicitValues, ExplicitValues) &&
                         Equals(obj.PrecursorConcentration, PrecursorConcentration) &&
-                        Equals(obj.PrecursorHash, PrecursorHash);
+                        Equals(obj.PrecursorExtraInfo, PrecursorExtraInfo);
             return equal;
         }
 
@@ -3119,7 +3113,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ ExplicitValues.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorConcentration.GetHashCode();
-                result = (result*397) ^ PrecursorHash.GetHashCode();
+                result = (result*397) ^ PrecursorExtraInfo?.GetHashCode() ?? 0;
                 return result;
             }
         }

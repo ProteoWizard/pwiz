@@ -65,12 +65,6 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.ScanWindowWidth = scanWindowWidth);
         }
 
-        public HashValue16 ComputeHash()
-        {
-            var message = ToPrecursorExtraInfoProto();
-            return HashValue16.ComputeHash(message.ToByteArray());
-        }
-
         protected bool Equals(PrecursorExtraInfo other)
         {
             return Equals(Ms1Precursors, other.Ms1Precursors) &&
@@ -99,23 +93,6 @@ namespace pwiz.Skyline.Model
                 hashCode = (hashCode * 397) ^ ScanWindowWidth.GetHashCode();
                 return hashCode;
             }
-        }
-
-        public SkylineDocumentProto.Types.PrecursorExtraInfo ToPrecursorExtraInfoProto()
-        {
-            var proto = new SkylineDocumentProto.Types.PrecursorExtraInfo()
-            {
-                CollisionEnergy = CollisionEnergy,
-                ScanDescription = ScanDescription,
-                ScanWindowWidth = ScanWindowWidth
-            };
-            proto.PrecursorIons.AddRange(Ms1Precursors.Select(p =>
-                new SkylineDocumentProto.Types.PrecursorExtraInfo.Types.PrecursorIon
-                {
-                    Mz = p.Mz.RawValue,
-                    MsLevel = p.MsLevel
-                }));
-            return proto;
         }
 
         public bool Matches(SpectrumMetadata spectrumMetadata, double tolerance)
@@ -349,21 +326,5 @@ namespace pwiz.Skyline.Model
                        (PrecursorExtraInfo != null ? PrecursorExtraInfo.GetHashCode() : 0);
             }
         }
-    }
-
-    public class HashedPrecursorExtraInfo
-    {
-        public HashedPrecursorExtraInfo(PrecursorExtraInfo precursorExtraInfo) : this(precursorExtraInfo, precursorExtraInfo.ComputeHash())
-        {
-
-        }
-        public HashedPrecursorExtraInfo(PrecursorExtraInfo precursorExtraInfo, HashValue16 hashValue)
-        {
-            PrecursorExtraInfo = precursorExtraInfo;
-            HashValue = hashValue;
-        }
-
-        public PrecursorExtraInfo PrecursorExtraInfo { get; private set; }
-        public HashValue16 HashValue { get; private set; }
     }
 }
