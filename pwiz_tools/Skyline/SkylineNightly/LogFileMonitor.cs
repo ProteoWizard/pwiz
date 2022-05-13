@@ -50,6 +50,7 @@ namespace SkylineNightly
         private bool _debuggerAttached;
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
+        private string _logEntire;
         private string _logTail;
         private readonly Regex _testLineRegex;
         private string _lastTest;
@@ -70,6 +71,7 @@ namespace SkylineNightly
             _debuggerAttached = false;
             _buffer = new byte[8192];
             _builder = new StringBuilder();
+            _logEntire = string.Empty;
             _logTail = "";
             _testLineRegex = new Regex(@"\[\d\d:\d\d\] +\d+.\d+ +(\S+) +\(\w\w\)", RegexOptions.Compiled | RegexOptions.RightToLeft);
             _lastTest = null;
@@ -139,6 +141,7 @@ namespace SkylineNightly
                         return;
                     _testerLog = log;
                     _fileStream = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    _logEntire = string.Empty;
                 }
 
                 if (HangThreshold > 0)
@@ -165,10 +168,20 @@ namespace SkylineNightly
                             message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, signalTime.ToShortDateString(), signalTime.ToShortTimeString());
                             message.AppendFormat("Log last modified: {0} {1}" + Environment.NewLine, lastWrite.ToShortDateString(), lastWrite.ToShortTimeString());
                             message.AppendLine();
-                            message.AppendLine("----------------------------------------");
-                            message.AppendLine("...");
-                            message.Append(_logTail);
-                            message.AppendLine();
+                            if (string.IsNullOrEmpty(_lastTest))
+                            {
+                                message.AppendLine("No tests found. Complete log follows:");
+                                message.AppendLine("----------------------------------------");
+                                message.Append(_logEntire);
+                                message.AppendLine();
+                            }
+                            else
+                            {
+                                message.AppendLine("----------------------------------------");
+                                message.AppendLine("...");
+                                message.Append(_logTail);
+                                message.AppendLine();
+                            }
                             SendEmailNotification(subject, message.ToString());
                         }
                         return;
@@ -188,6 +201,7 @@ namespace SkylineNightly
                     return;
 
                 var s = _builder.ToString();
+                _logEntire += s;
 
                 var match = _testLineRegex.Match(s);
                 if (match.Success)
