@@ -30,4 +30,24 @@ message ChromatogramGroupData {
 	bool inferZeroes = 9;
 	TimeIntervals timeIntervals = 10;
 }
+message ResultFileData {
+	message SpectrumMetadata {
+		double retentionTime = 1;
+		repeated int32 scanIdParts = 2;
+		string scanIdText = 3;
+		repeated int32 precursorIndex = 4;
+		int32 scanDescriptionIndex = 5;
+	}
 
+	message Precursor {
+		double targetMz = 1;
+		double isolationWindowLower = 2;
+		double isolationWindowUpper = 3;
+		double collisionEnergy = 4;
+		int32 msLevel = 5;
+	}
+
+	repeated SpectrumMetadata spectra = 1;
+	repeated Precursor precursors = 2;
+	repeated string scanDescriptions = 3;
+}

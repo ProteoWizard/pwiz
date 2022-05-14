@@ -644,6 +644,7 @@
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
+    <Compile Include="Model\Results\Spectra\ResultFileData.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />

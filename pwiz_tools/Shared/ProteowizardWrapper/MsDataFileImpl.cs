@@ -1098,25 +1098,13 @@ namespace pwiz.ProteowizardWrapper
             {
                 return null;
             }
-            var metadata = new SpectrumMetadata(spectrum.id);
-            var precursors = new List<List<SpectrumPrecursor>>();
-            var precursorLevels = GetPrecursorsByMsLevel(spectrum);
-            for (int level = 0; level < precursorLevels.Count; level++)
-            {
-                var spectrumPrecursors = new List<SpectrumPrecursor>();
-                foreach (var precursor in precursorLevels[level])
-                {
-                    if (!precursor.IsolationMz.HasValue)
-                    {
-                        continue;
-                    }
 
-                    var spectrumPrecursor =
-                        new SpectrumPrecursor(precursor.IsolationMz.Value).ChangeCollisionEnergy(precursor
-                            .PrecursorCollisionEnergy);
-                    spectrumPrecursors.Add(spectrumPrecursor);
-                }
+            var retentionTime = GetStartTime(spectrum);
+            if (!retentionTime.HasValue)
+            {
+                return null;
             }
+            var metadata = new SpectrumMetadata(spectrum.id, retentionTime.Value);
             metadata = metadata.ChangePrecursors(GetPrecursorsByMsLevel(spectrum).Select(level =>
                 level.Where(precursor => precursor.IsolationMz.HasValue)
                     .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
