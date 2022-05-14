@@ -43,6 +43,7 @@ namespace pwiz.Skyline.EditUI
         private ProteinAssociation _proteinAssociation;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         private SrmDocument _newDocument;
+        private SrmDocument _sourceForNewDocument;
 
         // cached per-process without persisting to settings for now
         // (discussion with Nick suggested we will automatically create lightweight background proteomes in a later PR)
@@ -159,6 +160,7 @@ namespace pwiz.Skyline.EditUI
         private void UpdateParsimonyResults()
         {
             _newDocument = null;
+            _sourceForNewDocument = null;
             if (Results == null)
                 return;
 
@@ -176,7 +178,8 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
-            _newDocument = CreateDocTree(_parent.Document);
+            _sourceForNewDocument = _parent.Document;
+            _newDocument = CreateDocTree(_sourceForNewDocument);
 
             dgvAssociateResults.RowCount = 2;
             dgvAssociateResults.Invalidate();
@@ -362,9 +365,17 @@ namespace pwiz.Skyline.EditUI
 
         public void ApplyChanges()
         {
-            lock (_parent.GetDocumentChangeLock())
+            lock (_parent.GetDocumentChangeLock()) // Prevent background threads from changing the document while the LongWaitDlg might be showing
             {
-                _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, current => _newDocument, FormSettings.EntryCreator.Create);
+                _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, current =>
+                {
+                    if (ReferenceEquals(current, _sourceForNewDocument))
+                    {
+                        return _newDocument;
+                    }
+                    // If the document was changed, then we need to call CreateDocTree again.
+                    return CreateDocTree(current) ?? current;
+                }, FormSettings.EntryCreator.Create);
             }
 
             DialogResult = DialogResult.OK;
