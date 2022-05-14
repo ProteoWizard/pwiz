@@ -340,9 +340,15 @@ namespace pwiz.Skyline.EditUI
             return result;
         }
 
-        private void btnApplyChanges_Click(object sender, EventArgs e)
+        public void OkDialog()
         {
             ApplyChanges();
+            DialogResult = DialogResult.OK;
+        }
+
+        private void btnApplyChanges_Click(object sender, EventArgs e)
+        {
+            OkDialog();
         }
 
         public AssociateProteinsSettings FormSettings
@@ -455,17 +461,6 @@ namespace pwiz.Skyline.EditUI
                 WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#shared-peptides");
             else
                 WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath);
-        }
-
-        private void numMinPeptides_Enter(object sender, EventArgs e)
-        {
-            // prevent Enter from closing the form when confirming the value of UpDown box
-            AcceptButton = null;
-        }
-
-        private void numMinPeptides_Leave(object sender, EventArgs e)
-        {
-            AcceptButton = btnOk;
         }
     }
 }

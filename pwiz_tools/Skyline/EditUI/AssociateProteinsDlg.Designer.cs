@@ -242,8 +242,6 @@
             0,
             0});
             this.numMinPeptides.ValueChanged += new System.EventHandler(this.numMinPeptides_ValueChanged);
-            this.numMinPeptides.Enter += new System.EventHandler(this.numMinPeptides_Enter);
-            this.numMinPeptides.Leave += new System.EventHandler(this.numMinPeptides_Leave);
             // 
             // rbFASTA
             // 
@@ -391,10 +389,8 @@
             // 
             // AssociateProteinsDlg
             // 
-            this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnCancel;
             this.Controls.Add(this.panelStatusBarResult);
             this.Controls.Add(this.lblResults);
             this.Controls.Add(this.dgvAssociateResults);

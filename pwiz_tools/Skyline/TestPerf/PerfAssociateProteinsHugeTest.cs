@@ -131,7 +131,7 @@ namespace TestPerf
                 Assert.AreEqual(3963, dlg2.FinalResults.FinalProteinCount);
             });
             //PauseTest();
-            OkDialog(dlg2, dlg2.AcceptButton.PerformClick);
+            OkDialog(dlg2, dlg2.OkDialog);
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
             RunUI(() =>
