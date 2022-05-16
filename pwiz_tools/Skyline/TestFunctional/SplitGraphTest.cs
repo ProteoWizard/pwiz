@@ -82,32 +82,35 @@ namespace pwiz.SkylineTestFunctional
             var graphLibraryMatch = FormUtil.OpenForms.OfType<GraphSpectrum>().First();
             var libraryMatchGraphControl = AllControls(graphLibraryMatch).OfType<ZedGraphControl>().First();
             RunUI(() =>
-                {
-                    Assert.IsTrue(Settings.Default.ShowLibraryChromatograms);
-                    AssertCurveListsSame(graphChromatogram.CurveList,
-                                         libraryMatchGraphControl.GraphPane.CurveList);
-                    AssertCurveListsSame(graphChromatogram.CurveList,
-                                         peakAreaSummary.GraphControl.GraphPane.CurveList);
-                    Assert.AreEqual(9, graphChromatogram.CurveList.Count);
-                    Assert.AreEqual(1, graphChromatogramGraphControl.MasterPane.PaneList.Count);
-                    Assert.AreEqual(1, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
-                    SkylineWindow.ShowPrecursorTransitions();
-                    Assert.AreEqual(3, graphChromatogram.CurveList.Count);
-                    // TODO(nicksh): Enable this when libraries filter based on precursor/product
-                    //AssertCurveListsSame(graphChromatogram.CurveList, libraryMatchGraphControl.GraphPane.CurveList);
-                    AssertCurveListsSame(graphChromatogram.CurveList,
-                                         peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && 
-                                                                                                       !c.IsY2Axis).ToList());  //exclude the dotp graph from the count.
-                    SkylineWindow.ShowProductTransitions();
-                    Assert.AreEqual(6, graphChromatogram.CurveList.Count);
-                    // TODO(nicksh): Enable this when libraries filter based on precursor/product
-                    AssertCurveListsSame(graphChromatogram.CurveList,
-                      libraryMatchGraphControl.GraphPane.CurveList);
-                    AssertCurveListsSame(graphChromatogram.CurveList,
-                                         peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
-                    SkylineWindow.ShowAllTransitions();
-                    SkylineWindow.ShowSplitChromatogramGraph(true);
-                });
+            {
+                Assert.IsTrue(Settings.Default.ShowLibraryChromatograms);
+                AssertCurveListsSame(graphChromatogram.CurveList,
+                    libraryMatchGraphControl.GraphPane.CurveList);
+                AssertCurveListsSame(graphChromatogram.CurveList,
+                    peakAreaSummary.GraphControl.GraphPane.CurveList);
+                Assert.AreEqual(9, graphChromatogram.CurveList.Count);
+                Assert.AreEqual(1, graphChromatogramGraphControl.MasterPane.PaneList.Count);
+                Assert.AreEqual(1, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);
+                SkylineWindow.ShowPrecursorTransitions();
+                Assert.AreEqual(3, graphChromatogram.CurveList.Count);
+                // TODO(nicksh): Enable this when libraries filter based on precursor/product
+                //AssertCurveListsSame(graphChromatogram.CurveList, libraryMatchGraphControl.GraphPane.CurveList);
+                AssertCurveListsSame(graphChromatogram.CurveList,
+                    peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath &&
+                        !c.IsY2Axis).ToList()); //exclude the dotp graph from the count.
+                SkylineWindow.ShowProductTransitions();
+            });
+            WaitForGraphs();
+            RunUI(() =>{
+                Assert.AreEqual(6, graphChromatogram.CurveList.Count);
+                // TODO(nicksh): Enable this when libraries filter based on precursor/product
+                AssertCurveListsSame(graphChromatogram.CurveList,
+                    libraryMatchGraphControl.GraphPane.CurveList);
+                AssertCurveListsSame(graphChromatogram.CurveList,
+                    peakAreaSummary.GraphControl.GraphPane.CurveList.FindAll(c => c.Tag is IdentityPath && !c.IsY2Axis).ToList());
+                SkylineWindow.ShowAllTransitions();
+                SkylineWindow.ShowSplitChromatogramGraph(true);
+            });
             WaitForGraphs();
             Assert.AreEqual(2, graphChromatogramGraphControl.MasterPane.PaneList.Count);
             Assert.AreEqual(2, peakAreaSummary.GraphControl.MasterPane.PaneList.Count);

@@ -56,6 +56,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 graphSpectrum.SelectSpectrum(new SpectrumIdentifier(goodSpectrum.FilePath.ToString(), goodSpectrum.RetentionTime.GetValueOrDefault()));
             });
+            WaitForGraphs();
             Assert.AreEqual(7, graphSpectrum.IonLabels.Count());
         }
     }

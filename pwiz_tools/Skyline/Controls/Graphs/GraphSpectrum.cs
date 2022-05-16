@@ -199,6 +199,8 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return toolBar.Visible; }
         }
 
+        public bool PrecursorComboVisible => comboPrecursor.Visible;
+
         public bool NCEVisible
         {
             get { return comboCE.Visible; }
@@ -1039,12 +1041,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     isUserAction = (bool)_timer.Tag;
                 }
 
-                var curSpectrum = _parent.SelectedSpectrum?.SpectrumInfo;
                 _parent.DoUpdate();
-                var newSpectrum = _parent.SelectedSpectrum?.SpectrumInfo;
-
-                if (!Equals(curSpectrum, newSpectrum))
-                    _parent.FireSelectedSpectrumChanged(isUserAction);
+                _parent.FireSelectedSpectrumChanged(isUserAction);
 
                 lock (_timer)
                 {
@@ -1053,9 +1051,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public IReadOnlyList<PrecursorSpectra> GetSpectra(SpectrumNodeSelection selection)
+            public IReadOnlyList<PrecursorSpectra> GetSpectra(SpectrumNodeSelection selection, SrmSettings settings)
             {
-                if (Cache.GetValue(_spectraCache, out var value, selection.SelectedTreeNode))
+                if (Cache.GetValue(_spectraCache, out var value, selection.SelectedTreeNode, settings))
                     return (IReadOnlyList<PrecursorSpectra>)value;
 
                 var spectra = new List<PrecursorSpectra>();
@@ -1076,7 +1074,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (spectra.Count == 0)
                     spectra = null;
 
-                _spectraCache = Cache.Create(spectra, selection.SelectedTreeNode);
+                _spectraCache = Cache.Create(spectra, selection.SelectedTreeNode, settings);
                 _spectraLoadCache = null;
                 return spectra;
             }
@@ -1251,7 +1249,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         throw prositEx;
                 }
 
-                _spectra = _updateManager.GetSpectra(selection);
+                _spectra = _updateManager.GetSpectra(selection, settings);
                 if (_spectra == null || (!_spectra.Any(p => p.Precursor.HasLibInfo) && !libraries.HasMidasLibrary && !usingProsit))
                 {
                     _spectra = null;
