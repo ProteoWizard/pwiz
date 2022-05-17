@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
@@ -199,9 +200,22 @@ namespace SharedBatch.Properties
         {
             if (!reader.Name.Equals("ConfigList") && !reader.Name.Equals("config_list"))
                 throw new ArgumentException(Resources.ConfigList_ReadXmlVersion_The_XML_reader_is_not_at_the_correct_position_to_read_the_XML_version_);
-            var xmlVersion = reader.GetAttribute(Attr.xml_version) != null
-                ? Convert.ToDecimal(reader.GetAttribute(Attr.xml_version))
-                : -1;
+            decimal xmlVersion = -1;
+            string strXmlVersion = reader.GetAttribute(Attr.xml_version);
+            if (strXmlVersion != null)
+            {
+                CultureInfo cultureInfo = CultureInfo.InvariantCulture;
+                if (CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator == @"'" &&
+                    strXmlVersion.Contains(@","))
+                {
+                    // SkylineBatch used to write out the version using CurrentCulture instead of InvariantCulture
+                    // For backwards compatibility with incorrect .bcfg files, use CurrentCulture if we see that the
+                    // version number has a comma in it.
+                    cultureInfo = CultureInfo.CurrentCulture;
+                }
+
+                xmlVersion = Convert.ToDecimal(strXmlVersion, cultureInfo);
+            }
             var importingVersion = reader.GetAttribute(Attr.version);
 
             // if the xml version is not set, AutoQC and SkylineBatch are on the same version numbers

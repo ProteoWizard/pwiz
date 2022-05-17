@@ -88,6 +88,11 @@ namespace SharedBatch
         {
             writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
         }
+        
+        public static void WriteAttribute(this XmlWriter writer, Enum name, decimal value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
 
         public static void WriteAttribute(this XmlWriter writer, Enum name, float value)
         {
