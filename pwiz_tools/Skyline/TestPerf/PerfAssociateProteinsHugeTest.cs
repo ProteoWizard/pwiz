@@ -56,7 +56,7 @@ namespace TestPerf
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("PerfAssociateProteinsHugeTest.sky")));
             //PauseTest();
-            TestDialog( ImportType.FASTA);
+            TestDialog(ImportType.FASTA);
         }
 
         /// <summary>
@@ -71,74 +71,78 @@ namespace TestPerf
                 AssertEx.AreComparableStrings(Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined, messageDlg.Message);
                 messageDlg.OkDialog();
             });
-            OkDialog(associateProteinsDlg, associateProteinsDlg.CancelButton.PerformClick);
+            OkDialog(associateProteinsDlg, associateProteinsDlg.CancelDialog);
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
-            var associateProteinsDlg2 = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
-            RunUI(associateProteinsDlg2.UseBackgroundProteome);
+            var proteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+            RunUI(proteinsDlg.UseBackgroundProteome);
             TestDialog(ImportType.BGPROTEOME);
         }
 
 
         /// <summary>
-        /// tests the form
-        /// makes sure correct number of matches were found
-        /// unchecks all boxes to make sure apply button disables
+        /// Tests the form
+        /// - Makes sure correct number of matches were found
+        /// - Unchecks all boxes to make sure apply button disables
         /// </summary>
         private void TestDialog(ImportType type)
         {
-            var dlg2 = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+            AssociateProteinsDlg.LastFastaFileName = null;  // Avoid last FASTA file causing problems
+            var proteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
             if (type == ImportType.FASTA)
             {
-                RunUI(() => dlg2.FastaFileName = _fastaFile);
+                RunUI(() => proteinsDlg.FastaFileName = _fastaFile);
             }
             else
             {
-                RunUI(dlg2.UseBackgroundProteome);
+                RunUI(proteinsDlg.UseBackgroundProteome);
             }
 
-            WaitForCondition(() => dlg2.FinalResults != null);
+            WaitForConditionUI(() => proteinsDlg.FinalResults != null);
 
             //PauseTest();
             RunUI(() =>
             {
-                Assert.AreEqual(425484, dlg2.FinalResults.PeptidesMapped);
-                Assert.AreEqual(0, dlg2.FinalResults.PeptidesUnmapped);
-                Assert.AreEqual(84463, dlg2.FinalResults.ProteinsMapped);
-                Assert.AreEqual(4016, dlg2.FinalResults.ProteinsUnmapped);
+                Assert.AreEqual(425484, proteinsDlg.FinalResults.PeptidesMapped);
+                Assert.AreEqual(0, proteinsDlg.FinalResults.PeptidesUnmapped);
+                Assert.AreEqual(84463, proteinsDlg.FinalResults.ProteinsMapped);
+                Assert.AreEqual(4016, proteinsDlg.FinalResults.ProteinsUnmapped);
 
-                dlg2.GroupProteins = true;
-                dlg2.FindMinimalProteinList = false;
-                dlg2.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein;
-                //Console.WriteLine($"KeepAllProteins AssignedToBestProtein {dlg2.FinalResults.FinalProteinCount} {dlg2.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(466483, dlg2.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(42491, dlg2.FinalResults.FinalProteinCount);
+                proteinsDlg.GroupProteins = true;
+                proteinsDlg.FindMinimalProteinList = false;
+                proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein;
+                //Console.WriteLine($"KeepAllProteins AssignedToBestProtein {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+                Assert.AreEqual(466483, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(42491, proteinsDlg.FinalResults.FinalProteinCount);
 
-                dlg2.FindMinimalProteinList = true;
-                dlg2.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
-                //Console.WriteLine($"MinimalProteinList DuplicatedBetweenProteins {dlg2.FinalResults.FinalProteinCount} {dlg2.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(721703, dlg2.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(43364, dlg2.FinalResults.FinalProteinCount);
+                proteinsDlg.FindMinimalProteinList = true;
+                proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+                //Console.WriteLine($"MinimalProteinList DuplicatedBetweenProteins {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+                Assert.AreEqual(721703, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(43364, proteinsDlg.FinalResults.FinalProteinCount);
 
-                dlg2.FindMinimalProteinList = false;
-                dlg2.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
-                //Console.WriteLine($"KeepAllProteins Removed {dlg2.FinalResults.FinalProteinCount} {dlg2.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(159725, dlg2.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(35598, dlg2.FinalResults.FinalProteinCount);
+                proteinsDlg.FindMinimalProteinList = false;
+                proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
+                //Console.WriteLine($"KeepAllProteins Removed {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+                Assert.AreEqual(159725, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(35598, proteinsDlg.FinalResults.FinalProteinCount);
 
-                dlg2.MinPeptidesPerProtein = 10;
-                //Console.WriteLine($"MinPeptidesPerProtein 10 {dlg2.FinalResults.FinalProteinCount} {dlg2.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(87720, dlg2.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(3963, dlg2.FinalResults.FinalProteinCount);
+                proteinsDlg.MinPeptidesPerProtein = 10;
+                //Console.WriteLine($"MinPeptidesPerProtein 10 {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
+                Assert.AreEqual(87720, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(3963, proteinsDlg.FinalResults.FinalProteinCount);
             });
-            //PauseTest();
-            OkDialog(dlg2, dlg2.AcceptButton.PerformClick);
+            // PauseTest();
+            using (new WaitDocumentChange(null, true))
+            {
+                OkDialog(proteinsDlg, proteinsDlg.OkDialog);
+            }
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
             RunUI(() =>
             {
                 List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
                 List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
-                foreach (var docNode in SkylineWindow.Document.MoleculeGroups)
+                foreach (var docNode in SkylineWindow.DocumentUI.MoleculeGroups)
                 {
                     if (docNode.IsProtein)
                         proteins.Add(docNode);
