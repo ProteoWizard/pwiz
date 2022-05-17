@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.1.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -3205,7 +3205,6 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         public global::System.Collections.Specialized.StringCollection BlibLibraryThresholds {
-                                               
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["BlibLibraryThresholds"]));
             }
@@ -3237,34 +3236,40 @@ namespace pwiz.Skyline.Properties {
                 this["PeakAreaRDotpCutoffValue"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowZHIons
-        {
-            get
-            {
+        public bool ShowZHIons {
+            get {
                 return ((bool)(this["ShowZHIons"]));
             }
-            set
-            {
+            set {
                 this["ShowZHIons"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowZHHIons
-        {
-            get
-            {
+        public bool ShowZHHIons {
+            get {
                 return ((bool)(this["ShowZHHIons"]));
             }
-            set
-            {
+            set {
                 this["ShowZHHIons"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastProteinAssociationFastaFilepath {
+            get {
+                return ((string)(this["LastProteinAssociationFastaFilepath"]));
+            }
+            set {
+                this["LastProteinAssociationFastaFilepath"] = value;
             }
         }
     }

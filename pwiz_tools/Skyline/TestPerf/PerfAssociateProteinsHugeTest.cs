@@ -82,11 +82,9 @@ namespace TestPerf
         /// <summary>
         /// Tests the form
         /// - Makes sure correct number of matches were found
-        /// - Unchecks all boxes to make sure apply button disables
         /// </summary>
         private void TestDialog(ImportType type)
         {
-            AssociateProteinsDlg.LastFastaFileName = null;  // Avoid last FASTA file causing problems
             var proteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
             if (type == ImportType.FASTA)
             {
