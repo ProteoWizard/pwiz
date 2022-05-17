@@ -46,7 +46,8 @@ namespace pwiz.Skyline.EditUI
 
         // cached per-process without persisting to settings for now
         // (discussion with Nick suggested we will automatically create lightweight background proteomes in a later PR)
-        private static string _lastFastaFileName;
+        public static string LastFastaFileName { get; set; }
+
         private bool _reuseLastFasta;
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.EditUI
         public string FastaFileName
         {
             get { return tbxFastaTargets.Text; }
-            set { _lastFastaFileName = tbxFastaTargets.Text = value; }
+            set { LastFastaFileName = tbxFastaTargets.Text = value; }
         }
 
         public AssociateProteinsDlg(SkylineWindow parent, bool reuseLastFasta = true)
@@ -100,8 +101,8 @@ namespace pwiz.Skyline.EditUI
                 Close();
             }
 
-            if (_reuseLastFasta && !_lastFastaFileName.IsNullOrEmpty())
-                tbxFastaTargets.Text = _lastFastaFileName;
+            if (_reuseLastFasta && !LastFastaFileName.IsNullOrEmpty())
+                tbxFastaTargets.Text = LastFastaFileName;
         }
 
         private void Initialize()
@@ -340,9 +341,9 @@ namespace pwiz.Skyline.EditUI
             return result;
         }
 
-        private void btnApplyChanges_Click(object sender, EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
-            ApplyChanges();
+            OkDialog();
         }
 
         public AssociateProteinsSettings FormSettings
@@ -354,7 +355,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public void ApplyChanges()
+        public void OkDialog()
         {
             lock (_parent.GetDocumentChangeLock())
             {
