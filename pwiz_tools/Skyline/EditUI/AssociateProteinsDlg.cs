@@ -278,10 +278,7 @@ namespace pwiz.Skyline.EditUI
         private void tbxFastaTargets_TextChanged(object sender, EventArgs e)
         {
             if (File.Exists(tbxFastaTargets.Text))
-            {
-                Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
                 UseFastaFile(tbxFastaTargets.Text);
-            }
         }
 
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)
@@ -363,6 +360,9 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
+            if (rbFASTA.Checked)
+                Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
+
             lock (_parent.GetDocumentChangeLock())
             {
                 _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, current => _newDocument, FormSettings.EntryCreator.Create);

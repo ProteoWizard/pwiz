@@ -95,7 +95,7 @@ namespace TestPerf
                 RunUI(proteinsDlg.UseBackgroundProteome);
             }
 
-            WaitForConditionUI(() => proteinsDlg.FinalResults != null);
+            WaitForCondition(() => !proteinsDlg.IsBusy);
 
             //PauseTest();
             RunUI(() =>
