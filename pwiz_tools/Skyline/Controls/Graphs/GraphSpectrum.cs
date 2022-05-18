@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     using (new ToolbarUpdate(this))
                     {
                         comboPrecursor.Items.Clear();
-                        comboPrecursor.Items.AddRange(precursorStrings);
+                        comboPrecursor.Items.AddRange(precursorStrings.ToArray());
 
                         if (selectedPrecursorIndex == 0 || selectedPrecursor == null || comboPrecursor.Items.IndexOf(selectedPrecursor) == -1)
                         {
@@ -996,9 +996,9 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly GraphSpectrum _parent;
             private readonly Timer _timer;
 
-            private Cache _spectraCache;
-            private Cache _spectraLoadCache;
-            private Cache _precursorStringCache;
+            private Tuple<IReadOnlyList<PrecursorSpectra>, TreeNodeMS, SrmSettings> _spectraCache;
+            private Tuple<IReadOnlyList<PrecursorSpectra>, SrmSettings> _spectraLoadCache;
+            private Tuple<ImmutableList<string>, IReadOnlyList<PrecursorSpectra>> _precursorStringCache;
 
             public UpdateManager(GraphSpectrum parent)
             {
@@ -1053,8 +1053,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public IReadOnlyList<PrecursorSpectra> GetSpectra(SpectrumNodeSelection selection, SrmSettings settings)
             {
-                if (Cache.GetValue(_spectraCache, out var value, selection.SelectedTreeNode, settings))
-                    return (IReadOnlyList<PrecursorSpectra>)value;
+                if (_spectraCache != null &&
+                    ReferenceEquals(_spectraCache.Item2, selection.SelectedTreeNode) &&
+                    ReferenceEquals(_spectraCache.Item3, settings))
+                    return _spectraCache.Item1;
 
                 var spectra = new List<PrecursorSpectra>();
                 const int limit = 100; // for performance reasons
@@ -1074,14 +1076,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (spectra.Count == 0)
                     spectra = null;
 
-                _spectraCache = Cache.Create(spectra, selection.SelectedTreeNode, settings);
+                _spectraCache = Tuple.Create((IReadOnlyList<PrecursorSpectra>)spectra, selection.SelectedTreeNode, settings);
                 _spectraLoadCache = null;
                 return spectra;
             }
 
             public void LoadSpectra(IReadOnlyList<PrecursorSpectra> precursorSpectra, SrmSettings settings)
             {
-                if (Cache.GetValue(_spectraLoadCache, out _, precursorSpectra, settings))
+                if (_spectraLoadCache != null &&
+                    ReferenceEquals(_spectraLoadCache.Item1, precursorSpectra) &&
+                    ReferenceEquals(_spectraLoadCache.Item2, settings))
                     return;
 
                 foreach (var ps in precursorSpectra)
@@ -1158,65 +1162,24 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
-                _spectraLoadCache = Cache.Create(null, precursorSpectra, settings);
+                _spectraLoadCache = Tuple.Create(precursorSpectra, settings);
             }
 
-            public bool GetPrecursorStrings(IReadOnlyList<PrecursorSpectra> spectra, out string[] outStrings)
+            public bool GetPrecursorStrings(IReadOnlyList<PrecursorSpectra> spectra, out ImmutableList<string> outStrings)
             {
-                if (Cache.GetValue(_precursorStringCache, out var value, spectra))
+                if (_precursorStringCache != null && ReferenceEquals(_precursorStringCache.Item2, spectra))
                 {
-                    outStrings = (string[])value;
+                    outStrings = _precursorStringCache.Item1;
                     return true;
                 }
-                outStrings = (spectra ?? Array.Empty<PrecursorSpectra>()).Select(s => s.PrecursorString).ToArray();
-                _precursorStringCache = Cache.Create(outStrings, spectra);
+                outStrings = ImmutableList.ValueOf((spectra ?? Array.Empty<PrecursorSpectra>()).Select(s => s.PrecursorString));
+                _precursorStringCache = Tuple.Create(outStrings, spectra);
                 return false;
             }
 
             public void Dispose()
             {
                 _timer.Dispose();
-            }
-
-            private class Cache
-            {
-                private object _value;
-                private object[] _keys;
-
-                public static Cache Create(object value, params object[] keys)
-                {
-                    return new Cache { _value = value, _keys = keys };
-                }
-
-                public static bool GetValue(Cache cache, out object value, params object[] keys)
-                {
-                    value = null;
-                    if (cache == null || (keys == null) != (cache._keys == null))
-                        return false;
-                    if (keys != null && cache._keys != null)
-                    {
-                        if (keys.Length != cache._keys.Length)
-                            return false;
-                        for (var i = 0; i < keys.Length; i++)
-                        {
-                            var obj1 = keys[i];
-                            var obj2 = cache._keys[i];
-
-                            if (obj1 is ValueType != obj2 is ValueType)
-                                return false;
-
-                            if (obj1 is ValueType)
-                            {
-                                if (!Equals(obj1, obj2))
-                                    return false;
-                            }
-                            else if (!ReferenceEquals(obj1, obj2))
-                                return false;
-                        }
-                    }
-                    value = cache._value;
-                    return true;
-                }
             }
         }
 
