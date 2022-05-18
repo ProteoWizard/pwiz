@@ -1156,13 +1156,19 @@ namespace pwiz.Skyline.Model.Lib
                 // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
-                    var failureException = new Exception(FormatErrorMessage(x), x);
-                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    // SQLiteExceptions are not considered programming defects and should be shown to the user
+                    // as an ordinary error message
+                    if (x is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
                     {
-                        throw failureException; // We want this to show up in ExceptionWeb
+                        var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
+                        // This will show the user the error message after which the operation can be treated as canceled.
+                        loader.UpdateProgress(status.ChangeErrorException(new Exception(message, x)));
                     }
-                    // This will show the user the error message after which the operation can be treated as canceled.
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
+                    else
+                    {
+                        // Other sorts of exceptions should be posted to the Exception Web
+                        throw new Exception(FormatErrorMessage(x), x);
+                    }
                 }
                 return false;
             }
