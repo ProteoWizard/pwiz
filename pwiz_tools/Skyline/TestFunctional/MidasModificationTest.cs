@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.ShowGraphSpectrum(true));
             var graphSpectrum = SkylineWindow.GraphSpectrum;
             Assert.IsNotNull(graphSpectrum);
-            WaitForCondition(() => null != graphSpectrum.AvailableSpectra);
+            WaitForCondition(() => !graphSpectrum.IsGraphUpdatePending && null != graphSpectrum.AvailableSpectra);
             Assert.AreEqual(8, graphSpectrum.AvailableSpectra.Count());
             var goodSpectrum = graphSpectrum.AvailableSpectra.Skip(1).First();
             RunUI(() =>

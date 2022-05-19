@@ -1655,7 +1655,7 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.MoleculeGroups, 0);
             GraphSpectrum.SpectrumNodeSelection selection = null;
             RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
-            WaitForPrositSpectrum(selection.Protein.Peptides.First().TransitionGroups.First(), baseCE);
+            WaitForPrositSpectrum(selection.NodePepGroup.Peptides.First().TransitionGroups.First(), baseCE);
 
             // Select several peptides and make sure they are displayed correctly
             TestPrositSinglePrecursorPredictions(client, SrmDocument.Level.Molecules, 0, 4);
@@ -1679,7 +1679,7 @@ namespace pwiz.SkylineTestFunctional
                 GraphSpectrum.SpectrumNodeSelection selection = null;
                 RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
 
-                WaitForPrositSpectrum(selection.Precursor, baseCE + i);
+                WaitForPrositSpectrum(selection.NodeTranGroup, baseCE + i);
 
                 if (!RecordData)
                     AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
@@ -1696,7 +1696,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(Settings.Default.PrositNCE, SkylineWindow.GraphSpectrum.PrositNCE);
                 });
 
-                WaitForPrositSpectrum(selection.Precursor, baseCE + i + 1);
+                WaitForPrositSpectrum(selection.NodeTranGroup, baseCE + i + 1);
 
                 if (!RecordData)
                     AssertIntensityAndIRTSpectrumCorrect((PrositIntensityModel.PeptidePrecursorNCE)selection, client.QueryIndex);
@@ -1767,7 +1767,7 @@ namespace pwiz.SkylineTestFunctional
                 SelectNode(SrmDocument.Level.Molecules, i);
                 GraphSpectrum.SpectrumNodeSelection selection = null;
                 RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
-                WaitForPrositSpectrum(selection.Precursor, Settings.Default.PrositNCE);
+                WaitForPrositSpectrum(selection.NodeTranGroup, Settings.Default.PrositNCE);
                 // These are the same if we are not displaying a mirror plot
                 RunUI(() => Assert.AreNotSame(SkylineWindow.SelectedSpectrum, SkylineWindow.GraphSpectrum.PrositSpectrum));
 
