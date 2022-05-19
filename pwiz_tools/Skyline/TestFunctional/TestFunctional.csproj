@@ -177,6 +177,7 @@
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
     <Compile Include="LibraryCacheTest.cs" />
