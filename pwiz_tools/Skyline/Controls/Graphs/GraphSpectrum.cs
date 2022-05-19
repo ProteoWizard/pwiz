@@ -1320,7 +1320,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     string.Format(PrositResources.GraphSpectrum_UpdateUI__0__vs___1_,
                                         GraphItem.LibraryName, mirrorSpectrum.Name),
                                     SpectrumGraphItem.RemoveLibraryPrefix(GraphItem.Title, GraphItem.LibraryName),
-                                    string.Format(@"dotp: {0:0.0000}", dotp));
+                                    string.Format(Resources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, dotp));
                             }
                             else
                             {
