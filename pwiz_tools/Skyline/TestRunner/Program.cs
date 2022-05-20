@@ -607,7 +607,12 @@ namespace TestRunner
             psi.WindowStyle = ProcessWindowStyle.Minimized;
             psi.CreateNoWindow = false;
             psi.UseShellExecute = true;
-            Process.Start(psi);
+            var proc = Process.Start(psi);
+            if (proc.WaitForExit(1000))
+            {
+                Console.WriteLine($"Error launching docker worker: {proc.ExitCode}");
+                log?.WriteLine($"Error launching docker worker: {proc.ExitCode}");
+            }
             return workerName;
         }
 
