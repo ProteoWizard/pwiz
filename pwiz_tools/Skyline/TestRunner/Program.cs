@@ -672,6 +672,8 @@ namespace TestRunner
                 languages = new[] { "en" };
             }
 
+            Thread.Sleep(10000);
+
             Console.CancelKeyPress += (sender, args) =>
             {
                 Console.WriteLine("Ctrl-C pressed: closing server and clients.");
