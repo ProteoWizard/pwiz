@@ -49,25 +49,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
         }
 
-        public TransitionDocNode DocNode { get { return (TransitionDocNode)Model; } }
-
-        public TransitionGroupDocNode TransitionGroupNode
-        {
-            get
-            {
-                return (Parent != null ?
-                    ((TransitionGroupTreeNode)Parent).DocNode : null);
-            }
-        }
-
-        public PeptideDocNode PepNode
-        {
-            get
-            {
-                return (Parent != null && Parent.Parent != null ?
-                    ((PeptideTreeNode) Parent.Parent).DocNode : null);
-            }
-        }
+        public TransitionDocNode DocNode => (TransitionDocNode)Model;
+        public TransitionGroupDocNode TransitionGroupNode => ((TransitionGroupTreeNode)Parent)?.DocNode;
+        public PeptideDocNode PepNode => ((PeptideTreeNode)Parent?.Parent)?.DocNode;
+        public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent?.Parent)?.DocNode;
 
         public override string Heading
         {

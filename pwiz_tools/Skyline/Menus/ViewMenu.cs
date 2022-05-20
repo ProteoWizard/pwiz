@@ -970,6 +970,11 @@ namespace pwiz.Skyline.Menus
             SkylineWindow.ShowQc(qcTraceItem.Text);
         }
 
+        private void candidatePeaksToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowCandidatePeaks();
+        }
+
         private void viewTargetsMenuItem_click(object sender, EventArgs e)
         {
             ShowTargetsWindow();

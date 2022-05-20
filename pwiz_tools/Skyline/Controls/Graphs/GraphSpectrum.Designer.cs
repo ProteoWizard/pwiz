@@ -31,6 +31,8 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphSpectrum));
             this.toolBar = new System.Windows.Forms.ToolStrip();
+            this.labelPrecursor = new System.Windows.Forms.ToolStripLabel();
+            this.comboPrecursor = new System.Windows.Forms.ToolStripComboBox();
             this.labelSpectrum = new System.Windows.Forms.ToolStripLabel();
             this.comboSpectrum = new System.Windows.Forms.ToolStripComboBox();
             this.mirrorLabel = new System.Windows.Forms.ToolStripLabel();
@@ -47,6 +49,8 @@
             // 
             this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.labelPrecursor,
+            this.comboPrecursor,
             this.labelSpectrum,
             this.comboSpectrum,
             this.mirrorLabel,
@@ -55,6 +59,19 @@
             this.comboCE});
             resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
+            // 
+            // labelPrecursor
+            // 
+            this.labelPrecursor.Name = "labelPrecursor";
+            resources.ApplyResources(this.labelPrecursor, "labelPrecursor");
+            // 
+            // comboPrecursor
+            // 
+            this.comboPrecursor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPrecursor.Name = "comboPrecursor";
+            this.comboPrecursor.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            resources.ApplyResources(this.comboPrecursor, "comboPrecursor");
+            this.comboPrecursor.SelectedIndexChanged += new System.EventHandler(this.comboPrecursor_SelectedIndexChanged);
             // 
             // labelSpectrum
             // 
@@ -150,5 +167,7 @@
         private System.Windows.Forms.ToolStripComboBox comboMirrorSpectrum;
         private System.Windows.Forms.ToolStripLabel ceLabel;
         private System.Windows.Forms.ToolStripComboBox comboCE;
+        private System.Windows.Forms.ToolStripLabel labelPrecursor;
+        private System.Windows.Forms.ToolStripComboBox comboPrecursor;
     }
 }

@@ -6,7 +6,7 @@
 # Then this script runs git for master or an active pull request[1] to check the files changed by the latest commit (for master)
 # or by any commit (for PRs).
 #
-# When a build is NOT triggered, the script reports this fact to GitHub so that the config can still be a "required check" for merging the PR.
+# When a build is NOT triggered due to changed files, the script reports this fact to GitHub so that the config can still be a "required check" for merging the PR.
 #
 # The 'targets' dictionary maps build config ids (e.g. 'bt83') to the status name shown in GitHub (e.g. "teamcity - Core Windows x86");
 # THESE NAMES MUST MATCH THE STATUS NAME REPORTED BY THE CORRESPONDING TEAMCITY CONFIGS (usually the name of the config as seen on the TeamCity project page).
@@ -33,7 +33,7 @@ teamcity_username = args[2]
 teamcity_password = args[3]
 
 def post(url, params, headers):
-    if os.environ['TEAMCITY_VERSION'] is None:
+    if not 'TEAMCITY_VERSION' in os.environ:
         return
 
     if isinstance(params, dict):
@@ -45,7 +45,7 @@ def post(url, params, headers):
         return conn.read().decode('utf-8')
 
 def get(url, always = False):
-    if not always and os.environ['TEAMCITY_VERSION'] is None:
+    if not always and not 'TEAMCITY_VERSION' in os.environ:
         return
     
     req = urllib.request.Request(url)
@@ -73,7 +73,7 @@ def merge(dict1, *dicts):
 
 if len(args) < 4:
     print("Usage:")
-    print(" %s <current branch> <current commit SHA1> <GitHub authorization token>" % os.path.basename(sys.argv[0]))
+    print(" %s <current branch> <GitHub authorization token> <teamcity_username> <teamcity_password>" % os.path.basename(sys.argv[0]))
     exit(0)
 
 targets = {}
@@ -209,17 +209,18 @@ else:
             if triggered:
                 break
     
-notBuilding = {}
+notBuildingDueToBranch = {}
+notBuildingDueToChangedFiles = {}
 building = {}
 for targetKey in targets:
     for target in targets[targetKey]:
         isBaseBranchDict = isinstance(targets[targetKey][target], dict) # these targets were promoted into top-level above
         if not isBaseBranchDict and target not in triggers:
-            notBuilding[target] = targets[targetKey][target]
+            notBuildingDueToChangedFiles[target] = targets[targetKey][target]
         elif isBaseBranchDict:
             for target2 in targets[targetKey][target]:
                 if target2 not in triggers:
-                    notBuilding[target2] = targets[targetKey][target][target2]
+                    notBuildingDueToBranch[target2] = targets[targetKey][target][target2]
         else:
             building[target] = targets[targetKey][target]
 
@@ -239,10 +240,13 @@ for trigger in triggers:
 # For builds not being triggered, report success to GitHub
 githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/%s" % current_commit
 headers = {"Authorization": "Bearer %s" % bearer_token, "Content-type": "application/json"}
-for target in notBuilding:
-    print("Not building %s (%s), but reporting success to GitHub." % (notBuilding[target], target))
-    data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuilding[target]
+for target in notBuildingDueToChangedFiles:
+    print("Not building %s (%s) due to unchanged files, but reporting success to GitHub." % (notBuildingDueToChangedFiles[target], target))
+    data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuildingDueToChangedFiles[target]
     rsp = post(githubUrl, data, headers)
+
+for target in notBuildingDueToBranch:
+    print("Not building %s (%s) or reporting to GitHub due to PR's target branch." % (notBuildingDueToBranch[target], target))
 
 # when no builds are triggered (e.g. if the only update is to this script), report a GitHub status that the script ran successfully
 if len(building) == 0:

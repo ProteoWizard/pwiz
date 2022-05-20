@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
+    <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />
     <Compile Include="DiaUmpireVendorFormatTest.cs" />
     <Compile Include="DiaUmpireTutorialTest.cs" />
