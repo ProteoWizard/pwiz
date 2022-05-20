@@ -585,7 +585,7 @@ namespace TestRunner
                 throw new InvalidOperationException($"'{DOCKER_IMAGE_NAME}' is missing; cannot launch Docker workers without it");
         }
 
-        private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, int workerPort)
+        private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, int workerPort, StreamWriter log)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
             string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
@@ -599,9 +599,11 @@ namespace TestRunner
             testRunnerCmd += $" workerport={workerPort}";
 
             long workerBytes = bigWorker ? MinBytesPerBigWorker : MinBytesPerNormalWorker;
-            Console.WriteLine($"Launching {workerName}");
+            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
+            Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
+            log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             workerNames = (workerNames ?? "") + $"{workerName} ";
-            var psi = new ProcessStartInfo("docker", $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}");
+            var psi = new ProcessStartInfo("docker", dockerArgs);
             psi.WindowStyle = ProcessWindowStyle.Minimized;
             psi.CreateNoWindow = false;
             psi.UseShellExecute = true;
@@ -609,10 +611,10 @@ namespace TestRunner
             return workerName;
         }
 
-        private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, int workerPort, ConcurrentDictionary<string, bool> workerIsAlive)
+        private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, int workerPort, ConcurrentDictionary<string, bool> workerIsAlive, StreamWriter log)
         {
             string currentWorkerNames = workerNames;
-            string workerName = LaunchDockerWorker(i, commandLineArgs, ref currentWorkerNames, bigWorker, workerPort);
+            string workerName = LaunchDockerWorker(i, commandLineArgs, ref currentWorkerNames, bigWorker, workerPort, log);
             for (int attempt = 0; attempt< 10; ++attempt)
             {
                 Thread.Sleep(3000);
@@ -722,14 +724,14 @@ namespace TestRunner
                             for (int i = 0; i < normalWorkerCount; ++i)
                             {
                                 int i2 = i;
-                                Helpers.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, workerPort, workerIsAlive), 4, 3000);
+                                Helpers.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, workerPort, workerIsAlive, log), 4, 3000);
                             }
                         }
                         else
                         {
                             for (int i = 0; i < normalWorkerCount; ++i)
                             {
-                                LaunchDockerWorker(i, commandLineArgs, ref workerNames, false, workerPort);
+                                LaunchDockerWorker(i, commandLineArgs, ref workerNames, false, workerPort, log);
                                 Thread.Sleep(1000);
                             }
                         }
@@ -918,7 +920,7 @@ namespace TestRunner
                                     if (workerCount > 0 && !isCanceling && !cts.IsCancellationRequested && !workerIsAlive.Any(kvp => kvp.Value))
                                     {
                                         Console.WriteLine("No more workers alive: starting another worker.");
-                                        LaunchDockerWorker(workerIsAlive.Count + 1, commandLineArgs, ref workerNames, true, workerPort);
+                                        LaunchDockerWorker(workerIsAlive.Count + 1, commandLineArgs, ref workerNames, true, workerPort, log);
                                     }
                                     return;
                                 }
