@@ -1105,7 +1105,7 @@ namespace pwiz.ProteowizardWrapper
             {
                 return null;
             }
-            var metadata = new SpectrumMetadata(spectrum.id, retentionTime.Value);
+            var metadata = new SpectrumMetadata(id.abbreviate(spectrum.id), retentionTime.Value);
             metadata = metadata.ChangePrecursors(GetPrecursorsByMsLevel(spectrum).Select(level =>
                 level.Where(precursor => precursor.IsolationMz.HasValue)
                     .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
