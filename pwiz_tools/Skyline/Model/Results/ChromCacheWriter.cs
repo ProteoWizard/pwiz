@@ -22,6 +22,7 @@ using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -33,6 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly Action<ChromatogramCache, IProgressStatus> _completed;
 
         protected List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
+        protected List<ResultFileData> _listResultFileDatas = new List<ResultFileData>();
         protected BlockedArrayList<ChromTransition> _listTransitions =
             new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
         private BlockedArrayList<ChromGroupHeaderEntry> _listGroups =
@@ -141,7 +143,7 @@ namespace pwiz.Skyline.Model.Results
                             var textIdBytes = _listTextIdBytes.ToArray();
                             _listTextIdBytes = null;
 
-                            var rawData = new ChromatogramCache.RawData(newCacheHeader, arrayCachFiles,
+                            var rawData = new ChromatogramCache.RawData(newCacheHeader, arrayCachFiles, _listResultFileDatas,
                                 arrayChromEntries, arrayTransitions, _listScoreTypes, scoreValueLocation, textIdBytes);
                             result = new ChromatogramCache(CachePath, rawData, readStream);
                             _status = _status.Complete();

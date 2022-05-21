@@ -1023,7 +1023,8 @@ namespace pwiz.ProteowizardWrapper
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum),
-                ScanDescription = GetScanDescription(spectrum)
+                ScanDescription = GetScanDescription(spectrum),
+                Metadata = GetSpectrumMetadata(spectrum)
             };
             if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
             {
@@ -1719,6 +1720,7 @@ namespace pwiz.ProteowizardWrapper
     public sealed class MsDataSpectrum
     {
         private IonMobilityValue _ionMobility;
+        public SpectrumMetadata Metadata { get; set; }
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any

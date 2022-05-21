@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -129,9 +130,9 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        public override byte[] MSDataFileScanIdBytes
+        public override IResultFileMetadata ResultFileData
         {
-            get { return _cache.LoadMSDataFileScanIdBytes(_fileIndex); }
+            get { return _cache.GetResultFileMetadata(_fileIndex); }
         }
 
         public override double? MaxRetentionTime { get { return _maxRetentionTime; } }

@@ -28,6 +28,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -442,14 +443,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Write scan ids
-            var scanIdBytes = provider.MSDataFileScanIdBytes;
-            if (scanIdBytes.Length > 0)
-            {
-                _currentFileInfo.LocationScanIds = _fsScans.Stream.Position;
-                _currentFileInfo.SizeScanIds = scanIdBytes.Length;
-                _fsScans.Stream.Write(scanIdBytes, 0, scanIdBytes.Length);
-            }
-
+            _currentFileInfo.WriteResultFileMetadata(provider.ResultFileData, _fsScans.Stream);
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
 
@@ -475,6 +469,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
+            _listResultFileDatas.Add(provider.ResultFileData as ResultFileData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,
@@ -1507,5 +1502,21 @@ namespace pwiz.Skyline.Model.Results
 
         public int SizeScanIds { get; set; }
         public long LocationScanIds { get; set; }
+
+        public void WriteResultFileMetadata(IResultFileMetadata resultFileMetadata, Stream stream)
+        {
+            if (resultFileMetadata == null)
+            {
+                SizeScanIds = 0;
+                return;
+            }
+
+            var locationScanIds = stream.Position;
+            var bytes = resultFileMetadata.ToByteArray();
+            stream.Write(bytes, 0, bytes.Length);
+            Assume.AreEqual(locationScanIds + bytes.Length, stream.Position);
+            SizeScanIds = bytes.Length;
+            SetFlag(resultFileMetadata is ResultFileData, ChromCachedFile.FlagValues.result_file_data);
+        }
     }
 }

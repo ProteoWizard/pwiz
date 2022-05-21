@@ -22,6 +22,7 @@ using System.Drawing;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract IEnumerable<ChromKeyProviderIdPair> ChromIds { get; }
 
-        public virtual byte[] MSDataFileScanIdBytes { get { return new byte[0]; } }
+        public virtual IResultFileMetadata ResultFileData { get { return null; } }
 
         public virtual void SetRequestOrder(IList<IList<int>> orderedSets) { }
 

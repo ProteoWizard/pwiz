@@ -1546,7 +1546,7 @@ namespace pwiz.Skyline.Model.Results
             has_midas_spectra = 0x04,
             has_combined_ion_mobility = 0x08,
             ion_mobility_type_bitmask = 0x70, // 3 bits for ion mobility type drift, inverse_mobility, spares
-            // 0x80 available
+            result_file_data = 0x80,
             used_ms1_centroids = 0x100,
             used_ms2_centroids = 0x200,
         }
@@ -1682,6 +1682,11 @@ namespace pwiz.Skyline.Model.Results
         public bool UsedMs2Centroids
         {
             get { return UsedMs2CentroidsFlags(Flags); }
+        }
+
+        public bool HasResultFileData
+        {
+            get { return 0 != (Flags & FlagValues.result_file_data); }
         }
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)

@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    public class ResultFileData : Immutable
+    public interface IResultFileMetadata
+    {
+        byte[] ToByteArray();
+        MsDataFileScanIds ToMsDataFileScanIds();
+    }
+    public class ResultFileData : Immutable, IResultFileMetadata
     {
         public ResultFileData(IEnumerable<SpectrumMetadata> spectrumMetadatas)
         {
@@ -45,8 +53,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
                 var precursorsByLevel =
                     protoSpectrum.PrecursorIndex.ToLookup(index => proto.Precursors[index - 1].MsLevel, index=>precursors[index - 1]);
-                spectrumMetadata = spectrumMetadata.ChangePrecursors(Enumerable
-                    .Range(1, precursorsByLevel.Max(group => group.Key)).Select(level => precursorsByLevel[level]));
+                if (precursorsByLevel.Any())
+                {
+                    spectrumMetadata = spectrumMetadata.ChangePrecursors(Enumerable
+                        .Range(1, precursorsByLevel.Max(group => group.Key)).Select(level => precursorsByLevel[level]));
+                }
                 spectrumMetadatas.Add(spectrumMetadata);
             }
 
@@ -126,6 +137,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             return proto;
+        }
+
+        public MsDataFileScanIds ToMsDataFileScanIds()
+        {
+            var byteStream = new MemoryStream();
+            var startBytesList = new List<int>();
+            var lengths = new List<int>();
+            for (int i = 0; i < SpectrumMetadatas.Count; i++)
+            {
+                var spectrum = SpectrumMetadatas[i];
+                var startIndex = byteStream.Length;
+                var scanIdBytes = Encoding.UTF8.GetBytes(spectrum.Id);
+                byteStream.Write(scanIdBytes, 0, scanIdBytes.Length);
+                Assume.AreEqual(startIndex + scanIdBytes.Length, byteStream.Length);
+                startBytesList.Add(Convert.ToInt32(startIndex));
+                lengths.Add(scanIdBytes.Length);
+            }
+            return new MsDataFileScanIds(startBytesList.ToArray(), lengths.ToArray(), byteStream.ToArray());
         }
 
         private IEnumerable<int> GetScanIdParts(string scanId)
