@@ -633,6 +633,12 @@
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
+    <Compile Include="Model\Results\PeakShapeStatistics.cs" />
+    <Compile Include="Model\Results\PeakShapeValues.cs" />
+    <Compile Include="Model\Results\Scoring\Calculators.cs" />
+    <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\MedianPeakShape.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
     <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
@@ -805,6 +811,7 @@
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\HalfPrecisionFloat.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">

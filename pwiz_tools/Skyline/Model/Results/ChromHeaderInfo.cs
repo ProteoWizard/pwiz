@@ -1045,6 +1045,10 @@ namespace pwiz.Skyline.Model.Results
         private FlagValues _flagValues;
         private short _massError;
         private readonly short _pointsAcross;
+        private readonly HalfPrecisionFloat _stdDev;
+        private readonly HalfPrecisionFloat _skewness;
+        private readonly HalfPrecisionFloat _kurtosis;
+        private readonly HalfPrecisionFloat _shapeCorrelation;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1056,6 +1060,7 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
+            has_peak_shape = 0x0080,
 
             // This is the last available flag
             mass_error_known =      0x8000,
@@ -1082,7 +1087,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
-            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross, PeakShapeValues? peakShapeValues)
         {
             _retentionTime = retentionTime;
             _startTime = startTime;
@@ -1103,6 +1108,19 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
+            if (peakShapeValues.HasValue)
+            {
+                flagValues |= FlagValues.has_peak_shape;
+                _skewness = (HalfPrecisionFloat) peakShapeValues.Value.Skewness;
+                _kurtosis = (HalfPrecisionFloat)peakShapeValues.Value.Kurtosis;
+                _stdDev = (HalfPrecisionFloat)peakShapeValues.Value.StdDev;
+                _shapeCorrelation = (HalfPrecisionFloat) peakShapeValues.Value.ShapeCorrelation;
+            }
+            else
+            {
+                flagValues &= ~FlagValues.has_peak_shape;
+                _shapeCorrelation = _stdDev = _skewness = _kurtosis = 0;
+            }
             _flagValues = flagValues;
         }
 
@@ -1110,7 +1128,8 @@ namespace pwiz.Skyline.Model.Results
                          IFoundPeak peak,
                          FlagValues flags,
                          TimeIntensities timeIntensities,
-                         IList<float> rawTimes)
+                         IList<float> rawTimes,
+                         MedianPeakShape medianPeakShape)
             : this()
         {
             var times = timeIntensities.Times;
@@ -1214,6 +1233,23 @@ namespace pwiz.Skyline.Model.Results
                     _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
                 }
             }
+
+            var backgroundLevel = Math.Min(timeIntensities.Intensities[peak.StartIndex],
+                timeIntensities.Intensities[peak.EndIndex]);
+            var peakShapeStatistics = PeakShapeStatistics.CalculateFromTimeIntensities(timeIntensities, peak.StartIndex,
+                peak.EndIndex, backgroundLevel);
+            if (peakShapeStatistics != null)
+            {
+                _flagValues |= FlagValues.has_peak_shape;
+                _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
+                _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
+                _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
+                _shapeCorrelation = (HalfPrecisionFloat) (medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f);
+            }
+            else
+            {
+                _flagValues &= ~FlagValues.has_peak_shape;
+            }
         }
 
         public float RetentionTime { get { return _retentionTime; } }
@@ -1288,6 +1324,18 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public PeakShapeValues? PeakShapeValues
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.has_peak_shape) == 0)
+                {
+                    return null;
+                }
+
+                return new PeakShapeValues(_stdDev, _skewness, _kurtosis, _shapeCorrelation);
+            }
+        }
         /// <summary>
         /// Removes the mass error bits from the upper 16 in order to keep
         /// from writing mass errors into older cache file formats until
@@ -1317,7 +1365,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 32;
             }
-            return 36;
+            if (formatVersion < CacheFormatVersion.Sixteen)
+            {
+                return 36;
+            }
+            return 44;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
@@ -1330,7 +1382,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
-            float endTime, FlagValues flags)
+            float endTime, FlagValues flags, MedianPeakShape medianPeakShape)
         {
             int pointsAcrossPeak = 0;
             int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
@@ -1350,6 +1402,9 @@ namespace pwiz.Skyline.Model.Results
                 Assume.AreEqual(endTime, timeIntensities.Times[endIndex]);
                 pointsAcrossPeak--;
             }
+
+            var peakShapeStatistics =
+                PeakShapeStatistics.CalculateFromTimeIntensities(timeIntensities, startIndex, endIndex, 0);
             pointsAcrossPeak += endIndex - startIndex + 1;
             double totalArea = 0;
             double totalMassError = 0;
@@ -1473,8 +1528,21 @@ namespace pwiz.Skyline.Model.Results
                 massError = totalMassError / totalArea;
             }
 
+            float correlation;
+            if (medianPeakShape == null)
+            {
+                correlation = 1;
+            }
+            else
+            {
+                correlation = (float) medianPeakShape.GetCorrelation(timeIntensities);
+            }
+
+            var peakShapeValues = new PeakShapeValues((float) peakShapeStatistics.StdDevTime, (float)peakShapeStatistics.Skewness,
+                (float)peakShapeStatistics.Kurtosis, correlation);
+
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak);
+                pointsAcrossPeak, peakShapeValues);
         }
 
         #region Fast file I/O
@@ -2796,7 +2864,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
+        public TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
         {
             var timeIntensitiesGroup = _groupInfo?.TimeIntensitiesGroup;
             if (timeIntensitiesGroup == null)
@@ -2885,11 +2953,18 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(FullScanAcquisitionMethod acquisitionMethod, float startTime, float endTime, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            var peakIntegrator = new PeakIntegrator(acquisitionMethod, TimeIntervals, Source, RawTimeIntensities,
-                TimeIntensities, null);
+            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
+        }
+
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
+        {
+            var rawTimeIntensities = RawTimeIntensities;
+            var interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
+            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, rawTimeIntensities,
+                interpolatedTimeIntensities, null);
         }
 
         public int IndexOfPeak(double retentionTime)

@@ -1394,6 +1394,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A measure of the &quot;tailedness&quot; of the chromatogram peak..
+        /// </summary>
+        public static string Kurtosis {
+            get {
+                return ResourceManager.GetString("Kurtosis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         /// </summary>
@@ -3386,6 +3395,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Score {
             get {
                 return ResourceManager.GetString("Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A measure of the asymmetry of the chromatogram peak..
+        /// </summary>
+        public static string Skewness {
+            get {
+                return ResourceManager.GetString("Skewness", resourceCulture);
             }
         }
         

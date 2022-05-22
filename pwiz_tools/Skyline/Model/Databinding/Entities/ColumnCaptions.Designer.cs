@@ -1357,6 +1357,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Kurtosis.
+        /// </summary>
+        public static string Kurtosis {
+            get {
+                return ResourceManager.GetString("Kurtosis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last Position.
         /// </summary>
         public static string LastPosition {
@@ -2235,6 +2244,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakScores {
             get {
                 return ResourceManager.GetString("PeakScores", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak StdDev.
+        /// </summary>
+        public static string PeakStandardDeviation {
+            get {
+                return ResourceManager.GetString("PeakStandardDeviation", resourceCulture);
             }
         }
         
@@ -3279,6 +3297,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Score {
             get {
                 return ResourceManager.GetString("Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skewness.
+        /// </summary>
+        public static string Skewness {
+            get {
+                return ResourceManager.GetString("Skewness", resourceCulture);
             }
         }
         

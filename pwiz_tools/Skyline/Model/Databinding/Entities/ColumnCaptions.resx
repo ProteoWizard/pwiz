@@ -544,6 +544,9 @@
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="Kurtosis">
+	<value>Kurtosis</value>
+  </data>
   <data name="LastPosition">
     <value>Last Position</value>
   </data>
@@ -822,6 +825,9 @@
   </data>
   <data name="PeakScores">
     <value>Peak Scores</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>Peak StdDev</value>
   </data>
   <data name="Peptide">
     <value>Peptide</value>
@@ -1163,6 +1169,9 @@
   </data>
   <data name="Score">
     <value>Score</value>
+  </data>
+  <data name="Skewness">
+    <value>Skewness</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline Version</value>

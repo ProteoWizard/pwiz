@@ -11768,4 +11768,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
 	  <value>Mi&amp;n peptides per protein group</value>
   </data>
+  <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
+      <value>dotp: {0:0.0000}</value>
+  </data>
 </root>
