@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
-            _listResultFileDatas.Add(provider.ResultFileData as ResultFileData);
+            _listResultFileDatas.Add(provider.ResultFileData as ResultFileMetaData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,
@@ -1516,7 +1516,7 @@ namespace pwiz.Skyline.Model.Results
             stream.Write(bytes, 0, bytes.Length);
             Assume.AreEqual(locationScanIds + bytes.Length, stream.Position);
             SizeScanIds = bytes.Length;
-            SetFlag(resultFileMetadata is ResultFileData, ChromCachedFile.FlagValues.result_file_data);
+            SetFlag(resultFileMetadata is ResultFileMetaData, ChromCachedFile.FlagValues.result_file_data);
         }
     }
 }

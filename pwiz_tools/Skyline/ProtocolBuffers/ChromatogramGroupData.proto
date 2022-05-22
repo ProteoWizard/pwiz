@@ -30,7 +30,7 @@ message ChromatogramGroupData {
 	bool inferZeroes = 9;
 	TimeIntervals timeIntervals = 10;
 }
-message ResultFileData {
+message ResultFileMetaDataProto {
 	message SpectrumMetadata {
 		double retentionTime = 1;
 		repeated int32 scanIdParts = 2;

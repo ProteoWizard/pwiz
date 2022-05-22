@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly Action<ChromatogramCache, IProgressStatus> _completed;
 
         protected List<ChromCachedFile> _listCachedFiles = new List<ChromCachedFile>();
-        protected List<ResultFileData> _listResultFileDatas = new List<ResultFileData>();
+        protected List<ResultFileMetaData> _listResultFileDatas = new List<ResultFileMetaData>();
         protected BlockedArrayList<ChromTransition> _listTransitions =
             new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
         private BlockedArrayList<ChromGroupHeaderEntry> _listGroups =

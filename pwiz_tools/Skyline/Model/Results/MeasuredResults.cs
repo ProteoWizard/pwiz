@@ -23,8 +23,10 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using EnvDTE;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -659,6 +661,24 @@ namespace pwiz.Skyline.Model.Results
 
             cachedFile = null;
             return null;
+        }
+
+        public IDictionary<MsDataFileUri, ResultFileMetaData> GetResultFileMetadatas()
+        {
+            var dictionary = new Dictionary<MsDataFileUri, ResultFileMetaData>();
+            foreach (var cache in Caches)
+            {
+                for (int i = 0; i < cache.CachedFiles.Count; i++)
+                {
+                    var resultFileMetadata = cache.GetResultFileMetadata(i);
+                    if (null != resultFileMetadata)
+                    {
+                        dictionary.Add(cache.CachedFiles[i].FilePath, resultFileMetadata);
+                    }
+                }
+            }
+
+            return dictionary;
         }
 
         public bool HasAllIonsChromatograms

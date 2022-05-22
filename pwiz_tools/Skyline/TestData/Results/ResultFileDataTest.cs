@@ -20,9 +20,9 @@ namespace pwiz.SkylineTestData.Results
                     var spectrumMetadatas = Enumerable.Range(0, msDataFile.SpectrumCount)
                         .Select(i => msDataFile.GetSpectrumMetadata(i)).ToList();
                     Assert.AreNotEqual(0, spectrumMetadatas.Count);
-                    var resultFileData = new ResultFileData(spectrumMetadatas);
+                    var resultFileData = new ResultFileMetaData(spectrumMetadatas);
                     var bytes = resultFileData.ToByteArray();
-                    var resultFileData2 = ResultFileData.FromByteArray(bytes);
+                    var resultFileData2 = ResultFileMetaData.FromByteArray(bytes);
                     Assert.AreEqual(resultFileData.SpectrumMetadatas, resultFileData2.SpectrumMetadatas);
                 }
             }

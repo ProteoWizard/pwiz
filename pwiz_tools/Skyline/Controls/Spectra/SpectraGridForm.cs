@@ -28,10 +28,10 @@ namespace pwiz.Skyline.Controls.Spectra
         private List<SpectrumClass> _spectrumClasses;
         private BindingList<SpectrumClass> _bindingList;
 
-        private Dictionary<MsDataFileUri, SpectrumMetadataList> _spectrumLists =
-            new Dictionary<MsDataFileUri, SpectrumMetadataList>();
+        private Dictionary<DataFileItem, SpectrumMetadataList> _spectrumLists =
+            new Dictionary<DataFileItem, SpectrumMetadataList>();
         private readonly SpectrumReader _spectrumReader;
-        private List<MsDataFileUri> _dataFileList = new List<MsDataFileUri>();
+        private List<DataFileItem> _dataFileList = new List<DataFileItem>();
         private HashSet<MsDataFileUri> _dataFileSet = new HashSet<MsDataFileUri>();
         private ImmutableList<SpectrumClassColumn> _allSpectrumClassColumns;
         private bool _updatePending;
@@ -115,20 +115,24 @@ namespace pwiz.Skyline.Controls.Spectra
                 return true;
             }
 
-            for (int i = 0; i < spectra.SpectraByPrecursor.Count; i++)
+            object lastValue = null;
+            double? lastPrecursor = null;
+            foreach (var keyValuePair in spectra.SpectraByPrecursor)
             {
-                var values = new HashSet<object>();
-                for (int j = i + 1;
-                     j < spectra.SpectraByPrecursor.Count && spectra.SpectraByPrecursor.Keys[j] - i <= tolerance * 2;
-                     j++)
+                var precursor = keyValuePair.Key;
+                foreach (var spectrum in keyValuePair.Value)
                 {
-                    foreach (var spectrum in spectra.SpectraByPrecursor[j].Value)
+                    var value = column.GetValue(spectrum);
+                    if (lastPrecursor.HasValue && precursor - lastPrecursor.Value <= tolerance)
                     {
-                        if (values.Add(column.GetValue(spectrum)) && values.Count > 1)
+                        if (!Equals(value, lastValue))
                         {
                             return true;
                         }
                     }
+
+                    lastPrecursor = precursor;
+                    lastValue = value;
                 }
             }
             return false;
@@ -205,6 +209,7 @@ namespace pwiz.Skyline.Controls.Spectra
         {
             _updatePending = false;
             var document = SkylineWindow.DocumentUI;
+            AddReplicatesWithMetadata(document);
             var spectrumClasses = new Dictionary<SpectrumClassKey, SpectrumClass>();
             var classColumns = ImmutableList.ValueOf(GetEnabledClassColumns());
             IList<TransitionGroupDocNode> transitionGroupDocNodes = null;
@@ -215,9 +220,9 @@ namespace pwiz.Skyline.Controls.Spectra
             }
 
             var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            foreach (var msDataFileUri in _dataFileList)
+            foreach (var dataFileItem in _dataFileList)
             {
-                if (!_spectrumLists.TryGetValue(msDataFileUri, out var spectrumList ))
+                if (!_spectrumLists.TryGetValue(dataFileItem, out var spectrumList ))
                 {
                     continue;
                 }
@@ -236,7 +241,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         spectrumClass = new SpectrumClass(_dataSchema, spectrumGroup.Key);
                         spectrumClasses.Add(spectrumGroup.Key, spectrumClass);
                     }
-                    spectrumClass.Files.Add(msDataFileUri.GetFileName(), new FileSpectrumInfo(_dataSchema, spectrumGroup.Count()));
+                    spectrumClass.Files.Add(dataFileItem.ToString(), new FileSpectrumInfo(_dataSchema, spectrumGroup.Count()));
                 }
             }
 
@@ -244,6 +249,41 @@ namespace pwiz.Skyline.Controls.Spectra
             _spectrumClasses.AddRange(spectrumClasses.Values);
             _bindingList.ResetBindings();
             UpdateViewContext();
+        }
+
+        private void AddReplicatesWithMetadata(SrmDocument document)
+        {
+            if (!document.Settings.HasResults)
+            {
+                return;
+            }
+
+            var resultFileMetadatas = document.Settings.MeasuredResults.GetResultFileMetadatas();
+            if (!resultFileMetadatas.Any())
+            {
+                return;
+            }
+
+            foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+            {
+                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    if (!resultFileMetadatas.TryGetValue(chromFileInfo.FilePath, out var resultFileMetadata))
+                    {
+                        continue;
+                    }
+
+                    var key = new DataFileItem(chromatogramSet.Name, chromFileInfo.FilePath);
+                    if (_spectrumLists.ContainsKey(key))
+                    {
+                        continue;
+                    }
+
+                    _spectrumLists.Add(key, new SpectrumMetadataList(resultFileMetadata.SpectrumMetadatas));
+                    _dataFileList.Add(key);
+                    listBoxFiles.Items.Add(key);
+                }
+            }
         }
 
         private void UpdateViewContext()
@@ -315,11 +355,12 @@ namespace pwiz.Skyline.Controls.Spectra
                 {
                     if (_dataFileSet.Add(msDataFileUri))
                     {
-                        _dataFileList.Add(msDataFileUri);
-                        if (!_spectrumLists.ContainsKey(msDataFileUri))
+                        var dataFileItem = new DataFileItem(null, msDataFileUri);
+                        _dataFileList.Add(dataFileItem);
+                        if (!_spectrumLists.ContainsKey(dataFileItem))
                         {
                             _spectrumReader.AddFile(msDataFileUri);
-                            listBoxFiles.Items.Add(msDataFileUri.GetFileName());
+                            listBoxFiles.Items.Add(dataFileItem);
                         }
                     }
                 }
@@ -328,7 +369,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
         public void SetSpectra(MsDataFileUri dataFile, IList<SpectrumMetadata> spectra)
         {
-            _spectrumLists[dataFile] = new SpectrumMetadataList(spectra);
+            _spectrumLists[new DataFileItem(null, dataFile)] = new SpectrumMetadataList(spectra);
             QueueUpdateSpectrumRows();
         }
 
@@ -506,6 +547,43 @@ namespace pwiz.Skyline.Controls.Spectra
 
                     CommonActionUtil.SafeBeginInvoke(_form, () => _form.SetSpectra(file, spectra));
                     return true;
+                }
+            }
+        }
+
+        private class DataFileItem
+        {
+            public DataFileItem(string replicateName, MsDataFileUri dataFileUri)
+            {
+                ReplicateName = replicateName;
+                MsDataFileUri = dataFileUri;
+            }
+
+            public string ReplicateName { get; }
+            public MsDataFileUri MsDataFileUri { get; }
+            public override string ToString()
+            {
+                return ReplicateName ?? MsDataFileUri.GetFileName();
+            }
+
+            protected bool Equals(DataFileItem other)
+            {
+                return ReplicateName == other.ReplicateName && Equals(MsDataFileUri, other.MsDataFileUri);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((DataFileItem) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((ReplicateName != null ? ReplicateName.GetHashCode() : 0) * 397) ^ (MsDataFileUri != null ? MsDataFileUri.GetHashCode() : 0);
                 }
             }
         }

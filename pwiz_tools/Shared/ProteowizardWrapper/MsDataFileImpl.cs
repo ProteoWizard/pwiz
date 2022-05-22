@@ -1110,6 +1110,14 @@ namespace pwiz.ProteowizardWrapper
                 level.Where(precursor => precursor.IsolationMz.HasValue)
                     .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
             metadata = metadata.ChangeScanDescription(GetScanDescription(spectrum));
+            IonMobilityValue ionMobilityValue = GetIonMobility(spectrum);
+            if (ionMobilityValue != null)
+            {
+                if (ionMobilityValue.Units == eIonMobilityUnits.compensation_V)
+                {
+                    metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
+                }
+            }
             return metadata;
         }
 

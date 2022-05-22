@@ -207,10 +207,15 @@ namespace pwiz.Skyline.Model.Results
 
         public MsDataFileScanIds LoadMSDataFileScanIds(int fileIndex)
         {
-            return GetResultFileMetadata(fileIndex)?.ToMsDataFileScanIds();
+            return GetOrLoadResultFileMetadata(fileIndex)?.ToMsDataFileScanIds();
         }
 
-        public IResultFileMetadata GetResultFileMetadata(int fileIndex)
+        public ResultFileMetaData GetResultFileMetadata(int fileIndex)
+        {
+            return _rawData.ResultFileDatas?[fileIndex];
+        }
+
+        public IResultFileMetadata GetOrLoadResultFileMetadata(int fileIndex)
         {
             var resultFileData = _rawData.ResultFileDatas?[fileIndex];
 
@@ -485,7 +490,7 @@ namespace pwiz.Skyline.Model.Results
 
         public class RawData : Immutable
         {
-            public RawData(CacheHeaderStruct header, IEnumerable<ChromCachedFile> chromCacheFiles, IList<ResultFileData> resultFileDatas,
+            public RawData(CacheHeaderStruct header, IEnumerable<ChromCachedFile> chromCacheFiles, IList<ResultFileMetaData> resultFileDatas,
                 BlockedArray<ChromGroupHeaderInfo> chromatogramEntries, BlockedArray<ChromTransition> transitions, 
                 FeatureNames scoreTypes, long locationScoreValues, byte[] textIdBytes) : this(header)
             {
@@ -570,9 +575,9 @@ namespace pwiz.Skyline.Model.Results
                 get { return LocationPeaks - LocationScanIds; }
             }
 
-            public ImmutableList<ResultFileData> ResultFileDatas { get; private set; }
+            public ImmutableList<ResultFileMetaData> ResultFileDatas { get; private set; }
 
-            public RawData ChangeResultFileDatas(IEnumerable<ResultFileData> resultFileDatas)
+            public RawData ChangeResultFileDatas(IEnumerable<ResultFileMetaData> resultFileDatas)
             {
                 return ChangeProp(ImClone(this), im => im.ResultFileDatas = ImmutableList.ValueOf(resultFileDatas));
             }
@@ -910,7 +915,7 @@ namespace pwiz.Skyline.Model.Results
                 status));
             if (raw.ChromCacheFiles.Any(file => file.HasResultFileData))
             {
-                var resultFileDatas = new List<ResultFileData>();
+                var resultFileDatas = new List<ResultFileMetaData>();
                 foreach (var chromCachedFile in raw.ChromCacheFiles)
                 {
                     if (!chromCachedFile.HasResultFileData)
@@ -922,7 +927,7 @@ namespace pwiz.Skyline.Model.Results
                     stream.Seek(chromCachedFile.LocationScanIds + cacheHeader.locationScanIds, SeekOrigin.Begin);
                     var byteArray = new byte[chromCachedFile.SizeScanIds];
                     ReadComplete(stream, byteArray, byteArray.Length);
-                    resultFileDatas.Add(ResultFileData.FromByteArray(byteArray));
+                    resultFileDatas.Add(ResultFileMetaData.FromByteArray(byteArray));
                 }
 
                 raw = raw.ChangeResultFileDatas(resultFileDatas);
@@ -934,7 +939,7 @@ namespace pwiz.Skyline.Model.Results
             return raw.LocationScanIds;  // Bytes of chromatogram data
         }
 
-        private IList<ResultFileData> ReadResultFileDatas(Stream stream,
+        private IList<ResultFileMetaData> ReadResultFileDatas(Stream stream,
             CachedFileHeaderStruct cacheHeader,
             IList<ChromCachedFile> chromCachedFiles)
         {
@@ -942,7 +947,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return null;
             }
-            var resultFileDatas = new List<ResultFileData>();
+            var resultFileDatas = new List<ResultFileMetaData>();
             foreach (var chromCachedFile in chromCachedFiles)
             {
                 if (!chromCachedFile.HasResultFileData)
@@ -954,7 +959,7 @@ namespace pwiz.Skyline.Model.Results
                 stream.Seek(chromCachedFile.LocationScanIds + cacheHeader.locationScanIds, SeekOrigin.Begin);
                 var byteArray = new byte[chromCachedFile.SizeScanIds];
                 ReadComplete(stream, byteArray, byteArray.Length);
-                resultFileDatas.Add(ResultFileData.FromByteArray(byteArray));
+                resultFileDatas.Add(ResultFileMetaData.FromByteArray(byteArray));
             }
 
             return resultFileDatas;
@@ -1325,10 +1330,10 @@ namespace pwiz.Skyline.Model.Results
             var listKeepEntries = new BlockedArrayList<ChromGroupHeaderInfo>(
                 ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
             var listKeepCachedFiles = new List<ChromCachedFile>();
-            List<ResultFileData> listKeepResultFileDatas = null;
+            List<ResultFileMetaData> listKeepResultFileDatas = null;
             if (_rawData.ResultFileDatas != null && cacheFormat.FormatVersion >= FORMAT_VERSION_RESULT_FILE_DATA)
             {
-                listKeepResultFileDatas = new List<ResultFileData>();
+                listKeepResultFileDatas = new List<ResultFileMetaData>();
             }
             var listKeepTransitions = new BlockedArrayList<ChromTransition>(
                 ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);

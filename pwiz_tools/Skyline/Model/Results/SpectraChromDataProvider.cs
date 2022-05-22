@@ -560,7 +560,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override IResultFileMetadata ResultFileData
         {
-            get { return new ResultFileData(_spectrumMetadatas); }
+            get { return new ResultFileMetaData(_spectrumMetadatas); }
         }
 
         public override void SetRequestOrder(IList<IList<int>> chromatogramRequestOrder)

@@ -63,6 +63,13 @@ namespace pwiz.Common.Spectra
 
         public double? CollisionEnergy { get; private set; }
 
+        public double? CompensationVoltage { get; private set; }
+
+        public SpectrumMetadata ChangeCompensationVoltage(double? compensationVoltage)
+        {
+            return ChangeProp(ImClone(this), im => im.CompensationVoltage = compensationVoltage);
+        }
+
         public double? ScanWindowLowerLimit { get; private set; }
         public double? ScanWindowUpperLimit { get; private set; }
 
@@ -92,7 +99,8 @@ namespace pwiz.Common.Spectra
                    ScanDescription == other.ScanDescription &&
                    Nullable.Equals(CollisionEnergy, other.CollisionEnergy) &&
                    Nullable.Equals(ScanWindowLowerLimit, other.ScanWindowLowerLimit) &&
-                   Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit);
+                   Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit) &&
+                   Nullable.Equals(CompensationVoltage, other.CompensationVoltage);
         }
 
         public override bool Equals(object obj)
@@ -115,6 +123,7 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanWindowLowerLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
+                hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
                 return hashCode;
             }
         }

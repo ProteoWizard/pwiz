@@ -9,6 +9,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.ProtoBuf;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
@@ -18,15 +19,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
         byte[] ToByteArray();
         MsDataFileScanIds ToMsDataFileScanIds();
     }
-    public class ResultFileData : Immutable, IResultFileMetadata
+    public class ResultFileMetaData : Immutable, IResultFileMetadata
     {
-        public ResultFileData(IEnumerable<SpectrumMetadata> spectrumMetadatas)
+        public ResultFileMetaData(IEnumerable<SpectrumMetadata> spectrumMetadatas)
         {
             SpectrumMetadatas = ImmutableList.ValueOf(spectrumMetadatas);
         }
         public ImmutableList<SpectrumMetadata> SpectrumMetadatas { get; private set; }
 
-        public static ResultFileData FromProtoBuf(ProtoBuf.ResultFileData proto)
+        public static ResultFileMetaData FromProtoBuf(ResultFileMetaDataProto proto)
         {
             var spectrumMetadatas = new List<SpectrumMetadata>();
             var precursors = proto.Precursors.Select(SpectrumPrecursorFromProto).ToList();
@@ -61,11 +62,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 spectrumMetadatas.Add(spectrumMetadata);
             }
 
-            return new ResultFileData(spectrumMetadatas);
+            return new ResultFileMetaData(spectrumMetadatas);
         }
 
         private static SpectrumPrecursor SpectrumPrecursorFromProto(
-            ProtoBuf.ResultFileData.Types.Precursor protoPrecursor)
+            ResultFileMetaDataProto.Types.Precursor protoPrecursor)
         {
             var spectrumPrecursor =
                 new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz, protoPrecursor.TargetMz < 0));
@@ -77,14 +78,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return spectrumPrecursor;
         }
 
-        public ProtoBuf.ResultFileData ToProtoBuf()
+        public ResultFileMetaDataProto ToProtoBuf()
         {
-            var proto = new ProtoBuf.ResultFileData();
+            var proto = new ResultFileMetaDataProto();
             var precursors = new Dictionary<Tuple<int, SpectrumPrecursor>, int>();
             var scanDescriptions = new Dictionary<string, int>();
             foreach (var spectrumMetadata in SpectrumMetadatas)
             {
-                var spectrum = new ProtoBuf.ResultFileData.Types.SpectrumMetadata
+                var spectrum = new ResultFileMetaDataProto.Types.SpectrumMetadata
                 {
                     RetentionTime = spectrumMetadata.RetentionTime,
                 };
@@ -117,7 +118,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         var key = Tuple.Create(msLevel, precursor);
                         if (!precursors.TryGetValue(key, out int precursorIndex))
                         {
-                            var protoPrecursor = new ProtoBuf.ResultFileData.Types.Precursor()
+                            var protoPrecursor = new ResultFileMetaDataProto.Types.Precursor()
                             {
                                 MsLevel = msLevel,
                                 TargetMz = precursor.PrecursorMz.RawValue
@@ -183,9 +184,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return ToProtoBuf().ToByteArray();
         }
 
-        public static ResultFileData FromByteArray(byte[] bytes)
+        public static ResultFileMetaData FromByteArray(byte[] bytes)
         {
-            var proto = new ProtoBuf.ResultFileData();
+            var proto = new ResultFileMetaDataProto();
             proto.MergeFrom(bytes);
             return FromProtoBuf(proto);
         }

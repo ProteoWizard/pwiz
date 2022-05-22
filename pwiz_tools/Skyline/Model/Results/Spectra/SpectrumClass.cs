@@ -46,6 +46,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
             get; private set;
         }
 
+        public double? CompensationVoltage
+        {
+            get;
+            private set;
+        }
+
         public double? ScanWindowWidth { get; private set; }
 
         public Dictionary<string, FileSpectrumInfo> Files { get; }

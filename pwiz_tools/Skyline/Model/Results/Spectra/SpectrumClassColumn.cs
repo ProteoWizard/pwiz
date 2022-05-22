@@ -27,9 +27,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
             MakeColumn(nameof(SpectrumClass.ScanWindowWidth),
                 spectrum => spectrum.ScanWindowUpperLimit - spectrum.ScanWindowLowerLimit);
 
+        public static readonly SpectrumClassColumn CompensationVoltage =
+            MakeColumn(nameof(SpectrumClass.CompensationVoltage),
+                spectrum => spectrum.CompensationVoltage);
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
-            Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth
+            Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage
         });
 
         private Func<SpectrumMetadata, object> _getter;
