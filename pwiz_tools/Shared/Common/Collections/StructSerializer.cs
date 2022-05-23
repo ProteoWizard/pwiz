@@ -37,8 +37,8 @@ namespace pwiz.Common.Collections
     /// <typeparam name="TItem"></typeparam>
     public interface IDirectSerializer<TItem>
     {
-        TItem[] ReadArray(SafeHandle safeHandle, int count);
-        bool WriteArray(SafeHandle safeHandle, TItem[] items);
+        TItem[] ReadArray(FileStream fileStream, int count);
+        bool WriteArray(FileStream fileStream, TItem[] items);
     }
 
     
@@ -162,7 +162,7 @@ namespace pwiz.Common.Collections
             {
                 return null;
             }
-            return DirectSerializer.ReadArray(fileStream.SafeFileHandle, count);
+            return DirectSerializer.ReadArray(fileStream, count);
         }
 
         protected bool TryFastWrite(Stream stream, TItem[] items)
@@ -180,7 +180,7 @@ namespace pwiz.Common.Collections
             {
                 return false;
             }
-            return DirectSerializer.WriteArray(fileStream.SafeFileHandle, items);
+            return DirectSerializer.WriteArray(fileStream, items);
         }
     }
 
