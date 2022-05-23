@@ -653,6 +653,7 @@
     <Compile Include="Model\Results\Spectra\ResultFileMetaData.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumSelector.cs" />

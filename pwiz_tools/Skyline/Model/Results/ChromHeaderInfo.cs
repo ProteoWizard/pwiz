@@ -1538,8 +1538,12 @@ namespace pwiz.Skyline.Model.Results
                 correlation = (float) medianPeakShape.GetCorrelation(timeIntensities);
             }
 
-            var peakShapeValues = new PeakShapeValues((float) peakShapeStatistics.StdDevTime, (float)peakShapeStatistics.Skewness,
-                (float)peakShapeStatistics.Kurtosis, correlation);
+            PeakShapeValues? peakShapeValues = null;
+            if (peakShapeStatistics != null)
+            {
+                peakShapeValues = new PeakShapeValues((float)peakShapeStatistics.StdDevTime, (float)peakShapeStatistics.Skewness,
+                    (float)peakShapeStatistics.Kurtosis, correlation);
+            }
 
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
                 pointsAcrossPeak, peakShapeValues);

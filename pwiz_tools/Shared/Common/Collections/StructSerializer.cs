@@ -180,7 +180,12 @@ namespace pwiz.Common.Collections
             {
                 return false;
             }
-            return DirectSerializer.WriteArray(fileStream.SafeFileHandle, items);
+            bool result = DirectSerializer.WriteArray(fileStream.SafeFileHandle, items);
+            if (result)
+            {
+                fileStream.Seek(0, SeekOrigin.End);
+            }
+            return result;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -43,6 +44,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             ColumnName = columnName;
             _getter = getter;
             _propertyInfo = typeof(SpectrumClass).GetProperty(columnName);
+            ValueType = valueType;
             if (_propertyInfo == null)
             {
                 throw new ArgumentException(string.Format(@"No such property {0}", columnName), nameof(columnName));
@@ -53,6 +55,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     _propertyInfo.PropertyType, valueType));
             }
         }
+
+        public Type ValueType { get; }
 
         private static bool TypesMatch(Type propertyType, Type valueType)
         {
@@ -102,6 +106,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static SpectrumClassColumn MakeColumn<T>(string name, Func<SpectrumMetadata, T> getter)
         {
             return new SpectrumClassColumn(name, key => getter(key), typeof(T));
+        }
+
+        public static SpectrumClassColumn FindColumn(PropertyPath propertyPath)
+        {
+            return ALL.FirstOrDefault(col => Equals(propertyPath, col.PropertyPath));
         }
     }
 }
