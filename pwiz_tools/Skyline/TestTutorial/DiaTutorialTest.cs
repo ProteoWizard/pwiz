@@ -154,6 +154,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new[] {GetTestPath("interact-20130311_DDA_Pit01.pep.xml")}); // Not L10N
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Spectral Library page - input files", 17);
 
             using (new WaitDocumentChange(1, true))
@@ -164,11 +165,12 @@ namespace pwiz.SkylineTestTutorial
                 // "Extract Chromatograms" page
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage ==
                                      ImportPeptideSearchDlg.Pages.chromatograms_page);
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.ChromatogramsDiaPage));    // So that SkylineTester - Forms tab pauses
             var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsDIAControl;
             Assert.IsNotNull(importResults);
             const string prefixKeep = "Pit0";
             if (!IsFullImportMode)
-                {
+            {
                 var noFilesMessage = ShowDialog<MultiButtonMsgDlg>(() => importPeptideSearchDlg.ClickNextButton());
                 OkDialog(noFilesMessage, noFilesMessage.OkDialog);
             }
@@ -180,7 +182,7 @@ namespace pwiz.SkylineTestTutorial
                 string diaDir = Path.Combine(baseDir, "DIA-20_2");
                 var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResults.Browse(diaDir));
                 RunUI(() => openDataFiles.SelectAllFileType(ExtensionTestContext.ExtThermoRaw));
-                PauseForScreenShot("Browse for Results Files form", 18);
+                PauseForScreenShot<OpenDataSourceDialog>("Browse for Results Files form", 18);
                 OkDialog(openDataFiles, openDataFiles.Open);
 
                 PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Extract Chromatograms page", 19);
@@ -193,7 +195,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(prefix.EndsWith(prefixKeep));
                     importResultsNameDlg.Prefix = prefix.Substring(0, prefix.Length - prefixKeep.Length);
                 });
-                PauseForScreenShot("Import Results names form", 20);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results names form", 20);
                 OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
             }
 

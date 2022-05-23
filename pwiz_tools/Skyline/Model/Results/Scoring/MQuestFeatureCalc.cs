@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override float Calculate(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            if (context.Document == null)
+            if (context.Settings == null)
                 return float.NaN;
 
             float maxHeight = float.MinValue;
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 if (summaryPeakData.NodePep.ExplicitRetentionTime != null)
                 {
                     explicitRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTime;
-                    windowRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTimeWindow ?? context.Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
+                    windowRT = summaryPeakData.NodePep.ExplicitRetentionTime.RetentionTimeWindow ?? context.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
                 }
                 if (explicitRT.HasValue && windowRT.HasValue)
                 {
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 else
                 {
                     var fileId = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FileId : null;
-                    var settings = context.Document.Settings;
+                    var settings = context.Settings;
                     var predictor = settings.PeptideSettings.Prediction.RetentionTime;
                     var fullScan = settings.TransitionSettings.FullScan;
                     var seqModified = settings.GetSourceTarget(summaryPeakData.NodePep); 
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // This can really mess up training and peak picking for the standards, since something
                 // like a negative coefficient for delta-RT^2 can result in far away peaks having huge scores.
                 // So, here we limit the delta scores. But, this was too invasive to do for everything.
-                var fullScan = context.Document.Settings.TransitionSettings.FullScan;
+                var fullScan = context.Settings.TransitionSettings.FullScan;
                 if (fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
                     rtDelta = maxDelta;
             }
@@ -244,6 +244,23 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         /// <summary>
+        /// Get ms2 ions used in dotp calculation which may differ from ms2 peak area ions for DDA
+        /// </summary>
+        /// <typeparam name="TData">Peak scoring data type (summary or detail)</typeparam>
+        /// <param name="tranGroupPeakDatas">Transition group peak datas to be scored</param>
+        /// <returns></returns>
+        public static IList<ITransitionPeakData<TData>> GetMs2DotpIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
+        {
+            // Copied because using a lambda/delegate causes allocation in this case (profiled)
+            if (tranGroupPeakDatas.Count == 1)
+                return tranGroupPeakDatas[0].Ms2TranstionDotpData;
+            var listTrans = new List<ITransitionPeakData<TData>>();
+            foreach (var transitionGroupPeakData in tranGroupPeakDatas)
+                listTrans.AddRange(transitionGroupPeakData.Ms2TranstionDotpData);
+            return listTrans;
+        }
+
+        /// <summary>
         /// Get ms2 ions if there are any available, otherwise get the ms1 ions
         /// </summary>
         /// <typeparam name="TData">Peak scoring data type (summary or detail)</typeparam>
@@ -262,19 +279,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public static double GetMaximumProductMassError(PeakScoringContext context)
         {
-            var productMz = context.Document.Settings.TransitionSettings.Instrument.MaxMz;
-            return context.Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(productMz) / 2.0;
+            var productMz = context.Settings.TransitionSettings.Instrument.MaxMz;
+            return context.Settings.TransitionSettings.FullScan.GetProductFilterWindow(productMz) / 2.0;
         }
 
         public static double GetMaximumPrecursorMassError(PeakScoringContext context)
         {
-            var precursorMz = context.Document.Settings.TransitionSettings.Instrument.MaxMz;
-            return context.Document.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(precursorMz) / 2.0;
+            var precursorMz = context.Settings.TransitionSettings.Instrument.MaxMz;
+            return context.Settings.TransitionSettings.FullScan.GetPrecursorFilterWindow(precursorMz) / 2.0;
         }
 
         public static float CalculateIdotp(PeakScoringContext context, IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
-            var tranGroupPeakDatas = GetAnalyteGroups(summaryPeakData);
+            var tranGroupPeakDatas = GetBestAvailableGroups(summaryPeakData);
 
             if (tranGroupPeakDatas.Count == 0)
                 return float.NaN;
@@ -399,8 +416,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData);
 
-            // If there are no light transition groups with library intensities,
-            // then this score does not apply.
+            // If there are no transition groups with library intensities, then this score does not apply.
             if (tranGroupPeakDatas.Count == 0 || tranGroupPeakDatas.All(pd => pd.NodeGroup == null || pd.NodeGroup.LibInfo == null))
                 return float.NaN;
 
@@ -511,14 +527,27 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IPeptidePeakData<ISummaryPeakData> summaryPeakData)
         {
             var tranGroupPeakDatas = GetTransitionGroups(summaryPeakData);
-            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas).Any() ? 
-                base.Calculate(context, summaryPeakData) : 
-                MQuestHelpers.CalculateIdotp(context, summaryPeakData);
+            if (MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas).Any())
+                return base.Calculate(context, summaryPeakData);
+
+            float feature = MQuestHelpers.CalculateIdotp(context, summaryPeakData);
+            // If there are MS2 ions for only dotp values (as in DDA) then add the dotp values together
+            if (MQuestHelpers.GetMs2DotpIonTypes(tranGroupPeakDatas).Any())
+            {
+                // For DDA MS2 spectra may not be sampled at all for the peak of interest
+                // However, when they are sampled, they are usually highly specific because
+                // of the narrow isolation range. So, avoid adding to this score unless
+                // the match is pretty good.
+                float dotp = base.Calculate(context, summaryPeakData);
+                if (dotp >= 0.75)
+                    feature += dotp;
+            }
+            return feature;
         }
 
         protected override IList<ITransitionPeakData<TData>> GetIonTypes<TData>(IList<ITransitionGroupPeakData<TData>> tranGroupPeakDatas)
         {
-            return MQuestHelpers.GetMs2IonTypes(tranGroupPeakDatas);
+            return MQuestHelpers.GetMs2DotpIonTypes(tranGroupPeakDatas);
         }
 
         protected override IList<ITransitionGroupPeakData<TData>> GetTransitionGroups<TData>(

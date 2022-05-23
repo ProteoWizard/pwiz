@@ -35,14 +35,14 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.bindingSourceGrid = new System.Windows.Forms.BindingSource(this.components);
             this.dataGridViewErrors = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.buttonOk = new System.Windows.Forms.Button();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.labelErrors = new System.Windows.Forms.Label();
-            this.cbShowText = new System.Windows.Forms.CheckBox();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LineText = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.buttonOk = new System.Windows.Forms.Button();
+            this.buttonCancel = new System.Windows.Forms.Button();
+            this.labelErrors = new System.Windows.Forms.Label();
+            this.cbShowText = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewErrors)).BeginInit();
             this.SuspendLayout();
@@ -64,32 +64,6 @@
             this.dataGridViewErrors.Name = "dataGridViewErrors";
             this.dataGridViewErrors.ReadOnly = true;
             this.dataGridViewErrors.RowHeadersVisible = false;
-            // 
-            // buttonOk
-            // 
-            resources.ApplyResources(this.buttonOk, "buttonOk");
-            this.buttonOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.buttonOk.Name = "buttonOk";
-            this.buttonOk.UseVisualStyleBackColor = true;
-            // 
-            // buttonCancel
-            // 
-            resources.ApplyResources(this.buttonCancel, "buttonCancel");
-            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
-            // 
-            // labelErrors
-            // 
-            resources.ApplyResources(this.labelErrors, "labelErrors");
-            this.labelErrors.Name = "labelErrors";
-            // 
-            // cbShowText
-            // 
-            resources.ApplyResources(this.cbShowText, "cbShowText");
-            this.cbShowText.Name = "cbShowText";
-            this.cbShowText.UseVisualStyleBackColor = true;
-            this.cbShowText.CheckedChanged += new System.EventHandler(this.cbShowText_CheckedChanged);
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -127,6 +101,32 @@
             resources.ApplyResources(this.LineText, "LineText");
             this.LineText.Name = "LineText";
             this.LineText.ReadOnly = true;
+            // 
+            // buttonOk
+            // 
+            resources.ApplyResources(this.buttonOk, "buttonOk");
+            this.buttonOk.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.buttonOk.Name = "buttonOk";
+            this.buttonOk.UseVisualStyleBackColor = true;
+            // 
+            // buttonCancel
+            // 
+            resources.ApplyResources(this.buttonCancel, "buttonCancel");
+            this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.buttonCancel.Name = "buttonCancel";
+            this.buttonCancel.UseVisualStyleBackColor = true;
+            // 
+            // labelErrors
+            // 
+            resources.ApplyResources(this.labelErrors, "labelErrors");
+            this.labelErrors.Name = "labelErrors";
+            // 
+            // cbShowText
+            // 
+            resources.ApplyResources(this.cbShowText, "cbShowText");
+            this.cbShowText.Name = "cbShowText";
+            this.cbShowText.UseVisualStyleBackColor = true;
+            this.cbShowText.CheckedChanged += new System.EventHandler(this.cbShowText_CheckedChanged);
             // 
             // ImportTransitionListErrorDlg
             // 

@@ -53,13 +53,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 buildLibrary.LibraryName = "iRT standard peptides test";
                 buildLibrary.LibraryPath = outBlib;
-                buildLibrary.LibraryCutoff = 0.95;
                 buildLibrary.IrtStandard = IrtStandard.BIOGNOSYS_11;
                 //buildLibrary.PreferEmbeddedSpectra = true;
                 buildLibrary.OkWizardPage();
 
                 buildLibrary.InputFileNames = new[] {searchResults};
             });
+            WaitForConditionUI(() => buildLibrary.Grid.ScoreTypesLoaded);
+            RunUI(() => buildLibrary.Grid.SetScoreThreshold(0.05));
 
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
             var preferEmbeddedDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -84,13 +85,15 @@ namespace pwiz.SkylineTestFunctional
             // Import peptide search
             RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("test.sky")));
             var import = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            RunUI(() => { import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults }); });
+            WaitForConditionUI(() => import.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
             RunUI(() =>
             {
-                import.BuildPepSearchLibControl.CutOffScore = 0.95;
-                import.BuildPepSearchLibControl.AddSearchFiles(new[] { searchResults });
+                import.BuildPepSearchLibControl.Grid.SetScoreThreshold(0.05);
                 import.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 //import.BuildPepSearchLibControl.PreferEmbeddedSpectra = true;
             });
+            WaitForConditionUI(() => import.IsNextButtonEnabled);
             VerifyAddIrts(ShowDialog<AddIrtPeptidesDlg>(() => import.ClickNextButton()));
             OkDialog(import, import.CancelDialog);
         }

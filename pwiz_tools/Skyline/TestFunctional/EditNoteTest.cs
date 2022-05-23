@@ -131,6 +131,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
             // Set matching annotations to match the protein, except for the noteText which is different.
+            var doc = SkylineWindow.Document;
             var editNoteDlg1 = ShowDialog<EditNoteDlg>(SkylineWindow.EditNote);
             Assert.IsTrue(SetAnnotationValue(editNoteDlg1, PROTEINS_AND_PEPTIDES, true));
             RunUI(() =>
@@ -146,6 +147,7 @@ namespace pwiz.SkylineTestFunctional
                 };
             });
             WaitForClosedForm(editNoteDlg1);
+            WaitForDocumentChange(doc);
             RunDlg<EditNoteDlg>(SkylineWindow.EditNote, editNoteDlg2 =>
             {
                 // Test annotation values for multiple nodes merge correctly.

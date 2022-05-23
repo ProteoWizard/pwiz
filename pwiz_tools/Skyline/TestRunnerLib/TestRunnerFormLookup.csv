@@ -28,6 +28,7 @@ BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 CalibrationForm,TestCalibration
+CandidatePeakForm,TestCandidatePeaks
 ChangeIrtPeptidesDlg,IrtFunctionalTest
 ChooseFormatDlg,TestGroupComparisonPivotEditor
 ChooseIrtStandardPeptidesDlg,TestAssayLibraryImport

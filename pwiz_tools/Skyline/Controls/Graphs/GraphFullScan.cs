@@ -360,8 +360,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
                 if (transition.Source != _msDataFileScanHelper.Source)
                     continue;
-                var color1 = Blend(GetTransitionColor(transition), Color.White, 0.60);
-                var color2 = Blend(GetTransitionColor(transition), Color.White, 0.95);
+                var color1 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.60);
+                var color2 = GraphHelper.Blend(GetTransitionColor(transition), Color.White, 0.95);
                 var extractionBox = new BoxObj(
                     transition.ProductMz - transition.ExtractionWidth.Value / 2,
                     0.0,
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Tag = i
                     };
                     label.FontSpec.Border.IsVisible = false;
-                    label.FontSpec.FontColor = Blend(GetTransitionColor(transition), Color.Black, 0.30);
+                    label.FontSpec.FontColor = GraphHelper.Blend(GetTransitionColor(transition), Color.Black, 0.30);
                     label.FontSpec.IsBold = true;
                     label.FontSpec.Fill = new Fill(Color.FromArgb(180, Color.White));
                     GraphPane.GraphObjList.Add(label);
@@ -748,7 +748,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(stateProvider);
                 //find out if the current selection belongs to the same precursor as the loaded MS spectrum
                 var dataPrecursor = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(t => (t.Id as Transition)?.IonType == IonType.precursor);
-                selectionMatch = ReferenceEquals(selection.Precursor?.Id, (dataPrecursor?.Id as Transition)?.Group);
+                selectionMatch = ReferenceEquals(selection.NodeTranGroup?.Id, (dataPrecursor?.Id as Transition)?.Group);
             }
 
             var currentTransition =
@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePath != null) // Make sure user hasn't removed node since last update
                 {
                     var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
-                        selectionMatch ? selection.Transition : null);
+                        selectionMatch ? selection.NodeTran : null);
                     _graphHelper.AddSpectrum(graphItem, false);
                 }
 
@@ -900,14 +900,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 minIonMobility = Math.Min(minIonMobility, spectrumMinMobility);
                 maxIonMobility = Math.Max(maxIonMobility, spectrumMaxMobility);
             }
-        }
-
-        private Color Blend(Color baseColor, Color blendColor, double blendAmount)
-        {
-            return Color.FromArgb(
-                (int) (baseColor.R*(1 - blendAmount) + blendColor.R*blendAmount),
-                (int) (baseColor.G*(1 - blendAmount) + blendColor.G*blendAmount),
-                (int) (baseColor.B*(1 - blendAmount) + blendColor.B*blendAmount));
         }
 
         private void ClearGraph()
@@ -1336,6 +1328,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public double XAxisMax { get { return GraphPane.XAxis.Scale.Max; }}
         public double YAxisMin { get { return GraphPane.YAxis.Scale.Min; }}
         public double YAxisMax { get { return GraphPane.YAxis.Scale.Max; }}
+
+        public bool IsScanTypeSelected(ChromSource source)
+        {
+            return string.Equals(comboBoxScanType.SelectedItem.ToString(),
+                _msDataFileScanHelper.NameFromSource(source));
+        }
 
         public void SelectScanType(ChromSource source)
         {

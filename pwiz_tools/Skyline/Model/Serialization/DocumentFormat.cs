@@ -90,8 +90,10 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_21_11 = new DocumentFormat(21.11); // Import Time
         public static readonly DocumentFormat VERSION_21_12 = new DocumentFormat(21.12); // Add synchronized integration, auto-train peak scoring model
         public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_21_2;
-
+        public static readonly DocumentFormat VERSION_22_1 = new DocumentFormat(22.1); // Add Cu' to list of supported heavy isotopes
+        public static readonly DocumentFormat VERSION_22_11 = new DocumentFormat(22.11); // zh and zhh ion types added to the schema.
+        public static readonly DocumentFormat VERSION_22_12 = new DocumentFormat(22.12); // ignore_sim_scans added
+        public static readonly DocumentFormat CURRENT = VERSION_22_12;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

@@ -82,8 +82,8 @@ namespace pwiz.Skyline.SettingsUI
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
 
             // Populate the small mol adduct filter helper menu
-            AppendAdductMenus(contextMenuStripPrecursorAdduct, true, precursorAdductStripMenuItem_Click);
-            AppendAdductMenus(contextMenuStripFragmentAdduct, false, fragmentAdductStripMenuItem_Click);
+            AppendAdductMenus(contextMenuStripPrecursorAdduct, precursorAdductStripMenuItem_Click);
+            AppendAdductMenus(contextMenuStripFragmentAdduct, fragmentAdductStripMenuItem_Click);
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnPrecursorAdduct.Image = bm;
@@ -328,6 +328,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return FullScanSettingsControl.PrecursorResMz; }
             set { FullScanSettingsControl.PrecursorResMz = value; }
+        }
+
+        public bool IgnoreSimScans
+        {
+            get { return FullScanSettingsControl.IgnoreSimScans; }
+            set { FullScanSettingsControl.IgnoreSimScans = value; }
         }
 
         public bool UseSelectiveExtraction
@@ -1152,7 +1158,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         // Append adduct picker submenus, one per charge 1,2,3,-1,-2,-3
-        public static void AppendAdductMenus(ContextMenuStrip menuParent, bool showOnlyAdductsWithMass, EventHandler adductStripMenuItem_Click)
+        public static void AppendAdductMenus(ContextMenuStrip menuParent, EventHandler adductStripMenuItem_Click)
         {
             var insertOffset = menuParent.Items.Count == 0 ? 0 : 1; // Leave Help as last item
 
@@ -1170,14 +1176,11 @@ namespace pwiz.Skyline.SettingsUI
                 };
                 menuParent.Items.Insert(menuParent.Items.Count - insertOffset, menuItem);
                 var cascadeTop = menuItem;
-                if (!showOnlyAdductsWithMass)
+                // Charge-only adducts first
+                foreach (var adduct in AdductMenuOrder(Adduct.COMMON_CHARGEONLY_ADDUCTS, charge))
                 {
-                    // Charge-only adducts first
-                    foreach (var adduct in AdductMenuOrder(Adduct.COMMON_CHARGEONLY_ADDUCTS, charge))
-                    {
-                        AddAdductMenuItem(menuItem, adduct.ToString(), adductStripMenuItem_Click);
-                        adductsInMenu.Add(adduct);
-                    }
+                    AddAdductMenuItem(menuItem, adduct.ToString(), adductStripMenuItem_Click);
+                    adductsInMenu.Add(adduct);
                 }
                 // All the adducts from Fiehn lab list
                 foreach (var adduct in AdductMenuOrder(Adduct.DEFACTO_STANDARD_ADDUCTS, charge))

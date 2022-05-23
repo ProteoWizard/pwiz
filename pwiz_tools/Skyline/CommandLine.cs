@@ -798,7 +798,7 @@ namespace pwiz.Skyline
                     // Publish document to the given folder on the Panorama Server
                     var panoramaHelper = new PanoramaPublishHelper(_out);
                     return panoramaHelper.PublishToPanorama(commandArgs.PanoramaServer, _doc, _skylineFile,
-                        commandArgs.PanoramaFolder);
+                        commandArgs.PanoramaFolder, commandArgs.SharedFileType);
                 }
                 else
                 {
@@ -2164,7 +2164,7 @@ namespace pwiz.Skyline
                 {
                     modelAndFeatures = CreateScoringModel(commandArgs.ReintegrateModelName,
                         commandArgs.ReintegrateModelType,
-                        commandArgs.ExcludeFeatures,
+                        new FeatureCalculators(commandArgs.ExcludeFeatures),
                         commandArgs.IsDecoyModel,
                         commandArgs.IsSecondBestModel,
                         commandArgs.IsLogTraining,
@@ -2210,7 +2210,7 @@ namespace pwiz.Skyline
         }
 
         private ModelAndFeatures CreateScoringModel(string modelName, CommandArgs.ScoringModelType modelType,
-            IList<IPeakFeatureCalculator> excludeFeatures, bool decoys, bool secondBest, bool log,
+            FeatureCalculators excludeFeatures, bool decoys, bool secondBest, bool log,
             IList<double> modelCutoffs, int? modelIterationCount)
         {
             _out.WriteLine(Resources.CommandLine_CreateScoringModel_Creating_scoring_model__0_, modelName);
@@ -2226,8 +2226,8 @@ namespace pwiz.Skyline
                     _doc.GetPeakFeatures(scoringModel.PeakFeatureCalculators, progressMonitor));
 
                 // Get scores for target and decoy groups.
-                List<IList<float[]>> targetTransitionGroups;
-                List<IList<float[]>> decoyTransitionGroups;
+                List<IList<FeatureScores>> targetTransitionGroups;
+                List<IList<FeatureScores>> decoyTransitionGroups;
                 targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
                 // If decoy box is checked and no decoys, throw an error
                 if (decoys && decoyTransitionGroups.Count == 0)
@@ -2237,7 +2237,7 @@ namespace pwiz.Skyline
                 }
                 // Use decoys for training only if decoy box is checked
                 if (!decoys)
-                    decoyTransitionGroups = new List<IList<float[]>>();
+                    decoyTransitionGroups = new List<IList<FeatureScores>>();
 
                 // Set intial weights based on previous model (with NaN's reset to 0)
                 var initialWeights = new double[scoringModel.PeakFeatureCalculators.Count];
@@ -2278,7 +2278,7 @@ namespace pwiz.Skyline
         }
 
         private PeakScoringModelSpec CreateUntrainedScoringModel(string modelName, CommandArgs.ScoringModelType modelType,
-            IList<IPeakFeatureCalculator> excludeFeatures, bool decoys, bool secondBest)
+            FeatureCalculators excludeFeatures, bool decoys, bool secondBest)
         {
             if (modelType == CommandArgs.ScoringModelType.Skyline)
             {
@@ -2301,7 +2301,7 @@ namespace pwiz.Skyline
                 }
 
                 // Excluding any requested by the caller
-                calcs = calcs.Where(c => excludeFeatures.All(c2 => c.GetType() != c2.GetType())).ToArray();
+                calcs = new FeatureCalculators(calcs.Where(c => excludeFeatures.IndexOf(c) < 0));
             }
 
             return new MProphetPeakScoringModel(modelName, (LinearModelParams) null, calcs, decoys, secondBest);
@@ -3620,14 +3620,15 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public bool PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder)
+            public bool PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder, ShareType selectedShareType)
             {
-                ShareType shareType;
                 try
                 {
                     WebPanoramaPublishClient publishClient = new WebPanoramaPublishClient();
-                    shareType = publishClient.DecideShareType(new FolderInformation(panoramaServer, true),
-                        document);
+                    // If the Panorama server does not support the skyd version of the document, change the Skyline version to the 
+                    // max version supported by the server.
+                    selectedShareType = publishClient.DecideShareTypeVersion(new FolderInformation(panoramaServer, true),
+                        document, selectedShareType);
                 }
                 catch (PanoramaServerException panoramaServerException)
                 {
@@ -3636,7 +3637,7 @@ namespace pwiz.Skyline
                 }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
                 var published = false;
-                if (ShareDocument(document, documentPath, zipFilePath, shareType, _statusWriter))
+                if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter))
                 {
                     published = PublishDocToPanorama(panoramaServer, zipFilePath, panoramaFolder);
                 }

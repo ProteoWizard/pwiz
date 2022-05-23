@@ -854,12 +854,13 @@ namespace pwiz.Skyline.Util
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
+            var hint = $@"File.Delete({path})";
             if (ignoreExceptions)
             {
                 try
                 {
                     if (path != null && File.Exists(path))
-                        Helpers.TryTwice(() => File.Delete(path));
+                        Helpers.TryTwice(() => File.Delete(path), hint);
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch (Exception)
@@ -872,7 +873,7 @@ namespace pwiz.Skyline.Util
 
             try
             {
-                Helpers.TryTwice(() => File.Delete(path));
+                Helpers.TryTwice(() => File.Delete(path), hint);
             }
             catch (ArgumentException e)
             {
@@ -953,7 +954,10 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete({path})");
+                }
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }
@@ -1040,7 +1044,8 @@ namespace pwiz.Skyline.Util
     {
         public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer)
         {
-            inStream.TransferBytes(outStream, bytesToTransfer, new byte[0x40000]); // 256K
+            int bufferSize = (int)Math.Min(bytesToTransfer, 0x40000); // 256K;
+            inStream.TransferBytes(outStream, bytesToTransfer, new byte[bufferSize]);
         }
 
         public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer, byte[] buffer)
@@ -1178,10 +1183,10 @@ namespace pwiz.Skyline.Util
         /// <param name="fileName">File path to the final destination</param>
         /// <param name="createStream">If true, create a Stream for the temporary file</param>
         /// <throws>IOException</throws>
-		public FileSaver(string fileName, bool createStream = false)
+        public FileSaver(string fileName, bool createStream = false)
             : this(fileName, FileStreamManager.Default, createStream)
-		{
-		}
+        {
+        }
 
         /// <summary>
         /// Construct an instance of <see cref="FileSaver"/> to manage saving to a temporary
@@ -1197,14 +1202,14 @@ namespace pwiz.Skyline.Util
 
             RealName = fileName;
 
-		    string dirName = Path.GetDirectoryName(fileName);
-		    string tempName = _streamManager.GetTempFileName(dirName, TEMP_PREFIX);
+            string dirName = Path.GetDirectoryName(fileName);
+            string tempName = _streamManager.GetTempFileName(dirName, TEMP_PREFIX);
             // If the directory name is returned, then starting path was bogus.
             if (!Equals(dirName, tempName))
                 SafeName = tempName;
             if (createStream)
                 CreateStream();
-		}
+        }
 
         public void CreateStream()
         {
@@ -1282,10 +1287,10 @@ namespace pwiz.Skyline.Util
         public bool Commit(IPooledStream streamDest)
         {
             // This is where the file that got written is renamed to the desired file.
-	        // Dispose() will do any necessary temporary file clean-up.
+            // Dispose() will do any necessary temporary file clean-up.
 
-	        if (string.IsNullOrEmpty(SafeName))
-		        return false;
+            if (string.IsNullOrEmpty(SafeName))
+                return false;
 
             if (_stream != null)
             {
@@ -1301,7 +1306,7 @@ namespace pwiz.Skyline.Util
 //                _streamManager.Commit(baseMatchFile, Path.ChangeExtension(RealName, baseMatchFile.Substring(SafeName.LastIndexOf('.'))), null);
 //            }
 
-        	Dispose();
+            Dispose();
 
             return true;
         }

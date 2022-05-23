@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -358,7 +359,14 @@ namespace pwiz.Skyline.Controls
                     _resultsIndex = settings.HasResults
                         ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
                         : 0;
-                    _normalizeOption = NormalizeOption.Constrain(settings, _normalizeOption);
+                    if (IsSupportedNormalizeOption(_normalizeOption))
+                    {
+                        _normalizeOption = NormalizeOption.Constrain(settings, _normalizeOption);
+                    }
+                    else
+                    {
+                        _normalizeOption = NormalizeOption.RatioToFirstStandard(settings);
+                    }
                 }
 
                 BeginUpdateMS();
@@ -462,6 +470,12 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private static bool IsSupportedNormalizeOption(NormalizeOption normalizeOption)
+        {
+            return normalizeOption == NormalizeOption.GLOBAL_STANDARDS ||
+                   normalizeOption?.NormalizationMethod is NormalizationMethod.RatioToLabel;
+        }
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NormalizeOption NormalizeOption
@@ -469,7 +483,7 @@ namespace pwiz.Skyline.Controls
             get { return _normalizeOption; }
             set
             {
-                if (value == NormalizeOption.GLOBAL_STANDARDS || value.IsRatioToLabel)
+                if (IsSupportedNormalizeOption(value))
                 {
                     if (_normalizeOption != value)
                     {

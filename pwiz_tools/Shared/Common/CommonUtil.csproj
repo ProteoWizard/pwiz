@@ -137,6 +137,7 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="SystemUtil\ProgressHandler.cs" />
     <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />
     <Compile Include="SystemUtil\ParallelEx.cs" />
+    <Compile Include="SystemUtil\PollingCancellationToken.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />

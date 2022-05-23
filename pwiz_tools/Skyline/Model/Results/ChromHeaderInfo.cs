@@ -184,6 +184,15 @@ namespace pwiz.Skyline.Model.Results
 
         private const byte NO_MAX_PEAK = 0xFF;
 
+        public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
+            int compressedSize, int uncompressedSize,
+            int numPoints, FlagValues flags, int statusId, int statusRank, float? startTime, float? endTime,
+            double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
+            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags, statusId,
+                statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+        {
+        }
+
         /// <summary>
         /// Constructs header struct with TextIdIndex and TextIdCount left to be initialized
         /// in a subsequent call to <see cref="CalcTextIdIndex"/>.
@@ -1033,11 +1042,12 @@ namespace pwiz.Skyline.Model.Results
         private readonly float _backgroundArea;
         private readonly float _height;
         private readonly float _fwhm;
-        private uint _flagBits;
+        private FlagValues _flagValues;
+        private short _massError;
         private readonly short _pointsAcross;
 
         [Flags]
-        public enum FlagValues
+        public enum FlagValues : ushort
         {
             degenerate_fwhm =       0x0001,
             forced_integration =    0x0002,
@@ -1048,7 +1058,6 @@ namespace pwiz.Skyline.Model.Results
             used_id_alignment =     0x0040,
 
             // This is the last available flag
-            // The high word of the flags is reserved for delta-mass-error
             mass_error_known =      0x8000,
         }
 
@@ -1072,72 +1081,317 @@ namespace pwiz.Skyline.Model.Results
             return (short) Math.Round(f*10);
         }
 
-        /// <summary>
-        /// Constructs a ChromPeak with the specified start and end times and no background subtraction.
-        /// </summary>
-        public ChromPeak(TimeIntensities timeIntensities, float startTime, float endTime, FlagValues flagValues)
+        public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
         {
-            int pointsAcrossThePeak = 0;
-            double totalArea = 0;
-            double totalMassError = 0;
-            double apexTime = 0;
-            double apexHeight = 0;
+            _retentionTime = retentionTime;
+            _startTime = startTime;
+            _endTime = endTime;
+            _area = area;
+            _backgroundArea = backgroundArea;
+            _height = height;
+            _fwhm = fwhm;
+            if (massError.HasValue)
+            {
+                flagValues |= FlagValues.mass_error_known;
+                _massError = To10x(massError.Value);
+            }
+            else
+            {
+                flagValues &= ~FlagValues.mass_error_known;
+                _massError = 0;
+            }
 
+            _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
+            _flagValues = flagValues;
+        }
+
+        public ChromPeak(IPeakFinder finder,
+                         IFoundPeak peak,
+                         FlagValues flags,
+                         TimeIntensities timeIntensities,
+                         IList<float> rawTimes)
+            : this()
+        {
+            var times = timeIntensities.Times;
+            if (times.Count == 0)
+            {
+                return;
+            }
+            var intensities = timeIntensities.Intensities;
+            var massErrors = timeIntensities.MassErrors;
+            // Get the interval being used to convert from Crawdad index based numbers
+            // to numbers that are normalized with respect to time.
+            double interval;
+            if (peak.StartIndex + 1 < timeIntensities.NumPoints)
+            {
+                interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
+            }
+            else
+            {
+                interval = 0;
+            }
+
+            _retentionTime = times[peak.TimeIndex];
+            _startTime = times[peak.StartIndex];
+            _endTime = times[peak.EndIndex];
+
+            if ((flags & FlagValues.time_normalized) == 0 || finder.IsHeightAsArea)
+            {
+                _area = peak.Area;
+                _backgroundArea = peak.BackgroundArea;
+            }
+            else
+            {
+                // Normalize area numbers by time in seconds, since this will be the least
+                // dramatic change from Skyline v0.5, when the Crawdad index based areas
+                // were used directly.
+                double intervalSeconds = interval * 60;
+
+                _area = (float)(peak.Area * intervalSeconds);
+                _backgroundArea = (float) (peak.BackgroundArea * intervalSeconds);
+            }
+            _height = peak.Height;
+            _fwhm = (float) (peak.Fwhm * interval);
+            if (float.IsNaN(Fwhm))
+                _fwhm = 0;
+            _flagValues = flags;
+            if (peak.FwhmDegenerate)
+                _flagValues |= FlagValues.degenerate_fwhm;
+
+            // Calculate peak truncation as a peak extent at either end of the
+            // recorded values, where the intensity is higher than the other extent
+            // by more than 1% of the peak height.
+            _flagValues |= FlagValues.peak_truncation_known;
+            const double truncationTolerance = 0.01;
+            double deltaIntensityExtents = (intensities[peak.EndIndex] - intensities[peak.StartIndex]) / Height;
+            if ((peak.StartIndex == 0 && deltaIntensityExtents < -truncationTolerance) ||
+                (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
+            {
+                _flagValues |= FlagValues.peak_truncated;
+            }
+
+            _massError = 0;
+            if (massErrors != null)
+            {
+                // Mass error is mean of mass errors in the peak, weighted by intensity
+                double massError = 0;
+                double totalIntensity = 0;
+                // Subtract background intensity to reduce noise contribution to this mean value
+                double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
+                for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
+                {
+                    double intensity = intensities[i] - backgroundIntensity;
+                    if (intensity <= 0)
+                        continue;
+
+                    double massErrorLocal = massErrors[i];
+                    totalIntensity += intensity;
+                    massError += (massErrorLocal - massError)*intensity/totalIntensity;
+                }
+                // Only if intensity exceded the background at least once
+                if (totalIntensity > 0)
+                {
+                    _flagValues |= FlagValues.mass_error_known;
+                    _massError = To10x(massError);
+                }
+            }
+            if (rawTimes != null)
+            {
+                int startIndex = CollectionUtil.BinarySearch(rawTimes, StartTime);
+                if (startIndex < 0)
+                {
+                    startIndex = ~startIndex;
+                }
+                int endIndex = CollectionUtil.BinarySearch(rawTimes, EndTime);
+                if (endIndex < 0)
+                {
+                    endIndex = ~endIndex - 1;
+                }
+                int pointsAcross = endIndex - startIndex + 1;
+                if (pointsAcross >= 0)
+                {
+                    _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
+                }
+            }
+        }
+
+        public float RetentionTime { get { return _retentionTime; } }
+        public float StartTime { get { return _startTime; } }
+        public float EndTime { get { return _endTime; } }
+        public float Area { get { return _area; } }
+        public float BackgroundArea { get { return _backgroundArea; } }
+        public float Height { get { return _height; } }
+        public float Fwhm { get { return _fwhm; } }
+        public short? PointsAcross { get { return _pointsAcross == 0 ? (short?)null : _pointsAcross; } }
+
+        public override string ToString()
+        {
+            return string.Format(@"rt={0:F02}, area={1}", RetentionTime, Area);
+        }
+
+        public FlagValues Flags
+        {
+            get
+            {
+                return _flagValues;
+            }
+        }
+
+        public bool IsEmpty { get { return EndTime == 0; } }
+
+        public bool ContainsTime(float retentionTime)
+        {
+            return StartTime <= retentionTime && retentionTime <= EndTime;
+        }
+
+        public bool IsFwhmDegenerate
+        {
+            get { return (Flags & FlagValues.degenerate_fwhm) != 0; }
+        }
+
+        public bool IsForcedIntegration
+        {
+            get { return (Flags & FlagValues.forced_integration) != 0; }
+        }
+
+        public PeakIdentification Identified
+        {
+            get
+            {
+                if ((Flags & FlagValues.contains_id) == 0)
+                    return PeakIdentification.FALSE;
+                else if ((Flags & FlagValues.used_id_alignment) == 0)
+                    return PeakIdentification.TRUE;
+                return PeakIdentification.ALIGNED;
+            }
+        }
+
+        public bool? IsTruncated
+        {
+            get
+            {
+                if ((Flags & FlagValues.peak_truncation_known) == 0)
+                    return null;
+                return (Flags & FlagValues.peak_truncated) != 0;
+            }
+        }
+
+        public float? MassError
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.mass_error_known) == 0)
+                    return null;
+                // Mass error is stored as 10x the calculated mass error in PPM.
+                return _massError / 10f;
+            }
+        }
+
+        /// <summary>
+        /// Removes the mass error bits from the upper 16 in order to keep
+        /// from writing mass errors into older cache file formats until
+        /// the v5 format version is ready.
+        /// </summary>
+        public ChromPeak RemoveMassError()
+        {
+            var copy = this;
+            copy._flagValues = Flags & ~FlagValues.mass_error_known;
+            copy._massError = 0;
+            return copy;
+        }
+
+        public static float Intersect(ChromPeak peak1, ChromPeak peak2)
+        {
+            return Intersect(peak1.StartTime, peak1.EndTime, peak2.StartTime, peak2.EndTime);
+        }
+
+        public static float Intersect(float startTime1, float endTime1, float startTime2, float endTime2)
+        {
+            return Math.Min(endTime1, endTime2) - Math.Max(startTime1, startTime2);
+        }
+
+        public static int GetStructSize(CacheFormatVersion formatVersion)
+        {
+            if (formatVersion < CacheFormatVersion.Twelve)
+            {
+                return 32;
+            }
+            return 36;
+        }
+
+        public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
+        {
+            return new StructSerializer<ChromPeak>
+            {
+                ItemSizeOnDisk = chromPeakSize,
+                DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
+            };
+        }
+
+        public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
+            float endTime, FlagValues flags)
+        {
+            int pointsAcrossPeak = 0;
             int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
             if (startIndex < 0)
             {
                 startIndex = ~startIndex;
+                timeIntensities = timeIntensities.InterpolateTime(startTime);
+                Assume.AreEqual(startTime, timeIntensities.Times[startIndex]);
+                pointsAcrossPeak--;
             }
 
-            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
+            int endIndex = CollectionUtil.BinarySearch(timeIntensities.Times, endTime);
+            if (endIndex < 0)
             {
-                double time = timeIntensities.Times[index];
-                double prevTime = startTime;
-                if (index > 0)
+                endIndex = ~endIndex;
+                timeIntensities = timeIntensities.InterpolateTime(endTime);
+                Assume.AreEqual(endTime, timeIntensities.Times[endIndex]);
+                pointsAcrossPeak--;
+            }
+            pointsAcrossPeak += endIndex - startIndex + 1;
+            double totalArea = 0;
+            double totalMassError = 0;
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                double width = (timeIntensities.Times[i + 1] - timeIntensities.Times[i]) * 60;
+                double intensity1 = timeIntensities.Intensities[i];
+                double intensity2 = timeIntensities.Intensities[i + 1];
+                totalArea += (intensity1 + intensity2) * width / 2;
+                if (timeIntensities.MassErrors != null)
                 {
-                    prevTime = Math.Max(prevTime, (time + timeIntensities.Times[index - 1]) / 2);
-                }
-
-                double nextTime = endTime;
-                if (index < timeIntensities.NumPoints - 1)
-                {
-                    nextTime = Math.Min(nextTime, (time + timeIntensities.Times[index + 1]) / 2);
-                }
-
-                float intensity = timeIntensities.Intensities[index];
-                if (nextTime > prevTime)
-                {
-                    double width = nextTime - prevTime;
-                    double area = intensity * width * 60;
-                    totalArea += area;
-                    if (timeIntensities.MassErrors != null)
-                    {
-                        totalMassError += area * timeIntensities.MassErrors[index];
-                    }
-                }
-
-                if (startTime <= time && endTime >= time)
-                {
-                    pointsAcrossThePeak++;
-                    if (intensity > apexHeight)
-                    {
-                        apexHeight = intensity;
-                        apexTime = time;
-                    }
-                }
-
-                if (time >= endTime)
-                {
-                    break;
+                    totalMassError +=
+                        (intensity1 * timeIntensities.MassErrors[i] + intensity2 * timeIntensities.MassErrors[i + 1]) *
+                        width / 2;
                 }
             }
 
+            double apexTime, apexHeight;
+            if (totalArea == 0)
+            {
+                apexTime = (startTime + endTime) / 2;
+                apexHeight = 0;
+            }
+            else
+            {
+                apexHeight = timeIntensities.Intensities[startIndex];
+                apexTime = timeIntensities.Times[startIndex];
+                for (int i = startIndex + 1; i <= endIndex; i++)
+                {
+                    if (timeIntensities.Intensities[i] > apexHeight)
+                    {
+                        apexTime = timeIntensities.Times[i];
+                        apexHeight = timeIntensities.Intensities[i];
+                    }
+                }
+            }
             // Determine the full width at half max
             bool fwhmDegenerate = false;
             double? halfMaxStart = null;
             double? halfMaxEnd = null;
             var halfHeight = apexHeight / 2;
-            for (int index = startIndex; index < timeIntensities.NumPoints; index++)
+            for (int index = startIndex; index <= endIndex; index++)
             {
                 double time = timeIntensities.Times[index];
                 double intensity = timeIntensities.Intensities[index];
@@ -1194,257 +1448,33 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            _area = (float) totalArea;
-            _startTime = startTime;
-            _endTime = endTime;
-            _height = (float) apexHeight;
-            _backgroundArea = 0;
-            _pointsAcross = (short)Math.Min(pointsAcrossThePeak, ushort.MaxValue);
-            _retentionTime = (float) apexTime;
-            _flagBits = 0;
-            if (halfMaxStart.HasValue)
-            {
-                _fwhm = (float) (halfMaxEnd - halfMaxStart);
-            }
-            else
-            {
-                _fwhm = 0;
-            }
-            if (null != timeIntensities.MassErrors && totalArea > 0)
-            {
-                flagValues |= FlagValues.mass_error_known;
-                FlagBits = ((uint)To10x(totalMassError / totalArea)) << 16;
-            }
-
-
-            FlagBits |= (uint) flagValues;
             if (fwhmDegenerate)
             {
-                FlagBits |= (uint) FlagValues.degenerate_fwhm;
-            }
-        }
-
-        public ChromPeak(IPeakFinder finder,
-                         IFoundPeak peak,
-                         FlagValues flags,
-                         TimeIntensities timeIntensities,
-                         IList<float> rawTimes)
-            : this()
-        {
-            var times = timeIntensities.Times;
-            if (times.Count == 0)
-            {
-                return;
-            }
-            var intensities = timeIntensities.Intensities;
-            var massErrors = timeIntensities.MassErrors;
-            // Get the interval being used to convert from Crawdad index based numbers
-            // to numbers that are normalized with respect to time.
-            double interval;
-            if (peak.StartIndex + 1 < timeIntensities.NumPoints)
-            {
-                interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
-            }
-            else
-            {
-                interval = 0;
-            }
-
-            _retentionTime = times[peak.TimeIndex];
-            _startTime = times[peak.StartIndex];
-            _endTime = times[peak.EndIndex];
-
-            if ((flags & FlagValues.time_normalized) == 0 || finder.IsHeightAsArea)
-            {
-                _area = peak.Area;
-                _backgroundArea = peak.BackgroundArea;
-            }
-            else
-            {
-                // Normalize area numbers by time in seconds, since this will be the least
-                // dramatic change from Skyline v0.5, when the Crawdad index based areas
-                // were used directly.
-                double intervalSeconds = interval * 60;
-
-                _area = (float)(peak.Area * intervalSeconds);
-                _backgroundArea = (float) (peak.BackgroundArea * intervalSeconds);
-            }
-            _height = peak.Height;
-            _fwhm = (float) (peak.Fwhm * interval);
-            if (float.IsNaN(Fwhm))
-                _fwhm = 0;
-            if (peak.FwhmDegenerate)
                 flags |= FlagValues.degenerate_fwhm;
-
-            // Calculate peak truncation as a peak extent at either end of the
-            // recorded values, where the intensity is higher than the other extent
-            // by more than 1% of the peak height.
-            flags |= FlagValues.peak_truncation_known;
-            const double truncationTolerance = 0.01;
-            double deltaIntensityExtents = (intensities[peak.EndIndex] - intensities[peak.StartIndex]) / Height;
-            if ((peak.StartIndex == 0 && deltaIntensityExtents < -truncationTolerance) ||
-                (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
-            {
-                flags |= FlagValues.peak_truncated;
             }
-            if (massErrors != null)
+            else
             {
-                // Mass error is mean of mass errors in the peak, weighted by intensity
-                double massError = 0;
-                double totalIntensity = 0;
-                // Subtract background intensity to reduce noise contribution to this mean value
-                double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
-                for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
-                {
-                    double intensity = intensities[i] - backgroundIntensity;
-                    if (intensity <= 0)
-                        continue;
-
-                    double massErrorLocal = massErrors[i];
-                    totalIntensity += intensity;
-                    massError += (massErrorLocal - massError)*intensity/totalIntensity;
-                }
-                // Only if intensity exceded the background at least once
-                if (totalIntensity > 0)
-                {
-                    flags |= FlagValues.mass_error_known;
-                    FlagBits = ((uint)To10x(massError)) << 16;
-                }
+                flags &= ~FlagValues.degenerate_fwhm;
             }
-            FlagBits |= (uint) flags;
-            if (rawTimes != null)
+
+            float fwhm;
+            if (halfMaxStart.HasValue)
             {
-                int startIndex = CollectionUtil.BinarySearch(rawTimes, StartTime);
-                if (startIndex < 0)
-                {
-                    startIndex = ~startIndex;
-                }
-                int endIndex = CollectionUtil.BinarySearch(rawTimes, EndTime);
-                if (endIndex < 0)
-                {
-                    endIndex = ~endIndex - 1;
-                }
-                int pointsAcross = endIndex - startIndex + 1;
-                if (pointsAcross >= 0)
-                {
-                    _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
-                }
+                fwhm = (float)(halfMaxEnd - halfMaxStart);
             }
-        }
-
-        public float RetentionTime { get { return _retentionTime; } }
-        public float StartTime { get { return _startTime; } }
-        public float EndTime { get { return _endTime; } }
-        public float Area { get { return _area; } }
-        public float BackgroundArea { get { return _backgroundArea; } }
-        public float Height { get { return _height; } }
-        public float Fwhm { get { return _fwhm; } }
-        public uint FlagBits { get { return _flagBits; } private set { _flagBits = value; } }
-        public short? PointsAcross { get { return _pointsAcross == 0 ? (short?)null : _pointsAcross; } }
-
-        public override string ToString()
-        {
-            return string.Format(@"rt={0:F02}, area={1}", RetentionTime, Area);
-        }
-
-        public FlagValues Flags
-        {
-            get
+            else
             {
-                // Mask off mass error bits
-                return (FlagValues) (FlagBits & 0xFFFF);
+                fwhm = 0;
             }
-        }
 
-        public bool IsEmpty { get { return EndTime == 0; } }
-
-        public bool ContainsTime(float retentionTime)
-        {
-            return StartTime <= retentionTime && retentionTime <= EndTime;
-        }
-
-        public bool IsFwhmDegenerate
-        {
-            get { return (Flags & FlagValues.degenerate_fwhm) != 0; }
-        }
-
-        public bool IsForcedIntegration
-        {
-            get { return (Flags & FlagValues.forced_integration) != 0; }
-        }
-
-        public PeakIdentification Identified
-        {
-            get
+            double? massError = null;
+            if (timeIntensities.MassErrors != null && totalArea > 0)
             {
-                if ((Flags & FlagValues.contains_id) == 0)
-                    return PeakIdentification.FALSE;
-                else if ((Flags & FlagValues.used_id_alignment) == 0)
-                    return PeakIdentification.TRUE;
-                return PeakIdentification.ALIGNED;
+                massError = totalMassError / totalArea;
             }
-        }
 
-        public bool? IsTruncated
-        {
-            get
-            {
-                if ((Flags & FlagValues.peak_truncation_known) == 0)
-                    return null;
-                return (Flags & FlagValues.peak_truncated) != 0;
-            }
-        }
-
-        public float? MassError
-        {
-            get
-            {
-                if ((FlagBits & (uint) FlagValues.mass_error_known) == 0)
-                    return null;
-                // Mass error is stored in the high 16 bits of the Flags
-                // as 10x the calculated mass error in PPM.
-                return ((short)(FlagBits >> 16))/10f;
-            }
-        }
-
-        /// <summary>
-        /// Removes the mass error bits from the upper 16 in order to keep
-        /// from writing mass errors into older cache file formats until
-        /// the v5 format version is ready.
-        /// </summary>
-        public ChromPeak RemoveMassError()
-        {
-            var copy = this;
-            copy.FlagBits = (uint) (Flags & ~FlagValues.mass_error_known);
-            return copy;
-        }
-
-        public static float Intersect(ChromPeak peak1, ChromPeak peak2)
-        {
-            return Intersect(peak1.StartTime, peak1.EndTime, peak2.StartTime, peak2.EndTime);
-        }
-
-        public static float Intersect(float startTime1, float endTime1, float startTime2, float endTime2)
-        {
-            return Math.Min(endTime1, endTime2) - Math.Max(startTime1, startTime2);
-        }
-
-        public static int GetStructSize(CacheFormatVersion formatVersion)
-        {
-            if (formatVersion < CacheFormatVersion.Twelve)
-            {
-                return 32;
-            }
-            return 36;
-        }
-
-        public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
-        {
-            return new StructSerializer<ChromPeak>
-            {
-                ItemSizeOnDisk = chromPeakSize,
-                DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
-            };
+            return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
+                pointsAcrossPeak);
         }
 
         #region Fast file I/O
@@ -1774,8 +1804,8 @@ namespace pwiz.Skyline.Model.Results
                 if (configInfo == null || configInfo.IsEmpty)
                     continue;
 
-				if (infoString.Length > 0)
-	                infoString.Append('\n');
+                if (infoString.Length > 0)
+                    infoString.Append('\n');
 
                 // instrument model
                 if(!string.IsNullOrWhiteSpace(configInfo.Model))
@@ -2218,7 +2248,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromatogramGroupInfo
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
-        protected readonly IDictionary<Type, int> _scoreTypeIndices;
+        protected readonly FeatureNames _scoreTypeIndices;
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
@@ -2229,7 +2259,7 @@ namespace pwiz.Skyline.Model.Results
         private TimeIntensitiesGroup _timeIntensitiesGroup;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
-                                     IDictionary<Type, int> scoreTypeIndices,
+                                     FeatureNames scoreTypeIndices,
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
@@ -2245,7 +2275,14 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
-            TimeIntensitiesGroup timeIntensitiesGroup)
+            TimeIntensitiesGroup timeIntensitiesGroup) 
+            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
+        {
+        }
+
+        public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
+            TimeIntensitiesGroup timeIntensitiesGroup, FeatureNames scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _textIdBytes = Array.Empty<byte>();
@@ -2253,9 +2290,10 @@ namespace pwiz.Skyline.Model.Results
             _allTransitions = allTransitions;
             _chromPeaks = peaks;
             _timeIntensitiesGroup = timeIntensitiesGroup;
-            _scoreTypeIndices = new Dictionary<Type, int>();
-            _scores = Array.Empty<float>();
+            _scoreTypeIndices = scoreTypeIndices;
+            _scores = scores;
         }
+
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
@@ -2293,7 +2331,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasScore(Type scoreType)
         {
-            return _scoreTypeIndices.ContainsKey(scoreType);
+            return _scoreTypeIndices.IndexOf(scoreType) >= 0;
         }
 
         protected IList<float> ReadScores()
@@ -2318,10 +2356,13 @@ namespace pwiz.Skyline.Model.Results
 
         public float GetScore(Type scoreType, int peakIndex)
         {
-            int scoreIndex;
-            if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
+            int scoreIndex = _scoreTypeIndices.IndexOf(scoreType);
+            if (scoreIndex < 0)
+            {
                 return float.NaN;
-            return ReadScores()[peakIndex*_scoreTypeIndices.Count + scoreIndex];
+            }
+            var scores = ReadScores();
+            return scores[peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }
 
         public IEnumerable<ChromatogramInfo> TransitionPointSets
@@ -2342,6 +2383,13 @@ namespace pwiz.Skyline.Model.Results
             int endPeak = startPeak + _groupHeaderInfo.NumPeaks;
             for (int i = startPeak; i < endPeak; i++)
                 yield return peaks[i];
+        }
+
+        public IList<ChromPeak> GetPeakGroup(int peakIndex)
+        {
+            var peaks = ReadPeaks();
+            return ReadOnlyList.Create(_groupHeaderInfo.NumTransitions,
+                transitionIndex => peaks[transitionIndex * _groupHeaderInfo.NumPeaks + peakIndex]);
         }
 
         public ChromatogramInfo GetTransitionInfo(int index)
@@ -2417,7 +2465,9 @@ namespace pwiz.Skyline.Model.Results
                         // was the regression value.
                         int startOptTran, endOptTran;
                         GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
-                        iMiddle = (startOptTran + endOptTran) / 2;
+                        var chromatogramMzs = Enumerable.Range(startOptTran, endOptTran - startOptTran + 1)
+                            .Select(GetProductGlobal);
+                        iMiddle = startOptTran + OptStepChromatograms.IndexOfCenter(productMz, chromatogramMzs, regression.StepCount);
                     }
 
                     double deltaMz = Math.Abs(productMz - GetProductGlobal(iMiddle));
@@ -2433,29 +2483,24 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public ChromatogramInfo[] GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
+        public OptStepChromatograms GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
         {
-            var listChromInfo = new List<ChromatogramInfo>();
-            GetAllTransitionInfo(nodeTran, tolerance, regression, listChromInfo, transform);
-            return listChromInfo.ToArray();
-        }
-
-        public void GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, List<ChromatogramInfo> listChromInfo, TransformChrom transform)
-        {
-            listChromInfo.Clear();
             if (regression == null)
             {
                 // ReSharper disable ExpressionIsAlwaysNull
                 var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
                 // ReSharper restore ExpressionIsAlwaysNull
                 if (info != null)
-                    listChromInfo.Add(info);
-                return;
+                {
+                    return OptStepChromatograms.FromChromatogram(info);
+                }
+                return OptStepChromatograms.EMPTY;
             }
 
             var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
+            var listChromInfo = new List<ChromatogramInfo>();
             for (int i = startTran; i < endTran; i++)
             {
                 if (IsProductGlobalMatch(i, nodeTran, tolerance))
@@ -2467,6 +2512,8 @@ namespace pwiz.Skyline.Model.Results
                     i = Math.Max(i, endOptTran);
                 }
             }
+
+            return new OptStepChromatograms(nodeTran?.Mz ?? SignedMz.ZERO, listChromInfo, regression.StepCount);
         }
 
         private void GetOptimizationBounds(SignedMz productMz, int i, int startTran, int endTran, out int startOptTran, out int endOptTran)
@@ -2833,13 +2880,10 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(float startTime, float endTime, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(FullScanAcquisitionMethod acquisitionMethod, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            var peakIntegrator = new PeakIntegrator(TimeIntensities)
-            {
-                RawTimeIntensities = RawTimeIntensities,
-                TimeIntervals = TimeIntervals
-            };
+            var peakIntegrator = new PeakIntegrator(acquisitionMethod, TimeIntervals, Source, RawTimeIntensities,
+                TimeIntensities, null);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }
 

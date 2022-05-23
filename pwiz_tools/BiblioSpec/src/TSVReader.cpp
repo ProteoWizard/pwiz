@@ -122,6 +122,10 @@ namespace {
             return true;
         }
 
+        vector<PSM_SCORE_TYPE> getScoreTypes() {
+            return vector<PSM_SCORE_TYPE>(1, GENERIC_QVALUE);
+        }
+
         private:
         void storeLine(const TSVLine& line, std::map<std::string, Protein>& proteins)
         {
@@ -376,6 +380,10 @@ namespace {
             return true;
         }
 
+        vector<PSM_SCORE_TYPE> getScoreTypes() {
+            return vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE);
+        }
+
         private:
         double currentPrecursorMz = 0;
         std::string currentSequence = "";
@@ -476,7 +484,7 @@ TSVReader::~TSVReader() {
 
 const escaped_list_separator<char> TSVReader::separator_("", "\t", "");
 
-boost::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
+std::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
 {
     string line;
     {
@@ -486,9 +494,9 @@ boost::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* t
     LineParser headerLine(line, separator_);
 
     if (OpenSwathResultReader::hasExpectedColumns(headerLine))
-        return boost::static_pointer_cast<TSVReader>(boost::make_shared<OpenSwathResultReader>(maker, tsvName, parentProgress));
+        return std::static_pointer_cast<TSVReader>(std::make_shared<OpenSwathResultReader>(maker, tsvName, parentProgress));
     if (OpenSwathAssayReader::hasExpectedColumns(headerLine))
-        return make_shared<OpenSwathAssayReader>(maker, tsvName, parentProgress);
+        return std::make_shared<OpenSwathAssayReader>(maker, tsvName, parentProgress);
     throw BlibException(false, "Did not find required columns. Only OpenSWATH result and assay .tsv files are supported.");
 }
 

@@ -977,6 +977,7 @@ namespace pwiz.SkylineTestTutorial
 
                 // In case the layout was restored, the old document grid reference may no longer be valid
                 documentGrid = WaitForOpenForm<DocumentGridForm>();
+                WaitForConditionUI(() => documentGrid.IsComplete);
 
                 RunUI(() =>
                 {
@@ -1323,20 +1324,20 @@ namespace pwiz.SkylineTestTutorial
         private void SimpleGroupComparisons()
         {
             const string comparisonName = "Healthy v. Diseased";
-            const string controlAnnoation = "Condition";
+            const string controlAnnotation = "Condition";
             const string controlValue = "Healthy";
             const string caseValue = "Diseased";
-            const string idendityAnnotation = "SubjectId";
+            const string identityAnnotation = "SubjectId";
 
             var docBeforeComparison = SkylineWindow.Document;
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            RunUI(() => documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.reports));
+            RunUI(() => documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.group_comparisons));
             var editGroupComparisonDlg = ShowDialog <EditGroupComparisonDlg>(documentSettingsDlg.AddGroupComparison);
             RunUI(() =>
             {
                 editGroupComparisonDlg.TextBoxName.Text = comparisonName;
-                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnoation));
-                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnoation;
+                Assert.IsTrue(editGroupComparisonDlg.ComboControlAnnotation.Items.Contains(controlAnnotation));
+                editGroupComparisonDlg.ComboControlAnnotation.SelectedItem = controlAnnotation;
             });
             WaitForConditionUI(2000, () => editGroupComparisonDlg.ComboControlValue.Items.Contains(controlValue));
             RunUI(() =>
@@ -1344,8 +1345,8 @@ namespace pwiz.SkylineTestTutorial
                 editGroupComparisonDlg.ComboControlValue.SelectedItem = controlValue;
                 editGroupComparisonDlg.ComboCaseValue.SelectedItem = caseValue;
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
-                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = idendityAnnotation;
-                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(idendityAnnotation));
+                editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
+                Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
                 editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem = NormalizationMethod.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
@@ -1361,10 +1362,10 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(1, groupComparisonDefs.Count);
             var groupComparison = groupComparisonDefs[0];
             Assert.AreEqual(comparisonName, groupComparison.Name);
-            Assert.AreEqual(controlAnnoation, groupComparison.ControlAnnotation);
+            Assert.AreEqual(controlAnnotation, groupComparison.ControlAnnotation);
             Assert.AreEqual(controlValue, groupComparison.ControlValue);
             Assert.AreEqual(caseValue, groupComparison.CaseValue);
-            Assert.AreEqual(idendityAnnotation, groupComparison.IdentityAnnotation);
+            Assert.AreEqual(identityAnnotation, groupComparison.IdentityAnnotation);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             var foldChangeGridControl = foldChangeGrid.DataboundGridControl;

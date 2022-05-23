@@ -236,7 +236,7 @@ namespace pwiz.Skyline.Model
             get { return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
         }
 
-		public static string FILTER_DOC_AND_SKY_ZIP
+        public static string FILTER_DOC_AND_SKY_ZIP
         {
             // Used only in the open file dialog.
             get
@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model
             catch (Exception)
             {
                 return false;
-           }
+            }
         }
 
         private HashSet<Target> GetRetentionTimeStandardsOrThrow()
@@ -977,6 +977,21 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         private SrmDocument ChangeSettingsInternal(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor = null)
         {
+            try
+            {
+                return ChangeSettingsInternalOrThrow(settingsNew, progressMonitor);
+            }
+            catch (Exception)
+            {
+                if (progressMonitor != null && progressMonitor.IsCanceled())
+                {
+                    throw new OperationCanceledException();
+                }
+                throw;
+            }
+        }
+        private SrmDocument ChangeSettingsInternalOrThrow(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor)
+        {
             settingsNew = UpdateHasHeavyModifications(settingsNew);
             // First figure out what changed.
             SrmSettingsDiff diff = new SrmSettingsDiff(Settings, settingsNew);
@@ -1077,9 +1092,12 @@ namespace pwiz.Skyline.Model
                         {
                             if (progressMonitor.IsCanceled())
                                 throw new OperationCanceledException();
-                            var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair, moleculeGroupPairs.Length);
+                            var percentComplete =
+                                ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair,
+                                    moleculeGroupPairs.Length);
                             if (percentComplete.HasValue && percentComplete.Value < 100)
-                                progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
+                                progressMonitor.ChangeProgress(status =>
+                                    status.ChangePercentComplete(percentComplete.Value));
                         }
 
                         var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
@@ -1093,7 +1111,12 @@ namespace pwiz.Skyline.Model
                 // Results handler changes for re-integration last only long enough
                 // to change the children
                 if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
-                    settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
+                {
+                    settingsNew = settingsNew.ChangePeptideIntegration(i =>
+                        i.ChangeResultsHandler(null)
+                            .ChangeScoreQValueMap(
+                                ScoreQValueMap.FromMoleculeGroups(childrenNew.Cast<PeptideGroupDocNode>())));
+                }
 
                 if (settingsNew.MeasuredResults != null)
                 {
@@ -1453,16 +1476,26 @@ namespace pwiz.Skyline.Model
             // Is this a small molecule transition list, or trying to be?
             if (((importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules) && radioType == DOCUMENT_TYPE.none) || radioType == DOCUMENT_TYPE.small_molecules)
             {
+                IList<string> lines = null;
                 try
                 {
-                    var lines = inputs.ReadLines(progressMonitor);
+                    lines = inputs.ReadLines(progressMonitor);
                     var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions, hasHeaders);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
+                    foreach (var error in reader.ErrorList)
+                    {
+                        var lineIndex  = error.Line + (hasHeaders ? 1 : 0); // Account for parser not including header in its line count
+                        var line =
+                            ((lineIndex >= 0 && lineIndex < lines.Count) ? lines[lineIndex] : null)?.Replace(
+                                TextUtil.SEPARATOR_TSV_STR, @" ");
+                        errorList.Add(new TransitionImportErrorInfo(error.Message, error.Column, lineIndex + 1, line)); // Show line number as 1 based
+                    }
                 }
                 catch (LineColNumberedIoException x)
                 {
-                    // TODO(brianp): Better to return a complete list of all rows with errors and allow skipping
-                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber, null));  // CONSIDER: worth the effort to pull row and column info from error message?
+                    var line = (lines != null && x.LineNumber >=0 && x.LineNumber < lines.Count ? lines[(int)x.LineNumber] : null)?.
+                        Replace(TextUtil.SEPARATOR_TSV_STR, @" ");
+                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber + 1, line));  // CONSIDER: worth the effort to pull row and column info from error message?
                 }
             }
             else
@@ -2088,6 +2121,10 @@ namespace pwiz.Skyline.Model
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
+
+            Settings = Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeIntegration(
+                Settings.PeptideSettings.Integration.ChangeScoreQValueMap(
+                    ScoreQValueMap.FromMoleculeGroups(MoleculeGroups))));
 
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
 

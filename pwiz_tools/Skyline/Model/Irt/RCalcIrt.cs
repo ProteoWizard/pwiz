@@ -112,16 +112,19 @@ namespace pwiz.Skyline.Model.Irt
                 // Calculate the minimal set of peptides needed for this document
                 var dbPeptides = _database.GetPeptides().ToList();
                 var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
-                var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.ModifiedTarget);
+                var dictPeptides = new TargetMap<DbIrtPeptide>(dbPeptides.Where(pep => !pep.Standard)
+                    .Select(pep => new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
+                var uniqueTargets = new HashSet<Target>();
                 foreach (var nodePep in document.Molecules)
                 {
                     var modifiedSeq = document.Settings.GetSourceTarget(nodePep);
                     DbIrtPeptide dbPeptide;
                     if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
                     {
-                        persistPeptides.Add(NewPeptide(dbPeptide));
-                        // Only add once
-                        dictPeptides.Remove(modifiedSeq);
+                        if (uniqueTargets.Add(dbPeptide.ModifiedTarget)) // Only add once
+                        {
+                            persistPeptides.Add(NewPeptide(dbPeptide));
+                        }
                     }
                 }
 
@@ -733,8 +736,7 @@ namespace pwiz.Skyline.Model.Irt
                     new MeasuredRetentionTime[0],
                     peptidesTimes,null,
                     calculator,
-                    RegressionMethodRT.linear,
-                    () => false);
+                    RegressionMethodRT.linear);
 
                 var startingCount = peptidesTimes.Length;
                 var regressionCount = regression?.PeptideTimes.Count ?? 0;

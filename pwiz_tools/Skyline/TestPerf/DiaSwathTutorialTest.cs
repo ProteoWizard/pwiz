@@ -530,9 +530,8 @@ namespace TestPerf
                 Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", screenshotPage++);
-
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", screenshotPage++);
 
             AddIrtPeptidesDlg addIrtPeptidesDlg;
             AddIrtStandardsDlg addIrtStandardsDlg = null;

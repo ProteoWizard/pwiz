@@ -69,6 +69,7 @@
             this.graphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseDownEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);
             this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
+            this.graphControl.MouseLeave += new System.EventHandler(this.graphControl_MouseOutEvent);
             // 
             // GraphSummary
             // 

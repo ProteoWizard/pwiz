@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
                 Assert.AreEqual(1, losses.Length);
-                VerifyLossGroup(losses, 0, 98, 124);
+                VerifyLossGroup(losses, 0, 98, 160);
                 dlg.ToggleFind();
                 dlg.SearchString = "-98";
                 dlg.ToggleItem(0);
@@ -220,8 +220,8 @@ namespace pwiz.SkylineTestFunctional
                 dlg.ApplyFilter(false);
                 losses1 = GetLossGroups(dlg.ItemNames).ToArray();
                 Assert.AreEqual(2, losses1.Length);
-                VerifyLossGroup(losses1, 0, 98, 124);
-                VerifyLossGroup(losses1, 1, 196, 109);
+                VerifyLossGroup(losses1, 0, 98, 160);
+                VerifyLossGroup(losses1, 1, 196, 139);
                 dlg.OnCancel();
             });
 
@@ -243,12 +243,12 @@ namespace pwiz.SkylineTestFunctional
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
                 Assert.AreEqual(6, losses.Length);
-                VerifyLossGroup(losses, 0, 17, 66);
-                VerifyLossGroup(losses, 1, 18, 66);
-                VerifyLossGroup(losses, 2, 98, 124);
-                VerifyLossGroup(losses, 3, 115, 61);
-                VerifyLossGroup(losses, 4, 116, 61);
-                VerifyLossGroup(losses, 5, 196, 109);
+                VerifyLossGroup(losses, 0, 17, 106);
+                VerifyLossGroup(losses, 1, 18, 106);
+                VerifyLossGroup(losses, 2, 98, 160);
+                VerifyLossGroup(losses, 3, 115, 97);
+                VerifyLossGroup(losses, 4, 116, 97);
+                VerifyLossGroup(losses, 5, 196, 139);
                 AssertEx.NoDiff(TextUtil.LineSeparate(losses1[0].ToArray()), TextUtil.LineSeparate(losses[2].ToArray()));
                 AssertEx.NoDiff(TextUtil.LineSeparate(losses1[1].ToArray()), TextUtil.LineSeparate(losses[5].ToArray()));
                 // Add new neutral loss transitions to the document
@@ -307,7 +307,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
                 Assert.AreEqual(1, losses.Length);
-                VerifyLossGroup(losses, 0, 20, 85);
+                VerifyLossGroup(losses, 0, 20, 113);
                 // Add new neutral loss transitions to the document
                 dlg.ToggleFind();
                 dlg.SearchString = "-20";

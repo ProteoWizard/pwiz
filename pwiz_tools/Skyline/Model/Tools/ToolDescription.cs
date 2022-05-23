@@ -887,15 +887,39 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
+
+        // Long test names make for long Tools directory names, which can make for long command lines - maybe too long. So limit that directory name length by
+        // shortening to acronym and original length (e.g. "Foo7WithBar" => "F7WB10", "Foo7WithoutBar" => "F7WB13"))
+        private static string LimitDirectoryNameLength()
+        {
+            var testName = Program.TestName.Length > 10 // Arbitrary cutoff, but too little is likely to lead to ambiguous names
+                ? string.Concat(Program.TestName.Replace(@"Test", string.Empty).Where(c => char.IsUpper(c) || char.IsDigit(c))) + Program.TestName.Length
+                : Program.TestName;
+            return $@"{testName}_{Thread.CurrentThread.CurrentCulture.Name}";
+        }
+
+        /// <summary>
+        /// Get a name for the Skyline Tools directory - if we are running a test, make that name unique to the test in case tests are executing in parallel
+        /// </summary>
         public static string GetToolsDirectory()
         {
-            string skylinePath = Assembly.GetExecutingAssembly().Location;
-            if (string.IsNullOrEmpty(skylinePath))
-                return null;
-            string skylineDirPath = Path.GetDirectoryName(skylinePath);
-            if (string.IsNullOrEmpty(skylineDirPath))
-                return null;
-            return Path.Combine(skylineDirPath, @"Tools");
+            var skylineDirPath = GetSkylineInstallationPath();
+
+            // Use a unique tools path when running tests to allow tests to run in parallel
+            // ReSharper disable once AssignNullToNotNullAttribute
+            return Path.Combine(skylineDirPath, Program.UnitTest ? $@"Tools_{LimitDirectoryNameLength()}" : @"Tools");
+        }
+
+        /// <summary>
+        /// Gets the current installation directory, where we would expect to find Tools directory etc
+        /// </summary>
+        public static string GetSkylineInstallationPath()
+        {
+            var skylinePath = Assembly.GetExecutingAssembly().Location;
+            Assume.IsFalse(string.IsNullOrEmpty(skylinePath), @"Could not determine Skyline installation location");
+            var skylineDirPath = Path.GetDirectoryName(skylinePath);
+            Assume.IsFalse(string.IsNullOrEmpty(skylineDirPath), @"Could not determine Skyline installation directory name");
+            return skylineDirPath;
         }
     }
 }

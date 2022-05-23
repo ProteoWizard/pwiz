@@ -31,6 +31,7 @@ namespace BiblioSpec
         DiaNNSpecLibReader(BlibBuilder& maker, const char* specLibFile, const ProgressIndicator* parent_progress);
         ~DiaNNSpecLibReader();
         bool parseFile();   // BuildParser virtual function
+        std::vector<PSM_SCORE_TYPE> getScoreTypes();   // BuildParser virtual function
 
         private:
         class Impl;
