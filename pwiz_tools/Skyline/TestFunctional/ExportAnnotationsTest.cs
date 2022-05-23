@@ -50,15 +50,15 @@ namespace pwiz.SkylineTestFunctional
                 "C8H10N4O2\t1\tC6H7N3O\t1",
                 "C9H13N\t1\tC9H11\t1"
             );
-            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.textBox1.Text = text1);
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = text1);
 
             RunUI(() => {
                 colDlg.radioMolecule.PerformClick();
-                var comboBoxes = colDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                colDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             });
 
             OkDialog(colDlg, colDlg.OkDialog);

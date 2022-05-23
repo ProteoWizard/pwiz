@@ -905,6 +905,8 @@ namespace pwiz.SkylineTest
                 "precursor_res=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
                 "precursor_res=\"" + validHiRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
+                "precursor_res=\"" + validHiRes + "\" ignore_sim_scans=\"true\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\"/>");  // Use defaults
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
@@ -952,6 +954,8 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"Unknown\" " +
                 "product_resolution=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" ignore_sim_scans=\"true\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 "Unknown" + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");

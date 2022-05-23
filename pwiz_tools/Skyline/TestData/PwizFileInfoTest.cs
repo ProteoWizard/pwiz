@@ -35,6 +35,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestInstrumentInfo()
         {
+            if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentInfo)))
+                return;
             const string testZipPath = @"TestData\PwizFileInfoTest.zip";
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
@@ -179,6 +181,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestInstrumentSerialNumbers()
         {
+            if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentSerialNumbers)))
+                return;
             if (Skyline.Program.NoVendorReaders)
                 return;
 

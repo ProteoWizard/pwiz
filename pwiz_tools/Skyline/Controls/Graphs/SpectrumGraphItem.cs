@@ -137,10 +137,19 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_Y { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.y), ref _fontSpecY); } }
         private FontSpec _fontSpecC;
         private FontSpec FONT_SPEC_C { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.c), ref _fontSpecC); } }
-        private FontSpec _fontSpecZ;
-        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.precursor), ref _fontSpecPrecursor); } }
         private FontSpec _fontSpecPrecursor;
+        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.precursor), ref _fontSpecPrecursor); } }
+
+        private FontSpec _fontSpecZ;
         private FontSpec FONT_SPEC_Z { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.z), ref _fontSpecZ); } }
+
+        private FontSpec _fontSpecZH;
+        private FontSpec FONT_SPEC_ZH { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.zh), ref _fontSpecZH); } }
+
+        private FontSpec _fontSpecZHH;
+        private FontSpec FONT_SPEC_ZHH { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.zhh), ref _fontSpecZHH); } }
+
+
         private FontSpec _fontSpecOtherIons;
         private FontSpec _fontSpecNone;
         private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(IonTypeExtension.GetTypeColor(null), ref _fontSpecNone); } }
@@ -270,6 +279,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
+                case IonType.zh: fontSpec = FONT_SPEC_ZH; break;
+                case IonType.zhh: fontSpec = FONT_SPEC_ZHH; break;
                 case IonType.custom:
                     {
                     if (rmi.Rank == 0 && !rmi.HasAnnotations)

@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public static string MSFRAGGER_FILENAME = @"MSFragger-3.4";
         public static string MsFraggerDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSFRAGGER_FILENAME);
         public static string MsFraggerBinary => Path.Combine(MsFraggerDirectory, MSFRAGGER_FILENAME, MSFRAGGER_FILENAME + @".jar");
-        public static FileDownloadInfo MsFraggerDownloadInfo = new FileDownloadInfo { Filename = MSFRAGGER_FILENAME, InstallPath = MsFraggerDirectory, OverwriteExisting = true, Unzip = true };
+        public static FileDownloadInfo MsFraggerDownloadInfo => new FileDownloadInfo { Filename = MSFRAGGER_FILENAME, InstallPath = MsFraggerDirectory, OverwriteExisting = true, Unzip = true };
 
         static string CRUX_FILENAME = @"crux-4.1";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             // ReSharper disable LocalizableElement 
             IEnumerable<string> commonAffixes = new [] { "decoy", "dec", "reverse", "rev", "__id_decoy", "xxx", "shuffled", "shuffle", "pseudo", "random" };
-            commonAffixes = commonAffixes.Concat(commonAffixes.Select(o => o.ToUpperInvariant()));
+            commonAffixes = commonAffixes.Concat(commonAffixes.Select(o => o.ToUpperInvariant())).ToArray();
             // ReSharper restore LocalizableElement
 
             var prefixCounts = commonAffixes.ToDictionary(o => o, k => 0);

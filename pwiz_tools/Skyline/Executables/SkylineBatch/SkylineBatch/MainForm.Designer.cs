@@ -459,7 +459,7 @@
         private System.Windows.Forms.ColumnHeader columnStartTime;
         private System.Windows.Forms.ColumnHeader columnRunTime;
         private System.Windows.Forms.Button btnLogStop;
-        private System.Windows.Forms.ToolStripButton btnUndo;
-        private System.Windows.Forms.ToolStripButton btnRedo;
+        public System.Windows.Forms.ToolStripButton btnUndo;
+        public System.Windows.Forms.ToolStripButton btnRedo;
     }
 }

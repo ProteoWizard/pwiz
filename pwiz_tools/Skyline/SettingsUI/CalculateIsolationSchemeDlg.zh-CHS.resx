@@ -691,7 +691,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>筹划隔离方案</value>
+    <value>计算分离方案</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CalculateIsolationSchemeDlg</value>

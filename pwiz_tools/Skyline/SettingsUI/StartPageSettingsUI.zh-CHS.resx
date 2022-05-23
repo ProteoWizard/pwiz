@@ -236,7 +236,7 @@
     <value>6</value>
   </data>
   <data name="nextBtn.Text" xml:space="preserve">
-    <value>下一个&gt;</value>
+    <value>下一步&gt;</value>
   </data>
   <data name="&gt;&gt;nextBtn.Name" xml:space="preserve">
     <value>nextBtn</value>

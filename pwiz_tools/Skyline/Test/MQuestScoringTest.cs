@@ -364,7 +364,8 @@ namespace pwiz.SkylineTest
             {
                 TransitionPeakData = transitionPeakData;
                 Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-                Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+                Ms2TranstionPeakData = Ms2TranstionDotpData =
+                    TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
 
                 IsStandard = isStandard;
                 var libInfo = new ChromLibSpectrumHeaderInfo("", 0, null);
@@ -378,6 +379,8 @@ namespace pwiz.SkylineTest
             public IList<ITransitionPeakData<TPeak>> TransitionPeakData { get; private set; }
             public IList<ITransitionPeakData<TPeak>> Ms1TranstionPeakData { get; private set; }
             public IList<ITransitionPeakData<TPeak>> Ms2TranstionPeakData { get; private set; }
+            public IList<ITransitionPeakData<TPeak>> Ms2TranstionDotpData { get; private set; }
+
             public IList<ITransitionPeakData<TPeak>> DefaultTranstionPeakData
             {
                 get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }

@@ -195,7 +195,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeMatchCategoryComboBox()
         {
-        	// Clear the combo box of any items left over from a previous library
+            // Clear the combo box of any items left over from a previous library
             comboFilterCategory.Items.Clear();
             
             // Add localized names for fields like Formula, Precursor m/z
@@ -799,7 +799,7 @@ namespace pwiz.Skyline.SettingsUI
                                     ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F2}", ccs.Value);
                                 if (dt.HasIonMobilityValue)
                                     imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
-                                if (dt.HighEnergyIonMobilityValueOffset != 0) // Show the high energy value (as in Waters MSe) if different
+                                if ((dt.HighEnergyIonMobilityValueOffset??0) != 0) // Show the high energy value (as in Waters MSe) if different
                                     imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
                                 labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
                             }

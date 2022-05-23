@@ -1510,6 +1510,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This file type does not support downloads from an FTP file source. Please download this file from Panorama..
+        /// </summary>
+        public static string RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FTP_file_source__Please_download_this_file_from_Panorama_ {
+            get {
+                return ResourceManager.GetString("RemoteFileForm_btnSave_Click_This_file_type_does_not_support_downloads_from_an_FT" +
+                        "P_file_source__Please_download_this_file_from_Panorama_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another remote file location with the name {0} already exists. Please choose a unique name..
         /// </summary>
         public static string RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_ {
@@ -2299,6 +2309,17 @@ namespace SkylineBatch.Properties {
             get {
                 return ResourceManager.GetString("SkylineBatchConfigManagerState_UserAddRemoteFileSource_A_remote_file_source_named" +
                         "___0___already_exists__Please_choose_a_different_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This file type must be downloaded from Panorama instead of an FTP source. Do you want to add this FTP file source anyway?.
+        /// </summary>
+        public static string SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_downloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file_source_anyway_ {
+            get {
+                return ResourceManager.GetString("SkylineBatchConfigManagerState_UserAddRemoteFileSource_This_file_type_must_be_dow" +
+                        "nloaded_from_Panorama_instead_of_an_FTP_source__Do_you_want_to_add_this_FTP_file" +
+                        "_source_anyway_", resourceCulture);
             }
         }
         

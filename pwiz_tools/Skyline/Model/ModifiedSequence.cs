@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -138,7 +137,7 @@ namespace pwiz.Skyline.Model
         public ModifiedSequence(string unmodifiedSequence, IEnumerable<Modification> explicitMods, MassType defaultMassType)
         {
             _unmodifiedSequence = unmodifiedSequence;
-            _explicitMods = ImmutableList.ValueOf(explicitMods.OrderBy(mod=>mod.IndexAA, SortOrder.Ascending));
+            _explicitMods = ImmutableList.ValueOf(explicitMods.OrderBy(mod=>mod.IndexAA));
             _defaultMassType = defaultMassType;
         }
 
@@ -180,7 +179,7 @@ namespace pwiz.Skyline.Model
 
         protected string FormatModsIndividually(Func<Modification, string> modFormatter)
         {
-            return Format(mods => string.Join(string.Empty, Enumerable.Select(mods, mod => Bracket(modFormatter(mod)))));
+            return Format(mods => string.Concat(Enumerable.Select(mods, mod => Bracket(modFormatter(mod)))));
         }
 
         protected string Format(Func<IEnumerable<Modification>, string> modFormatter)
@@ -267,7 +266,7 @@ namespace pwiz.Skyline.Model
 
         public static string FormatUnimodIds(IEnumerable<Modification> mods)
         {
-            return string.Join(String.Empty, mods.Select(mod =>
+            return string.Concat(mods.Select(mod =>
             {
                 if (mod.UnimodId.HasValue)
                 {
@@ -279,7 +278,7 @@ namespace pwiz.Skyline.Model
 
         public static string FormatFallback(IEnumerable<Modification> mods)
         {
-            return string.Join(string.Empty, mods.Select(mod => Bracket(FormatFallback(mod))));
+            return string.Concat(mods.Select(mod => Bracket(FormatFallback(mod))));
         }
 
         /// <summary>

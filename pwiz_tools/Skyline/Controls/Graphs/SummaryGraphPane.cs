@@ -106,6 +106,8 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
 
+        public virtual void HandleMouseOutEvent(object sender, EventArgs e){}
+
         public virtual bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return false;

@@ -70,14 +70,14 @@ namespace pwiz.SkylineTestFunctional
             
             var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.textBox1.Text = insertListText);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.TransitionListText = insertListText);
 
             RunUI(() => {
-                var comboBoxes = windowDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             OkDialog(windowDlg, windowDlg.OkDialog);
 
@@ -91,14 +91,14 @@ namespace pwiz.SkylineTestFunctional
 
             var showDialog1 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
-            var windowDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog1.textBox1.Text = insertListText);
+            var windowDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog1.TransitionListText = insertListText);
 
             RunUI(() => {
-                var comboBoxes = windowDlg1.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg1.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             OkDialog(windowDlg1, windowDlg1.OkDialog);
 
@@ -134,13 +134,13 @@ namespace pwiz.SkylineTestFunctional
             // Finally a working set of transitions
             SetClipboardText(insertPart1 + insertSep + insertPart2);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = insertPart1 + insertSep + insertPart2);
+            var windowDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = insertPart1 + insertSep + insertPart2);
             RunUI(() => {
-                var comboBoxes = windowDlg2.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg2.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             OkDialog(windowDlg2, windowDlg2.OkDialog);
             var docInsert2 = WaitForDocumentChange(docInsert1);
@@ -178,13 +178,13 @@ namespace pwiz.SkylineTestFunctional
                 insertListText;
             string allErrorText = "";
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.textBox1.Text = pasteText);
+            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
             RunUI(() => {
-                var comboBoxes = windowDlg.ComboBoxes;
-                comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence);
-                comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
-                comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
-                comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
+                windowDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name);
             });
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(windowDlg.OkDialog);
             RunUI(() =>
@@ -198,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
                         containsValue, errDlg.ErrorList));
                 errDlg.Close();
             });
-            RunUI(windowDlg.CancelDialog);
+            OkDialog(windowDlg, windowDlg.CancelDialog);
             WaitForClosedForm(transitionDlg);
             // TODO: Do we need to support these checks for columnSelectDlg?
             //Assert.AreEqual(row, insertTransDlg.SelectedGridRow);

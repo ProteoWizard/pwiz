@@ -3,15 +3,15 @@ Summary   : クリップボードからトランジションリストがイン�
 All Info  :
 クリップボードからトランジションリストがインポートされました
 Extra Info: 7個のトランジションが追加されました
-'分子リスト名','分子名','分子式','プリカーサー付加物','標識タイプ','プリカーサーm/z','プリカーサー電荷','明示的保持時間'と特定されている列
+'分子リスト名','分子名','分子式','プリカーサー付加物','標識タイプ','プリカーサーm/z','列を無視','明示的保持時間'と特定されている列
 Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Label Type,Precursor m/z,Precursor Charge,Explicit Retention Time
-Fatty Acid,FA 18:2 omega-6 (LA),C18H32O2,[M-H],,,-1,1.3
-Fatty Acid,FA 18:2 omega-6 (LA),C18H28H'4O2,[M-H],,,-1,1.3
-Fatty Acid,FA 18:3 omega-3 (ALA),C18H30O2,[M-H],,,-1,1.1
-Fatty Acid,FA 20:4 omega-6 (AA),C20H32O2,[M-H],,,-1,1.2
-Fatty Acid,FA 20:4 omega-6 (AA),C20H24H'8O2,[M-H],,,-1,1.2
-Fatty Acid,FA 22:6 omega-3 (DHA),C22H32O2,[M-H],,,-1,1.1
-Fatty Acid,FA 22:6 omega-3 (DHA),C22H27H'5O2,[M-H],,,-1,1.1
+Fatty Acid,FA 18:2 omega-6 (LA),C18H32O2,[M-H],,,1,1.3
+Fatty Acid,FA 18:2 omega-6 (LA),C18H28H'4O2,[M-H],,,1,1.3
+Fatty Acid,FA 18:3 omega-3 (ALA),C18H30O2,[M-H],,,1,1.1
+Fatty Acid,FA 20:4 omega-6 (AA),C20H32O2,[M-H],,,1,1.2
+Fatty Acid,FA 20:4 omega-6 (AA),C20H24H'8O2,[M-H],,,1,1.2
+Fatty Acid,FA 22:6 omega-3 (DHA),C22H32O2,[M-H],,,1,1.1
+Fatty Acid,FA 22:6 omega-3 (DHA),C22H27H'5O2,[M-H],,,1,1.1
 
 
 Undo Redo : FA 22:6 omega-3 (DHA) (C22H32O2)の標準タイプが設定されました

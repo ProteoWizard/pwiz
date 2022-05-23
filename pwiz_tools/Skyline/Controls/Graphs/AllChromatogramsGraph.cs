@@ -497,8 +497,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Match each file status with a progress control.
             bool first = true;
-            var width = flowFileStatus.Width - 2 -
-                        (flowFileStatus.VerticalScroll.Visible
+            var width = flowFileStatus.Width - 2 - // Avoid clipping the cancel/retry button when we need a vertical scrollbar
+                        (flowFileStatus.VerticalScroll.Visible || 
+                         status.ProgressList.Count > (panelFileList.Height / (new FileProgressControl()).Height)  // If scrollbar isn't visible already, it's about to be
                             ? SystemInformation.VerticalScrollBarWidth
                             : 0);
             List<FileProgressControl> controlsToAdd = new List<FileProgressControl>();

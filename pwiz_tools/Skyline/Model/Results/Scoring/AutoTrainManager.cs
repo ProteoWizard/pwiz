@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class AutoTrainManager : BackgroundLoader, IFeatureScoreProvider
     {
         private SrmDocument _document;
-        private IList<IPeakFeatureCalculator> _cacheCalculators;
+        private FeatureCalculators _cacheCalculators;
         private PeakTransitionGroupFeatureSet _cachedFeatureScores;
 
         public override void ClearCache()
@@ -42,15 +42,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return document.Settings.PeptideSettings.Integration.IsAutoTrain &&
-                   document.Settings.HasResults && document.MeasuredResults.IsLoaded &&
-                   !(previous.Settings.HasResults && previous.MeasuredResults.IsLoaded);
+            return document.IsLoaded != previous?.IsLoaded;
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
             if (document.Settings.PeptideSettings.Integration.IsAutoTrain &&
-                document.Settings.HasResults && document.MeasuredResults.IsLoaded)
+                document.Settings.HasResults && document.IsLoaded)
             {
                 return @"AutoTrainManager: Model not trained";
             }
@@ -160,7 +158,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IProgressMonitor progressMonitor)
         {
             if (!ReferenceEquals(document, _document) ||
-                !ArrayUtil.EqualsDeep(_cacheCalculators, scoringModel.PeakFeatureCalculators))
+                !Equals(_cacheCalculators, scoringModel.PeakFeatureCalculators))
             {
                 _document = document;
                 _cacheCalculators = scoringModel.PeakFeatureCalculators;

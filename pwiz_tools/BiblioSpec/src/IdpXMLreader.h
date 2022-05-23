@@ -144,6 +144,7 @@ class IdpXMLreader : public BuildParser{
   ~IdpXMLreader();
 
   bool parseFile();
+  std::vector<PSM_SCORE_TYPE> getScoreTypes();
   virtual void startElement(const XML_Char* name, const XML_Char** attr);
   virtual void endElement(const XML_Char* name);
 

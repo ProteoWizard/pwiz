@@ -74,6 +74,7 @@ namespace pwiz.Skyline
         private DocumentGridForm _documentGridForm;
         private CalibrationForm _calibrationForm;
         private AuditLogForm _auditLogForm;
+        private CandidatePeakForm _candidatePeakForm;
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
@@ -512,6 +513,7 @@ namespace pwiz.Skyline
             DestroyDocumentGrid();
             DestroyAuditLogForm();
             DestroyCalibrationForm();
+            DestroyCandidatePeakForm();
 
             DestroyImmediateWindow();
             HideFindResults(true);
@@ -640,6 +642,10 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(ResultsGridForm).ToString()) || Equals(persistentString, typeof (LiveResultsGrid).ToString()))
             {
                 return _resultsGridForm ?? CreateResultsGrid();
+            }
+            if (Equals(persistentString, typeof(CandidatePeakForm).ToString()))
+            {
+                return _candidatePeakForm ?? CreateCandidatePeakForm();
             }
             if (Equals(persistentString, typeof (DocumentGridForm).ToString()))
             {
@@ -781,11 +787,7 @@ namespace pwiz.Skyline
                     throw new InvalidOperationException(
                         Resources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
-                if (_timerGraphs.Enabled)
-                {
-                    return true;
-                }
-                return false;
+                return _timerGraphs.Enabled || (_graphSpectrum != null && _graphSpectrum.IsGraphUpdatePending);
             }
         }
 
@@ -847,65 +849,132 @@ namespace pwiz.Skyline
         public GraphSpectrum GraphSpectrum { get { return _graphSpectrum; } }
         public GraphSpectrumSettings GraphSpectrumSettings { get { return _graphSpectrumSettings; } }
 
+        public void ShowAIons(bool show)
+        {
+            _graphSpectrumSettings.ShowAIons = show;
+        }
+        public void ShowBIons(bool show)
+        {
+            _graphSpectrumSettings.ShowBIons = show;
+        }
+        public void ShowCIons(bool show)
+        {
+            _graphSpectrumSettings.ShowCIons = show;
+        }
+        public void ShowXIons(bool show)
+        {
+            _graphSpectrumSettings.ShowXIons = show;
+        }
+        public void ShowYIons(bool show)
+        {
+            _graphSpectrumSettings.ShowYIons = show;
+        }
+        public void ShowZIons(bool show)
+        {
+            _graphSpectrumSettings.ShowZIons = show;
+        }
+        public void ShowZHIons(bool show)
+        {
+            _graphSpectrumSettings.ShowZHIons = show;
+        }
+        public void ShowZHHIons(bool show)
+        {
+            _graphSpectrumSettings.ShowZHHIons = show;
+        }
+        public void ShowFragmentIons(bool show)
+        {
+            _graphSpectrumSettings.ShowFragmentIons = show;
+        }
+        public void ShowPrecursorIon(bool show)
+        {
+            _graphSpectrumSettings.ShowPrecursorIon = show;
+        }
+        public void ShowCharge1(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge1 = show;
+        }
+        public void ShowCharge2(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge2 = show;
+        }
+        public void ShowCharge3(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge3 = show;
+        }
+        public void ShowCharge4(bool show)
+        {
+            _graphSpectrumSettings.ShowCharge4 = show;
+        }
+
         private void aMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowAIons = !_graphSpectrumSettings.ShowAIons;
+            ShowAIons(!_graphSpectrumSettings.ShowAIons);
         }
 
         private void bMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowBIons = !_graphSpectrumSettings.ShowBIons;
+            ShowBIons(!_graphSpectrumSettings.ShowBIons);
         }
 
         private void cMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCIons = !_graphSpectrumSettings.ShowCIons;
+            ShowCIons(!_graphSpectrumSettings.ShowCIons);
         }
 
         private void xMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowXIons = !_graphSpectrumSettings.ShowXIons;
+            ShowXIons(!_graphSpectrumSettings.ShowXIons);
         }
 
         private void yMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowYIons = !_graphSpectrumSettings.ShowYIons;
+            ShowYIons(!_graphSpectrumSettings.ShowYIons);
         }
 
         private void zMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowZIons = !_graphSpectrumSettings.ShowZIons;
+            ShowZIons(!_graphSpectrumSettings.ShowZIons);
         }
+        private void zhMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowZHIons(!_graphSpectrumSettings.ShowZHIons);
+        }
+
+        private void zhhMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowZHHIons(!_graphSpectrumSettings.ShowZHHIons);
+        }
+
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowFragmentIons = !_graphSpectrumSettings.ShowFragmentIons;
+            ShowFragmentIons(!_graphSpectrumSettings.ShowFragmentIons);
         }
 
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowPrecursorIon = !_graphSpectrumSettings.ShowPrecursorIon;
+            ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
         }
 
         // Update the Ion Types menu for document contents
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge1 = !_graphSpectrumSettings.ShowCharge1;
+            ShowCharge1(!_graphSpectrumSettings.ShowCharge1);
         }
 
         private void charge2MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge2 = !_graphSpectrumSettings.ShowCharge2;
+            ShowCharge2(!_graphSpectrumSettings.ShowCharge2);
         }
 
         private void charge3MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge3 = !_graphSpectrumSettings.ShowCharge3;
+            ShowCharge3(!_graphSpectrumSettings.ShowCharge3);
         }
 
         private void charge4MenuItem_Click(object sender, EventArgs e)
         {
-            _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
+            ShowCharge4(!_graphSpectrumSettings.ShowCharge4);
         }
 
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
@@ -1042,6 +1111,10 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
                     zionsContextMenuItem.Checked = set.ShowZIons;
                     menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+                    zhionsContextMenuItem.Checked = set.ShowZHIons;
+                    menuStrip.Items.Insert(iInsert++, zhionsContextMenuItem);
+                    zhhionsContextMenuItem.Checked = set.ShowZHHIons;
+                    menuStrip.Items.Insert(iInsert++, zhhionsContextMenuItem);
                 }
                 else
                 {
@@ -1149,7 +1222,9 @@ namespace pwiz.Skyline
         private void lockYaxisContextMenuItem_Click(object sender, EventArgs e)
         {
             // Avoid updating the rest of the graph just to change the y-axis lock state
-            _graphSpectrum.LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
+            Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked;
+            _graphSpectrum?.LockYAxis(lockYaxisContextMenuItem.Checked);
+            _graphFullScan?.LockYAxis(lockYaxisContextMenuItem.Checked);
         }
 
         private void showChromatogramsSpectrumContextMenuItem_Click(object sender, EventArgs e)
@@ -2219,12 +2294,19 @@ namespace pwiz.Skyline
             if (includeSelf)
                 yield return change;
 
-            var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToArray();
-            if (syncTargets.Length == 0)
-                yield break;
+            ChromatogramSet thisChromSet = null;
+            var syncTargets = new List<ChromatogramSet>();
+            foreach (var syncTarget in document.GetSynchronizeIntegrationChromatogramSets())
+            {
+                syncTargets.Add(syncTarget);
+                if (thisChromSet == null && Equals(change.NameSet, syncTarget.Name))
+                    thisChromSet = syncTarget;
+            }
 
-            var thisChromSet = document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom => Equals(change.NameSet, chrom.Name));
-            var thisFile = thisChromSet?.FindFile(change.FilePath);
+            if (thisChromSet == null)
+                yield break; // This chromatogram is not selected for synchronized integration
+
+            var thisFile = thisChromSet.FindFile(change.FilePath);
 
             var transformOp = GetRetentionTimeTransformOperation();
             var thisStart = change.StartTime.MeasuredTime;
@@ -4250,6 +4332,10 @@ namespace pwiz.Skyline
                 {
                     SetNormalizationMethod(value);
                 }
+                else
+                {
+                    SequenceTree.NormalizeOption = value;
+                }
             }
         }
 
@@ -5724,6 +5810,48 @@ namespace pwiz.Skyline
             return runStartTime;
         }
 
+        #endregion
+
+        #region Candidate Peaks
+        public void ShowCandidatePeaks()
+        {
+            if (_candidatePeakForm!= null && !Program.SkylineOffscreen)
+            {
+                _candidatePeakForm.Activate();
+            }
+            else
+            {
+                _candidatePeakForm = _candidatePeakForm ?? CreateCandidatePeakForm();
+                if (_candidatePeakForm != null)
+                {
+                    var rectFloat = GetFloatingRectangleForNewWindow();
+                    _candidatePeakForm.Show(dockPanel, rectFloat);
+                }
+            }
+        }
+
+        public CandidatePeakForm CreateCandidatePeakForm()
+        {
+            Assume.IsNull(_candidatePeakForm);
+            _candidatePeakForm = new CandidatePeakForm(this);
+            _candidatePeakForm.FormClosed += candidatePeakForm_FormClosed;
+            return _candidatePeakForm;
+        }
+
+        private void DestroyCandidatePeakForm()
+        {
+            if (null != _candidatePeakForm)
+            {
+                _candidatePeakForm.FormClosed -= candidatePeakForm_FormClosed;
+                _candidatePeakForm.Close();
+                _candidatePeakForm = null;
+            }
+        }
+
+        void candidatePeakForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _candidatePeakForm = null;
+        }
         #endregion
     }
 }

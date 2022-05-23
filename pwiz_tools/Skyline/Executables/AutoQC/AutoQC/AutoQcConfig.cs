@@ -89,7 +89,7 @@ namespace AutoQC
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
 
-        internal string GetConfigDir()
+        public string GetConfigDir()
         {
             var skylineFileDir = Path.GetDirectoryName(MainSettings.SkylineFilePath);
             return Path.Combine(skylineFileDir ?? string.Empty, FileUtil.GetSafeNameForDir(Name));

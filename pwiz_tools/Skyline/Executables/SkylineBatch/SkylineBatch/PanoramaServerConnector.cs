@@ -165,7 +165,7 @@ namespace SkylineBatch
             }
             catch (Exception e)
             {
-                throw new Exception("Could not parse json response: " + e.Message);
+                throw new Exception("Could not parse json response: " + e.Message + Environment.NewLine + Environment.NewLine + filesJsonAsString);
             }
             return size;
         }

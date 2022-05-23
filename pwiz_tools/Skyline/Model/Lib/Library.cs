@@ -644,7 +644,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Some details for the library. 
         /// This can be the library revision, program version, 
-		/// build date or a hyperlink to the library source 
+        /// build date or a hyperlink to the library source 
         /// (e.g. http://peptide.nist.gov/ for NIST libraries)
         /// </summary>
         public abstract LibraryDetails LibraryDetails { get; }
@@ -2204,6 +2204,51 @@ namespace pwiz.Skyline.Model.Lib
                 hashCode = (hashCode * 397) ^ (OtherKeys != null ? OtherKeys.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        /// <summary>
+        /// Return a SmallMoleculeLibraryAttributes object that represents the union of this and other, or null if
+        /// conflicts prevent that
+        /// </summary>
+        public SmallMoleculeLibraryAttributes Merge(SmallMoleculeLibraryAttributes other)
+        {
+            if (other == null || Equals(other))
+                return this;
+
+            // If only one is named, could still be a match
+            var consensusName = MoleculeName;
+            if (!Equals(MoleculeName, other.MoleculeName))
+            {
+                if (string.IsNullOrEmpty(MoleculeName))
+                {
+                    consensusName = other.MoleculeName;
+                }
+                else if (!string.IsNullOrEmpty(other.MoleculeName))
+                {
+                    return null; // Conflict
+                }
+            }
+
+            if (!Equals(ChemicalFormulaOrMassesString, other.ChemicalFormulaOrMassesString))
+            {
+                return null; // Conflict
+            }
+
+            var consensusInChiKey = InChiKey;
+            var consensusOtherKeys = OtherKeys;
+            if (!Equals(InChiKey, other.InChiKey) || !Equals(OtherKeys, other.OtherKeys))
+            {
+                var consensusAccession = this.CreateMoleculeID().Union(other.CreateMoleculeID());
+                if (consensusAccession == null)
+                {
+                    return null; // Conflict
+                }
+                consensusInChiKey = consensusAccession.GetInChiKey();
+                consensusOtherKeys = consensusAccession.GetNonInChiKeys();
+            }
+            
+            return Create(consensusName, ChemicalFormulaOrMassesString, consensusInChiKey,
+                consensusOtherKeys);
         }
 
         public override string ToString()

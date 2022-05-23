@@ -129,12 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             float tolerance = (float) Transition.DataSchema.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var chromatogramInfos = chromatogramGroupInfo.GetAllTransitionInfo(Transition.DocNode, tolerance,
                 ChromatogramGroup.PrecursorResult.GetResultFile().Replicate.ChromatogramSet.OptimizationFunction, TransformChrom.raw);
-            int index = chromatogramInfos.Length / 2 + ChromatogramGroup.PrecursorResult.OptStep;
-            if (index < 0 || index >= chromatogramInfos.Length)
-            {
-                return null;
-            }
-            return chromatogramInfos[index];
+            return chromatogramInfos.GetChromatogramForStep(0);
         }
 
         private Lazy<MsDataFileScanIds> GetLazyMsDataFileScanIds()

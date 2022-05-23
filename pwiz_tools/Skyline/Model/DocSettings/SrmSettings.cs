@@ -245,6 +245,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return TryGetPrecursorCalc(labelType, mods) != null;
         }
 
+        public bool SupportsPrecursor(TransitionGroupDocNode transitionGroup, ExplicitMods mods)
+        {
+            if (transitionGroup.IsLight)
+            {
+                return true;
+            }
+            if (transitionGroup.IsCustomIon)
+            {
+                return PeptideSettings.Modifications.GetHeavyModificationTypes().Contains(transitionGroup.LabelType);
+            }
+            return HasPrecursorCalc(transitionGroup.LabelType, mods);
+        }
+
         public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
         {
             var precursorCalc =  TryGetPrecursorCalc(labelType, mods);
@@ -2034,6 +2047,24 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return result;
+        }
+
+        public ChromatogramGroupInfo LoadChromatogramGroup(ChromatogramSet chromatogramSet, MsDataFileUri dataFilePath, PeptideDocNode peptide,
+            TransitionGroupDocNode transitionGroup)
+        {
+            if (!HasResults)
+            {
+                return null;
+            }
+
+            if (!MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
+                (float) TransitionSettings.Instrument.MzMatchTolerance, out var infoSet))
+            {
+                return null;
+            }
+
+            return infoSet.FirstOrDefault(chromatogramGroupInfo =>
+                Equals(chromatogramGroupInfo.FilePath, dataFilePath));
         }
 
         #region Implementation of IXmlSerializable

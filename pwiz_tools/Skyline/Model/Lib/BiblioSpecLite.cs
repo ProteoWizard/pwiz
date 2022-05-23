@@ -29,7 +29,6 @@ using System.Xml.Serialization;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
@@ -588,20 +587,6 @@ namespace pwiz.Skyline.Model.Lib
                 string lsid;
                 int dataRev, schemaVer;
 
-                // check what columns exist in LibInfo
-                var libInfoCols = new HashSet<string>();
-                using (var cmd = _sqliteConnection.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"PRAGMA table_info(LibInfo)";
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            libInfoCols.Add(reader.GetString(1).ToLower());
-                        }
-                    }
-                }
-
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
@@ -697,6 +682,8 @@ namespace pwiz.Skyline.Model.Lib
                     int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
                     int iScore = reader.GetOrdinal(RefSpectra.score);
                     int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
+                    int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
+                    int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
 
                     int rowsRead = 0;
                     while (reader.Read())
@@ -727,7 +714,7 @@ namespace pwiz.Skyline.Model.Lib
                         int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?) null;
                         var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
                         bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
-                            string.IsNullOrEmpty(chemicalFormula); // We may write an adduct like [M+H] for peptides
+                                           !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
                         SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
                         if (isProteomic)
                         {
@@ -738,7 +725,28 @@ namespace pwiz.Skyline.Model.Lib
                             var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName) ? reader.GetString(iMoleculeName) : null;
                             var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey) ? reader.GetString(iInChiKey) : null;
                             var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
-                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                            if (string.IsNullOrEmpty(chemicalFormula))
+                            {
+                                var precursorMz = reader.GetDouble(iPrecursorMZ);
+                                Adduct precursorAdduct;
+                                if (string.IsNullOrEmpty(adduct))
+                                {
+                                    precursorAdduct = Adduct.FromChargeNoMass(charge);
+                                }
+                                else
+                                {
+                                    precursorAdduct = Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic,
+                                        charge);
+                                }
+                                TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
+                                TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
+                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
+                                    null, monoMass, avgMass, inChiKey, otherKeys);
+                            }
+                            else
+                            {
+                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                            }
                             // Construct a custom molecule so we can be sure we're using the same keys
                             var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
                             sequence = mol.PrimaryEquivalenceKey;
@@ -957,7 +965,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached, out var failureException))
+            if (Load(loader, status, cached))
                 return true;
 
             // If loading from the cache failed, rebuild it.
@@ -969,7 +977,7 @@ namespace pwiz.Skyline.Model.Lib
                     _sqliteConnection.CloseStream();
                     _sqliteConnection = null;
                 }
-                if (Load(loader, status, false, out failureException))
+                if (Load(loader, status, false))
                     return true;
             }
 
@@ -977,18 +985,15 @@ namespace pwiz.Skyline.Model.Lib
             foreach (var pooledStream in ReadStreams)
                 pooledStream.CloseStream();
 
-            if (failureException != null)
-                throw failureException;
             return false;
         }
 
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached, out Exception failureException)
+        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
         {
             try
             {
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
-                failureException = null;
                 byte[] cacheBytes = null;
                 if (!cached)
                 {
@@ -999,19 +1004,12 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    try
+                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
+                    if (cacheBytes == null)
                     {
-                        cacheBytes = CreateCache(loader, status, 100 - loadPercent);
-                        if (cacheBytes == null)
-                        {
-                            return false;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        failureException = new Exception(FormatErrorMessage(e), e);
                         return false;
                     }
+
                 }
 
                 status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
@@ -1150,30 +1148,27 @@ namespace pwiz.Skyline.Model.Lib
 
                 return true;
             }
-            catch (InvalidDataException x)
-            {
-                failureException = new InvalidDataException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
-            catch (IOException x)
-            {
-                failureException = new IOException(FormatErrorMessage(x), x);
-                if (!cached)
-                {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
-                }
-                return false;
-            }
+
             catch (Exception x)
             {
-                failureException = new Exception(FormatErrorMessage(x), x);
+                // Skyline first tries to load the library passing in "true" for "cached", and, if that fails, it tries
+                // again passing in "false" for "cached". So, any errors encountered during that first cached=true pass
+                // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
+                    // SQLiteExceptions are not considered programming defects and should be shown to the user
+                    // as an ordinary error message
+                    if (x is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
+                        // This will show the user the error message after which the operation can be treated as canceled.
+                        loader.UpdateProgress(status.ChangeErrorException(new Exception(message, x)));
+                    }
+                    else
+                    {
+                        // Other sorts of exceptions should be posted to the Exception Web
+                        throw new Exception(FormatErrorMessage(x), x);
+                    }
                 }
                 return false;
             }
@@ -1563,7 +1558,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0,
                                 RegressionMethodRT.linear,
-                                new CustomCancellationToken(longWaitBroker.CancellationToken));
+                                longWaitBroker.CancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
@@ -1893,9 +1888,9 @@ namespace pwiz.Skyline.Model.Lib
                             var ionMobilityType = (eIonMobilityUnits)NullSafeToInteger(reader.GetValue(iIonMobilityType));
                             if (!ionMobilityType.Equals(eIonMobilityUnits.none))
                             {
-                                var ionMobility = reader.GetDouble(iIonMobility);
-                                var collisionalCrossSectionSqA = reader.GetDouble(iCCS);
-                                var ionMobilityHighEnergyOffset = reader.GetDouble(iIonMobilityHighEnergyOffset);
+                                var ionMobility = UtilDB.GetNullableDouble(reader, iIonMobility);
+                                var collisionalCrossSectionSqA = UtilDB.GetNullableDouble(reader, iCCS);
+                                var ionMobilityHighEnergyOffset = UtilDB.GetNullableDouble(reader, iIonMobilityHighEnergyOffset);
                                 if (!(ionMobility == 0 && collisionalCrossSectionSqA == 0 && ionMobilityHighEnergyOffset == 0))
                                     ionMobilityInfo = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility, ionMobilityType), collisionalCrossSectionSqA, ionMobilityHighEnergyOffset);
                             }
@@ -2054,7 +2049,7 @@ namespace pwiz.Skyline.Model.Lib
                 return 0;
             }
             return Convert.ToInt32(value);
-        } 
+        }
 
         #region Implementation of IXmlSerializable
         

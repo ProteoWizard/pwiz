@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -129,10 +128,6 @@ namespace pwiz.Skyline.Alerts
 
         public void OkDialog()
         {
-            if (!Equals(Settings.Default.StackTraceListVersion, Install.Version))
-            {
-                Settings.Default.StackTraceListVersion = Install.Version;
-            }
             using (var detailedReportErrorDlg = new DetailedReportErrorDlg())
             {
                 if (detailedReportErrorDlg.ShowDialog(this) == DialogResult.OK)
@@ -201,13 +196,10 @@ namespace pwiz.Skyline.Alerts
                 if (!String.IsNullOrEmpty(_message))
                     sb.Append(@"User comments:").AppendLine().AppendLine(_message).AppendLine();
                 
-                if (ApplicationDeployment.IsNetworkDeployed)
-                {
-                    sb.Append(@"Skyline version: ").Append(Install.Version);
-                    if (Install.Is64Bit)
-                        sb.Append(@" (64-bit)");
-                    sb.AppendLine();
-                }
+                sb.Append(@"Skyline version: ").Append(Install.Version);
+                if (Install.Is64Bit)
+                    sb.Append(@" (64-bit)");
+                sb.AppendLine();
 
                 sb.Append(@"Installation ID: ").AppendLine(UserGuid);
                 sb.Append(@"Exception type: ").AppendLine(_exceptionType);
@@ -236,7 +228,7 @@ namespace pwiz.Skyline.Alerts
 
         private void btnClipboard_Click(object sender, EventArgs e)
         {
-            ClipboardEx.SetText(MessageBody);
+            ClipboardHelper.SetClipboardText(this, MessageBody);
         }
 
         private void btnOK_Click(object sender, EventArgs e)

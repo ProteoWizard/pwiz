@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest
         public void TestSerializePeptides()
         {
             var srmDocument = new SrmDocument(SrmSettingsList.GetDefault());
-            string strProteinSequence = string.Join(string.Empty, 
+            string strProteinSequence = string.Concat(
                 "MSLSSKLSVQDLDLKDKRVFIRVDFNVPLDGKKITSNQRIVAALPTIKYVLEHHPRYVVL",
                 "ASHLGRPNGERNEKYSLAPVAKELQSLLGKDVTFLNDCVGPEVEAAVKASAPGSVILLEN",
                 "LRYHIEEEGSRKVDGQKVKASKEDVQKFRHELSSLADVYINDAFGTAHRAHSSMVGFDLP",

@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -44,6 +45,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -171,9 +173,9 @@ namespace pwiz.SkylineTestTutorial
                     PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
                 importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
@@ -188,10 +190,16 @@ namespace pwiz.SkylineTestTutorial
             // Verify input paths sent to BlibBuild
             string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
             string buildOutput = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildOutput;
-            var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var argFiles = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Skip(1).ToArray();
+            for (var i = 0; i < argFiles.Length; i++)
+            {
+                var j = argFiles[i].IndexOf("score_threshold=", StringComparison.InvariantCulture);
+                if (j >= 0)
+                    argFiles[i] = argFiles[i].Substring(0, j).TrimEnd();
+            }
             var dirCommon = PathEx.GetCommonRoot(searchFiles);
             var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
-            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argFiles), buildArgs);
 
             // Verify resulting .blib file contains the expected files
             var docLib = librarySettings.Libraries[0];
@@ -521,14 +529,16 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
-                    Assert.AreEqual(726, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(75656, pointCount);
                     SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
                 });
                 WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
 
                 RunUI(() =>
                 {
-                    Assert.AreEqual(36, SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.CurveList.Sum(item => item.NPts));
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(3575, pointCount);
                     SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
                 });
             }
@@ -714,6 +724,25 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private int GetTotalPointCount(GraphPane msGraphPane)
+        {
+            int total = 0;
+            foreach (var curve in msGraphPane.CurveList)
+            {
+                var pointList = curve.Points;
+                if (pointList is MSPointList msPointList)
+                {
+                    total += msPointList.FullCount;
+                }
+                else
+                {
+                    total += pointList.Count;
+                }
+            }
+
+            return total;
         }
 
         private GraphChromatogram GetGraphChromatogram(int chromIndex)
