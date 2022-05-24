@@ -38,6 +38,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void ConsoleBrukerDiaPasefImportTest()
         {
+            if (SkipForResharperAnalysis())
+                return;
+
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
             TestFilesZipPaths = new[]
