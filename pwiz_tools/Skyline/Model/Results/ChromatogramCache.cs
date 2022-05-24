@@ -579,7 +579,12 @@ namespace pwiz.Skyline.Model.Results
 
             public RawData ChangeResultFileDatas(IEnumerable<ResultFileMetaData> resultFileDatas)
             {
-                return ChangeProp(ImClone(this), im => im.ResultFileDatas = ImmutableList.ValueOf(resultFileDatas));
+                var list = ImmutableList.ValueOf(resultFileDatas);
+                if (list != null)
+                {
+                    Assume.AreEqual(ChromCacheFiles.Count, list.Count);
+                }
+                return ChangeProp(ImClone(this), im => im.ResultFileDatas = list);
             }
 
             public ChromGroupHeaderInfo RecalcEntry(int entryIndex,

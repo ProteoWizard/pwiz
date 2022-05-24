@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Xml;
 using pwiz.Common.SystemUtil;
@@ -135,7 +136,11 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            return Convert.ChangeType(operandValue, type, cultureInfo);
+
+            var typeConverter = TypeDescriptor.GetConverter(type);
+            // ReSharper disable AssignNullToNotNullAttribute
+            return typeConverter.ConvertFrom(null, CultureInfo.InvariantCulture, operandValue);
+            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         private static string OperandValueToString(CultureInfo cultureInfo, object operandValue)
@@ -144,7 +149,8 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            return (string) Convert.ChangeType(operandValue, typeof (string), cultureInfo);
+
+            return LocalizationHelper.CallWithCulture(cultureInfo, operandValue.ToString);
         }
 
         public Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType)

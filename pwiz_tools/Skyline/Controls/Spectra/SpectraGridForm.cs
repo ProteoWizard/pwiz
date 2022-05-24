@@ -13,6 +13,7 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
@@ -219,7 +220,6 @@ namespace pwiz.Skyline.Controls.Spectra
                     .OfType<TransitionGroupDocNode>().ToList();
             }
 
-            var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             foreach (var dataFileItem in _dataFileList)
             {
                 if (!_spectrumLists.TryGetValue(dataFileItem, out var spectrumList ))
@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 if (transitionGroupDocNodes != null)
                 {
                     spectra = ImmutableList.ValueOf(spectra.Where(spectrum =>
-                        FindMatchingTransitionGroups(spectrum, transitionGroupDocNodes, tolerance).Any()));
+                        FindMatchingTransitionGroups(document.Settings.TransitionSettings, spectrum, transitionGroupDocNodes).Any()));
                 }
 
                 foreach (var spectrumGroup in spectra.GroupBy(spectrum=>new SpectrumClassKey(classColumns, spectrum)))
@@ -306,9 +306,26 @@ namespace pwiz.Skyline.Controls.Spectra
             }
         }
 
-        private IEnumerable<TransitionGroupDocNode> FindMatchingTransitionGroups(SpectrumMetadata spectrumMetadata,
-            IList<TransitionGroupDocNode> transitionGroups, double tolerance)
+        private IEnumerable<TransitionGroupDocNode> FindMatchingTransitionGroups(TransitionSettings transitionSettings, SpectrumMetadata spectrumMetadata, IList<TransitionGroupDocNode> transitionGroups)
         {
+            if (1 == spectrumMetadata.MsLevel)
+            {
+                if (!transitionSettings.FullScan.IsEnabledMs)
+                {
+                    yield break;
+                }
+
+                foreach (var transitionGroup in transitionGroups)
+                {
+                    if (transitionGroup.Transitions.Any(t => t.IsMs1))
+                    {
+                        yield return transitionGroup;
+                    }
+                }
+
+                yield break;
+            }
+            var tolerance = transitionSettings.Instrument.MzMatchTolerance;
             foreach (var spectrumPrecursor in spectrumMetadata.GetPrecursors(1))
             {
                 foreach (var transitionGroup in transitionGroups)

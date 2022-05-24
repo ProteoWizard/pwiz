@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.Spectra;
-using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
+    [TypeConverter(typeof(Converter))]
+    [Filterable]
     public class SpectrumPrecursors : IFormattable
     {
         public static readonly SpectrumPrecursors EMPTY =
@@ -50,6 +52,44 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public override int GetHashCode()
         {
             return _precursors.GetHashCode();
+        }
+
+        public static SpectrumPrecursors Parse(CultureInfo culture, string s)
+        {
+            try
+            {
+                var listSeparator = TextUtil.GetCsvSeparator(culture);
+                var precursors = new List<SpectrumPrecursor>();
+                foreach (var field in TextUtil.ParseDsvFields(s, listSeparator))
+                {
+                    var doubleValue = double.Parse(field.Trim(), culture);
+                    precursors.Add(new SpectrumPrecursor(new SignedMz(doubleValue, doubleValue < 0)));
+                }
+
+                return new SpectrumPrecursors(precursors);
+            }
+            catch (FormatException formatException)
+            {
+                throw new FormatException("Unable to convert '{0}' to a list of precursors", formatException);
+            }
+        }
+
+        public class Converter : TypeConverter
+        {
+            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+            {
+                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
+            }
+
+            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            {
+                if (!(value is string stringValue))
+                {
+                    return base.ConvertFrom(context, culture, value);
+                }
+
+                return Parse(culture, stringValue);
+            }
         }
     }
 }

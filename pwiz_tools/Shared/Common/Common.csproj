@@ -153,6 +153,7 @@
     <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\FilterableAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />

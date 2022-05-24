@@ -149,6 +149,7 @@
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
     <Compile Include="PeakShapeStatisticsTest.cs" />
+    <Compile Include="SpectrumClassFilterTest.cs" />
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
