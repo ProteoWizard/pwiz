@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1872,6 +1873,19 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public class TransitionGroupKey
+        {
+            public TransitionGroupKey(Adduct adduct, SpectrumClassFilter spectrumClassFilter)
+            {
+                Adduct = adduct.Unlabeled;
+                SpectrumClassFilter = spectrumClassFilter;
+            }
+
+            public Adduct Adduct { get; }
+
+            public SpectrumClassFilter SpectrumClassFilter { get; }
+        }
+
         public struct TransitionKey
         {
             private readonly IonType _ionType;
@@ -1879,7 +1893,6 @@ namespace pwiz.Skyline.Model
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
             private readonly int? _decoyMassShift;
-            private readonly Adduct _adduct; // We only care about charge and formula, other adduct details such as labels are intentionally not part of the comparison
             private readonly PrecursorKey _precursorKey;
             private readonly TransitionLosses _losses;
             private readonly IsotopeLabelType _labelType;
@@ -1892,7 +1905,6 @@ namespace pwiz.Skyline.Model
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
                 _decoyMassShift = transition.DecoyMassShift;
-                _adduct = transition.Adduct.Unlabeled; // Only interested in charge and formula, ignore any labels
                 _precursorKey = nodeGroup.PrecursorKey; // Only interested in charge and formula, ignore any labels
                 _losses = tranLossKey.Losses;
                 _labelType = labelType;
@@ -1905,7 +1917,7 @@ namespace pwiz.Skyline.Model
                 _ionOrdinal = key._ionOrdinal;
                 _massIndex = key._massIndex;
                 _decoyMassShift = key._decoyMassShift;
-                _adduct = key._adduct;
+                _precursorKey = key._precursorKey;
                 _precursorKey = key._precursorKey;
                 _losses = key._losses;
                 _labelType = labelType;
@@ -1920,7 +1932,7 @@ namespace pwiz.Skyline.Model
             // Match charge states if any specified (adduct may also contain isotope info, so look at charge specifically)
             internal bool IsMatchForRatioPurposes(PrecursorKey other)
             {
-                if (!Equals(PrecursorKey.PrecursorExtraInfo, other.PrecursorExtraInfo))
+                if (!Equals(PrecursorKey.SpectrumClassFilter, other.SpectrumClassFilter))
                 {
                     return false;
                 }
@@ -1942,7 +1954,6 @@ namespace pwiz.Skyline.Model
                        other._ionOrdinal == _ionOrdinal &&
                        other._massIndex == _massIndex &&
                        Equals(other._decoyMassShift, _decoyMassShift) &&
-                       Equals(other._adduct, _adduct) &&
                        Equals(other._precursorKey, _precursorKey) &&
                        Equals(other._losses, _losses) &&
                        Equals(other._labelType, _labelType);
@@ -1964,7 +1975,6 @@ namespace pwiz.Skyline.Model
                     result = (result*397) ^ _ionOrdinal;
                     result = (result*397) ^ _massIndex;
                     result = (result*397) ^ (_decoyMassShift.HasValue ? _decoyMassShift.Value : 0);
-                    result = (result*397) ^ _adduct.GetHashCode();
                     result = (result*397) ^ _precursorKey.GetHashCode();
                     result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);
                     result = (result*397) ^ _labelType.GetHashCode();

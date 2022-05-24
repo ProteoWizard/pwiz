@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
+using System.IO;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -30,6 +27,30 @@ namespace pwiz.SkylineTest
             Assert.IsInstanceOfType(operandValue, typeof(SpectrumPrecursors));
             var spectrumPrecursors = operandValue as SpectrumPrecursors;
             Assert.AreEqual(expectedSpectrumPrecursors, spectrumPrecursors);
+        }
+
+        [TestMethod]
+        public void TestSpectrumClassFilterSerialization()
+        {
+            var spectrumPrecursors = new SpectrumPrecursors(new[]
+            {
+                new SpectrumPrecursor(new SignedMz(422.5)),
+                new SpectrumPrecursor(new SignedMz(475.7))
+            });
+            var filterSpecs = new[]
+            {
+                new FilterSpec(SpectrumClassColumn.Ms2Precursors.PropertyPath,
+                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, spectrumPrecursors)),
+                new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
+                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
+            };
+            var spectrumClassFilter = new SpectrumClassFilter(filterSpecs);
+            var xmlSerializer = new XmlSerializer(typeof(SpectrumClassFilter));
+            var stream = new MemoryStream();
+            xmlSerializer.Serialize(stream, spectrumClassFilter);
+            stream.Seek(0, SeekOrigin.Begin);
+            var roundTrip = xmlSerializer.Deserialize(stream);
+            Assert.AreEqual(spectrumClassFilter, roundTrip);
         }
     }
 }

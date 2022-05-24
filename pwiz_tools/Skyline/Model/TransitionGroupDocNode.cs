@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -236,13 +237,13 @@ namespace pwiz.Skyline.Model
         public MassType PrecursorMzMassType { get; private set; } // What kind of mass was used to calculate Mz?
         public SignedMz PrecursorMz { get; private set; }
 
-        public PrecursorExtraInfo PrecursorExtraInfo { get; private set; }
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
         public PrecursorKey PrecursorKey
         {
             get
             {
-                return new PrecursorKey(PrecursorAdduct, PrecursorExtraInfo);
+                return new PrecursorKey(PrecursorAdduct, SpectrumClassFilter);
             }
         }
         public int PrecursorCharge { get { return TransitionGroup.PrecursorAdduct.AdductCharge; } }
@@ -3113,7 +3114,7 @@ namespace pwiz.Skyline.Model
                         Equals(obj.CustomMolecule, CustomMolecule) &&
                         Equals(obj.ExplicitValues, ExplicitValues) &&
                         Equals(obj.PrecursorConcentration, PrecursorConcentration) &&
-                        Equals(obj.PrecursorExtraInfo, PrecursorExtraInfo);
+                        Equals(obj.SpectrumClassFilter, SpectrumClassFilter);
             return equal;
         }
 
@@ -3136,7 +3137,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ ExplicitValues.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorConcentration.GetHashCode();
-                result = (result*397) ^ PrecursorExtraInfo?.GetHashCode() ?? 0;
+                result = (result*397) ^ SpectrumClassFilter?.GetHashCode() ?? 0;
                 return result;
             }
         }

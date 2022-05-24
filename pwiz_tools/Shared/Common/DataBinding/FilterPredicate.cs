@@ -56,6 +56,11 @@ namespace pwiz.Common.DataBinding
             return new FilterPredicate(filterOperation, invariantOperandText);
         }
 
+        public static FilterPredicate CreateFilterPredicate<T>(IFilterOperation filterOperation, T operand)
+        {
+            return new FilterPredicate(filterOperation, OperandValueToString(CultureInfo.InvariantCulture, operand));
+        }
+
         private FilterPredicate(IFilterOperation filterOperation, String invariantOperandText)
         {
             FilterOperation = filterOperation;
