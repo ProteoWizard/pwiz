@@ -3463,9 +3463,14 @@ namespace pwiz.Skyline.Model
             string line;
             string name = string.Empty;
             StringBuilder sequence = new StringBuilder();
+            int lineNum = 0;
 
             while ((line = reader.ReadLine()) != null)
             {
+                for (int i=0; i < line.Length; ++i)
+                    if (line[i] < 32 || line[i] > 126)
+                        throw new InvalidDataException($"Error on line {lineNum}: invalid non-ASCII character '{line[i]}' at position {i}");
+                    
                 if (line.StartsWith(@">"))
                 {
                     if (!string.IsNullOrEmpty(name))
