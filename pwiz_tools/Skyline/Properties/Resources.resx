@@ -11771,4 +11771,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
       <value>dotp: {0:0.0000}</value>
   </data>
+  <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
+	  <value>Error on line {0}: invalid non-ASCII character '{1}' at position {2}; are you sure this is a FASTA file?</value>
+  </data>
 </root>

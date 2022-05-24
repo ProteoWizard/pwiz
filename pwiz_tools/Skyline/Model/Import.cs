@@ -3469,7 +3469,7 @@ namespace pwiz.Skyline.Model
             {
                 for (int i=0; i < line.Length; ++i)
                     if (line[i] < 32 || line[i] > 126)
-                        throw new InvalidDataException($"Error on line {lineNum}: invalid non-ASCII character '{line[i]}' at position {i}");
+                        throw new InvalidDataException(string.Format(Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_, lineNum, line[i], i));
                     
                 if (line.StartsWith(@">"))
                 {

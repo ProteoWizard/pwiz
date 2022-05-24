@@ -13850,6 +13850,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error on line {0}: invalid non-ASCII character &apos;{1}&apos; at position {2}; are you sure this is a FASTA file?.
+        /// </summary>
+        public static string FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_ {
+            get {
+                return ResourceManager.GetString("FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_" +
+                        "position__2___are_you_sure_this_is_a_FASTA_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} proteins and {1} peptides added.
         /// </summary>
         public static string FastaImporter_Import__0__proteins_and__1__peptides_added {
