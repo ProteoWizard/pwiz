@@ -144,7 +144,7 @@ namespace pwiz.Common.DataBinding
 
             var typeConverter = TypeDescriptor.GetConverter(type);
             // ReSharper disable AssignNullToNotNullAttribute
-            return typeConverter.ConvertFrom(null, CultureInfo.InvariantCulture, operandValue);
+            return typeConverter.ConvertFrom(null, cultureInfo, operandValue);
             // ReSharper restore AssignNullToNotNullAttribute
         }
 

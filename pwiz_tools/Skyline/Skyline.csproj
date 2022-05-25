@@ -457,6 +457,11 @@
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -511,11 +516,6 @@
     </Compile>
     <Compile Include="Model\AbstractDdaConverter.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />

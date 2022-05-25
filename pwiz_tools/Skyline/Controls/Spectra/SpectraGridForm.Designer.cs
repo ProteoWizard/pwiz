@@ -33,8 +33,9 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.lblStatus = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.listBoxFiles = new System.Windows.Forms.ListBox();
             this.checkedListBoxSpectrumClassColumns = new System.Windows.Forms.CheckedListBox();
+            this.listBoxFiles = new System.Windows.Forms.ListBox();
+            this.btnAddSpectrumFilter = new System.Windows.Forms.Button();
             this.statusPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -86,6 +87,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btnAddSpectrumFilter);
             this.panel1.Controls.Add(this.checkedListBoxSpectrumClassColumns);
             this.panel1.Controls.Add(this.listBoxFiles);
             this.panel1.Controls.Add(this.btnBrowse);
@@ -94,6 +96,15 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 100);
             this.panel1.TabIndex = 1;
+            // 
+            // checkedListBoxSpectrumClassColumns
+            // 
+            this.checkedListBoxSpectrumClassColumns.FormattingEnabled = true;
+            this.checkedListBoxSpectrumClassColumns.IntegralHeight = false;
+            this.checkedListBoxSpectrumClassColumns.Location = new System.Drawing.Point(6, 3);
+            this.checkedListBoxSpectrumClassColumns.Name = "checkedListBoxSpectrumClassColumns";
+            this.checkedListBoxSpectrumClassColumns.Size = new System.Drawing.Size(285, 91);
+            this.checkedListBoxSpectrumClassColumns.TabIndex = 3;
             // 
             // listBoxFiles
             // 
@@ -107,14 +118,16 @@
             this.listBoxFiles.Size = new System.Drawing.Size(363, 91);
             this.listBoxFiles.TabIndex = 2;
             // 
-            // checkedListBoxSpectrumClassColumns
+            // btnAddSpectrumFilter
             // 
-            this.checkedListBoxSpectrumClassColumns.FormattingEnabled = true;
-            this.checkedListBoxSpectrumClassColumns.IntegralHeight = false;
-            this.checkedListBoxSpectrumClassColumns.Location = new System.Drawing.Point(6, 3);
-            this.checkedListBoxSpectrumClassColumns.Name = "checkedListBoxSpectrumClassColumns";
-            this.checkedListBoxSpectrumClassColumns.Size = new System.Drawing.Size(285, 91);
-            this.checkedListBoxSpectrumClassColumns.TabIndex = 3;
+            this.btnAddSpectrumFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAddSpectrumFilter.Location = new System.Drawing.Point(675, 71);
+            this.btnAddSpectrumFilter.Name = "btnAddSpectrumFilter";
+            this.btnAddSpectrumFilter.Size = new System.Drawing.Size(113, 23);
+            this.btnAddSpectrumFilter.TabIndex = 4;
+            this.btnAddSpectrumFilter.Text = "Add Spectrum Filter";
+            this.btnAddSpectrumFilter.UseVisualStyleBackColor = true;
+            this.btnAddSpectrumFilter.Click += new System.EventHandler(this.btnAddSpectrumFilter_Click);
             // 
             // SpectraGridForm
             // 
@@ -143,5 +156,6 @@
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.ListBox listBoxFiles;
         private System.Windows.Forms.CheckedListBox checkedListBoxSpectrumClassColumns;
+        private System.Windows.Forms.Button btnAddSpectrumFilter;
     }
 }

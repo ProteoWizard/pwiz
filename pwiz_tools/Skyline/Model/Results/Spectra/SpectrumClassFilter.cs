@@ -130,5 +130,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 writer.WriteEndElement();
             }
         }
+
+        public static SpectrumClassFilter Deserialize(XmlReader xmlReader)
+        {
+            return xmlReader.Deserialize(new SpectrumClassFilter());
+        }
     }
 }

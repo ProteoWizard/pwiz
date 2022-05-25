@@ -88,6 +88,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return _getter(spectrumMetadata);
         }
 
+        public object GetValue(SpectrumClass spectrumClass)
+        {
+            return _propertyInfo.GetValue(spectrumClass);
+        }
+
         public void SetValue(SpectrumClass spectrumClass, object value)
         {
             _propertyInfo.SetValue(spectrumClass, value);

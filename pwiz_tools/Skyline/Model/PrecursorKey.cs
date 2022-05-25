@@ -20,6 +20,11 @@ namespace pwiz.Skyline.Model
 
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
+        public PrecursorKey ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        {
+            return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
+        }
+
         protected bool Equals(PrecursorKey other)
         {
             return Equals(Adduct, other.Adduct) && Equals(SpectrumClassFilter, other.SpectrumClassFilter);

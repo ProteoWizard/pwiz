@@ -239,6 +239,11 @@ namespace pwiz.Skyline.Model
 
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
+        public TransitionGroupDocNode ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        {
+            return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
+        }
+
         public PrecursorKey PrecursorKey
         {
             get
