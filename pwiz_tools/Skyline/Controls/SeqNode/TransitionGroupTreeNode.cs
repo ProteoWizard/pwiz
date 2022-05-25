@@ -23,14 +23,20 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -167,8 +173,14 @@ namespace pwiz.Skyline.Controls.SeqNode
         
         public static string DisplayText(TransitionGroupDocNode nodeGroup, DisplaySettings settings)
         {
-            return GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
+            string displayText = GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
                 GetResultsText(settings, nodeGroup));
+            if (null != nodeGroup.SpectrumClassFilter)
+            {
+                displayText += " (Filtered)";
+            }
+
+            return displayText;
         }
 
         private const string DOTP_FORMAT = "0.##";
@@ -465,6 +477,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
                             nodeGroup.CustomMolecule.Formula + nodeGroup.TransitionGroup.PrecursorAdduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                     }
+                    RenderSpectrumClassFilterTip(customTable, rt, nodeGroup.SpectrumClassFilter);
                     SizeF size = customTable.CalcDimensions(g);
                     customTable.Draw(g);
                     return new Size((int) size.Width + 2, (int) size.Height + 2);
@@ -534,6 +547,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     foreach (KeyValuePair<PeptideRankId, string> pair in nodeGroup.LibInfo.RankValues)
                         tableDetails.AddDetailRow(pair.Key.Label, pair.Value, rt);
                 }
+                RenderSpectrumClassFilterTip(tableDetails, rt, nodeGroup.SpectrumClassFilter);
 
                 if (charges.Length > 0 && types.Length > 0)
                 {
@@ -617,6 +631,30 @@ namespace pwiz.Skyline.Controls.SeqNode
                 int width = (int) Math.Round(Math.Max(sizeDetails.Width, size.Width));
                 int height = (int) Math.Round(sizeDetails.Height + size.Height);
                 return new Size(width + 2, height + 2);
+            }
+        }
+
+        private static void RenderSpectrumClassFilterTip(TableDesc table, RenderTools rt, SpectrumClassFilter spectrumClassFilter)
+        {
+            if (spectrumClassFilter == null)
+            {
+                return;
+            }
+            var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            foreach (var filterSpec in spectrumClassFilter.FilterSpecs)
+            {
+                string column = ColumnCaptions.ResourceManager.GetString(filterSpec.ColumnId.Name) ??
+                                filterSpec.ColumnId.Name;
+                var row = new RowDesc
+                {
+                    CreateRowLabel(TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName), rt),
+                };
+                var operand = SpectrumClassFilter.GetOperandDisplayText(dataSchema, filterSpec);
+                if (operand != null)
+                {
+                    row.Add(CreateData(operand, rt));
+                }
+                table.Add(row);
             }
         }
 

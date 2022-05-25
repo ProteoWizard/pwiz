@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -7,12 +8,13 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     [XmlRoot(XML_ROOT)]
-    public class SpectrumClassFilter : Immutable, IXmlSerializable
+    public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable<SpectrumClassFilter>
     {
         public const string XML_ROOT = "spectrum_filter";
         public SpectrumClassFilter(IEnumerable<FilterSpec> filterSpecs)
@@ -41,14 +43,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             return spectrum =>
             {
-                foreach (var clause in clauses)
+                for (int i = 0; i < clauses.Count; i++)
                 {
-                    if (!clause(spectrum))
+                    if (!clauses[i](spectrum))
                     {
                         return false;
                     }
                 }
-
                 return true;
             };
         }
@@ -134,6 +135,151 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static SpectrumClassFilter Deserialize(XmlReader xmlReader)
         {
             return xmlReader.Deserialize(new SpectrumClassFilter());
+        }
+
+        public int CompareTo(SpectrumClassFilter other)
+        {
+            if (other == null)
+            {
+                return 1;
+            }
+
+            int result = FilterSpecs.Count.CompareTo(other.FilterSpecs.Count);
+            if (result != 0)
+            {
+                return result;
+            }
+            Assume.AreEqual(FilterSpecs.Count, other.FilterSpecs.Count);
+            for (int i = 0; i < FilterSpecs.Count; i++)
+            {
+                result = FilterSpecs[i].ColumnId.CompareTo(other.FilterSpecs[i].ColumnId);
+                if (result == 0)
+                {
+                    result = StringComparer.Ordinal.Compare(FilterSpecs[i].Operation.OpName,
+                        other.FilterSpecs[i].Operation.OpName);
+                }
+
+                if (result == 0)
+                {
+                    result = StringComparer.Ordinal.Compare(FilterSpecs[i].Predicate.InvariantOperandText,
+                        other.FilterSpecs[i].Predicate.InvariantOperandText);
+                }
+
+                if (result != 0)
+                {
+                    return result;
+                }
+            }
+
+            return 0;
+        }
+
+        public static string GetOperandDisplayText(DataSchema dataSchema, FilterSpec filterSpec)
+        {
+            var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
+            if (spectrumClassColumn == null)
+            {
+                return filterSpec.Predicate.InvariantOperandText;
+            }
+
+            var operandType = filterSpec.Operation.GetOperandType(dataSchema, spectrumClassColumn.ValueType);
+            if (operandType == null)
+            {
+                return null;
+            }
+            return filterSpec.Predicate.GetOperandDisplayText(dataSchema, operandType);
+        }
+
+        public ChromatogramGroupInfo FilterChromatogramGroupInfo(SrmSettings srmSettings, ChromatogramGroupInfo chromatogramGroupInfo)
+        {
+            var resultFileMetaData = srmSettings.MeasuredResults?.GetResultFileMetaData(chromatogramGroupInfo.FilePath);
+            if (resultFileMetaData == null)
+            {
+                return chromatogramGroupInfo;
+            }
+
+            var header = chromatogramGroupInfo.Header;
+            header = new ChromGroupHeaderInfo(header.Precursor, 0, 0, 0, header.NumTransitions, 0, header.NumPeaks, 0,
+                0, header.MaxPeakIndex, header.NumPeaks, 0, 0, 0, header.Flags, header.StatusId, header.StatusRank,
+                header.StartTime, header.EndTime, header.CollisionalCrossSection, header.IonMobilityUnits);
+            var chromTransitions = Enumerable.Range(0, header.NumTransitions)
+                .Select(chromatogramGroupInfo.GetChromTransitionLocal).ToList();
+            var timeIntensitiesGroup =
+                FilterTimeIntensitiesGroup(resultFileMetaData, chromTransitions, chromatogramGroupInfo.TimeIntensitiesGroup);
+            var peaks = Enumerable.Range(0, header.NumTransitions).SelectMany(chromatogramGroupInfo.GetPeaks).ToList();
+            return new ChromatogramGroupInfo(header, chromatogramGroupInfo.CachedFile, chromTransitions, peaks, timeIntensitiesGroup);
+        }
+
+        public TimeIntensitiesGroup FilterTimeIntensitiesGroup(ResultFileMetaData resultFileMetaData,
+            IList<ChromTransition> chromTransitions,
+            TimeIntensitiesGroup timeIntensitiesGroup)
+        {
+            var predicate = MakePredicate();
+            var timeIntensitiesList = new List<TimeIntensities>();
+            if (chromTransitions != null)
+            {
+                Assume.AreEqual(chromTransitions.Count, timeIntensitiesGroup.TransitionTimeIntensities.Count);
+            }
+            for (int iTransition = 0; iTransition < timeIntensitiesGroup.TransitionTimeIntensities.Count; iTransition++)
+            {
+                var timeIntensities = timeIntensitiesGroup.TransitionTimeIntensities[iTransition];
+                if (chromTransitions != null)
+                {
+                    var chromTransition = chromTransitions[iTransition];
+                    if (chromTransition.Source == ChromSource.ms1)
+                    {
+                        timeIntensitiesList.Add(timeIntensities);
+                        continue;
+                    }
+                }
+                timeIntensitiesList.Add(FilterTimeIntensities(resultFileMetaData, predicate, timeIntensities));
+            }
+            if (timeIntensitiesGroup is RawTimeIntensities rawTimeIntensities)
+            {
+                return new RawTimeIntensities(timeIntensitiesList, rawTimeIntensities.InterpolationParams)
+                    .ChangeTimeIntervals(rawTimeIntensities.TimeIntervals);
+            }
+
+            if (timeIntensitiesGroup is InterpolatedTimeIntensities interpolatedTimeIntensities)
+            {
+                return new InterpolatedTimeIntensities(timeIntensitiesList,
+                    interpolatedTimeIntensities.TransitionChromSources);
+            }
+
+            return new RawTimeIntensities(timeIntensitiesList, null);
+        }
+
+        public static TimeIntensities FilterTimeIntensities(ResultFileMetaData resultFileMetaData,
+            Predicate<SpectrumMetadata> predicate,
+            TimeIntensities timeIntensities)
+        {
+            if (timeIntensities.ScanIds == null)
+            {
+                return timeIntensities;
+            }
+
+            var times = new List<float>();
+            var intensities = new List<float>();
+            List<float> massErrors = null;
+            if (timeIntensities.MassErrors != null)
+            {
+                massErrors = new List<float>();
+            }
+            var scanIds = new List<int>();
+            for (int i = 0; i < timeIntensities.NumPoints; i++)
+            {
+                var spectrumMetadata = resultFileMetaData.SpectrumMetadatas[timeIntensities.ScanIds[i]];
+                if (spectrumMetadata == null || !predicate(spectrumMetadata))
+                {
+                    continue;
+                }
+                times.Add(timeIntensities.Times[i]);
+                intensities.Add(timeIntensities.Intensities[i]);
+                massErrors?.Add(timeIntensities.MassErrors[i]);
+                scanIds.Add(timeIntensities.ScanIds[i]);
+            }
+
+            return new TimeIntensities(times, intensities, massErrors, scanIds);
         }
     }
 }

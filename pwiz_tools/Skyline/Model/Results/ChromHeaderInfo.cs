@@ -2305,19 +2305,21 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            ChromCachedFile chromCachedFile,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
             TimeIntensitiesGroup timeIntensitiesGroup) 
-            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
+            : this(groupHeaderInfo, chromCachedFile, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
         {
         }
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            ChromCachedFile chromCachedFile,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
             TimeIntensitiesGroup timeIntensitiesGroup, FeatureNames scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _textIdBytes = Array.Empty<byte>();
-            _allFiles = Array.Empty<ChromCachedFile>();
+            _allFiles = new[]{chromCachedFile};
             _allTransitions = allTransitions;
             _chromPeaks = peaks;
             _timeIntensitiesGroup = timeIntensitiesGroup;

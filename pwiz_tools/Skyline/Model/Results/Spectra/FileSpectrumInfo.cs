@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Spectra;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -10,12 +13,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
     [DisplayName("Info")]
     public class FileSpectrumInfo : SkylineObject, ILinkValue
     {
-        public FileSpectrumInfo(SkylineDataSchema dataSchema, int spectrumCount) : base(dataSchema)
+        private ImmutableList<SpectrumMetadata> _spectra;
+        public FileSpectrumInfo(SkylineDataSchema dataSchema, IEnumerable<SpectrumMetadata> spectra) : base(dataSchema)
         {
-            SpectrumCount = spectrumCount;
+            _spectra = ImmutableList.ValueOf(spectra);
         }
 
-        public int SpectrumCount { get; private set; }
+        public int SpectrumCount
+        {
+            get { return _spectra.Count; }
+        }
 
         public EventHandler ClickEventHandler
         {
@@ -33,6 +40,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public override string ToString()
         {
             return string.Format("{0} Spectra", SpectrumCount);
+        }
+
+        public ImmutableList<SpectrumMetadata> GetSpectra()
+        {
+            return _spectra;
         }
     }
 }

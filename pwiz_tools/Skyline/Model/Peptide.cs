@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -120,7 +121,14 @@ namespace pwiz.Skyline.Model
 
         public static int CompareGroups(TransitionGroupDocNode node1, TransitionGroupDocNode node2)
         {
-            return CompareGroups(node1.TransitionGroup, node2.TransitionGroup);
+            int result = CompareGroups(node1.TransitionGroup, node2.TransitionGroup);
+            if (result == 0)
+            {
+                result = Comparer<SpectrumClassFilter>.Default.Compare(node1.SpectrumClassFilter,
+                    node2.SpectrumClassFilter);
+            }
+
+            return result;
         }
 
         public static int CompareGroups(TransitionGroup group1, TransitionGroup group2)

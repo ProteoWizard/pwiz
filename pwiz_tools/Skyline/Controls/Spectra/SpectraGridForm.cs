@@ -28,8 +28,8 @@ namespace pwiz.Skyline.Controls.Spectra
         private SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
         private HashSet<IdentityPath> _selectedPrecursorPaths = new HashSet<IdentityPath>();
-        private List<SpectrumClass> _spectrumClasses;
-        private BindingList<SpectrumClass> _bindingList;
+        private List<SpectrumClassRow> _spectrumClasses;
+        private BindingList<SpectrumClassRow> _bindingList;
 
         private Dictionary<DataFileItem, SpectrumMetadataList> _spectrumLists =
             new Dictionary<DataFileItem, SpectrumMetadataList>();
@@ -52,8 +52,8 @@ namespace pwiz.Skyline.Controls.Spectra
             checkedListBoxSpectrumClassColumns.ItemCheck += CheckedListBoxSpectrumClassColumns_OnItemCheck;
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
-            _spectrumClasses = new List<SpectrumClass>();
-            _bindingList = new BindingList<SpectrumClass>(_spectrumClasses);
+            _spectrumClasses = new List<SpectrumClassRow>();
+            _bindingList = new BindingList<SpectrumClassRow>(_spectrumClasses);
             var viewContext = new SkylineViewContext(_dataSchema, MakeRowSourceInfos());
             BindingListSource.SetViewContext(viewContext);
             Text = TabText = "Spectra";
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private IList<RowSourceInfo> MakeRowSourceInfos()
         {
-            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(SpectrumClass));
+            var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(SpectrumClassRow));
             return ImmutableList.Singleton(new RowSourceInfo(BindingListRowSource.Create(_bindingList),
                 new ViewInfo(rootColumn, GetDefaultViewSpec())));
         }
@@ -112,6 +112,7 @@ namespace pwiz.Skyline.Controls.Spectra
         {
             var columns = new List<ColumnSpec>();
             var tolerance = SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var ppSpectrumClass = PropertyPath.Root.Property(nameof(SpectrumClassRow.Properties));
             for (int i = 0; i < _allSpectrumClassColumns.Count; i++)
             {
                 var checkedState = checkedListBoxSpectrumClassColumns.GetItemCheckState(i);
@@ -130,9 +131,9 @@ namespace pwiz.Skyline.Controls.Spectra
                     }
                 }
 
-                columns.Add(new ColumnSpec(classColumn.PropertyPath));
+                columns.Add(new ColumnSpec(ppSpectrumClass.Concat(classColumn.PropertyPath)));
             }
-            columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClass.Files)).DictionaryValues()));
+            columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClassRow.Files)).DictionaryValues()));
             return new ViewSpec().SetName("Default").SetColumns(columns);
         }
 
@@ -238,7 +239,7 @@ namespace pwiz.Skyline.Controls.Spectra
             _updatePending = false;
             var document = SkylineWindow.DocumentUI;
             AddReplicatesWithMetadata(document);
-            var spectrumClasses = new Dictionary<SpectrumClassKey, SpectrumClass>();
+            var spectrumClasses = new Dictionary<SpectrumClassKey, SpectrumClassRow>();
             var classColumns = ImmutableList.ValueOf(GetEnabledClassColumns());
             IList<TransitionGroupDocNode> transitionGroupDocNodes = null;
             if (_selectedPrecursorPaths.Count > 0)
@@ -265,10 +266,10 @@ namespace pwiz.Skyline.Controls.Spectra
                 {
                     if (!spectrumClasses.TryGetValue(spectrumGroup.Key, out var spectrumClass))
                     {
-                        spectrumClass = new SpectrumClass(_dataSchema, spectrumGroup.Key);
+                        spectrumClass = new SpectrumClassRow(new SpectrumClass(spectrumGroup.Key));
                         spectrumClasses.Add(spectrumGroup.Key, spectrumClass);
                     }
-                    spectrumClass.Files.Add(dataFileItem.ToString(), new FileSpectrumInfo(_dataSchema, spectrumGroup.Count()));
+                    spectrumClass.Files.Add(dataFileItem.ToString(), new FileSpectrumInfo(_dataSchema, spectrumGroup));
                 }
             }
 
@@ -616,19 +617,19 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private void btnAddSpectrumFilter_Click(object sender, EventArgs e)
         {
-            var spectrumClass = (BindingListSource.Current as RowItem)?.Value as SpectrumClass;
+            var spectrumClass = (BindingListSource.Current as RowItem)?.Value as SpectrumClassRow;
             if (spectrumClass != null)
             {
                 AddSpectrumFilter(spectrumClass);
             }
         }
 
-        public void AddSpectrumFilter(SpectrumClass spectrumClass)
+        public void AddSpectrumFilter(SpectrumClassRow spectrumClassRow)
         {
             var filterSpecs = new List<FilterSpec>();
             foreach (var classColumn in GetActiveClassColumns())
             {
-                object value = classColumn.GetValue(spectrumClass);
+                object value = classColumn.GetValue(spectrumClassRow.Properties);
                 FilterPredicate filterPredicate;
                 if (value != null)
                 {
@@ -643,11 +644,12 @@ namespace pwiz.Skyline.Controls.Spectra
             }
 
             var spectrumFilter = new SpectrumClassFilter(filterSpecs);
-            SkylineWindow.ModifyDocument("Add spectrum filter", doc => AddSpectrumFilter(doc, spectrumFilter),
+            var firstSpectrumMetadata = spectrumClassRow.Files.SelectMany(entry => entry.Value.GetSpectra()).FirstOrDefault();
+            SkylineWindow.ModifyDocument("Add spectrum filter", doc => AddSpectrumFilter(doc, spectrumFilter, firstSpectrumMetadata),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
         }
 
-        public SrmDocument AddSpectrumFilter(SrmDocument document, SpectrumClassFilter spectrumClassFilter)
+        public SrmDocument AddSpectrumFilter(SrmDocument document, SpectrumClassFilter spectrumClassFilter, SpectrumMetadata spectrumMetadata)
         {
             foreach (var peptidePathGroup in _selectedPrecursorPaths.GroupBy(path => path.Parent))
             {
@@ -669,12 +671,25 @@ namespace pwiz.Skyline.Controls.Spectra
                         continue;
                     }
 
-                    var newTransitionGroup = ChangeSpectrumFilter(precursorGroup.First(), spectrumClassFilter);
+                    var templateTransitionGroup = precursorGroup.First();
+                    if (spectrumMetadata != null)
+                    {
+                        if (!FindMatchingTransitionGroups(document.Settings.TransitionSettings, spectrumMetadata,
+                                new[] {templateTransitionGroup}).Any())
+                        {
+                            continue;
+                        }
+                    }
+                    var newTransitionGroup = ChangeSpectrumFilter(templateTransitionGroup, spectrumClassFilter);
                     newTransitionGroups.Add(newTransitionGroup);
                 }
 
-                peptideDocNode = (PeptideDocNode) peptideDocNode.ChangeChildren(newTransitionGroups);
-                document = (SrmDocument) document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
+                if (newTransitionGroups.Count != peptideDocNode.Children.Count)
+                {
+                    newTransitionGroups.Sort(Peptide.CompareGroups);
+                    peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
+                    document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
+                }
             }
 
             return document;

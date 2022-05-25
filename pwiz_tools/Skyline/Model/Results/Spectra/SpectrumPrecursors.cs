@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public override string ToString()
         {
-            return ToString(Formats.Mz, CultureInfo.CurrentCulture);
+            return ToString(Formats.RoundTrip, CultureInfo.CurrentCulture);
         }
 
         public string ToString(string format, IFormatProvider formatProvider)

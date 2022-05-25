@@ -681,6 +681,22 @@ namespace pwiz.Skyline.Model.Results
             return dictionary;
         }
 
+        public ResultFileMetaData GetResultFileMetaData(MsDataFileUri msDataFileUri)
+        {
+            foreach (var cache in Caches)
+            {
+                for (int i = 0; i < cache.CachedFiles.Count; i++)
+                {
+                    if (msDataFileUri.Equals(cache.CachedFiles[i].FilePath))
+                    {
+                        return cache.GetResultFileMetadata(i);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public bool HasAllIonsChromatograms
         {
             get { return Caches.Any(cache => cache.HasAllIonsChromatograms); }

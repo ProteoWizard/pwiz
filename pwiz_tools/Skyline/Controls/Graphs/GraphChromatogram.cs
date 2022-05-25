@@ -2562,10 +2562,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listFiles = new List<MsDataFileUri>();
                 for (int i = 0; i < nodeGroups.Length; i++)
                 {
+                    var transitionGroupDocNode = nodeGroups[i];
                     if (!results.TryLoadChromatogram(
                         chromatograms, 
                         nodePeps[i], 
-                        nodeGroups[i], 
+                        transitionGroupDocNode, 
                         mzMatchTolerance, 
                         out var arrayChromInfo))
                     {
@@ -2573,6 +2574,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
 
+                    if (transitionGroupDocNode.SpectrumClassFilter != null)
+                    {
+                        arrayChromInfo = arrayChromInfo.Select(chrom =>
+                            transitionGroupDocNode.SpectrumClassFilter.FilterChromatogramGroupInfo(DocumentUI.Settings,
+                                chrom)).ToArray();
+                    }
                     listArrayChromInfo.Add(arrayChromInfo);
                     foreach (var chromInfo in arrayChromInfo)
                     {

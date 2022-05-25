@@ -1495,7 +1495,7 @@ namespace pwiz.Skyline.Model.Results
             var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
             var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToArray();
-            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromTransitions,
+            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromCachedFile, chromTransitions,
                 chromPeaks, timeIntensitiesGroup, featureNames, scores);
             return chromatogramGroupInfo;
         }
