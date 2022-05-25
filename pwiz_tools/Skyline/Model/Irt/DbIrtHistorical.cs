@@ -1,0 +1,85 @@
+﻿/*
+ * Original author: Kaipo Tamura <kaipot .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2022 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using pwiz.Skyline.Model.Lib.BlibData;
+// ReSharper disable VirtualMemberCallInConstructor
+
+namespace pwiz.Skyline.Model.Irt
+{
+    public class DbIrtHistorical : DbEntity
+    {
+        public override Type EntityClass => typeof(DbIrtHistorical);
+
+        // public virtual long? Id { get; set; } // in DbEntity
+        public virtual long PeptideId { get; set; }
+        public virtual double Irt { get; set; }
+
+        /// <summary>
+        /// For NHibernate only
+        /// </summary>
+        protected DbIrtHistorical()
+        {
+        }
+
+        public DbIrtHistorical(long peptideId, double irt)
+        {
+            Id = null;
+            PeptideId = peptideId;
+            Irt = irt;
+        }
+
+        public DbIrtHistorical(DbIrtHistorical other)
+        {
+            Id = other.Id;
+            PeptideId = other.PeptideId;
+            Irt = other.Irt;
+        }
+
+        #region object overrides
+
+        public virtual bool Equals(DbIrtHistorical other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) &&
+                   PeptideId.Equals(other.PeptideId) &&
+                   Irt.Equals(other.Irt);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as DbIrtPeptide);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var result = base.GetHashCode();
+                result = (result * 397) ^ PeptideId.GetHashCode();
+                result = (result * 397) ^ Irt.GetHashCode();
+                return result;
+            }
+        }
+
+        #endregion
+    }
+}

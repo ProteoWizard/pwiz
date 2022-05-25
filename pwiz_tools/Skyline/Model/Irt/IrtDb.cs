@@ -17,14 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.Linq;
-using System.IO;
-using System.Threading;
-using System.Xml;
-using System.Xml.Serialization;
 using NHibernate;
 using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
@@ -34,6 +26,16 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
+using NHibernate.Tool.hbm2ddl;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
@@ -61,10 +63,10 @@ namespace pwiz.Skyline.Model.Irt
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
-        private TargetMap<double> _dictStandards;
-        private TargetMap<double> _dictLibrary;
+        private TargetMap<TargetInfo> _dictStandards;
+        private TargetMap<TargetInfo> _dictLibrary;
 
-        private IrtDb(String path, ISessionFactory sessionFactory)
+        private IrtDb(string path, ISessionFactory sessionFactory)
         {
             _path = path;
             _sessionFactory = sessionFactory;
@@ -106,26 +108,21 @@ namespace pwiz.Skyline.Model.Irt
 
         public double UnknownScore { get; private set; }
 
-        public IEnumerable<KeyValuePair<Target, double>> PeptideScores
-        {
-            get { return new[] {DictStandards, DictLibrary}.SelectMany(dict => dict); }
-        }
+        public IEnumerable<KeyValuePair<Target, double>> PeptideScores =>
+            DictStandards.Concat(DictLibrary).Select(kvp => new KeyValuePair<Target, double>(kvp.Key, kvp.Value.Irt));
 
-        private IEnumerable<double> Scores
-        {
-            get { return new[] {DictStandards, DictLibrary}.SelectMany(dict => dict.Values); }
-        }
+        private IEnumerable<double> Scores => PeptideScores.Select(score => score.Value);
 
-        private IDictionary<Target, double> DictStandards
+        private IDictionary<Target, TargetInfo> DictStandards
         {
             get => _dictStandards;
-            set => _dictStandards = new TargetMap<double>(value);
+            set => _dictStandards = new TargetMap<TargetInfo>(value);
         }
 
-        private IDictionary<Target, double> DictLibrary
+        private IDictionary<Target, TargetInfo> DictLibrary
         {
             get => _dictLibrary;
-            set => _dictLibrary = new TargetMap<double>(value);
+            set => _dictLibrary = new TargetMap<TargetInfo>(value);
         }
 
         private ISession OpenWriteSession()
@@ -146,15 +143,18 @@ namespace pwiz.Skyline.Model.Irt
 
         public int LibraryPeptideCount => DictLibrary.Count;
 
+        public bool Redundant {get; private set; }
+
         public string DocumentXml { get; private set; }
 
         public IrtRegressionType RegressionType { get; private set; }
 
         public double? ScoreSequence(Target seq)
         {
-            if (seq != null && (DictStandards.TryGetValue(seq, out var irt) || DictLibrary.TryGetValue(seq, out irt)))
-                return irt;
-            return null;
+            if (seq == null || (!DictStandards.TryGetValue(seq, out var info) && !DictLibrary.TryGetValue(seq, out info)))
+                return null;
+
+            return info.Histories == null ? info.Irt : new Statistics(info.Histories.Append(info.Irt)).Median();
         }
 
         public IList<DbIrtPeptide> GetPeptides()
@@ -165,10 +165,19 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
+        public IList<DbIrtHistorical> GetHistory()
+        {
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
+            {
+                return SqliteOperations.TableExists(session.Connection, @"IrtHistory")
+                    ? session.CreateCriteria(typeof(DbIrtHistorical)).List<DbIrtHistorical>()
+                    : null;
+            }
+        }
+
         public string GetDocumentXml()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
-                false, CancellationToken.None))
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
                     return null;
@@ -183,8 +192,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtRegressionType GetRegressionType()
         {
-            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock,
-                false, CancellationToken.None))
+            using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml") ||
                     !SqliteOperations.ColumnExists(session.Connection, @"DocumentXml", @"RegressionType"))
@@ -200,92 +208,136 @@ namespace pwiz.Skyline.Model.Irt
 
         #region Property change methods
 
-        private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
+        private IrtDb Load(IProgressMonitor loadMonitor, IProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
         {
             var rawPeptides = dbPeptides = GetPeptides();
+            var history = GetHistory();
             var result = ChangeProp(ImClone(this), im =>
             {
-                im.LoadPeptides(rawPeptides);
+                im.LoadPeptides(rawPeptides, history);
+                im.Redundant = history != null;
                 im.DocumentXml = GetDocumentXml();
                 im.RegressionType = GetRegressionType();
             });
             // Not really possible to show progress, unless we switch to raw reading
-            if (loadMonitor != null)
-                loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
+            loadMonitor?.UpdateProgress(status.ChangePercentComplete(100));
             return result;
         }
 
-        public IrtDb AddPeptides(IProgressMonitor monitor, IList<DbIrtPeptide> newPeptides)
+        public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, bool redundant, IProgressMonitor monitor = null)
         {
-            IProgressStatus status = new ProgressStatus(Resources.IrtDb_AddPeptides_Adding_peptides);
-            return AddPeptides(monitor, newPeptides, ref status);
+            IProgressStatus status = new ProgressStatus(Resources.IrtDb_UpdatePeptides_Updating_peptides);
+            return UpdatePeptides(newPeptides, redundant, monitor, ref status);
         }
 
-        public IrtDb AddPeptides(IProgressMonitor monitor, IList<DbIrtPeptide> newPeptides, ref IProgressStatus status)
+        public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, bool redundant, IProgressMonitor monitor, ref IProgressStatus status)
         {
-            var total = newPeptides.Count;
-            var i = 0;
+            if (redundant && !Redundant)
+            {
+                // Create the IrtHistory table
+                var config = SessionFactoryFactory.GetConfiguration(_path, typeof(IrtDb), false);
+                new SchemaUpdate(config).Execute(false, true);
+            }
+
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
-                foreach (var peptideNewDisconnected in newPeptides.Select(peptideNew => new DbIrtPeptide(peptideNew) {Id = null}))
+                if (!redundant)
+                    SqliteOperations.DropTable(session.Connection, @"IrtHistory");
+
+                var newTargets = newPeptides.Select(pep => pep.ModifiedTarget).ToHashSet();
+                var existingPeps = new Dictionary<Target, DbIrtPeptide>();
+                foreach (var pep in session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>())
                 {
-                    session.SaveOrUpdate(peptideNewDisconnected);
+                    // Remove peptides that are no longer in the list
+                    if (!newTargets.Contains(pep.ModifiedTarget))
+                    {
+                        session.Delete(pep);
+                        continue;
+                    }
+
+                    if (!existingPeps.TryGetValue(pep.ModifiedTarget, out var tryGetPep))
+                    {
+                        existingPeps[pep.ModifiedTarget] = pep;
+                    }
+                    else if (pep.Standard && !tryGetPep.Standard)
+                    {
+                        // Delete library peptide if it is also a standard
+                        session.Delete(tryGetPep);
+                        existingPeps[pep.ModifiedTarget] = pep;
+                    }
+                }
+
+                var existingHistories = new Dictionary<long, List<double>>();
+                if (redundant)
+                {
+                    foreach (var history in session.CreateCriteria(typeof(DbIrtHistorical)).List<DbIrtHistorical>())
+                    {
+                        if (!existingHistories.TryGetValue(history.PeptideId, out var list))
+                            existingHistories.Add(history.PeptideId, new List<double> { history.Irt });
+                        else
+                            list.Add(history.Irt);
+                    }
+                }
+
+                // Add or update peptides that have changed from the old list
+                var i = 0;
+                foreach (var pep in newPeptides)
+                {
                     if (monitor != null)
                     {
                         if (monitor.IsCanceled)
                             return null;
-                        monitor.UpdateProgress(status = status.ChangePercentComplete(++i * 100 / total));
+                        monitor.UpdateProgress(status = status.ChangePercentComplete(i++ * 100 / newPeptides.Count));
+                    }
+                    
+                    if (existingPeps.TryGetValue(pep.ModifiedTarget, out var pepExisting))
+                    {
+                        pep.Id = pepExisting.Id;
+                        if (Equals(pep, pepExisting))
+                            continue;
+
+                        if (redundant && !pep.Standard && !Equals(pep.Irt, pepExisting.Irt))
+                        {
+                            var history = new DbIrtHistorical(pep.Id.Value, pepExisting.Irt);
+                            session.Save(history);
+                        }
+                        pepExisting.Irt = pep.Irt;
+                        pepExisting.Standard = pep.Standard;
+                        pepExisting.TimeSource = pep.TimeSource;
+                        session.Update(pepExisting);
+                    }
+                    else
+                    {
+                        // Create a new instance, because not doing this causes a BindingSource leak
+                        var pepDisconnected = new DbIrtPeptide(pep) { Id = null };
+                        pep.Id = (long?)session.Save(pepDisconnected);
                     }
                 }
+
+                if (redundant)
+                    RemoveUnusedHistories(session);
 
                 transaction.Commit();
             }
 
             monitor?.UpdateProgress(status.Complete());
-
-            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
+            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides, GetHistory()));
         }
 
-        public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, IList<DbIrtPeptide> oldPeptides)
+        private void LoadPeptides(ICollection<DbIrtPeptide> peptides, IEnumerable<DbIrtHistorical> histories)
         {
-            var setNew = new HashSet<long>(newPeptides.Select(pep => pep.Id.HasValue ? pep.Id.Value : 0));
-            var dictOld = oldPeptides.ToDictionary(pep => pep.ModifiedTarget);
+            var dictStandards = new Dictionary<Target, TargetInfo>();
+            var dictLibrary = new Dictionary<Target, TargetInfo>(peptides.Count);
 
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
+            var dictHistory = new Dictionary<long, List<double>>();
+            foreach (var history in histories ?? Enumerable.Empty<DbIrtHistorical>())
             {
-                // Remove peptides that are no longer in the list
-                foreach (var peptideOld in oldPeptides)
-                {
-                    if (!peptideOld.Id.HasValue)
-                        continue;
-
-                    if (!setNew.Contains(peptideOld.Id.Value))
-                        session.Delete(peptideOld);
-                }
-
-                // Add or update peptides that have changed from the old list
-                foreach (var peptideNew in newPeptides)
-                {
-                    if (dictOld.TryGetValue(peptideNew.ModifiedTarget, out var peptideOld) && Equals(peptideNew, peptideOld))
-                        continue;
-
-                    // Create a new instance, because not doing this causes a BindingSource leak
-                    var peptideNewDisconnected = new DbIrtPeptide(peptideNew);
-                    session.SaveOrUpdate(peptideNewDisconnected);
-                }
-
-                transaction.Commit();
+                if (!dictHistory.TryGetValue(history.PeptideId, out var list))
+                    dictHistory.Add(history.PeptideId, new List<double> { history.Irt });
+                else
+                    list.Add(history.Irt);
             }
-
-            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
-        }
-
-        private void LoadPeptides(IList<DbIrtPeptide> peptides)
-        {
-            var dictStandards = new Dictionary<Target, double>();
-            var dictLibrary = new Dictionary<Target, double>(peptides.Count);
 
             foreach (var pep in peptides)
             {
@@ -296,7 +348,10 @@ namespace pwiz.Skyline.Model.Irt
                     // attempts to enforce only normalized modified sequences, but this extra protection
                     // handles irtdb files created before normalization was implemented, or edited outside
                     // Skyline.
-                    dict.Add(pep.GetNormalizedModifiedSequence(), pep.Irt);
+                    List<double> hist = null;
+                    if (pep.Id.HasValue)
+                        dictHistory.TryGetValue(pep.Id.Value, out hist);
+                    dict.Add(pep.GetNormalizedModifiedSequence(), new TargetInfo(pep.Irt, hist));
                 }
                 catch (ArgumentException)
                 {
@@ -316,22 +371,22 @@ namespace pwiz.Skyline.Model.Irt
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other._path, _path) &&
-                other._modifiedTime.Equals(_modifiedTime);
+                   other._modifiedTime.Equals(_modifiedTime);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (IrtDb)) return false;
-            return Equals((IrtDb) obj);
+            if (obj.GetType() != typeof(IrtDb)) return false;
+            return Equals((IrtDb)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (_path.GetHashCode()*397) ^ _modifiedTime.GetHashCode();
+                return (_path.GetHashCode() * 397) ^ _modifiedTime.GetHashCode();
             }
         }
 
@@ -344,6 +399,9 @@ namespace pwiz.Skyline.Model.Irt
                 using (var session = new SessionWithLock(sessionFactory.OpenSession(), new ReaderWriterLock(), true))
                 using (var transaction = session.BeginTransaction())
                 {
+                    // Newly created IrtDbs start without IrtHistory table
+                    SqliteOperations.DropTable(session.Connection, @"IrtHistory");
+
                     session.Save(new DbVersionInfo { SchemaVersion = SCHEMA_VERSION_CURRENT });
                     transaction.Commit();
                 }
@@ -378,7 +436,7 @@ namespace pwiz.Skyline.Model.Irt
                     throw new DatabaseOpeningException(Resources.IrtDb_GetIrtDb_Database_path_cannot_be_null);
 
                 if (!File.Exists(path))
-                    throw new DatabaseOpeningException(String.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
+                    throw new DatabaseOpeningException(string.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
                 Exception xInner;
@@ -427,7 +485,7 @@ namespace pwiz.Skyline.Model.Irt
                 if (loadMonitor == null)
                     throw;
                 loadMonitor.UpdateProgress(status.ChangeErrorException(x));
-                dbPeptides = new DbIrtPeptide[0];
+                dbPeptides = Array.Empty<DbIrtPeptide>();
                 return null;
             }
         }
@@ -487,7 +545,7 @@ namespace pwiz.Skyline.Model.Irt
                 }
                 if (precursors.Count > 0)
                 {
-                    peptides.Add((PeptideDocNode) nodePep.ChangeResults(null).ChangeChildren(precursors));
+                    peptides.Add((PeptideDocNode)nodePep.ChangeResults(null).ChangeChildren(precursors));
                 }
             }
             if (peptides.Count == 0)
@@ -495,13 +553,18 @@ namespace pwiz.Skyline.Model.Irt
 
             // Clear some settings to make the document smaller and so that they won't get imported into a document
             doc = doc.ChangeMeasuredResults(null);
-            doc = (SrmDocument)doc.ChangeChildren(new[] { new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, new PeptideDocNode[0]) });
+            doc = (SrmDocument)doc.ChangeChildren(new[]
+            {
+                new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty,
+                    Array.Empty<PeptideDocNode>())
+            });
             doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
 
             peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
-            doc = (SrmDocument) doc.ChangeChildren(new[]
+            doc = (SrmDocument)doc.ChangeChildren(new[]
             {
-                new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray(), false)
+                new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
+                    Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray(), false)
             });
 
             using (var writer = new StringWriter())
@@ -585,8 +648,8 @@ namespace pwiz.Skyline.Model.Irt
                 using (var cmd = session.Connection.CreateCommand())
                 {
                     cmd.CommandText = @"INSERT INTO DocumentXml (Xml, RegressionType) VALUES (?, ?)";
-                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
-                    cmd.Parameters.Add(new SQLiteParameter {Value = null});
+                    cmd.Parameters.Add(new SQLiteParameter { Value = null });
+                    cmd.Parameters.Add(new SQLiteParameter { Value = null });
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -607,10 +670,32 @@ namespace pwiz.Skyline.Model.Irt
                     cmd.CommandText = @"DELETE FROM IrtLibrary WHERE Standard = 0 and PeptideModSeq IN (SELECT PeptideModSeq FROM IrtLibrary WHERE Standard = 1)";
                     cmd.ExecuteNonQuery();
                 }
-                return ChangeProp(ImClone(this), im =>
+                RemoveUnusedHistories(session);
+            }
+            return ChangeProp(ImClone(this), im => { im.LoadPeptides(GetPeptides(), GetHistory()); });
+        }
+
+        private static void RemoveUnusedHistories(ISession session)
+        {
+            if (SqliteOperations.TableExists(session.Connection, @"IrtHistory"))
+            {
+                using (var cmd = session.Connection.CreateCommand())
                 {
-                    im.LoadPeptides(session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>());
-                });
+                    cmd.CommandText = @"DELETE FROM IrtHistory WHERE PeptideId NOT IN (SELECT Id FROM IrtLibrary WHERE Standard = 0)";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private class TargetInfo
+        {
+            public double Irt { get; }
+            public List<double> Histories { get; }
+
+            public TargetInfo(double irt, List<double> histories)
+            {
+                Irt = irt;
+                Histories = histories;
             }
         }
     }

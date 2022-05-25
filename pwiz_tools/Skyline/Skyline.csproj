@@ -610,6 +610,7 @@
     <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\IonMobility\DbPrecursorAndIonMobility.cs" />
     <Compile Include="Model\IonMobility\ValidatingIonMobilityPrecursor.cs" />
+    <Compile Include="Model\Irt\DbIrtHistorical.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />

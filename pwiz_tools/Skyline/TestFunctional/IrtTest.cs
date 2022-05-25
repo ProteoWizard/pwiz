@@ -57,7 +57,6 @@ namespace pwiz.SkylineTestFunctional
         {
             RunIrtTest();
             RunCalibrationTest();
-            RunRemoveDuplicatesTest();
         }
 
         private void RunIrtTest()
@@ -207,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
             // Paste Biognosys-provided values
             RunUI(() =>
                       {
-                          string standardText = BuildStandardText(standard, seq => seq);
+                          string standardText = BuildStandardText(standard);
                           SetClipboardText(standardText);
                           irtDlg1.ClearStandardPeptides();
                           irtDlg1.DoPasteStandard();
@@ -967,74 +966,6 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettingsDlg3, peptideSettingsDlg3.CancelDialog);
         }
 
-        private void RunRemoveDuplicatesTest()
-        {
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
-            var dbPath = testFilesDir.GetTestPath("MPDS_1_Peptides.irtdb");
-            var dbBytes = File.ReadAllBytes(dbPath);
-
-            const int numStandards = 19;
-            const int numLibrary = 127;
-            const int numOverlap = 18;
-
-            void CheckIrtDbFile(bool expectDuplicates, out DbIrtPeptide[] arrStandards, out DbIrtPeptide[] arrLibrary, out Target[] arrOverlap)
-            {
-                IrtDb.GetIrtDb(dbPath, null, out var dbPeptides);
-                arrStandards = dbPeptides.Where(pep => pep.Standard).ToArray();
-                arrLibrary = dbPeptides.Where(pep => !pep.Standard).ToArray();
-                arrOverlap = arrStandards.Select(pep => pep.ModifiedTarget).Intersect(arrLibrary.Select(pep => pep.ModifiedTarget)).ToArray();
-                Assert.AreEqual(numStandards, arrStandards.Length);
-                Assert.AreEqual(expectDuplicates ? numLibrary : numLibrary - numOverlap, arrLibrary.Length);
-                Assert.AreEqual(expectDuplicates ? numOverlap : 0, arrOverlap.Length);
-            }
-            
-            CheckIrtDbFile(true, out var standards, out var library, out var overlap);
-
-            const string calcName = "Duplicate test";
-
-            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var editCalcDlg = ShowDialog<EditIrtCalcDlg>(peptideSettings.EditCalculator);
-            RunUI(() =>
-            {
-                editCalcDlg.CalcName = calcName;
-                editCalcDlg.OpenDatabase(dbPath);
-                // Check that the duplicates were removed from the list of library peptides
-                Assert.AreEqual(numStandards, editCalcDlg.StandardPeptideCount);
-                Assert.AreEqual(numLibrary - numOverlap, editCalcDlg.LibraryPeptideCount);
-                // Reset lists to original values (i.e. containing duplicates)
-                editCalcDlg.StandardPeptides = standards;
-                editCalcDlg.LibraryPeptides = library;
-                Assert.AreEqual(numStandards, editCalcDlg.StandardPeptideCount);
-                Assert.AreEqual(numLibrary, editCalcDlg.LibraryPeptideCount);
-            });
-            OkDialog(editCalcDlg, editCalcDlg.OkDialog);
-
-            // Check that the database got saved without duplicates
-            CheckIrtDbFile(false, out _, out _, out _);
-
-            // Add RT predictor with the new calculator
-            var rtPredictorDlg = ShowDialog<EditRTDlg>(peptideSettings.AddRTRegression);
-            rtPredictorDlg.ChooseCalculator(calcName);
-            OkDialog(rtPredictorDlg, rtPredictorDlg.OkDialog);
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-
-            var docPath = testFilesDir.GetTestPath("duplicate-test.sky");
-            RunUI(() =>
-            {
-                SkylineWindow.SaveDocument(docPath);
-                SkylineWindow.NewDocument();
-            });
-
-            // Reset irtdb file to contain duplicates
-            File.WriteAllBytes(dbPath, dbBytes);
-            CheckIrtDbFile(true, out _, out _, out _);
-
-            // Open file and check that the duplicates get removed
-            RunUI(() => SkylineWindow.OpenFile(docPath));
-            WaitForDocumentLoaded();
-            CheckIrtDbFile(false, out _, out _, out _);
-        }
-
         private SrmDocument VerifyIrtStandards(SrmDocument docBefore, bool expectStandards)
         {
             var doc = WaitForDocumentChangeLoaded(docBefore);
@@ -1057,12 +988,12 @@ namespace pwiz.SkylineTestFunctional
             return doc;
         }
 
-        private static string BuildStandardText(IEnumerable<MeasuredPeptide> standard, Func<string, string> adjustSeq)
+        private static string BuildStandardText(IEnumerable<MeasuredPeptide> standard, Func<string, string> adjustSeq = null)
         {
             var standardBuilder = new StringBuilder();
             foreach (var peptide in standard)
             {
-                standardBuilder.Append(adjustSeq(peptide.Sequence))
+                standardBuilder.Append(adjustSeq != null ? adjustSeq(peptide.Sequence) : peptide.Sequence)
                     .Append('\t')
                     .Append(peptide.RetentionTime)
                     .AppendLine();
@@ -1231,6 +1162,280 @@ namespace pwiz.SkylineTestFunctional
                 });
                 OkDialog(errorDlg, errorDlg.OkDialog);
             }
+        }
+    }
+
+    [TestClass]
+    public class IrtRemoveDuplicatesTest : AbstractFunctionalTestEx
+    {
+        [TestMethod]
+        public void IrtRemoveDuplicatesFunctionalTest()
+        {
+            TestFilesZip = @"TestFunctional\IrtTest.zip";
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+            var dbPath = testFilesDir.GetTestPath("MPDS_1_Peptides.irtdb");
+            var dbBytes = File.ReadAllBytes(dbPath);
+
+            const int numStandards = 19;
+            const int numLibrary = 127;
+            const int numOverlap = 18;
+
+            void CheckIrtDbFile(bool expectDuplicates, out DbIrtPeptide[] arrStandards, out DbIrtPeptide[] arrLibrary, out Target[] arrOverlap)
+            {
+                IrtDb.GetIrtDb(dbPath, null, out var dbPeptides);
+                arrStandards = dbPeptides.Where(pep => pep.Standard).ToArray();
+                arrLibrary = dbPeptides.Where(pep => !pep.Standard).ToArray();
+                arrOverlap = arrStandards.Select(pep => pep.ModifiedTarget).Intersect(arrLibrary.Select(pep => pep.ModifiedTarget)).ToArray();
+                Assert.AreEqual(numStandards, arrStandards.Length);
+                Assert.AreEqual(expectDuplicates ? numLibrary : numLibrary - numOverlap, arrLibrary.Length);
+                Assert.AreEqual(expectDuplicates ? numOverlap : 0, arrOverlap.Length);
+            }
+
+            CheckIrtDbFile(true, out var standards, out var library, out var overlap);
+
+            const string calcName = "Duplicate test";
+
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunDlg<EditIrtCalcDlg>(peptideSettings.EditCalculator, dlg =>
+            {
+                dlg.CalcName = calcName;
+                dlg.OpenDatabase(dbPath);
+                // Check that the duplicates were removed from the list of library peptides
+                Assert.AreEqual(numStandards, dlg.StandardPeptideCount);
+                Assert.AreEqual(numLibrary - numOverlap, dlg.LibraryPeptideCount);
+                // Reset lists to original values (i.e. containing duplicates)
+                dlg.StandardPeptides = standards;
+                dlg.LibraryPeptides = library;
+                Assert.AreEqual(numStandards, dlg.StandardPeptideCount);
+                Assert.AreEqual(numLibrary, dlg.LibraryPeptideCount);
+                dlg.OkDialog();
+            });
+
+            // Check that the database got saved without duplicates
+            CheckIrtDbFile(false, out _, out _, out _);
+
+            // Add RT predictor with the new calculator
+            RunDlg<EditRTDlg>(peptideSettings.AddRTRegression, dlg =>
+            {
+                dlg.ChooseCalculator(calcName);
+                dlg.OkDialog();
+            });
+            RunDlg<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog, dlg => dlg.BtnNoClick());
+
+            var docPath = testFilesDir.GetTestPath("duplicate-test.sky");
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(docPath);
+                SkylineWindow.NewDocument();
+            });
+
+            // Reset irtdb file to contain duplicates
+            File.WriteAllBytes(dbPath, dbBytes);
+            CheckIrtDbFile(true, out _, out _, out _);
+
+            // Open file and check that the duplicates get removed
+            RunUI(() => SkylineWindow.OpenFile(docPath));
+            WaitForDocumentLoaded();
+            CheckIrtDbFile(false, out _, out _, out _);
+        }
+    }
+
+    [TestClass]
+    public class IrtRedundantDbTest : AbstractFunctionalTestEx
+    {
+        [TestMethod]
+        public void IrtRedundantDbFunctionalTest()
+        {
+            TestFilesZip = @"TestFunctional\IrtTest.zip";
+            RunFunctionalTest();
+        }
+
+        private string _dbPath;
+        private IList<DbIrtPeptide> _standards;
+        private bool _redundant;
+        private Dictionary<string, DbIrtPeptide> _pepMap;
+        private Dictionary<string, List<double>> _pepHistories;
+
+        protected override void DoTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+
+            _dbPath = testFilesDir.GetTestPath("history-test.irtdb");
+            _standards = IrtStandard.BIOGNOSYS_10.Peptides;
+            _redundant = false;
+            _pepMap = new Dictionary<string, DbIrtPeptide>();
+            _pepHistories = new Dictionary<string, List<double>>();
+
+            // Create initial calculator
+            const string calcName = "History test";
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunDlg<EditIrtCalcDlg>(peptideSettings.EditCalculator, dlg =>
+            {
+                dlg.CalcName = calcName;
+                dlg.CalcPath = _dbPath;
+                dlg.StandardPeptides = _standards;
+                ChangeRedundant(dlg, true);
+                AddIrt(dlg, "P", -100);
+                AddIrt(dlg, "PE", -50);
+                AddIrt(dlg, "PEP", -25);
+                AddIrt(dlg, "PEPT", 0);
+                AddIrt(dlg, "PEPTI", 25);
+                AddIrt(dlg, "PEPTID", 50);
+                AddIrt(dlg, "PEPTIDE", 100);
+                dlg.OkDialog();
+            });
+            CheckIrtDbFile();
+
+            // Add RT predictor with the new calculator
+            RunDlg<EditRTDlg>(peptideSettings.AddRTRegression, dlg =>
+            {
+                dlg.ChooseCalculator(calcName);
+                dlg.OkDialog();
+            });
+
+            // Change some iRT values and check database
+            RunDlg<EditIrtCalcDlg>(peptideSettings.EditCalculator, dlg =>
+            {
+                Assert.IsTrue(dlg.IsRedundant);
+                AddIrt(dlg, "PEPTIDEP", 30);
+                AddIrt(dlg, "PEPTIDEPE", 35);
+                AddIrt(dlg, "PEPTIDEPEP", 40);
+                EditIrt(dlg, "PE", -75);
+                EditIrt(dlg, "PEPTID", 75);
+                DeleteIrt(dlg, "P");
+                dlg.OkDialog();
+            });
+            CheckIrtDbFile();
+
+            // Change some more iRT values and check database
+            RunDlg<EditIrtCalcDlg>(peptideSettings.EditCalculator, dlg =>
+            {
+                Assert.IsTrue(dlg.IsRedundant);
+                EditIrt(dlg, "PE", -150);
+                EditIrt(dlg, "PEP", -10);
+                EditIrt(dlg, "PEPTI", 10);
+                EditIrt(dlg, "PEPTIDEPE", 38);
+                DeleteIrt(dlg, "PEPTID");
+                dlg.OkDialog();
+            });
+            CheckIrtDbFile();
+
+            // Set database to non-redundant
+            RunDlg<EditIrtCalcDlg>(peptideSettings.EditCalculator, dlg =>
+            {
+                Assert.IsTrue(dlg.IsRedundant);
+                ChangeRedundant(dlg, false);
+                dlg.OkDialog();
+            });
+            CheckIrtDbFile();
+
+            RunDlg<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog, dlg => dlg.BtnNoClick());
+
+            RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("history-test.sky")));
+        }
+
+        private void ChangeRedundant(EditIrtCalcDlg dlg, bool redundant)
+        {
+            dlg.IsRedundant = _redundant = redundant;
+            if (!redundant)
+                _pepHistories.Clear();
+        }
+
+        private void AddIrt(EditIrtCalcDlg dlg, string target, double irt)
+        {
+            var dlgPeps = dlg.LibraryPeptides.ToList();
+            var dlgPep = dlgPeps.FirstOrDefault(pep => Equals(pep.ModifiedTarget.ToString(), target));
+            Assert.IsFalse(_pepMap.ContainsKey(target));
+            var newPep = new DbIrtPeptide(new Target(target), irt, false, TimeSource.peak);
+            _pepMap[target] = newPep;
+            Assert.IsNull(dlgPep);
+            dlg.LibraryPeptides = dlgPeps.Append(newPep);
+        }
+
+        private void EditIrt(EditIrtCalcDlg dlg, string target, double irt)
+        {
+            var dlgPep = dlg.LibraryPeptides.FirstOrDefault(pep => Equals(pep.ModifiedTarget.ToString(), target));
+            Assert.IsNotNull(dlgPep);
+            Assert.IsTrue(_pepMap.TryGetValue(target, out var existing));
+            if (_pepHistories.TryGetValue(target, out var list))
+                list.Add(existing.Irt);
+            else
+                _pepHistories.Add(target, new List<double> { existing.Irt });
+            dlgPep.Irt = existing.Irt = irt;
+        }
+
+        private void DeleteIrt(EditIrtCalcDlg dlg, string target)
+        {
+            Assert.IsTrue(_pepMap.Remove(target));
+            _pepHistories.Remove(target);
+            var dlgPeps = dlg.LibraryPeptides.ToList();
+            var i = dlgPeps.IndexOf(pep => Equals(pep.ModifiedTarget.ToString(), target));
+            Assert.AreNotEqual(-1, i);
+            dlgPeps.RemoveAt(i);
+            dlg.LibraryPeptides = dlgPeps;
+        }
+
+        private void CheckIrtDbFile()
+        {
+            var db = IrtDb.GetIrtDb(_dbPath, null, out var dbPeptides);
+            Assert.AreEqual(_redundant, db.Redundant);
+
+            var dbHistories = new Dictionary<long, List<double>>();
+            foreach (var history in db.GetHistory() ?? Enumerable.Empty<DbIrtHistorical>())
+            {
+                if (!dbHistories.TryGetValue(history.PeptideId, out var list))
+                    dbHistories.Add(history.PeptideId, new List<double> { history.Irt });
+                else
+                    list.Add(history.Irt);
+            }
+
+            var expectedHistories = new Dictionary<string, List<double>>();
+            foreach (var history in _pepHistories)
+                expectedHistories[history.Key] = history.Value.Select(v => v).ToList();
+
+            var expectedStandards = _standards.Select(pep => pep.ModifiedTarget).ToHashSet();
+
+            foreach (var pep in dbPeptides)
+            {
+                if (pep.Standard)
+                {
+                    Assert.IsTrue(expectedStandards.Remove(pep.ModifiedTarget));
+                    Assert.IsFalse(dbHistories.ContainsKey(pep.Id.Value)); // standards should not have histories
+                    Assert.AreEqual(pep.Irt, db.ScoreSequence(pep.ModifiedTarget).Value);
+                    continue;
+                }
+
+                Assert.IsTrue(_pepMap.TryGetValue(pep.ModifiedTarget.ToString(), out var pepMem),
+                    $"Missing peptide {pep.ModifiedTarget} from [{string.Join(", ", _pepMap.Keys)}]");
+
+                // Verify iRT value
+                Assert.AreEqual(pepMem.Irt, pep.Irt);
+
+                // Verify history
+                if (!expectedHistories.TryGetValue(pep.ModifiedTarget.ToString(), out var expectedHistory))
+                    expectedHistory = new List<double>();
+                if (dbHistories.TryGetValue(pep.Id.Value, out var dbHistory))
+                {
+                    foreach (var i in dbHistory.Select(history => expectedHistory.FindIndex(irt => Math.Abs(irt - history) < 0.01)))
+                    {
+                        Assert.AreNotEqual(-1, i);
+                        expectedHistory.RemoveAt(i);
+                    }
+                    Assert.AreEqual(new Statistics(dbHistory.Append(pep.Irt)).Median(), db.ScoreSequence(pep.ModifiedTarget));
+                }
+                else
+                {
+                    Assert.AreEqual(pep.Irt, db.ScoreSequence(pep.ModifiedTarget));
+                }
+                Assert.AreEqual(0, expectedHistory.Count);
+            }
+
+            Assert.AreEqual(0, expectedStandards.Count);
         }
     }
 }
