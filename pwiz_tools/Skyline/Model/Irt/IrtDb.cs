@@ -63,8 +63,8 @@ namespace pwiz.Skyline.Model.Irt
         private readonly ReaderWriterLock _databaseLock;
 
         private DateTime _modifiedTime;
-        private TargetMap<TargetInfo> _dictStandards;
-        private TargetMap<TargetInfo> _dictLibrary;
+        private TargetMap<double> _dictStandards;
+        private TargetMap<double> _dictLibrary;
 
         private IrtDb(string path, ISessionFactory sessionFactory)
         {
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Irt
             }
 
             double min = double.MaxValue, minNext = double.MaxValue;
-            foreach (var score in Scores)
+            foreach (var score in PeptideScores.Select(score => score.Value))
             {
                 if (score < min)
                 {
@@ -108,21 +108,19 @@ namespace pwiz.Skyline.Model.Irt
 
         public double UnknownScore { get; private set; }
 
-        public IEnumerable<KeyValuePair<Target, double>> PeptideScores =>
-            DictStandards.Concat(DictLibrary).Select(kvp => new KeyValuePair<Target, double>(kvp.Key, kvp.Value.Irt));
+        public IEnumerable<KeyValuePair<Target, double>> PeptideScores => DictStandards.Keys.Concat(DictLibrary.Keys)
+            .Select(target => new KeyValuePair<Target, double>(target, ScoreSequence(target).Value));
 
-        private IEnumerable<double> Scores => PeptideScores.Select(score => score.Value);
-
-        private IDictionary<Target, TargetInfo> DictStandards
+        private IDictionary<Target, double> DictStandards
         {
             get => _dictStandards;
-            set => _dictStandards = new TargetMap<TargetInfo>(value);
+            set => _dictStandards = new TargetMap<double>(value);
         }
 
-        private IDictionary<Target, TargetInfo> DictLibrary
+        private IDictionary<Target, double> DictLibrary
         {
             get => _dictLibrary;
-            set => _dictLibrary = new TargetMap<TargetInfo>(value);
+            set => _dictLibrary = new TargetMap<double>(value);
         }
 
         private ISession OpenWriteSession()
@@ -151,10 +149,9 @@ namespace pwiz.Skyline.Model.Irt
 
         public double? ScoreSequence(Target seq)
         {
-            if (seq == null || (!DictStandards.TryGetValue(seq, out var info) && !DictLibrary.TryGetValue(seq, out info)))
-                return null;
-
-            return info.Histories == null ? info.Irt : new Statistics(info.Histories.Append(info.Irt)).Median();
+            return seq != null && (DictStandards.TryGetValue(seq, out var irt) || DictLibrary.TryGetValue(seq, out irt))
+                ? (double?)irt
+                : null;
         }
 
         public IList<DbIrtPeptide> GetPeptides()
@@ -327,8 +324,8 @@ namespace pwiz.Skyline.Model.Irt
 
         private void LoadPeptides(ICollection<DbIrtPeptide> peptides, IEnumerable<DbIrtHistorical> histories)
         {
-            var dictStandards = new Dictionary<Target, TargetInfo>();
-            var dictLibrary = new Dictionary<Target, TargetInfo>(peptides.Count);
+            var dictStandards = new Dictionary<Target, double>();
+            var dictLibrary = new Dictionary<Target, double>(peptides.Count);
 
             var dictHistory = new Dictionary<long, List<double>>();
             foreach (var history in histories ?? Enumerable.Empty<DbIrtHistorical>())
@@ -348,10 +345,10 @@ namespace pwiz.Skyline.Model.Irt
                     // attempts to enforce only normalized modified sequences, but this extra protection
                     // handles irtdb files created before normalization was implemented, or edited outside
                     // Skyline.
-                    List<double> hist = null;
-                    if (pep.Id.HasValue)
-                        dictHistory.TryGetValue(pep.Id.Value, out hist);
-                    dict.Add(pep.GetNormalizedModifiedSequence(), new TargetInfo(pep.Irt, hist));
+                    var irt = pep.Irt;
+                    if (!pep.Standard && pep.Id.HasValue && dictHistory.TryGetValue(pep.Id.Value, out var hist))
+                        irt = new Statistics(hist.Append(irt)).Median();
+                    dict.Add(pep.GetNormalizedModifiedSequence(), irt);
                 }
                 catch (ArgumentException)
                 {
@@ -684,18 +681,6 @@ namespace pwiz.Skyline.Model.Irt
                     cmd.CommandText = @"DELETE FROM IrtHistory WHERE PeptideId NOT IN (SELECT Id FROM IrtLibrary WHERE Standard = 0)";
                     cmd.ExecuteNonQuery();
                 }
-            }
-        }
-
-        private class TargetInfo
-        {
-            public double Irt { get; }
-            public List<double> Histories { get; }
-
-            public TargetInfo(double irt, List<double> histories)
-            {
-                Irt = irt;
-                Histories = histories;
             }
         }
     }
