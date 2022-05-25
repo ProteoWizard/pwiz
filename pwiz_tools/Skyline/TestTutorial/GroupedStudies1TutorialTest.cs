@@ -977,6 +977,7 @@ namespace pwiz.SkylineTestTutorial
 
                 // In case the layout was restored, the old document grid reference may no longer be valid
                 documentGrid = WaitForOpenForm<DocumentGridForm>();
+                WaitForConditionUI(() => documentGrid.IsComplete);
 
                 RunUI(() =>
                 {

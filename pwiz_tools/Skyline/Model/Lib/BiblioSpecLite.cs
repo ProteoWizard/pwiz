@@ -682,6 +682,8 @@ namespace pwiz.Skyline.Model.Lib
                     int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
                     int iScore = reader.GetOrdinal(RefSpectra.score);
                     int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
+                    int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
+                    int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
 
                     int rowsRead = 0;
                     while (reader.Read())
@@ -712,7 +714,7 @@ namespace pwiz.Skyline.Model.Lib
                         int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?) null;
                         var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
                         bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
-                            string.IsNullOrEmpty(chemicalFormula); // We may write an adduct like [M+H] for peptides
+                                           !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
                         SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
                         if (isProteomic)
                         {
@@ -723,7 +725,28 @@ namespace pwiz.Skyline.Model.Lib
                             var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName) ? reader.GetString(iMoleculeName) : null;
                             var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey) ? reader.GetString(iInChiKey) : null;
                             var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
-                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                            if (string.IsNullOrEmpty(chemicalFormula))
+                            {
+                                var precursorMz = reader.GetDouble(iPrecursorMZ);
+                                Adduct precursorAdduct;
+                                if (string.IsNullOrEmpty(adduct))
+                                {
+                                    precursorAdduct = Adduct.FromChargeNoMass(charge);
+                                }
+                                else
+                                {
+                                    precursorAdduct = Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic,
+                                        charge);
+                                }
+                                TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
+                                TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
+                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
+                                    null, monoMass, avgMass, inChiKey, otherKeys);
+                            }
+                            else
+                            {
+                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                            }
                             // Construct a custom molecule so we can be sure we're using the same keys
                             var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
                             sequence = mol.PrimaryEquivalenceKey;
@@ -1133,13 +1156,19 @@ namespace pwiz.Skyline.Model.Lib
                 // should be suppressed because we know Skyline is going to try again.
                 if (!cached)
                 {
-                    var failureException = new Exception(FormatErrorMessage(x), x);
-                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    // SQLiteExceptions are not considered programming defects and should be shown to the user
+                    // as an ordinary error message
+                    if (x is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
                     {
-                        throw failureException; // We want this to show up in ExceptionWeb
+                        var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
+                        // This will show the user the error message after which the operation can be treated as canceled.
+                        loader.UpdateProgress(status.ChangeErrorException(new Exception(message, x)));
                     }
-                    // This will show the user the error message after which the operation can be treated as canceled.
-                    loader.UpdateProgress(status.ChangeErrorException(failureException));
+                    else
+                    {
+                        // Other sorts of exceptions should be posted to the Exception Web
+                        throw new Exception(FormatErrorMessage(x), x);
+                    }
                 }
                 return false;
             }

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Collections;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -37,12 +36,12 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class DdaScoringTest : AbstractFunctionalTest
     {
-        private IList<IPeakFeatureCalculator> _calculators;
+        private FeatureCalculators _calculators;
         private IDictionary<Type, int> _calculatorIndexes; 
 
         public DdaScoringTest()
         {
-            _calculators = ImmutableList.ValueOf(PeakFeatureCalculator.Calculators);
+            _calculators = FeatureCalculators.ALL;
             _calculatorIndexes = Enumerable.Range(0, _calculators.Count).ToDictionary(i => _calculators[i].GetType(), i=>i);
         }
 

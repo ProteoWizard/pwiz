@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get
             {
                 if (ScoredPeaks.Count == 0)
-                    return ScoredPeak.Empty;
+                    return null;
                 var maxPeak = ScoredPeaks[0];
                 var maxScore = maxPeak.Score;
                 for (int i = 1; i < ScoredPeaks.Count; i++)
@@ -76,10 +76,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             get
             {
                 if (ScoredPeaks.Count == 0)
-                    return ScoredPeak.Empty;
+                    return null;
                 var maxPeak = ScoredPeaks[0];
                 double maxScore = maxPeak.Score;
-                ScoredPeak max2Peak = ScoredPeak.Empty;
+                ScoredPeak max2Peak = null;
                 double max2Score = Double.MinValue;
                 for (int i = 1; i < ScoredPeaks.Count; i++)
                 {
@@ -109,14 +109,14 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Return a list of peak feature values.
         /// </summary>
         /// <returns></returns>
-        public List<float[]> ToList()
+        public List<FeatureScores> ToList()
         {
-            return ScoredPeaks.Select(peak => peak.Features).ToList();
+            return ScoredPeaks.Select(peak => peak.FeatureScores).ToList();
         }
 
         public override string ToString()
         {
-            return MaxPeak.IsEmpty ? String.Format(@"{0}: null", Id) : String.Format(@"{0}: {1:0.00}", Id, MaxPeak.Score);
+            return string.Format(@"{0}: {1}", Id, MaxPeak);
         }
         #endregion
     }
