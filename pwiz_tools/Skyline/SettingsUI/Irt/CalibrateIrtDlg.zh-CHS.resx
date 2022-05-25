@@ -319,7 +319,7 @@
     <value>True</value>
   </metadata>
   <data name="calibratePeptides.HeaderText" xml:space="preserve">
-    <value>修饰序列</value>
+    <value>目标</value>
   </data>
   <metadata name="calibrateMeasuredRt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -409,7 +409,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="comboRegression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>260,20</value>
+    <value>260, 21</value>
   </data>
   <data name="comboRegression.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -442,7 +442,7 @@
     <value>10</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>图形...</value>
+    <value>图形…</value>
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>
@@ -490,7 +490,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="comboMaxPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124,20</value>
+    <value>124, 21</value>
   </data>
   <data name="comboMaxPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -547,7 +547,7 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="comboMinPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>124,20</value>
+    <value>124, 21</value>
   </data>
   <data name="comboMinPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>

@@ -26,10 +26,9 @@ namespace AutoQC
     {
         private int _currentIndex = -1;
         private readonly List<string> _resultsFileList;
-        public bool ImportExisting { get; private set; }
-        // Total results files imported since AutoQC startup
-        internal int TotalImportCount { get; set; }
-        public string WorkingDir { get; private set; }
+        public bool ImportExisting { get; }
+        internal int ImportCount { get; private set; }
+        public string WorkingDir { get; }
 
         public ImportContext(string resultsFile, bool importExisting = false) 
         {
@@ -40,6 +39,7 @@ namespace AutoQC
             _resultsFileList = new List<string> {resultsFile};
             ImportExisting = importExisting;
             WorkingDir = Path.GetDirectoryName(resultsFile);
+            ImportCount = 0;
         }
 
         public ImportContext(List<string> resultsFiles, bool importExisting = true)
@@ -88,6 +88,11 @@ namespace AutoQC
                 }
             }
             return lastAcqDate;
+        }
+
+        public void IncrementImported()
+        {
+            ImportCount++;
         }
     }
 }

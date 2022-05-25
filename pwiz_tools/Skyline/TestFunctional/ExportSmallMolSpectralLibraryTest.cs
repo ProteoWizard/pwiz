@@ -16,7 +16,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class ExportSmallMolSpectralLibraryTest : AbstractFunctionalTest
+    public class ExportSmallMolSpectralLibraryTest : AbstractFunctionalTestEx
     {
         private bool _convertedFromPeptides;
         
@@ -130,13 +130,39 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errDlg2, errDlg2.OkDialog);
         }
 
+        // Verify the fix for Kaylie's issue of HE IM offsets not being output
+        // Also verify fix for writing spectral libraries for molecules defined by mass only (first item in document is mass-only)
         private void CheckHighEnergyOffsetOutput()
         {
             ExportTestLib("Original.sky", "exportIM.blib", false, out var refSpectra);
+            var mzValues = new Dictionary<string, double>(){ {"PE(18:0_18:1)", 744.55487984}, {"PE(12:0_14:0)", 606.41402921}, {"PE(16:1_18:3)", 710.47662949 }};
 
-            CheckRefSpectra(refSpectra, "PE(18:0_18:1)", "C41H80NO8P", "[M-H]", 744.55487984, 3, null, 35.3074607849121, -0.5);
-            CheckRefSpectra(refSpectra, "PE(12:0_14:0)", "C31H62NO8P", "[M-H]", 606.41402921, 3, null, 31.3844776153564, - 0.5);
-            CheckRefSpectra(refSpectra, "PE(16:1_18:3)", "C39H70NO8P", "[M-H]", 710.47662949, 3, null, 33.8052673339844, - 0.5);
+            var fragmentNamesFA = new[] { "FA 18:0(+O)", "FA 18:1(+O)", "HG(PE,196)" };
+            CheckRefSpectra(refSpectra, "PE(18:0_18:1)", string.Empty, "[M-H]", mzValues["PE(18:0_18:1)"], 3,
+                fragmentNamesFA, 35.3074607849121, -0.5);
+            CheckRefSpectra(refSpectra, "PE(12:0_14:0)", "C31H62NO8P", "[M-H]", mzValues["PE(12:0_14:0)"], 3,
+                new[] { "FA 12:0(+O)", "FA 14:0(+O)", "HG(PE,196)" }, 31.3844776153564, -0.5);
+            CheckRefSpectra(refSpectra, "PE(16:1_18:3)", "C39H70NO8P", "[M-H]", mzValues["PE(16:1_18:3)"], 3,
+                new[] { "FA 16:1(+O)", "FA 18:3(+O)", "HG(PE,196)" }, 33.8052673339844, -0.5);
+
+            // Now create a document based on the library contents
+            var docAfter = NewDocumentFromSpectralLibrary("exportIM", TestFilesDir.GetTestPath("exportIM.blib"));
+            foreach (var pair in mzValues)
+            {
+                AssertEx.IsTrue(docAfter.MoleculeTransitionGroups.Contains(m =>
+                    m.CustomMolecule.Name.Equals(pair.Key) && Math.Abs(pair.Value - m.PrecursorMz) < .0001));
+            }
+
+            foreach (var fragmentName in fragmentNamesFA)
+            {
+                AssertEx.IsTrue(docAfter.MoleculeTransitions.Contains(m =>
+                    m.Transition.Group.Peptide.CustomMolecule.Name.Equals("PE(18:0_18:1)") &&
+                    string.IsNullOrEmpty(m.Transition.Group.Peptide.CustomMolecule.Formula) &&
+                    Equals(m.Transition.FragmentIonName, fragmentName)));
+            }
+            AssertEx.IsTrue(docAfter.MoleculeTransitions.Contains(m =>
+                m.Transition.Group.Peptide.CustomMolecule.Name.Equals("PE(12:0_14:0)") &&
+                Equals(m.Transition.Group.Peptide.CustomMolecule.Formula, "C31H62NO8P")));
         }
 
         private void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, 

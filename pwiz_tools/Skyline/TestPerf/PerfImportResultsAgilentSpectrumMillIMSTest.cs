@@ -43,7 +43,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void AgilentSpectrumMillIMSImportTest()
         {
             // RunPerfTests = true;  // Uncomment to force this to run in UI
@@ -83,18 +82,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             string mid = GetTestPath("40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml");
             string up = GetTestPath("40minG_WBP_wide_z2-3_up_BSA_5pmol_02.pep.xml");
 
-            string[] searchFiles = { lo ,mid, up }; 
+            string[] searchFiles = { lo, mid, up };
             var doc = SkylineWindow.Document;
 
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
-
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
             doc = WaitForDocumentChange(doc);
 
@@ -119,7 +116,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importResultsNameDlg.NoDialog();
             });
             WaitForClosedForm(importResultsNameDlg);
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
             // Enable use of drift times in spectral library
@@ -155,7 +157,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

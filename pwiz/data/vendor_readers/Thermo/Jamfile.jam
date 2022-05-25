@@ -48,16 +48,14 @@ constant READER_NAME : "Reader_Thermo" ;
 
 
 import common path ;
-if ( $(MSFILEREADER_INSTALL_DIR) )    # only on Windows
+if x86 in $(PLATFORM) &&
+    $(MSFILEREADER_INSTALL_DIR) && ( [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
+                                    [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ] ) ||
+    x64 in $(PLATFORM) && [ path.exists $(API_PATH)\\ThermoFisher.CommonCore.Data.dll ]
 {
-    if x86 in $(PLATFORM) && ( [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
-                               [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ] ) ||
-       x64 in $(PLATFORM) && [ path.exists $(API_PATH)\\ThermoFisher.CommonCore.Data.dll ]
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
     {
-        if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-        {
-            .hasDLLs = true ;
-        }
+        .hasDLLs = true ;
     }
 }
 

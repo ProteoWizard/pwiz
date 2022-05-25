@@ -51,9 +51,6 @@ class PeakCurve
     //X: retention time
     //Y: intensity
     //XIC
-    mutable float startint = 0;
-    mutable float endrt = -1;
-    mutable float startrt = -1;
     float TotalIntMzF = 0;
     float TotalIntF = 0;
     vector<XYZData> PeakRegionList;
@@ -131,24 +128,16 @@ class PeakCurve
         return ApexInt / minIntF;
     }
 
-    void SetRTs(float StartRT, float EndRT) {
-        startrt = StartRT;
-        endrt = EndRT;
-    }
-
     //Detect peak region using CWT based on smoothed peak signals
     void DetectPeakRegion()
     {
-        std::vector<XYData> PeakArrayList;
         std::vector<PeakRidge> PeakRidgeList;
         PeakRegionList.clear();
         NoRidgeRegion.clear();
         if (RTWidth() * parameter.NoPeakPerMin < 1) {
             return;
         }
-        for (int i = 0; i < SmoothData.PointCount(); i++) {
-            PeakArrayList.emplace_back(SmoothData.Data.at(i).getX(), SmoothData.Data.at(i).getY());
-        }
+        std::vector<XYData> PeakArrayList = SmoothData.Data;
         //Start CWT process
         WaveletMassDetector waveletMassDetector(parameter, PeakArrayList, (int)(RTWidth() * parameter.NoPeakPerMin));
         waveletMassDetector.Run();
@@ -513,22 +502,16 @@ class PeakCurve
     PeakCurve(const InstrumentParameter& parameter, const pwiz::msdata::MSData& msd) : parameter(parameter), msd(msd) {}
 
     float StartInt() const {
-        if (startint == 0) {
-            startint = PeakList.at(0).getZ();
-        }
-        return startint;
+        return PeakList.at(0).getZ();
     }
 
     float StartRT() const {
-        if (startrt == -1) {
-            if (SmoothData.Data.size() > 0) {
-                startrt = SmoothData.Data.at(0).getX();
-            }
-            else {
-                startrt = PeakList.at(1).getX();
-            }
+        if (SmoothData.Data.size() > 0) {
+            return SmoothData.Data.at(0).getX();
         }
-        return startrt;
+        else {
+            return PeakList.at(1).getX();
+        }
     }
     float _snr = -1;
 
@@ -571,10 +554,7 @@ class PeakCurve
     }
 
     float EndRT() const {
-        if (endrt == -1) {
-            endrt = PeakList.at(PeakList.size() - 2).getX();
-        }
-        return endrt;
+        return PeakList.at(PeakList.size() - 2).getX();
     }
 
     float LastScanRT() {
@@ -584,6 +564,7 @@ class PeakCurve
     XYPointCollection GetPeakCollection() const
     {
         XYPointCollection PtCollection;
+        PtCollection.Data.reserve(SmoothData.Data.size());
 
         for (size_t i = 0; i < SmoothData.Data.size(); i++) {
             PtCollection.AddPoint(SmoothData.Data.at(i).getX(), SmoothData.Data.at(i).getY());
@@ -594,6 +575,7 @@ class PeakCurve
     XYPointCollection GetSmoothPeakCollection(float startRT, float endRT) const
     {
         XYPointCollection PtCollection;
+        PtCollection.Data.reserve(SmoothData.Data.size());
 
         for (int i = 0; i < SmoothData.PointCount(); i++) {
             const XYData& pt = SmoothData.Data.at(i);

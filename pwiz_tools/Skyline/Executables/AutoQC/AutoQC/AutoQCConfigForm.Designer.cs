@@ -115,8 +115,6 @@ namespace AutoQC
             // tabSettings
             // 
             this.tabSettings.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.tabSettings.Controls.Add(this.textConfigName);
-            this.tabSettings.Controls.Add(this.labelConfigName);
             this.tabSettings.Controls.Add(this.groupBoxMain);
             resources.ApplyResources(this.tabSettings, "tabSettings");
             this.tabSettings.Name = "tabSettings";
@@ -135,6 +133,8 @@ namespace AutoQC
             // groupBoxMain
             // 
             resources.ApplyResources(this.groupBoxMain, "groupBoxMain");
+            this.groupBoxMain.Controls.Add(this.textConfigName);
+            this.groupBoxMain.Controls.Add(this.labelConfigName);
             this.groupBoxMain.Controls.Add(this.checkBoxRemoveResults);
             this.groupBoxMain.Controls.Add(this.labelQcFilePattern);
             this.groupBoxMain.Controls.Add(this.comboBoxFileFilter);
@@ -425,7 +425,6 @@ namespace AutoQC
             this.splitContainer1.ResumeLayout(false);
             this.tabControl.ResumeLayout(false);
             this.tabSettings.ResumeLayout(false);
-            this.tabSettings.PerformLayout();
             this.groupBoxMain.ResumeLayout(false);
             this.groupBoxMain.PerformLayout();
             this.tabPanoramaSettings.ResumeLayout(false);

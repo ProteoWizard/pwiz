@@ -56,7 +56,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         }
 
-        public PeptideDocNode DocNode { get { return (PeptideDocNode)Model; } }
+        public PeptideDocNode DocNode => (PeptideDocNode)Model;
+        public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent)?.DocNode;
 
         public override string Heading
         {
@@ -618,8 +619,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     if (table.Count > 0)
                         table.AddDetailRow(@" ", @" ", rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Previous, peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, peptide.Begin.Value.ToString(LocalizationHelper.CurrentCulture), rt);
-                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, ((peptide.End ?? 1) - 1).ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, (peptide.Begin.Value + 1).ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, (peptide.End ?? 0).ToString(LocalizationHelper.CurrentCulture), rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Next, peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
                 }
                 if (nodePep.Rank.HasValue)

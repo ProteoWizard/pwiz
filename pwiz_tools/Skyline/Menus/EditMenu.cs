@@ -31,9 +31,11 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -146,15 +148,7 @@ namespace pwiz.Skyline.Menus
             sbData.Append(stringWriter);
             dataObj.SetData(ClipboardEx.SKYLINE_FORMAT, sbData.ToString());
 
-            try
-            {
-                ClipboardEx.Clear();
-                ClipboardEx.SetDataObject(dataObj);
-            }
-            catch (ExternalException)
-            {
-                MessageDlg.Show(SkylineWindow, ClipboardHelper.GetCopyErrorMessage());
-            }
+            ClipboardHelper.SetClipboardData(SkylineWindow, dataObj, false);
         }
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
@@ -328,11 +322,13 @@ namespace pwiz.Skyline.Menus
             else
             {
                 string text;
-                string textCsv;
                 try
                 {
-                    text = ClipboardEx.GetText().Trim();
-                    textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    text = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    if (string.IsNullOrEmpty(text))
+                    {
+                        text = ClipboardEx.GetText().Trim();
+                    }
                 }
                 catch (Exception)
                 {
@@ -341,7 +337,7 @@ namespace pwiz.Skyline.Menus
                 }
                 try
                 {
-                    Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
+                    Paste(text);
                 }
                 catch (Exception x)
                 {
@@ -389,135 +385,145 @@ namespace pwiz.Skyline.Menus
                     }
                 }
             }
-            // Perhaps it's a small molecule list with headers
-            else if (SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text) &&
-                     MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
-            {
-                SkylineWindow.InsertSmallMoleculeTransitionList(text, Resources.SkylineWindow_Paste_Paste_transition_list);
-            }
-            // If the text contains numbers, see if it can be imported as a mass list.
-            // It is definitely not a sequence, if it has numbers.  Whereas, sequences do
-            // allow internal white space including tabs.
-            else if (MassListImporter.IsColumnar(
-                Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE,
-                    TransitionGroup.MAX_PRECURSOR_CHARGE),
-                out formatProvider, out separator, out columnTypes))
-            {
-                // If no numeric type is found, try the second line.  The first may be
-                // a header row.
-                if (!MassListImporter.HasNumericColumn(columnTypes))
-                {
-                    int endLine = text.IndexOf('\n');
-                    if (endLine != -1)
-                    {
-                        MassListImporter.IsColumnar(text.Substring(endLine + 1),
-                            out formatProvider, out separator, out columnTypes);
-                    }
-                }
-
-                if (MassListImporter.HasNumericColumn(columnTypes))
-                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                        Resources.SkylineWindow_Paste_Paste_transition_list, false);
-                // Handle unusual corner case where data is found to be columnar and contains numbers, 
-                // but first line is missing
-                else if (columnTypes.Length == 0)
-                {
-                    throw new InvalidDataException(Resources
-                        .CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
-                }
-                else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)
-                ) // Name, Description, Sequence
-                {
-                    var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
-                        Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
-                    throw new InvalidDataException(message);
-                }
-                else
-                {
-                    string textFasta;
-                    try
-                    {
-                        textFasta = FastaImporter.ToFasta(text, separator);
-                    }
-                    catch (LineColNumberedIoException x)
-                    {
-                        throw new InvalidDataException(x.Message, x);
-                    }
-
-                    SkylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
-                        false, Resources.SkylineWindow_Paste_Paste_proteins,
-                        new SkylineWindow.ImportFastaInfo(false, textFasta));
-                }
-
-                return;
-            }
-            // Otherwise, look for a list of peptides, or a bare sequence
             else
             {
-                // First make sure it looks like a sequence.
-                List<double> lineLengths = new List<double>();
-                int lineLen = 0;
-                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
-                foreach (char c in textNoMods)
+                var inputType =
+                    SmallMoleculeTransitionListCSVReader.IsPlausibleSmallMoleculeTransitionList(text, Document.Settings, Program.ModeUI )
+                        ? SrmDocument.DOCUMENT_TYPE.small_molecules : SrmDocument.DOCUMENT_TYPE.proteomic;
+                
+                // Perhaps it's a small molecule list with headers
+                if (inputType == SrmDocument.DOCUMENT_TYPE.small_molecules && 
+                    MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
                 {
-                    if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
-                    {
-                        MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
-                        return;
-                    }
-                    if (c == '\n')
-                    {
-                        lineLengths.Add(lineLen);
-                        lineLen = 0;
-                    }
-                    else if (!char.IsWhiteSpace(c))
-                    {
-                        lineLen++;
-                    }
+                    SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                        Resources.SkylineWindow_Paste_Paste_transition_list, false, inputType);
                 }
-                lineLengths.Add(lineLen);
-
-                // Check to see if the pasted text looks like a peptide list.
-                PeptideFilter filter = DocumentUI.Settings.PeptideSettings.Filter;
-                if (lineLengths.Count == 1 && lineLen < filter.MaxPeptideLength)
-                    peptideList = true;
-                else
+                // If the text contains numbers, see if it can be imported as a mass list.
+                // It is definitely not a sequence, if it has numbers.  Whereas, sequences do
+                // allow internal white space including tabs.
+                else if (MassListImporter.IsColumnar(
+                    Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE,
+                        TransitionGroup.MAX_PRECURSOR_CHARGE),
+                    out formatProvider, out separator, out columnTypes))
                 {
-                    Statistics stats = new Statistics(lineLengths);
-                    // All lines smaller than the peptide filter
-                    if (stats.Max() <= filter.MaxPeptideLength ||
-                        // 3 out of 4 are peptide length
-                        (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
-                        peptideList = true;
-                    // Probably a FASTA sequence, but ask if average line length is less than 40
-                    else if (stats.Mean() < 40)
+                    // If no numeric type is found, try the second line.  The first may be
+                    // a header row.
+                    if (!MassListImporter.HasNumericColumn(columnTypes))
                     {
-                        using (PasteTypeDlg dlg = new PasteTypeDlg())
+                        int endLine = text.IndexOf('\n');
+                        if (endLine != -1)
                         {
-                            if (dlg.ShowDialog(SkylineWindow) == DialogResult.Cancel)
-                                return;
-                            peptideList = dlg.PeptideList;
+                            MassListImporter.IsColumnar(text.Substring(endLine + 1),
+                                out formatProvider, out separator, out columnTypes);
                         }
                     }
-                }
 
-                if (peptideList)
-                {
-                    text = FilterPeptideList(text);
-                    if (text == null)
-                        return; // Canceled
-                }
-                else if (text.Contains(@"."))
-                {
-                    MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                    if (MassListImporter.HasNumericColumn(columnTypes))
+                    {
+                        SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                            Resources.SkylineWindow_Paste_Paste_transition_list, false, inputType);
+                    }
+                    // Handle unusual corner case where data is found to be columnar and contains numbers, 
+                    // but first line is missing
+                    else if (columnTypes.Length == 0)
+                    {
+                        throw new InvalidDataException(Resources
+                            .CopyPasteTest_DoTest_Could_not_read_the_pasted_transition_list___Transition_list_must_be_in_separated_columns_and_cannot_contain_blank_lines_);
+                    }
+                    else if (columnTypes.Length <= 3 && columnTypes[columnTypes.Length - 1] != typeof(FastaSequence)
+                    ) // Name, Description, Sequence
+                    {
+                        var message = TextUtil.LineSeparate(Resources.SkylineWindow_Paste_Protein_sequence_not_found,
+                            Resources.SkylineWindow_Paste_The_protein_sequence_must_be_the_last_value_in_each_line);
+                        throw new InvalidDataException(message);
+                    }
+                    else
+                    {
+                        string textFasta;
+                        try
+                        {
+                            textFasta = FastaImporter.ToFasta(text, separator);
+                        }
+                        catch (LineColNumberedIoException x)
+                        {
+                            throw new InvalidDataException(x.Message, x);
+                        }
+
+                        SkylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
+                            false, Resources.SkylineWindow_Paste_Paste_proteins,
+                            new SkylineWindow.ImportFastaInfo(false, textFasta));
+                    }
+
                     return;
                 }
+                // Otherwise, look for a list of peptides, or a bare sequence
+                else
+                {
+                    // First make sure it looks like a sequence.
+                    List<double> lineLengths = new List<double>();
+                    int lineLen = 0;
+                var textNoMods = FastaSequence.StripModifications(Transition.StripChargeIndicators(text, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));
+                    foreach (char c in textNoMods)
+                    {
+                        if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
+                        {
+                        MessageDlg.Show(SkylineWindow, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
+                            return;
+                        }
+                        if (c == '\n')
+                        {
+                            lineLengths.Add(lineLen);
+                            lineLen = 0;
+                        }
+                        else if (!char.IsWhiteSpace(c))
+                        {
+                            lineLen++;
+                        }
+                    }
+                    lineLengths.Add(lineLen);
 
-                // Choose an unused ID
-                string seqId = Document.GetPeptideGroupId(peptideList);
+                    // Check to see if the pasted text looks like a peptide list.
+                    PeptideFilter filter = DocumentUI.Settings.PeptideSettings.Filter;
+                    if (lineLengths.Count == 1 && lineLen < filter.MaxPeptideLength)
+                        peptideList = true;
+                    else
+                    {
+                        Statistics stats = new Statistics(lineLengths);
+                        // All lines smaller than the peptide filter
+                        if (stats.Max() <= filter.MaxPeptideLength ||
+                            // 3 out of 4 are peptide length
+                            (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
+                            peptideList = true;
+                        // Probably a FASTA sequence, but ask if average line length is less than 40
+                        else if (stats.Mean() < 40)
+                        {
+                            using (PasteTypeDlg dlg = new PasteTypeDlg())
+                            {
+                                if (dlg.ShowDialog(SkylineWindow) == DialogResult.Cancel)
+                                    return;
+                                peptideList = dlg.PeptideList;
+                            }
+                        }
+                    }
 
-                // Construct valid FASTA format (with >> to indicate custom name)
-                text = @">>" + TextUtil.LineSeparate(seqId, text);
+                    if (peptideList)
+                    {
+                        text = FilterPeptideList(text);
+                        if (text == null)
+                            return; // Canceled
+                    }
+                    else if (text.Contains(@"."))
+                    {
+                        MessageDlg.Show(SkylineWindow, Resources.SkylineWindow_Paste_Unexpected_character_period_found);
+                        return;
+                    }
+
+                    // Choose an unused ID
+                    string seqId = Document.GetPeptideGroupId(peptideList);
+
+                    // Construct valid FASTA format (with >> to indicate custom name)
+                    text = @">>" + TextUtil.LineSeparate(seqId, text);
+                }
             }
 
             string description = (peptideList ? Resources.SkylineWindow_Paste_Paste_peptide_list : Resources.SkylineWindow_Paste_Paste_FASTA);
@@ -532,6 +538,7 @@ namespace pwiz.Skyline.Menus
             // Check to see if any of the peptides would be filtered
             // by the current settings.
             string[] pepSequences = text.Split('\n');
+            // ReSharper disable once CollectionNeverQueried.Local
             var setAdded = new HashSet<string>();
             var listAllPeptides = new List<string>();
             var listAcceptPeptides = new List<string>();
@@ -722,6 +729,7 @@ namespace pwiz.Skyline.Menus
 
         public void EditToolStripMenuItemDropDownOpening()
         {
+            var synchronizedIntegration = DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any();
             CanApplyOrRemovePeak(null, null, out var canApply, out var canRemove);
             if (!canApply && !canRemove)
             {
@@ -729,18 +737,20 @@ namespace pwiz.Skyline.Menus
             }
             else
             {
-                applyPeakAllToolStripMenuItem.Enabled = applyPeakSubsequentToolStripMenuItem.Enabled = canApply;
+
+                applyPeakAllToolStripMenuItem.Enabled = canApply;
+                applyPeakSubsequentToolStripMenuItem.Enabled = canApply && !synchronizedIntegration;
                 applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_editToolStripMenuItem_DropDownOpening_Apply_Peak_to_Group;
                 groupApplyToByToolStripMenuItem.DropDownItems.Clear();
                 applyPeakGroupToolStripMenuItem.Enabled = groupApplyToByToolStripMenuItem.Enabled = false;
                 if (ReplicateValue.GetGroupableReplicateValues(DocumentUI).Any())
                 {
-                    groupApplyToByToolStripMenuItem.Enabled = true;
+                    groupApplyToByToolStripMenuItem.Enabled = !synchronizedIntegration;
                     var selectedAnnotation = GetGroupApplyToDescription();
                     if (selectedAnnotation != null)
                     {
                         applyPeakGroupToolStripMenuItem.Text = Resources.SkylineWindow_BuildChromatogramMenu_Apply_Peak_to_ + selectedAnnotation;
-                        applyPeakGroupToolStripMenuItem.Enabled = true;
+                        applyPeakGroupToolStripMenuItem.Enabled = !synchronizedIntegration;
                     }
                     var i = 0;
                     AddGroupByMenuItems(null, groupApplyToByToolStripMenuItem, replicateValue => Settings.Default.GroupApplyToBy = replicateValue?.ToPersistedString(), false, Settings.Default.GroupApplyToBy, ref i);
@@ -748,6 +758,7 @@ namespace pwiz.Skyline.Menus
                 removePeakToolStripMenuItem.Enabled = canRemove;
                 integrationToolStripMenuItem.Enabled = true;
             }
+            synchronizedIntegrationToolStripMenuItem.Checked = synchronizedIntegration;
         }
 
         #region Peaks
@@ -772,27 +783,49 @@ namespace pwiz.Skyline.Menus
             if (!canApply)
                 return;
 
+            var resultsIndex = SelectedResultsIndex;
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
-            var nodeTranGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            var nodeTranGroup = nodeTranGroupTree?.DocNode;
+            var nodeTranGroup = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode ?? PeakMatcher.PickTransitionGroup(DocumentUI, nodePepTree, resultsIndex);
+
+            if (DocumentUI.GetSynchronizeIntegrationChromatogramSets().Any())
+            {
+                // Apply peak with synchronized integration
+                var chromSet = DocumentUI.MeasuredResults.Chromatograms[resultsIndex];
+                var filePath = SkylineWindow.GetGraphChrom(chromSet.Name).FilePath;
+                var chromInfo = SkylineWindow.FindChromInfo(DocumentUI, nodeTranGroup, chromSet.Name, filePath);
+
+                nodePepTree.EnsureChildren(); // in case peptide node is not expanded
+                var nodeTranGroupPath = nodePepTree.Nodes.Cast<TransitionGroupTreeNode>().First(node => ReferenceEquals(node.DocNode, nodeTranGroup)).Path;
+
+                var change = new ChangedPeakBoundsEventArgs(
+                    nodeTranGroupPath, null, chromSet.Name, filePath,
+                    new ScaledRetentionTime(chromInfo.StartRetentionTime.GetValueOrDefault()),
+                    new ScaledRetentionTime(chromInfo.EndRetentionTime.GetValueOrDefault()),
+                    null, PeakBoundsChangeType.both);
+
+                var path = PropertyName.ROOT
+                    .SubProperty(((PeptideGroupTreeNode) nodePepTree.SrmParent).DocNode.AuditLogText)
+                    .SubProperty(nodePepTree.DocNode.AuditLogText)
+                    .SubProperty(nodeTranGroup.AuditLogText);
+
+                ModifyDocument(Resources.SkylineWindow_PickPeakInChromatograms_Apply_picked_peak,
+                    doc => SkylineWindow.ChangePeakBounds(doc, SkylineWindow.GetSynchronizedPeakBoundChanges(doc, change, false)),
+                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.applied_peak_all, docPair.NewDocumentType,
+                        path.ToString()));
+                return;
+            }
 
             using (var longWait = new LongWaitDlg(SkylineWindow) { Text = Resources.SkylineWindow_ApplyPeak_Applying_Peak })
             {
                 SrmDocument doc = null;
                 try
                 {
-                    var resultsIndex = SelectedResultsIndex;
                     var chromatogramSet = Document.MeasuredResults.Chromatograms[resultsIndex];
                     var resultsFile = SkylineWindow.GetGraphChrom(chromatogramSet.Name).GetChromFileInfoId();
-                    var groupBy =
-                        ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy);
-                    object groupByValue = null;
-                    if (groupBy != null)
-                    {
-                        groupByValue = groupBy.GetValue(new AnnotationCalculator(Document), chromatogramSet);
-                    }
+                    var groupBy = group ? ReplicateValue.FromPersistedString(Document.Settings, Settings.Default.GroupApplyToBy) : null;
+                    var groupByValue = groupBy?.GetValue(new AnnotationCalculator(Document), chromatogramSet);
                     longWait.PerformWork(SkylineWindow, 800, monitor =>
-                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, ref nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
+                        doc = PeakMatcher.ApplyPeak(Document, nodePepTree, nodeTranGroup, resultsIndex, resultsFile, subsequent, groupBy, groupByValue, monitor));
                 }
                 catch (Exception x)
                 {
@@ -909,7 +942,7 @@ namespace pwiz.Skyline.Menus
         }
 
         private SrmDocument RemovePeakInternal(SrmDocument document, int resultsIndex, ChromFileInfoId chromFileInfoId, IdentityPath groupPath,
-            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, bool syncRecurse = true)
         {
             ChromInfo chromInfo;
             Transition transition;
@@ -927,11 +960,26 @@ namespace pwiz.Skyline.Menus
             if (chromInfo == null)
                 return document;
 
-            MsDataFileUri filePath;
-            string name = SkylineWindow.GetGraphChromStrings(resultsIndex, chromInfo.FileId, out filePath);
-            return name == null
+            string name = SkylineWindow.GetGraphChromStrings(resultsIndex, chromInfo.FileId, out var filePath);
+            document = name == null
                 ? document
                 : document.ChangePeak(groupPath, name, filePath, transition, 0, 0, UserSet.TRUE, PeakIdentification.FALSE, false);
+
+            if (syncRecurse)
+            {
+                var syncTargets = document.GetSynchronizeIntegrationChromatogramSets().ToHashSet();
+                for (var i = 0; i < document.MeasuredResults.Chromatograms.Count; i++)
+                {
+                    var chromSet = document.MeasuredResults.Chromatograms[i];
+                    if (syncTargets.Contains(chromSet))
+                    {
+                        foreach (var info in chromSet.MSDataFileInfos.Where(info => !(resultsIndex == i && Equals(chromInfo.FileId, info.FileId))))
+                            document = RemovePeakInternal(document, i, info.FileId, groupPath, nodeGroup, nodeTran, false);
+                    }
+                }
+            }
+
+            return document;
         }
         public void CanApplyOrRemovePeak(ToolStripItemCollection removePeakItems, IsotopeLabelType labelType, out bool canApply, out bool canRemove)
         {
@@ -985,6 +1033,7 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
+
         // ReSharper disable SuggestBaseTypeForParameter
         private static bool HasPeak(int iResult, ChromFileInfoId chromFileInfoId, TransitionGroupDocNode nodeGroup)
             // ReSharper restore SuggestBaseTypeForParameter
@@ -1002,6 +1051,37 @@ namespace pwiz.Skyline.Menus
             var chromInfo = nodeTran.GetChromInfo(iResults, chromFileInfoId);
             return (chromInfo != null && !chromInfo.IsEmpty);
         }
+
+        private void synchronizedIntegrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSynchronizedIntegrationDialog();
+        }
+
+        public void ShowSynchronizedIntegrationDialog()
+        {
+            using (var dlg = new SynchronizedIntegrationDlg(SkylineWindow))
+            {
+                if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                {
+                    var groupBy = dlg.GroupByPersistedString;
+                    var all = dlg.IsAll;
+                    var targets = dlg.TargetsInvariant.ToArray();
+
+                    var existing = Document.Settings.TransitionSettings.Integration;
+                    if (groupBy != existing.SynchronizedIntegrationGroupBy ||
+                        all != existing.SynchronizedIntegrationAll ||
+                        !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
+                    {
+                        ModifyDocument(
+                            string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
+                                (string.IsNullOrEmpty(groupBy) ? Resources.GroupByItem_ToString_Replicates : groupBy) + @":" + string.Join(@",", targets)),
+                            doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i =>
+                                i.ChangeSynchronizedIntegration(groupBy, all, targets))), AuditLogEntry.SettingsLogFunction);
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region Insert
@@ -1062,19 +1142,42 @@ namespace pwiz.Skyline.Menus
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
         {
-            ShowPasteTransitionListDlg();
+            ShowInsertTransitionListDlg();
         }
 
-        public void ShowPasteTransitionListDlg()
+        public void ShowInsertTransitionListDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var transitionDlg = new InsertTransitionListDlg())
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.transition_list
-            })
-            {
-                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
-                    SelectedPath = pasteDlg.SelectedPath;
+                if (transitionDlg.ShowDialog(SkylineWindow) != DialogResult.OK)
+                    return;
+
+                IFormatProvider formatProvider;
+                char separator;
+                Type[] columnTypes;
+                var text = transitionDlg.TransitionListText;
+                // As long as it has columns we want to parse the input as a transition list
+                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+                {
+                    try
+                    {
+                        SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                            Resources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                    }
+                    catch (Exception exception)
+                    {
+                        if (ExceptionUtil.IsProgrammingDefect(exception))
+                        {
+                            throw;
+                        }
+                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
+                    }
+                }
+                else
+                {
+                    // Alert the user that their list is not columnar
+                    MessageDlg.Show(this, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                }
             }
         }
         #endregion

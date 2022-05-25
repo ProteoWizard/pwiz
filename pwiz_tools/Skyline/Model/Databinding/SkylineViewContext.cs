@@ -480,8 +480,8 @@ namespace pwiz.Skyline.Model.Databinding
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
                         columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("BeginPos"));
-                        columnsToRemove.Add(PropertyPath.Root.Property("EndPos"));
+                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.FirstPosition)));
+                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.LastPosition)));
                         columnsToRemove.Add(PropertyPath.Root.Property("MissedCleavages"));
                     }
                     if (!docHasCustomIons)
@@ -899,6 +899,25 @@ namespace pwiz.Skyline.Model.Databinding
 
                 return UiModes.AvailableModes(SkylineDataSchema.SkylineWindow.ModeUI);
             }
+        }
+
+        public override bool CanDisplayView(ViewSpec viewSpec)
+        {
+            if (!base.CanDisplayView(viewSpec))
+            {
+                return false;
+            }
+
+            var reportUiMode = DataSchema.NormalizeUiMode(viewSpec.UiMode);
+            switch (DataSchema.DefaultUiMode)
+            {
+                case UiModes.PROTEOMIC:
+                    return reportUiMode != UiModes.SMALL_MOLECULES;
+                case UiModes.SMALL_MOLECULES:
+                    return reportUiMode != UiModes.PROTEOMIC;
+            }
+
+            return true;
         }
     }
 }

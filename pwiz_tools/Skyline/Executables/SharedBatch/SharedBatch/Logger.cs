@@ -19,8 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using SharedBatch.Properties;
 
  namespace SharedBatch
@@ -28,51 +30,89 @@ using SharedBatch.Properties;
 
     public class Logger
     {
-        //public static string LOG_FOLDER;
+        private const string DATE_PATTERN = "^\\[.*\\]\x20*";
+        private const string MEMSTAMP_PATTERN = "^[0-9]+\t[0-9]+\t";
+
+
+        private readonly string _filePath;
 
         public const long MaxLogSize = 10 * 1024 * 1024; // 10MB
         private const int MaxBackups = 5;
         public const int MaxLogLines = 10000;
-        public static string LogTruncatedMessage = Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_;
-
-
-        private string _lastMessage = string.Empty; // To avoid logging duplicate messages.
-
-        private readonly string _filePath;
-        public readonly string Name;
-
-        private readonly object _lock = new object();
-
-        private IMainUiControl _mainUi;
-        
-        private StreamReader _streamReader;
-        private StreamWriter _streamWriter;
 
         private Queue<string> _memLogMessages;
         private const int MemLogSize = 100; // Keep the last 100 log messages in memory
         private StringBuilder _logBuffer; // To be used when the log file is unavailable for writing
         private const int LogBufferSize = 10240;
-        private const int StreamReaderDefaultBufferSize = 4096;
-        
-        public Logger(string logFilePath, string logName, IMainUiControl mainUi = null)
+
+        private int _lines;
+
+        private static List<string> _errorFormats;
+        private readonly List<string> _uiBuffer;
+
+        private readonly object _uiBufferLock = new object();
+
+        private readonly object _fileLock = new object();
+        private readonly object _lock = new object();
+
+        private FileStream _fileStream;
+        private const int StreamDefaultBufferSize = 4096;
+
+
+
+        public Logger(string logFilePath, string logName, bool initialize)
         {
-            var logFolder = FileUtil.GetDirectory(logFilePath);
-            if (!Directory.Exists(logFolder))
-            {
-                Directory.CreateDirectory(logFolder);
-            }
+            InitializeErrorFormats();
 
             _filePath = logFilePath;
-            _mainUi = mainUi;
+            _uiBuffer = new List<string>();
             Name = logName;
-            Init();
+            if (initialize)
+                Init();
         }
-        
+
+        public string Name;
+
+        public delegate void UiLog(string text);
+
+        public delegate void UiLogError(string text);
+
+        public string LogFile => _filePath;
+
+        public string LogDirectory => Path.GetDirectoryName(_filePath);
+
+        public string LogFileName => Path.GetFileName(_filePath);
+
+        public bool WillTruncate => _lines > MaxLogLines;
+
+        public bool LogTestFormat = false;
+
+        private static void InitializeErrorFormats()
+        {
+            if (_errorFormats != null) return;
+            _errorFormats = new List<string>() { string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, ".*") };
+        }
+
+        public static void AddErrorMatch(string errorPattern)
+        {
+            InitializeErrorFormats();
+            if (!_errorFormats.Contains(errorPattern))
+                _errorFormats.Add(errorPattern);
+        }
+
+        private Regex ErrorRegex()
+        {
+            string errorPatterns = string.Join("|", _errorFormats);
+            if (_errorFormats.Count > 1) errorPatterns = "(" + errorPatterns + ")";
+            return new Regex(DATE_PATTERN + errorPatterns);
+        }
+
         public void Init()
         {
+            Directory.CreateDirectory(FileUtil.GetDirectorySafe(_filePath));
             _logBuffer = new StringBuilder();
             _memLogMessages = new Queue<string>(MemLogSize);
-            
+
             // Initialize - create blank log file if doesn't exist
             if (!File.Exists(_filePath))
             {
@@ -80,18 +120,212 @@ using SharedBatch.Properties;
                 {
                 }
             }
-
-            var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            var logFileWrite = File.Open(_filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-            // these need to be kept open while the program is running so log files can't be deleted outside of Skyline Batch
-            _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
-                StreamReaderDefaultBufferSize, true);
-            _streamWriter = new StreamWriter(logFileWrite, Encoding.Default, StreamReaderDefaultBufferSize, true);
+            lock (_uiBuffer)
+            {
+                _uiBuffer.Clear();
+                _fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
+            }
         }
 
-        public string GetDirectory()
+        private string _lastLogMessage;
+
+        // Logs the text to the log as is
+        private void LogVerbatim(params string[] text)
         {
-            return Path.GetDirectoryName(_filePath);
+            WriteToFile(TextUtil.LineSeparate(text));
+            lock (_uiBufferLock)
+            {
+                _uiBuffer.AddRange(text);
+            }
+            _lines += text.Length;
+        }
+
+        public void Log(params string[] text)
+        {
+            var memstampRegex = new Regex(MEMSTAMP_PATTERN);
+            var messageNoTimestamp = TextUtil.LineSeparate(text);
+            if (text.Length > 0 && !messageNoTimestamp.Equals(_lastLogMessage))
+            {
+                _lastLogMessage = messageNoTimestamp;
+                if (!LogTestFormat || memstampRegex.IsMatch(text[0]))
+                    text[0] = GetDate() + text[0];
+                else
+                {
+                    // Add memstamp with zeros
+                    text[0] = GetDate() + "0\t0\t" + text[0];
+                }
+                LogVerbatim(text);
+            }
+        }
+
+        public void LogError(params string[] text)
+        {
+            string errorText = string.Join(Environment.NewLine, text);
+            errorText = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, errorText);
+            Log(errorText);
+        }
+
+        private int LastPercent;
+        private DateTime LastLogTime;
+        private const int MIN_SECONDS_BETWEEN_LOGS = 4;
+        private object _percentLock = new object();
+
+
+        public void LogPercent(int percent)
+        {
+            lock (_percentLock)
+            {
+                if (percent < 0 || percent < LastPercent || percent == 100)
+                    return;
+                if ((DateTime.Now - LastLogTime) > new TimeSpan(0, 0, MIN_SECONDS_BETWEEN_LOGS) &&
+                    percent != LastPercent)
+                {
+                    // do not log 0%, gives fast operations a chance to skip percent logging
+                    if (percent == 0)
+                    {
+                        if (LastPercent == -2)
+                        {
+                            LastPercent = -1;
+                            LastLogTime = DateTime.Now;
+                        }
+
+                        return;
+                    }
+
+                    LastLogTime = DateTime.Now;
+                    Log(string.Format(Resources.Logger_LogPercent__0__, percent));
+                    LastPercent = Math.Max(LastPercent, percent);
+                }
+            }
+        }
+
+        public void StopLogPercent(bool completed)
+        {
+            lock (_percentLock)
+            {
+                if (completed && LastPercent >= 0)
+                    Log(string.Format(Resources.Logger_LogPercent__0__, 100));
+                LastPercent = -2;
+                LastLogTime = DateTime.MinValue;
+            }
+        }
+
+        private string GetDate()
+        {
+            if (LogTestFormat)
+                return "[" + DateTime.Now.ToString("G", CultureInfo.InvariantCulture) + "]\t";
+            return "[" + DateTime.Now.ToString("G") + "]    ";
+        }
+
+        public void DisplayLogFromFile()
+        {
+            if (!File.Exists(_filePath)) return;
+            var startBlockRegex = new Regex(DATE_PATTERN);
+            lock (_uiBufferLock)
+            {
+                _uiBuffer.Clear();
+                using (var fileStream = new FileStream(_filePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (var streamReader = new StreamReader(fileStream))
+                    {
+                        while (!streamReader.EndOfStream)
+                        {
+                            var line = streamReader.ReadLine();
+                            if (line == null) continue;
+                            if (startBlockRegex.IsMatch(line)) // add check for 0 len
+                                _uiBuffer.Add(line);
+                            else
+                                _uiBuffer[_uiBuffer.Count - 1] += Environment.NewLine + line;
+                        }
+                    }
+                    _lines = _uiBuffer.Count;
+                    _uiBuffer.RemoveRange(0, Math.Max(0, _lines - MaxLogLines));
+                }
+            }
+        }
+
+        public bool OutputLog(UiLog logToUi, UiLogError logErrorToUi)
+        {
+            lock (_uiBufferLock)
+            {
+                var errorRegex = ErrorRegex();
+                var errorOutput = new List<string>();
+                var normalOutput = new List<string>();
+                foreach (var textBlock in _uiBuffer)
+                {
+                    if (errorRegex.IsMatch(textBlock))
+                    {
+                        LogUiOutput(normalOutput, logToUi);
+                        errorOutput.Add(textBlock);
+                    }
+                    else
+                    {
+                        LogUiErrorOutput(errorOutput, logErrorToUi);
+                        normalOutput.Add(textBlock);
+                    }
+                }
+                LogUiOutput(normalOutput, logToUi);
+                LogUiErrorOutput(errorOutput, logErrorToUi);
+                var logChanged = _uiBuffer.Count > 0;
+                _uiBuffer.Clear();
+                return logChanged;
+            }
+        }
+
+        private void LogUiErrorOutput(List<string> errorOutput, UiLogError logErrorToUi)
+        {
+            if (errorOutput.Count == 0) return;
+            logErrorToUi(TextUtil.LineSeparate(errorOutput));
+            errorOutput.Clear();
+        }
+
+        private void LogUiOutput(List<string> normalOutput, UiLog logToUi)
+        {
+            if (normalOutput.Count == 0) return;
+            logToUi(TextUtil.LineSeparate(normalOutput));
+            normalOutput.Clear();
+        }
+
+
+
+        public Logger Archive()
+        {
+            lock (_fileLock)
+            {
+                if (File.Exists(_filePath) && new FileInfo(_filePath).Length > 0)
+                {
+                    var lastModified = File.GetLastWriteTime(_filePath);
+                    var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
+                    timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + TextUtil.EXT_LOG;
+                    Close();
+
+                    File.Copy(_filePath, timestampFileName, true);
+                    File.Delete(_filePath);
+                    Init();
+                    var newFilePath = Path.Combine(FileUtil.GetDirectory(_filePath), timestampFileName);
+                    return new Logger(newFilePath, timestampFileName, true);
+                }
+
+                return null;
+            }
+        }
+
+        public void Close()
+        {
+            _fileStream.Close();
+        }
+
+        public void Delete()
+        {
+            try
+            {
+                Close();
+            }
+            catch (ObjectDisposedException)
+            {
+                // pass - file already closed
+            }
+            File.Delete(_filePath);
         }
 
         private void WriteToFile(string message)
@@ -111,31 +345,40 @@ using SharedBatch.Properties;
                     ProgramLog.Error(err.ToString(), e);
                 }
 
-                var dateAndMessage = GetDate() + message;
+                //var dateAndMessage = GetDate() + message;
 
                 try
                 {
-                    if (_logBuffer != null && _logBuffer.Length > 0)
+
+                    using (var fileStream = new FileStream(_filePath, FileMode.Append, FileAccess.Write, FileShare.Read))
                     {
-                        // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
-                        _streamWriter.Write(_logBuffer.ToString());
-                        _streamWriter.Flush();
-                        _logBuffer.Clear();
+                        using (var streamWriter =
+                            new StreamWriter(fileStream, Encoding.UTF8, StreamDefaultBufferSize, true))
+                        {
+                            if (_logBuffer != null && _logBuffer.Length > 0)
+                            {
+                                // Append any log messages that were buffered while the log file was unavailable (e.g. due to network share being temporarily unavailable).
+                                streamWriter.Write(_logBuffer.ToString());
+                                streamWriter.Flush();
+                                _logBuffer.Clear();
+                            }
+                            streamWriter.WriteLine(message);
+                            streamWriter.Flush();
+                        }
+
                     }
-                    _streamWriter.WriteLine(dateAndMessage);
-                    _streamWriter.Flush();
 
                     // Save log message in memory
                     if (_memLogMessages.Count == MemLogSize)
                     {
                         _memLogMessages.Dequeue();
                     }
-                    _memLogMessages.Enqueue(dateAndMessage);
+                    _memLogMessages.Enqueue(message);
                 }
                 catch (Exception e)
                 {
                     // If we cannot access the log file at this time, write to the buffer and the program log
-                    WriteToBuffer(dateAndMessage);
+                    WriteToBuffer(message);
 
                     var fileNotFound = e.GetType().IsAssignableFrom(typeof(FileNotFoundException));
                     if (!fileNotFound)
@@ -171,11 +414,6 @@ using SharedBatch.Properties;
             }
         }
 
-        private static string GetDate()
-        {
-            return "[" + DateTime.Now.ToString("G") + "]    ";
-        }
-
         private void BackupLog()
         {
             if (!File.Exists(_filePath))
@@ -187,7 +425,12 @@ using SharedBatch.Properties;
             var size = new FileInfo(_filePath).Length;
             if (size >= MaxLogSize)
             {
+                Close();  // First close the open file handle
                 BackupLog(_filePath, 1);
+                using (File.Create(_filePath))
+                {
+                }
+                _fileStream = new FileStream(_filePath, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite);
             }
         }
 
@@ -207,255 +450,10 @@ using SharedBatch.Properties;
             var startFile = GetLogFilePath(filePath, bkupIndex - 1);
             File.Move(startFile, backupFile);
         }
-
         private static string GetLogFilePath(string filePath, int index)
         {
             return index == 0 ? filePath : filePath + "." + index;
         }
 
-        private void LogErrorToFile(string message)
-        {
-            WriteToFile(message);
-        }
-
-
-        #region [Logging methods; Implementation of ISkylineBatchLogger interface]
-
-        public void Log(string line, params object[] args)
-        {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-
-            if (line.Equals(_lastMessage))
-            {
-                return;
-            }
-            _lastMessage = line;
-
-            if (_mainUi != null)
-            {
-                _mainUi.LogToUi(Name, GetDate() + line);
-            }
-
-            WriteToFile(line);
-        }
-
-        public void LogException(Exception ex, string line, params object[] args)
-        {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-            line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
-
-            var exStr = ex != null ? ex.ToString() : string.Empty;
-            if (_mainUi != null)
-            {
-                line = GetDate() + line;
-
-                _mainUi.LogErrorLinesToUi(Name,
-                        new List<string> { line, exStr });
-            }
-
-            LogErrorToFile(string.Format("{0}\n{1}", line, exStr));
-        }
-
-        public void LogError(string line, params object[] args)
-        {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-
-            if (line.StartsWith(Resources.Logger_LogError_Error_, StringComparison.CurrentCultureIgnoreCase))
-                line = line.Substring(Resources.Logger_LogError_Error_.Length);
-            line = string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, line);
-
-            if (_mainUi != null)
-            {
-                _mainUi.LogErrorToUi(Name,GetDate() + line);
-            }
-
-            LogErrorToFile(line);
-        }
-
-        public void LogProgramError(string line, params object[] args)
-        {
-            if (args != null && args.Length > 0)
-            {
-                line = string.Format(line, args);
-            }
-
-            ProgramLog.Error(line);
-
-            if (_mainUi != null)
-            {
-                _mainUi.LogErrorToUi(Name, GetDate() + line);
-            }
-        }
-
-        public void Delete()
-        {
-            try
-            {
-                Close();
-            }
-            catch (ObjectDisposedException)
-            {
-                // pass - file already closed
-            }
-            File.Delete(_filePath);
-        }
-
-        public Logger Archive()
-        {
-            if (new FileInfo(_filePath).Length > 0)
-            {
-                var lastModified = File.GetLastWriteTime(_filePath);
-                var timestampFileName = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath);
-                timestampFileName += lastModified.ToString("_yyyyMMdd_HHmmss") + ".log";
-                Close();
-
-                File.Copy(GetFile(), timestampFileName);
-                File.Delete(_filePath);
-                Init();
-                var newFilePath = Path.Combine(FileUtil.GetDirectory(_filePath), timestampFileName);
-                return new Logger(newFilePath, timestampFileName, _mainUi);
-            }
-
-            return null;
-        }
-
-        public void LogToUi(IMainUiControl mainUi)
-        {
-            _mainUi = mainUi;
-        }
-
-        public void Close()
-        {
-            _streamWriter.Close();
-            _streamWriter.BaseStream.Dispose();
-            _streamReader.Close();
-            _streamReader.BaseStream.Dispose();
-        }
-
-        public string GetFile()
-        {
-            return _filePath;
-        }
-
-        public string GetFileName()
-        {
-            return Path.GetFileName(_filePath);
-        }
-
-        public void DisableUiLogging()
-        {
-            _mainUi = null;
-        }
-
-        public void DisplayLog()
-        {
-            lock (_lock)
-            {
-                if (!File.Exists(_filePath))
-                {
-                    // If the log file is not accessible, display the contents of the in memory buffer and anything saved in the log buffer
-                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Could_not_read_the_log_file___0___File_does_not_exist_, _filePath), false);
-                    if (_memLogMessages != null && _memLogMessages.Count > 0)
-                    {
-                        _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_Displaying_last__0__saved_log_messages_, _memLogMessages.Count), false);
-                        string[] arr = _memLogMessages.ToArray();
-                        foreach (var s in arr)
-                        {
-                            _mainUi.LogToUi(_filePath,s, false);
-                        }
-                    }
-
-                    if (_logBuffer != null && _logBuffer.Length > 0)
-                    {
-                        _mainUi.LogErrorToUi(_filePath, Resources.Logger_DisplayLog_Displaying_messages_since_log_file_became_unavailable_, false);
-                        _mainUi.LogToUi(_filePath, _logBuffer.ToString(), false);
-                    }
-                    return;
-                }
-
-                // Reset the stream reader to start from the beginning of the file
-                _streamReader.Close();
-                _streamReader.BaseStream.Dispose();
-                var logFileRead = File.Open(_filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                _streamReader = new StreamReader(logFileRead, Encoding.Default, false, 
-                    StreamReaderDefaultBufferSize, true);
-                
-                // Read the log contents and display in the log tab.
-                var lines = new List<string>();
-                var truncated = false;
-                var maxDisplaySize = MaxLogSize / 20;
-                // If the log is too big don't display all of it.
-                if (_streamReader.BaseStream.Length > maxDisplaySize)
-                {
-                    _streamReader.BaseStream.Seek(-maxDisplaySize, SeekOrigin.End);
-                    truncated = true;
-                }
-                string lineText;
-                while ((lineText = _streamReader.ReadLine()) != null)
-                {
-                    lines.Add(lineText);
-                }
-
-                if (lines.Count > MaxLogLines)
-                {
-                    lines = lines.GetRange(lines.Count - MaxLogLines - 1, MaxLogLines);
-                    truncated = true;
-                }
-                if (truncated)
-                {
-                    _mainUi.LogErrorToUi(_filePath, string.Format(Resources.Logger_DisplayLog_____Log_truncated_____Full_log_is_in__0_, GetFile()), false);
-                }
-
-                var toLog = new List<string>();
-                var lastLineErr = false;
-
-                foreach (var line in lines)
-                {
-                    if (line.Contains(string.Format(Resources.Logger_LogErrorToFile_ERROR___0_, string.Empty)))
-                    {
-                        if (!lastLineErr && toLog.Count > 0)
-                        {
-                            _mainUi.LogLinesToUi(Name, toLog);
-                            toLog.Clear();
-                        }
-                        lastLineErr = true;
-                    }
-                    // check that input starts with timestamp, accounts for multi-line errors
-                    else if (line.Length > 0 && line[0] == '[')
-                    {
-                        if (lastLineErr && toLog.Count > 0)
-                        {
-                            _mainUi.LogErrorLinesToUi(Name, toLog);
-                            toLog.Clear();
-                        }
-                        lastLineErr = false;
-                    }
-                    toLog.Add(line);
-                }
-                if (toLog.Count > 0)
-                {
-                    if (lastLineErr)
-                    {
-                        _mainUi.LogErrorLinesToUi(Name, toLog);
-                    }
-                    else
-                    {
-                        _mainUi.LogLinesToUi(Name, toLog);
-                    }
-                }
-            }
-        }
-
-        #endregion
     }
 }
-

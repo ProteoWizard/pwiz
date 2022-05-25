@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -69,8 +68,7 @@ namespace pwiz.SkylineTestFunctional
             foreach (var reportInfo in ListTestReportInfos())
             {
                 Settings.Default.PersistedViews.Clear();
-                StringWriter stringWriter = new StringWriter();
-                CommandLineRunner.RunCommand(new[]{"--report-add=" + reportInfo.Path}, new CommandStatusWriter(stringWriter));
+                RunCommand(new[] {"--report-add=" + reportInfo.Path});
                 VerifyReportsImported(PersistedViews.MainGroup, reportInfo);
             }
         }

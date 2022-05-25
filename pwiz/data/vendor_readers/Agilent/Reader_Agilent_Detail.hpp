@@ -45,6 +45,7 @@ PWIZ_API_DECL CVID translateAsActivationType(DeviceType deviceType);
 PWIZ_API_DECL CVID translateAsPolarityType(IonPolarity polarity);
 PWIZ_API_DECL CVID translateAsIonizationType(IonizationMode ionizationMode);
 PWIZ_API_DECL CVID translateAsInletType(IonizationMode ionizationMode);
+PWIZ_API_DECL CVID translateAsChromatogramType(const Signal& signal);
 
 
 } // Agilent

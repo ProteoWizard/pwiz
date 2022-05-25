@@ -1,34 +1,24 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using SharedBatch.Properties;
 
 namespace SharedBatch
 {
     public partial class ShareConfigsForm : Form
     {
-        private readonly ConfigManager _configManager;
         private readonly IMainUiControl _uiControl;
-        private readonly string _filter;
-        
-        public ShareConfigsForm(IMainUiControl uiControl, ConfigManager configManager, string filter, Icon icon)
+
+        public ShareConfigsForm(IMainUiControl uiControl, ConfigManagerState state, Icon icon)
         {
             InitializeComponent();
             Icon = icon;
             _uiControl = uiControl;
-            _configManager = configManager;
-            _filter = filter;
-            checkedSaveConfigs.Items.AddRange(_configManager.ConfigNamesAsObjectArray());
+            checkedSaveConfigs.Items.AddRange(state.ConfigNamesAsObjectArray());
         }
 
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
-            var dialog = new SaveFileDialog { Filter = _filter, FileName = textFileName.Text };
-            if (dialog.ShowDialog(this) != DialogResult.OK)
-                return;
+        public int[] IndiciesToSave { get; private set; }
 
-            textFileName.Text = dialog.FileName;
-            Export();
-        }
 
         private void checkedSaveConfigs_ItemCheck(object sender, ItemCheckEventArgs e)
         {
@@ -43,24 +33,15 @@ namespace SharedBatch
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            Export();
-        }
-
-        private void Export()
-        {
-            var indiciesToSave = new int[checkedSaveConfigs.CheckedIndices.Count];
-            checkedSaveConfigs.CheckedIndices.CopyTo(indiciesToSave, 0);
-
-            try
+            IndiciesToSave = new int[checkedSaveConfigs.CheckedIndices.Count];
+            checkedSaveConfigs.CheckedIndices.CopyTo(IndiciesToSave, 0);
+            if (IndiciesToSave.Length == 0)
             {
-                _configManager.ExportConfigs(textFileName.Text, indiciesToSave);
-            }
-            catch (ArgumentException e)
-            {
-                _uiControl.DisplayError(e.Message);
+                _uiControl.DisplayError(Resources.ConfigManager_ExportConfigs_There_is_no_configuration_selected_ + Environment.NewLine +
+                                        Resources.ConfigManager_ExportConfigs_Please_select_a_configuration_to_share_);
                 return;
             }
-
+            DialogResult = DialogResult.OK;
             Close();
         }
 

@@ -1,9 +1,9 @@
 # Copyright (c) 2010 Vladimir Prus.
-# Copyright 2017 Rene Rivera.
+# Copyright 2017-2021 Rene Ferdinand Rivera Morell
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This module defines function to help with two main tasks:
 #
@@ -25,23 +25,6 @@ import modules ;
 import sequence ;
 import utility ;
 import virtual-target ;
-
-
-# The configure feature allows external definition of what features are
-# relevant for doing configuration builds. One can add additional relevant
-# features by using:
-#
-#   import feature ;
-#   import configure ;
-#   feature.compose <configure> : <threading> ;
-#
-feature.feature configure : : composite optional ;
-
-# This is the initial set of relevant features. Note that subfeature of all
-# relevant features are also considered relevant.
-#
-feature.compose <configure> :
-    <target-os> <toolset> <address-model> <architecture> <cxxstd> ;
 
 
 rule log-summary ( )
@@ -83,7 +66,12 @@ rule log-component-configuration ( component : message )
 }
 
 
-rule log-check-result ( result )
+.variant_index = 0 ;
+.nl = "\n" ;
+
+.check_notes = ;
+
+rule log-check-result ( result variant ? )
 {
     if ! $(.announced-checks)
     {
@@ -91,16 +79,35 @@ rule log-check-result ( result )
         .announced-checks = 1 ;
     }
 
+    if $(variant)
+    {
+        if $(.variant_index.$(variant))
+        {
+            result = "$(result) [$(.variant_index.$(variant))]" ;
+        }
+        else
+        {
+            .variant_index = [ CALC $(.variant_index) + 1 ] ;
+            .variant_index.$(variant) = $(.variant_index) ;
+            result = "$(result) [$(.variant_index.$(variant))]" ;
+            .check_notes += "[$(.variant_index.$(variant))] $(variant)" ;
+        }
+    }
+    # else
+    # {
+    #     result = "$(result) [?]" ;
+    # }
+
     ECHO $(result) ;
     # FIXME: Unfinished code. Nothing seems to set .check-results at the moment.
     #.check-results += $(result) ;
 }
 
 
-rule log-library-search-result ( library : result )
+rule log-library-search-result ( library : result variant ? )
 {
     local x = [ PAD "    - $(library)" : $(.width) ] ;
-    log-check-result "$(x) : $(result)" ;
+    log-check-result "$(x) : $(result)" $(variant) ;
 }
 
 
@@ -134,6 +141,12 @@ rule print-component-configuration ( )
 
 rule print-configure-checks-summary ( )
 {
+    if $(.check_notes)
+    {
+        ECHO ;
+        for local l in $(.check_notes) { ECHO $(l) ; }
+    }
+
     # FIXME: The problem with this approach is that the user sees the checks
     # summary when all checks are done, and has no progress reporting while the
     # checks are being executed.
@@ -155,7 +168,7 @@ if --reconfigure in [ modules.peek : ARGV ]
 
 # Handle the --reconfigure option
 rule maybe-force-rebuild ( targets * )
-{    
+{
     if $(.reconfigure)
     {
         local all-targets ;
@@ -173,10 +186,12 @@ rule maybe-force-rebuild ( targets * )
 # Attempts to build a set of virtual targets
 rule try-build ( targets * : ps : what : retry ? )
 {
-   local cache-name = $(what) [ $(ps).raw ] ;
-   cache-name = $(cache-name:J=-) ;
-   local value = [ config-cache.get $(cache-name) ] ;
-        
+    local cache-props = [ $(ps).raw ] ;
+    local cache-name = $(what) $(cache-props) ;
+    cache-name = $(cache-name:J=-) ;
+    local value = [ config-cache.get $(cache-name) ] ;
+    local cache-min = [ property.as-path [ SORT [ feature.minimize $(cache-props) ] ] ] ;
+
     local result ;
     local jam-targets ;
 
@@ -186,39 +201,44 @@ rule try-build ( targets * : ps : what : retry ? )
     {
         jam-targets += [ $(t).actualize ] ;
     }
-         
+
+    local x ;
     if $(value)
     {
-        local x = [ PAD "    - $(what)" : $(.width) ] ; 
+        x = [ PAD "    - $(what)" : $(.width) ] ;
         if $(value) = true
         {
             .$(what)-supported.$(ps) = yes ;
             result = true ;
-            log-check-result "$(x) : yes (cached)" ;
+            x = "$(x) : yes (cached)" ;
         }
         else
         {
-            log-check-result "$(x) : no  (cached)" ;
+            x = "$(x) : no  (cached)" ;
         }
-    }       
+    }
     else if ! UPDATE_NOW in [ RULENAMES ]
     {
         # Cannot determine. Assume existence.
     }
     else
     {
-        local x = [ PAD "    - $(what)" : $(.width) ] ;
+        x = [ PAD "    - $(what)" : $(.width) ] ;
         if [ UPDATE_NOW $(jam-targets) :
              $(.log-fd) : ignore-minus-n : ignore-minus-q ]
         {
             .$(what)-supported.$(ps) = yes ;
             result = true ;
-            log-check-result "$(x) : yes" ;
+            x = "$(x) : yes" ;
         }
         else
         {
-            log-check-result "$(x) : no" ;
+            x = "$(x) : no" ;
         }
+    }
+    if $(x)
+    {
+        log-check-result "$(x)" "$(cache-min:J= )" ;
     }
     if ! $(value)
     {
@@ -230,7 +250,7 @@ rule try-build ( targets * : ps : what : retry ? )
         {
             config-cache.set $(cache-name) : false ;
         }
-    }        
+    }
     return $(result) ;
 }
 
@@ -242,10 +262,12 @@ rule try-find-build ( ps : what : * )
     # The outer layer only needs to check $(what), but we
     # also need to check the individual elements, in case
     # the set of targets has changed since the last build.
-    local cache-name = $(what) $($(args)[1]) [ $(ps).raw ] ;
+    local cache-props = [ $(ps).raw ] ;
+    local cache-name = $(what) $($(args)[1]) $(cache-props) ;
     cache-name = $(cache-name:J=-) ;
     local value = [ config-cache.get $(cache-name) ] ;
-        
+    local cache-min = [ property.as-path [ SORT [ feature.minimize $(cache-props) ] ] ] ;
+
     local result ;
     local jam-targets ;
 
@@ -271,7 +293,7 @@ rule try-find-build ( ps : what : * )
         local x = [ PAD "    - $(what)" : $(.width) ] ;
         local y = [ PAD $($(name)[1]) : 3 ] ;
         result = $(value) ;
-        log-check-result "$(x) : $(y) (cached)" ;
+        log-check-result "$(x) : $(y) (cached)" "$(cache-min:J= )" ;
     }
     else
     {
@@ -291,13 +313,13 @@ rule try-find-build ( ps : what : * )
                 $(.log-fd) : ignore-minus-n : ignore-minus-q ]
             {
                 result = [ CALC $(i) - 2 ] ;
-                log-check-result "$(x) : $($(i)[1])" ;
+                log-check-result "$(x) : $($(i)[1])" "$(cache-min:J= )" ;
                 break ;
             }
         }
         if ! $(result)
         {
-            log-check-result "$(x) : none" ;
+            log-check-result "$(x) : none" "$(cache-min:J= )" ;
             result = none ;
         }
     }
@@ -329,7 +351,7 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
     {
         .$(what)-tested.$(ps) = true ;
 
-        local targets = [ targets.generate-from-reference 
+        local targets = [ targets.generate-from-reference
             $(metatarget-reference) : $(project) : $(ps) ] ;
 
         result = [ try-build $(targets[2-]) : $(ps) : $(what) : $(retry) ] ;
@@ -406,29 +428,20 @@ rule find-builds-raw ( project : ps : what : * )
     }
 }
 
-rule get-relevant-features ( )
+rule get-relevant-features ( properties * )
 {
-    local relevant = [ feature.expand <configure> ] ;
-    local result = ;
-    for local f in $(relevant)
-    {
-        if $(f) != <configure>
-        {
-            local sub = [ modules.peek feature : $(f).subfeatures ] ;
-            local name = [ utility.ungrist $(f) ] ;
-            result += $(f) <$(name)-$(sub)> ;
-        }
-    }
-    return $(result) ;
+    local ps-full = [ property-set.create $(properties) ] ;
+    local ps-base = [ property-set.create [ $(ps-full).base ] ] ;
+    local ps-min = [ feature.expand-subfeatures [ feature.minimize
+        [ $(ps-base).raw ] ] ] ;
+    local ps-relevant = [ property-set.create $(ps-min) ] ;
+
+    return [ $(ps-relevant).raw ] ;
 }
 
 rule builds ( metatarget-reference : properties * : what ? : retry ? )
 {
-    local toolset-subfeatures = [ modules.peek feature : <toolset>.subfeatures ] ;
-    toolset-subfeatures = <toolset-$(toolset-subfeatures)> ;
-    # FIXME: This should not be hardcoded. Other checks might want to consider a
-    # different set of features as relevant.
-    local relevant = [ property.select [ get-relevant-features ] : $(properties) ] ;
+    local relevant = [ get-relevant-features $(properties) ] ;
     local ps = [ property-set.create $(relevant) ] ;
     local t = [ targets.current ] ;
     local p = [ $(t).project ] ;
@@ -446,7 +459,7 @@ rule builds ( metatarget-reference : properties * : what ? : retry ? )
 
 rule find-builds ( what : properties * : * )
 {
-    local relevant = [ property.select [ get-relevant-features ] : $(properties) ] ;
+    local relevant = [ get-relevant-features $(properties) ] ;
     local ps = [ property-set.create $(relevant) ] ;
     local t = [ targets.current ] ;
     local p = [ $(t).project ] ;
@@ -454,11 +467,11 @@ rule find-builds ( what : properties * : * )
     return [ find-builds-raw $(p) : $(ps) : $(what) :
         $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) :
         $(10) : $(11) : $(12) : $(13) : $(14) : $(15) :
-        $(16) : $(17) : $(18) : $(19)  ] ;
+        $(16) : $(17) : $(18) ] ;
 }
 
 
-# Called by Boost.Build startup code to specify the file to receive the
+# Called by B2 startup code to specify the file to receive the
 # configuration check results. Should never be called by user code.
 #
 rule set-log-file ( log-file )
@@ -518,7 +531,7 @@ class configure-choose-worker
     {
         local project = [ project.current ] ;
         self.message = $(message) ;
-        for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
+        for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
         {
             local name = [ CALC $(i) - 1 ] ;
             self.targets.$(name) = $($(i)[1]) ;
@@ -537,7 +550,7 @@ class configure-choose-worker
     }
     rule all-properties ( )
     {
-        local i = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ;
+        local i = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ;
         return $(self.props.$(i)) ;
     }
     rule check ( properties * )
@@ -559,9 +572,7 @@ class configure-choose-worker
             : $(self.targets.14) $(self.what.14)
             : $(self.targets.15) $(self.what.15)
             : $(self.targets.16) $(self.what.16)
-            : $(self.targets.17) $(self.what.17)
-            : $(self.targets.18) $(self.what.18)
-            : $(self.targets.19) $(self.what.19) ] ;
+            : $(self.targets.17) $(self.what.17) ] ;
         if $(self.props.$(i))
         {
             return [ property.evaluate-conditionals-in-context $(self.props.$(i)) : $(properties) ] ;
@@ -594,8 +605,7 @@ rule check-target-builds ( target message ? : true-properties * :
     local rulename = [ indirect.make check : $(instance) ] ;
     return <conditional>@$(rulename)
         [ property.evaluate-conditional-relevance
-            $(true-properties) $(false-properties)
-          : [ configure.get-relevant-features ] ] ;
+            $(true-properties) $(false-properties) ] ;
 }
 
 # Usage:
@@ -612,8 +622,7 @@ rule choose ( message : * )
     local rulename = [ indirect.make check : $(instance) ] ;
     return <conditional>@$(rulename)
         [ property.evaluate-conditional-relevance
-            [ $(instance).all-properties ]
-          : [ configure.get-relevant-features ]  ] ;
+            [ $(instance).all-properties ] ] ;
 }
 
 

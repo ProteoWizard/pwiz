@@ -18,9 +18,9 @@
  */
 
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataAnalysis;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             var alignedTo10 = documentRetentionTimes.FileAlignments.Find("S_10");
             var af10To1 = alignedTo1.RetentionTimeAlignments.Find("S_10");
             var af1To10 = alignedTo10.RetentionTimeAlignments.Find("S_1");
-		    // Verify that the slopes and intercepts are reciprocals of each other.
+            // Verify that the slopes and intercepts are reciprocals of each other.
             // We can only verify this with very coarse precision
             Assert.AreEqual(af10To1.RegressionLine.Slope, 1/af1To10.RegressionLine.Slope, .03);
             Assert.AreEqual(af10To1.RegressionLine.Intercept, -af1To10.RegressionLine.Intercept * af10To1.RegressionLine.Slope, 1);
@@ -93,12 +93,12 @@ namespace pwiz.SkylineTestFunctional
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
-                RegressionMethodRT.linear, CustomCancellationToken.NONE);
+                RegressionMethodRT.linear, CancellationToken.None);
             var alignedRetentionTimes1To10 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_10").GetFirstRetentionTimes(),
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
                 DocumentRetentionTimes.REFINEMENT_THRESHHOLD, 
-                RegressionMethodRT.linear, CustomCancellationToken.NONE);
+                RegressionMethodRT.linear, CancellationToken.None);
             var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
             Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);
             Assert.AreEqual(af10To1.RegressionLine.Intercept, regressionLine10To1.Intercept);
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
         {
             ChromatogramGroupInfo[] infoSet;
             document.Settings.MeasuredResults.TryLoadChromatogram(fileIndex, peptideDocNode, transitionGroupDocNode,
-                                                                  (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, true,
+                                                                  (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE,
                                                                   out infoSet);
             Assert.AreNotEqual(0, infoSet.Length);
             foreach (var chromatogramGroupInfo in infoSet)

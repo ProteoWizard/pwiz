@@ -1,8 +1,8 @@
 /*
  * Copyright 2005, 2016. Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "jam.h"
@@ -73,7 +73,7 @@ void profile_enter( OBJECT * rulename, profile_frame * frame )
 }
 
 
-void profile_memory( long mem )
+void profile_memory( size_t mem )
 {
     if ( DEBUG_PROFILE )
         if ( profile_stack && profile_stack->info )

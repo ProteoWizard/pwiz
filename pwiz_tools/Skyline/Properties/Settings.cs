@@ -127,6 +127,18 @@ namespace pwiz.Skyline.Properties
         }
 
         /// <summary>
+        /// Clears internal cache of original serialized settings values and resets all settings to their default value.
+        /// </summary>
+        public new void Reset()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reset();
+            }
+        }
+
+        /// <summary>
         /// Reload settings that may have been changed by other instances of Skyline, but preserve
         /// the values of any settings that have been modified by this instance.
         /// </summary>
@@ -539,40 +551,22 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSettingAttribute]
-        // Saves column positions between transition lists. This way when a user tell us the correct column positions they are carried
-        // on to the next transition list
-        public List<Tuple<int, string>> CustomImportTransitionListColumnsList
+        // Saves column type positions between transition lists. This way when a user tell us the correct column positions they are carried
+        // on to the next transition list. Normally these are saved in invariant language (en) but we can read localized for backward compatibility
+        public List<string> CustomImportTransitionListColumnTypesList
         {
             get
             {
-                if (this[@"CustomImportTransitionListColumnsList"] == null)
+                if (this[@"CustomImportTransitionListColumnTypesList"] == null)
                 {
-                    var list = new List<Tuple<int, string>>();
-                    CustomImportTransitionListColumnsList = list;
+                    var list = new List<string>();
+                    CustomImportTransitionListColumnTypesList = list;
                 }
-                return (List < Tuple < int, string>>)this[@"CustomImportTransitionListColumnsList"];
+                return (List <string>)this[@"CustomImportTransitionListColumnTypesList"];
             }
             set
             {
-                this[@"CustomImportTransitionListColumnsList"] = value;
-            }
-        }
-
-        [UserScopedSettingAttribute]
-        public int CustomImportTransitionListColumnCount
-        {
-            get
-            {
-                if (this[@"CustomImportTransitionListColumnCount"] == null)
-                {
-                    var i = new int();
-                    CustomImportTransitionListColumnCount = i;
-                }
-                return (int)this[@"CustomImportTransitionListColumnCount"];
-            }
-            set
-            {
-                this[@"CustomImportTransitionListColumnCount"] = value;
+                this[@"CustomImportTransitionListColumnTypesList"] = value;
             }
         }
 
@@ -860,8 +854,8 @@ namespace pwiz.Skyline.Properties
         {
             // Null return is valid for this list, and means no retention time
             // calculation should be applied.
-            RetentionTimeRegression regression;
-            if (RetentionTimeList.TryGetValue(name, out regression))
+            RetentionTimeRegression regression = null;
+            if (!string.IsNullOrEmpty(name) && RetentionTimeList.TryGetValue(name, out regression))
             {
                 if (regression.GetKey() == RetentionTimeList.GetDefault().GetKey())
                     regression = null;
@@ -2513,7 +2507,7 @@ namespace pwiz.Skyline.Properties
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
-            return new MeasuredIon(name, formula, null, null, Adduct.SINGLY_PROTONATED);
+            return new MeasuredIon(name, formula, null, null, Adduct.M_PLUS);
         }
 
         public override int RevisionIndexCurrent { get { return 1; } }
@@ -3075,6 +3069,10 @@ namespace pwiz.Skyline.Properties
 
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
+        /// <summary>
+        /// OBSOLETE: replaced by  <see cref="Settings.PersistedViews"></see> for reports management/>
+        /// </summary>
+
         public const string EXT_REPORTS = ".skyr";
         // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME

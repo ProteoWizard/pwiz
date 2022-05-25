@@ -263,6 +263,9 @@ void testIdentifyFileFormat()
         set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
         set<string> expectedTypeSet{ "mzML", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
                                      "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
+#if defined(PWIZ_READER_MOBILION)
+                                     "Mobilion MBI",
+#endif
                                      "Shimadzu LCD", "Thermo RAW", "UIMF", "Waters RAW", "Waters UNIFI" };
         auto expectedButNotFound = expectedTypeSet - readerTypeSet;
         auto foundButNotExpected = readerTypeSet - expectedTypeSet;
@@ -293,6 +296,10 @@ void testIdentifyFileFormat()
     unit_assert_operator_equal(2, extByType["Bruker YEP"].size());
     unit_assert_operator_equal(".d", extByType["Bruker YEP"][0]);
     unit_assert_operator_equal(".yep", extByType["Bruker YEP"][1]);
+#if defined(PWIZ_READER_MOBILION)
+    unit_assert_operator_equal(1, extByType["Mobilion MBI"].size());
+    unit_assert_operator_equal(".mbi", extByType["Mobilion MBI"][0]);
+#endif
 }
 
 

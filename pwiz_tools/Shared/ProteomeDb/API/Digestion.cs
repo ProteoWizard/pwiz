@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using NHibernate;
 using pwiz.ProteomeDatabase.DataModel;
 
@@ -40,32 +41,37 @@ namespace pwiz.ProteomeDatabase.API
 
         public List<Protein> GetProteinsWithSequence(String sequence)
         {
-            return GetProteinsWithSequences(new[] { sequence })[sequence];
+            return GetProteinsWithSequences(new[] { sequence }, CancellationToken.None)[sequence];
         }
 
         public List<Protein> GetProteinsWithSequence(IStatelessSession session, String sequence)
         {
-            return GetProteinsWithSequences(session, new[] {sequence})[sequence];
+            return GetProteinsWithSequences(session, new[] {sequence}, CancellationToken.None)[sequence];
         }
 
-        public IDictionary<String, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences)
+        public IDictionary<String, List<Protein>> GetProteinsWithSequences(IEnumerable<string> sequences,  CancellationToken cancellationToken)
         {
             using (var session = ProteomeDb.OpenStatelessSession(false))
             {
-                return GetProteinsWithSequences(session, sequences);
+                return GetProteinsWithSequences(session, sequences, cancellationToken);
             }
         }
 
         public IDictionary<String, List<Protein>> GetProteinsWithSequences(IStatelessSession session,
-            IEnumerable<string> sequences)
+            IEnumerable<string> sequences, CancellationToken cancellationToken)
         {
-            var sequenceList = sequences.ToArray();
+            var sequenceList = sequences.Where(s => !string.IsNullOrEmpty(s)).ToArray();
             var proteinIds = GetProteinIdsThatMightHaveSequence(session, sequenceList);
             var results = new Dictionary<string, List<Protein>>();
             var proteins = GetProteinsWithIds(session, proteinIds);
+            var count = 0;
             foreach (var s in sequenceList.Distinct())
             {
                 results.Add(s, proteins.Where(p => p.Sequence.IndexOf(s, StringComparison.Ordinal) >= 0).ToList());
+                if ((count++ % 100) == 0 && cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
             }
             return results;
         }

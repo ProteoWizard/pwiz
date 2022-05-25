@@ -200,12 +200,17 @@ namespace pwiz.Skyline.FileUI
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
+            cbSureQuant.Checked = Settings.Default.ExportSureQuant;
+            textIntensityThreshold.Text = cbSureQuant.Checked
+                ? Settings.Default.IntensityThresholdPercent.ToString(LocalizationHelper.CurrentCulture)
+                : Settings.Default.IntensityThresholdValue.ToString(LocalizationHelper.CurrentCulture);
+            textIntensityThresholdMin.Text = Settings.Default.IntensityThresholdMin.ToString(LocalizationHelper.CurrentCulture);
             cbExportEdcMass.Checked = Settings.Default.ExportEdcMass;
             textPrimaryCount.Text = Settings.Default.PrimaryTransitionCount.ToString(LocalizationHelper.CurrentCulture);
             textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
-            cbWriteCoV.Top = cbSlens.Bottom;
+            panelSureQuant.Top = labelMaxTransitions.Top;
             panelThermoColumns.Top = labelDwellTime.Top;
             var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
             foreach (var control in panelThermoColumns.Controls.Cast<Control>())
@@ -227,7 +232,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var controlObj in Controls)
             {
                 var control = controlObj as Control;
-                if ((control != null) && (control.Left > btnOk.Right))
+                if (control != null && control.Left > btnOk.Right)
                 {
                     control.Left = cbIgnoreProteins.Left; // Align with a known-good control
                 }
@@ -300,6 +305,9 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                    Equals(type, ExportInstrumentType.THERMO_LTQ) ||
                    Equals(type, ExportInstrumentType.THERMO_Q_EXACTIVE) ||
+                   Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
+                   Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
+                   Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -325,6 +333,8 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.THERMO_QUANTIVA) ||
                        Equals(type, ExportInstrumentType.THERMO_ALTIS) ||
                        Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
+                       Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
+                       Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -507,6 +517,30 @@ namespace pwiz.Skyline.FileUI
             set { _exportProperties.ExportMultiQuant = cbExportMultiQuant.Checked = value; }
         }
 
+        public bool ExportSureQuant
+        {
+            get { return _exportProperties.ExportSureQuant; }
+            set { _exportProperties.ExportSureQuant = cbSureQuant.Checked = value; }
+        }
+
+        public double? IntensityThresholdPercent
+        {
+            get { return _exportProperties.IntensityThresholdPercent; }
+            set { _exportProperties.IntensityThresholdPercent = value; }
+        }
+
+        public double? IntensityThresholdValue
+        {
+            get { return _exportProperties.IntensityThresholdValue; }
+            set { _exportProperties.IntensityThresholdValue = value; }
+        }
+
+        public double? IntensityThresholdMin
+        {
+            get { return _exportProperties.IntensityThresholdMin; }
+            set { _exportProperties.IntensityThresholdMin = value; }
+        }
+
         public bool ExportEdcMass
         {
             get { return _exportProperties.ExportEdcMass; }
@@ -548,7 +582,8 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateBrukerTimsTofControls()
         {
-            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF);
+            panelBrukerTimsTof.Visible = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF) &&
+                                         _fileType == ExportFileType.Method;
         }
 
         private void UpdateCovControls()
@@ -600,8 +635,12 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateThermoFaimsCvControl()
         {
+            var fusionMethod = InstrumentType == ExportInstrumentType.THERMO_FUSION && _fileType == ExportFileType.Method;
+            cbWriteCoV.Top = !fusionMethod ? cbSlens.Bottom : panelTuneColumns.Top - cbWriteCoV.Height;
+            cbWriteCoV.Left = !fusionMethod ? cbIgnoreProteins.Left : panelTuneColumns.Left + cbTune3.Left;
             cbWriteCoV.Visible = cbWriteCoV.Enabled =
                 InstrumentType == ExportInstrumentType.THERMO_QUANTIVA ||
+                (InstrumentType == ExportInstrumentType.THERMO_FUSION && !cbSureQuant.Checked) ||
                 InstrumentType == ExportInstrumentType.THERMO_ALTIS;
             var optimizing = comboOptimizing.SelectedItem;
             if (optimizing != null && Equals(optimizing.ToString(), ExportOptimize.COV))
@@ -611,9 +650,42 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void UpdateThermoTuneControls()
+        private void UpdateThermoSureQuantControls()
         {
-            panelTuneColumns.Visible = InstrumentType == ExportInstrumentType.THERMO_FUSION;
+            panelSureQuant.Visible =
+                _fileType == ExportFileType.Method &&
+                (InstrumentType == ExportInstrumentType.THERMO_EXPLORIS ||
+                 // InstrumentType == ExportInstrumentType.THERMO_FUSION ||
+                 InstrumentType == ExportInstrumentType.THERMO_FUSION_LUMOS||
+                 InstrumentType == ExportInstrumentType.THERMO_ECLIPSE);
+            if (cbSureQuant.Checked)
+            {
+                if (!lblIntensityThresholdType.Visible)
+                {
+                    lblIntensityThresholdType.Show();
+                    textIntensityThreshold.Width = textPrimaryCount.Width;
+                    textIntensityThreshold.Text = Settings.Default.IntensityThresholdPercent.ToString(CultureInfo.CurrentCulture);
+                    helpTip.SetToolTip(textIntensityThreshold, Resources.ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_);
+                    lblIntensityThresholdMin.Show();
+                    textIntensityThresholdMin.Show();
+                    textIntensityThresholdMin.Text = Settings.Default.IntensityThresholdMin.ToString(CultureInfo.CurrentCulture);
+                }
+            }
+            else
+            {
+                if (lblIntensityThresholdType.Visible)
+                {
+                    lblIntensityThresholdType.Hide();
+                    textIntensityThreshold.Width = textIntensityThresholdMin.Width;
+                    textIntensityThreshold.Text = Settings.Default.IntensityThresholdValue.ToString(CultureInfo.CurrentCulture);
+                    helpTip.SetToolTip(textIntensityThreshold, Resources.ExportMethodDlg_UpdateThermoSureQuantControls_Absolute_relative_intensity_threshold_value_);
+                    lblIntensityThresholdMin.Hide();
+                    textIntensityThresholdMin.Hide();
+                }
+            }
+
+            panelTuneColumns.Visible = InstrumentType == ExportInstrumentType.THERMO_FUSION && !cbSureQuant.Checked;
+            UpdateThermoFaimsCvControl();
         }
 
         private void UpdateMaxTransitions()
@@ -818,6 +890,19 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
+            if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+            {
+                var missingIonMobility = BrukerTimsTofIsolationListExporter.GetMissingIonMobility(documentExport, _exportProperties);
+                if (missingIonMobility.Length > 0)
+                {
+                    MessageDlg.Show(this,
+                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
+                        Environment.NewLine + Environment.NewLine +
+                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    return;
+                }
+            }
+
             // Full-scan method building ignores CE and DP regression values
             if (!IsFullScanInstrument)
             {
@@ -827,6 +912,11 @@ namespace pwiz.Skyline.FileUI
                 var ce = predict.CollisionEnergy;
                 string ceName = (ce != null ? ce.Name : null);
                 string ceNameDefault = _instrumentType.Split(' ')[0];
+
+                // CE prediction should be None for Bruker timsTOF, since the CE is populated by the instrument control software in the method.
+                if (Equals(_instrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
+                    ceNameDefault = CollisionEnergyList.ELEMENT_NONE;
+
                 bool ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
 
                 var dp = predict.DeclusteringPotential;
@@ -940,19 +1030,6 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
-            {
-                var missingIonMobility = BrukerTimsTofMethodExporter.GetMissingIonMobility(_document, _exportProperties);
-                if (missingIonMobility.Length > 0)
-                {
-                    MessageDlg.Show(this,
-                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
-                        Environment.NewLine + Environment.NewLine +
-                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
-                    return;
-                }
-            }
-
             if (outputPath == null)
             {
                 string title = Text;
@@ -1052,6 +1129,17 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
             if (cbExportMultiQuant.Visible)
                 Settings.Default.ExportMultiQuant = ExportMultiQuant;
+            if (cbSureQuant.Visible)
+                Settings.Default.ExportSureQuant = ExportSureQuant;
+            if (textIntensityThreshold.Visible)
+            {
+                if (cbSureQuant.Checked)
+                    Settings.Default.IntensityThresholdPercent = IntensityThresholdPercent.GetValueOrDefault();
+                else
+                    Settings.Default.IntensityThresholdValue = IntensityThresholdValue.GetValueOrDefault();
+            }
+            if (textIntensityThresholdMin.Visible)
+                Settings.Default.IntensityThresholdMin = IntensityThresholdMin.GetValueOrDefault();
             if (cbExportEdcMass.Visible)
                 Settings.Default.ExportEdcMass = ExportEdcMass;
             if (comboPolarityFilter.Enabled)
@@ -1106,6 +1194,7 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.Tune3 = panelTuneColumns.Visible && cbTune3.Checked;
 
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
+            _exportProperties.ExportSureQuant = cbSureQuant.Visible && cbSureQuant.Checked;
 
             _exportProperties.RetentionStartAndEnd = panelThermoRt.Visible && cbUseStartAndEndRts.Checked;
 
@@ -1122,6 +1211,8 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.MsMsAnalyzer =
                 TransitionFullScan.MassAnalyzerToString(
                     _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+
+            _exportProperties.PrimaryTransitionCount = 0;
 
             _exportProperties.OptimizeType = null;
             if (comboOptimizing.SelectedItem != null)
@@ -1182,7 +1273,7 @@ namespace pwiz.Skyline.FileUI
             else
             {
                 _exportProperties.OptimizeType = null;
-                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = _exportProperties.PrimaryTransitionCount = 0;
+                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = 0;
             }
 
             string maxTran = textMaxTransitions.Text;
@@ -1234,6 +1325,28 @@ namespace pwiz.Skyline.FileUI
 
                 _exportProperties.DwellTime = dwellTime;
             }
+
+            _exportProperties.IntensityThresholdPercent = null;
+            _exportProperties.IntensityThresholdValue = null;
+            if (textIntensityThreshold.Visible)
+            {
+                var surequant = cbSureQuant.Checked;
+                if (!helper.ValidateDecimalTextBox(textIntensityThreshold, 0, surequant ? (double?) 100 : null, out var intensityThreshold))
+                    return false;
+
+                if (surequant)
+                    _exportProperties.IntensityThresholdPercent = intensityThreshold;
+                else
+                    _exportProperties.IntensityThresholdValue = intensityThreshold;
+            }
+            if (textIntensityThresholdMin.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textIntensityThresholdMin, 0, null, out var intensityThresholdMin))
+                    return false;
+
+                _exportProperties.IntensityThresholdMin = intensityThresholdMin;
+            }
+
             if (textRunLength.Visible)
             {
                 double runLength;
@@ -1534,6 +1647,10 @@ namespace pwiz.Skyline.FileUI
 
             CalcMethodCount();
         }
+        private void cbSureQuant_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateThermoSureQuantControls();
+        }
 
         private void UpdateInstrumentControls(ExportMethodType targetType)
         {
@@ -1562,7 +1679,7 @@ namespace pwiz.Skyline.FileUI
             UpdateThermoRtControls(targetType);
             UpdateThermoSLensControl(targetType);
             UpdateThermoFaimsCvControl();
-            UpdateThermoTuneControls();
+            UpdateThermoSureQuantControls();
             UpdateMaxLabel(standard);
         }
 

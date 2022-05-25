@@ -29,7 +29,7 @@ namespace pwiz.SkylineTestFunctional
     /// Tests a few things that might go wrong in a document where a molecule has multiple identical precursors
     /// </summary>
     [TestClass]
-    public class DuplicateSmallMoleculePrecursorTest : AbstractFunctionalTest
+    public class DuplicateSmallMoleculePrecursorTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestDuplicateSmallMoleculePrecursors()
@@ -40,10 +40,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(()=>
+            RunUI(() =>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Skyline_test.sky"));
-                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 0);
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
             });
 
             RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, popupPickList =>
@@ -59,6 +59,14 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUi.OkDialog();
             });
             Assert.AreEqual(4, SkylineWindow.Document.Molecules.First().TransitionGroupCount);
+
+            // Now test fix for "an item with the same key has already been added" as in https://skyline.ms/announcements/home/support/thread.view?rowId=51494
+            LoadNewDocument(true);
+            RunUI(() => { SkylineWindow.OpenFile(TestFilesDir.GetTestPath("402.sky")); });
+            var mzML = TestFilesDir.GetTestPath("402.mzML");
+            ImportResultsFile(mzML);
+            WaitForDocumentLoaded(240000);
+            // If we get here without an exception, problem is solved
         }
     }
 }

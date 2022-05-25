@@ -54,7 +54,7 @@ namespace freicore {
         size_t rowIndex = 0;
         while(!fileStream.eof()) {
             // Get the line
-            std::getline(fileStream,inputLine);
+            getlinePortable(fileStream,inputLine);
             // If the line is start of a header
             if(inputLine.find("A R N D C")!=string::npos) {
                 // Tokenize the header using white space as delimiter
@@ -69,7 +69,7 @@ namespace freicore {
                 }
 
                 // Skip the line after the header
-                std::getline(fileStream, inputLine);
+                getlinePortable(fileStream, inputLine);
                 // We will be parsing log odds right after
                 parsingLogOdds = true;
             } else if(parsingLogOdds) {

@@ -23,14 +23,37 @@ namespace pwiz.Skyline.Model
 {
     public abstract class AbstractDdaConverter
     {
-        protected MsDataFileUri[] OriginalSpectrumSources { get; set; }
-        protected MsDataFileUri[] ConvertedSpectrumSources { get; set; }
-        protected AbstractDdaSearchEngine SearchEngine { get; private set; }
+        public MsDataFileUri[] OriginalSpectrumSources { get; protected set; }
+        public MsDataFileUri[] ConvertedSpectrumSources { get; protected set; }
+        protected ImportPeptideSearch ImportPeptideSearch { get; private set; }
 
-        public AbstractDdaConverter(AbstractDdaSearchEngine searchEngine)
+        public AbstractDdaConverter(ImportPeptideSearch importPeptideSearch)
         {
-            SearchEngine = searchEngine;
+            ImportPeptideSearch = importPeptideSearch;
         }
+
+        // NB: these must match the enum values in pwiz::msdata::MSDataFile::Format,
+        // but also match the letter casing from msconvert options since those options are case-sensitive
+        // ReSharper disable InconsistentNaming
+        public enum MsdataFileFormat
+        {
+            mzML = 1,
+            mzXML,
+            mgf,
+            ms1,
+            cms1,
+            ms2,
+            cms2,
+            mz5
+        }
+        // ReSharper restore InconsistentNaming
+
+        /// <summary>
+        /// Tells the DDA converter to produce output in the given format. 
+        /// </summary>
+        public abstract void SetRequiredOutputFormat(MsdataFileFormat format);
+
+        public abstract void SetSpectrumFiles(MsDataFileUri[] spectrumFiles);
 
         public abstract bool Run(IProgressMonitor progressMonitor, IProgressStatus status);
     }

@@ -121,6 +121,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
+        public bool ShowMassError { get; set; }
         public bool ShowDuplicates { get; set; }
         public float FontSize { get; set; }
         public bool Invert { get; set; }
@@ -136,18 +137,31 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_Y { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.y), ref _fontSpecY); } }
         private FontSpec _fontSpecC;
         private FontSpec FONT_SPEC_C { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.c), ref _fontSpecC); } }
-        private FontSpec _fontSpecZ;
-        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.precursor), ref _fontSpecPrecursor); } }
         private FontSpec _fontSpecPrecursor;
+        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.precursor), ref _fontSpecPrecursor); } }
+
+        private FontSpec _fontSpecZ;
         private FontSpec FONT_SPEC_Z { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.z), ref _fontSpecZ); } }
+
+        private FontSpec _fontSpecZH;
+        private FontSpec FONT_SPEC_ZH { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.zh), ref _fontSpecZH); } }
+
+        private FontSpec _fontSpecZHH;
+        private FontSpec FONT_SPEC_ZHH { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.zhh), ref _fontSpecZHH); } }
+
+
         private FontSpec _fontSpecOtherIons;
-        private FontSpec FONT_SPEC_OTHER_IONS { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.a), ref _fontSpecOtherIons); } } // Small molecule fragments etc
         private FontSpec _fontSpecNone;
         private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(IonTypeExtension.GetTypeColor(null), ref _fontSpecNone); } }
         private FontSpec _fontSpecSelected;
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
 
+        private FontSpec GetOtherIonsFontSpec(int rank = 0)
+        {
+            // Consider the rank of small molecule fragments when selecting the color for the FontSpec
+            return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.custom, rank), ref _fontSpecOtherIons);
+        }
         protected AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
         {
             SpectrumInfo = spectrumInfo;
@@ -265,11 +279,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
+                case IonType.zh: fontSpec = FONT_SPEC_ZH; break;
+                case IonType.zhh: fontSpec = FONT_SPEC_ZHH; break;
                 case IonType.custom:
                     {
                     if (rmi.Rank == 0 && !rmi.HasAnnotations)
                         return null; // Small molecule fragments - only force annotation if ranked
-                    fontSpec = FONT_SPEC_OTHER_IONS;
+                    fontSpec = GetOtherIonsFontSpec(rmi.Rank);
                     }
                     break;
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
@@ -321,6 +337,14 @@ namespace pwiz.Skyline.Controls.Graphs
             if (ShowObservedMz)
             {
                 sb.AppendLine().Append(GetDisplayMz(rmi.ObservedMz));
+            }
+
+            if (ShowMassError)
+            {
+                var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
+                massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
+                massError = Math.Round(massError, 1);
+                sb.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError));
             }
             return sb.ToString();
         }

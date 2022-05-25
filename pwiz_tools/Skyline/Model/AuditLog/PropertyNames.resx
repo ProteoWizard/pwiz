@@ -1353,13 +1353,13 @@
     <value>Associate Proteins</value>
   </data>
   <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
-    <value>Background Proteome</value>
+    <value>Background proteome</value>
   </data>
   <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
     <value>FASTA</value>
   </data>
-  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
-    <value>Proteins</value>
+  <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
+    <value>Find minimal protein list</value>
   </data>
   <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
     <value>Choose RT Prediction Replicates</value>
@@ -1499,6 +1499,15 @@
   <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
     <value>Integrate All</value>
   </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationGroupBy" xml:space="preserve">
+    <value>Synchronized Integration Group By</value>
+  </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationAll" xml:space="preserve">
+    <value>Synchronized Integration All</value>
+  </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationTargets" xml:space="preserve">
+    <value>Synchronized Integration Targets</value>
+  </data>
   <data name="TransitionSettings_Integration" xml:space="preserve">
     <value>Integration</value>
   </data>
@@ -1583,28 +1592,28 @@
   <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
     <value>Simple ratios</value>
   </data>
-  <data name="ViewLayout_ClusterSpec">
+  <data name="ViewLayout_ClusterSpec" xml:space="preserve">
     <value>Clustering specification</value>
   </data>
-  <data name="ClusteringSpec_Values">
+  <data name="ClusteringSpec_Values" xml:space="preserve">
     <value>Values</value>
   </data>
-  <data name="ClusteringSpec_DistanceMetric">
+  <data name="ClusteringSpec_DistanceMetric" xml:space="preserve">
     <value>Distance Metric</value>
   </data>
-  <data name="ValueSpec_ColumnRef">
+  <data name="ValueSpec_ColumnRef" xml:space="preserve">
     <value>Column reference</value>
   </data>
-  <data name="ExplicitMods_CrosslinkStructure">
+  <data name="ExplicitMods_CrosslinkStructure" xml:space="preserve">
     <value>Crosslink structure</value>
   </data>
-  <data name="CrosslinkStructure_LinkedPeptides">
+  <data name="CrosslinkStructure_LinkedPeptides" xml:space="preserve">
     <value>Linked peptides</value>
   </data>
-  <data name="CrosslinkStructure_LinkedExplicitMods">
+  <data name="CrosslinkStructure_LinkedExplicitMods" xml:space="preserve">
     <value>Linked explicit modifications</value>
   </data>
-  <data name="CrosslinkStructure_Crosslinks">
+  <data name="CrosslinkStructure_Crosslinks" xml:space="preserve">
     <value>Crosslinks</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
@@ -1639,5 +1648,56 @@
   </data>
   <data name="DdaConverterSettings_Protocol" xml:space="preserve">
     <value>DDA conversion protocol</value>
+  </data>
+  <data name="DdaSearchSettings_Ms2Analyzer" xml:space="preserve">
+    <value>MS2 analyzer</value>
+  </data>
+  <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
+    <value>Search Engine</value>
+  </data>
+  <data name="File_FileName" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="File_ScoreTypeName" xml:space="preserve">
+    <value>Score type</value>
+  </data>
+  <data name="File_ScoreThreshold" xml:space="preserve">
+    <value>Score threshold</value>
+  </data>
+  <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
+    <value>Ignore SIM scans</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedPeptides" xml:space="preserve">
+    <value>Peptides mapped</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedProteins" xml:space="preserve">
+    <value>Proteins mapped</value>
+  </data>
+  <data name="ParsimonySettings_SharedPeptides" xml:space="preserve">
+    <value>Shared peptides option</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetPeptides" xml:space="preserve">
+    <value>Peptide targets</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteins" xml:space="preserve">
+    <value>Protein targets</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedPeptides" xml:space="preserve">
+    <value>Peptides unmapped</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedProteins" xml:space="preserve">
+    <value>Proteins unmapped</value>
+  </data>
+  <data name="ParsimonySettings_GroupProteins" xml:space="preserve">
+    <value>Group proteins</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteinGroups" xml:space="preserve">
+    <value>Protein group targets</value>
+  </data>
+  <data name="ParsimonySettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>Min peptides per protein</value>
+  </data>
+  <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
+    <value>Remove subset proteins</value>
   </data>
 </root>

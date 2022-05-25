@@ -48,8 +48,8 @@ namespace AutoQC
         private Process _process;
 
         private bool _documentImportFailed;
-        private bool _panoramaUploadFailed;
         private bool _errorLogged;
+        private bool _fileImportIgnored;
 
         public ProcessRunner(Logger logger)
         {
@@ -96,6 +96,17 @@ namespace AutoQC
                     return ProcStatus.Error;
                 }
 
+                if (_fileImportIgnored)
+                {
+                    return ProcStatus.Skipped;
+                }
+
+                if (_documentImportFailed)
+                {
+                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_, _procInfo.ExeName, exitCode));
+                    return ProcStatus.Error;
+                }
+
                 if (exitCode != 0)
                 {
                     LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_error_code__1__, _procInfo.ExeName, exitCode));
@@ -106,16 +117,6 @@ namespace AutoQC
                 {
                     LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Error_reported_, _procInfo.ExeName, exitCode));
                     return ProcStatus.Error;
-                }
-                if (_documentImportFailed)
-                {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_, _procInfo.ExeName, exitCode));
-                    return ProcStatus.DocImportError;
-                }
-                if (_panoramaUploadFailed)
-                {
-                    LogError(string.Format(Resources.ProcessRunner_RunProcess__0__exited_with_code__1___Panorama_upload_failed_, _procInfo.ExeName, exitCode));
-                    return ProcStatus.PanoramaUploadError;
                 }
 
                 Log(string.Format(Resources.ProcessRunner_RunProcess__0__exited_successfully_, _procInfo.ExeName));
@@ -162,13 +163,21 @@ namespace AutoQC
                 return false;
             }
 
+            if (message.Contains("The file has already been imported. Ignoring...") ||
+                message.Contains("No files left to import"))
+            {
+                _fileImportIgnored = true; // SkylineRunner will return an exit code of 2 which will cause the file to be put 
+                                           // on the reimport queue. We don't want that.
+               return false;
+            }
+
             if (message.Contains("Failed importing"))
             {
-                // TODO: fix in Skyline? These do not start with "Error"
                 _documentImportFailed = true;
                 return true;
             }
-            if(message.StartsWith("Warning: Cannot read file") && message.EndsWith("Ignoring..."))
+            if(message.StartsWith("Warning: Cannot read file") && message.EndsWith("Ignoring...") ||
+               message.Contains("Unreadable Thermo file"))
             {
                 // This is the message for un-readable RAW files from Thermo instruments.
                 _documentImportFailed = true;
@@ -176,15 +185,8 @@ namespace AutoQC
             }
 
             if (!message.StartsWith("Error")) return false;
-            
-            if (message.Contains("PanoramaImportErrorException"))
-            {
-                _panoramaUploadFailed = true;
-            }
-            else
-            {
-                _errorLogged = true;
-            }
+
+            _errorLogged = true;
             return true;
         }
 
@@ -200,7 +202,7 @@ namespace AutoQC
 
         private void LogException(Exception e, string message)
         {
-            _logger.LogException(e, message);
+            _logger.LogError(message, e.ToString());
         }
 
         protected ProcessInfo GetProcessInfo()

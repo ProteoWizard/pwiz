@@ -67,7 +67,7 @@ namespace {
                 optionalColumns_.push_back(optionalColumn);
 
             string line;
-            getline(tsvFile_, line);
+            getlinePortable(tsvFile_, line);
             LineParser headerLine(line, separator_);
             parseHeader(headerLine, targetColumns_, optionalColumns_);
 
@@ -120,6 +120,10 @@ namespace {
             }
 
             return true;
+        }
+
+        vector<PSM_SCORE_TYPE> getScoreTypes() {
+            return vector<PSM_SCORE_TYPE>(1, GENERIC_QVALUE);
         }
 
         private:
@@ -335,7 +339,7 @@ namespace {
                 optionalColumns_.push_back(optionalColumn);
 
             string line;
-            getline(tsvFile_, line);
+            getlinePortable(tsvFile_, line);
             LineParser headerLine(line, separator_);
             parseHeader(headerLine, targetColumns_, optionalColumns_);
         }
@@ -374,6 +378,10 @@ namespace {
             }
 
             return true;
+        }
+
+        vector<PSM_SCORE_TYPE> getScoreTypes() {
+            return vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE);
         }
 
         private:
@@ -476,19 +484,19 @@ TSVReader::~TSVReader() {
 
 const escaped_list_separator<char> TSVReader::separator_("", "\t", "");
 
-boost::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
+std::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
 {
     string line;
     {
         ifstream tsvFile(tsvName);
-        getline(tsvFile, line);
+        getlinePortable(tsvFile, line);
     }
     LineParser headerLine(line, separator_);
 
     if (OpenSwathResultReader::hasExpectedColumns(headerLine))
-        return boost::static_pointer_cast<TSVReader>(boost::make_shared<OpenSwathResultReader>(maker, tsvName, parentProgress));
+        return std::static_pointer_cast<TSVReader>(std::make_shared<OpenSwathResultReader>(maker, tsvName, parentProgress));
     if (OpenSwathAssayReader::hasExpectedColumns(headerLine))
-        return make_shared<OpenSwathAssayReader>(maker, tsvName, parentProgress);
+        return std::make_shared<OpenSwathAssayReader>(maker, tsvName, parentProgress);
     throw BlibException(false, "Did not find required columns. Only OpenSWATH result and assay .tsv files are supported.");
 }
 
@@ -527,12 +535,12 @@ void TSVReader::parseHeader(LineParser& headerLine, vector<TSVColumnTranslator>&
 void TSVReader::collectPsms(map<string, Protein>& proteins) {
     tsvFile_.seekg(0);
     string lineStr;
-    getline(tsvFile_, lineStr);
+    getlinePortable(tsvFile_, lineStr);
 
     ProgressIndicator progress(bfs::file_size(tsvName_) - lineStr.length()+1);
 
     while (!tsvFile_.eof()) {
-        getline(tsvFile_, lineStr);
+        getlinePortable(tsvFile_, lineStr);
         lineNum_++;
 
         TSVLine line;

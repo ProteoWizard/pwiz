@@ -47,7 +47,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void WatersIMSImportTest()
         {
             Log.AddMemoryAppender();
-            TestFilesZip = GetPerfTestDataURL(@"PerfImportResultsWatersIMS.zip");
+            TestFilesZip = GetPerfTestDataURL(DateTime.Now.DayOfYear % 2 == 0
+                ? @"PerfImportResultsWatersIMSv2.zip" // v2 has _func003.cdt file removed, to test our former assumption that lockmass would have IMS data if other functions did and vice verse
+                : @"PerfImportResultsWatersIMS.zip");
             TestFilesPersistent = new[] { "ID12692_01_UCA168_3727_040714.raw", "ID12692_01_UCA168_3727_040714_IA_final_fragment.csv" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -89,13 +91,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var doc = SkylineWindow.Document;
                 RunUI(() =>
                 {
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                  ImportPeptideSearchDlg.Pages.spectra_page);
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                     importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                    importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
                     importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
                 });
-
+                WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
                 doc = WaitForDocumentChange(doc);
 
@@ -111,7 +111,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // just be able to move to the next page.
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page));
                 RunUI(() => importPeptideSearchDlg.ClickNextButton());
-                // Modifications are already set up, so that page should get skipped.
+
+                // Skip Match Modifications page.
+                RunUI(() =>
+                {
+                    AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                    AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                });
 
                 // Make sure we're set up for ion mobility filtering - these settings should come from skyline file
                 AssertEx.IsTrue(importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.IsUseSpectralLibraryIonMobilities);
@@ -153,8 +159,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 foreach (var pair in doc1.PeptidePrecursorPairs)
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
+                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
+                        out chromGroupInfo));
 
                     foreach (var chromGroup in chromGroupInfo)
                     {

@@ -455,7 +455,7 @@ template<class Archive>
 void save(Archive& ar, const Peptide& p, const unsigned int version)
 {
     ar << p.sequence();
-    ar << static_cast< map<int, vector<Modification> > >(p.modifications());
+    ar << p.modifications().base();
 }
 
 template<class Archive>
@@ -464,7 +464,7 @@ void load(Archive& ar, Peptide& p, const unsigned int version)
     string sequence;
     ar >> sequence;
     p = Peptide(sequence);
-    ar >> static_cast< map<int, vector<Modification> > >(p.modifications());
+    ar >> p.modifications().base();
 }
 
 template<class Archive>

@@ -13,8 +13,8 @@
 # Copyright 2008 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import os
 import subprocess
@@ -177,13 +177,6 @@ def init(version = None, command = None, options = None):
     toolset.flags('gcc.archive', '.AR', condition, [archiver])
     if debug():
         print 'notice: using gcc archiver ::', condition, '::', archiver
-
-    # - Ranlib
-    ranlib = common.get_invocation_command('gcc',
-            'ranlib', feature.get_values('<ranlib>', options), [bin], path_last=True)
-    toolset.flags('gcc.archive', '.RANLIB', condition, [ranlib])
-    if debug():
-        print 'notice: using gcc archiver ::', condition, '::', ranlib
 
     # - The resource compiler.
     rc_command = common.get_invocation_command_nodefault('gcc',
@@ -669,7 +662,6 @@ def gcc_archive(targets, sources, properties):
 # That warning is produced only on some platforms, for whatever reasons.
 engine.register_action('gcc.archive',
                        '''"$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-                       "$(.RANLIB)" "$(<)"
                        ''',
                        function=gcc_archive,
                        flags=['piecemeal'])
@@ -779,6 +771,15 @@ cpu_flags('gcc', 'OPTIONS', 'x86', 'sandy-bridge', ['-march=corei7-avx'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'core-avx-i', ['-march=core-avx-i'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'ivy-bridge', ['-march=core-avx-i'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'haswell', ['-march=core-avx-i', '-mavx2', '-mfma', '-mbmi', '-mbmi2', '-mlzcnt'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'broadwell', ['-march=broadwell'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'skylake', ['-march=skylake'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'skylake-avx512', ['-march=skylake-avx512'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'cannonlake', ['-march=skylake-avx512', '-mavx512vbmi', '-mavx512ifma', '-msha'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'icelake-client', ['-march=icelake-client'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'icelake-server', ['-march=icelake-server'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'cascadelake', ['-march=skylake-avx512', '-mavx512vnni'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'cooperlake', ['-march=cooperlake'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'tigerlake', ['-march=tigerlake'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'k6', ['-march=k6'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'k6-2', ['-march=k6-2'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'k6-3', ['-march=k6-3'])
@@ -802,10 +803,13 @@ cpu_flags('gcc', 'OPTIONS', 'x86', 'bdver2', ['-march=bdver2'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'bdver3', ['-march=bdver3'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'btver1', ['-march=btver1'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'btver2', ['-march=btver2'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'znver1', ['-march=znver1'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'znver2', ['-march=znver2'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'winchip-c6', ['-march=winchip-c6'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'winchip2', ['-march=winchip2'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'c3', ['-march=c3'])
 cpu_flags('gcc', 'OPTIONS', 'x86', 'c3-2', ['-march=c3-2'])
+cpu_flags('gcc', 'OPTIONS', 'x86', 'c7', ['-march=c7'])
 ##
 cpu_flags('gcc', 'OPTIONS', 'x86', 'atom', ['-march=atom'])
 # Sparc
@@ -864,6 +868,7 @@ cpu_flags('gcc', 'OPTIONS', 's390x',  'z196', ['-march=z196'])
 cpu_flags('gcc', 'OPTIONS', 's390x',  'zEC12', ['-march=zEC12'])
 cpu_flags('gcc', 'OPTIONS', 's390x',  'z13', ['-march=z13'])
 cpu_flags('gcc', 'OPTIONS', 's390x',  'z14', ['-march=z14'])
+cpu_flags('gcc', 'OPTIONS', 's390x',  'z15', ['-march=z15'])
 # AIX variant of RS/6000 & PowerPC
 flags('gcc', 'OPTIONS', ['<architecture>power/<address-model>32/<target-os>aix'], ['-maix32'])
 flags('gcc', 'OPTIONS', ['<architecture>power/<address-model>64/<target-os>aix'], ['-maix64'])

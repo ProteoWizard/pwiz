@@ -433,6 +433,8 @@ namespace pwiz.Skyline.ToolsUI
                         Program.Name), MultiButtonMsgDlg.BUTTON_OK) == DialogResult.OK)
             {
                 Settings.Default.Reset();
+                Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
+                Settings.Default.Save();
             }
         }
 

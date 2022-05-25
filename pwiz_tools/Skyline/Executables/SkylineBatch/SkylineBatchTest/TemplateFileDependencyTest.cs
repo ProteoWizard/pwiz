@@ -112,17 +112,17 @@ namespace SkylineBatchTest
         private void AssertDependency(SkylineBatchConfig dependentConfig, SkylineBatchConfig baseConfig, string message = "")
         {
             Assert.AreEqual(baseConfig.Name,
-                dependentConfig.MainSettings.DependentConfigName,
+                dependentConfig.MainSettings.Template.DependentConfigName,
                 message);
             Assert.AreEqual(baseConfig.RefineSettings.OutputFilePath,
-                dependentConfig.MainSettings.TemplateFilePath,
+                dependentConfig.MainSettings.Template.FilePath,
                 message);
             dependentConfig.Validate();
         }
 
         private void AssertNoDependency(SkylineBatchConfig wasDependentConfig, bool expectedTemplateExist)
         {
-            Assert.AreEqual(null, wasDependentConfig.MainSettings.DependentConfigName,
+            Assert.AreEqual(string.Empty, wasDependentConfig.MainSettings.Template.DependentConfigName,
                 "Dependent config name was not null");
             var validatedInvalidConfig = false;
             try
@@ -132,7 +132,7 @@ namespace SkylineBatchTest
             }
             catch (ArgumentException e)
             {
-                Assert.AreEqual(e.Message, $"The Skyline template file {wasDependentConfig.MainSettings.TemplateFilePath} does not exist.\r\nPlease provide a valid file.");
+                Assert.AreEqual(e.Message, $"The Skyline template file {wasDependentConfig.MainSettings.Template.FilePath} does not exist.\r\nPlease provide a valid file.");
             }
             Assert.AreEqual(expectedTemplateExist, validatedInvalidConfig, "Unexpected validation result");
         }

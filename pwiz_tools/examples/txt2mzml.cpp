@@ -87,7 +87,7 @@ void txt2mzml(const char* filenameIn, const char* filenameOut)
         // parse stream one line at a time 
 
         string buffer;
-        getline(is, buffer);
+        getlinePortable(is, buffer);
 
         // if we're done, flush one last time and break
 

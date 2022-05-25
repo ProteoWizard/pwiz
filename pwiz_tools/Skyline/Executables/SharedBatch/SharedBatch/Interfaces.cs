@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -28,6 +28,8 @@ namespace SharedBatch
         //                      otherwise replaced is the same as the current configuration (this)
         bool TryPathReplace(string oldRoot, string newRoot, out IConfig replaced);
 
+        IConfig ForcePathReplace(string oldRoot, string newRoot);
+
         // Returns a copy of the configuration with the new Skyline settings
         IConfig ReplaceSkylineVersion(SkylineSettings skylineSettings);
 
@@ -51,7 +53,8 @@ namespace SharedBatch
         Stopped,
         Completed,
         Disconnected,
-        Error
+        Error,
+        Loading
     }
 
     public interface IConfigRunner
@@ -68,6 +71,8 @@ namespace SharedBatch
 
         bool IsBusy();
         bool IsRunning();
+        bool IsWaiting();
+        bool IsCanceling();
         void Cancel();
     }
 
@@ -83,7 +88,7 @@ namespace SharedBatch
         bool IsValid(out string errorMessage);
 
         // For testing, sets the text in a control
-        void SetText(string value);
+        void SetInput(object variable);
     }
 
     // Possible actions a user is taking when opening a configuration in the edit configuration form 
@@ -102,25 +107,25 @@ namespace SharedBatch
         void UpdateUiLogFiles();
 
         // Checks there are no configurations with the name addingName
-        void AssertUniqueConfigName(string addingName, bool replacing);
 
         // Updates the Ui running buttons
         void UpdateRunningButtons(bool canStart, bool canStop);
-
-        void AddConfiguration(IConfig config);
-        void ReplaceSelectedConfig(IConfig config);
-        void ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
-
-        void LogToUi(string filePath, string text, bool trim = true);
-        void LogErrorToUi(string filePath, string text, bool trim = true);
-        void LogLinesToUi(string filePath, List<string> lines);
-        void LogErrorLinesToUi(string filePath, List<string> lines);
-
         void DisplayError(string message);
         void DisplayWarning(string message);
         void DisplayInfo(string message);
         void DisplayErrorWithException(string message, Exception exception);
         DialogResult DisplayQuestion(string message);
-        DialogResult DisplayLargeQuestion(string message);
+        DialogResult DisplayLargeOkCancel(string message);
+
+        void DisplayForm(Form form);
     }
+
+    public delegate void OnPercentProgress(int percent, int maxPercent);
+
+    public delegate  void LongOperation(OnPercentProgress progress, CancellationToken cancelToken);
+
+    public delegate void Callback(bool completed);
+
+    public delegate void Update(int percentComplete, Exception e);
+
 }

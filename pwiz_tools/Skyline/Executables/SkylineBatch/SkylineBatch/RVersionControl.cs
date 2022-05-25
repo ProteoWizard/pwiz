@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -20,26 +19,25 @@ namespace SkylineBatch
 
         private string _version; // a string representing the currently selected R version. It is null iff there are no R installations
         private string _oldVersion; // the old R version, initially invalid
-        private bool _hasRInstalled; // if R is installed
 
         private readonly RDirectorySelector _rDirectorySelector;
 
-        public RVersionControl(string scriptName, string oldVersion, RDirectorySelector rDirectorySelector)
+        public RVersionControl(string scriptName, string oldVersion, RDirectorySelector rDirectorySelector, SkylineBatchConfigManagerState state)
         {
             InitializeComponent();
             
-            _hasRInstalled = Settings.Default.RVersions.Keys.Count > 0;
+            var hasRInstalled = Settings.Default.RVersions.Keys.Count > 0;
             _oldVersion = oldVersion;
-
-            _version = _hasRInstalled ? oldVersion : null;
+            State = state;
+            _version = hasRInstalled ? oldVersion : null;
             _rDirectorySelector = rDirectorySelector;
 
-            labelTitle.Text = _hasRInstalled ? string.Format(Resources.RVersionControl_RVersionControl_R_version__0__not_found_, oldVersion) :
+            labelTitle.Text = hasRInstalled ? string.Format(Resources.RVersionControl_RVersionControl_R_version__0__not_found_, oldVersion) :
                 Resources.RVersionControl_RVersionControl_Could_not_find_any_R_installations_on_this_computer_;
-            labelMessage.Text = _hasRInstalled ? string.Format(Resources.RVersionControl_RVersionControl_Select_an_R_version_for__0__, Path.GetFileName(scriptName)) :
+            labelMessage.Text = hasRInstalled ? string.Format(Resources.RVersionControl_RVersionControl_Select_an_R_version_for__0__, Path.GetFileName(scriptName)) :
                 Resources.RVersionControl_RVersionControl_Please_add_an_R_installation_directory_;
 
-            if (_hasRInstalled)
+            if (hasRInstalled)
             {
                 UpdateComboRVersions();
             }
@@ -49,6 +47,7 @@ namespace SkylineBatch
             }
         }
 
+        public SkylineBatchConfigManagerState State { get; private set; }
         public object GetVariable() => _version;
 
         public bool IsValid(out string errorMessage)
@@ -88,8 +87,9 @@ namespace SkylineBatch
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
         {
-            if (_rDirectorySelector.ShowAddDirectoryDialog())
+            if (_rDirectorySelector.ShowAddDirectoryDialog(State))
             {
+                State = _rDirectorySelector.State;
                 UpdateComboRVersions();
                 comboRVersions.Show();
                 if (Settings.Default.RVersions.ContainsKey(_oldVersion))
@@ -97,11 +97,11 @@ namespace SkylineBatch
             }
         }
 
-        public void SetText(string value)
+        public void SetInput(object value)
         {
             if (comboRVersions.Items.Contains(value))
             {
-                comboRVersions.SelectedIndex = comboRVersions.Items.IndexOf(value);
+                comboRVersions.SelectedIndex = comboRVersions.Items.IndexOf((string)value);
             }
             else
             {

@@ -117,7 +117,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             get
             {
-                if (!ReferenceEquals(SelectedRegressionType, _originalRegressionType))
+                if (_originalRegressionType != null && !ReferenceEquals(SelectedRegressionType, _originalRegressionType))
                     return true;
 
                 if (_originalPeptides == null)
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var selectedItem = _driverStandards.SelectedItem;
                 return selectedItem != null && Settings.Default.IrtStandardList.GetDefaults()
-                           .Any(standard => ReferenceEquals(standard, selectedItem));
+                           .Any(standard => Equals(standard, selectedItem));
             }
         }
 
@@ -176,14 +176,18 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        public IEnumerable<DbIrtPeptide> StandardPeptides => StandardPeptideList;
-
-        public IEnumerable<DbIrtPeptide> LibraryPeptides => LibraryPeptideList;
-
-        public IEnumerable<DbIrtPeptide> AllPeptides
+        public IEnumerable<DbIrtPeptide> StandardPeptides
         {
-            get { return new[] {StandardPeptideList, LibraryPeptideList}.SelectMany(list => list); }
+            get => StandardPeptideList;
+            set => LoadStandard(value);
         }
+
+        public IEnumerable<DbIrtPeptide> LibraryPeptides
+        {
+            get => LibraryPeptideList;
+            set => LoadLibrary(value);
+        }
+        public IEnumerable<DbIrtPeptide> AllPeptides => StandardPeptides.Concat(LibraryPeptides);
 
         public int StandardPeptideCount => StandardPeptideList.Count;
         public int LibraryPeptideCount => LibraryPeptideList.Count;
@@ -301,6 +305,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
+        // Check that there are no peptides in both the standard and library list.
+        private void CheckForDuplicates()
+        {
+            var duplicates = IrtDb.CheckForDuplicates(StandardPeptides, LibraryPeptides);
+            for (var i = LibraryPeptideList.Count - 1; i >= 0; i--)
+                if (duplicates.Contains(LibraryPeptideList[i].ModifiedTarget))
+                    LibraryPeptideList.RemoveAt(i);
+        }
+
         public void OpenDatabase(string path)
         {
             if (!File.Exists(path))
@@ -313,7 +326,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             try
             {
-                var db = IrtDb.GetIrtDb(path, null, out var dbPeptides); // TODO: LongWaitDlg
+                IrtDb db = null;
+                IList<DbIrtPeptide> dbPeptides = null;
+                using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
+                {
+                    dlg.PerformWork(this, 800, progressMonitor => db = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
+                }
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -332,6 +350,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         ? SrmDocument.DOCUMENT_TYPE.mixed
                         : SrmDocument.DOCUMENT_TYPE.small_molecules;
                 }
+
+                CheckForDuplicates();
             }
             catch (DatabaseOpeningException e)
             {
@@ -347,6 +367,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textCalculatorName.Focus();
                 return;
             }
+
+            CheckForDuplicates();
 
             if (_existingCalcs != null)
             {
@@ -1285,18 +1307,30 @@ namespace pwiz.Skyline.SettingsUI.Irt
             get { return _driverStandards.SelectedItem; }
             set
             {
-                if (value == null)
-                    comboStandards.SelectedIndex = 0;
-
-                for (var i = 0; i < _driverStandards.List.Count; i++)
+                if (value != null)
                 {
-                    if (ReferenceEquals(_driverStandards.List[i], value))
+                    for (var i = 0; i < _driverStandards.List.Count; i++)
                     {
-                        comboStandards.SelectedIndex = i;
-                        return;
+                        if (Equals(_driverStandards.List[i], value))
+                        {
+                            comboStandards.SelectedIndex = i;
+                            return;
+                        }
                     }
                 }
                 comboStandards.SelectedIndex = 0;
+            }
+        }
+
+        public void AddStandard()
+        {
+            foreach (var item in comboStandards.Items)
+            {
+                if (item.ToString().Equals(Resources.SettingsListComboDriver_Add))
+                {
+                    comboStandards.SelectedItem = item;
+                    return;
+                }
             }
         }
 
@@ -1337,7 +1371,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (comboStandards.SelectedItem.ToString().Equals(Resources.SettingsListComboDriver_Add) &&
                 StandardPeptideList.Count > 0 &&
-                ReferenceEquals(_driverStandards.List[lastIdx], IrtStandard.EMPTY))
+                _driverStandards.List[lastIdx].IsEmpty)
             {
                 // Offer to create a new standard from the standard peptides currently in the calculator
                 using (var dlg = new UseCurrentCalculatorDlg(_driverStandards.List))
@@ -1393,7 +1427,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     // A built-in standard is selected and standards have changed
                     var newIdx = CurrentStandardIndex;
                     if (newIdx == -1)
-                        newIdx = _driverStandards.List.IndexOf(standard => ReferenceEquals(standard, IrtStandard.EMPTY));
+                        newIdx = _driverStandards.List.IndexOf(standard => standard.IsEmpty);
                     if (newIdx != comboStandards.SelectedIndex)
                     {
                         comboStandards.SelectedIndexChanged -= comboStandards_SelectedIndexChanged;

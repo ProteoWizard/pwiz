@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -88,6 +90,7 @@ namespace pwiz.Skyline.Model.Lib
         public LibraryBuildAction Action { get; set; }
         public bool KeepRedundant { get; set; }
         public double? CutOffScore { get; set; }
+        public Dictionary<string, double> ScoreThresholdsByFile { get; set; }
         public string Id { get; set; }
         public bool IncludeAmbiguousMatches { get; set; }
         public IrtStandard IrtStandard { get; set; }
@@ -149,6 +152,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 IncludeAmbiguousMatches = IncludeAmbiguousMatches,
                 CutOffScore = CutOffScore,
+                ScoreThresholdsByFile = ScoreThresholdsByFile,
                 Id = Id,
                 PreferEmbeddedSpectra = PreferEmbeddedSpectra,
                 DebugMode = DebugMode,
@@ -169,7 +173,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 catch (IOException x)
                 {
-                    if (IsLibraryMissingExternalSpectraError(x, out string spectrumFilename, out string resultsFilepath))
+                    if (IsLibraryMissingExternalSpectraError(x, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                     {
                         // replace the relative path to the results file (e.g. msms.txt) with the absolute path
                         string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath)) ??
@@ -198,7 +202,7 @@ namespace pwiz.Skyline.Model.Lib
                     Console.WriteLine(x.Message);
                     progress.UpdateProgress(status.ChangeErrorException(
                         new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
-                                                    redundantLibrary))));
+                                                    redundantLibrary), x)));
                     return false;
                 }
             } while (retry);
@@ -248,28 +252,85 @@ namespace pwiz.Skyline.Model.Lib
         public static bool IsLibraryMissingExternalSpectraError(Exception errorException)
         {
             // ReSharper disable UnusedVariable
-            return IsLibraryMissingExternalSpectraError(errorException, out string s1, out string s2);
+            return IsLibraryMissingExternalSpectraError(errorException, out IList<string> s1, out IList<string> s2, out string s3);
             // ReSharper restore UnusedVariable
         }
 
-        public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out string spectrumFilename, out string resultsFilepath)
+        public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath)
         {
-            spectrumFilename = resultsFilepath = null;
+            spectrumFilenames = null;
+            directoriesSearched = null;
+            resultsFilepath = null;
 
             // TODO: this test (and the regex below) will break if BiblioSpec output is translated to other languages
-            if (!errorException.Message.Contains(@"Could not find spectrum file"))
+            if (!errorException.Message.Contains(@"Run with the -E flag"))
                 return false;
-
-            var messageParts = Regex.Match(errorException.Message, "Could not find spectrum file '([^[]+)\\[.*\\]' for search results file '([^']*)'");
+            // ReSharper disable once LocalizableElement
+            string rawMessage = errorException.Message.Replace(@"ERROR: ", "");
+            var messageParts = Regex.Match(rawMessage, @"While searching .* results file '([^']+)'.*$\n(?:(.+)\n)+In any of the following directories\:(?:(.+)\n)+Run with the -E flag", RegexOptions.Multiline);
             if (!messageParts.Success)
                 throw new InvalidDataException(@"failed to parse filenames from BiblioSpec error message", errorException);
 
-            spectrumFilename = messageParts.Groups[1].Value;
-            resultsFilepath = messageParts.Groups[2].Value;
+            spectrumFilenames = new List<string>();
+            foreach (Capture line in messageParts.Groups[2].Captures)
+            {
+                var lineTrimmed = line.Value.Trim();
+                if (lineTrimmed.Length > 0)
+                    spectrumFilenames.Add(lineTrimmed);
+            }
+
+            directoriesSearched = new List<string>();
+            foreach (Capture line in messageParts.Groups[3].Captures)
+            {
+                var lineTrimmed = line.Value.Trim();
+                if (lineTrimmed.Length > 0)
+                    directoriesSearched.Add(lineTrimmed);
+            }
+
+            resultsFilepath = messageParts.Groups[1].Value;
 
             return HasEmbeddedSpectra(resultsFilepath);
         }
 
         public static string BiblioSpecSupportedFileExtensions => @"mz5, mzML, raw, wiff, d, lcd, mzXML, cms2, ms2, or mgf";
+
+        public static double? GetDefaultScoreThreshold(string scoreName, double? defaultThreshold = null)
+        {
+            foreach (var s in Settings.Default.BlibLibraryThresholds ?? new StringCollection())
+            {
+                var parsed = ParseScoreThresholdSetting(s);
+                if (parsed != null && Equals(parsed.Item1, scoreName))
+                    return parsed.Item2;
+            }
+            return defaultThreshold;
+        }
+
+        public static void SetDefaultScoreThreshold(string scoreName, double? threshold)
+        {
+            for (var i = 0; i < Settings.Default.BlibLibraryThresholds?.Count; i++)
+            {
+                var parsed = ParseScoreThresholdSetting(Settings.Default.BlibLibraryThresholds[i]);
+                if (Equals(parsed.Item1, scoreName))
+                {
+                    if (threshold.HasValue)
+                        Settings.Default.BlibLibraryThresholds[i] = scoreName + @"=" + threshold.Value.ToString(CultureInfo.InvariantCulture);
+                    else
+                        Settings.Default.BlibLibraryThresholds.RemoveAt(i);
+                    return;
+                }
+            }
+            if (Settings.Default.BlibLibraryThresholds == null)
+                Settings.Default.BlibLibraryThresholds = new StringCollection();
+            if (threshold.HasValue)
+                Settings.Default.BlibLibraryThresholds.Add(scoreName + @"=" + threshold.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        private static Tuple<string, double> ParseScoreThresholdSetting(string s)
+        {
+            var i = s.IndexOf('=');
+            return i >= 0 && double.TryParse(s.Substring(i + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out var threshold)
+                ? Tuple.Create(s.Substring(0, i), threshold)
+                : null;
+        }
     }
 }

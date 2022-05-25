@@ -38,7 +38,7 @@ SE.MinPrecursorMass = 400
 SE.MaxPrecursorMass = 5000
 
 #Report peak
-ExportPrecursorPeak = true
+#ExportPrecursorPeak = true
 #ExportFragmentPeak = false
 
 

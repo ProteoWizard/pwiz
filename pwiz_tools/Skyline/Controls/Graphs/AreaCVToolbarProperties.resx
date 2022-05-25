@@ -358,7 +358,7 @@
     <value>%</value>
   </data>
   <data name="checkShowMedian.Text" xml:space="preserve">
-    <value>Show me&amp;dian</value>
+    <value>S&amp;how median</value>
   </data>
   <data name="&gt;&gt;labelCvCutoffPercent.Name" xml:space="preserve">
     <value>labelCvCutoffPercent</value>
@@ -793,7 +793,7 @@
     <value>textMinLog10</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Font size:</value>
+    <value>F&amp;ont size:</value>
   </data>
   <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
     <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

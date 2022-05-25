@@ -18,8 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using AutoQC;
 using SharedBatch;
+using SharedBatch.Properties;
+using SharedBatchTest;
 
 namespace AutoQCTest
 {
@@ -27,31 +30,34 @@ namespace AutoQCTest
     {
         public static string GetTestFilePath(string fileName)
         {
-            var currentPath = Directory.GetCurrentDirectory();
-            var autoQcTestPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
-            return autoQcTestPath + "\\Test\\" + fileName;
+            return Path.Combine(GetTestDataPath(), fileName);
         }
 
-        public static string CreateTestFolder(string folderName)
+        private static string GetTestDataPath()
         {
-            var newFolder = GetTestFilePath(folderName);
-            Directory.CreateDirectory(newFolder);
-            return newFolder;
+            return Path.Combine(GetAutoQcPath(), "TestData");
         }
 
-        public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty);
-        
-
-        public static MainSettings GetTestMainSettings(string changedVariable, string value)
+        private static string GetAutoQcPath()
         {
-            var skylineFilePath = GetTestFilePath("QEP_2015_0424_RJ.sky");
-            var folderToWatch = changedVariable.Equals("folderToWatch")? GetTestFilePath(value) : GetTestFilePath("Config");
+            // ExtensionTestContext looks for paths relative to Skyline.sln.
+            return ExtensionTestContext.GetProjectDirectory(@"Executables\AutoQC");
+        }
+
+        public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);
+
+        public static MainSettings GetTestMainSettings(string changedVariable, string value) => GetTestMainSettings(string.Empty, changedVariable, value);
+
+        public static MainSettings GetTestMainSettings(string skyFilePath, string changedVariable, string value)
+        {
+            var skylineFilePath = !string.Empty.Equals(skyFilePath) ? skyFilePath : GetTestFilePath("emptyTemplate.sky");
+            var folderToWatch = changedVariable.Equals("folderToWatch")? value : GetTestDataPath();
 
             var includeSubfolders = changedVariable.Equals("includeSubfolders") && value.Equals("true");
             var fileFilter = MainSettings.GetDefaultQcFileFilter();
             var resultsWindow = MainSettings.GetDefaultResultsWindow();
             var removeResults = MainSettings.GetDefaultRemoveResults();
-            var acquisitionTime = MainSettings.GetDefaultAcquisitionTime();
+            var acquisitionTime = "0"; // Set to 0 so that AutoQC does not wait to import results files
             var instrumentType = MainSettings.GetDefaultInstrumentType();
             
             
@@ -63,14 +69,27 @@ namespace AutoQCTest
             var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
             var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
             var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaFolder = publishToPanorama ? "/SkylineTest" : "";
+            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
 
-            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaFolder);
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
+        }
+
+        public static PanoramaSettings GetNoPublishPanoramaSettings()
+        {
+            return new PanoramaSettings(false, null, null, null, null);
         }
 
         public static SkylineSettings GetTestSkylineSettings()
         {
-            return new SkylineSettings(SkylineType.Custom, "C:\\Program Files\\Skyline");
+            if (SkylineInstallations.FindSkyline())
+            {
+                if (SkylineInstallations.HasSkyline)
+                    return new SkylineSettings(SkylineType.Skyline, null);
+                if (SkylineInstallations.HasSkylineDaily)
+                    return new SkylineSettings(SkylineType.SkylineDaily, null);
+            }
+
+            return null;
         }
 
         public static AutoQcConfig GetTestConfig(string name)
@@ -86,8 +105,8 @@ namespace AutoQCTest
 
         public static Logger GetTestLogger(AutoQcConfig config)
         {
-            var logFile = GetTestFilePath("TestLogs\\AutoQC.log");
-            return new Logger(logFile, config.Name);
+            var logFile = Path.Combine(config.GetConfigDir(), "AutoQC.log");
+            return new Logger(logFile, config.Name, false);
         }
 
         public static List<AutoQcConfig> ConfigListFromNames(string[] names)
@@ -114,12 +133,29 @@ namespace AutoQCTest
                 };
             }
 
-            foreach(var config in configs)
-                testConfigManager.UserAddConfig(config);
+            foreach (var config in configs)
+                testConfigManager.SetState(testConfigManager.State,
+                    testConfigManager.State.UserAddConfig(config, null));
             
             return testConfigManager;
         }
 
+        public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
+        {
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
+            {
+                if (condition()) return;
+                Thread.Sleep(timestep);
+            }
+            throw new Exception(errorMessage);
+        }
+
+        public static void InitializeSettingsImportExport()
+        {
+            ConfigList.Importer = AutoQcConfig.ReadXml;
+            ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
+        }
     }
     
     class TestImportContext : ImportContext

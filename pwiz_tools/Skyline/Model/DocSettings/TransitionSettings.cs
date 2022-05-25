@@ -213,7 +213,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
-                                                      FullScanMassAnalyzerType.none, null, null, false,
+                                                      FullScanMassAnalyzerType.none, null, null, false, false,
                                                       null, RetentionTimeFilterType.none, 0);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
@@ -1089,7 +1089,8 @@ namespace pwiz.Skyline.Model.DocSettings
             string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
             if (spaces)
                 sep += TextUtil.SEPARATOR_SPACE;
-            return ionTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
+            var stringsList = ionTypes.Select(ion => ion.GetInputAliases().First()).ToList();
+            return stringsList.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
         }
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
@@ -1109,7 +1110,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return IonType.precursor;
             }
-            IonType ionType = TypeSafeEnum.Parse<IonType>(s);
+            IonType ionType = IonTypeExtension.GetEnum(s);
             if (ionType == IonType.custom)
             {
                 throw new ArgumentException();
@@ -1216,6 +1217,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return FragmentStartFinders.Select(f => f.Label);
         }
 
+        public static IEnumerable<string> GetFilterStartFragmentFinderLabels()
+        {
+            return FragmentStartFinders
+                .Where(f => f is OrdinalFragmentFinder || Equals(DEFAULT_START_FINDER, f.Name))
+                .Select(f => f.Label);
+        }
+
         public static string GetStartFragmentNameFromLabel(string label)
         {
             for (int i = 0; i < FragmentStartFinders.SafeLength(); i++)
@@ -1292,6 +1300,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public static IEnumerable<string> GetEndFragmentFinderLabels()
         {
             return FragmentEndFinders.Select(f => f.Label);
+        }
+
+        public static IEnumerable<string> GetFilterEndFragmentFinderLabels()
+        {
+            return FragmentEndFinders
+                .Where(f => f is LastFragmentFinder)
+                .Select(f => f.Label);
         }
 
         public static IEndFragmentFinder GetEndFragmentFinder(string finderName)
@@ -2281,6 +2296,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                     FullScanMassAnalyzerType precursorMassAnalyzer,
                                     double? precursorRes,
                                     double? precursorResMz,
+                                    bool ignoreSim,
                                     bool selectiveExtraction,
                                     IsotopeEnrichments isotopeEnrichments,
                                     RetentionTimeFilterType retentionTimeFilterType,
@@ -2296,6 +2312,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorMassAnalyzer = precursorMassAnalyzer;
             PrecursorRes = precursorRes;
             PrecursorResMz = precursorResMz;
+            IgnoreSimScans = ignoreSim;
 
             UseSelectiveExtraction = selectiveExtraction;
 
@@ -2310,6 +2327,9 @@ namespace pwiz.Skyline.Model.DocSettings
         // Applies to both MS1 and MS/MS because it is related to sample complexity
         [Track]
         public bool UseSelectiveExtraction { get; private set; }
+
+        [Track]
+        public bool IgnoreSimScans { get; private set; }
 
         public double ResPerFilter { get { return UseSelectiveExtraction ? RES_PER_FILTER_SELECTIVE : RES_PER_FILTER; } }
 
@@ -2723,6 +2743,7 @@ namespace pwiz.Skyline.Model.DocSettings
             scheduled_filter, // deprecated
             retention_time_filter_type,
             retention_time_filter_length,
+            ignore_sim_scans,
         }
 
         void IValidating.Validate()
@@ -2734,7 +2755,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (PrecursorIsotopes == FullScanPrecursorIsotopes.None)
             {
-                if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorIsotopeFilter.HasValue || PrecursorRes.HasValue || PrecursorResMz.HasValue)
+                if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorIsotopeFilter.HasValue || PrecursorRes.HasValue || PrecursorResMz.HasValue || IgnoreSimScans)
                     throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included);
             }
             else
@@ -2771,20 +2792,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                if (AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
-                {
-                    if (IsolationScheme != null)
-                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
-                }
-                else if (AcquisitionMethod == FullScanAcquisitionMethod.DDA)
-                {
-                    if (IsolationScheme != null)
-                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
-                }
-                else
+                if (AcquisitionMethod == FullScanAcquisitionMethod.DIA)
                 {
                     if (IsolationScheme == null)
                         throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+                }
+                else
+                {
+                    if (IsolationScheme != null)
+                    {
+                        string message = string.Format(Resources
+                                .TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
+                            AcquisitionMethod);
+                        throw new InvalidDataException(message);
+                    }
                 }
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
@@ -2899,6 +2920,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            IgnoreSimScans = reader.GetBoolAttribute(ATTR.ignore_sim_scans);
             UseSelectiveExtraction = reader.GetBoolAttribute(ATTR.selective_extraction);
             RetentionTimeFilterType = RetentionTimeFilterType.none;
             RetentionTimeFilterLength = 0;
@@ -2976,6 +2998,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
             }
+            if (IgnoreSimScans)
+                writer.WriteAttribute(ATTR.ignore_sim_scans, true);
             if (UseSelectiveExtraction)
                 writer.WriteAttribute(ATTR.selective_extraction, true);
             if (RetentionTimeFilterType != RetentionTimeFilterType.none)
@@ -3010,6 +3034,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.IsotopeEnrichments, IsotopeEnrichments) &&
                 Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
                 other.PrecursorRes.Equals(PrecursorRes) &&
+                other.IgnoreSimScans == IgnoreSimScans &&
                 other.UseSelectiveExtraction == UseSelectiveExtraction &&
                 other.PrecursorResMz.Equals(PrecursorResMz) &&
                 other.RetentionTimeFilterType == RetentionTimeFilterType &&
@@ -3039,6 +3064,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);
+                result = (result*397) ^ IgnoreSimScans.GetHashCode();
                 result = (result*397) ^ UseSelectiveExtraction.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterType.GetHashCode();
                 result = (result*397) ^ RetentionTimeFilterLength.GetHashCode();
@@ -3055,12 +3081,31 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public bool IsIntegrateAll { get; private set; }
 
+        [Track]
+        public string SynchronizedIntegrationGroupBy { get; private set; }
+
+        [Track]
+        public bool SynchronizedIntegrationAll { get; private set; }
+
+        [Track]
+        public string[] SynchronizedIntegrationTargets { get; private set; }
+
         #region Property change methods
 
         public TransitionIntegration ChangeIntegrateAll(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.IsIntegrateAll = prop);
-        }        
+        }
+
+        public TransitionIntegration ChangeSynchronizedIntegration(string groupBy, bool all, string[] targets)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SynchronizedIntegrationGroupBy = groupBy;
+                im.SynchronizedIntegrationAll = all;
+                im.SynchronizedIntegrationTargets = !all && targets.Length > 0 ? targets : Array.Empty<string>();
+            });
+        }
 
         #endregion
 
@@ -3069,6 +3114,15 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum ATTR
         {
             integrate_all,
+            group_by,
+            all,
+            value
+        }
+
+        private enum EL
+        {
+            synchronize_integration,
+            target
         }
 
         void IValidating.Validate()
@@ -3092,12 +3146,69 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Consume tag
             reader.Read();
+
+            if (reader.IsStartElement(EL.synchronize_integration))
+            {
+                SynchronizedIntegrationGroupBy = reader.GetAttribute(ATTR.group_by) ?? string.Empty;
+                SynchronizedIntegrationAll = reader.GetBoolAttribute(ATTR.all);
+                SynchronizedIntegrationTargets = Array.Empty<string>();
+
+                if (!reader.IsEmptyElement)
+                {
+                    // Consume synchronize_integration start tag
+                    reader.Read();
+
+                    // Read synchronization values
+                    var syncTargets = new List<string>();
+                    while (reader.IsStartElement(EL.target))
+                    {
+                        syncTargets.Add(reader.GetAttribute(ATTR.value));
+                        reader.Read();
+                    }
+                    SynchronizedIntegrationTargets = syncTargets.ToArray();
+                }
+
+                // Consume synchronize_integration end tag
+                reader.Read();
+                // Consume transition_integration end tag
+                reader.Read();
+            }
         }
 
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
             writer.WriteAttribute(ATTR.integrate_all, IsIntegrateAll);
+
+            // Write synchronize_integration
+            var hasGroupBy = SynchronizedIntegrationGroupBy != null;
+            var hasSyncTargets = SynchronizedIntegrationTargets != null && SynchronizedIntegrationTargets.Length > 0;
+            if (hasGroupBy || SynchronizedIntegrationAll || hasSyncTargets)
+            {
+                writer.WriteStartElement(EL.synchronize_integration);
+
+                if (hasGroupBy)
+                {
+                    writer.WriteAttribute(ATTR.group_by, SynchronizedIntegrationGroupBy);
+                }
+
+                if (SynchronizedIntegrationAll)
+                {
+                    writer.WriteAttribute(ATTR.all, SynchronizedIntegrationAll);
+                }
+
+                if (hasSyncTargets)
+                {
+                    foreach (var target in SynchronizedIntegrationTargets)
+                    {
+                        writer.WriteStartElement(EL.target);
+                        writer.WriteAttribute(ATTR.value, target);
+                        writer.WriteEndElement();
+                    }
+                }
+
+                writer.WriteEndElement();
+            }
         }
 
         #endregion
@@ -3108,7 +3219,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.IsIntegrateAll.Equals(IsIntegrateAll);
+            return other.IsIntegrateAll.Equals(IsIntegrateAll) &&
+                   Equals(other.SynchronizedIntegrationGroupBy, SynchronizedIntegrationGroupBy) &&
+                   Equals(other.SynchronizedIntegrationAll, SynchronizedIntegrationAll) &&
+                   ArrayUtil.EqualsDeep(other.SynchronizedIntegrationTargets, SynchronizedIntegrationTargets);
         }
 
         public override bool Equals(object obj)
@@ -3121,7 +3235,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override int GetHashCode()
         {
-            return IsIntegrateAll.GetHashCode();
+            unchecked
+            {
+                int result = IsIntegrateAll.GetHashCode();
+                if (SynchronizedIntegrationGroupBy != null)
+                    result = (result * 397) ^ SynchronizedIntegrationGroupBy.GetHashCode();
+                result = (result * 397) ^ SynchronizedIntegrationAll.GetHashCode();
+                result = (result * 397) ^ ArrayUtil.GetHashCodeDeep(SynchronizedIntegrationTargets);
+                return result;
+            }
         }
 
         #endregion

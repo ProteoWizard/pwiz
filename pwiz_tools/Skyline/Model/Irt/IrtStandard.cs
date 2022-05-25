@@ -15,8 +15,8 @@ namespace pwiz.Skyline.Model.Irt
 {
     public class IrtStandard : XmlNamedElement
     {
-        public static readonly IrtStandard AUTO = new IrtStandard(Resources.IrtStandard_AUTO_Automatic, null, null, new DbIrtPeptide[0]);
-        public static readonly IrtStandard EMPTY = new IrtStandard(AuditLogStrings.None, null, null, new DbIrtPeptide[0]);
+        public static IrtStandard AUTO => new IrtStandard(Resources.IrtStandard_AUTO_Automatic, null, null, Array.Empty<DbIrtPeptide>());
+        public static IrtStandard EMPTY => new IrtStandard(AuditLogStrings.None, null, null, Array.Empty<DbIrtPeptide>());
 
         public static readonly IrtStandard BIOGNOSYS_10 = new IrtStandard(@"Biognosys-10 (iRT-C18)", @"Biognosys10.sky", null,
             new[] {
@@ -308,9 +308,9 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"YTQSNSVC[+57.0]YAK",         -12.79),
             });
 
-        public static readonly ImmutableList<IrtStandard> ALL = ImmutableList.ValueOf(new[] {
+        public static IEnumerable<IrtStandard> ALL => new[] {
             EMPTY, AUTO, BIOGNOSYS_10, BIOGNOSYS_11, PIERCE, REPLICAL, RTBEADS, SCIEX, SIGMA, APOA1, CIRT_SHORT
-        });
+        };
 
         private static readonly HashSet<Target> ALL_TARGETS = new HashSet<Target>(ALL.SelectMany(l => l.Peptides.Select(p => p.ModifiedTarget)));
 
@@ -345,8 +345,11 @@ namespace pwiz.Skyline.Model.Irt
         public string DocXml { get; private set; }
         public ImmutableList<DbIrtPeptide> Peptides { get; private set; }
 
-        public override string AuditLogText => Equals(this, EMPTY) ? LogMessage.NONE : Name;
-        public override bool IsName => !Equals(this, EMPTY); // So EMPTY logs as None (unquoted) rather than "None"
+        public override string AuditLogText => IsEmpty ? LogMessage.NONE : Name;
+        public override bool IsName => !IsEmpty; // So EMPTY logs as None (unquoted) rather than "None"
+
+        public bool IsEmpty => Equals(this, EMPTY);
+        public bool IsAuto => Equals(this, AUTO);
 
         public bool HasDocument => !string.IsNullOrEmpty(_resourceSkyFile) || !string.IsNullOrEmpty(DocXml);
 

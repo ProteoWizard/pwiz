@@ -45,12 +45,12 @@ struct hash
      */
     struct
     {
-        int nel;
+        int32_t nel;
         ITEM * * base;
     } tab;
 
-    int bloat;  /* tab.nel / items.nel */
-    int inel;   /* initial number of elements */
+    int32_t bloat;  /* tab.nel / items.nel */
+    int32_t inel;   /* initial number of elements */
 
     /*
      * the array of records, maintained by these routines - essentially a
@@ -58,16 +58,16 @@ struct hash
      */
     struct
     {
-        int more;     /* how many more ITEMs fit in lists[ list ] */
+        int32_t more;     /* how many more ITEMs fit in lists[ list ] */
         ITEM * free;  /* free list of items */
         char * next;  /* where to put more ITEMs in lists[ list ] */
-        int size;     /* sizeof( ITEM ) + aligned datalen */
-        int nel;      /* total ITEMs held by all lists[] */
-        int list;     /* index into lists[] */
+        int32_t size;     /* sizeof( ITEM ) + aligned datalen */
+        int32_t nel;      /* total ITEMs held by all lists[] */
+        int32_t list;     /* index into lists[] */
 
         struct
         {
-            int nel;      /* total ITEMs held by this list */
+            int32_t nel;      /* total ITEMs held by this list */
             char * base;  /* base of ITEMs array */
         } lists[ MAX_LISTS ];
     } items;
@@ -78,7 +78,7 @@ struct hash
 static void hashrehash( struct hash * );
 static void hashstat( struct hash * );
 
-static unsigned int hash_keyval( OBJECT * key )
+static uint32_t hash_keyval( OBJECT * key )
 {
     return object_hash( key );
 }
@@ -96,7 +96,7 @@ static unsigned int hash_keyval( OBJECT * key )
  * hashinit() - initialize a hash table, returning a handle
  */
 
-struct hash * hashinit( int datalen, char const * name )
+struct hash * hashinit( int32_t datalen, char const * name )
 {
     struct hash * hp = (struct hash *)BJAM_MALLOC( sizeof( *hp ) );
 
@@ -123,7 +123,7 @@ struct hash * hashinit( int datalen, char const * name )
  * bucket or to 0 if our item is the first item in its bucket.
  */
 
-static ITEM * hash_search( struct hash * hp, unsigned int keyval,
+static ITEM * hash_search( struct hash * hp, uint32_t keyval,
     OBJECT * keydata, ITEM * * previous )
 {
     ITEM * i = *hash_bucket( hp, keyval );
@@ -146,10 +146,10 @@ static ITEM * hash_search( struct hash * hp, unsigned int keyval,
  * hash_insert() - insert a record in the table or return the existing one
  */
 
-HASHDATA * hash_insert( struct hash * hp, OBJECT * key, int * found )
+HASHDATA * hash_insert( struct hash * hp, OBJECT * key, int32_t * found )
 {
     ITEM * i;
-    unsigned int keyval = hash_keyval( key );
+    uint32_t keyval = hash_keyval( key );
 
     #ifdef HASH_DEBUG_PROFILE
     profile_frame prof[ 1 ];
@@ -201,7 +201,7 @@ HASHDATA * hash_insert( struct hash * hp, OBJECT * key, int * found )
 HASHDATA * hash_find( struct hash * hp, OBJECT * key )
 {
     ITEM * i;
-    unsigned int keyval = hash_keyval( key );
+    uint32_t keyval = hash_keyval( key );
 
     #ifdef HASH_DEBUG_PROFILE
     profile_frame prof[ 1 ];
@@ -235,7 +235,7 @@ HASHDATA * hash_find( struct hash * hp, OBJECT * key )
 
 static void hashrehash( struct hash * hp )
 {
-    int i = ++hp->items.list;
+    int32_t i = ++hp->items.list;
     hp->items.more = i ? 2 * hp->items.nel : hp->inel;
     hp->items.next = (char *)BJAM_MALLOC( hp->items.more * hp->items.size );
     hp->items.free = 0;
@@ -254,7 +254,7 @@ static void hashrehash( struct hash * hp )
 
     for ( i = 0; i < hp->items.list; ++i )
     {
-        int nel = hp->items.lists[ i ].nel;
+        int32_t nel = hp->items.lists[ i ].nel;
         char * next = hp->items.lists[ i ].base;
 
         for ( ; nel--; next += hp->items.size )
@@ -277,11 +277,11 @@ static void hashrehash( struct hash * hp )
 void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data
     )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i <= hp->items.list; ++i )
     {
         char * next = hp->items.lists[ i ].base;
-        int nel = hp->items.lists[ i ].nel;
+        int32_t nel = hp->items.lists[ i ].nel;
         if ( i == hp->items.list )
             nel -= hp->items.more;
 
@@ -301,7 +301,7 @@ void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data
 
 void hash_free( struct hash * hp )
 {
-    int i;
+    int32_t i;
     if ( !hp )
         return;
     if ( hp->tab.base )

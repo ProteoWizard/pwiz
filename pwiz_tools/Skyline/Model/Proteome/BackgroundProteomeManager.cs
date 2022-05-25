@@ -51,10 +51,6 @@ namespace pwiz.Skyline.Model.Proteome
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (previous == null)
-            {
-                return true;
-            }
             if (!ReferenceEquals(GetBackgroundProteome(document), GetBackgroundProteome(previous)))
             {
                 return true;
@@ -354,7 +350,7 @@ namespace pwiz.Skyline.Model.Proteome
             public bool IsCanceled
             {
                 // Cancel if the document state has changed since the digestion started, of if a foreground load has started
-                get { return _container != null && (_manager.StateChanged(_container.Document, _document) || _manager.ForegroundLoadRequested) || _manager.IsCanceled(_container, _document); }
+                get { return _container != null && (_manager.IsStateChanged(_container.Document, _document) || _manager.ForegroundLoadRequested) || _manager.IsCanceled(_container, _document); }
             }
 
             public UpdateProgressResponse UpdateProgress(IProgressStatus status)

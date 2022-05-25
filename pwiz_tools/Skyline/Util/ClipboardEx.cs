@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Util
     {
         public const string SKYLINE_FORMAT = "Skyline Format";
 
-	    private static bool _useSystemClipboard = true;
+        private static bool _useSystemClipboard = true;
         private static DataObject _dataObject;
 
         // Set this true to check that the internal clipboard returns the
@@ -43,23 +43,21 @@ namespace pwiz.Skyline.Util
             _useSystemClipboard = !useInternal;
         }
 
-        public static void SetDataObject(object data)
+        /// <summary>
+        /// Returns a list of the available formats on the clipboard now.
+        /// </summary>
+        public static string[] GetClipboardFormats()
         {
-            if (_useSystemClipboard)
+            var dataObject = _useSystemClipboard ? Clipboard.GetDataObject() : _dataObject;
+            if (dataObject == null)
             {
-                Clipboard.SetDataObject(data);
+                return new string[0];
             }
-            else lock (_dataObject)
-            {
-                _dataObject = (DataObject)data;
-                if (CHECK_VALUES)
-                {
-                    Clipboard.SetDataObject(data);
-                }
-            }
+
+            return dataObject.GetFormats();
         }
 
-        public static void SetDataObject(object data, bool copy)
+        public static void SetDataObject(DataObject data, bool copy)
         {
             if (_useSystemClipboard)
             {
@@ -67,7 +65,7 @@ namespace pwiz.Skyline.Util
             }
             else lock (_dataObject)
             {
-                _dataObject = (DataObject)data;
+                _dataObject = data;
                 if (CHECK_VALUES)
                 {
                     Clipboard.SetDataObject(data, copy);

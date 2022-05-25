@@ -1,7 +1,7 @@
 # Copyright Brian Kuhl 2017.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import clang ;
 import feature : feature get-values ;
@@ -16,9 +16,9 @@ import generators ;
 
 feature.extend-subfeature toolset clang : platform : vxworks ;
 
-toolset.inherit-generators clang-vxworks 
-  <toolset>clang <toolset-clang:platform>vxworks 
-  : gcc 
+toolset.inherit-generators clang-vxworks
+  <toolset>clang <toolset-clang:platform>vxworks
+  : gcc
   # Don't inherit PCH generators. They were not tested, and probably
   # don't work for this compiler.
   : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
@@ -30,12 +30,12 @@ generators.override clang-vxworks.searched-lib-generator : searched-lib-generato
 
 
 toolset.inherit-rules clang-vxworks : gcc ;
-toolset.inherit-flags clang-vxworks : gcc 
+toolset.inherit-flags clang-vxworks : gcc
         : <inlining>full
           <architecture>x86/<address-model>32
           <architecture>x86/<address-model>64
         ;
-        
+
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
     .debug-configuration = true ;
@@ -45,22 +45,22 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {
-    command = [ common.get-invocation-command clang-vxworks : ccllvm 
+    command = [ common.get-invocation-command clang-vxworks : ccllvm
         : $(command) ] ;
-    
+
     linker = [ get-values <linker> : $(options) ] ;
     linker   ?= ld ;
-    
+
     # Determine the version
     local command-string = $(command:J=" ") ;
     if $(command)
-    {    
+    {
         version ?= [ MATCH "^([0-9.]+)"
             : [ SHELL "$(command-string) -dumpversion" ] ] ;
     }
 
     local condition = [ common.check-init-parameters clang-vxworks
-        : version $(version) ] ;    
+        : version $(version) ] ;
 
     common.handle-options clang-vxworks : $(condition) : $(command) : $(options) ;
 
@@ -80,17 +80,15 @@ toolset.flags clang-vxworks.compile INCLUDES <include> ;
 # For clang, 'on' and 'full' are identical
 toolset.flags clang-vxworks.compile OPTIONS <inlining>full : -Wno-inline ;
 
-toolset.flags clang-vxworks.compile OPTIONS <flags> ;
-
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -x c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 
@@ -112,14 +110,11 @@ actions piecemeal archive
 rule link ( targets * : sources * : properties * )
 {
   SPACE on $(targets) = " " ;
-  # Serialize execution of the 'link' action, since
-  # running N links in parallel is just slower.
-  JAM_SEMAPHORE on $(targets) = <s>clang-vxworks-link-semaphore ;
 }
 
 actions link bind LIBRARIES
 {
-    "$(.LD)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) 
+    "$(.LD)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS)
     }
 
 actions link.dll bind LIBRARIES

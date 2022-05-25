@@ -68,9 +68,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            if (AsSmallMolecules && !RunSmallMoleculeTestVersions)
+            if (AsSmallMolecules && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -283,10 +282,9 @@ namespace pwiz.SkylineTestFunctional
             // Set up display while loading
             RunUI(SkylineWindow.ArrangeGraphsTiled);
 
-            SelectNode(SrmDocument.Level.Transitions, 0);
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
-
             // Add some heavy precursors while loading
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;
             const string heavyK = "Heavy K";
@@ -309,6 +307,22 @@ namespace pwiz.SkylineTestFunctional
 
             // First make sure the first settings change occurs
             WaitForDocumentChangeLoaded(docCurrent, 300*1000);
+
+            // Verify that "GraphChromatogram.DisplayOptimizationTotals" works for different values
+            // of TransformChrom
+            RunUI(()=>
+            {
+                SkylineWindow.ShowSingleTransition();
+                SkylineWindow.SetTransformChrom(TransformChrom.raw);
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                SkylineWindow.SetTransformChrom(TransformChrom.interpolated);
+            });
+            WaitForGraphs();
+
+            SelectNode(SrmDocument.Level.Transitions, 0);
 
             RunUI(() => SkylineWindow.SaveDocument());
 
@@ -762,7 +776,8 @@ namespace pwiz.SkylineTestFunctional
 
                 // Try exporting with an explicitly set compensation voltage value and declustering potential
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-                EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List, 5,
+                EnsureMixedTransitionListReport();
+                EnableDocumentGridColumns(documentGrid, MIXED_TRANSITION_LIST_REPORT_NAME, 5,
                     new[]
                     {
                         "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
@@ -879,7 +894,7 @@ namespace pwiz.SkylineTestFunctional
             SrmDocument docCurrent = SkylineWindow.Document;
             int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
-                Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
+                AssertEx.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphRetentionTime.CurveCount);
 

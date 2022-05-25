@@ -323,6 +323,21 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
             }
         }
         break;
+
+        case MS_emission_chromatogram:
+        {
+            WiffFile::ADCTrace twc;
+            wifffile_->getTWC(sample, twc);
+
+            if (getBinaryData)
+                result->setTimeIntensityArrays(twc.x, twc.y, UO_minute, UO_absorbance_unit);
+            else
+            {
+                result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, UO_absorbance_unit);
+                result->defaultArrayLength = twc.x.size();
+            }
+        }
+        break;
     }
 
     return result;
@@ -438,6 +453,21 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         idToIndexMap_[ie.id] = ie.index;
     }
 
+    WiffFile::ADCTrace twc;
+    wifffile_->getTWC(sample, twc);
+    if (!twc.x.empty())
+    {
+
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "TWC";
+        ie.sample = sample;
+        ie.transition = 0;
+        ie.chromatogramType = MS_emission_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
     size_ = index_.size();
 }
 
@@ -463,6 +493,7 @@ size_t ChromatogramList_ABI::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_ABI::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_ABI::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

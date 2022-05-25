@@ -175,6 +175,20 @@ namespace pwiz.SkylineTestUtil
             get { return CanImportAgilentRaw ? DataSourceUtil.EXT_AGILENT_BRUKER_RAW : ExtMzml; }
         }
 
+        public static bool CanImportMobilionRaw
+        {
+            get
+            {
+                // return false to import mzML
+                return Environment.Is64BitProcess && AllowVendorReaders;
+            }
+        }
+
+        public static string ExtMobilionRaw
+        {
+            get { return CanImportMobilionRaw ? DataSourceUtil.EXT_MOBILION_MBI : ExtMzml; }
+        }
+
         public static bool CanImportShimadzuRaw
         {
             get

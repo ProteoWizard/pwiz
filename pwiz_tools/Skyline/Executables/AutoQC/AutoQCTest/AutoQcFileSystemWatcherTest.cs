@@ -75,7 +75,8 @@ namespace AutoQCTest
 
         private static void FilesFromWatcherEquals(MainSettings mainSettings, string[] expectedFiles)
         {
-            var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
+                TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
             var logger = TestUtils.GetTestLogger(config);
             var watcher = new AutoQCFileSystemWatcher(logger, new ConfigRunner(config, logger));
 
@@ -166,7 +167,8 @@ namespace AutoQCTest
             var mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
-            var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            var config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
+                TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
             var logger = TestUtils.GetTestLogger(config);
             var configRunner = new ConfigRunner(config, logger);
             configRunner.ChangeStatus(RunnerStatus.Running);
@@ -206,7 +208,8 @@ namespace AutoQCTest
             mainSettings = new MainSettings(skyFile, folderToWatch, true, defaultFileFilter, true,
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
-            config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
+                TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
             logger = TestUtils.GetTestLogger(config);
             configRunner = new ConfigRunner(config, logger);
@@ -246,7 +249,8 @@ namespace AutoQCTest
             mainSettings = new MainSettings(skyFile, folderToWatch, true, fileFilter, true,
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
-            config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
+                TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
             logger = TestUtils.GetTestLogger(config);
             configRunner = new ConfigRunner(config, logger);
@@ -284,7 +288,8 @@ namespace AutoQCTest
             mainSettings = new MainSettings(skyFile, folderToWatch, false, defaultFileFilter, true,
                 MainSettings.ACCUM_TIME_WINDOW.ToString(), instrument, MainSettings.ACQUISITION_TIME.ToString());
 
-            config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings, new PanoramaSettings(), TestUtils.GetTestSkylineSettings());
+            config = new AutoQcConfig("test", false, DateTime.MinValue, DateTime.MinValue, mainSettings,
+                TestUtils.GetNoPublishPanoramaSettings(), TestUtils.GetTestSkylineSettings());
 
             logger = TestUtils.GetTestLogger(config);
             configRunner = new ConfigRunner(config, logger);

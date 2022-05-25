@@ -152,6 +152,9 @@ namespace pwiz.SkylineTestUtil
             ABI,
             Agilent,
             Bruker,
+/* Waiting for CCS<->DT support in .mbi reader
+            Mobilion,
+*/
             Shimadzu,
             Thermo,
             UIMF,

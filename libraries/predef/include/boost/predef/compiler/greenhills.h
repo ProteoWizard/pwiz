@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,22 +11,23 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_GHS`]
+/* tag::reference[]
+= `BOOST_COMP_GHS`
 
-[@http://en.wikipedia.org/wiki/Green_Hills_Software Green Hills C/C++] compiler.
+http://en.wikipedia.org/wiki/Green_Hills_Software[Green Hills C/{CPP}] compiler.
 Version number available as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__ghs`] [__predef_detection__]]
-    [[`__ghs__`] [__predef_detection__]]
+| `+__ghs+` | {predef_detection}
+| `+__ghs__+` | {predef_detection}
 
-    [[`__GHS_VERSION_NUMBER__`] [V.R.P]]
-    [[`__ghs`] [V.R.P]]
-    ]
- */
+| `+__GHS_VERSION_NUMBER__+` | V.R.P
+| `+__ghs+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_GHS BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -55,13 +56,12 @@ Version number available as major, minor, and patch.
 
 #define BOOST_COMP_GHS_NAME "Green Hills C/C++"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_GHS,BOOST_COMP_GHS_NAME)
 
 #ifdef BOOST_COMP_GHS_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_GHS_EMULATED,BOOST_COMP_GHS_NAME)
-#endif
-
-
 #endif

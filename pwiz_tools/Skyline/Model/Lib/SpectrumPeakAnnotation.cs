@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public static SpectrumPeakAnnotation Create(CustomIon ion, string comment)
         {
-            return ion.IsEmpty && string.IsNullOrEmpty(comment) ? 
+            return CustomIon.IsNullOrEmpty(ion) && string.IsNullOrEmpty(comment) ? 
                 EMPTY : 
                 new SpectrumPeakAnnotation(ion, comment);
         }

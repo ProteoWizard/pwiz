@@ -1,21 +1,21 @@
 /* Copyright 2004. Vladimir Prus
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "../lists.h"
 #include "../mem.h"
 #include "../native.h"
 #include "../object.h"
-#include "../strings.h"
+#include "../jam_strings.h"
 #include "../variable.h"
 
 
 /* Use quite klugy approach: when we add order dependency from 'a' to 'b', just
  * append 'b' to of value of variable 'a'.
  */
-LIST * add_pair( FRAME * frame, int flags )
+LIST * add_pair( FRAME * frame, int32_t flags )
 {
     LIST * arg = lol_get( frame->args, 0 );
     LISTITER iter = list_begin( arg );
@@ -29,9 +29,9 @@ LIST * add_pair( FRAME * frame, int flags )
 /* Given a list and a value, returns position of that value in the list, or -1
  * if not found.
  */
-int list_index( LIST * list, OBJECT * value )
+int32_t list_index( LIST * list, OBJECT * value )
 {
-    int result = 0;
+    int32_t result = 0;
     LISTITER iter = list_begin( list );
     LISTITER const end = list_end( list );
     for ( ; iter != end; iter = list_next( iter ), ++result )
@@ -47,15 +47,15 @@ enum colors { white, gray, black };
  * vertices which were not yet visited. After that, 'current_vertex' is added to
  * '*result_ptr'.
  */
-void do_ts( int * * graph, int current_vertex, int * colors, int * * result_ptr
+void do_ts( int32_t * * graph, int32_t current_vertex, int32_t * colors, int32_t * * result_ptr
     )
 {
-    int i;
+    int32_t i;
 
     colors[ current_vertex ] = gray;
     for ( i = 0; graph[ current_vertex ][ i ] != -1; ++i )
     {
-        int adjacent_vertex = graph[ current_vertex ][ i ];
+        int32_t adjacent_vertex = graph[ current_vertex ][ i ];
         if ( colors[ adjacent_vertex ] == white )
             do_ts( graph, adjacent_vertex, colors, result_ptr );
         /* The vertex is either black, in which case we do not have to do
@@ -70,10 +70,10 @@ void do_ts( int * * graph, int current_vertex, int * colors, int * * result_ptr
 }
 
 
-void topological_sort( int * * graph, int num_vertices, int * result )
+static void topological_sort( int32_t * * graph, int32_t num_vertices, int32_t * result )
 {
-    int i;
-    int * colors = ( int * )BJAM_CALLOC( num_vertices, sizeof( int ) );
+    int32_t i;
+    int32_t * colors = ( int32_t * )BJAM_CALLOC( num_vertices, sizeof( int32_t ) );
     for ( i = 0; i < num_vertices; ++i )
         colors[ i ] = white;
 
@@ -85,34 +85,34 @@ void topological_sort( int * * graph, int num_vertices, int * result )
 }
 
 
-LIST * order( FRAME * frame, int flags )
+LIST * order( FRAME * frame, int32_t flags )
 {
     LIST * arg = lol_get( frame->args, 0 );
     LIST * result = L0;
-    int src;
+    int32_t src;
     LISTITER iter = list_begin( arg );
     LISTITER const end = list_end( arg );
 
     /* We need to create a graph of order dependencies between the passed
      * objects. We assume there are no duplicates passed to 'add_pair'.
      */
-    int length = list_length( arg );
-    int * * graph = ( int * * )BJAM_CALLOC( length, sizeof( int * ) );
-    int * order = ( int * )BJAM_MALLOC( ( length + 1 ) * sizeof( int ) );
+    int32_t length = list_length( arg );
+    int32_t * * graph = ( int32_t * * )BJAM_CALLOC( length, sizeof( int32_t * ) );
+    int32_t * order = ( int32_t * )BJAM_MALLOC( ( length + 1 ) * sizeof( int32_t ) );
 
     for ( src = 0; iter != end; iter = list_next( iter ), ++src )
     {
         /* For all objects this one depends upon, add elements to 'graph'. */
         LIST * dependencies = var_get( frame->module, list_item( iter ) );
-        int index = 0;
+        int32_t index = 0;
         LISTITER dep_iter = list_begin( dependencies );
         LISTITER const dep_end = list_end( dependencies );
 
-        graph[ src ] = ( int * )BJAM_CALLOC( list_length( dependencies ) + 1,
-            sizeof( int ) );
+        graph[ src ] = ( int32_t * )BJAM_CALLOC( list_length( dependencies ) + 1,
+            sizeof( int32_t ) );
         for ( ; dep_iter != dep_end; dep_iter = list_next( dep_iter ) )
         {
-            int const dst = list_index( arg, list_item( dep_iter ) );
+            int32_t const dst = list_index( arg, list_item( dep_iter ) );
             if ( dst != -1 )
                 graph[ src ][ index++ ] = dst;
         }
@@ -122,12 +122,11 @@ LIST * order( FRAME * frame, int flags )
     topological_sort( graph, length, order );
 
     {
-        int index = length - 1;
+        int32_t index = length - 1;
         for ( ; index >= 0; --index )
         {
-            int i;
+            int32_t i;
             LISTITER iter = list_begin( arg );
-            LISTITER const end = list_end( arg );
             for ( i = 0; i < order[ index ]; ++i, iter = list_next( iter ) );
             result = list_push_back( result, object_copy( list_item( iter ) ) );
         }
@@ -135,7 +134,7 @@ LIST * order( FRAME * frame, int flags )
 
     /* Clean up */
     {
-        int i;
+        int32_t i;
         for ( i = 0; i < length; ++i )
             BJAM_FREE( graph[ i ] );
         BJAM_FREE( graph );

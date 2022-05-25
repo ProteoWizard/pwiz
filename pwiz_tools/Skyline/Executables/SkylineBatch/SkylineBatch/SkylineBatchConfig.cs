@@ -18,7 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -38,7 +40,7 @@ namespace SkylineBatch
         // script that will copy the skyline file, import data, export reports, and run r scripts.
 
         
-        public SkylineBatchConfig(string name, bool enabled, DateTime modified, MainSettings mainSettings, 
+        public SkylineBatchConfig(string name, bool enabled, bool logTestFormat, DateTime modified, MainSettings mainSettings, 
             FileSettings fileSettings, RefineSettings refineSettings, ReportSettings reportSettings, 
             SkylineSettings skylineSettings)
         {
@@ -49,6 +51,7 @@ namespace SkylineBatch
             }
             Name = name;
             Enabled = enabled;
+            LogTestFormat = logTestFormat;
             Modified = modified;
             MainSettings = mainSettings;
             FileSettings = fileSettings;
@@ -71,13 +74,17 @@ namespace SkylineBatch
 
         public readonly SkylineSettings SkylineSettings;
 
-        public bool Enabled;
+        public readonly bool Enabled;
+
+        public bool LogTestFormat;
 
         public bool UsesSkyline => SkylineSettings.Type == SkylineType.Skyline;
 
         public bool UsesSkylineDaily => SkylineSettings.Type == SkylineType.SkylineDaily;
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
+
+        public bool WillDownloadData => MainSettings.WillDownloadData || ReportSettings.WillDownloadData;
 
         public string GetName() { return Name; }
 
@@ -121,29 +128,47 @@ namespace SkylineBatch
 
         public SkylineBatchConfig WithoutDependency()
         {
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.WithoutDependency(),
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings.WithoutDependency(),
                 FileSettings, RefineSettings, ReportSettings, SkylineSettings);
         }
 
         public SkylineBatchConfig DependentChanged(string newName, string newTemplateFile)
         {
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings.UpdateDependent(newName, newTemplateFile),
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings.UpdateDependent(newName, newTemplateFile),
                 FileSettings, RefineSettings, ReportSettings, SkylineSettings);
+        }
+
+        public IConfig UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newMainSettings = MainSettings.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            var newReportSettings = ReportSettings.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, newMainSettings,
+                FileSettings, RefineSettings, newReportSettings, SkylineSettings);
+        }
+
+        public IConfig ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newMainSettings = MainSettings.ReplacedRemoteFileSource(existingSource, newSource, out bool mainSettingsReplaced);
+            var newReportSettings = ReportSettings.ReplacedRemoteFileSource(existingSource, newSource, out bool reportsReplaced);
+            replaced = mainSettingsReplaced || reportsReplaced;
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, newMainSettings,
+                FileSettings, RefineSettings, newReportSettings, SkylineSettings);
         }
 
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
-            return new SkylineBatchConfig(Name, Enabled, DateTime.Now, MainSettings,
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings,
                 FileSettings, RefineSettings, ReportSettings, newSettings);
         }
 
-        private enum Attr
+        public void AddDownloadingFiles(ServerFilesManager serverFiles)
         {
-            Name,
-            Enabled,
-            Modified
+            MainSettings.AddDownloadingFiles(serverFiles);
+            ReportSettings.AddDownloadingFiles(serverFiles);
         }
-        
+
+
         #region XML
 
         public XmlSchema GetSchema()
@@ -153,12 +178,36 @@ namespace SkylineBatch
 
         public static SkylineBatchConfig ReadXml(XmlReader reader)
         {
-            var name = reader.GetAttribute(Attr.Name);
-            var enabled = reader.GetBoolAttribute(Attr.Enabled);
-            DateTime modified;
-            DateTime.TryParse(reader.GetAttribute(Attr.Modified), out modified);
+            return ReadXml(reader, Settings.Default.XmlVersion);
+        }
 
-                ReadUntilElement(reader);
+        public static SkylineBatchConfig ReadXml(XmlReader reader, decimal version)
+        {
+            string name;
+            bool enabled;
+            bool logTestFormat;
+            DateTime modified;
+            switch (version)
+            {
+                case 21.12M:
+                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                case 21.11M:
+                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                case 21.1M:
+                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                case 20.2M:
+                    ReadConfigVariables_20_2(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                default:
+                    throw new ArgumentException(string.Format(
+                        Resources.XmlUpdater_GetUpdatedXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_,
+                        version));
+            }
+
+            XmlUtil.ReadUntilElement(reader);
             MainSettings mainSettings = null;
             RefineSettings refineSettings = null;
             FileSettings fileSettings = null;
@@ -167,15 +216,37 @@ namespace SkylineBatch
             string exceptionMessage = null;
             try
             {
-                mainSettings = MainSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                fileSettings = FileSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                refineSettings = RefineSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                reportSettings = ReportSettings.ReadXml(reader);
-                ReadUntilElement(reader);
-                skylineSettings = SkylineSettings.ReadXml(reader);
+                switch (version)
+                {
+                    case 21.12M:
+                        mainSettings = MainSettings.ReadXml(reader);
+                        fileSettings = FileSettings.ReadXml(reader);
+                        refineSettings = RefineSettings.ReadXml(reader);
+                        reportSettings = ReportSettings.ReadXml(reader);
+                        skylineSettings = SkylineSettings.ReadXml(reader);
+                        break;
+                    case 21.11M:
+                        mainSettings = MainSettings.ReadXml(reader);
+                        fileSettings = FileSettings.ReadXml(reader);
+                        refineSettings = RefineSettings.ReadXml(reader);
+                        reportSettings = ReportSettings.ReadXml(reader);
+                        skylineSettings = SkylineSettings.ReadXml(reader);
+                        break;
+                    case 21.1M:
+                        mainSettings = MainSettings.ReadXmlVersion_21_1(reader);
+                        fileSettings = FileSettings.ReadXml(reader);
+                        refineSettings = RefineSettings.ReadXml(reader);
+                        reportSettings = ReportSettings.ReadXmlVersion_21_1(reader);
+                        skylineSettings = SkylineSettings.ReadXml(reader);
+                        break;
+                    default: // 20.2M
+                        mainSettings = MainSettings.ReadXmlVersion_20_2(reader);
+                        fileSettings = FileSettings.ReadXmlVersion_20_2(reader);
+                        refineSettings = RefineSettings.ReadXmlVersion_20_2(reader);
+                        reportSettings = ReportSettings.ReadXmlVersion_20_2(reader);
+                        skylineSettings = SkylineSettings.ReadXmlVersion_20_2(reader);
+                        break;
+                }
             }
             catch (ArgumentException e)
             {
@@ -185,29 +256,38 @@ namespace SkylineBatch
             do
             {
                 reader.Read();
-            } while (!(reader.Name == "skylinebatch_config" && reader.NodeType == XmlNodeType.EndElement));
+            } while (!(reader.Name == XMLElements.BATCH_CONFIG && reader.NodeType == XmlNodeType.EndElement) && !reader.EOF);
 
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
-            return new SkylineBatchConfig(name, enabled, modified, mainSettings, fileSettings,
+            return new SkylineBatchConfig(name, enabled, logTestFormat, modified, mainSettings, fileSettings,
                 refineSettings, reportSettings, skylineSettings);
         }
 
-        private static void ReadUntilElement(XmlReader reader)
+        private static void ReadConfigVariables(XmlReader reader, out string name, out bool enabled, out bool logTestFormat, out DateTime modified)
         {
-            do
-            {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
+            name = reader.GetAttribute(XML_TAGS.name);
+            enabled = reader.GetBoolAttribute(XML_TAGS.enabled);
+            logTestFormat = !SkylineInstallations.HasLocalSkylineCmd && reader.GetBoolAttribute(XML_TAGS.log_test_format);
+            DateTime.TryParse(reader.GetAttribute(XML_TAGS.modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
+        }
+
+        private static void ReadConfigVariables_20_2(XmlReader reader, out string name, out bool enabled, out bool logTestFormat, out DateTime modified)
+        {
+            name = reader.GetAttribute(OLD_XML_TAGS.Name);
+            enabled = reader.GetBoolAttribute(OLD_XML_TAGS.Enabled);
+            logTestFormat = false;
+            DateTime.TryParse(reader.GetAttribute(OLD_XML_TAGS.Modified), CultureInfo.InvariantCulture, DateTimeStyles.None, out modified);
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("skylinebatch_config");
-            writer.WriteAttribute(Attr.Name, Name);
-            writer.WriteAttribute(Attr.Enabled, Enabled);
-            writer.WriteAttributeIfString(Attr.Modified, Modified.ToShortDateString() + " " + Modified.ToShortTimeString());
+            writer.WriteStartElement(XMLElements.BATCH_CONFIG);
+            writer.WriteAttribute(XML_TAGS.name, Name);
+            writer.WriteAttribute(XML_TAGS.enabled, Enabled);
+            writer.WriteAttribute(XML_TAGS.log_test_format, LogTestFormat);
+            writer.WriteAttributeIfString(XML_TAGS.modified, Modified.ToString(CultureInfo.InvariantCulture));
             MainSettings.WriteXml(writer);
             FileSettings.WriteXml(writer);
             RefineSettings.WriteXml(writer);
@@ -227,11 +307,14 @@ namespace SkylineBatch
             SkylineSettings.Validate();
         }
 
-        public bool RunWillOverwrite(int startStep, string configurationHeader, out StringBuilder message)
+        public bool RunWillOverwrite(RunBatchOptions runOption, string configurationHeader, out StringBuilder message)
         {
-            if (startStep != 3)
-                return MainSettings.RunWillOverwrite(startStep, configurationHeader, out message);
-            return RefineSettings.RunWillOverwrite(startStep, configurationHeader, out message);
+            message = new StringBuilder();
+            if (runOption == RunBatchOptions.DOWNLOAD_DATA) return false;
+            
+            return MainSettings.RunWillOverwrite(runOption, configurationHeader, out message)
+                || RefineSettings.RunWillOverwrite(runOption, configurationHeader, out message)
+                || ReportSettings.RunWillOverwrite(runOption, configurationHeader, MainSettings.AnalysisFolderPath, out message);
         }
 
         public bool TryPathReplace(string oldRoot, string newRoot, out IConfig replacedPathConfig)
@@ -241,9 +324,18 @@ namespace SkylineBatch
                 RefineSettings.TryPathReplace(oldRoot, newRoot, out RefineSettings pathReplacedRefineSettings);
             var reportSettingsReplaced =
                 ReportSettings.TryPathReplace(oldRoot, newRoot, out ReportSettings pathReplacedReportSettings);
-            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, DateTime.Now, pathReplacedMainSettings,
+            replacedPathConfig = new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, pathReplacedMainSettings,
                 FileSettings, pathReplacedRefineSettings, pathReplacedReportSettings, SkylineSettings);
             return mainSettingsReplaced || reportSettingsReplaced || refineSettingsReplaced;
+        }
+
+        public IConfig ForcePathReplace(string oldRoot, string newRoot)
+        {
+            var mainSettings = MainSettings.ForcePathReplace(oldRoot, newRoot);
+            var refineSettings = RefineSettings.ForcePathReplace(oldRoot, newRoot);
+            var reportSettings = ReportSettings.ForcePathReplace(oldRoot, newRoot);
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, mainSettings,
+                FileSettings, refineSettings, reportSettings, SkylineSettings);
         }
 
         public override string ToString()
@@ -298,6 +390,7 @@ namespace SkylineBatch
                    && Equals(MainSettings, other.MainSettings)
                    && Equals(ReportSettings, other.ReportSettings)
                    && Equals(FileSettings, other.FileSettings)
+                   && Equals(RefineSettings, other.RefineSettings)
                    && Equals(SkylineSettings, other.SkylineSettings);
         }
 

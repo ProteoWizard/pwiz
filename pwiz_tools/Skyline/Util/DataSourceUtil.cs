@@ -43,6 +43,8 @@ namespace pwiz.Skyline.Util
         public const string EXT_UIMF = ".uimf";
         public const string EXT_WATERS_RAW = ".raw";
         public const string EXT_AGILENT_BRUKER_RAW = ".d";
+        public const string EXT_MOBILION_MBI = ".mbi";
+        public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
 
         public const string TYPE_WIFF = "Sciex WIFF/WIFF2";
         public const string TYPE_AGILENT = "Agilent MassHunter Data";
@@ -55,6 +57,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_MZ5 = "mz5";
         public const string TYPE_MZDATA = "mzData";
         public const string TYPE_UIMF = "Unified Ion Mobility Frame";
+        public const string TYPE_MBI = "Mobilion MBI";
         public const string TYPE_CHORUSRESPONSE = "Chorus Response";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
@@ -126,6 +129,7 @@ namespace pwiz.Skyline.Util
                 case EXT_MZ5: return TYPE_MZ5;
                 case EXT_XML: return GetSourceTypeFromXML(fileInfo.FullName);
                 case EXT_UIMF: return TYPE_UIMF;
+                case EXT_MOBILION_MBI: return TYPE_MBI;
                 default: return UNKNOWN_TYPE;
             }
         }

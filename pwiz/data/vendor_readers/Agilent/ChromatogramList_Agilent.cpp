@@ -32,6 +32,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
 #include <boost/spirit/include/karma.hpp>
+#include <boost/range/algorithm/for_each.hpp>
 
 
 namespace pwiz {
@@ -133,7 +134,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_SRM_chromatogram:
         {
-            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
+            MassChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
 
             CVID polarityType = Agilent::translateAsPolarityType(chromatogramPtr->getIonPolarity());
             if (polarityType != CVID_Unknown)
@@ -169,7 +170,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
 
         case MS_SIM_chromatogram:
         {
-            pwiz::vendor_api::Agilent::ChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
+            MassChromatogramPtr chromatogramPtr(rawfile_->getChromatogram(ci.transition));
             CVID polarityType = Agilent::translateAsPolarityType(chromatogramPtr->getIonPolarity());
             if (polarityType != CVID_Unknown)
                 result->set(polarityType);
@@ -189,6 +190,46 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t inde
                 pwiz::util::BinaryData<float> yArray;
                 chromatogramPtr->getYArray(yArray);
                 result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+
+                result->defaultArrayLength = timeArray.size();
+            }
+            else
+                result->defaultArrayLength = chromatogramPtr->getTotalDataPoints();
+        }
+        break;
+
+        case MS_absorption_chromatogram:
+        case MS_pressure_chromatogram:
+        case MS_flow_rate_chromatogram:
+        {
+            SignalChromatogramPtr chromatogramPtr(rawfile_->getSignal(ci.signal));
+
+            if (getBinaryData)
+            {
+                CVID yUnit = UO_absorbance_unit;
+                if (ci.chromatogramType == MS_pressure_chromatogram)
+                    yUnit = UO_pascal;
+                else if (ci.chromatogramType == MS_flow_rate_chromatogram)
+                    yUnit = UO_microliters_per_minute;
+
+                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, yUnit);
+
+                auto& timeArray = result->getTimeArray()->data;
+                chromatogramPtr->getXArray(timeArray);
+
+                pwiz::util::BinaryData<float> yArray;
+                chromatogramPtr->getYArray(yArray);
+                result->getIntensityArray()->data.assign(yArray.begin(), yArray.end());
+
+                double unitMultiplier = 1.0;
+                
+                if (ci.chromatogramType == MS_pressure_chromatogram)
+                    unitMultiplier = 1e5; // convert bar to pascal (1 bar = 100000 Pa) because there's no bar term in UO
+                else if (ci.chromatogramType == MS_flow_rate_chromatogram)
+                    unitMultiplier = 1e-6; // convert mL/min to uL/min because there's no mL/min term in UO
+
+                if (unitMultiplier != 1.0)
+                    boost::range::for_each(result->getIntensityArray()->data, [&](auto& v) {v *= unitMultiplier; });
 
                 result->defaultArrayLength = timeArray.size();
             }
@@ -224,7 +265,7 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
 
     const set<Transition>& transitions = rawfile_->getTransitions();
 
-    BOOST_FOREACH(const Transition& transition, transitions)
+    for (const Transition& transition : transitions)
     {
         index_.push_back(IndexEntry());
         IndexEntry& ci = index_.back();
@@ -251,6 +292,26 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
                     );
         idMap_[ci.id] = ci.index;
     }
+
+    const auto& signals = rawfile_->getSignals();
+    for (const auto& signal : signals)
+    {
+        CVID chromatogramType = Agilent::translateAsChromatogramType(signal);
+        if (chromatogramType == CVID_Unknown ||
+            chromatogramType == MS_chromatogram)
+            continue;
+
+        index_.push_back(IndexEntry());
+        IndexEntry& ci = index_.back();
+        ci.index = index_.size() - 1;
+        ci.signal = signal;
+        ci.chromatogramType = chromatogramType;
+
+        ci.id = signal.deviceName + " " + signal.signalName;
+        if (!signal.signalDescription.empty())
+            ci.id += ": " + signal.signalDescription;
+        idMap_[ci.id] = ci.index;
+    }
 }
 
 } // detail
@@ -274,6 +335,7 @@ size_t ChromatogramList_Agilent::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Agilent::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

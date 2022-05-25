@@ -2,7 +2,7 @@
  *  Copyright 2001-2004 David Abrahams.
  *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -33,7 +33,7 @@
 #include "lists.h"
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #include <assert.h>
@@ -649,8 +649,6 @@ int filelist_length( FILELIST * list )
 
 void filelist_free( FILELIST * list )
 {
-    FILELISTITER iter;
-
     if ( filelist_empty( list ) ) return;
 
     while ( filelist_length( list ) ) filelist_pop_front( list );

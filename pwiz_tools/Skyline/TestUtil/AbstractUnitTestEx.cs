@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 
 
 namespace pwiz.SkylineTestUtil
@@ -39,7 +40,20 @@ namespace pwiz.SkylineTestUtil
         {
             var consoleBuffer = new StringBuilder();
             var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
+            var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
+
+            var fail = exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported ||
+                       exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported;
+            if (fail)
+            {
+                var message =
+                    TextUtil.LineSeparate(
+                        string.Format("{0} reported but exit status was {1}.",
+                            consoleOutput.IsErrorReported ? "Error" : "No error", exitStatus),
+                        "Output: ", consoleBuffer.ToString());
+                Assert.Fail(message);
+            }
+
             return consoleBuffer.ToString();
         }
 
@@ -70,6 +84,13 @@ namespace pwiz.SkylineTestUtil
             docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
             var docSmallMol =
                 refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
+            if (docSmallMol.MeasuredResults != null)
+            {
+                foreach (var stream in docSmallMol.MeasuredResults.ReadStreams)
+                {
+                    stream.CloseStream();
+                }
+            }
             var listChromatograms = new List<ChromatogramSet>();
             if (dataPaths != null)
             {

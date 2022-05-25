@@ -9,22 +9,26 @@ Summary   : 已添加谱图库“TestDdaTutorial”
 All Info  :
 已添加谱图库“TestDdaTutorial”
 建立谱图库 > 截止值 是 "0.95"
-建立谱图库 > 搜索文件 : 包含 "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
+建立谱图库 > 搜索文件 : 包含 { File = "QE_140221_01_UPS1_100fmolspiked.pepXML", Score type = "q-value", Score threshold = "0.05" }
 建立谱图库 > iRT 标准肽段 是 无
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
 建立谱图库 > 工作流程 是 "含有 MS1 筛选器的 DDA"
-建立谱图库 > Input File Type 是 "DDA raw (search and build library)"
+建立谱图库 > 输入文件类型 是 "DDA 原始（搜索和构建库）"
 Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
-    "QE_140221_01_UPS1_100fmolspiked.mzid.gz"
+    {
+        File = "QE_140221_01_UPS1_100fmolspiked.pepXML",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    }
 ],
 iRT 标准肽段 = 无,
 包含不明确匹配项 = 假,
 文档肽段筛选器 = 假,
 工作流程 = "含有 MS1 筛选器的 DDA",
-Input File Type = "DDA raw (search and build library)"
+输入文件类型 = "DDA 原始（搜索和构建库）"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索
@@ -37,10 +41,11 @@ All Info  :
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Label:13C(6)15N(4) (C-term R) = R[10] （同位素标签）"
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16] （可变）"
 导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "2014_01_HUMAN_UPS.fasta"
-导入肽段搜索 > DDA search settings > Precursor tolerance 是 5ppm
-导入肽段搜索 > DDA search settings > Fragment tolerance 是 10ppm
-导入肽段搜索 > DDA search settings > Max variable mods per peptide 是 "3"
-导入肽段搜索 > DDA search settings > Fragment ion types 是 "b, y"
+导入肽段搜索 > DDA 搜索设置 > 搜索引擎 是 "MSFragger"
+导入肽段搜索 > DDA 搜索设置 > 母离子耐受性 是 5ppm
+导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 10ppm
+导入肽段搜索 > DDA 搜索设置 > 每个肽段的最大可变修饰数 是 "3"
+导入肽段搜索 > DDA 搜索设置 > 碎片离子类型 是 "b,y"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -63,11 +68,12 @@ Extra Info: 提取色谱图 =
 {
     FASTA 文件 = "2014_01_HUMAN_UPS.fasta"
 },
-DDA search settings = 
+DDA 搜索设置 = 
 {
-    Precursor tolerance = 5ppm,
-    Fragment tolerance = 10ppm,
-    Max variable mods per peptide = "3",
-    Fragment ion types = "b, y"
+    搜索引擎 = "MSFragger",
+    母离子耐受性 = 5ppm,
+    片段耐受性 = 10ppm,
+    每个肽段的最大可变修饰数 = "3",
+    碎片离子类型 = "b,y"
 }
 

@@ -18,8 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
@@ -30,66 +28,99 @@ namespace SkylineBatch
     {
         private readonly IMainUiControl _uiControl;
         private readonly RDirectorySelector _rDirectorySelector;
-        public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, ReportInfo editingReport = null)
+        private readonly Dictionary<string, PanoramaFile> _remoteFiles;
+
+        public ReportsAddForm(IMainUiControl uiControl, RDirectorySelector rDirectorySelector, bool hasRefineFile, SkylineBatchConfigManagerState state, ReportInfo editingReport = null)
         {
             InitializeComponent();
+            Icon = Program.Icon();
             _uiControl = uiControl;
+            State = state;
             _rDirectorySelector = rDirectorySelector;
+            _remoteFiles = new Dictionary<string, PanoramaFile>();
             radioResultsFile.Checked = true;
             radioRefinedFile.Enabled = hasRefineFile;
 
             if (editingReport != null)
             {
                 textReportName.Text = editingReport.Name;
+                checkBoxCultureInvariant.Checked = !editingReport.CultureSpecific;
                 textReportPath.Text = editingReport.ReportPath ?? string.Empty;
                 checkBoxImport.Checked = !string.IsNullOrEmpty(editingReport.ReportPath);
                 radioRefinedFile.Checked = editingReport.UseRefineFile;
                 foreach (var scriptAndVersion in editingReport.RScripts)
                 {
-                    dataGridScripts.Rows.Add(scriptAndVersion.Item1, scriptAndVersion.Item2);
+                    var server = editingReport.RScriptServers.ContainsKey(scriptAndVersion.Item1)
+                        ? editingReport.RScriptServers[scriptAndVersion.Item1]
+                        : null;
+                    var url = server != null ? server.URI.AbsoluteUri : string.Empty;
+                    dataGridScripts.Rows.Add(scriptAndVersion.Item1, url, scriptAndVersion.Item2);
                 }
+                foreach (var entry in editingReport.RScriptServers)
+                    _remoteFiles.Add(entry.Key, entry.Value);
             }
-            UpdateRVersionDropDown();
         }
 
+        public SkylineBatchConfigManagerState State { get; private set; }
         public ReportInfo NewReportInfo { get; private set; }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (Settings.Default.RVersions.Count == 0)
-            {
-                if (!AddRDirectory())
-                    return;
-            }
+            Add();
+        }
 
-            var fileNames = OpenRScript(textReportPath.Text, true);
-            foreach (var fileName in fileNames)
+        private void Add()
+        {
+            var rScriptForm = new RScriptForm(null, null, null, _rDirectorySelector, _uiControl, State);
+            if (DialogResult.OK != rScriptForm.ShowDialog(this))
+                return;
+            if (rScriptForm.RemoteFile != null)
             {
-                dataGridScripts.Rows.Add(fileName, rVersionsDropDown.Items[rVersionsDropDown.Items.Count - 1].AccessibilityObject.Name);
+                dataGridScripts.Rows.Add(rScriptForm.Path, rScriptForm.RemoteFile.URI.AbsoluteUri, rScriptForm.Version);
+                _remoteFiles.Add(rScriptForm.Path, rScriptForm.RemoteFile);
             }
+            else
+            {
+                dataGridScripts.Rows.Add(rScriptForm.Path, string.Empty, rScriptForm.Version);
+            }
+        }
+
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            EditSelected();
         }
 
         private void dataGridScripts_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex != 0 || string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
+            if (dataGridScripts.SelectedRows.Count == 0)
                 return;
-            var selectedCell = dataGridScripts.SelectedCells[0];
-            var fileNames = OpenRScript((string)selectedCell.Value, false);
-            if (fileNames.Length > 0)
-            {
-                selectedCell.Value = fileNames[0];
-            }
+            if (dataGridScripts.SelectedRows[0].Index == dataGridScripts.Rows.Count - 1)
+                Add();
+            else
+                EditSelected();
         }
 
-        private string[] OpenRScript(string path, bool allowMultiSelect)
+        private void EditSelected()
         {
-            var openDialog = new OpenFileDialog();
-            openDialog.Filter = TextUtil.FILTER_R;
-            openDialog.Multiselect = allowMultiSelect;
-            openDialog.InitialDirectory = FileUtil.GetInitialDirectory(path);
-            if (openDialog.ShowDialog() != DialogResult.OK)
-                return new string[]{};
-            return openDialog.FileNames;
+            var oldPath = (string)dataGridScripts.SelectedCells[0].Value;
+            var rowSelected = dataGridScripts.SelectedRows[0].Index;
+            var remoteFile = _remoteFiles.ContainsKey(oldPath) ? _remoteFiles[oldPath] : null;
+            var rScriptForm = new RScriptForm(oldPath, (string)dataGridScripts.SelectedCells[2].Value, remoteFile, _rDirectorySelector, _uiControl, State);
+            if (DialogResult.OK != rScriptForm.ShowDialog(this))
+                return;
+            State = rScriptForm.State;
+            dataGridScripts.Rows.RemoveAt(rowSelected);
+            if (_remoteFiles.ContainsKey(oldPath))
+                _remoteFiles.Remove(oldPath);
+            if (rScriptForm.RemoteFile != null)
+            {
+                dataGridScripts.Rows.Insert(rowSelected, rScriptForm.Path, rScriptForm.RemoteFile.URI.AbsoluteUri, rScriptForm.Version);
+                _remoteFiles.Add(rScriptForm.Path, rScriptForm.RemoteFile);
+            }
+            else
+            {
+                dataGridScripts.Rows.Insert(rowSelected, rScriptForm.Path, string.Empty, rScriptForm.Version);
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
@@ -114,7 +145,8 @@ namespace SkylineBatch
             var reportPath = checkBoxImport.Checked ? textReportPath.Text : string.Empty;
             try
             {
-                NewReportInfo = new ReportInfo(textReportName.Text, reportPath, GetScriptsFromUi(), radioRefinedFile.Checked);
+                NewReportInfo = new ReportInfo(textReportName.Text, !checkBoxCultureInvariant.Checked,
+                    reportPath, GetScriptsFromUi(), _remoteFiles, radioRefinedFile.Checked);
                 NewReportInfo.Validate();
             }
             catch (ArgumentException ex)
@@ -133,67 +165,16 @@ namespace SkylineBatch
             {
                 if (row.Cells[1].Value == null)
                     break;
-                scripts.Add(new Tuple<string, string>((string)row.Cells[0].Value, (string)row.Cells[1].Value));
+                scripts.Add(new Tuple<string, string>((string)row.Cells[0].Value, (string)row.Cells[2].Value));
             }
             return scripts;
         }
         
         private void dataGridScripts_SelectionChanged(object sender, EventArgs e)
         {
-            rVersionsDropDown.Hide();
-            if (dataGridScripts.SelectedCells.Count == 0)
-            {
-                btnDelete.Enabled = false;
-                return;
-            }
-
-            btnDelete.Enabled = dataGridScripts.SelectedCells[0].ColumnIndex == 0;
-        }
-
-        private void SelectRVersion(string version)
-        {
-            for (int i = 0; i < rVersionsDropDown.Items.Count; i++)
-            {
-                ((ToolStripMenuItem)rVersionsDropDown.Items[i]).Checked = rVersionsDropDown.Items[i].AccessibilityObject.Name == version;
-            }
-        }
-
-        private void UpdateRVersionDropDown()
-        {
-            rVersionsDropDown.Items.Clear();
-            var sortedRVersions = Settings.Default.RVersions.Keys.ToList();
-            sortedRVersions.Sort();
-            foreach (var version in sortedRVersions)
-                rVersionsDropDown.Items.Add(version);
-        }
-
-        private bool AddRDirectory()
-        {
-            if (!_rDirectorySelector.RequiredDirectoryAdded())
-                return false;
-            UpdateRVersionDropDown();
-            return true;
-        }
-
-        private void dataGridScripts_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex == 1 && e.RowIndex > -1 && !string.IsNullOrEmpty((string)dataGridScripts.SelectedCells[0].Value))
-            {
-                var rectangle = dataGridScripts.GetCellDisplayRectangle(e.ColumnIndex, e.RowIndex, true);
-                var showLocation = new Point(rectangle.X, rectangle.Bottom);
-                SelectRVersion((string)dataGridScripts.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
-                var dropDown = true;
-                if (Settings.Default.RVersions.Count == 0)
-                    dropDown = AddRDirectory();
-                if (dropDown)
-                    rVersionsDropDown.Show(dataGridScripts, showLocation);
-            }
-        }
-
-        private void rVersionsDropDown_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-            SelectRVersion(e.ClickedItem.Name);
-            dataGridScripts.SelectedCells[0].Value = e.ClickedItem.AccessibilityObject.Name;
+            var emptyRowSelected = dataGridScripts.SelectedRows[0].Index == dataGridScripts.Rows.Count - 1;
+            btnDelete.Enabled = dataGridScripts.SelectedRows.Count > 0 && !emptyRowSelected;
+            btnEdit.Enabled = dataGridScripts.SelectedRows.Count > 0 && !emptyRowSelected;
         }
 
         private void checkBoxImport_CheckedChanged(object sender, EventArgs e)
@@ -201,6 +182,24 @@ namespace SkylineBatch
             labelReportPath.Enabled = checkBoxImport.Checked;
             textReportPath.Enabled = checkBoxImport.Checked;
             btnReportPath.Enabled = checkBoxImport.Checked;
+        }
+
+        private void checkBoxCultureInvariant_CheckedChanged(object sender, EventArgs e)
+        {
+            checkBoxCultureInvariant.CheckedChanged -= checkBoxCultureInvariant_CheckedChanged;
+            if (!checkBoxCultureInvariant.Checked)
+            {
+                var continueChecked = DialogResult.Cancel != AlertDlg.ShowOkCancel(this, Program.AppName(),
+                    Resources.ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_A_culture_invariant_report_ensures_a_CSV_file_with_period_decimal_points_and_full_precision_numbers_ + Environment.NewLine + 
+                    Resources.ReportsAddForm_checkBoxCultureSpecific_CheckedChanged_Do_you_want_to_continue_);
+                if (!continueChecked)
+                    checkBoxCultureInvariant.Checked = true;
+            }
+        }
+
+        private void ReportsAddForm_Load(object sender, EventArgs e)
+        {
+            checkBoxCultureInvariant.CheckedChanged += checkBoxCultureInvariant_CheckedChanged;
         }
     }
 }

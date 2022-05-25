@@ -1091,21 +1091,27 @@ PWIZ_API_DECL size_t SpectrumList::findAbbreviated(const string& abbreviatedId, 
     if (empty()) return size();
 
     // "sample=1 period=1 cycle=123 experiment=2" splits to { sample, 1, period, 1, cycle, 123, experiment, 2 }
-    string firstId = spectrumIdentity(0).id;
-    bal::split(actualTokens, firstId, bal::is_any_of(" ="));
-
-    if (actualTokens.size() != abbreviatedTokens.size() * 2)
+    for (size_t s = size(); s-- > 0;) // Some files contain mixed scan types - e.g. Waters where lockmass scans may be non-IMS and others IMS, so we may need to search a bit to find a format match
     {
-        // TODO log this since I assume Skyline devs/uers don't want to see it
-        //warn_once(("[SpectrumList::findAbbreviated] abbreviated id (" + abbreviatedId + ") has different number of terms from spectrum list (" + firstId + ")").c_str());
-        return size();
+        string firstId = spectrumIdentity(s).id;
+        bal::split(actualTokens, firstId, bal::is_any_of(" ="));
+
+        if (actualTokens.size() != abbreviatedTokens.size() * 2)
+        {
+            // TODO log this since I assume Skyline devs/uers don't want to see it
+            //warn_once(("[SpectrumList::findAbbreviated] abbreviated id (" + abbreviatedId + ") has different number of terms from spectrum list (" + firstId + ")").c_str());
+            if (s==0)
+                return size();
+        }
+
+        string fullId(actualTokens[0] + "=" + abbreviatedTokens[0]);
+        for (size_t i = 1; i < abbreviatedTokens.size(); ++i)
+            fullId += " " + actualTokens[2*i] + "=" + abbreviatedTokens[i];
+
+        size_t result = find(fullId);
+        if ((result >= 0 && result < size()) || s == 0)
+            return result;
     }
-
-    string fullId(actualTokens[0] + "=" + abbreviatedTokens[0]);
-    for (size_t i = 1; i < abbreviatedTokens.size(); ++i)
-        fullId += " " + actualTokens[2*i] + "=" + abbreviatedTokens[i];
-
-    return find(fullId);
 }
 
 

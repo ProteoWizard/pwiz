@@ -2,8 +2,8 @@
 # Copyright 2005, 2006 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Implements virtual targets, which correspond to actual files created during a
 # build, but are not yet targets in Jam sense. They are needed, for example,
@@ -174,6 +174,19 @@ class virtual-target
 
 # private: (overridables)
 
+    # Sets/gets the 'root' flag. Target is root if it directly corresponds to
+    # some variant of a main target.
+    #
+    rule root ( set ? )
+    {
+        if $(set)
+        {
+            self.root = true ;
+        }
+        return $(self.root) ;
+    }
+
+
     # Sets up build actions for 'target'. Should call appropriate rules and set
     # target variables.
     #
@@ -294,18 +307,6 @@ class abstract-file-target : virtual-target
     rule action ( )
     {
         return $(self.action) ;
-    }
-
-    # Sets/gets the 'root' flag. Target is root if it directly corresponds to
-    # some variant of a main target.
-    #
-    rule root ( set ? )
-    {
-        if $(set)
-        {
-            self.root = true ;
-        }
-        return $(self.root) ;
     }
 
     # Gets or sets the subvariant which created this target. Subvariant is set
@@ -453,7 +454,7 @@ class abstract-file-target : virtual-target
         {
             ps = [ property-set.empty ] ;
         }
-        
+
         # Add this target object for use in getting additional information
         # when tagging.
         ps = [ property-set.create [ $(ps).raw ] <target>$(__name__) ] ;

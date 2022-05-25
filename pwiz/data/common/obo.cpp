@@ -82,7 +82,7 @@ string unescape_copy(const string& str)
 
 istream& getcleanline(istream& is, string& buffer)
 {
-    if (getline(is, buffer))
+    if (getlinePortable(is, buffer))
         bal::trim(buffer);
 
     return is;

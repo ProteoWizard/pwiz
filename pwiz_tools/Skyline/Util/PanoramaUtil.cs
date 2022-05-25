@@ -38,6 +38,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
@@ -312,7 +313,7 @@ namespace pwiz.Skyline.Util
 
         public static IPanoramaClient CreatePanoramaClient(Uri serverUri)
         { return new WebPanoramaClient(serverUri);}
-}
+    }
 
     [XmlRoot("server")]
     public sealed class Server : Immutable, IKeyContainer<string>, IXmlSerializable
@@ -731,7 +732,9 @@ namespace pwiz.Skyline.Util
         Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor);
         JObject SupportedVersionsJson(Server server);
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
-        ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document);
+        ShareType DecideShareTypeVersion(FolderInformation folderInfo, SrmDocument document, ShareType shareType);
+        ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk,
+            Control parent, ref bool cancelled);
 
         Uri UploadedDocumentUri { get; }
     }
@@ -773,13 +776,9 @@ namespace pwiz.Skyline.Util
             return CacheFormatVersion.CURRENT;
         }
 
-        public ShareType DecideShareType(FolderInformation folderInfo, SrmDocument document)
+        public ShareType DecideShareTypeVersion(FolderInformation folderInfo, SrmDocument document, ShareType shareType)
         {
-            ShareType shareType = ShareType.DEFAULT;
-            
-            var settings = document.Settings;
-            Assume.IsTrue(document.IsLoaded);
-            var cacheVersion = settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+            var cacheVersion = GetDocumentCacheVersion(document);
 
             if (!cacheVersion.HasValue)
             {
@@ -787,18 +786,72 @@ namespace pwiz.Skyline.Util
                 return shareType;
             }
 
-            CacheFormatVersion supportedVersion = GetSupportedSkydVersion(folderInfo);
+            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(folderInfo, cacheVersion);
+            CacheFormatVersion supportedVersion = supportedSkylineVersion.CacheFormatVersion;
             if (supportedVersion >= cacheVersion.Value)
             {
                 return shareType;
             }
-            var skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= supportedVersion);
-            if (skylineVersion == null)
+            
+            return shareType.ChangeSkylineVersion(supportedSkylineVersion);
+        }
+
+
+        private SkylineVersion GetSupportedVersionForCacheFormat(FolderInformation folderInfo, CacheFormatVersion? cacheVersion)
+        {
+            var skydVersion = GetSupportedSkydVersion(folderInfo);
+            SkylineVersion skylineVersion;
+            if (!cacheVersion.HasValue || skydVersion >= cacheVersion)
             {
-                throw new PanoramaServerException(string.Format(
-                    Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int) cacheVersion.Value));
+                // Either the document does not have any chromatograms or the server supports the document's cache version. 
+                // Since the cache version does not change when the document is shared, it can be shared as the latest Skyline
+                // version even if the cache version associated with that version is higher than what the server supports. 
+                // Example scenario:
+                // Document cache version is 14; max version supported by server is 14; current Skyline version is associated
+                // with cache version 15. In this case the document can be shared as the current Skyline version even though
+                // the cache version associated with the current version is higher than what the server supports. When the document
+                // is shared the cache format of the document will remain at 14. Only the document format (.sky XML) will change.
+                skylineVersion = SkylineVersion.SupportedForSharing().First();
             }
-            return shareType.ChangeSkylineVersion(skylineVersion);
+            else
+            {
+                // The server does not support the document's cache version.
+                // Find the highest Skyline version consistent with the cache version supported by the server.
+                skylineVersion = SkylineVersion.SupportedForSharing().FirstOrDefault(ver => ver.CacheFormatVersion <= skydVersion);
+                if (skylineVersion == null)
+                {
+                    throw new PanoramaServerException(string.Format(
+                        Resources.PublishDocumentDlg_ServerSupportsSkydVersion_, (int)cacheVersion.Value));
+                }
+            }
+
+            return skylineVersion;
+        }
+
+        private static CacheFormatVersion? GetDocumentCacheVersion(SrmDocument document)
+        {
+            var settings = document.Settings;
+            Assume.IsTrue(document.IsLoaded);
+            return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
+        }
+
+        public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
+        {
+            var cacheVersion = GetDocumentCacheVersion(document);
+            var supportedSkylineVersion = GetSupportedVersionForCacheFormat(folderInfo, cacheVersion);
+            
+            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, supportedSkylineVersion))
+            {
+                if (dlgType.ShowDialog(parent) == DialogResult.Cancel)
+                {
+                    cancelled = true;
+                    return null;
+                }
+                else
+                {
+                    return dlgType.ShareType;
+                }
+            }
         }
 
         public void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath)

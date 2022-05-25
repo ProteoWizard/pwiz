@@ -18,7 +18,9 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData.Results
@@ -40,6 +42,23 @@ namespace pwiz.SkylineTestData.Results
             Assert.IsFalse(MeasuredResults.IsBaseNameMatch("BaseName123", "BaseName123_wiff"));
             Assert.IsFalse(MeasuredResults.IsBaseNameMatch("BaseName123", "BaseName1234"));
             Assert.IsFalse(MeasuredResults.IsBaseNameMatch("BaseName1234", "BaseName123"));
+        }
+
+        [TestMethod]
+        public void TestChromInfoListConstructor()
+        {
+            var chromInfoList = new ChromInfoList<TransitionChromInfo>(null);
+            Assert.AreEqual(0, chromInfoList.Count);
+            chromInfoList = new ChromInfoList<TransitionChromInfo>(new TransitionChromInfo[] {null, null});
+            Assert.AreEqual(0, chromInfoList.Count);
+            var transitionChromInfo = new TransitionChromInfo(new ChromFileInfoId(), 0, null, 1, 0, 2, null, 1, 0, 1, 1,
+                false, false, 0, PeakIdentification.FALSE, 0, 0, Annotations.EMPTY, UserSet.FALSE, false);
+            chromInfoList = new ChromInfoList<TransitionChromInfo>(new[] {transitionChromInfo});
+            Assert.AreEqual(1, chromInfoList.Count);
+            chromInfoList = new ChromInfoList<TransitionChromInfo>(new[] {transitionChromInfo, null});
+            Assert.AreEqual(1, chromInfoList.Count);
+            chromInfoList = new ChromInfoList<TransitionChromInfo>(new[] { transitionChromInfo, null, transitionChromInfo});
+            Assert.AreEqual(2, chromInfoList.Count);
         }
     }
 }

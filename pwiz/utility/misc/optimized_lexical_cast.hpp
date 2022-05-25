@@ -27,7 +27,7 @@
 #include <cstdlib>
 #include <cerrno>
 #include <boost/lexical_cast.hpp>
-#include <boost/logic/tribool.hpp>
+#include <boost/logic/tribool_io.hpp>
 
 
 // HACK: Darwin strtod isn't threadsafe so strtod_l must be used

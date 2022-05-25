@@ -88,6 +88,11 @@ namespace SharedBatch
         {
             writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
         }
+        
+        public static void WriteAttribute(this XmlWriter writer, Enum name, decimal value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
 
         public static void WriteAttribute(this XmlWriter writer, Enum name, float value)
         {
@@ -462,6 +467,37 @@ namespace SharedBatch
             if (!int.TryParse(match.Groups[2].Value, out column))
                 return false;
             return true;
+        }
+
+        public static bool ReadNextElement(XmlReader reader, string name)
+        {
+            if (reader.NodeType == XmlNodeType.Element && reader.Name.Equals(name))
+                return true;
+            do
+            {
+                if (!reader.Read())
+                    return false;
+            } while (reader.NodeType != XmlNodeType.Element);
+            return reader.Name.Equals(name);
+        }
+
+        public static bool ReadUntilElement(XmlReader reader)
+        {
+            do
+            {
+                if (!reader.Read()) return false;
+            } while (reader.NodeType != XmlNodeType.Element);
+            return true;
+        }
+
+        public static bool IsEndElement(this XmlReader reader, string name)
+        {
+            return reader.NodeType == XmlNodeType.EndElement && reader.Name.Equals(name);
+        }
+
+        public static bool IsElement(this XmlReader reader, string name)
+        {
+            return reader.NodeType == XmlNodeType.Element && reader.Name.Equals(name);
         }
     }
 }

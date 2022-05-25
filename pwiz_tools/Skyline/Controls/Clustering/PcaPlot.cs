@@ -568,7 +568,7 @@ namespace pwiz.Skyline.Controls.Clustering
 
             public PcaChoice ConstrainComponents(int numberOfDimensions)
             {
-                if (XComponent < numberOfDimensions || YComponent < numberOfDimensions)
+                if (XComponent < numberOfDimensions && YComponent < numberOfDimensions)
                 {
                     return this;
                 }

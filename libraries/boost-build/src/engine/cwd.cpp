@@ -2,14 +2,15 @@
  * Copyright 2002. Vladimir Prus
  * Copyright 2005. Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "cwd.h"
 
 #include "jam.h"
 #include "mem.h"
+#include "output.h"
 #include "pathsys.h"
 
 #include <assert.h>
@@ -33,6 +34,10 @@
 
 
 static OBJECT * cwd_;
+namespace
+{
+    std::string cwd_s;
+}
 
 
 void cwd_init( void )
@@ -59,6 +64,7 @@ void cwd_init( void )
             OBJECT * const cwd = object_new( cwd_buffer );
             cwd_ = path_as_key( cwd );
             object_free( cwd );
+            cwd_s = cwd_buffer;
         }
         buffer_size *= 2;
         BJAM_FREE_RAW( buffer );
@@ -67,7 +73,7 @@ void cwd_init( void )
 
     if ( !cwd_ )
     {
-        perror( "can not get current working directory" );
+        errno_puts( "can not get current working directory" );
         exit( EXITBAD );
     }
 }
@@ -85,4 +91,10 @@ void cwd_done( void )
     assert( cwd_ );
     object_free( cwd_ );
     cwd_ = NULL;
+}
+
+
+const std::string & b2::cwd_str()
+{
+    return cwd_s;
 }

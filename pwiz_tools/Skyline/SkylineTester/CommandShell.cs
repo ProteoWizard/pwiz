@@ -33,6 +33,7 @@ namespace SkylineTester
     {
         public const int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
         public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds 
+        public const int RETRY_WAIT_SECONDS = 60; // Wait this long between retries
         private enum EXIT_TYPE {error_stop, error_restart, success};
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
@@ -70,6 +71,16 @@ namespace SkylineTester
         private DateTime _lastOutputTime;
 
         #region Add/run commands
+
+        // Insert a pause before next executed command
+        public void InsertPause()
+        {
+            var pauseCommand = "timeout /T " + RETRY_WAIT_SECONDS + " /NOBREAK";
+            if (_commands.Count == 0 || _commands[0] != pauseCommand)
+            {
+                _commands.Insert(0, pauseCommand);
+            }
+        }
 
         /// <summary>
         /// Add a command and arguments to be executed by the command shell by the Run
@@ -220,7 +231,7 @@ namespace SkylineTester
                             catch (Exception e)
                             {
                                 Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
-                                CommandsDone(EXIT_TYPE.error_stop);
+                                CommandsDone(IsUnattended ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop);
                                 return;
                             }
                         }
@@ -279,15 +290,16 @@ namespace SkylineTester
             if (exitType == EXIT_TYPE.error_restart)
             {
                 // restart a maximum of 10 times and within 30 minutes of starting
-                if (RestartCount < 10 && DateTime.Now.Subtract(RunStartTime) < new TimeSpan(0, 0, 30, 0, 0)) 
+                var MaxRestartCount = 10;
+                if (RestartCount < MaxRestartCount && DateTime.UtcNow.Subtract(RunStartTime) < new TimeSpan(0, 0, 30, 0, 0)) 
                 {
                     restart = true;
                     RestartCount++;
-                    Log("# Restarting (take "+RestartCount+") " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+                    Log("# Will retry in " + RETRY_WAIT_SECONDS + " seconds (this will be retry #" + RestartCount + " of " + MaxRestartCount + ") " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
                 }
                 else
                 {
-                    Log("# Restart count exceeded" + Environment.NewLine + Environment.NewLine);
+                    Log("# Retry count exceeded" + Environment.NewLine + Environment.NewLine);
                     exitType = EXIT_TYPE.error_stop;
                 }
             }
@@ -356,6 +368,11 @@ namespace SkylineTester
             _process.StartInfo.Arguments = arguments;
             _process.StartInfo.StandardOutputEncoding = Encoding.UTF8; // So we can read Japanese from TestRunner's console
             _process.StartInfo.StandardErrorEncoding = Encoding.UTF8; // So we can read Japanese from TestRunner's console
+
+            // Configure git to fail if its https connection stalls out, so our retry logic can kick in
+            _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_LIMIT", @"1000"); // Fail if transfer rate falls below 1Kbps,
+            _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_TIME", @"300");   // and stays that way for 5 minutes
+
             _process.OutputDataReceived += HandleOutput;
             _process.ErrorDataReceived += HandleOutput;
             _process.Exited += ProcessExit;

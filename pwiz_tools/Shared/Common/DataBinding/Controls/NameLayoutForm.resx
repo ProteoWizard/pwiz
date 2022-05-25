@@ -232,13 +232,13 @@
     <value>15, 55</value>
   </data>
   <data name="cbxMakeDefault.Size" type="System.Drawing.Size, System.Drawing">
-    <value>215, 17</value>
+    <value>220, 17</value>
   </data>
   <data name="cbxMakeDefault.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="cbxMakeDefault.Text" xml:space="preserve">
-    <value>Make this the default layout for this view</value>
+    <value>Make this the default layout for this report</value>
   </data>
   <data name="&gt;&gt;cbxMakeDefault.Name" xml:space="preserve">
     <value>cbxMakeDefault</value>

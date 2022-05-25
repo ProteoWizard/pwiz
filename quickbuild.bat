@@ -10,6 +10,9 @@ set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 
+REM # Disable MSVC telemetry
+set VSCMD_SKIP_SENDTELEMETRY=1
+
 set PWIZ_BJAM=%BOOST_BUILD_PATH%\src\engine\b2.exe
 
 REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%

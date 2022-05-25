@@ -124,8 +124,17 @@
     <value>160, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="labelPrecursor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 22</value>
+  </data>
+  <data name="labelPrecursor.Text" xml:space="preserve">
+    <value>Precursor:</value>
+  </data>
+  <data name="comboPrecursor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 25</value>
+  </data>
   <data name="labelSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61, 22</value>
+    <value>61, 15</value>
   </data>
   <data name="labelSpectrum.Text" xml:space="preserve">
     <value>Spectrum:</value>
@@ -138,7 +147,7 @@
     <value>200, 25</value>
   </data>
   <data name="mirrorLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>43, 22</value>
+    <value>43, 15</value>
   </data>
   <data name="mirrorLabel.Text" xml:space="preserve">
     <value>Mirror:</value>
@@ -150,7 +159,7 @@
     <value>200, 25</value>
   </data>
   <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 22</value>
+    <value>24, 15</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
     <value>CE:</value>
@@ -253,7 +262,19 @@
     <value>ModeUIExtender</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.462, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursor.Name" xml:space="preserve">
+    <value>labelPrecursor</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursor.Name" xml:space="preserve">
+    <value>comboPrecursor</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSpectrum.Name" xml:space="preserve">
     <value>labelSpectrum</value>
@@ -295,6 +316,6 @@
     <value>GraphSpectrum</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=19.1.1.311, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=21.2.1.462, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

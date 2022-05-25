@@ -76,17 +76,18 @@ namespace pwiz.SkylineTestTutorial
         {
             // Creating a MS/MS Spectral Library, p. 1
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg);
+            RunUI(() =>
             {
                 buildLibraryDlg.LibraryPath = TestFilesDirs[0].GetTestPath(@"MethodEdit\Library\"); // Not L10N
                 buildLibraryDlg.LibraryName = YEAST_ATLAS;
-                buildLibraryDlg.LibraryCutoff = 0.95;
                 buildLibraryDlg.OkWizardPage();
-                IList<string> inputPaths = new List<string>
-                 {
-                     TestFilesDirs[0].GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") // Not L10N
-                 };
-                buildLibraryDlg.AddInputFiles(inputPaths);
+                buildLibraryDlg.AddInputFiles(new[] { TestFilesDirs[0].GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") }); // Not L10N
+            });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
+            RunUI(() =>
+            {
+                buildLibraryDlg.Grid.SetScoreThreshold(0.95);
                 buildLibraryDlg.OkWizardPage();
             });
 
@@ -250,10 +251,10 @@ namespace pwiz.SkylineTestTutorial
                     () =>
                         SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                             SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
-                // The tutorial tells the reader they can see the library name in the spectrum graph title
-                VerifyPrecursorLibrary(12, YEAST_GPM);
-                VerifyPrecursorLibrary(13, YEAST_ATLAS);
             }
+            // The tutorial tells the reader they can see the library name in the spectrum graph title
+            VerifyPrecursorLibrary(12, YEAST_GPM, 125);
+            VerifyPrecursorLibrary(13, YEAST_ATLAS, 5.23156E+07);
 
             using (new CheckDocumentState(35, 47, 47, 223, 2, true))    // Wait for change loaded, and expect 2 document revisions.
             {
@@ -386,7 +387,7 @@ namespace pwiz.SkylineTestTutorial
             // Peptide Sequence Auto-Completion, p. 21
             TestAutoComplete("IQGP", 0); // Not L10N
             var peptides = new List<PeptideDocNode>(Program.ActiveDocument.Peptides);
-            Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [769, 784]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
+            Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [770, 785]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
             PauseForScreenShot("(fig. 1) - For screenshot, click at the bottom of the document tree", 21); // Not L10N
 
             // Pop-up Pick-Lists, p. 21
@@ -489,13 +490,17 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        private void VerifyPrecursorLibrary(int indexPrecursor, string libraryName)
+        private void VerifyPrecursorLibrary(int indexPrecursor, string libraryName, double maxIntensity)
         {
-            RunUI(() => SkylineWindow.SelectPath(
-                SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, indexPrecursor)));
+            SelectNode(SrmDocument.Level.TransitionGroups, indexPrecursor);
             WaitForGraphs();
-            RunUI(() => Assert.IsTrue(SkylineWindow.GraphSpectrum.GraphTitle.StartsWith(libraryName),
-                string.Format("Graph title '{0}' does not start with {1}", SkylineWindow.GraphSpectrum.GraphTitle, libraryName)));
+            RunUI(() =>
+            {
+                var graphSpec = SkylineWindow.GraphSpectrum;
+                Assert.IsTrue(graphSpec.GraphTitle.StartsWith(libraryName),
+                    string.Format("Graph title '{0}' does not start with {1}", graphSpec.GraphTitle, libraryName));
+                Assert.AreEqual(maxIntensity, graphSpec.IntensityScale.Max);
+            });
         }
 
         private void ShowNodeTip(string nodeText)

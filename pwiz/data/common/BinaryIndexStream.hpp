@@ -40,6 +40,7 @@ class PWIZ_API_DECL BinaryIndexStream : public Index
     public:
 
     BinaryIndexStream(boost::shared_ptr<std::iostream> indexStreamPtr);
+    ~BinaryIndexStream() {}
 
     virtual void create(std::vector<Entry>& entries);
     virtual size_t size() const;

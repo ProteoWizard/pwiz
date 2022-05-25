@@ -84,9 +84,8 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
 
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -164,7 +163,7 @@ namespace pwiz.SkylineTestTutorial
 
                     transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.qit;
-                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                 });
                 PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Peptide Settings - Full-Scan tab low res", 6);
 
@@ -193,7 +192,7 @@ namespace pwiz.SkylineTestTutorial
                 var tranSettingsFullScan = SkylineWindow.Document.Settings.TransitionSettings;
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
-                Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsFullScan.FullScan.AcquisitionMethod);
+                Assert.AreEqual(FullScanAcquisitionMethod.PRM, tranSettingsFullScan.FullScan.AcquisitionMethod);
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] {IonType.y, IonType.b, IonType.precursor},
                     tranSettingsFullScan.Filter.PeptideIonTypes));
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
@@ -340,6 +339,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
             }
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
+
             //p. 15 Import Full-Scan Data
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -364,12 +365,16 @@ namespace pwiz.SkylineTestTutorial
             var doc = SkylineWindow.Document;
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.99;
+            });
+            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.SetScoreThreshold(0.01);
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
             
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());
@@ -415,9 +420,12 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ImportResultsNameDlg>("Import Results form removing prefix and suffix", 18);
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
-            // Modifications are already set up, so that page should get skipped.
+            // Skip Match Modifications page.
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             // PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 19);
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.TransitionSettingsPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
@@ -432,6 +440,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 19);
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.Ms2FullScanPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.
@@ -470,7 +479,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Select the first precursor. 
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+                FindNode(AsSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [66, 75]");
             else
                 FindNode(SkylineWindow.Document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             // Ensure Graphs look like p20. (checked)
@@ -542,7 +551,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Select precursor
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [34, 41]");  // May be localized " (missed 1)"
+                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [35, 42]");  // May be localized " (missed 1)"
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1045");
             WaitForGraphs();
@@ -595,8 +604,8 @@ namespace pwiz.SkylineTestTutorial
             // Ensure graph looks like p27.
             if (!AsSmallMoleculeMasses)
             {
-                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [80, 90]");
-                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [80, 90]"); // Find again - takes you to Phosphorylated version
+                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [81, 91]");
+                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [81, 91]"); // Find again - takes you to Phosphorylated version
             }
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1330");
@@ -609,7 +618,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "HLVDEPQNLIK" : "K.HLVDEPQNLIK.Q [401, 411]");
+                FindNode(AsSmallMolecules ? "HLVDEPQNLIK" : "K.HLVDEPQNLIK.Q [402, 412]");
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1304");
             WaitForGraphs();
@@ -720,7 +729,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.centroided;
                     transitionSettingsUI.PrecursorRes = 20;
                     transitionSettingsUI.Peaks = 3;
-                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                    transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                     transitionSettingsUI.ProductMassAnalyzer = FullScanMassAnalyzerType.centroided;
                     transitionSettingsUI.ProductRes = 20;
                 });
@@ -745,7 +754,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsHighRes.FullScan.PrecursorIsotopes);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, tranSettingsHighRes.FullScan.PrecursorMassAnalyzer);
             Assert.AreEqual(20, tranSettingsHighRes.FullScan.PrecursorRes);
-            Assert.AreEqual(FullScanAcquisitionMethod.Targeted, tranSettingsHighRes.FullScan.AcquisitionMethod);
+            Assert.AreEqual(FullScanAcquisitionMethod.PRM, tranSettingsHighRes.FullScan.AcquisitionMethod);
             Assert.AreEqual(20, tranSettingsHighRes.FullScan.ProductRes);
             Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.y, IonType.b, IonType.precursor },
                                                tranSettingsHighRes.Filter.PeptideIonTypes));
@@ -785,7 +794,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentChangeLoaded(docHighRes, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
-                FindNode(asSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [65, 74]");
+                FindNode(asSmallMolecules ? "LVNELTEFAK" : "K.LVNELTEFAK.T [66, 75]");
             else
                 FindNode(document.MoleculeTransitionGroups.First().CustomMolecule.DisplayName);
             RunUI(() =>

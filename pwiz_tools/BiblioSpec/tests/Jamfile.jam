@@ -230,6 +230,7 @@ blib-test-build smill : -o : output/smill.blib : smill.check : $(TEST_INPUTS_PAT
 blib-test-build smill_ims : -o : output/smill_ims.blib : smill_ims.check smill_ims.skip-lines : $(TEST_INPUTS_PATH)/40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml ;
 blib-test-build bad-index : -o : output/bad-index.blib : bad-index.check : $(TEST_INPUTS_PATH)/interact-prob-three-spec.pep.xml ;
 blib-test-build comet : -o : output/comet.blib : comet.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/comet.demo1.target.pep.xml ;
+blib-test-build comet-prg2012-wiff : -o -c@0 : output/comet-prg2012-wiff.blib : comet-prg2012-wiff.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/201208-378803-cm.pep.xml : <vendor-api-support>off:<build>no ;
 blib-test-build msfragger-tims : -o : output/msfragger-tims.blib : msfragger-tims.check  : "$(TEST_INPUTS_PATH)/Hela$(.percent)20QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" ;
 blib-test-build msfragger-thermo : -o : output/msfragger-thermo.blib : msfragger-thermo.check  : $(TEST_INPUTS_PATH)/BSA_min_21.pepXML ;
 blib-test-build peptideprophet-msfragger-thermo-mzml : -o : output/peptideprophet-msfragger-thermo-mzml.blib : peptideprophet-msfragger-thermo-mzml.check  : $(TEST_INPUTS_PATH)/peptideprophet-msfragger-thermo-mzml.pep.xml ;
@@ -249,6 +250,8 @@ blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check 
 blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
 blib-test-build md_special_filtered-pdResult : --unicode -o : output/md_special_filtered-pdResult.blib : md_special_filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/md_special_filtered.pdResult ;
+blib-test-build example-pdResult-confidence3 : -o -c@0.99 : output/example-pdResult-confidence3.blib : example-pdResult-confidence3.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
+blib-test-build example-pdResult-numeric : -o -c@0.96 : output/example-pdResult-numeric.blib : example-pdResult-numeric.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/example.pdResult ;
 blib-test-build pilot : --unicode -o : output/pilot.blib : pilot.check : $(TEST_INPUTS_PATH)/MB1_98_03.group.xml ;
 blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.check : $(TEST_INPUTS_PATH)/ProtPilotTest.mzid ;
 
@@ -256,7 +259,7 @@ blib-test-build pilot-mzid : --unicode -o : output/pilot-mzid.blib : pilot-mzid.
 blib-test-build maxquant : --unicode -o -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant.blib : maxquant.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test MaxQuant error when external file not found
-blib-test-build maxquant-spectrum-file-not-found : -o -e@~run_with_the_-E_flag~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
+blib-test-build maxquant-spectrum-file-not-found : -o -p@$(TEST_DATA_PATH)/mqpar1.xml -e@~Run_with_the_-E_flag~ : output/maxquant-spectrum-file-not-found.blib : maxquant-spectrum-file-not-found.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/test.msms.txt ;
 
 # Test reading from stdin (filenames and target sequences)
 blib-test-build maxquant-targeted : -o -s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt -E -p@$(TEST_DATA_PATH)/mqpar1.xml : output/maxquant-targeted.blib : maxquant-targeted.check zbuild.skip-lines : : <dependency>maxquant ;
@@ -303,6 +306,7 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 
 # Test DiaNN specLib format
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
+blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
 
 # Test waters csv format
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;
@@ -394,10 +398,11 @@ blib-test-to-ms2 lms2 : : output/demo.lms2 : demo.lms2 lms2-skip-lines : output/
 
 # Test BlibSearch
 
-blib-test-search search-demo : --unicode --preserve-order : $(TEST_INPUTS_PATH)/demo.report : demo.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
-blib-test-search search-decoy : --unicode --preserve-order --decoys-per-target@1 : $(TEST_INPUTS_PATH)/demo.decoy.report : demo.decoy.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 <dependency>search-demo ;
-blib-test-search search-mzsorted : --unicode : $(TEST_INPUTS_PATH)/mzsorted.report : mzsorted.report mzsorted.skip-lines : $(TEST_INPUTS_PATH)/mzsorted.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
-blib-test-search search-binning : --unicode --bin-size@1.1 --bin-offset@0.2 : $(TEST_INPUTS_PATH)/binning.report : binning.report demo.skip-lines : $(TEST_INPUTS_PATH)/binning.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
+blib-test-search search-demo : --unicode --preserve-order : $(TEST_INPUTS_PATH)/search-demo.report : demo.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
+blib-test-search search-demo-negative : --unicode --preserve-order : $(TEST_INPUTS_PATH)/search-demo-negative.report : demo-negative.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo-negative.mzML $(TEST_INPUTS_PATH)/sqt-ms2-negative.blib ;
+blib-test-search search-decoy : --unicode --preserve-order --decoys-per-target@1 : $(TEST_INPUTS_PATH)/search-demo.decoy.report : demo.decoy.report demo.skip-lines : $(TEST_INPUTS_PATH)/demo.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 <dependency>search-demo ;
+blib-test-search search-mzsorted : --unicode : $(TEST_INPUTS_PATH)/search-mzsorted.report : mzsorted.report mzsorted.skip-lines : $(TEST_INPUTS_PATH)/mzsorted.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
+blib-test-search search-binning : --unicode --bin-size@1.1 --bin-offset@0.2 : $(TEST_INPUTS_PATH)/search-binning.report : binning.report demo.skip-lines : $(TEST_INPUTS_PATH)/binning.ms2 output/sqt-ms2.blib : <dependency>sqt-ms2 ;
 
 alias all-build : $(build-tests) ;
 alias all-filter : $(filter-tests) ;

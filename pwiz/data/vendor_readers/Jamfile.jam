@@ -36,6 +36,7 @@ rule vendor-reader-libraries ( properties * )
     libraries += <library>$(vendor_reader_path)/ABI/T2D//pwiz_reader_abi_t2d ;
     libraries += <library>$(vendor_reader_path)/Agilent//pwiz_reader_agilent ;
     libraries += <library>$(vendor_reader_path)/Bruker//pwiz_reader_bruker ;
+# Waiting for CCS<->DT support in .mbi reader #   libraries += <library>$(vendor_reader_path)/Mobilion//pwiz_reader_mobilion ; 
     libraries += <library>$(vendor_reader_path)/Shimadzu//pwiz_reader_shimadzu ;
     libraries += <library>$(vendor_reader_path)/Thermo//pwiz_reader_thermo ;
     libraries += <library>$(vendor_reader_path)/UIMF//pwiz_reader_uimf ;
@@ -58,6 +59,7 @@ lib pwiz_data_vendor_readers
 build-project-if-exists ABI ;
 build-project-if-exists Agilent ;
 build-project-if-exists Bruker ;
+# wait for MBI CCS<->DT conversion capability # build-project-if-exists Mobilion ;
 build-project-if-exists Shimadzu ;
 build-project-if-exists Thermo ;
 build-project-if-exists UIMF ;

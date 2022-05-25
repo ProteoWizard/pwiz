@@ -21,8 +21,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -35,12 +37,10 @@ namespace AutoQC
     {
         private BackgroundWorker _worker;
 
-        private int _totalImportCount;
-
         private AutoQCFileSystemWatcher _fileWatcher;
 
         private readonly IMainUiControl _uiControl;
-        private Logger _logger;
+        private readonly Logger _logger;
         private ProcessRunner _processRunner;
 
         public AutoQcConfig Config { get; }
@@ -56,6 +56,11 @@ namespace AutoQC
         private RunnerStatus _runnerStatus;
         // This flag is set if a document failed to upload to Panorama for any reason.
         private bool _panoramaUploadError;
+        private DateTime _panoramaErrorOccurred = DateTime.MinValue;
+        private DateTime _lastUploadAt = DateTime.MinValue;
+
+        public DateTime LastAcquiredFileDate;
+        public DateTime LastArchivalDate; 
 
         public ConfigRunner(AutoQcConfig config, Logger logger, IMainUiControl uiControl = null)
         {
@@ -96,7 +101,7 @@ namespace AutoQC
                 return Color.Orange;
             if (IsError())
                 return Color.Red;
-            if (IsDisconnected())
+            if (IsPending()) // Starting / Stopping / Validating
                 return Color.DarkOrange;
             return Color.Black;
         }
@@ -121,16 +126,9 @@ namespace AutoQC
             return _logger;
         }
 
-        private string GetConfigDir()
-        {
-            var skylineFileDir = Path.GetDirectoryName(Config.MainSettings.SkylineFilePath);
-            if (skylineFileDir == null) throw new Exception("Cannot have a null Skyline file directory.");
-            return Path.Combine(skylineFileDir, GetSafeName(Config.Name));
-        }
-
         private void CreateConfigDir()
         {
-            var configDir = GetConfigDir();
+            var configDir = Config.GetConfigDir();
             if (!Directory.Exists(configDir))
             {
                 try
@@ -139,7 +137,7 @@ namespace AutoQC
                 }
                 catch (Exception e)
                 {
-                    var sb = new StringBuilder(string.Format("Configuration directory \"{0}\" could not be created for configuration \"{1}\""
+                    var sb = new StringBuilder(string.Format(Resources.ConfigRunner_CreateConfigDir_Configuration_directory___0___could_not_be_created_for_configuration___1___
                         , configDir, GetConfigName()));
                     sb.AppendLine();
                     sb.AppendLine(e.Message);
@@ -148,35 +146,27 @@ namespace AutoQC
             }
         }
 
-        private static string GetSafeName(string name)
-        {
-            var invalidChars = new List<char>();
-            invalidChars.AddRange(Path.GetInvalidFileNameChars());
-            invalidChars.AddRange(Path.GetInvalidPathChars());
-            var safeName = string.Join("_", name.Split(invalidChars.ToArray()));
-            return safeName; // .TrimStart('.').TrimEnd('.');
-        }
-
         public string GetLogDirectory()
         {
-            return Path.GetDirectoryName(_logger.GetFile());
+            return Path.GetDirectoryName(_logger.LogFile);
         }
 
         public void Start()
         {
             _panoramaUploadError = false;
 
-            try
-            {
-                CreateConfigDir();
-            }
-            catch (Exception)
-            {
-                ChangeStatus(RunnerStatus.Error);
-                throw;
-            }
+            CreateConfigDir();
+            _logger.Init(); // Create the log file after the config directory has been created.
             
             RunBackgroundWorker(RunConfiguration, ProcessFilesCompleted);
+        }
+
+        private void LogStartMessage()
+        {
+            var msg = new StringBuilder("Starting configuration...").AppendLine();
+            msg.AppendLine(string.Format("Version: {0}", Program.Version()));
+            msg.Append(Config).AppendLine();
+            _logger.Log(msg.ToString());
         }
 
         public void ChangeStatus(RunnerStatus runnerStatus)
@@ -184,11 +174,12 @@ namespace AutoQC
             lock (_lock)
             {
                 _runnerStatus = runnerStatus;
-                if (_uiControl != null)
+                if (runnerStatus == RunnerStatus.Stopped)
                 {
-                    _uiControl.UpdateUiConfigurations();
+                    ((MainForm)_uiControl)?.DisableConfig(Config);
                 }
             }
+            _uiControl?.UpdateUiConfigurations();
         }
 
         private void RunBackgroundWorker(DoWorkEventHandler doWork, RunWorkerCompletedEventHandler doOnComplete)
@@ -218,10 +209,18 @@ namespace AutoQC
             try
             {
                 ChangeStatus(RunnerStatus.Starting);
-                
-                Config.MainSettings.ValidateSettings();
-
-                Config.PanoramaSettings.ValidateSettings();
+                Config.Validate(true);
+            }
+            catch (ArgumentException x)
+            {
+                ((MainForm)_uiControl)?.SetConfigInvalid(Config); // TODO: Another way to add the configs to the invalid config list?
+                SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_Error_validating_configuration___0___, Config.Name), x, false);
+                return;
+            }
+            
+            try
+            {
+                LogStartMessage();
 
                 _fileWatcher = new AutoQCFileSystemWatcher(_logger, this);
 
@@ -249,7 +248,7 @@ namespace AutoQC
 
                 _fileWatcher.Init(Config);
 
-                Log("Starting configuration...");
+                Log("Running configuration...");
                 ChangeStatus(RunnerStatus.Running);
 
                 if (ProcessExistingFiles(e))
@@ -258,36 +257,27 @@ namespace AutoQC
                 }
                 e.Result = COMPLETED;
             }
-
-            catch (ArgumentException x)
-            {
-                var err = new StringBuilder(string.Format("There was an error validating configuration \"{0}\"",
-                    Config.Name));
-                
-                LogException(x, err.ToString());
-                ChangeStatus(RunnerStatus.Error);
-
-                err.AppendLine().AppendLine().Append(x.Message);
-                if (_uiControl != null)
-                    _uiControl.DisplayError("Configuration Validation Error:" + Environment.NewLine + err);
-            }
             catch (FileWatcherException x)
             {
-                var err = new StringBuilder(string.Format("There was an error looking for files for configuration \"{0}\".",
-                    Config.Name));
-
-                LogException(x, err.ToString());
-                ChangeStatus(RunnerStatus.Error);
-
-                err.AppendLine().AppendLine().Append(x.Message);
-                if (_uiControl != null)
-                    _uiControl.DisplayError("File Watcher Error" + Environment.NewLine + err);   
+                SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configuration___0___, Config.Name), x);
             }
             catch (Exception x)
             {
-                LogException(x, "There was an error running configuration \"{0}\"",
-                    Config.Name);
-                ChangeStatus(RunnerStatus.Error);
+                SetErrorStateDisplayAndLogException(string.Format(Resources.ConfigRunner_RunConfiguration_There_was_an_error_running_configuration___0___, Config.Name), x);
+            }
+        }
+
+        private void SetErrorStateDisplayAndLogException(string message, Exception x, bool showException = true)
+        {
+            LogException(x, message);
+            ChangeStatus(RunnerStatus.Error);
+            if (showException)
+            {
+                _uiControl?.DisplayErrorWithException(message, x);
+            }
+            else
+            {
+                _uiControl?.DisplayError(TextUtil.LineSeparate(message, x.Message));
             }
         }
 
@@ -307,14 +297,8 @@ namespace AutoQC
                
                 if (filePath != null)
                 {
-                    var importContext = new ImportContext(filePath) { TotalImportCount = _totalImportCount };
+                    var importContext = new ImportContext(filePath);
                     var success = ImportFile(e, importContext);
-                    
-                    if (_panoramaUploadError)
-                    {
-                        // If there was an error uploading to Panorama, we will stop here
-                        break;
-                    }
 
                     if (success)
                     {
@@ -330,6 +314,24 @@ namespace AutoQC
                 {
                     // Try to import any older files that resulted in an import error the first time.
                     TryReimportOldFiles(e, false);
+
+                    if (_panoramaUploadError)
+                    {
+                        if (_lastUploadAt.AddMinutes(5) < DateTime.Now)
+                        {
+                            // Try uploading to Panorama every 5 minutes until we succeed
+                            Log("Trying to upload the Skyline document to Panorama again. ");
+                            UploadToPanorama(PanoramaArgs(), PanoramaArgs(true));
+                        }
+
+                        // If we haven't been able to upload to Panorama for 24 hours, stop with an error
+                        if (!DateTime.MinValue.Equals(_panoramaErrorOccurred) && // _panoramaErrorOccurred.AddMinutes(5) < DateTime.Now)
+                            _panoramaErrorOccurred.AddHours(24) < DateTime.Now)
+                        {
+                            LogError("Uploads to Panorama have not been successful in over 24 hours. Stopping configuration.");
+                            break;
+                        }
+                    }
 
                     if (!inWait)
                     {
@@ -351,7 +353,7 @@ namespace AutoQC
                 var file = _fileWatcher.GetNextFileToReimport();
                 if (forceImport || file.TryReimport())
                 {
-                    var importContext = new ImportContext(file.FilePath) { TotalImportCount = _totalImportCount };
+                    var importContext = new ImportContext(file.FilePath);
                     _logger.Log(Resources.ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__, file.FilePath);
                     if (!ImportFile(e, importContext, false)) 
                     {
@@ -394,28 +396,27 @@ namespace AutoQC
 
         private void ProcessFilesCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (e.Error != null)
+            Task.Run(() =>
             {
+                if (e.Error != null)
+                {
                 LogException(e.Error, Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred_while_running_configuration_);  
-            }
-            else if (e.Result == null)
-            {
-                LogError(Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_);
-            }
-            else if (CANCELED.Equals(e.Result))
-            {
-                Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
-            }
-            else if (_panoramaUploadError)
-            {
-                LogError(Resources.ConfigRunner_ProcessFilesCompleted_There_was_an_error_uploading_the_document_to_Panorama__Stopping_configuration_);    
-            }
-            else
-            {
-                Log(Resources.ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_);
-            }
+                }
+                else if (e.Result == null)
+                {
+                    LogError(Resources.ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_);
+                }
+                else if (CANCELED.Equals(e.Result))
+                {
+                    Log(Resources.ConfigRunner_ProcessFilesCompleted_Canceled_configuration_);
+                }
+                else
+                {
+                    Log(Resources.ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_);
+                }
 
-            Stop();
+                Stop();
+            });
         }
 
         private bool ProcessExistingFiles(DoWorkEventArgs e)
@@ -435,7 +436,7 @@ namespace AutoQC
             
             Log("Existing files found: {0}", files.Count);
 
-            var importContext = new ImportContext(files) {TotalImportCount = _totalImportCount};
+            var importContext = new ImportContext(files);
             while (importContext.GetNextFile() != null)
             {
                 if (_worker.CancellationPending)
@@ -452,7 +453,7 @@ namespace AutoQC
                     continue;
                 }
 
-                var lastAcquiredFileDate = Config.MainSettings.LastAcquiredFileDate;
+                var lastAcquiredFileDate = LastAcquiredFileDate;
                 var fileLastWriteTime = File.GetLastWriteTime(filePath);
                 if (fileLastWriteTime.CompareTo(lastAcquiredFileDate.AddSeconds(1)) < 0)
                 {
@@ -467,7 +468,7 @@ namespace AutoQC
             }
 
             Log(Resources.ConfigRunner_ProcessExistingFiles_Finished_importing_existing_files___);
-            return !_panoramaUploadError;
+            return true;
         }
 
         private string GetFilePathForLog(string filePath)
@@ -495,7 +496,7 @@ namespace AutoQC
                 }
                 else
                 {
-                    _logger.LogException(fse, Resources.ConfigRunner_ImportFile_Error_getting_status_of_file__0__, GetFilePathForLog(filePath));
+                    LogException(fse, Resources.ConfigRunner_ImportFile_Error_getting_status_of_file__0__, GetFilePathForLog(filePath));
                 }
                 // Put the file in the re-import queue
                 if (addToReimportQueueOnFailure)
@@ -511,9 +512,8 @@ namespace AutoQC
                 return false;
             }
 
-            _panoramaUploadError = false;
-            var docImported = ProcessOneFile(importContext);
-            if (!docImported)
+            var resultsImported = ProcessOneFile(importContext);
+            if (!resultsImported)
             {
                 if (addToReimportQueueOnFailure)
                 {
@@ -521,7 +521,7 @@ namespace AutoQC
                 }
             }
            
-            return docImported;
+            return resultsImported;
         }
 
         private void AddToReimportQueue(string filePath)
@@ -533,23 +533,90 @@ namespace AutoQC
 
         private bool ProcessOneFile(ImportContext importContext)
         {
-            var processInfos = GetProcessInfos(importContext);
-            bool docImportFailed = false;
-            foreach (var processInfo in processInfos)
+            CreateZipArchiveBefore(importContext);
+
+            var importSucceeded = ImportResults(importContext);
+
+            UploadToPanorama(importContext);
+
+            CreateZipArchiveAfter(importContext);
+
+            return importSucceeded;
+        }
+
+        private bool ImportResults(ImportContext importContext)
+        {
+            var skylineRunnerArgs = ImportResultsFileArgs(importContext);
+            var importResultsFileProc = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, skylineRunnerArgs);
+            var status = RunProcess(importResultsFileProc);
+            if (status == ProcStatus.Error)
             {
-                var status = RunProcess(processInfo);
-                if (status == ProcStatus.PanoramaUploadError)
-                {
-                    _panoramaUploadError = true;
-                }
-                if (status == ProcStatus.DocImportError || status == ProcStatus.Error)
-                {
-                    docImportFailed = true;
-                }   
+                return false;
             }
-            
-            if(!docImportFailed) _totalImportCount++;
-            return !docImportFailed;
+
+            if (status != ProcStatus.Skipped)
+            {
+                importContext.IncrementImported();
+            }
+
+            return true;
+        }
+
+        private void UploadToPanorama(ImportContext importContext)
+        {
+            var panoramaUploadArgs = PanoramaArgs(importContext);
+            if (!string.IsNullOrEmpty(panoramaUploadArgs))
+            {
+                if (importContext.ImportCount == 0)
+                {
+                    LogError("No results were imported. Skipping upload to Panorama.");
+                }
+                else
+                {
+                    var argsToPrint = PanoramaArgs(importContext, true);
+                    UploadToPanorama(panoramaUploadArgs, argsToPrint);
+                }
+            }
+        }
+
+        private void UploadToPanorama(string panoramaUploadArgs, string argsToPrint)
+        {
+            var uploadToPanoramaProc = new ProcessInfo(Config.SkylineSettings.CmdPath, panoramaUploadArgs, argsToPrint);
+            var status = RunProcess(uploadToPanoramaProc);
+            _lastUploadAt = DateTime.Now;
+            if (status == ProcStatus.Error)
+            {
+                _panoramaUploadError = true;
+                if (DateTime.MinValue.Equals(_panoramaErrorOccurred))
+                {
+                    // Set the time when the first error occurred
+                    _panoramaErrorOccurred = _lastUploadAt;
+                }
+            }
+            else
+            {
+                _panoramaUploadError = false;
+                _panoramaErrorOccurred = DateTime.MinValue;
+            }
+        }
+
+        private void CreateZipArchiveBefore(ImportContext importContext)
+        {
+            var runBeforeProc = RunBefore(importContext);
+            if (runBeforeProc != null)
+            {
+                runBeforeProc.WorkingDirectory = importContext.WorkingDir;
+                RunProcess(runBeforeProc); // Create a zip archive BEFORE if NOT importing existing files
+            }
+        }
+
+        private void CreateZipArchiveAfter(ImportContext importContext)
+        {
+            var runAfter = RunAfter(importContext);
+            if (runAfter != null && importContext.ImportCount > 0)
+            {
+                RunProcess(runAfter); // Create a zip archive AFTER importing all files if importing existing files
+            }
         }
 
         public void Cancel()
@@ -566,8 +633,6 @@ namespace AutoQC
             {
                 _fileWatcher?.Stop();
 
-                _totalImportCount = 0;
-
                 if (_worker != null && _worker.IsBusy)
                 {
                     ChangeStatus(RunnerStatus.Stopping);
@@ -583,6 +648,10 @@ namespace AutoQC
                     ChangeStatus(RunnerStatus.Error);
                 }
 
+                if (IsStopped())
+                {
+                    _logger?.Close();
+                }
                 _panoramaPinger?.Stop();
             });
         }
@@ -608,8 +677,7 @@ namespace AutoQC
                                     {
                                         if (reader.MoveToAttribute("integrate_all"))
                                         {
-                                            bool integrateAll;
-                                            Boolean.TryParse(reader.Value, out integrateAll);
+                                            bool.TryParse(reader.Value, out var integrateAll);
                                             return integrateAll;
                                         }
                                         done = true;
@@ -628,7 +696,7 @@ namespace AutoQC
             }
             catch (Exception e)
             {
-                logger.LogException(e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, mainSettings.SkylineFilePath);
+                LogException(logger, e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, mainSettings.SkylineFilePath);
                 return false;
             }
             logger.LogError(Resources.ConfigRunner_IsIntegrateAllChecked__Integrate_all__is_not_checked_for_the_Skyline_document__This_setting_is_under_the__Settings__menu_in_Skyline__and_should_be_checked_for__documents_with_QC_results_);
@@ -646,7 +714,7 @@ namespace AutoQC
 
             }
             var skyrFile = Path.Combine(exeDir, "FileAcquisitionTime.skyr");
-            var reportFile = Path.Combine(GetConfigDir(), "AcquisitionTimes.csv");
+            var reportFile = Config.getConfigFilePath("AcquisitionTimes.csv");
 
             // Export a report from the given Skyline file
             var args =
@@ -670,10 +738,10 @@ namespace AutoQC
             try
             {
                 var lastAcquiredFileDate = GetLastAcquiredFileDate(reportFile, logger);
-                Config.MainSettings.LastAcquiredFileDate = lastAcquiredFileDate;
+                LastAcquiredFileDate = lastAcquiredFileDate;
                 if (!lastAcquiredFileDate.Equals(DateTime.MinValue))
                 {
-                    logger.Log(Resources.ConfigRunner_ReadLastAcquiredFileDate_The_most_recent_acquisition_date_in_the_Skyline_document_is__0_, lastAcquiredFileDate);
+                    logger.Log(string.Format(Resources.ConfigRunner_ReadLastAcquiredFileDate_The_most_recent_acquisition_date_in_the_Skyline_document_is__0_, lastAcquiredFileDate));
                 }
                 else
                 {
@@ -682,7 +750,7 @@ namespace AutoQC
             }
             catch (IOException e)
             {
-                logger.LogException(e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, reportFile);
+                LogException(logger, e, Resources.ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__, reportFile);
                 return false;
             }
             return true;
@@ -690,7 +758,7 @@ namespace AutoQC
 
         private static DateTime GetLastAcquiredFileDate(string reportFile, Logger logger)
         {
-            var lastAcq = new DateTime();
+            var lastAcq = DateTime.MinValue;
 
             using (var reader = new StreamReader(reportFile))
             {
@@ -715,7 +783,7 @@ namespace AutoQC
                         }
                         catch (Exception e)
                         {
-                            logger.LogException(e, Resources.ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_report___0_, reportFile);
+                            LogException(logger, e, Resources.ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_report___0_, reportFile);
                         }
                         if (acqDate.CompareTo(lastAcq) == 1)
                         {
@@ -728,19 +796,83 @@ namespace AutoQC
             return lastAcq;
         }
 
-        private void Log(string message, params Object[] args)
+        public string GetArchiveArgs(DateTime archiveDate, DateTime currentDate)
+        {
+            if (currentDate.CompareTo(archiveDate) < 0)
+                return null;
+
+            if (currentDate.Year == archiveDate.Year && currentDate.Month == archiveDate.Month)
+            {
+                return null;
+            }
+
+            // Return args to archive the file: create a shared zip
+            var archiveFileName = string.Format("{0}_{1:D4}_{2:D2}.sky.zip",
+                Path.GetFileNameWithoutExtension(Config.MainSettings.SkylineFilePath),
+                archiveDate.Year,
+                archiveDate.Month);
+
+            LastArchivalDate = currentDate;
+
+            // Archive file will be written in the same directory as the Skyline file.
+            return string.Format("--share-zip={0}", archiveFileName);
+        }
+
+        public DateTime GetLastArchivalDate()
+        {
+            return GetLastArchivalDate(new FileSystemUtil());
+        }
+
+        public DateTime GetLastArchivalDate(IFileSystemUtil fileUtil)
+        {
+            if (!DateTime.MinValue.Equals(LastArchivalDate))
+            {
+                return LastArchivalDate;
+            }
+
+            if (!DateTime.MinValue.Equals(LastAcquiredFileDate))
+            {
+                LastArchivalDate = LastAcquiredFileDate;
+                return LastArchivalDate;
+            }
+
+            var fileName = Path.GetFileNameWithoutExtension(Config.MainSettings.SkylineFilePath);
+            var pattern = fileName + "_\\d{4}_\\d{2}.sky.zip";
+            var regex = new Regex(pattern);
+
+            var skylineFileDir = Path.GetDirectoryName(Config.MainSettings.SkylineFilePath);
+
+            // Look at any existing .sky.zip files to determine the last archival date
+            // Look for shared zip files with file names like <skyline_file_name>_<yyyy>_<mm>.sky.zip
+            var archiveFiles =
+                fileUtil.GetSkyZipFiles(skylineFileDir)
+                    .Where(f => regex.IsMatch(Path.GetFileName(f) ?? string.Empty))
+                    .OrderBy(filePath => fileUtil.LastWriteTime(filePath))
+                    .ToList();
+
+            LastArchivalDate = archiveFiles.Any() ? fileUtil.LastWriteTime(archiveFiles.Last()) : DateTime.Today;
+
+            return LastArchivalDate;
+        }
+
+        private void Log(string message, params object[] args)
         {
             _logger.Log(string.Format(message, args));    
         }
-        
-        private void LogError(string message, params Object[] args)
+
+        private void LogError(string message, params object[] args)
         {
             _logger.LogError(string.Format(message, args));
         }
 
-        private void LogException(Exception e, string message, params Object[] args)
+        private void LogException(Exception e, string message, params object[] args)
         {
-            _logger.LogException(e, string.Format(message, args));
+            _logger.LogError(string.Format(message, args), e.ToString());
+        }
+
+        private static void LogException(Logger logger, Exception e, string message, params object[] args)
+        {
+            logger.LogError(string.Format(message, args), e.ToString());
         }
 
         private void CancelAsync()
@@ -752,6 +884,16 @@ namespace AutoQC
         public bool IsBusy()
         {
             return !IsStopped();
+        }
+
+        public static bool IsBusy(RunnerStatus status)
+        {
+            return !(status == RunnerStatus.Stopped || status == RunnerStatus.Error);
+        }
+
+        public bool IsPending()
+        {
+            return IsStarting() || IsStopping() || IsLoading();
         }
 
         public bool IsStopping()
@@ -769,6 +911,11 @@ namespace AutoQC
             return _runnerStatus == RunnerStatus.Starting;
         }
 
+        public bool IsLoading()
+        {
+            return _runnerStatus == RunnerStatus.Loading;
+        }
+
         public bool IsRunning()
         {
             return _runnerStatus == RunnerStatus.Running;
@@ -784,55 +931,141 @@ namespace AutoQC
             return _runnerStatus == RunnerStatus.Disconnected;
         }
 
+        public bool IsCanceling()
+        {
+            return _runnerStatus == RunnerStatus.Canceling;
+        }
+
+        public bool IsWaiting()
+        {
+            return _runnerStatus == RunnerStatus.Waiting;
+        }
+
         public bool CanStart()
         {
-            return IsStopped() || IsDisconnected() || IsError();
+            return IsStopped() || IsError();
         }
 
-        public bool CanStop()
+        public string ImportResultsFileArgs(ImportContext importContext)
         {
-            return IsRunning();
-        }
+            // Get the current results time window
+            var currentDate = DateTime.Today;
+            var accumulationWindow = AccumulationWindow.Get(currentDate, Config.MainSettings.ResultsWindow);
 
-        #region [Implementation of IProcessControl interface]
-        public IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext)
-        {
-            var processInfos = new List<ProcessInfo>();
-
-            var runBefore = Config.RunBefore(importContext);
-            if (runBefore != null)
-            {
-                runBefore.WorkingDirectory = importContext.WorkingDir;
-                processInfos.Add(runBefore);
-            }
-            
-
-            var skylineRunnerArgs = GetSkylineRunnerArgs(importContext);
-            var argsToPrint = GetSkylineRunnerArgs(importContext, true);
-            var skylineRunner = new ProcessInfo(Config.SkylineSettings.CmdPath, skylineRunnerArgs, argsToPrint);
-            processInfos.Add(skylineRunner);
-            
-            var runAfter = Config.RunAfter(importContext);
-            if (runAfter != null)
-            {
-                processInfos.Add(runAfter);
-            }
-
-            return processInfos;
-        }
-
-        private string GetSkylineRunnerArgs(ImportContext importContext, bool toPrint = false)
-        {
             var args = new StringBuilder();
+            // Input Skyline file
+            args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
 
-            args.AppendLine();
-            args.Append(Config.MainSettings.SkylineRunnerArgs(importContext, toPrint));
-            args.Append(" ");
-            args.Append(Config.PanoramaSettings.SkylineRunnerArgs(importContext, toPrint));
+            string importOnOrAfter = string.Empty;
+            if (importContext.ImportExisting || !Config.MainSettings.RemoveResults)
+            {
+                // We are importing existing files in the folder.  The import-on-or-after is determined
+                // by the last acquisition date on the files already imported in the Skyline document.
+                // If the Skyline document does not have any results files, we will import all existing
+                // files in the folder.
+                if (!DateTime.MinValue.Equals(LastAcquiredFileDate))
+                {
+                    importOnOrAfter = string.Format(" --import-on-or-after={0}", LastAcquiredFileDate);
+                }
+            }
+            else
+            {
+                importOnOrAfter = string.Format(" --import-on-or-after={0}",
+                    accumulationWindow.StartDate.ToShortDateString());
+
+                if (Config.MainSettings.RemoveResults)
+                {
+                    // Add arguments to remove files older than the start of the rolling window.   
+                    args.Append(string.Format(" --remove-before={0}",
+                        accumulationWindow.StartDate.ToShortDateString()));
+                }
+            }
+
+            // Add arguments to import the results file
+            args.Append(string.Format(" --import-file=\"{0}\"{1}", importContext.GetCurrentFile(), importOnOrAfter));
+
+            // Save the Skyline file
+            args.Append(" --save");
 
             return args.ToString();
         }
 
+        private string PanoramaArgs(ImportContext importContext, bool toPrint = false)
+        {
+            if (!Config.PanoramaSettings.PublishToPanorama || importContext.ImportExisting && !importContext.ImportingLast())
+            {
+                // Do not upload to Panorama if we are importing existing documents and this is not the 
+                // last file being imported.
+                return string.Empty;
+            }
+
+            return PanoramaArgs(toPrint);
+        }
+
+        private string PanoramaArgs(bool toPrint = false)
+        {
+            var args = new StringBuilder();
+            // Input Skyline file
+            args.Append(string.Format(" --in=\"{0}\"", Config.MainSettings.SkylineFilePath));
+
+            var passwdArg = toPrint ? string.Empty : string.Format(" --panorama-password=\"{0}\"", Config.PanoramaSettings.PanoramaPassword);
+            var uploadArgs = string.Format(
+                " --panorama-server=\"{0}\" --panorama-folder=\"{1}\" --panorama-username=\"{2}\" {3}",
+                Config.PanoramaSettings.PanoramaServerUrl,
+                Config.PanoramaSettings.PanoramaFolder,
+                Config.PanoramaSettings.PanoramaUserEmail,
+                passwdArg);
+            return args.Append(uploadArgs).ToString();
+        }
+
+        public ProcessInfo RunBefore(ImportContext importContext)
+        {
+            string archiveArgs = null;
+            if (!importContext.ImportExisting)
+            {
+                // If we are NOT importing existing results, create an archive (if required) of the 
+                // Skyline document BEFORE importing a results file.
+                archiveArgs = GetArchiveArgs(GetLastArchivalDate(), DateTime.Today);
+            }
+            if (string.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
+        }
+
+        public ProcessInfo RunAfter(ImportContext importContext)
+        {
+            string archiveArgs = null;
+            var currentDate = DateTime.Today;
+            if (importContext.ImportExisting && importContext.ImportingLast())
+            {
+                // If we are importing existing files in the folder, create an archive (if required) of the 
+                // Skyline document AFTER importing the last results file.
+                var oldestFileDate = importContext.GetOldestImportedFileDate(LastAcquiredFileDate);
+                var today = DateTime.Today;
+                if (oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
+                {
+                    archiveArgs = GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
+                }
+            }
+            if (string.IsNullOrEmpty(archiveArgs))
+            {
+                return null;
+            }
+            var args = string.Format("--in=\"{0}\" {1}", Config.MainSettings.SkylineFilePath, archiveArgs);
+            return new ProcessInfo(Config.SkylineSettings.CmdPath, args, args);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return false;
+        }
+
+        #region [Implementation of IProcessControl interface]
         public ProcStatus RunProcess(ProcessInfo processInfo)
         {
             _processRunner = new ProcessRunner(_logger);
@@ -849,7 +1082,6 @@ namespace AutoQC
 
     public interface IProcessControl
     {
-        IEnumerable<ProcessInfo> GetProcessInfos(ImportContext importContext);
         ProcStatus RunProcess(ProcessInfo processInfo);
         void StopProcess();
     }
@@ -858,13 +1090,16 @@ namespace AutoQC
     {
         Success,
         Error,
-        DocImportError,
-        PanoramaUploadError
+        Skipped
     }
 
     public class ConfigRunnerException : SystemException
     {
         public ConfigRunnerException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        public ConfigRunnerException(string message) : base(message)
         {
         }
     }

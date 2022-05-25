@@ -16,8 +16,8 @@
  * Copyright 2001-2004 David Abrahams.
  * Copyright 2018 Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -79,7 +79,6 @@
  *  hash.c - simple in-memory hashing routines
  *  hdrmacro.c - handle header file parsing for filename macro definitions
  *  headers.c - handle #includes in source files
- *  jambase.c - compilable copy of Jambase
  *  jamgram.y - jam grammar
  *  lists.c - maintain lists of strings
  *  make.c - bring a target up to date, once rules are in place
@@ -130,11 +129,15 @@
 #include "rules.h"
 #include "scan.h"
 #include "search.h"
-#include "strings.h"
+#include "startup.h"
+#include "jam_strings.h"
 #include "timestamp.h"
 #include "variable.h"
 #include "execcmd.h"
 #include "sysinfo.h"
+
+#include <errno.h>
+#include <string.h>
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
@@ -166,24 +169,6 @@ struct globs globs =
 
 /* Symbols to be defined as true for use in Jambase. */
 static const char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
-
-
-/* Known for sure:
- *  mac needs arg_enviro
- *  OS2 needs extern environ
- */
-
-#ifdef OS_MAC
-# define use_environ arg_environ
-# ifdef MPW
-    QDGlobals qd;
-# endif
-#endif
-
-
-#ifdef OS_VMS
-# define use_environ arg_environ
-#endif
 
 
 /* on Win32-LCC */
@@ -240,7 +225,7 @@ static void usage( const char * progname )
 
 	err_printf("-a      Build all targets, even if they are current.\n");
 	err_printf("-dx     Set the debug level to x (0-13,console,mi).\n");
-	err_printf("-fx     Read x instead of Jambase.\n");
+	err_printf("-fx     Read x instead of bootstrap.\n");
 	/* err_printf( "-g      Build from newest sources first.\n" ); */
 	err_printf("-jx     Run up to x shell commands concurrently.\n");
 	err_printf("-lx     Limit actions to x number of seconds after which they are stopped.\n");
@@ -260,13 +245,12 @@ static void usage( const char * progname )
     exit( EXITBAD );
 }
 
-int main( int argc, char * * argv, char * * arg_environ )
+int main( int argc, char * * argv )
 {
     int                     n;
     char                  * s;
     struct bjam_option      optv[ N_OPTS ];
-    char            const * all = "all";
-    int                     status;
+    int                     status = 0;
     int                     arg_c = argc;
     char          *       * arg_v = argv;
     char            const * progname = argv[ 0 ];
@@ -275,6 +259,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     b2::system_info sys_info;
 
     saved_argv0 = argv[ 0 ];
+    last_update_now_status = 0;
 
     BJAM_MEM_INIT();
 
@@ -462,7 +447,8 @@ int main( int argc, char * * argv, char * * arg_environ )
     {
         if ( !( globs.out = fopen( s, "w" ) ) )
         {
-            err_printf( "Failed to write to '%s'\n", s );
+            err_printf( "[errno %d] failed to write output file '%s': %s",
+                errno, s, strerror(errno) );
             exit( EXITBAD );
         }
         /* ++globs.noexec; */
@@ -589,6 +575,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
         /* Initialize built-in rules. */
         load_builtins();
+        b2::startup::load_builtins();
 
         /* Add the targets in the command line to the update list. */
         for ( n = 1; n < arg_c; ++n )
@@ -645,30 +632,37 @@ int main( int argc, char * * argv, char * * arg_environ )
                 object_free( filename );
             }
 
-            if ( !n )
-                parse_file( constant_plus, frame );
+            if ( !n  )
+                status = b2::startup::bootstrap(frame) ? 0 : 13;
         }
 
-        status = yyanyerrors();
+        /* FIXME: What shall we do if builtin_update_now,
+         * the sole place setting last_update_now_status,
+         * failed earlier?
+         */
 
-        /* Manually touch -t targets. */
-        for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+        if ( status == 0 )
+            status = yyanyerrors();
+        if ( status == 0 )
         {
-            OBJECT * const target = object_new( s );
-            touch_target( target );
-            object_free( target );
-        }
+            /* Manually touch -t targets. */
+            for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+            {
+                OBJECT * const target = object_new( s );
+                touch_target( target );
+                object_free( target );
+            }
 
-
-        /* Now make target. */
-        {
-            PROFILE_ENTER( MAIN_MAKE );
-            LIST * const targets = targets_to_update();
-            if ( !list_empty( targets ) )
-                status |= make( targets, anyhow );
-            else
-                status = last_update_now_status;
-            PROFILE_EXIT( MAIN_MAKE );
+            /* Now make target. */
+            {
+                PROFILE_ENTER( MAIN_MAKE );
+                LIST * const targets = targets_to_update();
+                if ( !list_empty( targets ) )
+                    status |= make( targets, anyhow );
+                else
+                    status = last_update_now_status;
+                PROFILE_EXIT( MAIN_MAKE );
+            }
         }
 
         PROFILE_EXIT( MAIN );
@@ -713,76 +707,3 @@ int main( int argc, char * * argv, char * * arg_environ )
 
     return status ? EXITBAD : EXITOK;
 }
-
-
-/*
- * executable_path()
- */
-
-#if defined(_WIN32)
-# define WIN32_LEAN_AND_MEAN
-# include <windows.h>
-char * executable_path( char const * argv0 )
-{
-    char buf[ 1024 ];
-    DWORD const ret = GetModuleFileName( NULL, buf, sizeof( buf ) );
-    return ( !ret || ret == sizeof( buf ) ) ? NULL : strdup( buf );
-}
-#elif defined(__APPLE__)  /* Not tested */
-# include <mach-o/dyld.h>
-char *executable_path( char const * argv0 )
-{
-    char buf[ 1024 ];
-    uint32_t size = sizeof( buf );
-    return _NSGetExecutablePath( buf, &size ) ? NULL : strdup( buf );
-}
-#elif defined(sun) || defined(__sun)  /* Not tested */
-# include <stdlib.h>
-char * executable_path( char const * argv0 )
-{
-    const char * execname = getexecname();
-    return execname ? strdup( execname ) : NULL;
-}
-#elif defined(__FreeBSD__)
-# include <sys/sysctl.h>
-char * executable_path( char const * argv0 )
-{
-    int mib[ 4 ] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
-    char buf[ 1024 ];
-    size_t size = sizeof( buf );
-    sysctl( mib, 4, buf, &size, NULL, 0 );
-    return ( !size || size == sizeof( buf ) ) ? NULL : strndup( buf, size );
-}
-#elif defined(__linux__)
-# include <unistd.h>
-char * executable_path( char const * argv0 )
-{
-    char buf[ 1024 ];
-    ssize_t const ret = readlink( "/proc/self/exe", buf, sizeof( buf ) );
-    return ( !ret || ret == sizeof( buf ) ) ? NULL : strndup( buf, ret );
-}
-#elif defined(OS_VMS)
-# include <unixlib.h>
-char * executable_path( char const * argv0 )
-{
-    char * vms_path = NULL;
-    char * posix_path = NULL;
-    char * p;
-
-    /* On VMS argv[0] shows absolute path to the image file.
-     * So, just remove VMS file version and translate path to POSIX-style.
-     */
-    vms_path = strdup( argv0 );
-    if ( vms_path && ( p = strchr( vms_path, ';') ) ) *p = '\0';
-    posix_path = decc$translate_vms( vms_path );
-    if ( vms_path ) free( vms_path );
-
-    return posix_path > 0 ? strdup( posix_path ) : NULL;
-}
-#else
-char * executable_path( char const * argv0 )
-{
-    /* If argv0 is an absolute path, assume it is the right absolute path. */
-    return argv0[ 0 ] == '/' ? strdup( argv0 ) : NULL;
-}
-#endif

@@ -1,0 +1,5 @@
+--in="REPLACE_TEXT\emptyTemplate.sky" --full-scan-precursor-res=5 --full-scan-product-res=4 --full-scan-rt-filter-tolerance=3 --decoys-add=shuffle --out="REPLACE_TEXT\analysis\emptyTemplate.sky" 
+--import-all="REPLACE_TEXT\emptyData" --import-naming-pattern="testNamingPattern" --reintegrate-model-name="TestConfig" --reintegrate-create-model --reintegrate-overwrite-peaks --import-annotations="REPLACE_TEXT\fakeAnnotations.csv" --save 
+--refine-cv-remove-above-cutoff=20 --refine-cv-transitions-count=2 --refine-qvalue-cutoff=0.01 --refine-cv-global-normalize=equalize_medians --out="REPLACE_TEXT\RefineOutput.sky" 
+--report-add="REPLACE_TEXT\uniqueReport.skyr" --report-conflict-resolution=overwrite --save-settings --report-name="Another Unique Report" --report-file="REPLACE_TEXT\analysis\Another Unique Report.csv" 
+--in="REPLACE_TEXT\analysis\emptyTemplate.sky" --report-add="REPLACE_TEXT\uniqueReport.skyr" --report-conflict-resolution=overwrite --save-settings --report-name="Unique Report" --report-file="REPLACE_TEXT\analysis\Unique Report.csv" --report-invariant 

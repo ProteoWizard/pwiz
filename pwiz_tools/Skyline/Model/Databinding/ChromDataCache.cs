@@ -38,8 +38,11 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return cacheSlot.Item2;
             }
-            var chromatogramGroupInfo = LoadChromatogramInfo(document, chromatogramSet, filePath, precursorIdentityPath,
-                loadPoints);
+            var chromatogramGroupInfo = LoadChromatogramInfo(document, chromatogramSet, filePath, precursorIdentityPath);
+            if (!loadPoints)
+            {
+                chromatogramGroupInfo?.DiscardData();
+            }
             cacheSlot = Tuple.Create(key, chromatogramGroupInfo);
             if (loadPoints)
             {
@@ -53,19 +56,14 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         private ChromatogramGroupInfo LoadChromatogramInfo(SrmDocument document, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
-            IdentityPath precursorIdentityPath, bool loadPoints)
+            IdentityPath precursorIdentityPath)
         {
-            var measuredResults = document.Settings.MeasuredResults;
-            if (null == measuredResults)
-            {
-                return null;
-            }
-            var tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var peptideDocNode = (PeptideDocNode) document.FindNode(precursorIdentityPath.Parent);
             var precursorDocNode = (TransitionGroupDocNode) peptideDocNode.FindNode(precursorIdentityPath.Child);
             ChromatogramGroupInfo[] chromatogramGroupInfos;
-            if (!measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode, tolerance, loadPoints,
-                out chromatogramGroupInfos))
+            var measuredResults = document.Settings.MeasuredResults;
+            var tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            if (!measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode, precursorDocNode, tolerance, out chromatogramGroupInfos))
             {
                 return null;
             }
