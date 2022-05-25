@@ -1235,7 +1235,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Reset irtdb file to contain duplicates
-            File.WriteAllBytes(dbPath, dbBytes);
+            Helpers.TryTwice(() => File.WriteAllBytes(dbPath, dbBytes));
             CheckIrtDbFile(true, out _, out _, out _);
 
             // Open file and check that the duplicates get removed
