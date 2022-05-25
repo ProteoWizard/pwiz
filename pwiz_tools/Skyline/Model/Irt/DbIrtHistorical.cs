@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as DbIrtPeptide);
+            return Equals(obj as DbIrtHistorical);
         }
 
         public override int GetHashCode()
