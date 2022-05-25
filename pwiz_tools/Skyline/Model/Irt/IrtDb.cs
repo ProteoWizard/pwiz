@@ -229,6 +229,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, bool redundant, IProgressMonitor monitor, ref IProgressStatus status)
         {
+            var updateTime = DateTimeOffset.Now;
+
             if (redundant && !Redundant)
             {
                 // Create the IrtHistory table
@@ -296,7 +298,7 @@ namespace pwiz.Skyline.Model.Irt
 
                         if (redundant && !pep.Standard && !Equals(pep.Irt, pepExisting.Irt))
                         {
-                            var history = new DbIrtHistorical(pep.Id.Value, pepExisting.Irt);
+                            var history = new DbIrtHistorical(pep.Id.Value, pepExisting.Irt, updateTime);
                             session.Save(history);
                         }
                         pepExisting.Irt = pep.Irt;

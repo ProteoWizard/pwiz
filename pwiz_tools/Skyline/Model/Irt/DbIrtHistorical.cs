@@ -29,6 +29,13 @@ namespace pwiz.Skyline.Model.Irt
         // public virtual long? Id { get; set; } // in DbEntity
         public virtual long PeptideId { get; set; }
         public virtual double Irt { get; set; }
+        public virtual long SaveTimestamp { get; set; }
+
+        public virtual DateTimeOffset SaveTime
+        {
+            get => DateTimeOffset.FromUnixTimeMilliseconds(SaveTimestamp);
+            set => SaveTimestamp = value.ToUnixTimeMilliseconds();
+        }
 
         /// <summary>
         /// For NHibernate only
@@ -37,11 +44,12 @@ namespace pwiz.Skyline.Model.Irt
         {
         }
 
-        public DbIrtHistorical(long peptideId, double irt)
+        public DbIrtHistorical(long peptideId, double irt, DateTimeOffset saveTime)
         {
             Id = null;
             PeptideId = peptideId;
             Irt = irt;
+            SaveTime = saveTime;
         }
 
         public DbIrtHistorical(DbIrtHistorical other)
@@ -49,6 +57,7 @@ namespace pwiz.Skyline.Model.Irt
             Id = other.Id;
             PeptideId = other.PeptideId;
             Irt = other.Irt;
+            SaveTimestamp = other.SaveTimestamp;
         }
 
         #region object overrides
@@ -59,7 +68,8 @@ namespace pwiz.Skyline.Model.Irt
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
                    PeptideId.Equals(other.PeptideId) &&
-                   Irt.Equals(other.Irt);
+                   Irt.Equals(other.Irt) &&
+                   SaveTimestamp.Equals(other.SaveTimestamp);
         }
 
         public override bool Equals(object obj)
@@ -76,6 +86,7 @@ namespace pwiz.Skyline.Model.Irt
                 var result = base.GetHashCode();
                 result = (result * 397) ^ PeptideId.GetHashCode();
                 result = (result * 397) ^ Irt.GetHashCode();
+                result = (result * 397) ^ SaveTimestamp.GetHashCode();
                 return result;
             }
         }
