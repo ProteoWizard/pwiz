@@ -11768,4 +11768,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
       <value>dotp: {0:0.0000}</value>
   </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_The_file__0__could_not_be_opened_" xml:space="preserve">
+      <value>The file {0} could not be opened.</value>
+  </data>
 </root>

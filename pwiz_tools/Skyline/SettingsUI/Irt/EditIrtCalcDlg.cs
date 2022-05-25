@@ -330,37 +330,43 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
-            try
+            IList<DbIrtPeptide> dbPeptides = null;
+            using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
             {
-                IList<DbIrtPeptide> dbPeptides = null;
-                using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
+                DatabaseOpeningException openException = null;
+                dlg.PerformWork(this, 800, progressMonitor =>
                 {
-                    dlg.PerformWork(this, 800, progressMonitor => _originalDb = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
-                }
-
-                LoadStandard(dbPeptides);
-                LoadLibrary(dbPeptides);
-                SelectedRegressionType = _originalDb.RegressionType;
-                IsRedundant = _originalDb.Redundant;
-
-                // Clone all of the peptides to use for comparison in OkDialog
-                _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
-
-                textDatabase.Text = path;
-
-                if (_originalPeptides.Any(p => !p.Target.IsProteomic))
+                    _originalDb = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides);
+                    if (progressMonitor is ProgressWaitBroker progress && progress.Status.ErrorException is DatabaseOpeningException e)
+                        openException = e;
+                });
+                if (_originalDb == null && openException == null)
+                    openException = new DatabaseOpeningException(string.Format(Resources.EditIrtCalcDlg_OpenDatabase_The_file__0__could_not_be_opened_, path));
+                if (openException != null)
                 {
-                    GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic)
-                        ? SrmDocument.DOCUMENT_TYPE.mixed
-                        : SrmDocument.DOCUMENT_TYPE.small_molecules;
+                    MessageDlg.Show(this, openException.Message);
+                    return;
                 }
-
-                CheckForDuplicates();
             }
-            catch (DatabaseOpeningException e)
+
+            LoadStandard(dbPeptides);
+            LoadLibrary(dbPeptides);
+            SelectedRegressionType = _originalDb.RegressionType;
+            IsRedundant = _originalDb.Redundant;
+
+            // Clone all of the peptides to use for comparison in OkDialog
+            _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
+
+            textDatabase.Text = path;
+
+            if (_originalPeptides.Any(p => !p.Target.IsProteomic))
             {
-                MessageDlg.Show(this, e.Message);
+                GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic)
+                    ? SrmDocument.DOCUMENT_TYPE.mixed
+                    : SrmDocument.DOCUMENT_TYPE.small_molecules;
             }
+
+            CheckForDuplicates();
         }
 
         public void OkDialog()
@@ -791,6 +797,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             public BindingList<DbIrtPeptide> StandardPeptideList { private get; set; }
 
             public IrtRegressionType RegressionType { private get; set; }
+            public bool RedundantDb { private get; set; }
 
             protected override void DoPaste()
             {
@@ -1084,11 +1091,20 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 // If there were any matches, get user feedback
                 AddIrtPeptidesAction action;
-                using (var dlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.irt_database, irtAverages, listChangedPeptides, listOverwritePeptides, listKeepPeptides))
+                if (!RedundantDb)
                 {
-                    if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
-                        return;
-                    action = dlg.Action;
+                    using (var dlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.irt_database, irtAverages,
+                               listChangedPeptides, listOverwritePeptides, listKeepPeptides))
+                    {
+                        if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
+                            return;
+                        action = dlg.Action;
+                    }
+                }
+                else
+                {
+                    // For redundant libraries, replace without asking
+                    action = AddIrtPeptidesAction.replace;
                 }
 
                 List<DbIrtPeptide> newStandards = null;
@@ -1343,6 +1359,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void comboRegressionType_SelectedIndexChanged(object sender, EventArgs e)
         {
             _gridViewLibraryDriver.RegressionType = SelectedRegressionType;
+        }
+
+        private void cbRedundant_CheckedChanged(object sender, EventArgs e)
+        {
+            _gridViewLibraryDriver.RedundantDb = IsRedundant;
         }
 
         private void comboStandards_SelectedIndexChanged(object sender, EventArgs e)

@@ -344,6 +344,7 @@
             resources.ApplyResources(this.cbRedundant, "cbRedundant");
             this.cbRedundant.Name = "cbRedundant";
             this.cbRedundant.UseVisualStyleBackColor = true;
+            this.cbRedundant.CheckedChanged += new System.EventHandler(this.cbRedundant_CheckedChanged);
             // 
             // EditIrtCalcDlg
             // 
