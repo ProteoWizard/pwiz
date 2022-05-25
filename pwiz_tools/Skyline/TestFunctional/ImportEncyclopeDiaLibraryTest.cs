@@ -19,7 +19,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
@@ -84,8 +84,8 @@ namespace pwiz.SkylineTestFunctional
                     importPeptideSearchDlg.ImportFastaControl.SetFastaContent(
                         TestFilesDir.GetTestPath("ns_peptides.fasta"));
                 });
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(()=>importPeptideSearchDlg.ClickNextButton());
-            RunUI(()=>peptidesPerProteinDlg.KeepAll = true);
+            var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(()=>importPeptideSearchDlg.ClickNextButton());
+            //RunUI(()=>peptidesPerProteinDlg.KeepAll = true);
             WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForDocumentLoaded();

@@ -3490,7 +3490,8 @@ namespace pwiz.Skyline.Model
             }
 
             // Add the last fasta sequence
-            yield return new FastaData(name, sequence.ToString());
+            if (!string.IsNullOrEmpty(name))
+                yield return new FastaData(name, sequence.ToString());
         }
     }
 }

@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DdaSearch;
@@ -274,10 +275,10 @@ namespace TestPerf
             }
 
             // clicking 'Finish' (Next) will run ImportFasta
-            PeptidesPerProteinDlg emptyProteinsDlg;
+            AssociateProteinsDlg emptyProteinsDlg;
             if (importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
             {
-                emptyProteinsDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             }
             else
             {
@@ -286,14 +287,14 @@ namespace TestPerf
                 RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                     Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
                 OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
-                emptyProteinsDlg = WaitForOpenForm<PeptidesPerProteinDlg>(600000);
+                emptyProteinsDlg = WaitForOpenForm<AssociateProteinsDlg>(600000);
             }
 
             RunUI(() =>
             {
                 emptyProteinsDlg.RemoveRepeatedPeptides = true;
                 int proteinCount, peptideCount, precursorCount, transitionCount;
-                emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)
                 {
                     if (IsRecordMode)
@@ -311,7 +312,7 @@ namespace TestPerf
                         Assert.AreEqual(51162, precursorCount);
                         Assert.AreEqual(153486, transitionCount);
                     }
-                }
+                }*/
 
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)

@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -115,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
 
             SetupDiaSearchVariableWindows();
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 78, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 92, PeptideCount = 99, PrecursorCount = 110, TransitionCount = 990 };
 
             RunFunctionalTest();
         }
@@ -128,7 +129,7 @@ namespace pwiz.SkylineTestFunctional
             SetupDiaSearchVariableWindows();
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSGFPlus;
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 38, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 48, PeptideCount = 48, PrecursorCount = 48, TransitionCount = 432 };
 
             RunFunctionalTest();
         }
@@ -140,10 +141,10 @@ namespace pwiz.SkylineTestFunctional
 
             SetupDiaSearchVariableWindows();
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
-            _testDetails.PrecursorMzTolerance = new MzTolerance(100, MzTolerance.Units.ppm);
+            _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 77, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 104, PeptideCount = 109, PrecursorCount = 128, TransitionCount = 1152 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0")
@@ -175,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
                 FragmentMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
 
                 Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 90, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
+                Final = new TestDetails.DocumentCounts { ProteinCount = 103, PeptideCount = 108, PrecursorCount = 110, TransitionCount = 990 },
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -486,14 +487,14 @@ namespace pwiz.SkylineTestFunctional
             if(IsRecordMode)
                 Console.WriteLine();
 
-            RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
+            RunDlg<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
             {
                 var aic = new TestDetails.DocumentCounts();
 
-                emptyProteinsDlg.NewTargetsAll(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
+                /*emptyProteinsDlg.NewTargetsAll(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
                 if (Environment.Is64BitProcess)
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");
+                    ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");*/
 
                 emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
                 if (Environment.Is64BitProcess)

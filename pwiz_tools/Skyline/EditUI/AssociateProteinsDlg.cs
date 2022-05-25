@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -27,6 +29,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -38,13 +41,18 @@ namespace pwiz.Skyline.EditUI
     public partial class AssociateProteinsDlg : ModeUIInvariantFormEx,  // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
                   IAuditLogModifier<AssociateProteinsSettings>
     {
-        private readonly SkylineWindow _parent;
+        private readonly SrmDocument _document;
         private bool _isFasta;
         private ProteinAssociation _proteinAssociation;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
-        private SrmDocument _newDocument;
+        public SrmDocument DocumentFinal { get; private set; }
 
         private bool _reuseLastFasta;
+        private string _overrideFastaPath;
+        private readonly IrtStandard _irtStandard;
+        private readonly string _decoyGenerationMethod;
+        private readonly double _decoysPerTarget;
+
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
 
@@ -54,13 +62,19 @@ namespace pwiz.Skyline.EditUI
             set { tbxFastaTargets.Text = value; }
         }
 
-        public bool IsBusy => _newDocument == null;
+        public bool IsBusy => DocumentFinal == null;
+        public bool DocumentFinalCalculated => !IsBusy || _document.PeptideCount == 0;
 
 
-        public AssociateProteinsDlg(SkylineWindow parent, bool reuseLastFasta = true)
+        /// <summary>
+        /// Show the Associate Proteins dialog.
+        /// </summary>
+        /// <param name="document">The Skyline document for which to associate peptides to proteins.</param>
+        /// <param name="reuseLastFasta">Set to false to prevent the dialog from using the previously used FASTA filepath as the default textbox value.</param>
+        public AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
-            _parent = parent;
+            _document = document;
             _reuseLastFasta = reuseLastFasta;
             _statusBarResultFormat = string.Format(@"{{0}} {0}, {{1}} {1}, {{2}} {2}, {{3}} {3}",
                 Resources.AnnotationDef_AnnotationTarget_Proteins,
@@ -70,7 +84,7 @@ namespace pwiz.Skyline.EditUI
             btnOk.Enabled = false;
             lblStatusBarResult.Text = string.Empty;
 
-            var peptideSettings = parent.DocumentUI.Settings.PeptideSettings;
+            var peptideSettings = document.Settings.PeptideSettings;
 
             foreach (var sharedPeptides in _sharedPeptideOptionNames)
                 comboSharedPeptides.Items.Add(EnumNames.ResourceManager.GetString(@"SharedPeptides_" + sharedPeptides) ?? throw new InvalidOperationException(sharedPeptides));
@@ -90,31 +104,68 @@ namespace pwiz.Skyline.EditUI
             helpTip.SetToolTip(numMinPeptides, helpTip.GetToolTip(lblMinPeptides));
         }
 
+        /// <summary>
+        /// Show the Associate Proteins dialog.
+        /// </summary>
+        /// <param name="document">The Skyline document for which to associate peptides to proteins.</param>
+        /// <param name="overrideFastaPath">Set to a FASTA filepath to force using that FASTA and remove the user's ability to set the FASTA filepath (the protein source controls will be hidden).</param>
+        /// <param name="irtStandard">The iRT standard to preserve iRT peptides at the top of the document.</param>
+        /// <param name="decoyGenerationMethod">Decoy generation method.</param>
+        /// <param name="decoysPerTarget">Number of decoys per target.</param>
+        public AssociateProteinsDlg(SrmDocument document, string overrideFastaPath, IrtStandard irtStandard, string decoyGenerationMethod, double decoysPerTarget) : this(document)
+        {
+            _overrideFastaPath = overrideFastaPath;
+            _irtStandard = irtStandard;
+            _decoyGenerationMethod = decoyGenerationMethod;
+            _decoysPerTarget = decoysPerTarget;
+        }
+
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
 
-            if (_parent.Document.PeptideCount == 0)
+            if (_overrideFastaPath != null)
             {
-                MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
-                Close();
+                proteinSourcePanel.Visible = false;
+                gbParsimonyOptions.Location = FormUtil.Offset(gbParsimonyOptions.Location, 0, -proteinSourcePanel.Height);
+                MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height - proteinSourcePanel.Height);
+                Height -= proteinSourcePanel.Height;
+                lblDescription.Text = Resources.AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups;
+                if (_document.PeptideGroups.Any(pg => pg.IsProtein))
+                    lblDescription.Text += @" " + Resources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
             }
 
-            if (_reuseLastFasta && !Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
+            if (_document.PeptideCount == 0)
+            {
+                if (_overrideFastaPath == null)
+                {
+                    MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
+                    Close();
+                }
+                else
+                {
+                    DocumentFinal = AddIrtAndDecoys(_document);
+                    return;
+                }
+            }
+
+            if (_overrideFastaPath != null)
+                tbxFastaTargets.Text = _overrideFastaPath;
+            else if (_reuseLastFasta && !Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
                 tbxFastaTargets.Text = Settings.Default.LastProteinAssociationFastaFilepath;
 
         }
 
         private void Initialize()
         {
-            if (_proteinAssociation != null)
+            if (_proteinAssociation != null || _document.PeptideCount == 0)
                 return;
 
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    _proteinAssociation = new ProteinAssociation(_parent.Document, broker);
+                    _proteinAssociation = new ProteinAssociation(_document, broker);
                 });
 
                 if (longWaitDlg.IsCanceled)
@@ -159,7 +210,7 @@ namespace pwiz.Skyline.EditUI
 
         private void UpdateParsimonyResults()
         {
-            _newDocument = null;
+            DocumentFinal = null;
             if (Results == null)
                 return;
 
@@ -177,9 +228,10 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
-            _newDocument = CreateDocTree(_parent.Document);
+            DocumentFinal = CreateDocTree(_document);
 
             dgvAssociateResults.RowCount = 2;
+            dgvAssociateResults.ClearSelection();
             dgvAssociateResults.Invalidate();
 
             lblStatusBarResult.Text = GetStatusBarResultString();
@@ -248,7 +300,10 @@ namespace pwiz.Skyline.EditUI
 
             _isFasta = false;
             //FastaFileName = _parent.Document.Settings.PeptideSettings.BackgroundProteome.DatabasePath;
-            
+
+            if (_document.PeptideCount == 0)
+                return;
+
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, broker));
@@ -316,6 +371,9 @@ namespace pwiz.Skyline.EditUI
             _isFasta = true;
             //FastaFileName = file;
 
+            if (_document.PeptideCount == 0)
+                return;
+
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, broker));
@@ -337,11 +395,54 @@ namespace pwiz.Skyline.EditUI
                 longWaitDlg.PerformWork(this, 1000, monitor =>
                 {
                     result = _proteinAssociation.CreateDocTree(current, monitor);
+                    result = AddIrtAndDecoys(result);
+
                 });
                 if (longWaitDlg.IsCanceled)
                     return null;
             }
             return result;
+        }
+
+        private SrmDocument AddIrtAndDecoys(SrmDocument document)
+        {
+            var result = AddDecoys(document);
+
+            if (_overrideFastaPath != null)
+                result =ImportPeptideSearch.AddStandardsToDocument(result, _irtStandard);
+
+            // Move iRT proteins to top
+            var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(result));
+            var proteins = new List<PeptideGroupDocNode>(result.PeptideGroups);
+            var proteinsIrt = new List<PeptideGroupDocNode>();
+            for (var i = 0; i < proteins.Count; i++)
+            {
+                var nodePepGroup = proteins[i];
+                if (nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
+                {
+                    proteinsIrt.Add(nodePepGroup);
+                    proteins.RemoveAt(i--);
+                }
+            }
+            if (proteinsIrt.Any())
+                return (SrmDocument)result.ChangeChildrenChecked(proteinsIrt.Concat(proteins).Cast<DocNode>().ToArray());
+
+            return result;
+        }
+
+        private int NumDecoys(IEnumerable<PeptideGroupDocNode> pepGroups)
+        {
+            return !string.IsNullOrEmpty(_decoyGenerationMethod) && _decoysPerTarget > 0
+                ? (int)Math.Round(pepGroups.Sum(pepGroup => pepGroup.PeptideCount) * _decoysPerTarget)
+                : 0;
+        }
+
+        private SrmDocument AddDecoys(SrmDocument document)
+        {
+            var numDecoys = NumDecoys(document.PeptideGroups);
+            return numDecoys > 0
+                ? new RefinementSettings { DecoysMethod = _decoyGenerationMethod, NumberOfDecoys = numDecoys }.GenerateDecoys(document)
+                : document;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -358,22 +459,46 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        public int MinPeptides
+        {
+            //get => MinPeptidesPerProtein;
+            set => MinPeptidesPerProtein = value;
+        }
+
+        public void SetRepeatedDuplicatePeptides(bool removeRepeated, bool removeDuplicate)
+        {
+            if (removeDuplicate)
+                SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
+            else if (removeRepeated)
+                SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToFirstProtein;
+            else
+                SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+        }
+
+        public bool RemoveRepeatedPeptides
+        {
+            get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.AssignedToFirstProtein ||
+                   SelectedSharedPeptides == ProteinAssociation.SharedPeptides.Removed;
+            set => SetRepeatedDuplicatePeptides(value, RemoveDuplicatePeptides);
+        }
+
+        public bool RemoveDuplicatePeptides
+        {
+            get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.Removed;
+            set => SetRepeatedDuplicatePeptides(RemoveRepeatedPeptides, value);
+        }
+
         public void OkDialog()
         {
             if (rbFASTA.Checked)
                 Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
-
-            lock (_parent.GetDocumentChangeLock())
-            {
-                _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, current => _newDocument, FormSettings.EntryCreator.Create);
-            }
 
             DialogResult = DialogResult.OK;
         }
 
         private string GetStatusBarResultString()
         {
-            if (FinalResults == null || _newDocument == null)
+            if (FinalResults == null || DocumentFinal == null)
                 return string.Empty;
 
             const int separatorThreshold = 10000;
@@ -382,13 +507,13 @@ namespace pwiz.Skyline.EditUI
 
             return string.Format(_statusBarResultFormat, resultToString(FinalResults.FinalProteinCount),
                 resultToString(FinalResults.FinalPeptideCount),
-                resultToString(_newDocument.PeptideTransitionGroupCount),
-                resultToString(_newDocument.PeptideTransitionCount));
+                resultToString(DocumentFinal.PeptideTransitionGroupCount),
+                resultToString(DocumentFinal.PeptideTransitionCount));
         }
 
         private void dgvAssociateResults_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
         {
-            if (FinalResults == null || _newDocument == null)
+            if (FinalResults == null || DocumentFinal == null)
                 return;
 
             const int separatorThreshold = 10000;
@@ -473,6 +598,55 @@ namespace pwiz.Skyline.EditUI
         private void numMinPeptides_Leave(object sender, EventArgs e)
         {
             AcceptButton = btnOk;
+        }
+
+
+        /*public void NewTargetsAll(out int proteins, out int peptides, out int precursors, out int transitions)
+        {
+            var pepGroups = new List<PeptideGroupDocNode>(_document.PeptideGroups);
+            var numDecoys = NumDecoys(pepGroups);
+            if (numDecoys > 0)
+            {
+                var decoyGroups = AddDecoys(_document).PeptideGroups.Where(pepGroup => Equals(pepGroup.Name, PeptideGroup.DECOYS));
+                pepGroups.AddRange(decoyGroups);
+            }
+
+            var docWithStandards = ImportPeptideSearch.AddStandardsToDocument(_document, _irtStandard);
+            if (!ReferenceEquals(docWithStandards, _document))
+            {
+                pepGroups.Add(docWithStandards.PeptideGroups.First());
+            }
+
+            proteins = pepGroups.Count + Results.ProteinsUnmapped;
+            peptides = pepGroups.Sum(pepGroup => pepGroup.PeptideCount);
+            precursors = pepGroups.Sum(pepGroup => pepGroup.TransitionGroupCount);
+            transitions = pepGroups.Sum(pepGroup => pepGroup.TransitionCount);
+        }*/
+
+        public void NewTargetsFinal(out int proteins, out int peptides, out int precursors, out int transitions)
+        {
+            if (DocumentFinal == null)
+                throw new Exception();
+            proteins = DocumentFinal.PeptideGroupCount;
+            peptides = DocumentFinal.PeptideCount;
+            precursors = DocumentFinal.PeptideTransitionGroupCount;
+            transitions = DocumentFinal.PeptideTransitionCount;
+        }
+
+        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions)
+        {
+            int? emptyProteins;
+            NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out emptyProteins);
+        }
+
+        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int? emptyProteins)
+        {
+            var doc = DocumentFinal;
+            emptyProteins = 0;
+            proteins = doc.PeptideGroupCount;
+            peptides = doc.PeptideCount;
+            precursors = doc.PeptideTransitionGroupCount;
+            transitions = doc.PeptideTransitionCount;
         }
     }
 }

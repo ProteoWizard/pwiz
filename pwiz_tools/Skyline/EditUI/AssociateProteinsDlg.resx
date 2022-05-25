@@ -136,7 +136,7 @@
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -151,7 +151,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>7</value>
   </data>
   <data name="lblDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -181,7 +181,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblDescription.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>6</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -196,7 +196,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+    <value>6</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -211,7 +211,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>5</value>
   </data>
   <data name="cbGroupProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -245,9 +245,6 @@
   </data>
   <data name="&gt;&gt;cbGroupProteins.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="comboSharedPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
   </data>
   <data name="lblGroupProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -401,7 +398,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 78</value>
+    <value>3, 75</value>
   </data>
   <data name="cbMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 6, 0, 3</value>
@@ -431,7 +428,7 @@
     <value>True</value>
   </data>
   <data name="lblMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 78</value>
+    <value>18, 75</value>
   </data>
   <data name="lblMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 0, 3</value>
@@ -471,7 +468,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 72</value>
+    <value>250, 69</value>
   </data>
   <data name="lnkHelpFindMinimalProteinList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -504,7 +501,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 98</value>
+    <value>3, 95</value>
   </data>
   <data name="cbRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 0, 3</value>
@@ -537,7 +534,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 98</value>
+    <value>18, 95</value>
   </data>
   <data name="lblRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 3, 0, 3</value>
@@ -576,7 +573,7 @@
     <value>NoControl</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>139, 95</value>
+    <value>139, 92</value>
   </data>
   <data name="lnkHelpRemoveSubsetProteins.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 3, 0</value>
@@ -609,7 +606,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 121</value>
+    <value>0, 118</value>
   </data>
   <data name="lblMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 3, 3</value>
@@ -642,7 +639,7 @@
     <value>12</value>
   </data>
   <data name="numMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 138</value>
+    <value>3, 135</value>
   </data>
   <data name="numMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 0, 3, 3</value>
@@ -692,11 +689,8 @@
   <data name="comboSharedPeptides.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 45</value>
   </data>
-  <data name="comboSharedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 6</value>
-  </data>
   <data name="comboSharedPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>329, 21</value>
+    <value>341, 21</value>
   </data>
   <data name="comboSharedPeptides.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -723,7 +717,7 @@
     <value>428, 184</value>
   </data>
   <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>2</value>
   </data>
   <data name="gbParsimonyOptions.Text" xml:space="preserve">
     <value>Protein parsimony options</value>
@@ -738,7 +732,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gbParsimonyOptions.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>4</value>
   </data>
   <data name="rbFASTA.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -747,7 +741,7 @@
     <value>NoControl</value>
   </data>
   <data name="rbFASTA.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 67</value>
+    <value>3, 3</value>
   </data>
   <data name="rbFASTA.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 17</value>
@@ -765,10 +759,10 @@
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;rbFASTA.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;rbFASTA.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>0</value>
   </data>
   <data name="rbBackgroundProteome.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -777,7 +771,7 @@
     <value>NoControl</value>
   </data>
   <data name="rbBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 117</value>
+    <value>3, 53</value>
   </data>
   <data name="rbBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 17</value>
@@ -795,16 +789,16 @@
     <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;rbBackgroundProteome.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;rbBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>1</value>
   </data>
   <data name="comboBackgroundProteome.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 140</value>
+    <value>3, 76</value>
   </data>
   <data name="comboBackgroundProteome.Size" type="System.Drawing.Size, System.Drawing">
     <value>256, 21</value>
@@ -819,22 +813,22 @@
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="tbxFastaTargets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxFastaTargets.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 87</value>
+    <value>3, 23</value>
   </data>
   <data name="tbxFastaTargets.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxFastaTargets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>343, 20</value>
+    <value>344, 20</value>
   </data>
   <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -846,10 +840,10 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxFastaTargets.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;tbxFastaTargets.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="browseFastaTargetsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -858,7 +852,7 @@
     <value>NoControl</value>
   </data>
   <data name="browseFastaTargetsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>359, 85</value>
+    <value>350, 21</value>
   </data>
   <data name="browseFastaTargetsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -879,10 +873,10 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;browseFastaTargetsBtn.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;browseFastaTargetsBtn.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="dgvAssociateResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -918,7 +912,7 @@
     <value>428, 67</value>
   </data>
   <data name="dgvAssociateResults.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;dgvAssociateResults.Name" xml:space="preserve">
     <value>dgvAssociateResults</value>
@@ -930,7 +924,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;dgvAssociateResults.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="lblResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -948,7 +942,7 @@
     <value>132, 13</value>
   </data>
   <data name="lblResults.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>3</value>
   </data>
   <data name="lblResults.Text" xml:space="preserve">
     <value>Protein association results:</value>
@@ -963,7 +957,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblResults.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="lblStatusBarResult.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -1038,7 +1032,7 @@
     <value>428, 20</value>
   </data>
   <data name="panelStatusBarResult.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;panelStatusBarResult.Name" xml:space="preserve">
     <value>panelStatusBarResult</value>
@@ -1050,6 +1044,27 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelStatusBarResult.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="proteinSourcePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 55</value>
+  </data>
+  <data name="proteinSourcePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>428, 116</value>
+  </data>
+  <data name="proteinSourcePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;proteinSourcePanel.Name" xml:space="preserve">
+    <value>proteinSourcePanel</value>
+  </data>
+  <data name="&gt;&gt;proteinSourcePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;proteinSourcePanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;proteinSourcePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

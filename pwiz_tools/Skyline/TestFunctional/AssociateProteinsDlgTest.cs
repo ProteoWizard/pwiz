@@ -21,11 +21,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -36,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class AssociateProteinsDlgTest : AbstractFunctionalTest
     {
-        private enum ImportType { FASTA, BGPROTEOME }
+        private enum ImportType { FASTA, BGPROTEOME, OVERRIDE }
         private String _fastaFile;
 
         [TestMethod]
@@ -52,6 +54,7 @@ namespace pwiz.SkylineTestFunctional
             TestUseFasta();
             TestUseBackgroundProteome();
             TestParsimonyOptions();
+            TestFastaOverride();
         }
 
         /// <summary>
@@ -78,26 +81,53 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
+        /// Test that setting the FASTA path programatically can override the user's ability to control the protein source
+        /// </summary>
+        private void TestFastaOverride()
+        {
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            TestDialog(ImportType.OVERRIDE);
+
+            // test again with existing associations
+            TestDialog(ImportType.OVERRIDE, SkylineWindow.Document.PeptideCount - 4);
+        }
+
+        /// <summary>
         /// tests the form
         /// makes sure correct number of matches were found
         /// unchecks all boxes to make sure apply button disables
         /// </summary>
-        private void TestDialog(ImportType type)
+        private void TestDialog(ImportType type, int? initialPeptideCount = null)
         {
-            int initialPeptideCount = SkylineWindow.Document.PeptideCount;
-            var dlg2 = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+            initialPeptideCount = initialPeptideCount ?? SkylineWindow.Document.PeptideCount;
+            AssociateProteinsDlg associateProteinsDlg;
             if (type == ImportType.FASTA)
             {
+                associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
                 if (Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
-                    RunUI(() => dlg2.FastaFileName = _fastaFile);
+                    RunUI(() => associateProteinsDlg.FastaFileName = _fastaFile);
+            }
+            else if (type == ImportType.OVERRIDE)
+            {
+                associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(() =>
+                {
+                    using (var dlg = new AssociateProteinsDlg(SkylineWindow.Document, _fastaFile, IrtStandard.EMPTY, null, 0))
+                    {
+                        if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
+                            SkylineWindow.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
+                                current => dlg.DocumentFinal, dlg.FormSettings.EntryCreator.Create);
+                    }
+                });
             }
             else
             {
-                RunUI(dlg2.UseBackgroundProteome);
+                associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+                RunUI(associateProteinsDlg.UseBackgroundProteome);
             }
 
             //PauseTest();
-            OkDialog(dlg2, dlg2.AcceptButton.PerformClick);
+            OkDialog(associateProteinsDlg, associateProteinsDlg.AcceptButton.PerformClick);
+
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
 

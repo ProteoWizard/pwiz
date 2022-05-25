@@ -628,13 +628,13 @@ namespace TestPerf
             }
             OkDialog(addIrtDlg, addIrtDlg.OkDialog);
 
-            var peptidesPerProteinDlg = WaitForOpenForm<PeptidesPerProteinDlg>(600000);
+            var peptidesPerProteinDlg = WaitForOpenForm<AssociateProteinsDlg>(600000);
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
-                int proteinCount, peptideCount, precursorCount, transitionCount;
-                peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(ref _analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
+                //int proteinCount, peptideCount, precursorCount, transitionCount;
+                //peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                //ValidateTargets(ref _analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
                 if (_analysisValues.RemoveDuplicates)
                     peptidesPerProteinDlg.RemoveDuplicatePeptides = true;
                 if (_analysisValues.MinPeptidesPerProtein.HasValue)

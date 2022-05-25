@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Proteome
             try
             {
                 ResetMapping();
-                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     var fastaSource = new FastaSource(stream);
                     var proteinAssociations = FindProteinMatches(fastaSource, broker);
@@ -175,6 +175,8 @@ namespace pwiz.Skyline.Model.Proteome
                     peptidesMappedSet.UnionWith(peptidesMatched);
                 }
             });
+            
+            Assume.IsTrue(localResults.ProteinsMapped + localResults.ProteinsUnmapped > 0);
 
             _peptideToProteins = peptideToProteins;
             _results = localResults;

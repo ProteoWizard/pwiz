@@ -11774,4 +11774,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
 	  <value>Error on line {0}: invalid non-ASCII character '{1}' at position {2}; are you sure this is a FASTA file?</value>
   </data>
+  <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
+	  <value>Organize all document peptides into associated proteins or protein groups.</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
+	  <value>Existing protein associations will be discarded.</value>
+  </data>
 </root>

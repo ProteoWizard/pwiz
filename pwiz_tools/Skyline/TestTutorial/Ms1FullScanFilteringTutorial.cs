@@ -299,16 +299,16 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", 12);
 
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
-                peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                /*peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(11, proteinCount);
                 Assert.AreEqual(51, peptideCount);
                 Assert.AreEqual(52, precursorCount);
-                Assert.AreEqual(156, transitionCount);
+                Assert.AreEqual(156, transitionCount);*/
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(11, proteinCount);
                 Assert.AreEqual(51, peptideCount);

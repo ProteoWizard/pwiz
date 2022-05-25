@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DdaSearch;
@@ -100,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
                 ExpectedResults = new ExpectedResults(1131, 110, 110, 330),
-                ExpectedResultsFinal = new ExpectedResults(99, 110, 110, 330)
+                ExpectedResultsFinal = new ExpectedResults(100, 111, 111, 333)
             };
 
             RunFunctionalTest();
@@ -127,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new List<KeyValuePair<string, string>>(),
                 ExpectedResults = new ExpectedResults(1131, 79, 79, 237),
-                ExpectedResultsFinal = new ExpectedResults(72, 79, 79, 237)
+                ExpectedResultsFinal = new ExpectedResults(73, 80, 80, 240)
             };
 
             RunFunctionalTest();
@@ -159,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
                 ExpectedResults = new ExpectedResults(1131, 90, 90, 270),
-                ExpectedResultsFinal = new ExpectedResults(81, 90, 90, 270)
+                ExpectedResultsFinal = new ExpectedResults(82, 91, 91, 273)
             };
 
             RunFunctionalTest();
@@ -402,11 +403,11 @@ namespace pwiz.SkylineTestFunctional
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
 
-            var emptyProteinsDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(()=>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
-                emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
@@ -422,13 +423,21 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(TestSettings.ExpectedResults.precursorCount, precursorCount);
                         Assert.AreEqual(TestSettings.ExpectedResults.transitionCount, transitionCount);
                     }
-                }
+                }*/
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (Environment.Is64BitProcess)
                 {
                     if (IsRecordMode)
                     {
                         Console.WriteLine($@"{proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}");
+                        using (var proteins = new StreamWriter($"proteins-{emptyProteinsDlg.GetType().Name}.txt"))
+                        using (var peptides = new StreamWriter($"peptides-{emptyProteinsDlg.GetType().Name}.txt"))
+                        {
+                            foreach (var protein in emptyProteinsDlg.DocumentFinal.PeptideGroups)
+                                proteins.WriteLine(protein.Name);
+                            foreach (var peptide in emptyProteinsDlg.DocumentFinal.Peptides)
+                                peptides.WriteLine(peptide.ModifiedSequence);
+                        }
                     }
                     else
                     {
