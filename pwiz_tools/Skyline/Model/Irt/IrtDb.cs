@@ -267,18 +267,6 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
 
-                var existingHistories = new Dictionary<long, List<double>>();
-                if (redundant)
-                {
-                    foreach (var history in session.CreateCriteria(typeof(DbIrtHistorical)).List<DbIrtHistorical>())
-                    {
-                        if (!existingHistories.TryGetValue(history.PeptideId, out var list))
-                            existingHistories.Add(history.PeptideId, new List<double> { history.Irt });
-                        else
-                            list.Add(history.Irt);
-                    }
-                }
-
                 // Add or update peptides that have changed from the old list
                 var i = 0;
                 foreach (var pep in newPeptides)
