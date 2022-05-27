@@ -30,9 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditSpectrumFilterDlg));
             this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbCreateCopy = new System.Windows.Forms.CheckBox();
             this.btnReset = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -41,6 +38,9 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.toolStripFilter = new System.Windows.Forms.ToolStrip();
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
+            this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.panel1.SuspendLayout();
             this.toolStripFilter.SuspendLayout();
@@ -59,31 +59,9 @@
             this.dataGridViewEx1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewEx1.Location = new System.Drawing.Point(0, 0);
             this.dataGridViewEx1.Name = "dataGridViewEx1";
-            this.dataGridViewEx1.Size = new System.Drawing.Size(646, 216);
+            this.dataGridViewEx1.Size = new System.Drawing.Size(677, 216);
             this.dataGridViewEx1.TabIndex = 0;
             this.dataGridViewEx1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewEx1_DataError);
-            // 
-            // propertyColumn
-            // 
-            this.propertyColumn.DataPropertyName = "Property";
-            this.propertyColumn.HeaderText = "Property";
-            this.propertyColumn.Name = "propertyColumn";
-            this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // operationColumn
-            // 
-            this.operationColumn.DataPropertyName = "Operation";
-            this.operationColumn.HeaderText = "Operation";
-            this.operationColumn.Name = "operationColumn";
-            this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // dataGridViewTextBoxColumn1
-            // 
-            this.dataGridViewTextBoxColumn1.DataPropertyName = "Value";
-            this.dataGridViewTextBoxColumn1.HeaderText = "Value";
-            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             // 
             // cbCreateCopy
             // 
@@ -101,7 +79,7 @@
             // 
             this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnReset.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.btnReset.Location = new System.Drawing.Point(713, 197);
+            this.btnReset.Location = new System.Drawing.Point(714, 200);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(75, 23);
             this.btnReset.TabIndex = 8;
@@ -141,11 +119,14 @@
             // 
             // panel1
             // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.dataGridViewEx1);
             this.panel1.Controls.Add(this.toolStripFilter);
-            this.panel1.Location = new System.Drawing.Point(12, 7);
+            this.panel1.Location = new System.Drawing.Point(6, 7);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(670, 216);
+            this.panel1.Size = new System.Drawing.Size(701, 216);
             this.panel1.TabIndex = 10;
             // 
             // toolStripFilter
@@ -153,7 +134,7 @@
             this.toolStripFilter.Dock = System.Windows.Forms.DockStyle.Right;
             this.toolStripFilter.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnDeleteFilter});
-            this.toolStripFilter.Location = new System.Drawing.Point(646, 0);
+            this.toolStripFilter.Location = new System.Drawing.Point(677, 0);
             this.toolStripFilter.Name = "toolStripFilter";
             this.toolStripFilter.Size = new System.Drawing.Size(24, 216);
             this.toolStripFilter.TabIndex = 2;
@@ -168,6 +149,33 @@
             this.btnDeleteFilter.Size = new System.Drawing.Size(21, 20);
             this.btnDeleteFilter.Text = "Delete";
             this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
+            // 
+            // propertyColumn
+            // 
+            this.propertyColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.propertyColumn.DataPropertyName = "Property";
+            this.propertyColumn.HeaderText = "Property";
+            this.propertyColumn.Name = "propertyColumn";
+            this.propertyColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.propertyColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.propertyColumn.Width = 150;
+            // 
+            // operationColumn
+            // 
+            this.operationColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.operationColumn.DataPropertyName = "Operation";
+            this.operationColumn.HeaderText = "Operation";
+            this.operationColumn.Name = "operationColumn";
+            this.operationColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.operationColumn.Width = 150;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn1.DataPropertyName = "Value";
+            this.dataGridViewTextBoxColumn1.HeaderText = "Value";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             // 
             // EditSpectrumFilterDlg
             // 
@@ -201,12 +209,12 @@
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
-        private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn valueDataGridViewTextBoxColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStrip toolStripFilter;
         private System.Windows.Forms.ToolStripButton btnDeleteFilter;
+        private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
+        private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
     }
 }
