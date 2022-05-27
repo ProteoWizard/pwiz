@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -1631,6 +1632,7 @@ namespace pwiz.Skyline.Menus
             manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
+            editSpectrumFilterMenuItem.Enabled = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>() != null;
             setStandardTypeMenuItem.Enabled = SkylineWindow.HasSelectedTargetPeptides();
         }
 
@@ -1686,5 +1688,96 @@ namespace pwiz.Skyline.Menus
             menuStrip?.Items.Insert(iInsert++, item);
         }
 
+        private void editSpectrumFilterMenuItem_Click(object sender, EventArgs e)
+        {
+            EditSpectrumFilter();
+        }
+
+        public void EditSpectrumFilter()
+        {
+            var transitionGroupTreeNode = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+            if (transitionGroupTreeNode == null)
+            {
+                return;
+            }
+
+            var precursorIdentityPath = transitionGroupTreeNode.Path;
+            using (var dlg = new EditSpectrumFilterDlg(transitionGroupTreeNode.DocNode.SpectrumClassFilter))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                {
+                    return;
+                }
+
+                ChangeSpectrumFilter(new[] {precursorIdentityPath}, dlg.SpectrumClassFilter, dlg.CreateCopy);
+            }
+        }
+
+        public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
+            SpectrumClassFilter spectrumClassFilter, bool copy)
+        {
+            SkylineWindow.ModifyDocument("Change spectrum filter", doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy),
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
+
+        }
+
+        private SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
+            SpectrumClassFilter spectrumClassFilter, bool copy)
+        {
+            foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
+            {
+                var peptideDocNode = (PeptideDocNode)document.FindNode(peptidePathGroup.Key);
+                if (peptideDocNode == null)
+                {
+                    continue;
+                }
+
+                var transitionGroupDocNodes = peptidePathGroup
+                    .Select(idPath => peptideDocNode.FindNode(idPath.Child))
+                    .OfType<TransitionGroupDocNode>().ToList();
+                var newTransitionGroups = new List<DocNode>();
+                if (copy)
+                {
+                    newTransitionGroups.AddRange(peptideDocNode.Children);
+                }
+                else
+                {
+                    var idPathSet = peptidePathGroup.ToHashSet();
+                    newTransitionGroups.AddRange(peptideDocNode.Children.Where(tg=>!idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.Id))));
+                }
+                bool changed = false;
+                foreach (var precursorGroup in transitionGroupDocNodes.GroupBy(tg =>
+                             tg.PrecursorKey.ChangeSpectrumClassFilter(null)))
+                {
+                    if (precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
+                    {
+                        if (!copy)
+                        {
+                            newTransitionGroups.AddRange(precursorGroup);
+                        }
+                        continue;
+                    }
+
+                    var transitionGroup = precursorGroup.First();
+                    if (copy)
+                    {
+                        transitionGroup = transitionGroup.CloneTransitionGroupId();
+                    }
+
+                    transitionGroup = transitionGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
+                    newTransitionGroups.Add(transitionGroup);
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    newTransitionGroups.Sort(Peptide.CompareGroups);
+                    peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
+                    document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
+                }
+            }
+
+            return document;
+        }
     }
 }

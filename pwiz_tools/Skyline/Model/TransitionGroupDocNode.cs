@@ -113,6 +113,17 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
+        public TransitionGroupDocNode CloneTransitionGroupId()
+        {
+            var newTransitionGroup = new TransitionGroup(TransitionGroup.Peptide,
+                TransitionGroup.PrecursorAdduct,
+                TransitionGroup.LabelType, true,
+                TransitionGroup.DecoyMassShift);
+            var newTransitions = Transitions.Select(t => t.ChangeTransitionGroup(newTransitionGroup)).ToList();
+            return ChangeTransitionGroupId(newTransitionGroup, newTransitions);
+
+        }
+
         [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
 

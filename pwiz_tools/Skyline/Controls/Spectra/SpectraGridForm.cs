@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -645,65 +646,20 @@ namespace pwiz.Skyline.Controls.Spectra
 
             var spectrumFilter = new SpectrumClassFilter(filterSpecs);
             var firstSpectrumMetadata = spectrumClassRow.Files.SelectMany(entry => entry.Value.GetSpectra()).FirstOrDefault();
-            SkylineWindow.ModifyDocument("Add spectrum filter", doc => AddSpectrumFilter(doc, spectrumFilter, firstSpectrumMetadata),
-                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
-        }
-
-        public SrmDocument AddSpectrumFilter(SrmDocument document, SpectrumClassFilter spectrumClassFilter, SpectrumMetadata spectrumMetadata)
-        {
-            foreach (var peptidePathGroup in _selectedPrecursorPaths.GroupBy(path => path.Parent))
+            ICollection<IdentityPath> precursorPaths = _selectedPrecursorPaths;
+            var document = SkylineWindow.DocumentUI;
+            var transitionSettings = document.Settings.TransitionSettings;
+            if (firstSpectrumMetadata != null)
             {
-                var peptideDocNode = (PeptideDocNode) document.FindNode(peptidePathGroup.Key);
-                if (peptideDocNode == null)
+                precursorPaths = precursorPaths.Where(path =>
                 {
-                    continue;
-                }
-
-                var newTransitionGroups = peptideDocNode.TransitionGroups.Cast<DocNode>().ToList();
-                var transitionGroupDocNodes = peptidePathGroup
-                    .Select(idPath => peptideDocNode.FindNode(idPath.Child))
-                    .OfType<TransitionGroupDocNode>().ToList();
-                foreach (var precursorGroup in transitionGroupDocNodes.GroupBy(tg =>
-                             tg.PrecursorKey.ChangeSpectrumClassFilter(null)))
-                {
-                    if (precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
-                    {
-                        continue;
-                    }
-
-                    var templateTransitionGroup = precursorGroup.First();
-                    if (spectrumMetadata != null)
-                    {
-                        if (!FindMatchingTransitionGroups(document.Settings.TransitionSettings, spectrumMetadata,
-                                new[] {templateTransitionGroup}).Any())
-                        {
-                            continue;
-                        }
-                    }
-                    var newTransitionGroup = ChangeSpectrumFilter(templateTransitionGroup, spectrumClassFilter);
-                    newTransitionGroups.Add(newTransitionGroup);
-                }
-
-                if (newTransitionGroups.Count != peptideDocNode.Children.Count)
-                {
-                    newTransitionGroups.Sort(Peptide.CompareGroups);
-                    peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
-                    document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
-                }
+                    var docNode = (TransitionGroupDocNode) document.FindNode(path);
+                    return docNode != null &&
+                           FindMatchingTransitionGroups(transitionSettings, firstSpectrumMetadata, new[] {docNode})
+                               .Any();
+                }).ToList();
             }
-
-            return document;
-        }
-
-        public TransitionGroupDocNode ChangeSpectrumFilter(TransitionGroupDocNode transitionGroupDocNode, SpectrumClassFilter spectrumClassFilter)
-        {
-            var newTransitionGroup = new TransitionGroup(transitionGroupDocNode.TransitionGroup.Peptide,
-                transitionGroupDocNode.TransitionGroup.PrecursorAdduct,
-                transitionGroupDocNode.TransitionGroup.LabelType, true,
-                transitionGroupDocNode.TransitionGroup.DecoyMassShift);
-            var newTransitions =
-                transitionGroupDocNode.Transitions.Select(t => t.ChangeTransitionGroup(newTransitionGroup)).ToList();
-            return transitionGroupDocNode.ChangeTransitionGroupId(newTransitionGroup, newTransitions).ChangeSpectrumClassFilter(spectrumClassFilter);
+            SkylineWindow.EditMenu.ChangeSpectrumFilter(precursorPaths, spectrumFilter, true);
         }
     }
 }

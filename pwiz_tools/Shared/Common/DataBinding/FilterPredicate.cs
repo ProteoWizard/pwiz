@@ -95,8 +95,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 object operand = GetOperandValue(dataSchema, propertyType);
-                return (string) Convert.ChangeType(operand, typeof(string),
-                    dataSchema.DataSchemaLocalizer.FormatProvider);
+                return OperandValueToString(dataSchema.DataSchemaLocalizer.FormatProvider, operand);
             }
             catch (Exception)
             {

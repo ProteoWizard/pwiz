@@ -348,6 +348,7 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.editSpectrumFilterContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -375,6 +376,7 @@ namespace pwiz.Skyline
             this.removePeakContextMenuItem,
             this.setStandardTypeContextMenuItem,
             this.modifyPeptideContextMenuItem,
+            this.editSpectrumFilterContextMenuItem,
             this.toggleQuantitativeContextMenuItem,
             this.markTransitionsQuantitativeContextMenuItem,
             this.toolStripSeparator7,
@@ -645,7 +647,6 @@ namespace pwiz.Skyline
             this.zhionsContextMenuItem.Name = "zhionsContextMenuItem";
             resources.ApplyResources(this.zhionsContextMenuItem, "zhionsContextMenuItem");
             this.zhionsContextMenuItem.Click += new System.EventHandler(this.zhMenuItem_Click);
-
             // 
             // zhhionsContextMenuItem
             // 
@@ -653,7 +654,6 @@ namespace pwiz.Skyline
             this.zhhionsContextMenuItem.Name = "zhhionsContextMenuItem";
             resources.ApplyResources(this.zhhionsContextMenuItem, "zhhionsContextMenuItem");
             this.zhhionsContextMenuItem.Click += new System.EventHandler(this.zhhMenuItem_Click);
-            
             // 
             // fragmentionsContextMenuItem
             // 
@@ -2579,6 +2579,12 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
+            // editSpectrumFilterContextMenuItem
+            // 
+            this.editSpectrumFilterContextMenuItem.Name = "editSpectrumFilterContextMenuItem";
+            resources.ApplyResources(this.editSpectrumFilterContextMenuItem, "editSpectrumFilterContextMenuItem");
+            this.editSpectrumFilterContextMenuItem.Click += new System.EventHandler(this.editSpectrumFilterContextMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -2926,6 +2932,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editSpectrumFilterContextMenuItem;
     }
 }
 
