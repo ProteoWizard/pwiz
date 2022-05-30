@@ -384,5 +384,13 @@ namespace pwiz.Skyline.Menus
                 }
             }
         }
+
+        private void optimizeTransitionsMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var optimizeTransitionsDlg = new OptimizeTransitionsDlg(SkylineWindow))
+            {
+                optimizeTransitionsDlg.ShowDialog(SkylineWindow);
+            }
+        }
     }
 }

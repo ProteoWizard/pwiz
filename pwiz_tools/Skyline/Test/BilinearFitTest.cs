@@ -200,11 +200,10 @@ namespace pwiz.SkylineTest
                 weightedPoints.Add(MakeWeightedPoints(concentrations, transitionAreas));
             }
 
-            var result = curveFitter.OptimizeTransitions(OptimizeType.LOQ, weightedPoints);
-            var acceptedIndices = result.Item1.ToList();
+            var acceptedIndices = curveFitter.OptimizeTransitions(OptimizeType.LOQ, weightedPoints, out var finalQuantLimit).ToList();
             CollectionAssert.AreEqual(new[]{1,3,0,5}, acceptedIndices);
-            Assert.AreEqual(result.Item2.Lod, 0.3719707784516309, delta);
-            Assert.AreEqual(result.Item2.Loq, 0.3719707784516309, delta);
+            Assert.AreEqual(finalQuantLimit.Lod, 0.3719707784516309, delta);
+            Assert.AreEqual(finalQuantLimit.Loq, 0.3719707784516309, delta);
         }
 
         private double[] datasetConcentrations =

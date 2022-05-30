@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using EnvDTE;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.Collections;
 using Statistics = pwiz.Skyline.Util.Statistics;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -29,6 +31,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public double CvThreshold { get; set; }
         public Random Random { get; set; }
         public int MinNumTransitions { get; set; }
+        public CancellationToken CancellationToken { get; set; }
 
         public BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
         {
@@ -97,6 +100,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             double lastLoq = maxConcentration;
             for (int i = 0; i < MaxBootstrapIterations; i++)
             {
+                CancellationToken.ThrowIfCancellationRequested();
                 var p = ComputeBootstrapParams(points);
                 for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
                 {
@@ -167,9 +171,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double ComputeLod(IList<WeightedPoint> points)
         {
+            if (points.Count == 0)
+            {
+                return double.MaxValue;
+            }
             BilinearCurveFit fit = FitBilinearCurve(points);
-            var lodArea = fit.BaselineHeight + fit.StdDevBaseline;
+            if (fit == null)
+            {
+                return double.MaxValue;
+            }
             var largestConc = points.Max(pt => pt.X);
+            var lodArea = fit.BaselineHeight + fit.StdDevBaseline;
             var smallestNonzeroConc = points.Where(pt => pt.X > 0).Select(pt => pt.X).Append(largestConc).Min();
             double lodConc;
             if (fit.Slope == 0)
@@ -185,12 +197,47 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return lodConc;
         }
 
+        public IDictionary<CalibrationPoint, double> GetCalibrationPoints(CalibrationCurveFitter calibrationCurveFitter)
+        {
+            var result = new Dictionary<CalibrationPoint, double>();
+            foreach (var calibrationPoint in calibrationCurveFitter.EnumerateCalibrationPoints())
+            {
+                var concentration = calibrationCurveFitter.GetPeptideConcentration(calibrationPoint);
+                if (!concentration.HasValue)
+                {
+                    continue;
+                }
+
+                var area = calibrationCurveFitter.GetNormalizedPeakArea(calibrationPoint);
+                if (!area.HasValue)
+                {
+                    continue;
+                }
+
+                result[calibrationPoint] = area.Value;
+            }
+
+            return result;
+        }
+
         public QuantLimit ComputeQuantLimits(IList<WeightedPoint> areas)
         {
             return new QuantLimit(ComputeLod(areas), ComputeBootstrappedLoq(areas));
         }
 
-        public Tuple<IList<int>, QuantLimit> OptimizeTransitions(OptimizeType optimizeType, IList<IList<WeightedPoint>> areas)
+        public QuantLimit ComputeQuantLimits(CalibrationCurveFitter calibrationCurveFitter)
+        {
+            var weightedPoints = calibrationCurveFitter.EnumerateCalibrationPoints()
+                .Select(calibrationCurveFitter.GetWeightedPoint).OfType<WeightedPoint>().ToList();
+            var combinedWeightedPoints = new List<WeightedPoint>();
+            foreach (var pointGroup in weightedPoints.GroupBy(pt => pt.X))
+            {
+                combinedWeightedPoints.Add(new WeightedPoint(pointGroup.Key, pointGroup.Average(pt=>pt.Y), pointGroup.First().Weight));
+            }
+            return ComputeQuantLimits(combinedWeightedPoints);
+        }
+
+        public IList<int> OptimizeTransitions(OptimizeType optimizeType, IList<IList<WeightedPoint>> areas, out QuantLimit finalQuantLimit)
         {
             var quantLimits = new List<Tuple<int, QuantLimit>>();
 
@@ -287,7 +334,121 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 optimizedQuantLimit = ComputeQuantLimits(acceptedAreas);
             }
 
-            return Tuple.Create(acceptedFragmentIndices, optimizedQuantLimit);
+            finalQuantLimit = optimizedQuantLimit;
+            return acceptedFragmentIndices;
+        }
+        
+        public PeptideDocNode OptimizeTransitions(OptimizeType optimizeType, CalibrationCurveFitter calibrationCurveFitter)
+        {
+            var standardConcentrations = calibrationCurveFitter.GetStandardConcentrations();
+            if (standardConcentrations.Count == 0)
+            {
+                return null;
+            }
+            OptimizeType otherOptimizeType;
+            if (optimizeType == OptimizeType.LOD)
+            {
+                otherOptimizeType = OptimizeType.LOQ;
+            }
+            else
+            {
+                otherOptimizeType = OptimizeType.LOD;
+            }
+
+            var maxConcentration = standardConcentrations.Values.Max();
+            var quantLimits = new List<Tuple<IdentityPath, QuantLimit>>();
+            var peptideDocNode = calibrationCurveFitter.PeptideQuantifier.PeptideDocNode;
+            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
+            {
+                foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
+                {
+                    var identityPath = new IdentityPath(
+                        calibrationCurveFitter.PeptideQuantifier.PeptideGroupDocNode.PeptideGroup,
+                        calibrationCurveFitter.PeptideQuantifier.PeptideDocNode.Peptide,
+                        transitionGroupDocNode.TransitionGroup, transitionDocNode.Transition);
+                    var transitionCalibrationCurveFitter =
+                        calibrationCurveFitter.MakeCalibrationCurveFitterWithTransitions(
+                            ImmutableList.Singleton(identityPath));
+                    var quantLimit = ComputeQuantLimits(transitionCalibrationCurveFitter);
+                    if (quantLimit != null)
+                    {
+                        quantLimits.Add(Tuple.Create(identityPath, quantLimit));
+                    }
+                }
+            }
+            var lowestLimits = new Dictionary<OptimizeType, double>()
+            {
+                {OptimizeType.LOD, quantLimits.Min(q=>q.Item2.Lod)},
+                {OptimizeType.LOQ, quantLimits.Min(q=>q.Item2.Loq)}
+            };
+            if (lowestLimits[optimizeType] == maxConcentration && lowestLimits[otherOptimizeType] < maxConcentration)
+            {
+                quantLimits = quantLimits.OrderBy(q => q.Item2.GetQuantLimit(otherOptimizeType)).ToList();
+            }
+            else
+            {
+                quantLimits = quantLimits.OrderBy(q => q.Item2.GetQuantLimit(optimizeType)).ToList();
+            }
+
+            IList<IdentityPath> acceptedTransitionIdentityPaths = new List<IdentityPath>();
+            foreach (var quantLimit in quantLimits.Take(MinNumTransitions))
+            {
+                if (acceptedTransitionIdentityPaths.Count > 0 && quantLimit.Item2.GetQuantLimit(optimizeType) >= maxConcentration)
+                {
+                    break;
+                }
+                acceptedTransitionIdentityPaths.Add(quantLimit.Item1);
+            }
+
+            var optimizedQuantLimit = ComputeQuantLimits(calibrationCurveFitter.MakeCalibrationCurveFitterWithTransitions(acceptedTransitionIdentityPaths));
+            int startIndex = Math.Min(acceptedTransitionIdentityPaths.Count, MinNumTransitions);
+            var rejectedItems = new List<Tuple<IdentityPath, QuantLimit>>();
+            foreach (var quantLimitAndIndex in quantLimits.Skip(startIndex))
+            {
+                var possibleCalibrationCurveFitter = calibrationCurveFitter
+                    .MakeCalibrationCurveFitterWithTransitions(acceptedTransitionIdentityPaths.Append(quantLimitAndIndex.Item1));
+                var prospectiveQuantLimit = ComputeQuantLimits(possibleCalibrationCurveFitter);
+                // accept this transition if it helped the result
+                if (prospectiveQuantLimit.GetQuantLimit(optimizeType) < optimizedQuantLimit.GetQuantLimit(optimizeType))
+                {
+                    optimizedQuantLimit = prospectiveQuantLimit;
+                    acceptedTransitionIdentityPaths.Add(quantLimitAndIndex.Item1);
+                }
+                else
+                {
+                    // save the limits in case we don't have enough limits at the end of this
+                    rejectedItems.Add(Tuple.Create(quantLimitAndIndex.Item1, prospectiveQuantLimit));
+                    lowestLimits[OptimizeType.LOD] = Math.Min(lowestLimits[OptimizeType.LOD],
+                        prospectiveQuantLimit.GetQuantLimit(OptimizeType.LOD));
+                    lowestLimits[OptimizeType.LOQ] = Math.Min(lowestLimits[OptimizeType.LOQ],
+                        prospectiveQuantLimit.GetQuantLimit(OptimizeType.LOQ));
+                }
+            }
+            // if we still don't have enough transitions, for the case where there were transitions at the maximum limit
+            if (acceptedTransitionIdentityPaths.Count < MinNumTransitions && rejectedItems.Any())
+            {
+                if (lowestLimits[optimizeType] == maxConcentration &&
+                    lowestLimits[otherOptimizeType] < maxConcentration)
+                {
+                    rejectedItems = rejectedItems.OrderBy(item => item.Item2.GetQuantLimit(otherOptimizeType)).ToList();
+                }
+                else
+                {
+                    rejectedItems = rejectedItems.OrderBy(item => item.Item2.GetQuantLimit(optimizeType)).ToList();
+                }
+
+                int numTransitionsNeeded = MinNumTransitions - acceptedTransitionIdentityPaths.Count;
+                foreach (var item in rejectedItems.Take(numTransitionsNeeded))
+                {
+                    acceptedTransitionIdentityPaths.Add(item.Item1);
+                }
+
+                var acceptedCalibrationCurveFitter =
+                    calibrationCurveFitter.MakeCalibrationCurveFitterWithTransitions(acceptedTransitionIdentityPaths);
+                optimizedQuantLimit = ComputeQuantLimits(acceptedCalibrationCurveFitter);
+            }
+
+            return calibrationCurveFitter.PeptideQuantifier.WithQuantifiableTransitions(acceptedTransitionIdentityPaths).PeptideDocNode;
         }
 
         public class QuantLimit

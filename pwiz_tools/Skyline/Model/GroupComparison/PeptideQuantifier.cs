@@ -216,6 +216,40 @@ namespace pwiz.Skyline.Model.GroupComparison
             return numerator / denominator;
         }
 
+        public PeptideQuantifier WithQuantifiableTransitions(
+            IEnumerable<IdentityPath> quantifiableTransitionIdentityPaths)
+        {
+            ICollection<IdentityPath> identityPathSet = quantifiableTransitionIdentityPaths as ICollection<IdentityPath> ??
+                                                        quantifiableTransitionIdentityPaths.ToHashSet();
+            if (identityPathSet.Count > 1 && !(identityPathSet is HashSet<IdentityPath>))
+            {
+                identityPathSet = identityPathSet.ToHashSet();
+            }
+            var newTransitionGroups = new List<TransitionGroupDocNode>();
+            foreach (var transitionGroupDocNode in PeptideDocNode.TransitionGroups)
+            {
+                if (SkipTransitionGroup(transitionGroupDocNode))
+                {
+                    newTransitionGroups.Add(transitionGroupDocNode);
+                    continue;
+                }
+
+                var newTransitions = new List<TransitionDocNode>();
+                foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
+                {
+                    var identityPath = new IdentityPath(PeptideGroupDocNode.PeptideGroup,
+                        PeptideDocNode.Peptide, transitionGroupDocNode.TransitionGroup,
+                        transitionDocNode.Transition);
+                    newTransitions.Add(transitionDocNode.ChangeQuantitative(identityPathSet.Contains(identityPath)));
+                }
+                newTransitionGroups.Add((TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(newTransitions.ToArray()));
+            }
+
+            var newPeptideDocNode = (PeptideDocNode) PeptideDocNode.ChangeChildren(newTransitionGroups.ToArray());
+            return new PeptideQuantifier(_getNormalizationDataFunc, PeptideGroupDocNode, newPeptideDocNode,
+                QuantificationSettings);
+        }
+
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,

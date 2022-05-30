@@ -51,6 +51,7 @@
             this.removeEmptyPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.optimizeTransitionsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
             this.permuteIsotopeModificationsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,6 +84,7 @@
             this.removeEmptyPeptidesMenuItem,
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
+            this.optimizeTransitionsMenuItem,
             this.toolStripSeparator35,
             this.permuteIsotopeModificationsMenuItem,
             this.refineAdvancedMenuItem});
@@ -218,6 +220,12 @@
             resources.ApplyResources(this.removeRepeatedPeptidesMenuItem, "removeRepeatedPeptidesMenuItem");
             this.removeRepeatedPeptidesMenuItem.Click += new System.EventHandler(this.removeRepeatedPeptidesMenuItem_Click);
             // 
+            // optimizeTransitionsMenuItem
+            // 
+            this.optimizeTransitionsMenuItem.Name = "optimizeTransitionsMenuItem";
+            resources.ApplyResources(this.optimizeTransitionsMenuItem, "optimizeTransitionsMenuItem");
+            this.optimizeTransitionsMenuItem.Click += new System.EventHandler(this.optimizeTransitionsMenuItem_Click);
+            // 
             // toolStripSeparator35
             // 
             this.toolStripSeparator35.Name = "toolStripSeparator35";
@@ -276,5 +284,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator35;
         private System.Windows.Forms.ToolStripMenuItem permuteIsotopeModificationsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem refineAdvancedMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem optimizeTransitionsMenuItem;
     }
 }

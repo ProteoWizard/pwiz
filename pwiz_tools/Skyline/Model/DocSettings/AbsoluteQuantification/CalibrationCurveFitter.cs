@@ -327,15 +327,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             List<WeightedPoint> weightedPoints = new List<WeightedPoint>();
             foreach (var replicateIndex in GetValidStandardReplicates())
             {
-                double? intensity = GetYValue(replicateIndex);
-                if (!intensity.HasValue)
+                var weightedPoint = GetWeightedPoint(replicateIndex);
+                if (weightedPoint.HasValue)
                 {
-                    continue;
+                    weightedPoints.Add(weightedPoint.Value);
                 }
-                double x = GetSpecifiedXValue(replicateIndex).Value;
-                double weight = QuantificationSettings.RegressionWeighting.GetWeighting(x, intensity.Value);
-                WeightedPoint weightedPoint = new WeightedPoint(x, intensity.Value, weight);
-                weightedPoints.Add(weightedPoint);
             }
             if (weightedPoints.Count == 0)
             {
@@ -343,6 +339,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     .ChangeErrorMessage(QuantificationStrings.CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
             }
             return FindBestLodForPoints(weightedPoints);
+        }
+
+        public WeightedPoint? GetWeightedPoint(CalibrationPoint calibrationPoint)
+        {
+            double? intensity = GetYValue(calibrationPoint);
+            if (!intensity.HasValue)
+            {
+                return null;
+            }
+            double x = GetSpecifiedXValue(calibrationPoint).Value;
+            double weight = QuantificationSettings.RegressionWeighting.GetWeighting(x, intensity.Value);
+            WeightedPoint weightedPoint = new WeightedPoint(x, intensity.Value, weight);
+            return weightedPoint;
         }
 
         public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve)
@@ -745,6 +754,52 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return srmSettings.HasResults &&
                    srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
+        }
+
+        public CalibrationCurveFitter MakeCalibrationCurveFitterWithTransitions(IEnumerable<IdentityPath> transitionIdentityPaths)
+        {
+            return new CalibrationCurveFitter(PeptideQuantifier.WithQuantifiableTransitions(transitionIdentityPaths),
+                SrmSettings);
+#if false
+            ICollection<IdentityPath> identityPathSet = transitionIdentityPaths as ICollection<IdentityPath> ??
+                                                        transitionIdentityPaths.ToHashSet();
+            if (identityPathSet.Count > 1 && !(identityPathSet is HashSet<IdentityPath>))
+            {
+                identityPathSet = identityPathSet.ToHashSet();
+            }
+            var newTransitionGroups = new List<TransitionGroupDocNode>();
+            var peptideDocNode = PeptideQuantifier.PeptideDocNode;
+            foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
+            {
+                if (PeptideQuantifier.SkipTransitionGroup(transitionGroupDocNode))
+                {
+                    newTransitionGroups.Add(transitionGroupDocNode);
+                    continue;
+                }
+
+                var newTransitions = new List<TransitionDocNode>();
+                foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
+                {
+                    var identityPath = new IdentityPath(PeptideQuantifier.PeptideGroupDocNode.PeptideGroup,
+                        PeptideQuantifier.PeptideDocNode.Peptide, transitionGroupDocNode.TransitionGroup,
+                        transitionDocNode.Transition);
+                    if (identityPathSet.Contains(identityPath))
+                    {
+                        newTransitions.Add(transitionDocNode);
+                    }
+                }
+
+                if (newTransitions.Any())
+                {
+                    newTransitionGroups.Add((TransitionGroupDocNode)transitionGroupDocNode.ChangeChildren(newTransitions.ToArray()));
+                }
+            }
+
+            var newPeptideDocNode = (PeptideDocNode) peptideDocNode.ChangeChildren(newTransitionGroups.ToArray());
+            var newPeptideQuantifier = new PeptideQuantifier(() => PeptideQuantifier.GetNormalizationData(),
+                PeptideQuantifier.PeptideGroupDocNode, newPeptideDocNode, PeptideQuantifier.QuantificationSettings);
+            return new CalibrationCurveFitter(newPeptideQuantifier, SrmSettings);
+#endif
         }
     }
 

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification

@@ -124,13 +124,43 @@
     <value>155, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>150, 24</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="menuStrip1.Text" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Name" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 20</value>
+  </data>
+  <data name="refineToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Refine</value>
+  </data>
   <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>246, 22</value>
   </data>
   <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Reintegrate...</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -182,35 +212,35 @@
   <data name="renameProteinsMenuItem.Text" xml:space="preserve">
     <value>Re&amp;name Proteins...</value>
   </data>
-  <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
-    <value>By &amp;Name</value>
-  </data>
-  <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
-    <value>By &amp;Accession</value>
-  </data>
-  <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
-    <value>By &amp;Preferred Name</value>
-  </data>
-  <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
-    <value>By &amp;Gene</value>
-  </data>
   <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>246, 22</value>
   </data>
   <data name="sortProteinsMenuItem.Text" xml:space="preserve">
     <value>&amp;Sort Proteins</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>By &amp;Name</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
+    <value>By &amp;Accession</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>By &amp;Preferred Name</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 22</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
+    <value>By &amp;Gene</value>
   </data>
   <data name="toolStripSeparator43.Size" type="System.Drawing.Size, System.Drawing">
     <value>243, 6</value>
@@ -247,6 +277,12 @@ will be removed.</value>
     <value>All repeated peptides will be removed to leave only the
 first occurrence of any peptide.</value>
   </data>
+  <data name="optimizeTransitionsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="optimizeTransitionsMenuItem.Text" xml:space="preserve">
+    <value>Optimize Transitions...</value>
+  </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>243, 6</value>
   </data>
@@ -262,36 +298,6 @@ first occurrence of any peptide.</value>
   <data name="refineAdvancedMenuItem.Text" xml:space="preserve">
     <value>&amp;Advanced...</value>
   </data>
-  <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 20</value>
-  </data>
-  <data name="refineToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Refine</value>
-  </data>
-  <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>150, 24</value>
-  </data>
-  <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="menuStrip1.Text" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Name" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -302,7 +308,7 @@ first occurrence of any peptide.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.510, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;refineToolStripMenuItem.Name" xml:space="preserve">
     <value>refineToolStripMenuItem</value>
@@ -430,6 +436,12 @@ first occurrence of any peptide.</value>
   <data name="&gt;&gt;removeRepeatedPeptidesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;optimizeTransitionsMenuItem.Name" xml:space="preserve">
+    <value>optimizeTransitionsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;optimizeTransitionsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator35.Name" xml:space="preserve">
     <value>toolStripSeparator35</value>
   </data>
@@ -452,6 +464,6 @@ first occurrence of any peptide.</value>
     <value>RefineMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=21.2.1.510, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
