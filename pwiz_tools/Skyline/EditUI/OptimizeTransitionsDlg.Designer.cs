@@ -29,10 +29,11 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.tbxMinTransitions = new System.Windows.Forms.NumericUpDown();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnPreview = new System.Windows.Forms.Button();
             this.lblMinTransitions = new System.Windows.Forms.Label();
-            this.tbxMinTransitions = new System.Windows.Forms.NumericUpDown();
+            this.cbxReconsiderNonQuantitative = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).BeginInit();
             this.SuspendLayout();
@@ -44,6 +45,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.cbxReconsiderNonQuantitative);
             this.panel1.Controls.Add(this.tbxMinTransitions);
             this.panel1.Controls.Add(this.btnApply);
             this.panel1.Controls.Add(this.btnPreview);
@@ -53,6 +55,23 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 70);
             this.panel1.TabIndex = 1;
+            // 
+            // tbxMinTransitions
+            // 
+            this.tbxMinTransitions.Location = new System.Drawing.Point(15, 34);
+            this.tbxMinTransitions.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.tbxMinTransitions.Name = "tbxMinTransitions";
+            this.tbxMinTransitions.Size = new System.Drawing.Size(120, 20);
+            this.tbxMinTransitions.TabIndex = 4;
+            this.tbxMinTransitions.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // btnApply
             // 
@@ -83,22 +102,15 @@
             this.lblMinTransitions.TabIndex = 0;
             this.lblMinTransitions.Text = "Minimum number of transitions";
             // 
-            // tbxMinTransitions
+            // cbxReconsiderNonQuantitative
             // 
-            this.tbxMinTransitions.Location = new System.Drawing.Point(15, 34);
-            this.tbxMinTransitions.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.tbxMinTransitions.Name = "tbxMinTransitions";
-            this.tbxMinTransitions.Size = new System.Drawing.Size(120, 20);
-            this.tbxMinTransitions.TabIndex = 4;
-            this.tbxMinTransitions.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.cbxReconsiderNonQuantitative.AutoSize = true;
+            this.cbxReconsiderNonQuantitative.Location = new System.Drawing.Point(213, 33);
+            this.cbxReconsiderNonQuantitative.Name = "cbxReconsiderNonQuantitative";
+            this.cbxReconsiderNonQuantitative.Size = new System.Drawing.Size(209, 17);
+            this.cbxReconsiderNonQuantitative.TabIndex = 5;
+            this.cbxReconsiderNonQuantitative.Text = "Reconsider non-quantitative transitions";
+            this.cbxReconsiderNonQuantitative.UseVisualStyleBackColor = true;
             // 
             // OptimizeTransitionsDlg
             // 
@@ -124,5 +136,6 @@
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Button btnPreview;
         private System.Windows.Forms.NumericUpDown tbxMinTransitions;
+        private System.Windows.Forms.CheckBox cbxReconsiderNonQuantitative;
     }
 }

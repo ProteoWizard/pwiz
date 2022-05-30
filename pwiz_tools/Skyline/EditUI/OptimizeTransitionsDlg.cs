@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -69,7 +68,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeType optimizeType)
+        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeType optimizeType, bool reconsiderNonQuantitative)
         {
             longWaitBroker.ProgressValue = 0;
             var newMoleculeArrays = new List<PeptideDocNode[]>();
@@ -107,6 +106,10 @@ namespace pwiz.Skyline.EditUI
                 longWaitBroker.CancellationToken.ThrowIfCancellationRequested();
                 var peptideQuantifier = new PeptideQuantifier(() => normalizationData, moleculeList, molecule,
                     document.Settings.PeptideSettings.Quantification);
+                if (reconsiderNonQuantitative)
+                {
+                    peptideQuantifier = peptideQuantifier.WithAllQuantifiableTransitions();
+                }
                 var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
                 var optimizedMolecule =
                     bilinearCurveFitter.OptimizeTransitions(optimizeType, calibrationCurveFitter);
@@ -139,7 +142,8 @@ namespace pwiz.Skyline.EditUI
         public SrmDocument GetOptimizedDocument(SrmDocument document)
         {
             SrmDocument newDocument = null;
-            int minNumTransitions = (int) tbxMinTransitions.Value;
+            int minNumTransitions = (int)tbxMinTransitions.Value;
+            bool reconsiderNonQuantitative = cbxReconsiderNonQuantitative.Checked;
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000, broker =>
@@ -149,7 +153,8 @@ namespace pwiz.Skyline.EditUI
                         MinNumTransitions = minNumTransitions,
                         CancellationToken = broker.CancellationToken,
                     };
-                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, OptimizeType.LOQ);
+                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, OptimizeType.LOQ,
+                        reconsiderNonQuantitative);
                 });
             }
 

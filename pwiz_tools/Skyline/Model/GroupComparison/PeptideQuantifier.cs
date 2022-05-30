@@ -250,6 +250,14 @@ namespace pwiz.Skyline.Model.GroupComparison
                 QuantificationSettings);
         }
 
+        public PeptideQuantifier WithAllQuantifiableTransitions()
+        {
+            var allTransitionIdentityPaths = PeptideDocNode.TransitionGroups.SelectMany(tg =>
+                tg.Transitions.Select(t => new IdentityPath(PeptideGroupDocNode.PeptideGroup, PeptideDocNode.Peptide,
+                    tg.TransitionGroup, t.Transition))).ToHashSet();
+            return WithQuantifiableTransitions(allTransitionIdentityPaths);
+        }
+
         private Quantity GetTransitionQuantity(
             SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
