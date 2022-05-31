@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results;
@@ -47,11 +48,13 @@ namespace pwiz.Skyline.Util
                 _writeAction = writeAction;
             }
 
-            public TItem[] ReadArray(SafeHandle safeFileHandle, int count)
+            public TItem[] ReadArray(FileStream stream, int count)
             {
                 try
                 {
-                    return _readFunc(safeFileHandle, count);
+                    var result = _readFunc(stream.SafeFileHandle, count);
+                    stream.Seek(0, SeekOrigin.Current);
+                    return result;
                 }
                 catch (BulkReadException)
                 {
@@ -59,7 +62,7 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            public bool WriteArray(SafeHandle safeFileHandle, TItem[] items)
+            public bool WriteArray(FileStream stream, TItem[] items)
             {
                 if (_writeAction == null)
                 {
@@ -67,7 +70,9 @@ namespace pwiz.Skyline.Util
                 }
                 try
                 {
-                    _writeAction(safeFileHandle, items);
+                    _writeAction(stream.SafeFileHandle, items);
+                    // Tell the stream to ask for its current position from the underlying file handle.
+                    stream.Seek(0, SeekOrigin.Current);
                     return true;
                 }
                 catch (BulkReadException)

@@ -16,7 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results;
@@ -56,6 +59,40 @@ namespace pwiz.SkylineTestData.Results
             var roundTrip = serializer.FromByteArray(bytes);
             Assert.AreEqual(1, roundTrip.modified);
             Assert.AreEqual(0, roundTrip.lenInstrumentInfo);
+        }
+
+        /// <summary>
+        /// Tests using the <see cref="StructSerializer{TItem}.DirectSerializer"/> to read and write
+        /// arrays using the <see cref="Skyline.Util.FastWrite"/> functions.
+        /// </summary>
+        [TestMethod]
+        public void TestDirectSerializer()
+        {
+            var filePath = TestContext.GetTestPath("TestDirectSerializerToDisk.bin");
+            byte[] firstBytes = Encoding.UTF8.GetBytes("Beginning");
+            var chromTransitions = new[] {new ChromTransition4(522.6f)};
+            var chromTransitionSerializer = (StructSerializer<ChromTransition4>) ChromTransition4.StructSerializer();
+            byte[] endBytes = Encoding.UTF8.GetBytes("End");
+            using (var writeStream = File.OpenWrite(filePath))
+            {
+                PrimitiveArrays.Write(writeStream, firstBytes);
+                bool writeDirectArrayResult =
+                    chromTransitionSerializer.DirectSerializer.WriteArray(writeStream, chromTransitions);
+                Assert.IsTrue(writeDirectArrayResult);
+                PrimitiveArrays.Write(writeStream, endBytes);
+            }
+
+            using (var readStream = File.OpenRead(filePath))
+            {
+                var firstBytesCompare = PrimitiveArrays.Read<byte>(readStream, firstBytes.Length);
+                CollectionAssert.AreEqual(firstBytes, firstBytesCompare);
+                var chromTransitionsCompare =
+                    chromTransitionSerializer.DirectSerializer.ReadArray(readStream, chromTransitions.Length);
+                Assert.IsNotNull(chromTransitionsCompare);
+                CollectionAssert.AreEqual(chromTransitions, chromTransitionsCompare);
+                var endBytesCompare = PrimitiveArrays.Read<byte>(readStream, endBytes.Length);
+                CollectionAssert.AreEqual(endBytes, endBytesCompare);
+            }
         }
     }
 }

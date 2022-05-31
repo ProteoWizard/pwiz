@@ -44,9 +44,6 @@ namespace pwiz.Skyline.EditUI
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         private SrmDocument _newDocument;
 
-        // cached per-process without persisting to settings for now
-        // (discussion with Nick suggested we will automatically create lightweight background proteomes in a later PR)
-        private static string _lastFastaFileName;
         private bool _reuseLastFasta;
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
@@ -54,8 +51,11 @@ namespace pwiz.Skyline.EditUI
         public string FastaFileName
         {
             get { return tbxFastaTargets.Text; }
-            set { _lastFastaFileName = tbxFastaTargets.Text = value; }
+            set { tbxFastaTargets.Text = value; }
         }
+
+        public bool IsBusy => _newDocument == null;
+
 
         public AssociateProteinsDlg(SkylineWindow parent, bool reuseLastFasta = true)
         {
@@ -100,8 +100,9 @@ namespace pwiz.Skyline.EditUI
                 Close();
             }
 
-            if (_reuseLastFasta && !_lastFastaFileName.IsNullOrEmpty())
-                tbxFastaTargets.Text = _lastFastaFileName;
+            if (_reuseLastFasta && !Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
+                tbxFastaTargets.Text = Settings.Default.LastProteinAssociationFastaFilepath;
+
         }
 
         private void Initialize()
@@ -200,12 +201,15 @@ namespace pwiz.Skyline.EditUI
 
         private void cbGroupProteins_CheckedChanged(object sender, EventArgs e)
         {
+            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
             // adjust labels to reflect whether proteins or protein groups are used
             for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
                 comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
                                                    (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
                                                    _sharedPeptideOptionNames[i]) ??
                                                throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
+            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+
             if (GroupProteins)
             {
                 lblMinimalProteinList.Text = Resources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
@@ -340,9 +344,9 @@ namespace pwiz.Skyline.EditUI
             return result;
         }
 
-        private void btnApplyChanges_Click(object sender, EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
-            ApplyChanges();
+            OkDialog();
         }
 
         public AssociateProteinsSettings FormSettings
@@ -354,8 +358,11 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public void ApplyChanges()
+        public void OkDialog()
         {
+            if (rbFASTA.Checked)
+                Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
+
             lock (_parent.GetDocumentChangeLock())
             {
                 _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins, current => _newDocument, FormSettings.EntryCreator.Create);

@@ -56,7 +56,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         }
 
-        public PeptideDocNode DocNode { get { return (PeptideDocNode)Model; } }
+        public PeptideDocNode DocNode => (PeptideDocNode)Model;
+        public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent)?.DocNode;
 
         public override string Heading
         {

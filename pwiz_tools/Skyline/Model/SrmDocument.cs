@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model
             catch (Exception)
             {
                 return false;
-           }
+            }
         }
 
         private HashSet<Target> GetRetentionTimeStandardsOrThrow()
