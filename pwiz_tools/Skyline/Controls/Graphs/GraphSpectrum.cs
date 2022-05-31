@@ -279,6 +279,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
+            if (e.DocumentPrevious != null && !ReferenceEquals(
+                    DocumentUI.Settings.PeptideSettings.Modifications.StaticModifications,
+                    e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModifications))
+            {
+                var newMods = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsFormulae;
+                var oldMods = e.DocumentPrevious.Settings.PeptideSettings.Modifications.StaticModsFormulae;
+                var addedMods = newMods.ToList().FindAll(newMod => !oldMods.Contains(newMod)).ToList();
+                if (addedMods.Any())
+                    Settings.Default.ShowLosses = Settings.Default.ShowLosses + @"," + addedMods.ToString(@",");
+            }
+
             // If document changed, update spectrum x scale to instrument
             // Or if library settings changed, show new ranks etc
             if (e.DocumentPrevious == null ||
@@ -289,6 +300,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
                 ZoomSpectrumToSettings();
+                Settings.Default.ShowLosses = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsFormulae.ToString(@",");
                 _spectra = null;
                 UpdateUI();
             }
@@ -1560,7 +1572,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public List<string> ShowLosses
         {
-            get { return  Set.ShowLosses.Split(',').ToList(); }
+            get
+            {
+                return Set.ShowLosses.IsNullOrEmpty() ? new List<string>() : Set.ShowLosses.Split(',').ToList();
+            }
             set { ActAndUpdate(() => Set.ShowLosses = value.ToString(@","));}
         }
 

@@ -11731,4 +11731,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="IonTypeSelector_LossesTooltip" xml:space="preserve">
 	  <value>Formula: {0}</value>
   </data>
+  <data name="IonTypeSelector_SelectAllLossesTooltip" xml:space="preserve">
+	  <value>Select all losses</value>
+  </data>
+  <data name="IonTypeSelector_DeselectAllLossesTooltip" xml:space="preserve">
+	  <value>Deselect all losses</value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+	  <value>(Unknown)</value>
+  </data>
 </root>
