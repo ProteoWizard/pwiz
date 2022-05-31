@@ -219,8 +219,14 @@
   <data name="CalibrationCurve">
     <value>Calibration Curve</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>Candidate Peak Group</value>
+  </data>
   <data name="CAS">
     <value>CAS</value>
+  </data>
+  <data name="Chosen">
+    <value>Chosen</value>
   </data>
   <data name="Chromatogram">
     <value>Chromatogram</value>
@@ -396,6 +402,9 @@
   <data name="ExplicitSLens">
     <value>Explicit SLens</value>
   </data>
+  <data name="Features">
+    <value>Features</value>
+  </data>
   <data name="FiguresOfMerit">
     <value>Figures Of Merit</value>
   </data>
@@ -456,6 +465,9 @@
   </data>
   <data name="InChI">
     <value>InChI</value>
+  </data>
+  <data name="InstrumentSerialNumber">
+    <value>Instrument Serial Number</value>
   </data>
   <data name="Intensities">
     <value>Intensities</value>
@@ -691,6 +703,9 @@
   <data name="MissedCleavages">
     <value>Missed Cleavages</value>
   </data>
+  <data name="ModelScore">
+    <value>Model Score</value>
+  </data>
   <data name="ModifiedAreaProportion">
     <value>Modified Area Proportion</value>
   </data>
@@ -790,11 +805,23 @@
   <data name="OptStep">
     <value>Opt Step</value>
   </data>
+  <data name="PeakGroupEndTime">
+    <value>Peak Group End Time</value>
+  </data>
+  <data name="PeakGroupStartTime">
+    <value>Peak Group Start Time</value>
+  </data>
+  <data name="PeakQValue">
+    <value>Peak Q Value</value>
+  </data>
   <data name="PeakRank">
     <value>Peak Rank</value>
   </data>
   <data name="PeakRankByLevel">
     <value>Peak Rank By Level</value>
+  </data>
+  <data name="PeakScores">
+    <value>Peak Scores</value>
   </data>
   <data name="Peptide">
     <value>Peptide</value>
@@ -1125,11 +1152,17 @@
   <data name="SampleDilutionFactor">
     <value>Sample Dilution Factor</value>
   </data>
+  <data name="SampleId">
+    <value>Sample Id</value>
+  </data>
   <data name="SampleName">
     <value>Sample Name</value>
   </data>
   <data name="SampleType">
     <value>Sample Type</value>
+  </data>
+  <data name="Score">
+    <value>Score</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline Version</value>
@@ -1295,10 +1328,19 @@
   <data name="UTCTime">
     <value>UTC Time</value>
   </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>Sample Id</value>
+  <data name="Weight">
+    <value>Weight</value>
   </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>Instrument Serial Number</value>
+  <data name="WeightedFeature">
+    <value>Weighted Feature</value>
+  </data>
+  <data name="WeightedFeatures">
+    <value>Weighted Features</value>
+  </data>
+  <data name="WeightedScore">
+    <value>Weighted Score</value>
+  </data>
+  <data name="PeakGroupRetentionTime" xml:space="preserve">
+    <value>Peak Group Retention Time</value>
   </data>
 </root>

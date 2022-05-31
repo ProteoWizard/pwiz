@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -72,6 +73,13 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
             var foundPeak = PeakFinder.GetPeak(startIndex, endIndex);
+            // Tell Crawdad find peaks in the chromatogram. If Crawdad would not have detected a peak at
+            // that location, then mark the peak as Forced Integration
+            if (PeakFinder.CalcPeaks(-1, Array.Empty<int>())
+                .All(peak => peak.EndIndex < startIndex || peak.StartIndex > endIndex))
+            {
+                flags |= ChromPeak.FlagValues.forced_integration;
+            }
             return new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
         }
 

@@ -60,17 +60,14 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
         }
 
-        public TransitionGroupDocNode DocNode { get { return (TransitionGroupDocNode) Model; } }
-
         public Target ModifiedSequence
         {
             get { return GetModifiedSequence(PepNode, DocNode, SequenceTree.Document.Settings); }
         }
 
-        public PeptideDocNode PepNode
-        {
-            get { return (Parent != null ? ((PeptideTreeNode)Parent).DocNode : null); }
-        }
+        public TransitionGroupDocNode DocNode => (TransitionGroupDocNode)Model;
+        public PeptideDocNode PepNode => ((PeptideTreeNode)Parent)?.DocNode;
+        public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent)?.DocNode;
 
         public override string Heading
         {

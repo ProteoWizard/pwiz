@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnToolTips {
@@ -378,11 +378,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A set of peaks with the same start and end time from the transition chromatograms of a set of precursors belonging to the same peptide or molecule..
+        /// </summary>
+        public static string CandidatePeakGroup {
+            get {
+                return ResourceManager.GetString("CandidatePeakGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         public static string CAS {
             get {
                 return ResourceManager.GetString("CAS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True if the peak boundaries of the candidate peak are the same as the integration boundaries that are used for all of the transitions in the peak group..
+        /// </summary>
+        public static string Chosen {
+            get {
+                return ResourceManager.GetString("Chosen", resourceCulture);
             }
         }
         
@@ -927,6 +945,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ExplicitSLens {
             get {
                 return ResourceManager.GetString("ExplicitSLens", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collection of properties of the peak group which can be assigned a numerical score to be used in assessing peak quality..
+        /// </summary>
+        public static string Features {
+            get {
+                return ResourceManager.GetString("Features", resourceCulture);
             }
         }
         
@@ -1864,6 +1891,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The sum of the feature values weighted according to the currently selected peak scoring model..
+        /// </summary>
+        public static string ModelScore {
+            get {
+                return ResourceManager.GetString("ModelScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The normalized area of this peptide result divided by the sum of all peptide results in this protein and replicate that have the same unmodified sequence..
         /// </summary>
         public static string ModifiedAreaProportion {
@@ -2206,6 +2242,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum end time of the individual peaks in the peak group..
+        /// </summary>
+        public static string PeakGroupEndTime {
+            get {
+                return ResourceManager.GetString("PeakGroupEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The retention time of the peak with the maximum height of all transitions in a peak group.
+        /// </summary>
+        public static string PeakGroupRetentionTime {
+            get {
+                return ResourceManager.GetString("PeakGroupRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum start time of the individual peaks in the peak group..
+        /// </summary>
+        public static string PeakGroupStartTime {
+            get {
+                return ResourceManager.GetString("PeakGroupStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The estimate q-value (false discovery rate) that a peak with this score would get if it were the peak chosen by Skyline..
+        /// </summary>
+        public static string PeakQValue {
+            get {
+                return ResourceManager.GetString("PeakQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The rank based on Area of this transition among all other transitions of the
         ///same precursor..
         /// </summary>
@@ -2221,6 +2293,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakRankByLevel {
             get {
                 return ResourceManager.GetString("PeakRankByLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The features and their scores for the peak group..
+        /// </summary>
+        public static string PeakScores {
+            get {
+                return ResourceManager.GetString("PeakScores", resourceCulture);
             }
         }
         
@@ -3300,6 +3381,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The numerical value for the particular feature..
+        /// </summary>
+        public static string Score {
+            get {
+                return ResourceManager.GetString("Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Version of Skyline in which the change was made.
         /// </summary>
         public static string SkylineVersion {
@@ -3811,6 +3901,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UTCTime {
             get {
                 return ResourceManager.GetString("UTCTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The numerical weighting for the feature assigned by the peak scoring model..
+        /// </summary>
+        public static string Weight {
+            get {
+                return ResourceManager.GetString("Weight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A combination of the feature score and its weight..
+        /// </summary>
+        public static string WeightedFeature {
+            get {
+                return ResourceManager.GetString("WeightedFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A collection of the features that have been assigned weights by the peak scoring model..
+        /// </summary>
+        public static string WeightedFeatures {
+            get {
+                return ResourceManager.GetString("WeightedFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The product of the feature score and the feature weight.
+        /// </summary>
+        public static string WeightedScore {
+            get {
+                return ResourceManager.GetString("WeightedScore", resourceCulture);
             }
         }
     }

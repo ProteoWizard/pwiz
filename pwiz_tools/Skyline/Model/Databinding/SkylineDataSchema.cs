@@ -117,7 +117,8 @@ namespace pwiz.Skyline.Model.Databinding
             return base.GetPropertyDescriptors(type)
                 .Concat(GetAnnotations(type))
                 .Concat(GetRatioProperties(type))
-                .Concat(GetListProperties(type));
+                .Concat(GetListProperties(type))
+                .Concat(GetFeatureProperties(type));
         }
 
         public IEnumerable<PropertyDescriptor> GetAnnotations(Type type)
@@ -177,6 +178,11 @@ namespace pwiz.Skyline.Model.Databinding
         public IEnumerable<RatioPropertyDescriptor> GetRatioProperties(Type type)
         {
             return RatioPropertyDescriptor.ListProperties(Document, type);
+        }
+
+        public IEnumerable<FeaturePropertyDescriptor> GetFeatureProperties(Type type)
+        {
+            return FeaturePropertyDescriptor.ListProperties(type, DataSchemaLocalizer.Language);
         }
 
         public SrmDocument Document

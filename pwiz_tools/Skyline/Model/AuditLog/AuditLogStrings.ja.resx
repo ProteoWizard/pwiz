@@ -530,12 +530,6 @@
   <data name="accepted_protein" xml:space="preserve">
     <value>タンパク質{0}が許可されました</value>
   </data>
-  <data name="associated_peptides_with_protein" xml:space="preserve">
-    <value>ペプチドが{0}と関連付けられました</value>
-  </data>
-  <data name="associated_peptides_with_proteins" xml:space="preserve">
-    <value>ペプチドが{0}個のタンパク質と関連付けられました</value>
-  </data>
   <data name="drag_and_dropped_node" xml:space="preserve">
     <value>{0}が{1}にドラッグアンドドロップされました</value>
   </data>
