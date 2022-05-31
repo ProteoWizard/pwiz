@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -61,6 +62,10 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
             TestDialog(ImportType.FASTA);
+
+            // test again without needing to set the FASTA
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            TestDialog(ImportType.FASTA);
         }
 
         /// <summary>
@@ -83,7 +88,8 @@ namespace pwiz.SkylineTestFunctional
             var dlg2 = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
             if (type == ImportType.FASTA)
             {
-                RunUI(() => dlg2.FastaFileName = _fastaFile);
+                if (Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
+                    RunUI(() => dlg2.FastaFileName = _fastaFile);
             }
             else
             {

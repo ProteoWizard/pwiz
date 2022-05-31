@@ -748,7 +748,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(stateProvider);
                 //find out if the current selection belongs to the same precursor as the loaded MS spectrum
                 var dataPrecursor = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(t => (t.Id as Transition)?.IonType == IonType.precursor);
-                selectionMatch = ReferenceEquals(selection.Precursor?.Id, (dataPrecursor?.Id as Transition)?.Group);
+                selectionMatch = ReferenceEquals(selection.NodeTranGroup?.Id, (dataPrecursor?.Id as Transition)?.Group);
             }
 
             var currentTransition =
@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePath != null) // Make sure user hasn't removed node since last update
                 {
                     var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
-                        selectionMatch ? selection.Transition : null);
+                        selectionMatch ? selection.NodeTran : null);
                     _graphHelper.AddSpectrum(graphItem, false);
                 }
 

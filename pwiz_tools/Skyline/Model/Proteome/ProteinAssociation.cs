@@ -270,7 +270,8 @@ namespace pwiz.Skyline.Model.Proteome
                     FindMinimalProteinList = FindMinimalProteinList,
                     RemoveSubsetProteins = RemoveSubsetProteins,
                     SharedPeptides = SharedPeptides,
-                    GroupProteins = GroupProteins
+                    GroupProteins = GroupProteins,
+                    MinPeptidesPerProtein = MinPeptidesPerProtein
                 };
             }
 
@@ -333,7 +334,6 @@ namespace pwiz.Skyline.Model.Proteome
             Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups = _peptideToProteins;
 
             broker.Message = Resources.AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options;
-            _results.MinPeptidesPerProtein = minPeptidesPerProtein;
 
             if (groupProteins)
             {
@@ -441,6 +441,7 @@ namespace pwiz.Skyline.Model.Proteome
                 _finalResults.FinalProteinCount = ParsimoniousProteins.Count;
                 _finalResults.FinalPeptideCount = ParsimoniousProteins.Sum(kvp => kvp.Value.Peptides.Count);
             }
+            _finalResults.MinPeptidesPerProtein = minPeptidesPerProtein;
         }
 
         private Dictionary<IProteinRecord, PeptideAssociationGroup> CalculateProteinGroups(MappingResultsInternal results, ILongWaitBroker broker)
