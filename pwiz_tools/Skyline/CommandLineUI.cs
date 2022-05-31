@@ -28,6 +28,9 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline
 {
+    ///
+    /// For testing and debugging Skyline command-line interface
+    ///
     public class CommandLineUI
     {
         private readonly CommandArgs _commandArgs;

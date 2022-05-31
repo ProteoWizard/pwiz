@@ -4,7 +4,6 @@ REM Arg 1: Full path to signing certificate
 REM Arg 2: Signing certificate password
 REM Arg 3: Publish folder
 REM Arg 4: Target name (e.g. Skyline)
-CALL "%VS120COMNTOOLS%vsvars32.bat"
 pushd %3
 REM Set "CURRENT_VERSION" to the folder found under "Application Files"
 FOR /D %%G IN ("Application Files\*") DO SET CURRENT_VERSION=%%G
