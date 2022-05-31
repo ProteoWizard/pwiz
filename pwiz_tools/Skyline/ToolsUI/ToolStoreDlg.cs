@@ -382,7 +382,7 @@ namespace pwiz.Skyline.ToolsUI
             var uri = new UriBuilder(TOOL_STORE_URI)
             {
                 Path = DOWNLOAD_TOOL_URL,
-                Query = @"lsid=" + WebUtility.UrlEncode(packageIdentifier)
+                Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
             };
             byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);
             string contentDisposition = webClient.ResponseHeaders.Get(@"Content-Disposition");
