@@ -279,7 +279,7 @@ namespace pwiz.SkylineTestFunctional
             });
             RunUI(() =>
             {
-                SkylineWindow.ShowLosses(new[] { "H2O" }.ToList());
+                SkylineWindow.ShowLosses(new[] { "H2O" });
             });
             WaitForGraphs();
             RunUI(() =>

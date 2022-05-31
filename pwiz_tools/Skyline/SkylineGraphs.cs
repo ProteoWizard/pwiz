@@ -904,9 +904,9 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = show;
         }
 
-        public void ShowLosses(List<string> losses)
+        public void ShowLosses(IEnumerable<string> losses)
         {
-            _graphSpectrumSettings.ShowLosses = losses;
+            _graphSpectrumSettings.ShowLosses = new List<string>(losses);
         }
 
         private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
@@ -942,7 +942,7 @@ namespace pwiz.Skyline
 
         private void IonTypeSelector_LossChanged(string[] losses)
         {
-            ShowLosses(losses.ToList());
+            ShowLosses(losses);
         }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
@@ -1364,7 +1364,7 @@ namespace pwiz.Skyline
 
         IList<string> GraphSpectrum.IStateProvider.ShowLosses()
         {
-            return _graphSpectrumSettings.ShowLosses;
+            return _graphSpectrumSettings.ShowLosses.ToList();
         }
 
 

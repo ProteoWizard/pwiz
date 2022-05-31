@@ -1522,16 +1522,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public Dictionary<IonType, bool> GetShowIonTypeSettings()
         {
-            var res = new Dictionary<IonType, bool>();
-            res[IonType.a] = ShowAIons;
-            res[IonType.b] = ShowBIons;
-            res[IonType.c] = ShowCIons;
-            res[IonType.x] = ShowXIons;
-            res[IonType.y] = ShowYIons;
-            res[IonType.z] = ShowZIons;
-            res[IonType.zh] = ShowZHIons;
-            res[IonType.zhh] = ShowZHHIons;
-            return res;
+            return new Dictionary<IonType, bool>(){{IonType.a, ShowAIons}, { IonType.b, ShowBIons }, { IonType.c, ShowCIons },
+                { IonType.x, ShowXIons }, { IonType.y, ShowYIons }, { IonType.z, ShowZIons },{IonType.zh, ShowZHIons}, {IonType.zhh, ShowZHHIons} };
         }
 
         public bool ShowFragmentIons
@@ -1570,13 +1562,13 @@ namespace pwiz.Skyline.Controls.Graphs
             set { ActAndUpdate(() => Set.ShowCharge4 = value); }
         }
 
-        public List<string> ShowLosses
+        public ICollection<string> ShowLosses
         {
             get
             {
-                return Set.ShowLosses.IsNullOrEmpty() ? new List<string>() : Set.ShowLosses.Split(',').ToList();
+                return Set.ShowLosses.IsNullOrEmpty() ? new string[] {} : Set.ShowLosses.Split(',');
             }
-            set { ActAndUpdate(() => Set.ShowLosses = value.ToString(@","));}
+            set { ActAndUpdate(() => Set.ShowLosses = value.ToList().ToString(@","));}
         }
 
         public bool Prosit
