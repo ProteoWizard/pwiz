@@ -802,8 +802,20 @@
   <data name="OptDeclusteringPotential">
     <value>Opt Declustering Potential</value>
   </data>
+  <data name="OptimizedLimitOfDetection">
+    <value>Optimized Limit of Detection</value>
+  </data>
+  <data name="OptimizedLimitOfQuantification">
+    <value>Optimized Limit of Quantification</value>
+  </data>
   <data name="OptStep">
     <value>Opt Step</value>
+  </data>
+  <data name="OriginalLimitOfDetection">
+    <value>Original Limit of Detection</value>
+  </data>
+  <data name="OriginalLimitOfQuantification">
+    <value>Original Limit of Quantification</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>Peak Group End Time</value>

@@ -29,23 +29,28 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.groupBoxOptimize = new System.Windows.Forms.GroupBox();
+            this.radioLOQ = new System.Windows.Forms.RadioButton();
+            this.radioLOD = new System.Windows.Forms.RadioButton();
+            this.cbxPreserveNonQuantitative = new System.Windows.Forms.CheckBox();
             this.tbxMinTransitions = new System.Windows.Forms.NumericUpDown();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnPreview = new System.Windows.Forms.Button();
             this.lblMinTransitions = new System.Windows.Forms.Label();
-            this.cbxReconsiderNonQuantitative = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
+            this.groupBoxOptimize.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).BeginInit();
             this.SuspendLayout();
             // 
             // databoundGridControl
             // 
-            this.databoundGridControl.Location = new System.Drawing.Point(0, 70);
-            this.databoundGridControl.Size = new System.Drawing.Size(800, 380);
+            this.databoundGridControl.Location = new System.Drawing.Point(0, 83);
+            this.databoundGridControl.Size = new System.Drawing.Size(800, 367);
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.cbxReconsiderNonQuantitative);
+            this.panel1.Controls.Add(this.groupBoxOptimize);
+            this.panel1.Controls.Add(this.cbxPreserveNonQuantitative);
             this.panel1.Controls.Add(this.tbxMinTransitions);
             this.panel1.Controls.Add(this.btnApply);
             this.panel1.Controls.Add(this.btnPreview);
@@ -53,12 +58,57 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(800, 70);
+            this.panel1.Size = new System.Drawing.Size(800, 83);
             this.panel1.TabIndex = 1;
+            // 
+            // groupBoxOptimize
+            // 
+            this.groupBoxOptimize.Controls.Add(this.radioLOQ);
+            this.groupBoxOptimize.Controls.Add(this.radioLOD);
+            this.groupBoxOptimize.Location = new System.Drawing.Point(232, 9);
+            this.groupBoxOptimize.Name = "groupBoxOptimize";
+            this.groupBoxOptimize.Size = new System.Drawing.Size(211, 70);
+            this.groupBoxOptimize.TabIndex = 6;
+            this.groupBoxOptimize.TabStop = false;
+            this.groupBoxOptimize.Text = "Optimize";
+            // 
+            // radioLOQ
+            // 
+            this.radioLOQ.AutoSize = true;
+            this.radioLOQ.Checked = true;
+            this.radioLOQ.Location = new System.Drawing.Point(6, 42);
+            this.radioLOQ.Name = "radioLOQ";
+            this.radioLOQ.Size = new System.Drawing.Size(124, 17);
+            this.radioLOQ.TabIndex = 1;
+            this.radioLOQ.TabStop = true;
+            this.radioLOQ.Text = "Limit of quantification";
+            this.radioLOQ.UseVisualStyleBackColor = true;
+            this.radioLOQ.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
+            // 
+            // radioLOD
+            // 
+            this.radioLOD.AutoSize = true;
+            this.radioLOD.Location = new System.Drawing.Point(6, 19);
+            this.radioLOD.Name = "radioLOD";
+            this.radioLOD.Size = new System.Drawing.Size(105, 17);
+            this.radioLOD.TabIndex = 0;
+            this.radioLOD.Text = "Limit of detection";
+            this.radioLOD.UseVisualStyleBackColor = true;
+            this.radioLOD.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
+            // 
+            // cbxPreserveNonQuantitative
+            // 
+            this.cbxPreserveNonQuantitative.AutoSize = true;
+            this.cbxPreserveNonQuantitative.Location = new System.Drawing.Point(15, 51);
+            this.cbxPreserveNonQuantitative.Name = "cbxPreserveNonQuantitative";
+            this.cbxPreserveNonQuantitative.Size = new System.Drawing.Size(197, 17);
+            this.cbxPreserveNonQuantitative.TabIndex = 5;
+            this.cbxPreserveNonQuantitative.Text = "Preserve non-quantitative transitions";
+            this.cbxPreserveNonQuantitative.UseVisualStyleBackColor = true;
             // 
             // tbxMinTransitions
             // 
-            this.tbxMinTransitions.Location = new System.Drawing.Point(15, 34);
+            this.tbxMinTransitions.Location = new System.Drawing.Point(15, 25);
             this.tbxMinTransitions.Minimum = new decimal(new int[] {
             1,
             0,
@@ -68,7 +118,7 @@
             this.tbxMinTransitions.Size = new System.Drawing.Size(120, 20);
             this.tbxMinTransitions.TabIndex = 4;
             this.tbxMinTransitions.Value = new decimal(new int[] {
-            1,
+            4,
             0,
             0,
             0});
@@ -102,16 +152,6 @@
             this.lblMinTransitions.TabIndex = 0;
             this.lblMinTransitions.Text = "Minimum number of transitions";
             // 
-            // cbxReconsiderNonQuantitative
-            // 
-            this.cbxReconsiderNonQuantitative.AutoSize = true;
-            this.cbxReconsiderNonQuantitative.Location = new System.Drawing.Point(213, 33);
-            this.cbxReconsiderNonQuantitative.Name = "cbxReconsiderNonQuantitative";
-            this.cbxReconsiderNonQuantitative.Size = new System.Drawing.Size(209, 17);
-            this.cbxReconsiderNonQuantitative.TabIndex = 5;
-            this.cbxReconsiderNonQuantitative.Text = "Reconsider non-quantitative transitions";
-            this.cbxReconsiderNonQuantitative.UseVisualStyleBackColor = true;
-            // 
             // OptimizeTransitionsDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -124,6 +164,8 @@
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.groupBoxOptimize.ResumeLayout(false);
+            this.groupBoxOptimize.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).EndInit();
             this.ResumeLayout(false);
 
@@ -136,6 +178,9 @@
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Button btnPreview;
         private System.Windows.Forms.NumericUpDown tbxMinTransitions;
-        private System.Windows.Forms.CheckBox cbxReconsiderNonQuantitative;
+        private System.Windows.Forms.CheckBox cbxPreserveNonQuantitative;
+        private System.Windows.Forms.GroupBox groupBoxOptimize;
+        private System.Windows.Forms.RadioButton radioLOQ;
+        private System.Windows.Forms.RadioButton radioLOD;
     }
 }

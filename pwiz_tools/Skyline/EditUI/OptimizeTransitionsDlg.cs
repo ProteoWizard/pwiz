@@ -13,10 +13,11 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -25,6 +26,8 @@ namespace pwiz.Skyline.EditUI
         private SkylineDataSchema _dataSchema;
         private List<Row> _rowList = new List<Row>();
         private BindingList<Row> _bindingList;
+        private SrmDocument _originalDocument;
+        private SrmDocument _optimizedDocument;
 
         public OptimizeTransitionsDlg(SkylineWindow skylineWindow)
         {
@@ -33,9 +36,9 @@ namespace pwiz.Skyline.EditUI
             _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _bindingList = new BindingList<Row>(_rowList);
-            var viewContext = new SkylineViewContext(_dataSchema, MakeRowSourceInfos());
-            BindingListSource.SetViewContext(viewContext);
+            UpdateViewContext();
             Text = TabText = "Optimize Transitions";
+            Icon = Resources.Skyline;
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -44,31 +47,109 @@ namespace pwiz.Skyline.EditUI
         {
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(Row));
             return ImmutableList.Singleton(new RowSourceInfo(BindingListRowSource.Create(_bindingList),
-                SkylineViewContext.GetDefaultViewInfo(rootColumn)));
+                new ViewInfo(rootColumn, GetDefaultViewSpec())));
+        }
+
+        private ViewSpec GetDefaultViewSpec()
+        {
+            var propertyPaths = new List<PropertyPath>
+            {
+                PropertyPath.Root.Property(nameof(Row.Molecule)),
+            };
+            foreach (string fom in new[] {nameof(Row.OriginalFiguresOfMerit), nameof(Row.OptimizedFiguresOfMerit)})
+            {
+                var ppFom = PropertyPath.Root.Property(fom);
+                if (OptimizeType == OptimizeType.LOD)
+                {
+                    propertyPaths.Add(ppFom.Property(nameof(FiguresOfMerit.LimitOfDetection)));
+                }
+                else
+                {
+                    propertyPaths.Add(ppFom.Property(nameof(FiguresOfMerit.LimitOfQuantification)));
+                }
+            }
+
+            return new ViewSpec().SetRowType(typeof(Row)).SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)));
         }
 
         public class Row : SkylineObject
         {
-            public Row(Peptide molecule) : base(molecule.DataSchema)
+            private SrmDocument _originalDocument;
+            private SrmDocument _optimizedDocument;
+            private Lazy<FiguresOfMerit> _originalFiguresOfMerit;
+            private Lazy<FiguresOfMerit> _optimizedFiguresOfMerit;
+            public Row(Model.Databinding.Entities.Peptide molecule, SrmDocument originalDocument, SrmDocument optimizedDocument) 
+                : base(molecule.DataSchema)
             {
                 Molecule = molecule;
+                _originalDocument = originalDocument;
+                _optimizedDocument = optimizedDocument;
+                _originalFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_originalDocument));
+                _optimizedFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_optimizedDocument));
+                if (optimizedDocument != null)
+                {
+                    var peptideQuantifier = GetPeptideQuantifier(optimizedDocument, molecule.IdentityPath);
+                    int countQuantitative = 0;
+                    int countNonQuantitative = 0;
+                    foreach (var tg in peptideQuantifier.PeptideDocNode.TransitionGroups)
+                    {
+                        if (!peptideQuantifier.SkipTransitionGroup(tg))
+                        {
+                            countQuantitative += tg.Transitions.Count(t => t.ExplicitQuantitative);
+                            countNonQuantitative += tg.Transitions.Count(t => !t.ExplicitQuantitative);
+                        }
+                    }
+
+                    CountQuantitative = countQuantitative;
+                    CountNonQuantitative = countNonQuantitative;
+                }
             }
 
             [InvariantDisplayName("Peptide", InUiMode = UiModes.PROTEOMIC)]
-            public Peptide Molecule { get; private set; }
+            public Model.Databinding.Entities.Peptide Molecule { get; private set; }
 
-            public int CountQuantitative
+            public int? CountQuantitative
             {
                 get; internal set;
             }
 
-            public int CountNonQuantitative 
+            public int? CountNonQuantitative 
             {
                 get; internal set;
+            }
+
+            [ChildDisplayName("Original{0}")]
+            public FiguresOfMerit OriginalFiguresOfMerit
+            {
+                get { return _originalFiguresOfMerit.Value;}
+            }
+
+            [ChildDisplayName("Optimized{0}")]
+            public FiguresOfMerit OptimizedFiguresOfMerit
+            {
+                get { return _optimizedFiguresOfMerit.Value; }
+            }
+
+            private FiguresOfMerit GetFiguresOfMerit(SrmDocument document)
+            {
+                if (document == null)
+                {
+                    return null;
+                }
+
+                var peptideQuantifier = GetPeptideQuantifier(document, Molecule.IdentityPath);
+                if (peptideQuantifier == null)
+                {
+                    return null;
+                }
+                var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+                var bilinearCurveFitter = new BilinearCurveFitter();
+                return MakeFiguresOfMerit(bilinearCurveFitter.ComputeQuantLimits(calibrationCurveFitter),
+                    document.Settings);
             }
         }
 
-        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeType optimizeType, bool reconsiderNonQuantitative)
+        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeType optimizeType, bool preserveNonQuantitative)
         {
             longWaitBroker.ProgressValue = 0;
             var newMoleculeArrays = new List<PeptideDocNode[]>();
@@ -106,9 +187,9 @@ namespace pwiz.Skyline.EditUI
                 longWaitBroker.CancellationToken.ThrowIfCancellationRequested();
                 var peptideQuantifier = new PeptideQuantifier(() => normalizationData, moleculeList, molecule,
                     document.Settings.PeptideSettings.Quantification);
-                if (reconsiderNonQuantitative)
+                if (!preserveNonQuantitative)
                 {
-                    peptideQuantifier = peptideQuantifier.WithAllQuantifiableTransitions();
+                    peptideQuantifier = peptideQuantifier.MakeAllTransitionsQuantitative();
                 }
                 var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
                 var optimizedMolecule =
@@ -129,10 +210,13 @@ namespace pwiz.Skyline.EditUI
 
         private void btnPreview_Click(object sender, System.EventArgs e)
         {
-            var optimizedDocument = GetOptimizedDocument(SkylineWindow.Document);
+            var originalDocument = SkylineWindow.Document;
+            var optimizedDocument = GetOptimizedDocument(originalDocument);
             if (optimizedDocument != null)
             {
-                var newRows = MakeRows(optimizedDocument).ToList();
+                _originalDocument = originalDocument;
+                _optimizedDocument = optimizedDocument;
+                var newRows = MakeRows().ToList();
                 _rowList.Clear();
                 _rowList.AddRange(newRows);
                 _bindingList.ResetBindings();
@@ -143,7 +227,8 @@ namespace pwiz.Skyline.EditUI
         {
             SrmDocument newDocument = null;
             int minNumTransitions = (int)tbxMinTransitions.Value;
-            bool reconsiderNonQuantitative = cbxReconsiderNonQuantitative.Checked;
+            bool preserveNonQuantitative = cbxPreserveNonQuantitative.Checked;
+            var optimizeType = OptimizeType;
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000, broker =>
@@ -153,18 +238,17 @@ namespace pwiz.Skyline.EditUI
                         MinNumTransitions = minNumTransitions,
                         CancellationToken = broker.CancellationToken,
                     };
-                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, OptimizeType.LOQ,
-                        reconsiderNonQuantitative);
+                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, optimizeType, preserveNonQuantitative);
                 });
             }
 
             return newDocument;
         }
 
-        public IEnumerable<Row> MakeRows(SrmDocument document)
+        public IEnumerable<Row> MakeRows()
         {
-            
-            foreach (var moleculeList in document.MoleculeGroups)
+            var currentDocument = SkylineWindow.Document;
+            foreach (var moleculeList in currentDocument.MoleculeGroups)
             {
                 foreach (var molecule in moleculeList.Molecules)
                 {
@@ -172,43 +256,99 @@ namespace pwiz.Skyline.EditUI
                     {
                         continue;
                     }
-                    var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, moleculeList, molecule);
-                    int countQuantifiable = 0;
-                    int countUnquantifiable = 0;
-                    foreach (var transitionGroupDocNode in molecule.TransitionGroups)
-                    {
-                        if (peptideQuantifier.SkipTransitionGroup(transitionGroupDocNode))
-                        {
-                            continue;
-                        }
 
-                        foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
-                        {
-                            if (transitionDocNode.ExplicitQuantitative)
-                            {
-                                countQuantifiable++;
-                            }
-                            else
-                            {
-                                countUnquantifiable++;
-                            }
-                        }
-                    }
-
-                    var identityPath = new IdentityPath(moleculeList.PeptideGroup, molecule.Peptide);
-                    var peptide = new Peptide(_dataSchema, identityPath);
-                    yield return new Row(peptide) {CountQuantitative = countQuantifiable, CountNonQuantitative = countUnquantifiable};
+                    var peptideIdentityPath = new IdentityPath(moleculeList.PeptideGroup, molecule.Peptide);
+                    var row = new Row(new Model.Databinding.Entities.Peptide(_dataSchema, peptideIdentityPath), _originalDocument, _optimizedDocument);
+                    yield return row;
                 }
             }
+        }
+
+        private static FiguresOfMerit MakeFiguresOfMerit(BilinearCurveFitter.QuantLimit quantLimit, SrmSettings settings)
+        {
+            if (quantLimit == null)
+            {
+                return null;
+            }
+
+            return FiguresOfMerit.EMPTY.ChangeLimitOfDetection(quantLimit.Lod)
+                .ChangeLimitOfQuantification(quantLimit.Loq)
+                .ChangeUnits(settings.PeptideSettings.Quantification.Units);
         }
 
         private void btnApply_Click(object sender, EventArgs e)
         {
             lock (SkylineWindow.GetDocumentChangeLock())
             {
-                SkylineWindow.ModifyDocument("Optimize transitions", doc=>GetOptimizedDocument(doc) ?? doc,
+                SkylineWindow.ModifyDocument("Optimize transitions", doc=>
+                    {
+                        if (null != _optimizedDocument && ReferenceEquals(doc, _originalDocument))
+                        {
+                            return _optimizedDocument;
+                        }
+
+                        var optimizedDoc = GetOptimizedDocument(doc);
+                        if (optimizedDoc != null)
+                        {
+                            _originalDocument = doc;
+                            _optimizedDocument = optimizedDoc;
+                            return optimizedDoc;
+                        }
+
+                        return doc;
+                    },
                     docPair=>AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, "Unknown"));
             }
+        }
+
+        private static PeptideQuantifier GetPeptideQuantifier(SrmDocument document, IdentityPath peptideIdentityPath)
+        {
+            var moleculeList = (PeptideGroupDocNode)
+                document.FindNode(peptideIdentityPath.GetIdentity((int) SrmDocument.Level.MoleculeGroups));
+            var molecule = (PeptideDocNode) moleculeList?.FindNode(peptideIdentityPath.GetIdentity((int) SrmDocument.Level.Molecules));
+            if (molecule == null)
+            {
+                return null;
+            }
+            return PeptideQuantifier.GetPeptideQuantifier(document, moleculeList, molecule);
+        }
+
+        public OptimizeType OptimizeType
+        {
+            get
+            {
+                return radioLOQ.Checked ? OptimizeType.LOQ : OptimizeType.LOD;
+            }
+            set
+            {
+                if (OptimizeType == value)
+                {
+                    return;
+                }
+                radioLOQ.Checked = value == OptimizeType.LOQ;
+                radioLOD.Checked = value == OptimizeType.LOD;
+            }
+        }
+
+        private void UpdateViewContext()
+        {
+            var viewContext = new SkylineViewContext(_dataSchema, MakeRowSourceInfos());
+            if (BindingListSource.ViewInfo == null ||
+                Equals(BindingListSource.ViewInfo.ViewGroup.Id, ViewGroup.BUILT_IN.Id))
+            {
+                BindingListSource.SetViewContext(viewContext, viewContext.GetViewInfo(
+                    ViewGroup.BUILT_IN,
+                    viewContext.GetViewSpecList(ViewGroup.BUILT_IN.Id).ViewSpecs.FirstOrDefault()));
+            }
+            else
+            {
+                BindingListSource.SetViewContext(viewContext);
+            }
+        }
+
+        private void radio_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateViewContext();
         }
     }
 }

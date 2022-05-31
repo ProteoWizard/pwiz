@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 QuantificationSettings);
         }
 
-        public PeptideQuantifier WithAllQuantifiableTransitions()
+        public PeptideQuantifier MakeAllTransitionsQuantitative()
         {
             var allTransitionIdentityPaths = PeptideDocNode.TransitionGroups.SelectMany(tg =>
                 tg.Transitions.Select(t => new IdentityPath(PeptideGroupDocNode.PeptideGroup, PeptideDocNode.Peptide,

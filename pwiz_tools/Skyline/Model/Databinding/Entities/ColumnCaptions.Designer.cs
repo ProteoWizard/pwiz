@@ -2167,11 +2167,47 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimized Limit of Detection.
+        /// </summary>
+        public static string OptimizedLimitOfDetection {
+            get {
+                return ResourceManager.GetString("OptimizedLimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimized Limit of Quantification.
+        /// </summary>
+        public static string OptimizedLimitOfQuantification {
+            get {
+                return ResourceManager.GetString("OptimizedLimitOfQuantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Opt Step.
         /// </summary>
         public static string OptStep {
             get {
                 return ResourceManager.GetString("OptStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Limit of Detection.
+        /// </summary>
+        public static string OriginalLimitOfDetection {
+            get {
+                return ResourceManager.GetString("OriginalLimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Limit of Quantification.
+        /// </summary>
+        public static string OriginalLimitOfQuantification {
+            get {
+                return ResourceManager.GetString("OriginalLimitOfQuantification", resourceCulture);
             }
         }
         
