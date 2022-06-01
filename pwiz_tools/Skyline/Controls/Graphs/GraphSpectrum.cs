@@ -305,8 +305,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
                 ZoomSpectrumToSettings();
-                _updateManager.ClearPrecursors();
                 Settings.Default.ShowLosses = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsFormulae.ToString(@",");
+                _updateManager.ClearPrecursors();
                 UpdateUI();
             }
         }
