@@ -530,12 +530,6 @@
   <data name="accepted_protein" xml:space="preserve">
     <value>已接受的蛋白质 {0}</value>
   </data>
-  <data name="associated_peptides_with_protein" xml:space="preserve">
-    <value>与 {0} 相关的肽段</value>
-  </data>
-  <data name="associated_peptides_with_proteins" xml:space="preserve">
-    <value>与 {0} 蛋白质相关的肽段</value>
-  </data>
   <data name="drag_and_dropped_node" xml:space="preserve">
     <value>将 {0} 拖放到 {1}</value>
   </data>

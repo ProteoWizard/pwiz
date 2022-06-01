@@ -530,11 +530,11 @@
   <data name="accepted_protein" xml:space="preserve">
     <value>Accepted protein {0}</value>
   </data>
-  <data name="associated_peptides_with_protein" xml:space="preserve">
-    <value>Associated peptides with {0}</value>
-  </data>
   <data name="associated_peptides_with_proteins" xml:space="preserve">
-    <value>Associated peptides with {0} proteins</value>
+    <value>Associated peptides with proteins</value>
+  </data>
+  <data name="associated_peptides_with_protein_groups" xml:space="preserve">
+    <value>Associated peptides with protein groups</value>
   </data>
   <data name="drag_and_dropped_node" xml:space="preserve">
     <value>Drag and dropped {0} to {1}</value>
@@ -669,10 +669,10 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
     <value>{0} transitions</value>
   </data>
-  <data name="permuted_isotope_label_simple">
+  <data name="permuted_isotope_label_simple" xml:space="preserve">
     <value>Added simple permutations of isotope modification '{0}'</value>
   </data>
-  <data name="permuted_isotope_label_complete">
+  <data name="permuted_isotope_label_complete" xml:space="preserve">
     <value>Added complete permutations of isotope modification '{0}'</value>
   </data>
 </root>

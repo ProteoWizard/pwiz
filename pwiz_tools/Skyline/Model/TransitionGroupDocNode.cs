@@ -1435,8 +1435,7 @@ namespace pwiz.Skyline.Model
 
                 if (resultsHandler != null)
                 {
-                    reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(
-                        nodePep.Peptide.GlobalIndex, fileId.GlobalIndex);
+                    reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, fileId);
                 }
             }
             resultsCalc.AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);
@@ -2361,7 +2360,6 @@ namespace pwiz.Skyline.Model
                                                                           step,
                                                                           TransitionCount,
                                                                           chromInfoGroup,
-                                                                          ReintegrateResults,
                                                                           GetReintegratePeak(fileId, step), 
                                                                           explicitPeakBounds);
                         calc.AddChromInfo(nodeTran, chromInfo);
@@ -2444,7 +2442,6 @@ namespace pwiz.Skyline.Model
                                                         int optimizationStep,
                                                         int transitionCount,
                                                         TransitionGroupChromInfo chromInfo,
-                                                        MProphetResultsHandler reintegrateResults,
                                                         PeakFeatureStatistics reintegratePeak,
                                                         ExplicitPeakBounds explicitPeakBounds)
             {
