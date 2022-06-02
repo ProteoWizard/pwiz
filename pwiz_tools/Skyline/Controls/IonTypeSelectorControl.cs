@@ -164,6 +164,38 @@ namespace pwiz.Skyline.Controls
         private CheckBox _allLossesButton;
         private bool _disposed;
 
+        private sealed class IonSelectorButton : CheckBox
+        {
+            public IonSelectorButton(object tag): base()
+            {
+                Appearance = Appearance.Button;
+                AutoSize = true;
+                Tag = tag;
+                FlatAppearance.BorderSize = 0;
+                FlatStyle = FlatStyle.Flat;
+                FlatAppearance.CheckedBackColor = Color.DarkCyan;
+            }
+            protected override bool ShowFocusCues
+            {
+                get { return false; }
+            }
+
+            protected override void OnCheckStateChanged(EventArgs e)
+            {
+                base.OnCheckStateChanged(e);
+                if (Checked)
+                {
+                    ForeColor = Color.White;
+                    Font = new Font(Font, FontStyle.Bold);
+                }
+                else
+                {
+                    ForeColor = Color.Black;
+                    Font = new Font(Font, FontStyle.Regular);
+                }
+            }
+        }
+
         public IonTypeSelectionPanel()
         {
             SuspendLayout();
@@ -247,12 +279,9 @@ namespace pwiz.Skyline.Controls
 
         CheckBox CreateIonTypeCheckBox(IonType ionType)
         {
-            return new CheckBox()
+            return new IonSelectorButton(ionType)
             {
                 Text = ionType.GetLocalizedString().ToUpper(),
-                Appearance = Appearance.Button,
-                AutoSize = true,
-                Tag = ionType,
                 TextAlign = ContentAlignment.MiddleCenter
             };
         }
@@ -294,12 +323,10 @@ namespace pwiz.Skyline.Controls
                 if (LayoutSettings.RowCount == 2)
                 {
                     LayoutSettings.RowCount = 2 + modRowNumber;
-                    _allLossesButton = new CheckBox()
+                    _allLossesButton = new IonSelectorButton(null)
                     {
                         Text = Resources.IonTypeSelector_LossesLabel,
-                        AutoSize = true,
-                        TextAlign = ContentAlignment.MiddleLeft,
-                        Appearance = Appearance.Button
+                        TextAlign = ContentAlignment.MiddleLeft
                     };
                     Controls.Add(_allLossesButton);
                     SetCellPosition(_allLossesButton, new TableLayoutPanelCellPosition(0, 2));
@@ -317,12 +344,9 @@ namespace pwiz.Skyline.Controls
                     //Add the buttons that are not there yet
                     if (!Controls.OfType<CheckBox>().Any(cb => loss.Equals(cb.Tag)))
                     {
-                        var cb = new CheckBox()
+                        var cb = new IonSelectorButton(loss)
                         {
                             Text = string.Format(CultureInfo.CurrentCulture, @"-{0:F0}", loss.AverageMass),
-                            AutoSize = true,
-                            Tag = loss,
-                            Appearance = Appearance.Button,
                             Checked = lossButtonStates.Contains(loss.FormulaNoNull)
                         };
                         cb.CheckedChanged += LossButton_CheckedChanged;
