@@ -18,6 +18,8 @@
  */
 using System;
 using pwiz.Skyline.Model.Lib.BlibData;
+using pwiz.Skyline.Util;
+
 // ReSharper disable VirtualMemberCallInConstructor
 
 namespace pwiz.Skyline.Model.Irt
@@ -29,13 +31,7 @@ namespace pwiz.Skyline.Model.Irt
         // public virtual long? Id { get; set; } // in DbEntity
         public virtual long PeptideId { get; set; }
         public virtual double Irt { get; set; }
-        public virtual long SaveTimestamp { get; set; }
-
-        public virtual DateTimeOffset SaveTime
-        {
-            get => DateTimeOffset.FromUnixTimeMilliseconds(SaveTimestamp);
-            set => SaveTimestamp = value.ToUnixTimeMilliseconds();
-        }
+        public virtual string SaveTime { get; set; }
 
         /// <summary>
         /// For NHibernate only
@@ -44,12 +40,12 @@ namespace pwiz.Skyline.Model.Irt
         {
         }
 
-        public DbIrtHistorical(long peptideId, double irt, DateTimeOffset saveTime)
+        public DbIrtHistorical(long peptideId, double irt, TimeStampISO8601 saveTime)
         {
             Id = null;
             PeptideId = peptideId;
             Irt = irt;
-            SaveTime = saveTime;
+            SaveTime = saveTime.ToString();
         }
 
         public DbIrtHistorical(DbIrtHistorical other)
@@ -57,7 +53,7 @@ namespace pwiz.Skyline.Model.Irt
             Id = other.Id;
             PeptideId = other.PeptideId;
             Irt = other.Irt;
-            SaveTimestamp = other.SaveTimestamp;
+            SaveTime = other.SaveTime;
         }
 
         #region object overrides
@@ -69,7 +65,7 @@ namespace pwiz.Skyline.Model.Irt
             return base.Equals(other) &&
                    PeptideId.Equals(other.PeptideId) &&
                    Irt.Equals(other.Irt) &&
-                   SaveTimestamp.Equals(other.SaveTimestamp);
+                   SaveTime.Equals(other.SaveTime);
         }
 
         public override bool Equals(object obj)
@@ -86,7 +82,7 @@ namespace pwiz.Skyline.Model.Irt
                 var result = base.GetHashCode();
                 result = (result * 397) ^ PeptideId.GetHashCode();
                 result = (result * 397) ^ Irt.GetHashCode();
-                result = (result * 397) ^ SaveTimestamp.GetHashCode();
+                result = (result * 397) ^ SaveTime.GetHashCode();
                 return result;
             }
         }

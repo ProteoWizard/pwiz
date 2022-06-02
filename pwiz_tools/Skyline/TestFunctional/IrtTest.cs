@@ -1259,8 +1259,7 @@ namespace pwiz.SkylineTestFunctional
         private string _dbPath;
         private readonly IList<DbIrtPeptide> _standards = IrtStandard.BIOGNOSYS_10.Peptides;
         private bool _redundant;
-        private readonly Dictionary<string, DbIrtPeptide> _pepMap = new Dictionary<string, DbIrtPeptide>();
-        private readonly Dictionary<string, List<double>> _pepHistories = new Dictionary<string, List<double>>();
+        private readonly Dictionary<string, List<double>> _peps = new Dictionary<string, List<double>>();
 
         protected override void DoTest()
         {
@@ -1272,7 +1271,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<EditIrtCalcDlg>(peptideSettings.EditCalculator, dlg =>
             {
                 dlg.CalcName = CALC_NAME;
-                dlg.CalcPath = _dbPath;
+                dlg.CreateDatabase(_dbPath);
                 dlg.StandardPeptides = _standards;
                 CheckIrtCalcDlg(dlg);
                 ChangeRedundant(dlg, true);
@@ -1335,39 +1334,50 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("history-test.sky")));
         }
 
+        private double GetMedianIrt(string target)
+        {
+            Assert.IsTrue(_peps.TryGetValue(target, out var irts),
+                $"Missing peptide {target} from [{string.Join(", ", _peps.Keys)}]");
+            return new Statistics(irts).Median();
+        }
+
         private void ChangeRedundant(EditIrtCalcDlg dlg, bool redundant)
         {
             dlg.IsRedundant = _redundant = redundant;
             if (!redundant)
-                _pepHistories.Clear();
+            {
+                var dlgPeps = dlg.LibraryPeptides.ToDictionary(pep => pep.ModifiedTarget.ToString());
+                foreach (var pep in _peps)
+                {
+                    Assert.IsTrue(dlgPeps.ContainsKey(pep.Key));
+                    pep.Value.Clear();
+                    pep.Value.Add(dlgPeps[pep.Key].Irt);
+                }
+            }
         }
 
         private void AddIrt(EditIrtCalcDlg dlg, string target, double irt)
         {
             var dlgPeps = dlg.LibraryPeptides.ToList();
             Assert.IsNull(dlgPeps.FirstOrDefault(pep => Equals(pep.ModifiedTarget.ToString(), target)));
-            Assert.IsFalse(_pepMap.ContainsKey(target));
             var newPep = new DbIrtPeptide(new Target(target), irt, false, TimeSource.peak);
-            _pepMap[target] = newPep;
+            _peps.Add(target, new List<double> { irt });
             dlg.LibraryPeptides = dlgPeps.Append(newPep);
         }
 
         private void EditIrt(EditIrtCalcDlg dlg, string target, double irt)
         {
-            var dlgPep = dlg.LibraryPeptides.FirstOrDefault(pep => Equals(pep.ModifiedTarget.ToString(), target));
-            Assert.IsNotNull(dlgPep);
-            Assert.IsTrue(_pepMap.TryGetValue(target, out var existing));
-            if (_pepHistories.TryGetValue(target, out var list))
-                list.Add(existing.Irt);
-            else
-                _pepHistories.Add(target, new List<double> { existing.Irt });
-            dlgPep.Irt = existing.Irt = irt;
+            var dlgPepIdx = dlg.LibraryPeptides.ToArray().IndexOf(pep => Equals(pep.ModifiedTarget.ToString(), target));
+            Assert.AreNotEqual(-1, dlgPepIdx);
+            dlg.AddLibraryIrt(dlgPepIdx, irt);
+            Assert.IsTrue(_peps.TryGetValue(target, out var histories));
+            histories.Add(irt);
+            Assert.AreEqual(GetMedianIrt(target), dlg.LibraryPeptides.Skip(dlgPepIdx).First().Irt);
         }
 
         private void DeleteIrt(EditIrtCalcDlg dlg, string target)
         {
-            Assert.IsTrue(_pepMap.Remove(target));
-            _pepHistories.Remove(target);
+            Assert.IsTrue(_peps.Remove(target));
             var dlgPeps = dlg.LibraryPeptides.ToList();
             var i = dlgPeps.IndexOf(pep => Equals(pep.ModifiedTarget.ToString(), target));
             Assert.AreNotEqual(-1, i);
@@ -1391,12 +1401,13 @@ namespace pwiz.SkylineTestFunctional
             }
 
             var dlgPeps = dlg.LibraryPeptides.ToDictionary(pep => pep.PeptideModSeq, pep => pep);
-            Assert.AreEqual(_pepMap.Count, dlg.LibraryPeptideCount);
-            foreach (var pep in _pepMap)
+            Assert.AreEqual(_peps.Count, dlg.LibraryPeptideCount);
+            foreach (var pep in _peps)
             {
                 Assert.IsTrue(dlgPeps.TryGetValue(pep.Key, out var dlgPep));
-                Assert.AreEqual(pep.Value.Irt, dlgPep.Irt,
-                    $"Peptide {pep.Key} differs (iRT expected = {pep.Value.Irt}, actual = {dlgPep.Irt})");
+                var expectedIrt = GetMedianIrt(pep.Key);
+                Assert.AreEqual(expectedIrt, dlgPep.Irt,
+                    $"Peptide {pep.Key} differs (iRT expected = {expectedIrt}, actual = {dlgPep.Irt})");
             }
         }
 
@@ -1406,7 +1417,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(_redundant, db.Redundant);
 
             var dbHistories = new Dictionary<long, List<double>>();
-            foreach (var history in db.GetHistory() ?? Enumerable.Empty<DbIrtHistorical>())
+            foreach (var history in db.ReadHistories() ?? Enumerable.Empty<DbIrtHistorical>())
             {
                 if (!dbHistories.TryGetValue(history.PeptideId, out var list))
                     dbHistories.Add(history.PeptideId, new List<double> { history.Irt });
@@ -1414,12 +1425,8 @@ namespace pwiz.SkylineTestFunctional
                     list.Add(history.Irt);
             }
 
-            var expectedHistories = new Dictionary<string, List<double>>();
-            foreach (var history in _pepHistories)
-                expectedHistories[history.Key] = history.Value.Select(v => v).ToList();
-
             var expectedStandards = _standards.Select(pep => pep.ModifiedTarget).ToHashSet();
-
+            var expectedLibrary = _peps.ToDictionary(pep => pep.Key, pep => new List<double>(pep.Value));
             foreach (var pep in dbPeptides)
             {
                 if (pep.Standard)
@@ -1430,32 +1437,27 @@ namespace pwiz.SkylineTestFunctional
                     continue;
                 }
 
-                Assert.IsTrue(_pepMap.TryGetValue(pep.ModifiedTarget.ToString(), out var pepMem),
-                    $"Missing peptide {pep.ModifiedTarget} from [{string.Join(", ", _pepMap.Keys)}]");
-
                 // Verify iRT value
-                Assert.AreEqual(pepMem.Irt, pep.Irt);
+                Assert.AreEqual(GetMedianIrt(pep.ModifiedTarget.ToString()), pep.Irt);
 
                 // Verify history
-                if (!expectedHistories.TryGetValue(pep.ModifiedTarget.ToString(), out var expectedHistory))
-                    expectedHistory = new List<double>();
-                if (dbHistories.TryGetValue(pep.Id.Value, out var dbHistory))
+                if (_redundant)
                 {
+                    Assert.IsTrue(expectedLibrary.TryGetValue(pep.ModifiedTarget.ToString(), out var expectedHistory));
+                    Assert.IsTrue(dbHistories.TryGetValue(pep.Id.Value, out var dbHistory));
                     foreach (var i in dbHistory.Select(history => expectedHistory.FindIndex(irt => Math.Abs(irt - history) < 0.01)))
                     {
                         Assert.AreNotEqual(-1, i);
                         expectedHistory.RemoveAt(i);
                     }
                     Assert.AreEqual(new Statistics(dbHistory.Append(pep.Irt)).Median(), db.ScoreSequence(pep.ModifiedTarget));
+                    Assert.AreEqual(0, expectedHistory.Count);
                 }
-                else
-                {
-                    Assert.AreEqual(pep.Irt, db.ScoreSequence(pep.ModifiedTarget));
-                }
-                Assert.AreEqual(0, expectedHistory.Count);
+                Assert.IsTrue(expectedLibrary.Remove(pep.PeptideModSeq));
             }
 
             Assert.AreEqual(0, expectedStandards.Count);
+            Assert.AreEqual(0, expectedLibrary.Count);
         }
     }
 }

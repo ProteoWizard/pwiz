@@ -221,7 +221,7 @@ namespace pwiz.Skyline.Model
                     processed.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
                     newStandards.ToArray(), Array.Empty<DbIrtPeptide>(), regressionType);
             }
-            IrtDb.CreateIrtDb(path).UpdatePeptides((newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList(), false, monitor);
+            IrtDb.CreateIrtDb(path).UpdatePeptides((newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList(), monitor);
         }
 
         public bool VerifyRetentionTimes(IEnumerable<string> resultsFiles)

@@ -51,8 +51,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
-        private IrtDb _originalDb;
-        private DbIrtPeptide[] _originalPeptides;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
@@ -108,6 +106,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void EditIrtCalcDlg_FormClosing(object sender, FormClosingEventArgs e)
         {
             Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
+        }
+
+        private IrtDb _originalDb;
+        private DbIrtPeptide[] _originalPeptides;
+        private void ChangeDb(string path, IrtDb db, DbIrtPeptide[] peps)
+        {
+            textDatabase.Text = path;
+            _originalDb = _gridViewLibraryDriver.OriginalDb = db;
+            _originalPeptides = peps;
         }
 
         private bool DatabaseChanged
@@ -266,9 +273,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             //Create file, initialize db
             try
             {
-                _originalDb = IrtDb.CreateIrtDb(path);
-                _originalPeptides = Array.Empty<DbIrtPeptide>();
-                textDatabase.Text = path;
+                ChangeDb(path, IrtDb.CreateIrtDb(path), Array.Empty<DbIrtPeptide>());
             }
             catch (DatabaseOpeningException x)
             {
@@ -330,38 +335,31 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;
             }
 
+            IrtDb db = null;
             IList<DbIrtPeptide> dbPeptides = null;
             using (var dlg = new LongWaitDlg { Message = Resources.EditIrtCalcDlg_OpenDatabase_Opening_database })
             {
-                DatabaseOpeningException openException = null;
-                dlg.PerformWork(this, 800, progressMonitor =>
+                var status = dlg.PerformWork(this, 800, progressMonitor => db = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides));
+                if (status.IsError)
                 {
-                    _originalDb = IrtDb.GetIrtDb(path, progressMonitor, out dbPeptides);
-                    if (progressMonitor is ProgressWaitBroker progress && progress.Status.ErrorException is DatabaseOpeningException e)
-                        openException = e;
-                });
-                if (_originalDb == null && openException == null)
-                    openException = new DatabaseOpeningException(string.Format(Resources.EditIrtCalcDlg_OpenDatabase_The_file__0__could_not_be_opened_, path));
-                if (openException != null)
-                {
-                    MessageDlg.Show(this, openException.Message);
+                    MessageDlg.Show(this, status.ErrorException.Message);
                     return;
                 }
             }
 
             LoadStandard(dbPeptides);
             LoadLibrary(dbPeptides);
-            SelectedRegressionType = _originalDb.RegressionType;
-            IsRedundant = _originalDb.Redundant;
+            // ReSharper disable PossibleNullReferenceException
+            SelectedRegressionType = db.RegressionType;
+            IsRedundant = db.Redundant;
+            // ReSharper restore PossibleNullReferenceException
 
             // Clone all of the peptides to use for comparison in OkDialog
-            _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
+            ChangeDb(path, db, dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray());
 
-            textDatabase.Text = path;
-
-            if (_originalPeptides.Any(p => !p.Target.IsProteomic))
+            if (dbPeptides.Any(p => !p.Target.IsProteomic))
             {
-                GetModeUIHelper().ModeUI = _originalPeptides.Any(p => p.Target.IsProteomic)
+                GetModeUIHelper().ModeUI = dbPeptides.Any(p => p.Target.IsProteomic)
                     ? SrmDocument.DOCUMENT_TYPE.mixed
                     : SrmDocument.DOCUMENT_TYPE.small_molecules;
             }
@@ -475,16 +473,25 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     using (var fileSaver = new FileSaver(path))
                     {
                         IrtDb db;
-                        if (File.Exists(path))
+                        if (!File.Exists(path))
+                        {
+                            db = IrtDb.CreateIrtDb(fileSaver.SafeName);
+                        }
+                        else
                         {
                             fileSaver.CopyFile(path);
                             db = IrtDb.GetIrtDb(fileSaver.SafeName, null).RemoveDuplicateLibraryPeptides();
                         }
-                        else
+                        
+                        db = db.SetRedundant(IsRedundant);
+                        using (var longWaitDlg = new LongWaitDlg { Text = "Saving to database" })
                         {
-                            db = IrtDb.CreateIrtDb(fileSaver.SafeName);
+                            var dbCopy = db;
+                            longWaitDlg.PerformWork(this, 800, monitor => db = dbCopy.UpdatePeptides(AllPeptides.ToArray(), monitor));
                         }
-                        db = db.UpdatePeptides(AllPeptides.ToArray(), IsRedundant);
+                        if (IsRedundant)
+                            db = db.AddHistories(_gridViewLibraryDriver.GetHistoriesToAdd(db));
+
                         var putDocXml = string.IsNullOrEmpty(docXml); // Add docxml to database if it didn't have any
                         if (!putDocXml)
                         {
@@ -500,6 +507,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             docXml = db.DocumentXml;
                         }
                         db.SetRegressionType(SelectedRegressionType ?? IrtRegressionType.DEFAULT);
+
                         fileSaver.Commit();
                     }
                 }
@@ -789,6 +797,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 : base(gridView, bindingSource, items)
             {
                 AllowNegativeTime = true;
+                _newHistories = new Dictionary<Target, double>();
+                GridView.CellValueChanged += FireCellChanged;
+                GridView.UserDeletingRow += (_, e) => _newHistories.Remove(((DbIrtPeptide)e.Row.DataBoundItem).ModifiedTarget);
             }
 
             /// <summary>
@@ -798,6 +809,65 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             public IrtRegressionType RegressionType { private get; set; }
             public bool RedundantDb { private get; set; }
+
+            private IrtDb _originalDb;
+            public IrtDb OriginalDb
+            {
+                get => _originalDb;
+                set
+                {
+                    _newHistories.Clear();
+                    _originalDb = value;
+                }
+            }
+
+            private readonly Dictionary<Target, double> _newHistories;
+            private void AddIrt(DbIrtPeptide pep, double newIrt)
+            {
+                if (!RedundantDb || OriginalDb == null)
+                {
+                    pep.Irt = newIrt;
+                }
+                else
+                {
+                    // ReSharper disable PossibleMultipleEnumeration
+                    var hist = OriginalDb.GetHistory(pep.ModifiedTarget);
+                    if (hist != null && hist.Any())
+                    {
+                        _newHistories[pep.ModifiedTarget] = newIrt;
+                        pep.Irt = new Statistics(hist.Append(newIrt)).Median();
+                    }
+                    else
+                    {
+                        pep.Irt = newIrt;
+                    }
+                    // ReSharper restore PossibleMultipleEnumeration
+                }
+            }
+            public void FireCellChanged(object sender, DataGridViewCellEventArgs e)
+            {
+                if (e.ColumnIndex == COLUMN_TIME)
+                {
+                    var pep = (DbIrtPeptide)GridView.Rows[e.RowIndex].DataBoundItem;
+                    AddIrt(pep, pep.Irt);
+                }
+            }
+            public Dictionary<Target, double> GetHistoriesToAdd(IrtDb db)
+            {
+                var histories = new Dictionary<Target, double>();
+                foreach (var pep in Items)
+                {
+                    var saveIrt = pep.Irt;
+                    if (db.TryGetLatestHistory(pep.ModifiedTarget, out var dbLatest))
+                    {
+                        saveIrt = (_newHistories.TryGetValue(pep.ModifiedTarget, out var irt) ? irt : (double?)null) ?? pep.Irt;
+                        if (Math.Abs(dbLatest - saveIrt) < IRT_TOLERANCE)
+                            continue; // don't add history if iRT value hasn't changed
+                    }
+                    histories[pep.ModifiedTarget] = saveIrt;
+                }
+                return histories;
+            }
 
             protected override void DoPaste()
             {
@@ -1057,7 +1127,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 public IrtRetentionTimeProvider(string name, IrtDb irtDb)
                 {
                     Name = name;
-                    _dictSequenceToPeptide = new TargetMap<DbIrtPeptide>(irtDb.GetPeptides().ToDictionary(peptide => peptide.ModifiedTarget));
+                    _dictSequenceToPeptide = new TargetMap<DbIrtPeptide>(irtDb.ReadPeptides().ToDictionary(peptide => peptide.ModifiedTarget));
                 }
 
                 public double? GetRetentionTime(Target sequence)
@@ -1090,7 +1160,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 GetPeptideLists(listPeptidesNew, out var dictLibraryIndices, out var listChangedPeptides, out var listOverwritePeptides, out var listKeepPeptides);
 
                 // If there were any matches, get user feedback
-                AddIrtPeptidesAction action;
+                var action = AddIrtPeptidesAction.replace;
                 if (!RedundantDb)
                 {
                     using (var dlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.irt_database, irtAverages,
@@ -1100,11 +1170,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             return;
                         action = dlg.Action;
                     }
-                }
-                else
-                {
-                    // For redundant libraries, replace without asking
-                    action = AddIrtPeptidesAction.replace;
                 }
 
                 List<DbIrtPeptide> newStandards = null;
@@ -1184,11 +1249,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             continue;
 
                         var peptideExist = Items[peptideIndex];
+
                         // Replace peptides if the user said to, or if the peak type is more accurate
                         // than that of the existing iRT value.
-                        if (action == AddIrtPeptidesAction.replace || setOverwritePeptides.Contains(seq))
+                        if (RedundantDb || action == AddIrtPeptidesAction.replace || setOverwritePeptides.Contains(seq))
                         {
-                            peptideExist.Irt = peptide.Irt;
+                            AddIrt(peptideExist, peptide.Irt);
                             peptideExist.TimeSource = peptide.TimeSource;
                         }
                         // Skip peptides if the user said to, or no change has occurred.
@@ -1320,6 +1386,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
         public void DoPasteLibrary()
         {
             _gridViewLibraryDriver.OnPaste();
+        }
+
+        public void AddLibraryIrt(int row, double irt)
+        {
+            LibraryPeptideList[row].Irt = irt;
+            _gridViewLibraryDriver.FireCellChanged(this, new DataGridViewCellEventArgs(LibraryGridViewDriver.COLUMN_TIME, row));
         }
 
         public IrtStandard IrtStandards
@@ -1487,9 +1559,6 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        public DataGridViewEx GridViewStandard
-        {
-            get { return gridViewStandard; }
-        }
+        public DataGridViewEx GridViewStandard => gridViewStandard;
     }
 }

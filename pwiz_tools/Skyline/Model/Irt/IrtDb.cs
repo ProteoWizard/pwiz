@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static string FILTER_IRTDB => TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT);
 
-        public const int SCHEMA_VERSION_CURRENT = 1;
+        public const int SCHEMA_VERSION_CURRENT = 2;
 
         private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Irt
 
         private DateTime _modifiedTime;
         private TargetMap<double> _dictStandards;
-        private TargetMap<double> _dictLibrary;
+        private TargetMap<TargetInfo> _dictLibrary;
 
         private IrtDb(string path, ISessionFactory sessionFactory)
         {
@@ -108,8 +108,8 @@ namespace pwiz.Skyline.Model.Irt
 
         public double UnknownScore { get; private set; }
 
-        public IEnumerable<KeyValuePair<Target, double>> PeptideScores => DictStandards.Keys.Concat(DictLibrary.Keys)
-            .Select(target => new KeyValuePair<Target, double>(target, ScoreSequence(target).Value));
+        public IEnumerable<KeyValuePair<Target, double>> PeptideScores => DictStandards.Concat(
+            DictLibrary.Select(kvp => new KeyValuePair<Target, double>(kvp.Key, kvp.Value.Irt)));
 
         private IDictionary<Target, double> DictStandards
         {
@@ -117,10 +117,10 @@ namespace pwiz.Skyline.Model.Irt
             set => _dictStandards = new TargetMap<double>(value);
         }
 
-        private IDictionary<Target, double> DictLibrary
+        private IDictionary<Target, TargetInfo> DictLibrary
         {
             get => _dictLibrary;
-            set => _dictLibrary = new TargetMap<double>(value);
+            set => _dictLibrary = new TargetMap<TargetInfo>(value);
         }
 
         private ISession OpenWriteSession()
@@ -149,12 +149,36 @@ namespace pwiz.Skyline.Model.Irt
 
         public double? ScoreSequence(Target seq)
         {
-            return seq != null && (DictStandards.TryGetValue(seq, out var irt) || DictLibrary.TryGetValue(seq, out irt))
-                ? (double?)irt
-                : null;
+            if (seq == null)
+                return null;
+            if (DictStandards.TryGetValue(seq, out var irt))
+                return irt;
+            if (DictLibrary.TryGetValue(seq, out var info))
+                return info.Irt;
+            return null;
         }
 
-        public IList<DbIrtPeptide> GetPeptides()
+        public IEnumerable<double> GetHistory(Target seq)
+        {
+            return seq != null && DictLibrary.TryGetValue(seq, out var info) ? info.PrevIrts : null;
+        }
+
+        public bool TryGetLatestHistory(Target seq, out double history)
+        {
+            if (seq != null && DictLibrary.TryGetValue(seq, out var info))
+            {
+                var latest = info.LatestIrt;
+                if (latest.HasValue)
+                {
+                    history = latest.Value;
+                    return true;
+                }
+            }
+            history = 0;
+            return false;
+        }
+
+        public IList<DbIrtPeptide> ReadPeptides()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
@@ -162,7 +186,7 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public IList<DbIrtHistorical> GetHistory()
+        public IList<DbIrtHistorical> ReadHistories()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
@@ -172,7 +196,7 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public string GetDocumentXml()
+        public string ReadDocumentXml()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
@@ -187,7 +211,7 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public IrtRegressionType GetRegressionType()
+        public IrtRegressionType ReadRegressionType()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
@@ -207,43 +231,32 @@ namespace pwiz.Skyline.Model.Irt
 
         private IrtDb Load(IProgressMonitor loadMonitor, IProgressStatus status, out IList<DbIrtPeptide> dbPeptides)
         {
-            var rawPeptides = dbPeptides = GetPeptides();
-            var history = GetHistory();
+            var rawPeptides = dbPeptides = ReadPeptides();
+            var history = ReadHistories();
             var result = ChangeProp(ImClone(this), im =>
             {
                 im.LoadPeptides(rawPeptides, history);
                 im.Redundant = history != null;
-                im.DocumentXml = GetDocumentXml();
-                im.RegressionType = GetRegressionType();
+                im.DocumentXml = ReadDocumentXml();
+                im.RegressionType = ReadRegressionType();
             });
             // Not really possible to show progress, unless we switch to raw reading
             loadMonitor?.UpdateProgress(status.ChangePercentComplete(100));
             return result;
         }
 
-        public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, bool redundant, IProgressMonitor monitor = null)
+        public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor = null)
         {
             IProgressStatus status = new ProgressStatus(Resources.IrtDb_UpdatePeptides_Updating_peptides);
-            return UpdatePeptides(newPeptides, redundant, monitor, ref status);
+            monitor?.UpdateProgress(status);
+            return UpdatePeptides(newPeptides, monitor, ref status);
         }
 
-        public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, bool redundant, IProgressMonitor monitor, ref IProgressStatus status)
+        public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor, ref IProgressStatus status)
         {
-            var updateTime = DateTimeOffset.Now;
-
-            if (redundant && !Redundant)
-            {
-                // Create the IrtHistory table
-                var config = SessionFactoryFactory.GetConfiguration(_path, typeof(IrtDb), false);
-                new SchemaUpdate(config).Execute(false, true);
-            }
-
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
-                if (!redundant)
-                    SqliteOperations.DropTable(session.Connection, @"IrtHistory");
-
                 var newTargets = newPeptides.Select(pep => pep.ModifiedTarget).ToHashSet();
                 var existingPeps = new Dictionary<Target, DbIrtPeptide>();
                 foreach (var pep in session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>())
@@ -277,18 +290,12 @@ namespace pwiz.Skyline.Model.Irt
                             return null;
                         monitor.UpdateProgress(status = status.ChangePercentComplete(i++ * 100 / newPeptides.Count));
                     }
-                    
+
                     if (existingPeps.TryGetValue(pep.ModifiedTarget, out var pepExisting))
                     {
                         pep.Id = pepExisting.Id;
                         if (Equals(pep, pepExisting))
                             continue;
-
-                        if (redundant && !pep.Standard && !Equals(pep.Irt, pepExisting.Irt))
-                        {
-                            var history = new DbIrtHistorical(pep.Id.Value, pepExisting.Irt, updateTime);
-                            session.Save(history);
-                        }
                         pepExisting.Irt = pep.Irt;
                         pepExisting.Standard = pep.Standard;
                         pepExisting.TimeSource = pep.TimeSource;
@@ -302,43 +309,81 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
 
-                if (redundant)
+                if (Redundant)
                     RemoveUnusedHistories(session);
 
                 transaction.Commit();
             }
 
-            monitor?.UpdateProgress(status.Complete());
-            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides, GetHistory()));
+            monitor?.UpdateProgress(status = status.Complete());
+            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides, Redundant ? ReadHistories() : null));
+        }
+
+        public IrtDb AddHistories(IDictionary<Target, double> histories)
+        {
+            if (histories == null || histories.Count == 0)
+                return this;
+            else if (!Redundant)
+                throw new InvalidOperationException();
+
+            var saveTime = new TimeStampISO8601();
+
+            if (!(histories is TargetMap<double>))
+                histories = new TargetMap<double>(histories.Select(h => new KeyValuePair<Target, double>(h.Key, h.Value)));
+
+            var newDict = new Dictionary<Target, TargetInfo>(DictLibrary.Count);
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                foreach (var existing in DictLibrary)
+                {
+                    var info = existing.Value;
+                    if (histories.TryGetValue(existing.Key, out var addHistory))
+                    {
+                        var histObj = new DbIrtHistorical(info.DbId, addHistory, saveTime);
+                        session.Save(histObj);
+
+                        info = new TargetInfo(info, addHistory);
+                    }
+                    newDict[existing.Key] = info;
+                }
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => DictLibrary = newDict);
         }
 
         private void LoadPeptides(ICollection<DbIrtPeptide> peptides, IEnumerable<DbIrtHistorical> histories)
         {
             var dictStandards = new Dictionary<Target, double>();
-            var dictLibrary = new Dictionary<Target, double>(peptides.Count);
+            var dictLibrary = new Dictionary<Target, TargetInfo>(peptides.Count);
 
-            var dictHistory = new Dictionary<long, List<double>>();
+            var dictHistory = new Dictionary<long, List<DbIrtHistorical>>();
             foreach (var history in histories ?? Enumerable.Empty<DbIrtHistorical>())
             {
                 if (!dictHistory.TryGetValue(history.PeptideId, out var list))
-                    dictHistory.Add(history.PeptideId, new List<double> { history.Irt });
+                    dictHistory.Add(history.PeptideId, new List<DbIrtHistorical> { history });
                 else
-                    list.Add(history.Irt);
+                    list.Add(history);
             }
 
             foreach (var pep in peptides)
             {
-                var dict = pep.Standard ? dictStandards : dictLibrary;
                 try
                 {
                     // Unnormalized modified sequences will not match anything.  The user interface
                     // attempts to enforce only normalized modified sequences, but this extra protection
                     // handles irtdb files created before normalization was implemented, or edited outside
                     // Skyline.
-                    var irt = pep.Irt;
-                    if (!pep.Standard && pep.Id.HasValue && dictHistory.TryGetValue(pep.Id.Value, out var hist))
-                        irt = new Statistics(hist.Append(irt)).Median();
-                    dict.Add(pep.GetNormalizedModifiedSequence(), irt);
+                    if (pep.Standard)
+                    {
+                        dictStandards.Add(pep.GetNormalizedModifiedSequence(), pep.Irt);
+                    }
+                    else
+                    {
+                        dictHistory.TryGetValue(pep.Id.Value, out var hist);
+                        dictLibrary.Add(pep.GetNormalizedModifiedSequence(), new TargetInfo(pep.Id.Value, pep.Irt, hist));
+                    }
                 }
                 catch (ArgumentException)
                 {
@@ -347,6 +392,70 @@ namespace pwiz.Skyline.Model.Irt
 
             DictStandards = dictStandards;
             DictLibrary = dictLibrary;
+        }
+
+        public IrtDb SetDocumentXml(SrmDocument doc, string oldXml)
+        {
+            var documentXml = GenerateDocumentXml(StandardPeptides, doc, oldXml);
+
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                EnsureDocumentXmlTable(session);
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = @"UPDATE DocumentXml SET Xml = ?";
+                    cmd.Parameters.Add(new SQLiteParameter { Value = documentXml });
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => im.DocumentXml = documentXml);
+        }
+
+        public IrtDb SetRegressionType(IrtRegressionType regressionType)
+        {
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                EnsureDocumentXmlTable(session);
+
+                using (var cmd = session.Connection.CreateCommand())
+                {
+                    cmd.CommandText = "UPDATE DocumentXml SET RegressionType = ?";
+                    cmd.Parameters.Add(new SQLiteParameter { Value = regressionType.Name });
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im => im.RegressionType = regressionType);
+        }
+
+        public IrtDb SetRedundant(bool redundant)
+        {
+            if (redundant == Redundant)
+                return this;
+
+            if (redundant)
+            {
+                // Create the IrtHistory table
+                var config = SessionFactoryFactory.GetConfiguration(_path, typeof(IrtDb), false);
+                new SchemaUpdate(config).Execute(false, true);
+            }
+            else
+            {
+                using (var session = OpenWriteSession())
+                {
+                    SqliteOperations.DropTable(session.Connection, @"IrtHistory");
+                }
+            }
+
+            return ChangeProp(ImClone(this), im => im.Redundant = redundant);
         }
 
         #endregion
@@ -562,48 +671,6 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public IrtDb SetDocumentXml(SrmDocument doc, string oldXml)
-        {
-            var documentXml = GenerateDocumentXml(StandardPeptides, doc, oldXml);
-
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
-            {
-                EnsureDocumentXmlTable(session);
-
-                using (var cmd = session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = @"UPDATE DocumentXml SET Xml = ?";
-                    cmd.Parameters.Add(new SQLiteParameter { Value = documentXml });
-                    cmd.ExecuteNonQuery();
-                }
-
-                transaction.Commit();
-            }
-
-            return ChangeProp(ImClone(this), im => im.DocumentXml = documentXml);
-        }
-
-        public IrtDb SetRegressionType(IrtRegressionType regressionType)
-        {
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
-            {
-                EnsureDocumentXmlTable(session);
-
-                using (var cmd = session.Connection.CreateCommand())
-                {
-                    cmd.CommandText = "UPDATE DocumentXml SET RegressionType = ?";
-                    cmd.Parameters.Add(new SQLiteParameter { Value = regressionType.Name });
-                    cmd.ExecuteNonQuery();
-                }
-
-                transaction.Commit();
-            }
-
-            return ChangeProp(ImClone(this), im => im.RegressionType = regressionType);
-        }
-
         private static void EnsureDocumentXmlTable(ISession session)
         {
             if (!SqliteOperations.TableExists(session.Connection, @"DocumentXml"))
@@ -659,7 +726,7 @@ namespace pwiz.Skyline.Model.Irt
                 }
                 RemoveUnusedHistories(session);
             }
-            return ChangeProp(ImClone(this), im => { im.LoadPeptides(GetPeptides(), GetHistory()); });
+            return ChangeProp(ImClone(this), im => { im.LoadPeptides(ReadPeptides(), ReadHistories()); });
         }
 
         private static void RemoveUnusedHistories(ISession session)
@@ -672,6 +739,37 @@ namespace pwiz.Skyline.Model.Irt
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+
+        private class TargetInfo
+        {
+            public TargetInfo(long dbId, double irt, IEnumerable<DbIrtHistorical> prevIrts)
+            {
+                DbId = dbId;
+                Irt = irt;
+
+                // SaveTimes are ISO 8601 strings, which can be sorted lexicographically.
+                _prevIrts = prevIrts != null
+                    ? new List<double>(prevIrts.OrderBy(hist => hist.SaveTime).Select(hist => hist.Irt))
+                    : null;
+            }
+
+            public TargetInfo(TargetInfo other, double newIrt)
+            {
+                DbId = other.DbId;
+                Irt = other.Irt;
+                _prevIrts = new List<double>();
+                if (other._prevIrts != null)
+                    _prevIrts.AddRange(other._prevIrts);
+                _prevIrts.Add(newIrt);
+            }
+
+            public long DbId { get; }
+            public double Irt { get; }
+
+            private readonly List<double> _prevIrts;
+            public IEnumerable<double> PrevIrts => _prevIrts;
+            public double? LatestIrt => _prevIrts != null && _prevIrts.Count > 0 ? _prevIrts.Last() : (double?)null;
         }
     }
 }

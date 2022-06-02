@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Irt
                 var irtDbMinimal = IrtDb.CreateIrtDb(fs.SafeName);
 
                 // Calculate the minimal set of peptides needed for this document
-                var dbPeptides = _database.GetPeptides().ToList();
+                var dbPeptides = _database.ReadPeptides().ToList();
                 var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
                 var dictPeptides = new TargetMap<DbIrtPeptide>(dbPeptides.Where(pep => !pep.Standard)
                     .Select(pep => new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
 
-                irtDbMinimal.UpdatePeptides(persistPeptides, false);
+                irtDbMinimal.UpdatePeptides(persistPeptides);
                 fs.Commit();
             }
 
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public IEnumerable<DbIrtPeptide> GetDbIrtPeptides()
         {
-            return _database.GetPeptides();
+            return _database.ReadPeptides();
         }
 
         public string DocumentXml => _database.DocumentXml;

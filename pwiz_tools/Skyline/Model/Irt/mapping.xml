@@ -21,6 +21,6 @@
     </id>
     <property name="PeptideId" index="idxPeptideId" not-null="true"/>
     <property name="Irt" not-null="true"/>
-    <property name="SaveTimestamp" not-null="true"/>
+    <property name="SaveTime" not-null="true"/>
   </class>
 </hibernate-mapping>

@@ -1567,7 +1567,7 @@ namespace pwiz.Skyline.Model
             }
             var dbPath = calculator.DatabasePath;
             var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
-            var oldPeptides = db.GetPeptides().Select(p => new DbIrtPeptide(p)).ToList();
+            var oldPeptides = db.ReadPeptides().Select(p => new DbIrtPeptide(p)).ToList();
             var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out var conflicts);
             if (peptidesCombined == null)
                 return null;
@@ -1584,7 +1584,7 @@ namespace pwiz.Skyline.Model
             }
             // Peptides that were already present in the database can be either kept or overwritten 
             peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.NewPeptide : conflict.ExistingPeptide));
-            db = db.UpdatePeptides(peptidesCombined, false, progressMonitor);
+            db = db.UpdatePeptides(peptidesCombined, progressMonitor);
             calculator = calculator.ChangeDatabase(db);
             regression = regression.ChangeCalculator(calculator);
             var srmSettings = Settings.ChangePeptidePrediction(pred => pred.ChangeRetentionTime(regression));

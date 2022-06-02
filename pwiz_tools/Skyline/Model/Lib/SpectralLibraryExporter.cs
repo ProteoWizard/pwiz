@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Lib
 
             if (rCalcIrt != null)
             {
-                IrtDb.CreateIrtDb(path).UpdatePeptides(rCalcIrt.GetDbIrtPeptides().ToList(), false, progressMonitor, ref status);
+                IrtDb.CreateIrtDb(path).UpdatePeptides(rCalcIrt.GetDbIrtPeptides().ToList(), progressMonitor, ref status);
             }
         }
 
