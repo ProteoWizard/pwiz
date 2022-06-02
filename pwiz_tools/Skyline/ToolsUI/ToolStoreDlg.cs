@@ -378,12 +378,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetToolZipFile(ILongWaitBroker waitBroker, string packageIdentifier, string directory)
         {
-            WebClient webClient = new WebClient();
-            UriBuilder uri = new UriBuilder(TOOL_STORE_URI)
-                {
-                    Path = DOWNLOAD_TOOL_URL,
-                    Query = @"lsid=" + packageIdentifier
-                };
+            var webClient = new WebClient();
+            var uri = new UriBuilder(TOOL_STORE_URI)
+            {
+                Path = DOWNLOAD_TOOL_URL,
+                Query = @"lsid=" + Uri.EscapeDataString(packageIdentifier)
+            };
             byte[] toolZip = webClient.DownloadData(uri.Uri.AbsoluteUri);
             string contentDisposition = webClient.ResponseHeaders.Get(@"Content-Disposition");
             // contentDisposition is filename="ToolBasename.zip"
