@@ -742,52 +742,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// A 2x slower version of ReadArray than <see cref="ReadArray(SafeHandle,int)"/>
-        /// that does not require a file handle.  This one is covered in Randy Kern's blog,
-        /// but is originally from Eric Gunnerson:
-        /// <para>
-        /// http://blogs.msdn.com/ericgu/archive/2004/04/13/112297.aspx
-        /// </para>
-        /// </summary>
-        /// <param name="stream">Stream to from which to read the elements</param>
-        /// <param name="count">Number of elements to read</param>
-        /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition5[] ReadArray(Stream stream, int count)
-        {
-            // Use fast version, if this is a file
-            var fileStream = stream as FileStream;
-            if (fileStream != null)
-            {
-                try
-                {
-                    return ReadArray(fileStream.SafeFileHandle, count);
-                }
-                catch (BulkReadException)
-                {
-                    // Fall through and attempt to read the slow way
-                }
-            }
-
-            // CONSIDER: Probably faster in this case to read the entire block,
-            //           and convert from bytes to single float values.
-            ChromTransition5[] results = new ChromTransition5[count];
-            int size = sizeof (ChromTransition5);
-            byte[] buffer = new byte[size];
-            for (int i = 0; i < count; ++i)
-            {
-                if (stream.Read(buffer, 0, size) != size)
-                    throw new InvalidDataException();
-
-                fixed (byte* pBuffer = buffer)
-                {
-                    results[i] = *(ChromTransition5*) pBuffer;
-                }
-            }
-
-            return results;
-        }
-
-        /// <summary>
         /// Direct read of an entire array throw p-invoke of Win32 WriteFile.  This seems
         /// to coexist with FileStream reading that the write version, but its use case
         /// is tightly limited.
