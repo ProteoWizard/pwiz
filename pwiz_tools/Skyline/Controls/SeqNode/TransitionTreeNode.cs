@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -149,9 +150,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                 label = string.Format(Resources.TransitionTreeNode_GetResultsText__0__, rankText);
             }
 
-            float? ratio = (float?) displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
-                displaySettings.NodePep, nodeTran,
-                nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
+            float? ratio = null;
+            if (!Equals(displaySettings.NormalizationMethod, NormalizationMethod.NONE))
+            {
+                ratio = (float?)displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
+                    displaySettings.NodePep, nodeTran,
+                    nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
+            }
             if (!ratio.HasValue)
                 return label;
 
