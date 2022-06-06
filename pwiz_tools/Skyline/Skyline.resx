@@ -410,6 +410,12 @@
   <data name="charge4ContextMenuItem.Text" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 22</value>
+  </data>
+  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
+    <value>Special Ions</value>
+  </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>

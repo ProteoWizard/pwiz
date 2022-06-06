@@ -887,6 +887,10 @@ namespace pwiz.Skyline
         {
             _graphSpectrumSettings.ShowPrecursorIon = show;
         }
+        public void ShowSpecialIons(bool show)
+        {
+            _graphSpectrumSettings.ShowSpecialIons = show;
+        }
         public void ShowCharge1(bool show)
         {
             _graphSpectrumSettings.ShowCharge1 = show;
@@ -975,6 +979,11 @@ namespace pwiz.Skyline
             ShowCharge4(!_graphSpectrumSettings.ShowCharge4);
         }
 
+        private void specialionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSpecialIons(!_graphSpectrumSettings.ShowSpecialIons);
+        }
+        
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
         {
             if(ListMzScaleCopyables().Count() < 2)
@@ -1113,6 +1122,8 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, zhionsContextMenuItem);
                     zhhionsContextMenuItem.Checked = set.ShowZHHIons;
                     menuStrip.Items.Insert(iInsert++, zhhionsContextMenuItem);
+                    specialionsContextMenuItem.Checked = set.ShowSpecialIons;
+                    menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
                 }
                 else
                 {

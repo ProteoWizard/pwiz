@@ -3205,7 +3205,6 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         public global::System.Collections.Specialized.StringCollection BlibLibraryThresholds {
-                                               
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["BlibLibraryThresholds"]));
             }
@@ -3237,34 +3236,40 @@ namespace pwiz.Skyline.Properties {
                 this["PeakAreaRDotpCutoffValue"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowZHIons
-        {
-            get
-            {
+        public bool ShowZHIons {
+            get {
                 return ((bool)(this["ShowZHIons"]));
             }
-            set
-            {
+            set {
                 this["ShowZHIons"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowZHHIons
-        {
-            get
-            {
+        public bool ShowZHHIons {
+            get {
                 return ((bool)(this["ShowZHHIons"]));
             }
-            set
-            {
+            set {
                 this["ShowZHHIons"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowSpecialIons {
+            get {
+                return ((bool)(this["ShowSpecialIons"]));
+            }
+            set {
+                this["ShowSpecialIons"] = value;
             }
         }
     }

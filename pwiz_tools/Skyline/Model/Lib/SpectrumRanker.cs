@@ -693,7 +693,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
                 if(!Sequence.IsProteomic)
-                return rankedMI;
+                    return rankedMI;
             }
 
             // Look for a predicted match within the acceptable tolerance
@@ -718,6 +718,10 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     continue;
                 }
+
+                //custom ions have been already matched above. No need to do anything.
+                if (IonType.custom.Equals(type))
+                    continue;
 
                 foreach (var adduct in Adducts)
                 {
