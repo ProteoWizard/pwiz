@@ -11771,4 +11771,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EditIrtCalcDlg_OkDialog_Saving_to_database" xml:space="preserve">
       <value>Saving to database</value>
   </data>
+  <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
+      <value>Updating peptides</value>
+  </data>
 </root>

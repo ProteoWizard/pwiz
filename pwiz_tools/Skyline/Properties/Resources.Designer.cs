@@ -17267,6 +17267,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updating peptides.
+        /// </summary>
+        public static string IrtDb_UpdatePeptides_Updating_peptides {
+            get {
+                return ResourceManager.GetString("IrtDb_UpdatePeptides_Updating_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear.
         /// </summary>
         public static string IrtRegressionType_Linear {
