@@ -170,6 +170,7 @@
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
     <Compile Include="LibraryCacheTest.cs" />
     <Compile Include="PermuteIsotopeModificationsTest.cs" />
@@ -563,6 +564,7 @@
     <None Include="RowActionsTest.zip" />
     <None Include="RunToRunRegressionTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
+    <None Include="SequenceTreeRatioTest.zip" />
     <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
