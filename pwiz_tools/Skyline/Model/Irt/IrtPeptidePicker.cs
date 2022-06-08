@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Irt
             foreach (var nodePep in doc.Molecules.Where(pep => pep.PercentileMeasuredRetentionTime.HasValue && !pep.IsDecoy))
             {
                 var allStats = doc.MeasuredResults.MSDataFileInfos
-                    .Select(info => mProphetResultsHandler.GetPeakFeatureStatistics(nodePep.Id.GlobalIndex, info.FileId.GlobalIndex))
+                    .Select(info => mProphetResultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, info.FileId))
                     .Where(stats => stats != null).ToArray();
                 var value = float.MaxValue;
                 if (allStats.Length > 0)

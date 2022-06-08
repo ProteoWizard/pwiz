@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             _scoredGroupPeaksList = new List<ScoredGroupPeaks>();
         }
 
-        public ScoredGroupPeaksSet(IEnumerable<IList<float[]>> groupList, int capacity)
+        public ScoredGroupPeaksSet(IEnumerable<IList<FeatureScores>> groupList, int capacity)
         {
             _scoredGroupPeaksList = new List<ScoredGroupPeaks>(capacity);
             foreach (var group in groupList)
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             foreach (var scoredGroupPeaks in _scoredGroupPeaksList)
             {
                 var secondHighestPeak = scoredGroupPeaks.SecondHighestPeak;
-                if (!secondHighestPeak.IsEmpty)
+                if (secondHighestPeak != null)
                 {
                     var decoyScoredGroupPeaks = new ScoredGroupPeaks();
                     decoyScoredGroupPeaks.Add(secondHighestPeak);
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 var targetScoredGroupPeaks = new ScoredGroupPeaks();
                 foreach (var peak in scoredGroupPeaks.ScoredPeaks)
                 {
-                    if (!ReferenceEquals(peak.Features, secondHighestPeak.Features))
+                    if (!ReferenceEquals(peak, secondHighestPeak))
                         targetScoredGroupPeaks.Add(peak);
                 }
                 targetScoredGroupPeaksSet.Add(targetScoredGroupPeaks);
@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             ParallelEx.For(0, maxScores.Length, i =>
             {
                 var maxPeak = _scoredGroupPeaksList[i].MaxPeak;
-                maxScores[i] = !maxPeak.IsEmpty ? maxPeak.Score : double.NaN;
+                maxScores[i] = maxPeak?.Score ?? double.NaN;
             });
                 
             return maxScores;
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 foreach (var peaks in _scoredGroupPeaksList)
                 {
                     var maxPeak = peaks.MaxPeak;
-                    writer.WriteLine(!maxPeak.IsEmpty ? maxPeak.Score : double.NaN);
+                    writer.WriteLine(maxPeak?.Score ?? double.NaN);
                 }
                 writer.Close();
                 saver.Commit();
@@ -232,9 +232,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Return a list of transition groups, each containing peak feature values.
         /// </summary>
         /// <returns></returns>
-        public List<IList<float[]>> ToList()
+        public List<IList<FeatureScores>> ToList()
         {
-            var list = new List<IList<float[]>>(_scoredGroupPeaksList.Count);
+            var list = new List<IList<FeatureScores>>(_scoredGroupPeaksList.Count);
             foreach (var scoredGroupPeaks in _scoredGroupPeaksList)
                 list.Add(scoredGroupPeaks.ToList());
             return list;

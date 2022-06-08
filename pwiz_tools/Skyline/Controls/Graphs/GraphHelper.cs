@@ -172,23 +172,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var lastPeak = bestPeaks.OrderByDescending(peak => peak.EndRetentionTime).FirstOrDefault();
                     if (firstPeak != null && lastPeak != null)
                     {
-                        var bestStartTime = firstPeak.StartRetentionTime;
-                        var bestEndTime = lastPeak.EndRetentionTime;
-                        // If relative zooming, scale to the best peak
-                        if (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime)
-                        {
-                            double multiplier = (chromDisplayState.TimeRange != 0 ? chromDisplayState.TimeRange : GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW);
-                            bestStartTime -= firstPeak.Fwb * (multiplier - 1) / 2;
-                            bestEndTime += lastPeak.Fwb * (multiplier - 1) / 2;
-                        }
-                        // Otherwise, use an absolute peak width
-                        else
-                        {
-                            double mid = (bestStartTime + bestEndTime) / 2;
-                            bestStartTime = mid - chromDisplayState.TimeRange / 2;
-                            bestEndTime = bestStartTime + chromDisplayState.TimeRange;
-                        }
-                        ZoomXAxis(bestStartTime, bestEndTime);
+                        ZoomToPeaks(firstPeak, lastPeak);
                     }
                     break;
                 case AutoZoomChrom.window:
@@ -361,6 +345,39 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool AllowSplitGraph
         {
             get { return _displayState.AllowSplitPanes; }
+        }
+
+        public void ZoomToPeak(double startRetentionTime, double endRetentionTime)
+        {
+            var retentionTimeValues = new RetentionTimeValues((startRetentionTime + endRetentionTime) / 2,
+                startRetentionTime, endRetentionTime, 0, null);
+            ZoomToPeaks(retentionTimeValues, retentionTimeValues);
+        }
+
+        private void ZoomToPeaks(RetentionTimeValues firstPeak, RetentionTimeValues lastPeak)
+        {
+            var chromDisplayState = _displayState as ChromDisplayState;
+            if (chromDisplayState == null)
+            {
+                return;
+            }
+            var bestStartTime = firstPeak.StartRetentionTime;
+            var bestEndTime = lastPeak.EndRetentionTime;
+            // If relative zooming, scale to the best peak
+            if (chromDisplayState.TimeRange == 0 || chromDisplayState.PeakRelativeTime)
+            {
+                double multiplier = (chromDisplayState.TimeRange != 0 ? chromDisplayState.TimeRange : GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW);
+                bestStartTime -= firstPeak.Fwb * (multiplier - 1) / 2;
+                bestEndTime += lastPeak.Fwb * (multiplier - 1) / 2;
+            }
+            // Otherwise, use an absolute peak width
+            else
+            {
+                double mid = (bestStartTime + bestEndTime) / 2;
+                bestStartTime = mid - chromDisplayState.TimeRange / 2;
+                bestEndTime = bestStartTime + chromDisplayState.TimeRange;
+            }
+            ZoomXAxis(bestStartTime, bestEndTime);
         }
 
         public abstract class DisplayState

@@ -184,6 +184,15 @@ namespace pwiz.Skyline.Model.Results
 
         private const byte NO_MAX_PEAK = 0xFF;
 
+        public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
+            int compressedSize, int uncompressedSize,
+            int numPoints, FlagValues flags, int statusId, int statusRank, float? startTime, float? endTime,
+            double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
+            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags, statusId,
+                statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+        {
+        }
+
         /// <summary>
         /// Constructs header struct with TextIdIndex and TextIdCount left to be initialized
         /// in a subsequent call to <see cref="CalcTextIdIndex"/>.
@@ -730,52 +739,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray),
             };
-        }
-
-        /// <summary>
-        /// A 2x slower version of ReadArray than <see cref="ReadArray(SafeHandle,int)"/>
-        /// that does not require a file handle.  This one is covered in Randy Kern's blog,
-        /// but is originally from Eric Gunnerson:
-        /// <para>
-        /// http://blogs.msdn.com/ericgu/archive/2004/04/13/112297.aspx
-        /// </para>
-        /// </summary>
-        /// <param name="stream">Stream to from which to read the elements</param>
-        /// <param name="count">Number of elements to read</param>
-        /// <returns>New array of elements</returns>
-        public static unsafe ChromTransition5[] ReadArray(Stream stream, int count)
-        {
-            // Use fast version, if this is a file
-            var fileStream = stream as FileStream;
-            if (fileStream != null)
-            {
-                try
-                {
-                    return ReadArray(fileStream.SafeFileHandle, count);
-                }
-                catch (BulkReadException)
-                {
-                    // Fall through and attempt to read the slow way
-                }
-            }
-
-            // CONSIDER: Probably faster in this case to read the entire block,
-            //           and convert from bytes to single float values.
-            ChromTransition5[] results = new ChromTransition5[count];
-            int size = sizeof (ChromTransition5);
-            byte[] buffer = new byte[size];
-            for (int i = 0; i < count; ++i)
-            {
-                if (stream.Read(buffer, 0, size) != size)
-                    throw new InvalidDataException();
-
-                fixed (byte* pBuffer = buffer)
-                {
-                    results[i] = *(ChromTransition5*) pBuffer;
-                }
-            }
-
-            return results;
         }
 
         /// <summary>
@@ -2239,7 +2202,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromatogramGroupInfo
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
-        protected readonly IDictionary<Type, int> _scoreTypeIndices;
+        protected readonly FeatureNames _scoreTypeIndices;
         protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
@@ -2250,7 +2213,7 @@ namespace pwiz.Skyline.Model.Results
         private TimeIntensitiesGroup _timeIntensitiesGroup;
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
-                                     IDictionary<Type, int> scoreTypeIndices,
+                                     FeatureNames scoreTypeIndices,
                                      byte[] textIdBytes,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
@@ -2266,7 +2229,14 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
-            TimeIntensitiesGroup timeIntensitiesGroup)
+            TimeIntensitiesGroup timeIntensitiesGroup) 
+            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
+        {
+        }
+
+        public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
+            TimeIntensitiesGroup timeIntensitiesGroup, FeatureNames scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _textIdBytes = Array.Empty<byte>();
@@ -2274,9 +2244,10 @@ namespace pwiz.Skyline.Model.Results
             _allTransitions = allTransitions;
             _chromPeaks = peaks;
             _timeIntensitiesGroup = timeIntensitiesGroup;
-            _scoreTypeIndices = new Dictionary<Type, int>();
-            _scores = Array.Empty<float>();
+            _scoreTypeIndices = scoreTypeIndices;
+            _scores = scores;
         }
+
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
@@ -2314,7 +2285,7 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasScore(Type scoreType)
         {
-            return _scoreTypeIndices.ContainsKey(scoreType);
+            return _scoreTypeIndices.IndexOf(scoreType) >= 0;
         }
 
         protected IList<float> ReadScores()
@@ -2339,10 +2310,13 @@ namespace pwiz.Skyline.Model.Results
 
         public float GetScore(Type scoreType, int peakIndex)
         {
-            int scoreIndex;
-            if (!_scoreTypeIndices.TryGetValue(scoreType, out scoreIndex))
+            int scoreIndex = _scoreTypeIndices.IndexOf(scoreType);
+            if (scoreIndex < 0)
+            {
                 return float.NaN;
-            return ReadScores()[peakIndex*_scoreTypeIndices.Count + scoreIndex];
+            }
+            var scores = ReadScores();
+            return scores[peakIndex*_scoreTypeIndices.Count + scoreIndex];
         }
 
         public IEnumerable<ChromatogramInfo> TransitionPointSets
@@ -2363,6 +2337,13 @@ namespace pwiz.Skyline.Model.Results
             int endPeak = startPeak + _groupHeaderInfo.NumPeaks;
             for (int i = startPeak; i < endPeak; i++)
                 yield return peaks[i];
+        }
+
+        public IList<ChromPeak> GetPeakGroup(int peakIndex)
+        {
+            var peaks = ReadPeaks();
+            return ReadOnlyList.Create(_groupHeaderInfo.NumTransitions,
+                transitionIndex => peaks[transitionIndex * _groupHeaderInfo.NumPeaks + peakIndex]);
         }
 
         public ChromatogramInfo GetTransitionInfo(int index)

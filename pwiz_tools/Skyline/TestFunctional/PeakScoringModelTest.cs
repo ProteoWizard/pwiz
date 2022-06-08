@@ -285,7 +285,7 @@ namespace pwiz.SkylineTestFunctional
                 // ReSharper disable PossibleNullReferenceException
                 Assert.IsTrue(peakScoringModelMProphet.UsesDecoys);
                 // ReSharper restore PossibleNullReferenceException
-                Assert.AreEqual(MProphetPeakScoringModel.GetDefaultCalculators(SkylineWindow.Document).Length,
+                Assert.AreEqual(MProphetPeakScoringModel.GetDefaultCalculators(SkylineWindow.Document).Count,
                     peakScoringModelMProphet.PeakFeatureCalculators.Count);
             });
         }
