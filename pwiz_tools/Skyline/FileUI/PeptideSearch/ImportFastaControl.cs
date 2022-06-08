@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -119,6 +120,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 targetFastaPanel.Visible = _isDdaSearch;
             }
         }
+
+        public AssociateProteinsSettings AssociateProteinsSettings { get; private set; }
 
         public ImportFastaSettings ImportSettings
         {
@@ -487,14 +490,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_);
                         return false;
                     }
-
+                    
                     // Filter proteins based on number of peptides and add decoys
                     using (var dlg = new AssociateProteinsDlg(docNew, fastaFilepath, irtStandard, DecoyGenerationMethod,
                                NumDecoys ?? 0))
                     {
                         if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
                             return false;
-
+                        AssociateProteinsSettings = dlg.FormSettings;
                         docNew = dlg.DocumentFinal;
                     }
                 }

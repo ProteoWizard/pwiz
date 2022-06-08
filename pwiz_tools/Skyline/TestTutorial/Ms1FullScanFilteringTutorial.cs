@@ -311,9 +311,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(156, transitionCount);*/
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(11, proteinCount);
-                Assert.AreEqual(51, peptideCount);
-                Assert.AreEqual(52, precursorCount);
-                Assert.AreEqual(156, transitionCount);
+                Assert.AreEqual(50, peptideCount);
+                Assert.AreEqual(51, precursorCount);
+                Assert.AreEqual(153, transitionCount);
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
@@ -360,9 +360,9 @@ namespace pwiz.SkylineTestTutorial
 
             const int TIB_L = 0; // index for Tib_L
             const int TIP3 = 1; // index for Tip3
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 51, 52, 156);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 51, 52, 0, 156, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 51, 52, 0, 156, 0);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 50, 51, 153);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 50, 51, 0, 153, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 50, 51, 0, 153, 0);
             string Tib_LFilename = searchFiles[TIB_L].Replace(".group.xml", PreferedExtAbWiff);
             string Tip3Filename = searchFiles[TIP3].Replace(".group.xml", PreferedExtAbWiff);
 

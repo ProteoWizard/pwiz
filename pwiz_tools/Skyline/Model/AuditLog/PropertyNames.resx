@@ -1700,4 +1700,7 @@
   <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
     <value>Remove subset proteins</value>
   </data>
+  <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
+    <value>Associate Proteins</value>
+  </data>
 </root>

@@ -386,6 +386,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     SkylineWindow.NewDocument(true);
+                    Settings.Default.Reset();
                     var peptideNodes = new List<PeptideDocNode>();
                     foreach (var peptide in testCase.Peptides)
                         peptideNodes.Add(modificationMatcher.GetModifiedNode(peptide));
@@ -394,8 +395,11 @@ namespace pwiz.SkylineTestFunctional
                     transSettings = transSettings.ChangeFullScan(
                         transSettings.FullScan.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, null)
                             .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DDA, null));
-                    srmSettings = srmSettings.ChangePeptideSettings(srmSettings.PeptideSettings.ChangeFilter(new PeptideFilter(0, 2, 20,
-                            new List<PeptideExcludeRegex>(), true, PeptideFilter.PeptideUniquenessConstraint.none)))
+                    srmSettings = srmSettings.ChangePeptideSettings(srmSettings.PeptideSettings.ChangeFilter(
+                                new PeptideFilter(0, 2, 20, new List<PeptideExcludeRegex>(), true,
+                                    PeptideFilter.PeptideUniquenessConstraint.none, null))
+                            .ChangeEnzyme(new Enzyme("non-specific", "ACDEFGHIKLMNPQRSTUVWY", ""))
+                            .ChangeDigestSettings(new DigestSettings(100, false)))
                         .ChangeTransitionSettings(transSettings);
 
                     var peptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", string.Empty, peptideNodes.ToArray());

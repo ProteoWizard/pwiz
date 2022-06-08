@@ -289,6 +289,14 @@ namespace pwiz.Skyline.EditUI
             UpdateParsimonyResults();
         }
 
+        private IEnumerable<Peptide> DigestProteinToPeptides(FastaSequence sequence)
+        {
+            var peptideSettings = _document.Settings.PeptideSettings;
+            return peptideSettings.Enzyme.Digest(sequence, peptideSettings.DigestSettings);
+            // CONSIDER: should AssociateProteinsDlg use the length filters? The old PeptidePerProteinDlg doesn't seem to.
+                //peptideSettings.Filter.MaxPeptideLength, peptideSettings.Filter.MinPeptideLength);
+        }
+
         // find matches using the background proteome
         public void UseBackgroundProteome()
         {
@@ -306,7 +314,7 @@ namespace pwiz.Skyline.EditUI
 
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, broker));
+                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, DigestProteinToPeptides, broker));
                 if (longWaitDlg.IsCanceled)
                     return;
             }
@@ -376,7 +384,7 @@ namespace pwiz.Skyline.EditUI
 
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, broker));
+                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, DigestProteinToPeptides, broker));
                 if (longWaitDlg.IsCanceled)
                     return;
             }
@@ -409,7 +417,7 @@ namespace pwiz.Skyline.EditUI
             var result = AddDecoys(document);
 
             if (_overrideFastaPath != null)
-                result =ImportPeptideSearch.AddStandardsToDocument(result, _irtStandard);
+                result = ImportPeptideSearch.AddStandardsToDocument(result, _irtStandard);
 
             // Move iRT proteins to top
             var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(result));
@@ -455,7 +463,7 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var fileName = FastaFileName;
-                return new AssociateProteinsSettings(_proteinAssociation.FinalResults, _isFasta ? fileName : null, _isFasta ? null : fileName);
+                return new AssociateProteinsSettings(_proteinAssociation.FinalResults, _isFasta && _overrideFastaPath == null ? fileName : null, _isFasta ? null : fileName);
             }
         }
 

@@ -274,9 +274,12 @@ namespace TestPerf
                 Assert.IsNotNull(_searchLogImage);
             }
 
+            bool isNotAmanda = false;
+            RunUI(() => isNotAmanda = importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda);
+
             // clicking 'Finish' (Next) will run ImportFasta
             AssociateProteinsDlg emptyProteinsDlg;
-            if (importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+            if (isNotAmanda)
             {
                 emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             }
@@ -290,9 +293,12 @@ namespace TestPerf
                 emptyProteinsDlg = WaitForOpenForm<AssociateProteinsDlg>(600000);
             }
 
+            RunUI(() => emptyProteinsDlg.RemoveRepeatedPeptides = true);
+
+            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+
             RunUI(() =>
             {
-                emptyProteinsDlg.RemoveRepeatedPeptides = true;
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 if (!IsFullData)

@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Proteome
             _peptideToProteins = null;
         }
 
-        public void UseFastaFile(string file, ILongWaitBroker broker)
+        public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             try
             {
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Proteome
                 using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     var fastaSource = new FastaSource(stream);
-                    var proteinAssociations = FindProteinMatches(fastaSource, broker);
+                    var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
                     if (proteinAssociations != null)
                     {
                         AssociatedProteins = proteinAssociations;
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
         // find matches using the background proteome
-        public void UseBackgroundProteome(BackgroundProteome backgroundProteome, ILongWaitBroker broker)
+        public void UseBackgroundProteome(BackgroundProteome backgroundProteome, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             if (backgroundProteome.Equals(BackgroundProteome.NONE))
                 throw new InvalidOperationException(Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
@@ -106,14 +106,14 @@ namespace pwiz.Skyline.Model.Proteome
             ResetMapping();
             var proteome = backgroundProteome;
             var proteinSource = new BackgroundProteomeSource(broker.CancellationToken, proteome);
-            var proteinAssociations = FindProteinMatches(proteinSource, broker);
+            var proteinAssociations = FindProteinMatches(proteinSource, digestProteinToPeptides, broker);
             if (proteinAssociations != null)
             {
                 AssociatedProteins = proteinAssociations;
             }
         }
 
-        private Dictionary<IProteinRecord, PeptideAssociationGroup> FindProteinMatches(IProteinSource proteinSource, ILongWaitBroker broker)
+        private Dictionary<IProteinRecord, PeptideAssociationGroup> FindProteinMatches(IProteinSource proteinSource, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             var localResults = new MappingResultsInternal();
             var peptidesMappedSet = new HashSet<string>();
@@ -133,12 +133,18 @@ namespace pwiz.Skyline.Model.Proteome
                 // don't count the same peptide twice in a protein
                 var peptidesMatched = new HashSet<string>();
 
+                IList<Peptide> digestedPeptides = null;
+
                 foreach (var result in trieResults)
                 {
                     if (!peptidesMatched.Add(result.Keyword))
                         continue;
 
-                    // TODO(yuval): does digest matter?
+                    // check that peptide is in the digest of the protein (if the result is non-empty)
+                    digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).ToList();
+                    if (!digestedPeptides.Contains(p => p.Sequence == result.Keyword))
+                        continue;
+
                     matches.AddRange(_peptideToPath[result.Keyword]);
                 }
 
@@ -881,6 +887,8 @@ namespace pwiz.Skyline.Model.Proteome
 
     public class AssociateProteinsSettings : AuditLogOperationSettings<AssociateProteinsSettings>, IAuditLogComparable
     {
+        public static AssociateProteinsSettings DEFAULT = new AssociateProteinsSettings(null, null, null);
+
         public AssociateProteinsSettings(ProteinAssociation.IMappingResults results, string fasta, string backgroundProteome)
         {
             Results = results;
@@ -936,7 +944,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return new AssociateProteinsSettings(null, null, null);
+            return DEFAULT;
         }
     }
 }

@@ -33,6 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -241,6 +242,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     MatchModificationsControl.ModificationSettings,
                     skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
                     ImportFastaControl.ImportSettings,
+                    ImportFastaControl.AssociateProteinsSettings,
                     ImportPeptideSearch.IsDDASearch ? SearchSettingsControl.SearchSettings : null,
                     ConverterSettingsControl.ConverterSettings,
                     ModeUI);
@@ -259,7 +261,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 ImportResultsSettings importResultsSettings,
                 MatchModificationsControl.MatchModificationsSettings modificationsSettings,
                 TransitionSettingsControl.TransitionFilterAndLibrariesSettings filterAndLibSettings,
-                TransitionFullScan fullScanSettings, ImportFastaControl.ImportFastaSettings importFastaSettings,
+                TransitionFullScan fullScanSettings,
+                ImportFastaControl.ImportFastaSettings importFastaSettings,
+                AssociateProteinsSettings associateProteinsSettings,
                 SearchSettingsControl.DdaSearchSettings ddaSearchSettings,
                 ConverterSettingsControl.DdaConverterSettings ddaConverterSettings,
                 SrmDocument.DOCUMENT_TYPE docType)
@@ -269,6 +273,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FilterAndLibrariesSettings = filterAndLibSettings;
                 FullScanSettings = fullScanSettings;
                 ImportFastaSettings = importFastaSettings;
+                AssociateProteinsSettings = associateProteinsSettings;
                 DdaSearchSettings = ddaSearchSettings;
                 DdaConverterSettings = ddaConverterSettings;
                 _docType = docType;
@@ -294,6 +299,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [TrackChildren]
             public ImportFastaControl.ImportFastaSettings ImportFastaSettings { get; private set; }
 
+            // Associate proteins
+            [TrackChildren]
+            public AssociateProteinsSettings AssociateProteinsSettings { get; private set; }
+
             // DDA search settings
             [TrackChildren]
             public SearchSettingsControl.DdaSearchSettings DdaSearchSettings { get; private set; }
@@ -314,6 +323,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     TransitionSettingsControl.TransitionFilterAndLibrariesSettings.GetDefault(doc.Settings.TransitionSettings),
                     doc.Settings.TransitionSettings.FullScan,
                     ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings),
+                    AssociateProteinsSettings.DEFAULT,
                     null,
                     null,
                     SrmDocument.DOCUMENT_TYPE.proteomic);
