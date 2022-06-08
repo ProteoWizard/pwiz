@@ -463,7 +463,7 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var fileName = FastaFileName;
-                return new AssociateProteinsSettings(_proteinAssociation.FinalResults, _isFasta && _overrideFastaPath == null ? fileName : null, _isFasta ? null : fileName);
+                return new AssociateProteinsSettings(_proteinAssociation, _isFasta && _overrideFastaPath == null ? fileName : null, _isFasta ? null : fileName);
             }
         }
 

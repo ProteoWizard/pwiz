@@ -889,13 +889,13 @@ namespace pwiz.Skyline.Model.Proteome
     {
         public static AssociateProteinsSettings DEFAULT = new AssociateProteinsSettings(null, null, null);
 
-        public AssociateProteinsSettings(ProteinAssociation.IMappingResults results, string fasta, string backgroundProteome)
+        public AssociateProteinsSettings(ProteinAssociation proteinAssociation, string fasta, string backgroundProteome)
         {
-            Results = results;
+            Results = proteinAssociation?.FinalResults ?? proteinAssociation?.Results;
             FASTA = fasta;
             BackgroundProteome = backgroundProteome;
 
-            ParsimonySettings = results?.ParsimonySettings;
+            ParsimonySettings = Results?.ParsimonySettings;
         }
 
         protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
