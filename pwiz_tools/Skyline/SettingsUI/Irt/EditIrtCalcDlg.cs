@@ -484,7 +484,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         }
                         
                         db = db.SetRedundant(IsRedundant);
-                        using (var longWaitDlg = new LongWaitDlg { Text = "Saving to database" })
+                        using (var longWaitDlg = new LongWaitDlg { Text = Resources.EditIrtCalcDlg_OkDialog_Saving_to_database })
                         {
                             var dbCopy = db;
                             longWaitDlg.PerformWork(this, 800, monitor => db = dbCopy.UpdatePeptides(AllPeptides.ToArray(), monitor));
