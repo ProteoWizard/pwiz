@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -144,7 +145,11 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    DocumentFinal = AddIrtAndDecoys(_document);
+                    lock (this)
+                    {
+                        DocumentFinal = AddIrtAndDecoys(_document);
+                        Monitor.PulseAll(this);
+                    }
                     return;
                 }
             }
@@ -228,7 +233,11 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
-            DocumentFinal = CreateDocTree(_document);
+            lock (this)
+            {
+                DocumentFinal = CreateDocTree(_document);
+                Monitor.PulseAll(this);
+            }
 
             dgvAssociateResults.RowCount = 2;
             dgvAssociateResults.ClearSelection();
@@ -649,12 +658,20 @@ namespace pwiz.Skyline.EditUI
 
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int? emptyProteins)
         {
+            WaitForDocumentFinal();
             var doc = DocumentFinal;
             emptyProteins = 0;
             proteins = doc.PeptideGroupCount;
             peptides = doc.PeptideCount;
             precursors = doc.PeptideTransitionGroupCount;
             transitions = doc.PeptideTransitionCount;
+        }
+
+        private void WaitForDocumentFinal()
+        {
+            if (!DocumentFinalCalculated)
+                lock(this)
+                    Monitor.Wait(this);
         }
     }
 }

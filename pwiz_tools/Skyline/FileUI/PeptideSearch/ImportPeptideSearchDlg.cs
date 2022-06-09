@@ -300,7 +300,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public ImportFastaControl.ImportFastaSettings ImportFastaSettings { get; private set; }
 
             // Associate proteins
-            [TrackChildren]
+            [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
             public AssociateProteinsSettings AssociateProteinsSettings { get; private set; }
 
             // DDA search settings
