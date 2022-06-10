@@ -150,7 +150,20 @@ namespace
         return scanNum;
     }
 
-    void writeSpectrumText(const SpectrumPtr& s, ostream& os, CVID nativeIdFormat)
+    double getPrecursorScanTimeInMinutes(const SpectrumList& sl, const Precursor& p)
+    {
+        if (p.spectrumID.empty())
+            return 0;
+        size_t precursorScanIndex = sl.find(p.spectrumID);
+        if (precursorScanIndex == sl.size())
+            return 0;
+        auto precursorSpectrum = sl.spectrum(precursorScanIndex, DetailLevel_FastMetadata);
+        if (precursorSpectrum->scanList.scans.empty())
+            return 0;
+        return precursorSpectrum->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() / 60;
+    }
+
+    void writeSpectrumText(const SpectrumList& sl, const SpectrumPtr& s, ostream& os, CVID nativeIdFormat)
     {
         os << std::setprecision(7); // 123.4567
         bool ms1File = s->cvParam(MS_ms_level).valueAs<int>() == 1;
@@ -218,8 +231,9 @@ namespace
             // Write EZ lines if accurate masses are available
             CVParam massParam = si.cvParam(MS_accurate_mass_OBSOLETE);
             if( !massParam.empty() ){
-              for(int i=0; i < numChargeStates; i++){
-                os << "I\tEZ\t" << charges[i] << "\t" << masses[i] << "\t0\t0" << endl; // pad last two fields with 0
+                string precursorIntensity = precur.cvParam(MS_peak_intensity).value;
+                for(int i=0; i < numChargeStates; i++){
+                os << "I\tEZ\t" << charges[i] << "\t" << masses[i] << "\t" << getPrecursorScanTimeInMinutes(sl, precur) << "\t" << precursorIntensity << endl;
               }
             }
 
@@ -456,7 +470,7 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
             switch (_filetype)
             {
             case MSn_Type_MS1:
-                writeSpectrumText(s, os, nativeIdFormat);
+                writeSpectrumText(sl, s, os, nativeIdFormat);
                 break;
             case MSn_Type_CMS1:
                 writeSpectrumBinary(s, 3 /* version */, true, os, nativeIdFormat);
@@ -465,7 +479,7 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
                 writeSpectrumBinary(s, 3 /* version */, false, os, nativeIdFormat);
                 break;
             case MSn_Type_MS2:
-                writeSpectrumText(s, os, nativeIdFormat);
+                writeSpectrumText(sl, s, os, nativeIdFormat);
                 break;
             case MSn_Type_CMS2:
                 writeSpectrumBinary(s, 3 /* version */, true, os, nativeIdFormat);

@@ -48,7 +48,12 @@ PWIZ_API_DECL IntegerSet::Interval::Interval(int a, int b)
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const IntegerSet::Interval& interval)
 {
-    os << "[" << interval.begin << "," << interval.end << "]";
+    if (interval.end == numeric_limits<int>::max())
+        os << interval.begin << "-";
+    else if (interval.begin == numeric_limits<int>::min())
+        os << "-" << interval.end;
+    else
+        os << "[" << interval.begin << "," << interval.end << "]";
     return os;
 }
 
@@ -230,8 +235,13 @@ PWIZ_API_DECL size_t IntegerSet::size() const
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const IntegerSet& integerSet)
 {
-    copy(integerSet.intervals_.begin(), integerSet.intervals_.end(), 
-         ostream_iterator<IntegerSet::Interval>(os," "));
+    if (!integerSet.intervals_.empty())
+    {
+        auto itr = integerSet.intervals_.begin();
+        os << *itr;
+        for (++itr; itr != integerSet.intervals_.end(); ++itr)
+            os << " " << *itr;
+    }
     return os;
 }
 
