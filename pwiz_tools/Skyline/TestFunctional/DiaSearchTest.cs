@@ -487,7 +487,8 @@ namespace pwiz.SkylineTestFunctional
             if(IsRecordMode)
                 Console.WriteLine();
 
-            RunDlg<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
+            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() =>
             {
                 var aic = new TestDetails.DocumentCounts();
 
@@ -498,13 +499,12 @@ namespace pwiz.SkylineTestFunctional
 
                 emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
 
-                WaitForCondition(() => emptyProteinsDlg.DocumentFinalCalculated); // Dialog won't actually close on OkDialog until this is set
+                WaitForCondition(() => emptyProteinsDlg.DocumentFinalCalculated);
 
                 if (Environment.Is64BitProcess)
                     ValidateTargets(testDetails.Final, aic, "_testDetails.Final");
-
-                emptyProteinsDlg.OkDialog();
             });
+            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
