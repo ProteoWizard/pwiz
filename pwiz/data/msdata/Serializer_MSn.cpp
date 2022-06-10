@@ -109,7 +109,7 @@ namespace
     {
         int startingChargesCount = charges.size();
         CVParam chargeParam = si.cvParam(MS_charge_state);
-        CVParam massParam = si.cvParam(MS_accurate_mass_OBSOLETE);
+        UserParam massParam = si.userParam("accurate mass");
         double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
         if (!chargeParam.empty())
         {
@@ -229,7 +229,7 @@ namespace
             }
 
             // Write EZ lines if accurate masses are available
-            CVParam massParam = si.cvParam(MS_accurate_mass_OBSOLETE);
+            UserParam massParam = si.userParam("accurate mass");
             if( !massParam.empty() ){
                 string precursorIntensity = precur.cvParam(MS_peak_intensity).value;
                 for(int i=0; i < numChargeStates; i++){
@@ -379,7 +379,7 @@ namespace
         if (version == 3)
         {
           int numEzStates = 0;
-          CVParam massParam = si.cvParam(MS_accurate_mass_OBSOLETE);
+          UserParam massParam = si.userParam("accurate mass");
           if (!massParam.empty())
           {
             numEzStates = numChargeStates;
