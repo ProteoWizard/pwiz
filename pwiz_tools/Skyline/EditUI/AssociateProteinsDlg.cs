@@ -145,11 +145,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    lock (this)
-                    {
-                        DocumentFinal = AddIrtAndDecoys(_document);
-                        Monitor.PulseAll(this);
-                    }
+                    DocumentFinal = AddIrtAndDecoys(_document);
                     return;
                 }
             }
@@ -233,11 +229,7 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
-            lock (this)
-            {
-                DocumentFinal = CreateDocTree(_document);
-                Monitor.PulseAll(this);
-            }
+            DocumentFinal = CreateDocTree(_document);
 
             dgvAssociateResults.RowCount = 2;
             dgvAssociateResults.ClearSelection();
@@ -669,9 +661,10 @@ namespace pwiz.Skyline.EditUI
 
         private void WaitForDocumentFinal()
         {
-            if (!DocumentFinalCalculated)
-                lock(this)
-                    Monitor.Wait(this);
+            while (!DocumentFinalCalculated)
+            {
+                Thread.Sleep(500);
+            }
         }
     }
 }
