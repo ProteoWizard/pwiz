@@ -186,12 +186,12 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-        public IList<DbIrtHistorical> ReadHistories()
+        public IList<DbIrtHistory> ReadHistories()
         {
             using (var session = new StatelessSessionWithLock(_sessionFactory.OpenStatelessSession(), _databaseLock, false, CancellationToken.None))
             {
                 return SqliteOperations.TableExists(session.Connection, @"IrtHistory")
-                    ? session.CreateCriteria(typeof(DbIrtHistorical)).List<DbIrtHistorical>()
+                    ? session.CreateCriteria(typeof(DbIrtHistory)).List<DbIrtHistory>()
                     : null;
             }
         }
@@ -340,7 +340,7 @@ namespace pwiz.Skyline.Model.Irt
                     var info = existing.Value;
                     if (histories.TryGetValue(existing.Key, out var addHistory))
                     {
-                        var histObj = new DbIrtHistorical(info.DbId, addHistory, saveTime);
+                        var histObj = new DbIrtHistory(info.DbId, addHistory, saveTime);
                         session.Save(histObj);
 
                         info = new TargetInfo(info, addHistory);
@@ -353,16 +353,16 @@ namespace pwiz.Skyline.Model.Irt
             return ChangeProp(ImClone(this), im => DictLibrary = newDict);
         }
 
-        private void LoadPeptides(ICollection<DbIrtPeptide> peptides, IEnumerable<DbIrtHistorical> histories)
+        private void LoadPeptides(ICollection<DbIrtPeptide> peptides, IEnumerable<DbIrtHistory> histories)
         {
             var dictStandards = new Dictionary<Target, double>();
             var dictLibrary = new Dictionary<Target, TargetInfo>(peptides.Count);
 
-            var dictHistory = new Dictionary<long, List<DbIrtHistorical>>();
-            foreach (var history in histories ?? Enumerable.Empty<DbIrtHistorical>())
+            var dictHistory = new Dictionary<long, List<DbIrtHistory>>();
+            foreach (var history in histories ?? Enumerable.Empty<DbIrtHistory>())
             {
                 if (!dictHistory.TryGetValue(history.PeptideId, out var list))
-                    dictHistory.Add(history.PeptideId, new List<DbIrtHistorical> { history });
+                    dictHistory.Add(history.PeptideId, new List<DbIrtHistory> { history });
                 else
                     list.Add(history);
             }
@@ -743,7 +743,7 @@ namespace pwiz.Skyline.Model.Irt
 
         private class TargetInfo
         {
-            public TargetInfo(long dbId, double irt, IEnumerable<DbIrtHistorical> prevIrts)
+            public TargetInfo(long dbId, double irt, IEnumerable<DbIrtHistory> prevIrts)
             {
                 DbId = dbId;
                 Irt = irt;

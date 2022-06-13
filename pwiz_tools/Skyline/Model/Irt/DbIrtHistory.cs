@@ -24,9 +24,9 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public class DbIrtHistorical : DbEntity
+    public class DbIrtHistory : DbEntity
     {
-        public override Type EntityClass => typeof(DbIrtHistorical);
+        public override Type EntityClass => typeof(DbIrtHistory);
 
         // public virtual long? Id { get; set; } // in DbEntity
         public virtual long PeptideId { get; set; }
@@ -36,11 +36,11 @@ namespace pwiz.Skyline.Model.Irt
         /// <summary>
         /// For NHibernate only
         /// </summary>
-        protected DbIrtHistorical()
+        protected DbIrtHistory()
         {
         }
 
-        public DbIrtHistorical(long peptideId, double irt, TimeStampISO8601 saveTime)
+        public DbIrtHistory(long peptideId, double irt, TimeStampISO8601 saveTime)
         {
             Id = null;
             PeptideId = peptideId;
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Irt
             SaveTime = saveTime.ToString();
         }
 
-        public DbIrtHistorical(DbIrtHistorical other)
+        public DbIrtHistory(DbIrtHistory other)
         {
             Id = other.Id;
             PeptideId = other.PeptideId;
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Irt
 
         #region object overrides
 
-        public virtual bool Equals(DbIrtHistorical other)
+        public virtual bool Equals(DbIrtHistory other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.Irt
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as DbIrtHistorical);
+            return Equals(obj as DbIrtHistory);
         }
 
         public override int GetHashCode()

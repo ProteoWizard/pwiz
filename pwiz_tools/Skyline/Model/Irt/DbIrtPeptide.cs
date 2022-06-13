@@ -156,15 +156,15 @@ namespace pwiz.Skyline.Model.Irt
             out IList<Conflict> conflicts)
         {
             var progressPercent = 0;
-            var i = 0;
             IProgressStatus status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
             progressMonitor?.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Conflict>();
             var dictOld = oldPeptides.ToDictionary(pep => pep.ModifiedTarget);
             var dictNew = newPeptides.ToDictionary(pep => pep.ModifiedTarget);
-            foreach (var newPeptide in newPeptides)
+            for (var i = 0; i < newPeptides.Count; i++)
             {
+                var newPeptide = newPeptides[i];
                 // A conflict occurs only when there is another peptide of the same sequence, and different iRT
                 if (!dictOld.TryGetValue(newPeptide.ModifiedTarget, out var oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
                 {
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Model.Irt
                 {
                     if (progressMonitor.IsCanceled)
                         return null;
-                    var progressNew = (++i * 100 / newPeptides.Count);
+                    var progressNew = i * 100 / newPeptides.Count;
                     if (progressPercent != progressNew)
                     {
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));

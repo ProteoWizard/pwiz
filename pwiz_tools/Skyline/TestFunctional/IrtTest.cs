@@ -1417,7 +1417,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(_redundant, db.Redundant);
 
             var dbHistories = new Dictionary<long, List<double>>();
-            foreach (var history in db.ReadHistories() ?? Enumerable.Empty<DbIrtHistorical>())
+            foreach (var history in db.ReadHistories() ?? Enumerable.Empty<DbIrtHistory>())
             {
                 if (!dbHistories.TryGetValue(history.PeptideId, out var list))
                     dbHistories.Add(history.PeptideId, new List<double> { history.Irt });

@@ -15,7 +15,7 @@
     <property name="Standard"/>
     <property name="TimeSource"/>
   </class>
-  <class name="DbIrtHistorical" table="IrtHistory">
+  <class name="DbIrtHistory" table="IrtHistory">
     <id name="Id">
         <generator class="native" />
     </id>
