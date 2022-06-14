@@ -2786,12 +2786,13 @@ namespace pwiz.Skyline.Model.DocSettings
             else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
 
-            if (settingsNew.HasLibraries && !settingsNew.PeptideSettings.Libraries.IsLoaded &&
-                settingsNew.PeptideSettings.Libraries.Pick != PeptidePick.filter)
+            if (settingsNew.HasLibraries && !settingsNew.PeptideSettings.Libraries.IsLoaded)
             {
-                // If the libraries have not been loaded then we will not be able to determine which peptides
+                // If the libraries have not been loaded then we will not be able to determine which children
                 // should be chosen
                 DiffPeptides = false;
+                DiffTransitionGroups = false;
+                DiffTransitions = false;
             }
         }
 
