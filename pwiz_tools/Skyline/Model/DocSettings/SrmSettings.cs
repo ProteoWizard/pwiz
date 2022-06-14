@@ -2594,8 +2594,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 uniquenessConstraintChange = uniquenessConstraintChange || !newPep.DigestSettings.Equals(oldPep.DigestSettings);
             }
-            // Don't try to update peptide uniqueness if the libraries have not yet been loaded
-            uniquenessConstraintChange &= newPep.Libraries.IsLoaded;
 
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||
@@ -2787,6 +2785,14 @@ namespace pwiz.Skyline.Model.DocSettings
             // Force update if the bulk import has just completed
             else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
+
+            if (settingsNew.HasLibraries && !settingsNew.PeptideSettings.Libraries.IsLoaded &&
+                settingsNew.PeptideSettings.Libraries.Pick != PeptidePick.filter)
+            {
+                // If the libraries have not been loaded then we will not be able to determine which peptides
+                // should be chosen
+                DiffPeptides = false;
+            }
         }
 
         private static bool EqualExceptAnnotations(MeasuredResults measuredResultsNew, MeasuredResults measuredResultsOld)
