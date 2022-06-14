@@ -2578,7 +2578,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // changes, or if constraint is non-None and background proteome or digestion enzyme changes
             // Background proteome uniqueness constraints - only considered a change if constraint type
             // changes, or if constraint is non-None and background proteome or digestion enzyme changes
-            bool uniquenessConstraintChange = uniquenessConstraintChange = !Equals(newPep.Filter.PeptideUniqueness, oldPep.Filter.PeptideUniqueness);
+            bool uniquenessConstraintChange = !Equals(newPep.Filter.PeptideUniqueness, oldPep.Filter.PeptideUniqueness);
             if (!uniquenessConstraintChange && newPep.Filter.PeptideUniqueness != PeptideFilter.PeptideUniquenessConstraint.none)
             {
                 if (newPep.BackgroundProteome != null || oldPep.BackgroundProteome != null)

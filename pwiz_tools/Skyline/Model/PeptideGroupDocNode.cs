@@ -172,7 +172,8 @@ namespace pwiz.Skyline.Model
             if (diff.Monitor != null)
                 diff.Monitor.ProcessGroup(this);
 
-            if (diff.DiffPeptides && settingsNew.PeptideSettings.Filter.AutoSelect && AutoManageChildren)
+            if (diff.DiffPeptides && settingsNew.PeptideSettings.Filter.AutoSelect &&
+                AutoManageChildren && settingsNew.PeptideSettings.Libraries.IsLoaded)
             {
                 IList<DocNode> childrenNew = new List<DocNode>();
 
