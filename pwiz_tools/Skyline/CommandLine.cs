@@ -2508,7 +2508,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                var oldPeptides = db.GetPeptides().ToList();
+                var oldPeptides = db.ReadPeptides().ToList();
                 IList<DbIrtPeptide.Conflict> conflicts;
                 dbIrtPeptidesFilter = DbIrtPeptide.MakeUnique(dbIrtPeptidesFilter);
                 DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, null, out conflicts);

@@ -1560,17 +1560,15 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgressMonitor progressMonitor)
         {
-            var retentionTimeRegression = Settings.PeptideSettings.Prediction.RetentionTime;
-            if (retentionTimeRegression == null || !(retentionTimeRegression.Calculator is RCalcIrt))
+            var regression = Settings.PeptideSettings.Prediction.RetentionTime;
+            if (!(regression?.Calculator is RCalcIrt calculator))
             {
                 throw new InvalidDataException(Resources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
             }
-            var calculator = (RCalcIrt) retentionTimeRegression.Calculator;
-            string dbPath = calculator.DatabasePath;
-            IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
-            var oldPeptides = db.GetPeptides().Select(p => new DbIrtPeptide(p)).ToList();
-            IList<DbIrtPeptide.Conflict> conflicts;
-            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out conflicts);
+            var dbPath = calculator.DatabasePath;
+            var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+            var oldPeptides = db.ReadPeptides().Select(p => new DbIrtPeptide(p)).ToList();
+            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out var conflicts);
             if (peptidesCombined == null)
                 return null;
             foreach (var conflict in conflicts)
@@ -1579,19 +1577,18 @@ namespace pwiz.Skyline.Model
                 // The same peptide must not appear in both places
                 if (conflict.NewPeptide.Standard ^ conflict.ExistingPeptide.Standard)
                 {
-                    throw new InvalidDataException(string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
-                                                    conflict.NewPeptide.ModifiedTarget));
+                    throw new InvalidDataException(string.Format(
+                        Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
+                        conflict.NewPeptide.ModifiedTarget));
                 }
             }
             // Peptides that were already present in the database can be either kept or overwritten 
-            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.NewPeptide  : conflict.ExistingPeptide));
-            db = db.UpdatePeptides(peptidesCombined, oldPeptides);
+            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.NewPeptide : conflict.ExistingPeptide));
+            db = db.UpdatePeptides(peptidesCombined, progressMonitor);
             calculator = calculator.ChangeDatabase(db);
-            retentionTimeRegression = retentionTimeRegression.ChangeCalculator(calculator);
-            var srmSettings = Settings.ChangePeptidePrediction(pred => pred.ChangeRetentionTime(retentionTimeRegression));
-            if (ReferenceEquals(srmSettings, Settings))
-                return this;
-            return ChangeSettings(srmSettings);
+            regression = regression.ChangeCalculator(calculator);
+            var srmSettings = Settings.ChangePeptidePrediction(pred => pred.ChangeRetentionTime(regression));
+            return ReferenceEquals(srmSettings, Settings) ? this : ChangeSettings(srmSettings);
         }
 
         public static bool IsConvertedFromProteomicTestDocNode(DocNode node)
