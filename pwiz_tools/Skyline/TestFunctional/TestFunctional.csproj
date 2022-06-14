@@ -177,6 +177,7 @@
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
@@ -550,6 +551,7 @@
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="NewDocumentLoadLibrariesTest.zip" />
     <None Include="NoQuantitativeTransitionsTest.zip" />
+    <None Include="OpenDocWithBackgroundProteomeTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
