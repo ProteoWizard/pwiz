@@ -575,7 +575,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(calcTemp);
             string dbPath = calcTemp.DatabasePath;
             IrtDb db = IrtDb.GetIrtDb(dbPath, null);
-            var oldPeptides = db.GetPeptides().ToList();
+            var oldPeptides = db.ReadPeptides().ToList();
             var standardSeq = from peptide in oldPeptides where peptide.Standard select peptide.Target;
             standardSeq = standardSeq.ToList();
             foreach (var groupNode in SkylineWindow.Document.PeptideTransitionGroups)
