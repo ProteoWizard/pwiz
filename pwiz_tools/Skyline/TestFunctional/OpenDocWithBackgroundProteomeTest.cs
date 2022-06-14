@@ -18,6 +18,9 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -35,6 +38,39 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("PRM_Bacillus_heavy.sky")));
+            WaitForDocumentLoaded();
+            Assert.AreEqual(2, SkylineWindow.Document.PeptideCount);
+
+            // Use the Peptide Settings dialog to both change the enzyme and add a new library.
+            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            RunUI(() =>
+            {
+                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Digest;
+                peptideSettingsDlg.ComboEnzymeSelected = "Trypsin/P [KR | -]";
+                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Library;
+            });
+            const string libName = "myLibrary";
+            var libListDlg =
+                ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsDlg.EditLibraryList);
+            var addLibDlg = ShowDialog<EditLibraryDlg>(libListDlg.AddItem);
+            RunUI(() =>
+            {
+                addLibDlg.LibraryName = libName;
+                addLibDlg.LibraryPath = TestFilesDir.GetTestPath("rat_cmp_20.blib");
+            });
+            OkDialog(addLibDlg, addLibDlg.OkDialog);
+            OkDialog(libListDlg, libListDlg.OkDialog);
+            RunUI(() =>
+            {
+                peptideSettingsDlg.SetLibraryChecked(0, true);
+                peptideSettingsDlg.SetLibraryChecked(1, true);
+            });
+            // When we OK the dialog, there will be a SrmSettingsDiff.DiffPeptides change (from the enzyme change)
+            // but the libraries will not be loaded
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
+
+            // Make sure that the peptides in the document did not get reset to zero just because the libraries hadn't been loaded
+            Assert.AreEqual(2, SkylineWindow.Document.PeptideCount);
             WaitForDocumentLoaded();
             Assert.AreEqual(2, SkylineWindow.Document.PeptideCount);
         }

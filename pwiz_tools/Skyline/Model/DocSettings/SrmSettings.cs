@@ -2595,7 +2595,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 uniquenessConstraintChange = uniquenessConstraintChange || !newPep.DigestSettings.Equals(oldPep.DigestSettings);
             }
             // Don't try to update peptide uniqueness if the libraries have not yet been loaded
-            uniquenessConstraintChange = uniquenessConstraintChange && newPep.Libraries.IsLoaded;
+            uniquenessConstraintChange &= newPep.Libraries.IsLoaded;
 
             // Change peptides if enzyme, digestion or filter settings changed
             DiffPeptides = !newPep.Enzyme.Equals(oldPep.Enzyme) ||
