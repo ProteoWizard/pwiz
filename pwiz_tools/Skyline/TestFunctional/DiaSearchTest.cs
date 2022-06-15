@@ -244,11 +244,9 @@ namespace pwiz.SkylineTestFunctional
                 if (File.Exists(Path.Combine(diaUmpireTestDataPath, sourceName)))
                     File.Copy(Path.Combine(diaUmpireTestDataPath, sourceName), Path.Combine(TestFilesDir.FullPath, sourceName), true);
 
-            foreach (var sourceName in Directory.GetFiles(@"C:\dev\pwiz\pwiz_tools\Skyline\TestResults", "*diaumpire*"))
-                File.Copy(sourceName, @"C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\DiaSearchTest\" + Path.GetFileName(sourceName));
             // delete -diaumpire files so they get regenerated instead of reused
-            //foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
-            //    FileEx.SafeDelete(file);
+            foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
+                FileEx.SafeDelete(file);
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);

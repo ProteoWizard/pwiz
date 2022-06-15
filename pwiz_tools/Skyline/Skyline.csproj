@@ -222,12 +222,6 @@
     <Compile Include="Alerts\NoModeUIDlg.Designer.cs">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Alerts\PeptidesPerProteinDlg.Designer.cs">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="Alerts\MessageDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2131,15 +2125,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.ja.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.zh-CHS.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
