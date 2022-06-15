@@ -220,7 +220,7 @@ namespace pwiz.Skyline
                             d.MeasuredResults.ChangeIsJoiningDisabled(true))));
                     }
                     DocContainer.SetDocument(_doc, null);
-
+                    WaitForDocumentLoaded();
                     bool successProcessing = ProcessDocument(commandArgs);
                     bool successExporting = true;
                     if (successProcessing)
