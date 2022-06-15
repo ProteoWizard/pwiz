@@ -871,7 +871,8 @@ namespace SkylineTester
             this.tutorialsDemoMode.Name = "tutorialsDemoMode";
             this.tutorialsDemoMode.Size = new System.Drawing.Size(82, 17);
             this.tutorialsDemoMode.TabIndex = 6;
-            this.tutorialsDemoMode.Text = "Demo mode";
+            this.tutorialsDemoMode.Text = "Demo mode (deprecated)";
+            this.toolTip1.SetToolTip(this.tutorialsDemoMode, "Use the Tests tab's 'Tutorials only', 'Mode', and 'Run indefinitely' settings for more fine-grained control of demos");
             this.tutorialsDemoMode.UseVisualStyleBackColor = true;
             // 
             // label5
