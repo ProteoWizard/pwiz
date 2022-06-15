@@ -2786,7 +2786,7 @@ namespace pwiz.Skyline.Model.DocSettings
             else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
 
-            if (settingsNew.HasLibraries && !settingsNew.PeptideSettings.Libraries.IsLoaded)
+            if (!settingsNew.PeptideSettings.Libraries.IsLoaded)
             {
                 // If the libraries have not been loaded then we will not be able to determine which children
                 // should be chosen
