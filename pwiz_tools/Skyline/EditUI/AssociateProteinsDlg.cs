@@ -87,6 +87,7 @@ namespace pwiz.Skyline.EditUI
 
             var peptideSettings = document.Settings.PeptideSettings;
 
+            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
             foreach (var sharedPeptides in _sharedPeptideOptionNames)
                 comboSharedPeptides.Items.Add(EnumNames.ResourceManager.GetString(@"SharedPeptides_" + sharedPeptides) ?? throw new InvalidOperationException(sharedPeptides));
 
@@ -94,6 +95,7 @@ namespace pwiz.Skyline.EditUI
             FindMinimalProteinList = peptideSettings.Filter.ParsimonySettings?.FindMinimalProteinList ?? false;
             RemoveSubsetProteins = peptideSettings.Filter.ParsimonySettings?.RemoveSubsetProteins ?? false;
             SelectedSharedPeptides = peptideSettings.Filter.ParsimonySettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
 
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(peptideSettings.BackgroundProteome.Name);
@@ -650,21 +652,12 @@ namespace pwiz.Skyline.EditUI
 
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int? emptyProteins)
         {
-            WaitForDocumentFinal();
             var doc = DocumentFinal;
             emptyProteins = 0;
             proteins = doc.PeptideGroupCount;
             peptides = doc.PeptideCount;
             precursors = doc.PeptideTransitionGroupCount;
             transitions = doc.PeptideTransitionCount;
-        }
-
-        private void WaitForDocumentFinal()
-        {
-            while (!DocumentFinalCalculated)
-            {
-                Thread.Sleep(500);
-            }
         }
     }
 }

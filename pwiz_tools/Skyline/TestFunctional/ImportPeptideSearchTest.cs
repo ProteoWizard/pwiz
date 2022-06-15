@@ -272,7 +272,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Finish wizard and have empty proteins dialog come up. Only 1 out of the 10 proteins had a match.
             // Cancel the empty proteins dialog.
-            RunDlg<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
+            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+            RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 /*emptyProteinsDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
@@ -285,8 +287,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, peptideCount);
                 Assert.AreEqual(1, precursorCount);
                 Assert.AreEqual(3, transitionCount);
-                emptyProteinsDlg.CancelDialog();
             });
+            emptyProteinsDlg.CancelDialog();
 
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
             using (new EmptyProteinGroupSetter(5))
@@ -499,9 +501,10 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10-duplicate.fasta"));
             });
             var peptidesPerProteinDlg2 = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            int proteins, peptides, precursors, transitions;
             RunUI(() =>
             {
-                int proteins, peptides, precursors, transitions;
                 //Assert.IsTrue(peptidesPerProteinDlg2.DuplicateControlsVisible);
                 peptidesPerProteinDlg2.MinPeptides = 1;
                 peptidesPerProteinDlg2.RemoveRepeatedPeptides = peptidesPerProteinDlg2.RemoveDuplicatePeptides = false;
@@ -510,12 +513,20 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(4, peptides);
                 Assert.AreEqual(4, precursors);
                 Assert.AreEqual(12, transitions);*/
+            });
+            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            RunUI(() =>
+            {
                 peptidesPerProteinDlg2.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(3, proteins);
                 Assert.AreEqual(4, peptides);
                 Assert.AreEqual(4, precursors);
                 Assert.AreEqual(12, transitions);
                 peptidesPerProteinDlg2.RemoveRepeatedPeptides = true;
+            });
+            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            RunUI(() =>
+            {
                 peptidesPerProteinDlg2.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(2, proteins);
                 Assert.AreEqual(2, peptides);
@@ -523,6 +534,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(6, transitions);
                 peptidesPerProteinDlg2.RemoveRepeatedPeptides = false;
                 peptidesPerProteinDlg2.RemoveDuplicatePeptides = true;
+            });
+            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            RunUI(() =>
+            {
                 peptidesPerProteinDlg2.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(0, proteins);
                 Assert.AreEqual(0, peptides);
@@ -535,7 +550,6 @@ namespace pwiz.SkylineTestFunctional
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             RunUI(() =>
             {
-                int proteins, peptides, precursors, transitions;
                 //int? emptyProteins;
                 //Assert.IsFalse(peptidesPerProteinDlg.DuplicateControlsVisible);
                 /*peptidesPerProteinDlg.MinPeptides = 0;
@@ -547,19 +561,26 @@ namespace pwiz.SkylineTestFunctional
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out emptyProteins);
                 Assert.AreEqual(9, emptyProteins);*/
                 peptidesPerProteinDlg.MinPeptides = 2;
+            });
+            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            RunUI(() =>
+            {
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(0, proteins);
                 Assert.AreEqual(0, peptides);
                 Assert.AreEqual(0, precursors);
                 Assert.AreEqual(0, transitions);
                 peptidesPerProteinDlg.MinPeptides = 1;
+            });
+            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            RunUI(() =>
+            {
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions);
                 Assert.AreEqual(2, proteins);
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
                 Assert.AreEqual(6, transitions);
             });
-            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);

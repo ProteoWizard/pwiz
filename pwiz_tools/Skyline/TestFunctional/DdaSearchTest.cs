@@ -431,14 +431,6 @@ namespace pwiz.SkylineTestFunctional
                     if (IsRecordMode)
                     {
                         Console.WriteLine($@"{proteinCount}, {peptideCount}, {precursorCount}, {transitionCount}");
-                        using (var proteins = new StreamWriter($"proteins-{emptyProteinsDlg.GetType().Name}.txt"))
-                        using (var peptides = new StreamWriter($"peptides-{emptyProteinsDlg.GetType().Name}.txt"))
-                        {
-                            foreach (var protein in emptyProteinsDlg.DocumentFinal.PeptideGroups)
-                                proteins.WriteLine(protein.Name);
-                            foreach (var peptide in emptyProteinsDlg.DocumentFinal.Peptides)
-                                peptides.WriteLine(peptide.ModifiedSequence);
-                        }
                     }
                     else
                     {
