@@ -70,6 +70,7 @@
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.comboRegressionType = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.cbRedundant = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
@@ -338,12 +339,20 @@
             resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
             // 
+            // cbRedundant
+            // 
+            resources.ApplyResources(this.cbRedundant, "cbRedundant");
+            this.cbRedundant.Name = "cbRedundant";
+            this.cbRedundant.UseVisualStyleBackColor = true;
+            this.cbRedundant.CheckedChanged += new System.EventHandler(this.cbRedundant_CheckedChanged);
+            // 
             // EditIrtCalcDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbRedundant);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.comboRegressionType);
             this.Controls.Add(this.comboStandards);
@@ -413,5 +422,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLibraryIrt;
         private System.Windows.Forms.ComboBox comboRegressionType;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.CheckBox cbRedundant;
     }
 }
