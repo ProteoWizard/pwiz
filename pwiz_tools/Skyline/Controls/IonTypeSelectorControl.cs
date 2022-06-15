@@ -173,8 +173,10 @@ namespace pwiz.Skyline.Controls
                 Tag = tag;
                 FlatAppearance.BorderSize = 0;
                 FlatStyle = FlatStyle.Flat;
-                FlatAppearance.CheckedBackColor = Color.DarkCyan;
+                FlatAppearance.CheckedBackColor = Color.FromArgb(64, SystemColors.MenuHighlight);
             }
+
+            
             protected override bool ShowFocusCues
             {
                 get { return false; }
@@ -185,8 +187,8 @@ namespace pwiz.Skyline.Controls
                 base.OnCheckStateChanged(e);
                 if (Checked)
                 {
-                    ForeColor = Color.White;
-                    Font = new Font(Font, FontStyle.Bold);
+                    ForeColor = Color.Black;
+                    Font = new Font(Font, FontStyle.Regular);
                 }
                 else
                 {
