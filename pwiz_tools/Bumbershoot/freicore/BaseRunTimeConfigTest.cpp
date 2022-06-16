@@ -254,11 +254,11 @@ void test()
             
         rtConfig.initializeFromBuffer("TestIntegerSet = [-3,1]");
         testIntegerSet.str(""); testIntegerSet << rtConfig.TestIntegerSet;
-        unit_assert_operator_equal("[-3,1] ", testIntegerSet.str());
+        unit_assert_operator_equal("[-3,1]", testIntegerSet.str());
             
         rtConfig.initializeFromBuffer("TestIntegerSet = -3-1");
         testIntegerSet.str(""); testIntegerSet << rtConfig.TestIntegerSet;
-        unit_assert_operator_equal("[-3,1] ", testIntegerSet.str());
+        unit_assert_operator_equal("[-3,1]", testIntegerSet.str());
             
         rtConfig.initializeFromBuffer("TestMZTolerance = 123ppm");
         unit_assert_operator_equal(123, rtConfig.TestMZTolerance.value);
