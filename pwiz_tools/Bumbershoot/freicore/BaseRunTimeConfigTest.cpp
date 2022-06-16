@@ -183,7 +183,7 @@ void test()
         unit_assert_operator_equal(0.42, rtConfig.TestDouble);
 
         testIntegerSet << rtConfig.TestIntegerSet;
-        unit_assert_operator_equal("[-4,2] ", testIntegerSet.str());
+        unit_assert_operator_equal("[-4,2]", testIntegerSet.str());
 
         unit_assert_operator_equal(42, rtConfig.TestMZTolerance.value);
         unit_assert_operator_equal(MZTolerance::PPM, rtConfig.TestMZTolerance.units);
