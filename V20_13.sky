@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="22.12" software_version="Skyline (64-bit : developer build) 21.2.1.523 (0ff594f59)">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="LysN promisc" cut="KASR" no_cut="" sense="N" />
+      <digest_settings max_missed_cleavages="1" exclude_ragged_ends="true" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2">
+        <predict_retention_time name="Bovine Standard (100A)" time_window="13.6" calculator="SSRCalc 3.0 (100A)">
+          <regression_rt slope="1.681" intercept="-6.247" />
+        </predict_retention_time>
+      </peptide_prediction>
+      <peptide_filter start="0" min_length="5" max_length="30" auto_select="true">
+        <peptide_exclusions>
+          <exclusion name="Met" regex="[M]" />
+          <exclusion name="NXT/NXS" regex="N.[TS]" />
+          <exclusion name="D Runs" regex="DDDD" />
+        </peptide_exclusions>
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Test2" aminoacid="M" massdiff_monoisotopic="5" massdiff_average="5.1" />
+          <static_modification name="Test3" aminoacid="K" terminus="N" formula="CH3ON2" />
+        </static_modifications>
+        <heavy_modifications />
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Average" fragment_mass_type="Average" optimize_by="None">
+        <predict_collision_energy name="ABI" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.0431" intercept="4.7556" />
+        </predict_collision_energy>
+        <predict_declustering_potential name="Test1" step_size="1" step_count="5" slope="0.5" intercept="5" />
+      </transition_prediction>
+      <transition_filter precursor_charges="2,3" product_charges="1,2" precursor_adducts="[M-3H],[M-2H],[M-H],[M-],[M+H],[M+],[M+2H],[M+3H]" product_adducts="[M-3],[M-2],[M-],[M+],[M+2],[M+3]" fragment_types="y" small_molecule_fragment_types="f" fragment_range_first="ion 3" fragment_range_last="last ion - 1" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline (legacy)" cut="P" sense="N" min_length="1" />
+        <measured_ion name="C-terminal to Glu or Asp (legacy)" cut="ED" sense="C" min_length="1" />
+      </transition_filter>
+      <ion_mobility_filtering window_width_calc_type="linear_range" resolving_power="100" width_at_ion_mobility_zero="20" width_at_ion_mobility_max="500">
+        <ion_mobility_library name="test" database_path="D:\ahsigra\pwiz\test.imsdb" />
+      </ion_mobility_filtering>
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="52" max_mz="1503" mz_match_tolerance="0.055" />
+    </transition_settings>
+    <data_settings />
+  </settings_summary>
+</srm_settings>

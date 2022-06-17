@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate.Mapping;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -50,6 +51,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using Array = System.Array;
 using Label = System.Windows.Forms.Label;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
@@ -176,6 +178,7 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
+            comboRedundantSpectra.AutoSize = true;
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -493,6 +496,7 @@ namespace pwiz.Skyline.SettingsUI
             NextLink.Enabled = _pageInfo.Items > _pageInfo.PageSize;
         }
 
+
         /// <summary>
         /// Updates the status area showing which peptides are being shown.
         /// </summary>
@@ -633,6 +637,9 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+
+        private Dictionary<String, SpectrumInfoLibrary> redundantInfoLibraries;
+
         /// <summary>
         /// Updates the spectrum graph using the currently selected peptide.
         /// </summary>
@@ -738,8 +745,63 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
-                        var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum,
+                        //Get all redundant spectrum for the selected peptide
+                        // var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, null, 
+                        //     LibraryRedundancy.all);
+                        var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, IsotopeLabelType.light,
+                            LibraryRedundancy.all);
+                        comboRedundantSpectra.Visible = redundantSpectra.Count() > 1;
+                        redundantInfoLibraries = new Dictionary<string, SpectrumInfoLibrary>();
+                        var newDropDownOptions = new List<String>();
+                        foreach (var spectra in redundantSpectra)
+                        {
+                            //Do we need to change "min" for localization purposes? -Aaron
+                            String spectrumName = string.Format(@"{0} ({1:F02} min)", spectra.FileName,
+                                spectra.RetentionTime);
+                            try
+                            {
+                                redundantInfoLibraries.Add(spectrumName, spectra);
+                                newDropDownOptions.Add(spectrumName);
+                            }
+                            catch (ArgumentException ex)
+                            {
+
+                            }
+                        }
+                        SpectrumInfoLibrary selectedLib;
+                        if (comboRedundantSpectra.SelectedItem != null && 
+                            redundantInfoLibraries.ContainsKey(comboRedundantSpectra.SelectedItem.ToString()))
+                        {
+                            selectedLib = redundantInfoLibraries[comboRedundantSpectra.SelectedItem.ToString()];
+                        }
+                        else
+                        {
+                            selectedLib = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+                            if (redundantSpectra != null)
+                            {
+                                foreach (var spectra in redundantSpectra)
+                                {
+                                    if (spectra.IsBest)
+                                    {
+                                        String spectrumName = string.Format(@"{0} ({1:F02} min)", spectra.FileName,
+                                            spectra.RetentionTime);
+                                        comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
+                                        comboRedundantSpectra.Items.Clear();
+                                        newDropDownOptions.Sort();
+                                        foreach (var elt in newDropDownOptions)
+                                        {
+                                            comboRedundantSpectra.Items.Add(elt);
+                                        }
+                                        comboRedundantSpectra.SelectedItem = spectrumName;
+                                        comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
+                                    }
+                                }
+                            }
+                        }
+
+
+                        var spectrumInfo = selectedLib;
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
                                                                           settings,
@@ -774,8 +836,9 @@ namespace pwiz.Skyline.SettingsUI
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
                         // Update file and retention time indicators
-                        var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
-                            IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
+                        // var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
+                        //     IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
+                        var bestSpectrum = spectrumInfo;
                         if (bestSpectrum != null)
                         {
                             double? rt = libraryChromGroup?.RetentionTime ?? bestSpectrum.RetentionTime;
@@ -783,7 +846,14 @@ namespace pwiz.Skyline.SettingsUI
 
                             if (!string.IsNullOrEmpty(filename))
                             {
-                                labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP + filename;
+                                if (redundantSpectra.Count() < 2)
+                                {
+                                    labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP + filename;
+                                }
+                                else
+                                {
+                                    labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP;
+                                }
                             }
                             if (rt.HasValue)
                             {
@@ -874,6 +944,7 @@ namespace pwiz.Skyline.SettingsUI
             charge1Button.Checked = charge1Button.Enabled && Settings.Default.ShowCharge1;
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
         }
+
 
         private void SetGraphItem(IMSGraphItemInfo item)
         {
@@ -2770,6 +2841,11 @@ namespace pwiz.Skyline.SettingsUI
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _showChromatograms = !_showChromatograms;
+            UpdateUI();
+        }
+
+        private void redundantSpectrum_changed(object sender, EventArgs e)
+        {
             UpdateUI();
         }
     }

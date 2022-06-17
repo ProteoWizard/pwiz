@@ -52,6 +52,15 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
+            this.toolBar = new System.Windows.Forms.ToolStrip();
+            this.labelPrecursor = new System.Windows.Forms.ToolStripLabel();
+            this.comboPrecursor = new System.Windows.Forms.ToolStripComboBox();
+            this.labelSpectrum = new System.Windows.Forms.ToolStripLabel();
+            this.comboSpectrum = new System.Windows.Forms.ToolStripComboBox();
+            this.mirrorLabel = new System.Windows.Forms.ToolStripLabel();
+            this.comboMirrorSpectrum = new System.Windows.Forms.ToolStripComboBox();
+            this.ceLabel = new System.Windows.Forms.ToolStripLabel();
+            this.comboCE = new System.Windows.Forms.ToolStripComboBox();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnAIons = new System.Windows.Forms.ToolStripButton();
@@ -70,6 +79,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave = new System.Windows.Forms.ToolStripButton();
             this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.comboRedundantSpectra = new System.Windows.Forms.ComboBox();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
             this.labelFilename = new System.Windows.Forms.Label();
             this.btnAdd = new System.Windows.Forms.Button();
@@ -119,6 +129,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideEditPanel.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.GraphPanel.SuspendLayout();
+            this.toolBar.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.ViewLibraryPanel.SuspendLayout();
@@ -285,10 +296,74 @@ namespace pwiz.Skyline.SettingsUI
             // GraphPanel
             // 
             this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.GraphPanel.Controls.Add(this.toolBar);
             this.GraphPanel.Controls.Add(this.graphControl);
             this.GraphPanel.Controls.Add(this.toolStrip1);
             resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
+            // 
+            // toolBar
+            // 
+            this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.labelPrecursor,
+            this.comboPrecursor,
+            this.labelSpectrum,
+            this.comboSpectrum,
+            this.mirrorLabel,
+            this.comboMirrorSpectrum,
+            this.ceLabel,
+            this.comboCE});
+            resources.ApplyResources(this.toolBar, "toolBar");
+            this.toolBar.Name = "toolBar";
+            // 
+            // labelPrecursor
+            // 
+            this.labelPrecursor.Name = "labelPrecursor";
+            resources.ApplyResources(this.labelPrecursor, "labelPrecursor");
+            // 
+            // comboPrecursor
+            // 
+            this.comboPrecursor.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPrecursor.Name = "comboPrecursor";
+            this.comboPrecursor.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            resources.ApplyResources(this.comboPrecursor, "comboPrecursor");
+            // 
+            // labelSpectrum
+            // 
+            this.labelSpectrum.Name = "labelSpectrum";
+            resources.ApplyResources(this.labelSpectrum, "labelSpectrum");
+            // 
+            // comboSpectrum
+            // 
+            this.comboSpectrum.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            resources.ApplyResources(this.comboSpectrum, "comboSpectrum");
+            this.comboSpectrum.Name = "comboSpectrum";
+            this.comboSpectrum.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            // 
+            // mirrorLabel
+            // 
+            this.mirrorLabel.Name = "mirrorLabel";
+            resources.ApplyResources(this.mirrorLabel, "mirrorLabel");
+            // 
+            // comboMirrorSpectrum
+            // 
+            this.comboMirrorSpectrum.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            resources.ApplyResources(this.comboMirrorSpectrum, "comboMirrorSpectrum");
+            this.comboMirrorSpectrum.Name = "comboMirrorSpectrum";
+            this.comboMirrorSpectrum.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            // 
+            // ceLabel
+            // 
+            this.ceLabel.Name = "ceLabel";
+            resources.ApplyResources(this.ceLabel, "ceLabel");
+            // 
+            // comboCE
+            // 
+            this.comboCE.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboCE.Name = "comboCE";
+            this.comboCE.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            resources.ApplyResources(this.comboCE, "comboCE");
             // 
             // graphControl
             // 
@@ -447,6 +522,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.comboRedundantSpectra);
             this.panel2.Controls.Add(this.cbAssociateProteins);
             this.panel2.Controls.Add(this.labelFilename);
             this.panel2.Controls.Add(this.btnAdd);
@@ -455,6 +531,15 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.Controls.Add(this.labelRT);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
+            // 
+            // comboRedundantSpectra
+            // 
+            resources.ApplyResources(this.comboRedundantSpectra, "comboRedundantSpectra");
+            this.comboRedundantSpectra.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRedundantSpectra.DropDownWidth = 400;
+            this.comboRedundantSpectra.FormattingEnabled = true;
+            this.comboRedundantSpectra.Name = "comboRedundantSpectra";
+            this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.redundantSpectrum_changed);
             // 
             // cbAssociateProteins
             // 
@@ -751,6 +836,8 @@ namespace pwiz.Skyline.SettingsUI
             this.tableLayoutPanel1.ResumeLayout(false);
             this.GraphPanel.ResumeLayout(false);
             this.GraphPanel.PerformLayout();
+            this.toolBar.ResumeLayout(false);
+            this.toolBar.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.panel2.ResumeLayout(false);
@@ -839,5 +926,15 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label filterLabel;
         private System.Windows.Forms.Label byLabel;
         private System.Windows.Forms.ComboBox comboFilterCategory;
+        private System.Windows.Forms.ToolStrip toolBar;
+        private System.Windows.Forms.ToolStripLabel labelPrecursor;
+        private System.Windows.Forms.ToolStripComboBox comboPrecursor;
+        private System.Windows.Forms.ToolStripLabel labelSpectrum;
+        private System.Windows.Forms.ToolStripComboBox comboSpectrum;
+        private System.Windows.Forms.ToolStripLabel mirrorLabel;
+        private System.Windows.Forms.ToolStripComboBox comboMirrorSpectrum;
+        private System.Windows.Forms.ToolStripLabel ceLabel;
+        private System.Windows.Forms.ToolStripComboBox comboCE;
+        private System.Windows.Forms.ComboBox comboRedundantSpectra;
     }
 }

@@ -1609,6 +1609,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
+
     }
 
     public class GraphSpectrumSettings
