@@ -10652,6 +10652,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Saving to database.
+        /// </summary>
+        public static string EditIrtCalcDlg_OkDialog_Saving_to_database {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OkDialog_Saving_to_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectral libraries cannot be modified. You must save this iRT calculator as a new file..
         /// </summary>
         public static string EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_ {
@@ -17167,15 +17176,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding peptides.
-        /// </summary>
-        public static string IrtDb_AddPeptides_Adding_peptides {
-            get {
-                return ResourceManager.GetString("IrtDb_AddPeptides_Adding_peptides", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to iRT Database Files.
         /// </summary>
         public static string IrtDb_FILTER_IRTDB_iRT_Database_Files {
@@ -17263,6 +17263,15 @@ namespace pwiz.Skyline.Properties {
         public static string IrtDb_MakeDocumentXml_iRT_standards {
             get {
                 return ResourceManager.GetString("IrtDb_MakeDocumentXml_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating peptides.
+        /// </summary>
+        public static string IrtDb_UpdatePeptides_Updating_peptides {
+            get {
+                return ResourceManager.GetString("IrtDb_UpdatePeptides_Updating_peptides", resourceCulture);
             }
         }
         

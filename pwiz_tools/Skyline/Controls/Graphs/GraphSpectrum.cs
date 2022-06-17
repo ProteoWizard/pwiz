@@ -398,7 +398,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var selectedSpectrumIndex = comboSpectrum.SelectedIndex;
                 var selectedMirror = comboMirrorSpectrum.SelectedItem;
 
-                var showPrecursorSelect = SpectraCount > 1;
+                var showPrecursorSelect = PrecursorCount > 1;
                 comboPrecursor.Visible = labelPrecursor.Visible = showPrecursorSelect;
                 if (!_updateManager.GetPrecursorStrings(out var precursorStrings))
                 {
