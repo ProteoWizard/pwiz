@@ -133,6 +133,10 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
     else if (algorithm != NULL)
         method.userParams.emplace_back(algorithm->name());
 
+    string msLevelsToPeakPickStr = lexical_cast<string>(msLevelsToPeakPick);
+    if (msLevelsToPeakPickStr != "1-")
+        method.userParams.emplace_back("ms levels", msLevelsToPeakPickStr);
+
     if (algorithm_)
         noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this data; falling back to ") + algorithm_->name();
 
