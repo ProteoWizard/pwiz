@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2021 University of Washington - Seattle, WA
@@ -121,12 +121,15 @@ namespace pwiz.Skyline.Alerts
                     {
                         var postData = new NameValueCollection();
                         postData[@"transfer"] = @"academic";
-                        postData[@"agreement2"] = @"true";
-                        postData[@"agreement3"] = @"true";
+                        postData[@"agreement1"] = @"on";
+                        postData[@"agreement2"] = @"on";
+                        postData[@"agreement3"] = @"on";
                         postData[@"name"] = tbName.Text;
                         postData[@"email"] = tbEmail.Text;
                         postData[@"organization"] = tbInstitution.Text;
                         postData[@"download"] = $@"Release {MsFraggerSearchEngine.MSFRAGGER_VERSION}$zip";
+                        if (cbReceiveUpdateEmails.Checked)
+                            postData[@"receive_email"] = @"on";
 
                         // temporarily disable Expect100Continue to avoid (417) Expectation Failed
                         bool lastExpect100ContinueValue = ServicePointManager.Expect100Continue;

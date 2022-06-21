@@ -496,6 +496,9 @@ namespace pwiz.SkylineTestFunctional
                     ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");
 
                 emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
+
+                WaitForCondition(() => emptyProteinsDlg.DocumentFinalCalculated); // Dialog won't actually close on OkDialog until this is set
+
                 if (Environment.Is64BitProcess)
                     ValidateTargets(testDetails.Final, aic, "_testDetails.Final");
 
