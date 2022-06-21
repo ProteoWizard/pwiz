@@ -24,9 +24,11 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -165,6 +167,7 @@ namespace pwiz.SkylineTestFunctional
                 public int MinPeptidesPerProtein = 1;
 
                 public int ExpectedFinalPeptides, ExpectedFinalProteins;
+                public int ExpectedMappedSharedPeptides, ExpectedFinalSharedPeptides;
 
                 private bool? _removeSubsetProteins;
                 public bool RemoveSubsetProteins
@@ -195,6 +198,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToFirstProtein,
                         ExpectedFinalPeptides = 5,
                         ExpectedFinalProteins = 3, // empty protein removed without an option?
+                        ExpectedMappedSharedPeptides = 8,
+                        ExpectedFinalSharedPeptides = 0,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -204,6 +209,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
                         ExpectedFinalPeptides = 7,
                         ExpectedFinalProteins = 3,
+                        ExpectedMappedSharedPeptides = 8,
+                        ExpectedFinalSharedPeptides = 4,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -213,6 +220,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.Removed,
                         ExpectedFinalPeptides = 1, // only AAAK is unique
                         ExpectedFinalProteins = 1,
+                        ExpectedMappedSharedPeptides = 8,
+                        ExpectedFinalSharedPeptides = 0,
                     },
                     
                     // DuplicatedBetweenProteins should be last option so that all peptides are kept in order to test a second round of protein association
@@ -223,6 +232,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
                         ExpectedFinalPeptides = 9,
                         ExpectedFinalProteins = 4,
+                        ExpectedMappedSharedPeptides = 8,
+                        ExpectedFinalSharedPeptides = 8,
                     },
                 }
             },
@@ -245,6 +256,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToFirstProtein,
                         ExpectedFinalPeptides = 14,
                         ExpectedFinalProteins = 7,
+                        ExpectedMappedSharedPeptides = 17,
+                        ExpectedFinalSharedPeptides = 0,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -254,6 +267,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
                         ExpectedFinalPeptides = 15,
                         ExpectedFinalProteins = 6,
+                        ExpectedMappedSharedPeptides = 17,
+                        ExpectedFinalSharedPeptides = 2,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -263,6 +278,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.Removed,
                         ExpectedFinalPeptides = 7,
                         ExpectedFinalProteins = 5,
+                        ExpectedMappedSharedPeptides = 17,
+                        ExpectedFinalSharedPeptides = 0,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -273,6 +290,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
                         ExpectedFinalPeptides = 19,
                         ExpectedFinalProteins = 6,
+                        ExpectedMappedSharedPeptides = 17,
+                        ExpectedFinalSharedPeptides = 10,
                     },
                     
                     // DuplicatedBetweenProteins should be last option so that all peptides are kept in order to test a second round of protein association
@@ -283,6 +302,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
                         ExpectedFinalPeptides = 24,
                         ExpectedFinalProteins = 9,
+                        ExpectedMappedSharedPeptides = 17,
+                        ExpectedFinalSharedPeptides = 17,
                     },
                 }
             },
@@ -305,6 +326,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToFirstProtein,
                         ExpectedFinalPeptides = 9,
                         ExpectedFinalProteins = 5,
+                        ExpectedMappedSharedPeptides = 16,
+                        ExpectedFinalSharedPeptides = 0,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -314,6 +337,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
                         ExpectedFinalPeptides = 11,
                         ExpectedFinalProteins = 3,
+                        ExpectedMappedSharedPeptides = 16,
+                        ExpectedFinalSharedPeptides = 4,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -323,6 +348,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein,
                         ExpectedFinalPeptides = 11,
                         ExpectedFinalProteins = 3,
+                        ExpectedMappedSharedPeptides = 16,
+                        ExpectedFinalSharedPeptides = 4,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -332,6 +359,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.Removed,
                         ExpectedFinalPeptides = 2, // only AMAK is unique
                         ExpectedFinalProteins = 1,
+                        ExpectedMappedSharedPeptides = 16,
+                        ExpectedFinalSharedPeptides = 0,
                     },
 
                     new ParsimonyTestCase.OptionsAndResult
@@ -342,6 +371,8 @@ namespace pwiz.SkylineTestFunctional
                         MinPeptidesPerProtein = 4,
                         ExpectedFinalPeptides = 5, // only AMAK is unique
                         ExpectedFinalProteins = 1,
+                        ExpectedMappedSharedPeptides = 16,
+                        ExpectedFinalSharedPeptides = 0,
                     },
 
                     // DuplicatedBetweenProteins should be last option so that all peptides are kept in order to test a second round of protein association
@@ -352,6 +383,8 @@ namespace pwiz.SkylineTestFunctional
                         SharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins,
                         ExpectedFinalPeptides = 11,
                         ExpectedFinalProteins = 3,
+                        ExpectedMappedSharedPeptides = 16,
+                        ExpectedFinalSharedPeptides = 4,
                     },
                 }
             }
@@ -430,6 +463,8 @@ namespace pwiz.SkylineTestFunctional
                         {
                             Assert.AreEqual(optionsAndResult.ExpectedFinalProteins, dlg.FinalResults.FinalProteinCount, $"Test case {i + 1}.{j + 1} FinalProteinCount");
                             Assert.AreEqual(optionsAndResult.ExpectedFinalPeptides, dlg.FinalResults.FinalPeptideCount, $"Test case {i + 1}.{j + 1} FinalPeptideCount");
+                            Assert.AreEqual(optionsAndResult.ExpectedMappedSharedPeptides, dlg.FinalResults.TotalSharedPeptideCount, $"Test case {i + 1}.{j + 1} TotalSharedPeptideCount");
+                            Assert.AreEqual(optionsAndResult.ExpectedFinalSharedPeptides, dlg.FinalResults.FinalSharedPeptideCount, $"Test case {i + 1}.{j + 1} FinalSharedPeptideCount");
 
                             Assert.AreEqual(testCase.ExpectedPeptidesMapped, dlg.FinalResults.PeptidesMapped, $"Test case {i + 1}.{j + 1} PeptidesMapped");
                             Assert.AreEqual(testCase.ExpectedPeptidesUnmapped, dlg.FinalResults.PeptidesUnmapped, $"Test case {i + 1}.{j + 1} PeptidesUnmapped");
@@ -461,6 +496,8 @@ namespace pwiz.SkylineTestFunctional
                         {
                             Assert.AreEqual(optionsAndResult.ExpectedFinalProteins, dlg.FinalResults.FinalProteinCount, $"Test case {i + 1}.{j + 1} FinalProteinCount");
                             Assert.AreEqual(optionsAndResult.ExpectedFinalPeptides, dlg.FinalResults.FinalPeptideCount, $"Test case {i + 1}.{j + 1} FinalPeptideCount");
+                            Assert.AreEqual(optionsAndResult.ExpectedMappedSharedPeptides, dlg.FinalResults.TotalSharedPeptideCount, $"Test case {i + 1}.{j + 1} TotalSharedPeptideCount");
+                            Assert.AreEqual(optionsAndResult.ExpectedFinalSharedPeptides, dlg.FinalResults.FinalSharedPeptideCount, $"Test case {i + 1}.{j + 1} FinalSharedPeptideCount");
 
                             Assert.AreEqual(testCase.ExpectedPeptidesMapped, dlg.FinalResults.PeptidesMapped, $"Test case {i + 1}.{j + 1} PeptidesMapped");
                             Assert.AreEqual(0, dlg.FinalResults.PeptidesUnmapped, $"Test case {i + 1}.{j + 1} PeptidesUnmapped");
@@ -470,6 +507,36 @@ namespace pwiz.SkylineTestFunctional
                     }
 
                     OkDialog(dlg, dlg.AcceptButton.PerformClick);
+
+                    var findNodeDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+                    int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides;
+                    RunUI(() =>
+                    {
+                        findNodeDlg.AdvancedVisible = true;
+                        findNodeDlg.FindOptions = new FindOptions().ChangeCustomFinders(Finders.ListAllFinders().Where(f => f is DuplicatedPeptideFinder));
+                        var duplicatePeptideNodes = new List<TreeNodeMS>();
+                        for (int k = 0; k < expectedItems; ++k)
+                        {
+                            findNodeDlg.FindNext();
+                            duplicatePeptideNodes.Add(SkylineWindow.SelectedNode);
+                        }
+                        Assert.AreEqual(expectedItems, duplicatePeptideNodes.Count);
+
+                        findNodeDlg.FindAll();
+                    });
+                    OkDialog(findNodeDlg, findNodeDlg.Close);
+
+                    var findView = WaitForOpenForm<FindResultsForm>();
+                    try
+                    {
+                        WaitForConditionUI(1000, () => findView.ItemCount == expectedItems);
+                    }
+                    catch (AssertFailedException)
+                    {
+                        RunUI(() => Assert.AreEqual(expectedItems, findView.ItemCount));
+                    }
+                    OkDialog(findView, findView.Close);
+
 
                     RunUI(() =>
                     {

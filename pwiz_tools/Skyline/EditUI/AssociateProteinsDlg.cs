@@ -550,7 +550,7 @@ namespace pwiz.Skyline.EditUI
                 else if (e.RowIndex == peptideRowIndex)
                     e.Value = resultToString(FinalResults.PeptidesMapped);
                 else if (e.RowIndex == sharedRowIndex)
-                    e.Value = resultToString(_proteinAssociation.TotalSharedPeptideCount);
+                    e.Value = resultToString(FinalResults.TotalSharedPeptideCount);
             }
             else if (e.ColumnIndex == unmappedColumn.Index)
             {
@@ -566,7 +566,7 @@ namespace pwiz.Skyline.EditUI
                 else if (e.RowIndex == peptideRowIndex)
                     e.Value = resultToString(FinalResults.FinalPeptideCount);
                 else if (e.RowIndex == sharedRowIndex)
-                    e.Value = resultToString(_proteinAssociation.RemainingSharedPeptideCount);
+                    e.Value = resultToString(FinalResults.FinalSharedPeptideCount);
             }
         }
 

@@ -41,8 +41,6 @@ namespace pwiz.Skyline.Model.Proteome
 
         public IDictionary<IProteinRecord, PeptideAssociationGroup> AssociatedProteins { get; private set; }
         public IDictionary<IProteinRecord, PeptideAssociationGroup> ParsimoniousProteins { get; private set; }
-        public int TotalSharedPeptideCount { get; private set; }
-        public int RemainingSharedPeptideCount { get; private set; }
 
         public IMappingResults Results
         {
@@ -260,6 +258,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             int FinalProteinCount { get; }
             int FinalPeptideCount { get; }
+
+            int TotalSharedPeptideCount { get; }
+            int FinalSharedPeptideCount { get; }
         }
 
         public class MappingResultsInternal : IMappingResults
@@ -274,6 +275,8 @@ namespace pwiz.Skyline.Model.Proteome
                     ProteinsUnmapped = ProteinsUnmapped,
                     FinalPeptideCount = FinalPeptideCount,
                     FinalProteinCount = FinalProteinCount,
+                    TotalSharedPeptideCount = TotalSharedPeptideCount,
+                    FinalSharedPeptideCount = FinalSharedPeptideCount,
                     FindMinimalProteinList = FindMinimalProteinList,
                     RemoveSubsetProteins = RemoveSubsetProteins,
                     SharedPeptides = SharedPeptides,
@@ -304,6 +307,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             public int FinalProteinCount { get; set; }
             public int FinalPeptideCount { get; set; }
+
+            public int TotalSharedPeptideCount { get; set; }
+            public int FinalSharedPeptideCount { get; set; }
         }
 
         public class PeptideAssociationGroup
@@ -371,7 +377,7 @@ namespace pwiz.Skyline.Model.Proteome
             var allPeptidesRemaining = new HashSet<string>();
             var sharedPeptidesRemaining = new Dictionary<string, int>();
             foreach (var kvp in ParsimoniousProteins)
-            foreach (var peptide in kvp.Value.Peptides.GroupBy(p => p.Peptide.Sequence))
+            foreach (var peptide in kvp.Value.Peptides.GroupBy(p => p.ModifiedSequence))
                 if (!allPeptidesRemaining.Add(peptide.Key))
                 {
                     if (!sharedPeptidesRemaining.ContainsKey(peptide.Key))
@@ -379,7 +385,7 @@ namespace pwiz.Skyline.Model.Proteome
                     else
                         sharedPeptidesRemaining[peptide.Key] += 1;
                 }
-            TotalSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
+            _finalResults.TotalSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
 
             // FindProteinMatches already duplicates results between proteins
             if (sharedPeptides != SharedPeptides.DuplicatedBetweenProteins)
@@ -468,7 +474,7 @@ namespace pwiz.Skyline.Model.Proteome
             allPeptidesRemaining.Clear();
             sharedPeptidesRemaining.Clear();
             foreach(var kvp in ParsimoniousProteins)
-            foreach(var peptide in kvp.Value.Peptides.GroupBy(p => p.Peptide.Sequence))
+            foreach(var peptide in kvp.Value.Peptides.GroupBy(p => p.ModifiedSequence))
                 if (!allPeptidesRemaining.Add(peptide.Key))
                 {
                     if (!sharedPeptidesRemaining.ContainsKey(peptide.Key))
@@ -476,7 +482,7 @@ namespace pwiz.Skyline.Model.Proteome
                     else
                         sharedPeptidesRemaining[peptide.Key] += 1;
                 }
-            RemainingSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
+            _finalResults.FinalSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
         }
 
         private Dictionary<IProteinRecord, PeptideAssociationGroup> CalculateProteinGroups(MappingResultsInternal results, ILongWaitBroker broker)
