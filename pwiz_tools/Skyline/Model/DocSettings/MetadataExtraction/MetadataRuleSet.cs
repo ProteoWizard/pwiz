@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -26,8 +25,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
@@ -225,44 +222,6 @@ namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction
                 hashCode = (hashCode * 397) ^ (RowSource != null ? RowSource.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Rules != null ? Rules.GetHashCode() : 0);
                 return hashCode;
-            }
-        }
-    }
-
-    public class MetadataRuleSetList : SettingsList<MetadataRuleSet>
-    {
-        public override IEnumerable<MetadataRuleSet> GetDefaults(int revisionIndex)
-        {
-            yield break;
-        }
-
-        public override string Title
-        {
-            get { return Resources.MetadataRuleSetList_Title_Rule_Sets; }
-        }
-        public override string Label
-        {
-            get { return Resources.MetadataRuleSetList_Label_Rule_Set; }
-        }
-
-        public override MetadataRuleSet CopyItem(MetadataRuleSet item)
-        {
-            return item.ChangeName(string.Empty);
-        }
-
-        public override MetadataRuleSet EditItem(Control owner, MetadataRuleSet item, IEnumerable<MetadataRuleSet> existing, object tag)
-        {
-            var documentContainer = (IDocumentContainer) tag;
-            using (var dlg = new MetadataRuleSetEditor(documentContainer, item, existing))
-            {
-                if (dlg.ShowDialog(owner) == DialogResult.OK)
-                {
-                    return dlg.MetadataRuleSet;
-                }
-                else
-                {
-                    return null;
-                }
             }
         }
     }
