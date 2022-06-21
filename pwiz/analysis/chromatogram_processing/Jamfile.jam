@@ -58,7 +58,7 @@ import path ;
 run-if-exists ChromatogramList_LockmassRefinerTest.cpp pwiz_analysis_chromatogram_processing $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     : [ path.native $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/091204_NFDM_008.raw ] # args
     : # input-files
-    : <vendor-api-support>off:<build>no <runtime-debugging>on:<build>no # requirements
+    : <vendor-api-support>off:<build>no # requirements
     : ChromatogramList_LockmassRefinerTest # target name
     : # default-build
     ;

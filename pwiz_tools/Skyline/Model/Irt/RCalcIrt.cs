@@ -61,20 +61,11 @@ namespace pwiz.Skyline.Model.Irt
 
         public string DatabasePath { get; private set; }
 
-        public IEnumerable<KeyValuePair<Target, double>> PeptideScores
-        {
-            get { return _database != null ? _database.PeptideScores : new KeyValuePair<Target, double>[0]; }
-        }
+        public IEnumerable<KeyValuePair<Target, double>> PeptideScores => _database?.PeptideScores ?? Array.Empty<KeyValuePair<Target, double>>();
 
-        public bool IsNone
-        {
-            get { return Name == NONE.Name; }
-        }
+        public bool IsNone => Name == NONE.Name;
 
-        public override bool IsUsable
-        {
-            get { return _database != null; }
-        }
+        public override bool IsUsable => _database != null;
 
         public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {
@@ -110,7 +101,7 @@ namespace pwiz.Skyline.Model.Irt
                 var irtDbMinimal = IrtDb.CreateIrtDb(fs.SafeName);
 
                 // Calculate the minimal set of peptides needed for this document
-                var dbPeptides = _database.GetPeptides().ToList();
+                var dbPeptides = _database.ReadPeptides().ToList();
                 var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
                 var dictPeptides = new TargetMap<DbIrtPeptide>(dbPeptides.Where(pep => !pep.Standard)
                     .Select(pep => new KeyValuePair<Target, DbIrtPeptide>(pep.ModifiedTarget, pep)));
@@ -128,7 +119,7 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
 
-                irtDbMinimal.AddPeptides(null, persistPeptides);
+                irtDbMinimal.UpdatePeptides(persistPeptides);
                 fs.Commit();
             }
 
@@ -167,15 +158,12 @@ namespace pwiz.Skyline.Model.Irt
 
         public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
-            int minCount;
-            return ChooseRegressionPeptides(peptides, out minCount);
+            return ChooseRegressionPeptides(peptides, out _);
         }
 
         public override double? ScoreSequence(Target seq)
         {
-            if (_database != null)
-                return _database.ScoreSequence(seq);
-            return null;
+            return _database?.ScoreSequence(seq);
         }
 
         public override double UnknownScore
@@ -201,7 +189,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public IEnumerable<DbIrtPeptide> GetDbIrtPeptides()
         {
-            return _database.GetPeptides();
+            return _database.ReadPeptides();
         }
 
         public string DocumentXml => _database.DocumentXml;
