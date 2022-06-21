@@ -54,7 +54,7 @@ All Info  :
 导入肽段搜索 > Associate Proteins > Shared peptides option 是 "Duplicated between proteins"
 导入肽段搜索 > Associate Proteins > Min peptides per protein 是 "1"
 导入肽段搜索 > Associate Proteins > Proteins mapped 是 "11"
-导入肽段搜索 > Associate Proteins > Peptides mapped 是 "46"
+导入肽段搜索 > Associate Proteins > Peptides mapped 是 "50"
 导入肽段搜索 > Associate Proteins > Protein targets 是 "11"
 导入肽段搜索 > Associate Proteins > Peptide targets 是 "50"
 Extra Info: 提取色谱图 = 
@@ -97,7 +97,7 @@ Associate Proteins =
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
     Proteins mapped = "11",
-    Peptides mapped = "46",
+    Peptides mapped = "50",
     Protein targets = "11",
     Peptide targets = "50"
 }

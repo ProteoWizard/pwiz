@@ -54,7 +54,7 @@ Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
 Import Peptide Search > Associate Proteins > Proteins mapped is "11"
-Import Peptide Search > Associate Proteins > Peptides mapped is "46"
+Import Peptide Search > Associate Proteins > Peptides mapped is "50"
 Import Peptide Search > Associate Proteins > Protein targets is "11"
 Import Peptide Search > Associate Proteins > Peptide targets is "50"
 Extra Info: Extract Chromatograms = 
@@ -97,7 +97,7 @@ Associate Proteins =
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
     Proteins mapped = "11",
-    Peptides mapped = "46",
+    Peptides mapped = "50",
     Protein targets = "11",
     Peptide targets = "50"
 }

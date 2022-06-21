@@ -54,7 +54,7 @@ All Info  :
 ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Duplicated between proteins"です
 ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
 ペプチド検索のインポート>Associate Proteins>Proteins mappedは"11"です
-ペプチド検索のインポート>Associate Proteins>Peptides mappedは"46"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"50"です
 ペプチド検索のインポート>Associate Proteins>Protein targetsは"11"です
 ペプチド検索のインポート>Associate Proteins>Peptide targetsは"50"です
 Extra Info: クロマトグラムを抽出 = 
@@ -97,7 +97,7 @@ Associate Proteins =
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
     Proteins mapped = "11",
-    Peptides mapped = "46",
+    Peptides mapped = "50",
     Protein targets = "11",
     Peptide targets = "50"
 }

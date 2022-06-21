@@ -392,12 +392,12 @@
             // 
             // proteinSourcePanel
             // 
+            resources.ApplyResources(this.proteinSourcePanel, "proteinSourcePanel");
             this.proteinSourcePanel.Controls.Add(this.rbFASTA);
             this.proteinSourcePanel.Controls.Add(this.rbBackgroundProteome);
             this.proteinSourcePanel.Controls.Add(this.comboBackgroundProteome);
             this.proteinSourcePanel.Controls.Add(this.browseFastaTargetsBtn);
             this.proteinSourcePanel.Controls.Add(this.tbxFastaTargets);
-            resources.ApplyResources(this.proteinSourcePanel, "proteinSourcePanel");
             this.proteinSourcePanel.Name = "proteinSourcePanel";
             // 
             // AssociateProteinsDlg

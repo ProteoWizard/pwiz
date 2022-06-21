@@ -11783,4 +11783,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
       <value>Updating peptides</value>
   </data>
+  <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
+	  <value>Shared Peptides</value>
+  </data>
 </root>

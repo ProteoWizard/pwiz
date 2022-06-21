@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>365, 480</value>
+    <value>420, 507</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -163,7 +163,7 @@
     <value>13, 13</value>
   </data>
   <data name="lblDescription.Size" type="System.Drawing.Size, System.Drawing">
-    <value>427, 39</value>
+    <value>482, 39</value>
   </data>
   <data name="lblDescription.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>284, 480</value>
+    <value>339, 507</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -669,7 +669,7 @@
     <value>3, 16</value>
   </data>
   <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>422, 165</value>
+    <value>477, 164</value>
   </data>
   <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -714,7 +714,7 @@
     <value>12, 177</value>
   </data>
   <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>428, 184</value>
+    <value>483, 183</value>
   </data>
   <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -828,7 +828,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxFastaTargets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>344, 20</value>
+    <value>399, 20</value>
   </data>
   <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -852,7 +852,7 @@
     <value>NoControl</value>
   </data>
   <data name="browseFastaTargetsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>350, 21</value>
+    <value>405, 21</value>
   </data>
   <data name="browseFastaTargetsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -906,10 +906,10 @@
     <value>Targets</value>
   </data>
   <data name="dgvAssociateResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 382</value>
+    <value>12, 387</value>
   </data>
   <data name="dgvAssociateResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>428, 67</value>
+    <value>483, 89</value>
   </data>
   <data name="dgvAssociateResults.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -936,7 +936,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 366</value>
+    <value>12, 369</value>
   </data>
   <data name="lblResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 13</value>
@@ -969,7 +969,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblStatusBarResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>159, 0</value>
+    <value>214, 0</value>
   </data>
   <data name="lblStatusBarResult.Size" type="System.Drawing.Size, System.Drawing">
     <value>266, 13</value>
@@ -1026,10 +1026,10 @@
     <value>RightToLeft</value>
   </data>
   <data name="panelStatusBarResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 454</value>
+    <value>12, 481</value>
   </data>
   <data name="panelStatusBarResult.Size" type="System.Drawing.Size, System.Drawing">
-    <value>428, 20</value>
+    <value>483, 20</value>
   </data>
   <data name="panelStatusBarResult.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1046,11 +1046,14 @@
   <data name="&gt;&gt;panelStatusBarResult.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="proteinSourcePanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
   <data name="proteinSourcePanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 55</value>
   </data>
   <data name="proteinSourcePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>428, 116</value>
+    <value>483, 116</value>
   </data>
   <data name="proteinSourcePanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1074,7 +1077,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>452, 515</value>
+    <value>507, 542</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>468, 554</value>
@@ -1089,7 +1092,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.467, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.530, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;headerColumn.Name" xml:space="preserve">
     <value>headerColumn</value>
@@ -1149,6 +1152,6 @@
     <value>AssociateProteinsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=21.2.1.467, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=21.2.1.530, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

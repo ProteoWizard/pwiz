@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Proteins = new[] {"AKKAA", "AKAAK", "AKAAKAAAK", "AKAAKAMAK", "ARAMR", "ARAMRAAAR", "ARVK", "AMRVKR", "ELVISWASHERE" },
                 Peptides = new[] {"AK", "KAA", "AAK", "AMAK", "AM[16]AK", "AR", "AM[16]R", "AMR", "VK", "PEPTIDE" },
-                ExpectedPeptidesMapped = 7,
+                ExpectedPeptidesMapped = 9,
                 ExpectedPeptidesUnmapped = 1,
                 ExpectedProteinsMapped = 8,
                 ExpectedProteinsUnmapped = 1,

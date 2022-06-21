@@ -232,7 +232,7 @@ namespace pwiz.Skyline.EditUI
 
             DocumentFinal = CreateDocTree(_document);
 
-            dgvAssociateResults.RowCount = 2;
+            dgvAssociateResults.RowCount = 3;
             dgvAssociateResults.ClearSelection();
             dgvAssociateResults.Invalidate();
 
@@ -532,6 +532,7 @@ namespace pwiz.Skyline.EditUI
             
             const int proteinRowIndex = 0;
             const int peptideRowIndex = 1;
+            const int sharedRowIndex = 2;
 
             if (e.ColumnIndex == headerColumn.Index)
             {
@@ -539,6 +540,8 @@ namespace pwiz.Skyline.EditUI
                     e.Value = Resources.AnnotationDef_AnnotationTarget_Proteins;
                 else if (e.RowIndex == peptideRowIndex)
                     e.Value = Resources.AnnotationDef_AnnotationTarget_Peptides;
+                else if (e.RowIndex == sharedRowIndex)
+                    e.Value = Resources.AssociateProteinsDlg_CellValueNeeded_Shared_Peptides;
             }
             else if (e.ColumnIndex == mappedColumn.Index)
             {
@@ -546,6 +549,8 @@ namespace pwiz.Skyline.EditUI
                     e.Value = resultToString(FinalResults.ProteinsMapped);
                 else if (e.RowIndex == peptideRowIndex)
                     e.Value = resultToString(FinalResults.PeptidesMapped);
+                else if (e.RowIndex == sharedRowIndex)
+                    e.Value = resultToString(_proteinAssociation.TotalSharedPeptideCount);
             }
             else if (e.ColumnIndex == unmappedColumn.Index)
             {
@@ -560,6 +565,8 @@ namespace pwiz.Skyline.EditUI
                     e.Value = resultToString(FinalResults.FinalProteinCount);
                 else if (e.RowIndex == peptideRowIndex)
                     e.Value = resultToString(FinalResults.FinalPeptideCount);
+                else if (e.RowIndex == sharedRowIndex)
+                    e.Value = resultToString(_proteinAssociation.RemainingSharedPeptideCount);
             }
         }
 

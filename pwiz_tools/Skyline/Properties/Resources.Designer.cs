@@ -1923,6 +1923,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shared Peptides.
+        /// </summary>
+        public static string AssociateProteinsDlg_CellValueNeeded_Shared_Peptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_CellValueNeeded_Shared_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find &amp;minimal protein group list that explains all peptides.
         /// </summary>
         public static string AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides {
