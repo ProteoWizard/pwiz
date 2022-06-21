@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls
 
         private sealed class IonSelectorButton : CheckBox
         {
-            public IonSelectorButton(object tag): base()
+            public IonSelectorButton(object tag)
             {
                 Appearance = Appearance.Button;
                 AutoSize = true;
