@@ -890,6 +890,7 @@ namespace TestPerf
             FindNode("_HUMAN");
             WaitForGraphs();
             FindNode(_instrumentValues.ExamplePeptide);
+            WaitForGraphs();
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
             PauseForScreenShot("Snip just one chromatogram pane", screenshotPage);
