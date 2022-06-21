@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -1995,6 +1996,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     infoPrimary.Transform(Transform);
 
                     int iColor = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                    if (nodeGroup.SpectrumClassFilter != null)
+                    {
+                        var peptideDocNode = DocumentUI.FindNode(_groupPaths[i].Parent) as PeptideDocNode;
+                        if (peptideDocNode != null)
+                        {
+                            iColor += peptideDocNode.FindNodeIndex(nodeGroup.TransitionGroup);
+                        }
+                    }
                     Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
                     bool[] annotateAll = new bool[infoPrimary.NumPeaks];

@@ -501,6 +501,10 @@ namespace pwiz.Skyline.Model.Results
                 LocationScoreValues = locationScoreValues;
                 TextIdBytes = textIdBytes;
                 ResultFileDatas = ImmutableList.ValueOf(resultFileDatas);
+                if (ResultFileDatas != null)
+                {
+                    Assume.AreEqual(ResultFileDatas.Count, ChromCacheFiles.Count);
+                }
             }
 
             public RawData(CacheHeaderStruct header) : this(CacheFormat.FromCacheHeader(header))
@@ -535,7 +539,14 @@ namespace pwiz.Skyline.Model.Results
 
             public RawData ChangeChromCacheFiles(IEnumerable<ChromCachedFile> files)
             {
-                return ChangeProp(ImClone(this), im => im.ChromCacheFiles = ImmutableList.ValueOf(files));
+                return ChangeProp(ImClone(this), im =>
+                {
+                    im.ChromCacheFiles = ImmutableList.ValueOf(files);
+                    if (im.ResultFileDatas != null)
+                    {
+                        Assume.AreEqual(im.ChromCacheFiles.Count, im.ResultFileDatas.Count);
+                    }
+                });
             }
             public BlockedArray<ChromGroupHeaderInfo> ChromatogramEntries { get; private set; }
 

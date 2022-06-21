@@ -24,6 +24,13 @@ namespace pwiz.Common.Spectra
             get { return _precursorsByMsLevel.Count + 1; }
         }
 
+        public int PresetScanConfiguration { get; private set; }
+
+        public SpectrumMetadata ChangePresetScanConfiguration(int presetScanConfiguration)
+        {
+            return ChangeProp(ImClone(this), im => im.PresetScanConfiguration = presetScanConfiguration);
+        }
+
         public ImmutableList<SpectrumPrecursor> GetPrecursors(int msLevel)
         {
             if (msLevel < 1 || msLevel > _precursorsByMsLevel.Count)
@@ -100,7 +107,8 @@ namespace pwiz.Common.Spectra
                    Nullable.Equals(CollisionEnergy, other.CollisionEnergy) &&
                    Nullable.Equals(ScanWindowLowerLimit, other.ScanWindowLowerLimit) &&
                    Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit) &&
-                   Nullable.Equals(CompensationVoltage, other.CompensationVoltage);
+                   Nullable.Equals(CompensationVoltage, other.CompensationVoltage) &&
+                   Equals(PresetScanConfiguration, other.PresetScanConfiguration);
         }
 
         public override bool Equals(object obj)

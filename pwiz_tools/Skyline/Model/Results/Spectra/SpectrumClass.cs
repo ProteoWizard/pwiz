@@ -47,5 +47,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public double? ScanWindowWidth { get; private set; }
 
+        public int PresetScanConfiguration { get; private set; }
+
+        public int MsLevel { get; private set; }
     }
 }

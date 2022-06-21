@@ -30,6 +30,7 @@ namespace pwiz.Common.DataBinding
         string OpName { get; }
         [Track]
         string DisplayName { get; }
+        string ShortDisplayName { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
         bool IsValidFor(DataSchema dataSchema, Type columnType);
         Type GetOperandType(ColumnDescriptor columnDescriptor);
@@ -162,6 +163,11 @@ namespace pwiz.Common.DataBinding
             }
             public string OpName { get; private set; }
             public abstract string DisplayName { get; }
+            public virtual string ShortDisplayName
+            {
+                get { return DisplayName; }
+            }
+
             public bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
                 return IsValidFor(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
@@ -323,6 +329,11 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Equals; }
             }
 
+            public override string ShortDisplayName
+            {
+                get { return @"="; }
+            }
+
             public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
             {
                 return Equals(
@@ -416,7 +427,6 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Is_Greater_Than_Or_Equal_To; }
             }
 
-
             protected override bool ComparisonMatches(int comparisonResult)
             {
                 return comparisonResult >= 0;
@@ -463,6 +473,11 @@ namespace pwiz.Common.DataBinding
             protected ComparisonFilterOperation(string opName)
                 : base(opName)
             {
+            }
+
+            public sealed override string ShortDisplayName
+            {
+                get { return OpName; }
             }
 
             public override bool IsValidFor(DataSchema dataSchema, Type propertyType)

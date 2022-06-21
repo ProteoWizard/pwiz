@@ -57,7 +57,10 @@ namespace pwiz.Skyline.Controls.Spectra
             _bindingList = new BindingList<SpectrumClassRow>(_spectrumClasses);
             var viewContext = new SkylineViewContext(_dataSchema, MakeRowSourceInfos());
             BindingListSource.SetViewContext(viewContext);
-            Text = TabText = "Spectra";
+            Text = TabText = "Spectrum Grid";
+            DataboundGridControl.Parent.Controls.Remove(DataboundGridControl);
+            splitContainer1.Panel2.Controls.Add(DataboundGridControl);
+            DataboundGridControl.Dock = DockStyle.Fill;
             _spectrumReader = new SpectrumReader(this);
         }
 
@@ -270,7 +273,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         spectrumClass = new SpectrumClassRow(new SpectrumClass(spectrumGroup.Key));
                         spectrumClasses.Add(spectrumGroup.Key, spectrumClass);
                     }
-                    spectrumClass.Files.Add(dataFileItem.ToString(), new FileSpectrumInfo(_dataSchema, spectrumGroup));
+                    spectrumClass.Files.Add(dataFileItem.ToString(), new FileSpectrumInfo(_dataSchema, dataFileItem.MsDataFileUri, spectrumGroup));
                 }
             }
 
@@ -410,6 +413,7 @@ namespace pwiz.Skyline.Controls.Spectra
         {
             _spectrumLists[new DataFileItem(null, dataFile)] = new SpectrumMetadataList(spectra);
             QueueUpdateSpectrumRows();
+            statusPanel.Visible = false;
         }
 
         public HashSet<IdentityPath> GetSelectedPrecursorPaths()
@@ -618,48 +622,164 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private void btnAddSpectrumFilter_Click(object sender, EventArgs e)
         {
-            var spectrumClass = (BindingListSource.Current as RowItem)?.Value as SpectrumClassRow;
-            if (spectrumClass != null)
+            IList<SpectrumClassRow> spectrumClassRows = new List<SpectrumClassRow>();
+            if (DataboundGridControl.DataGridView.SelectedRows.Count == 0)
             {
-                AddSpectrumFilter(spectrumClass);
-            }
-        }
-
-        public void AddSpectrumFilter(SpectrumClassRow spectrumClassRow)
-        {
-            var filterSpecs = new List<FilterSpec>();
-            foreach (var classColumn in GetActiveClassColumns())
-            {
-                object value = classColumn.GetValue(spectrumClassRow.Properties);
-                FilterPredicate filterPredicate;
-                if (value != null)
+                var spectrumClass = (BindingListSource.Current as RowItem)?.Value as SpectrumClassRow;
+                if (spectrumClass != null)
                 {
-                    filterPredicate = FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, value);
-                    filterSpecs.Add(new FilterSpec(classColumn.PropertyPath, filterPredicate));
+                    spectrumClassRows.Add(spectrumClass);
+                }
+            }
+            else
+            {
+                foreach (var dataGridViewRow in DataboundGridControl.DataGridView.SelectedRows.Cast<DataGridViewRow>())
+                {
+                    if (dataGridViewRow.Index >= 0 && dataGridViewRow.Index < BindingListSource.Count)
+                    {
+                        var spectrumClass =
+                            (BindingListSource[dataGridViewRow.Index] as RowItem)?.Value as SpectrumClassRow;
+                        if (spectrumClass != null)
+                        {
+                            spectrumClassRows.Add(spectrumClass);
+                        }
+                    }
                 }
             }
 
-            if (filterSpecs.Count == 0)
+            if (spectrumClassRows.Any())
             {
-                MessageDlg.Show(this, "The currently selected row has no filters");
+                AddSpectrumFilters(spectrumClassRows);
+            }
+        }
+
+        public void AddSpectrumFilters(IList<SpectrumClassRow> spectrumClassRows)
+        {
+            var filters = new List<SpectrumClassFilter>();
+            var transitionIdentityPathLists = new List<ICollection<IdentityPath>>();
+            var activeClassColumns = GetActiveClassColumns().ToList();
+            using (var longWaitDlg = new LongWaitDlg()
+                   {
+                       Message = "Examining filters"
+                   })
+            {
+                var document = SkylineWindow.DocumentUI;
+                longWaitDlg.PerformWork(this, 1000, broker =>
+                {
+                    for (int i = 0; i < spectrumClassRows.Count; i++)
+                    {
+                        broker.ProgressValue = 100 * i / spectrumClassRows.Count;
+                        broker.CancellationToken.ThrowIfCancellationRequested();
+                        var spectrumClassRow = spectrumClassRows[i];
+                        var filter = MakeFilter(spectrumClassRow, activeClassColumns);
+                        if (filter.FilterSpecs.Count == 0)
+                        {
+                            continue;
+                        }
+
+                        var firstSpectrumMetadata = spectrumClassRow.Files.SelectMany(entry => entry.Value.GetSpectra())
+                            .FirstOrDefault();
+                        ICollection<IdentityPath> precursorPaths = _selectedPrecursorPaths;
+                        var transitionSettings = document.Settings.TransitionSettings;
+                        if (firstSpectrumMetadata != null)
+                        {
+                            precursorPaths = precursorPaths.Where(path =>
+                            {
+                                var docNode = (TransitionGroupDocNode) document.FindNode(path);
+                                return docNode != null &&
+                                       FindMatchingTransitionGroups(transitionSettings, firstSpectrumMetadata,
+                                               new[] {docNode})
+                                           .Any();
+                            }).ToList();
+                        }
+
+                        filters.Add(filter);
+                        transitionIdentityPathLists.Add(precursorPaths);
+                    }
+                });
             }
 
-            var spectrumFilter = new SpectrumClassFilter(filterSpecs);
-            var firstSpectrumMetadata = spectrumClassRow.Files.SelectMany(entry => entry.Value.GetSpectra()).FirstOrDefault();
-            ICollection<IdentityPath> precursorPaths = _selectedPrecursorPaths;
-            var document = SkylineWindow.DocumentUI;
-            var transitionSettings = document.Settings.TransitionSettings;
-            if (firstSpectrumMetadata != null)
+            if (filters.Count == 0)
             {
-                precursorPaths = precursorPaths.Where(path =>
+                if (spectrumClassRows.Count == 0)
                 {
-                    var docNode = (TransitionGroupDocNode) document.FindNode(path);
-                    return docNode != null &&
-                           FindMatchingTransitionGroups(transitionSettings, firstSpectrumMetadata, new[] {docNode})
-                               .Any();
-                }).ToList();
+                    MessageDlg.Show(this, "The selected row does not have any filters");
+                }
+                else
+                {
+                    MessageDlg.Show(this, "The selected rows do not have any filters");
+                }
+
+                return;
             }
-            SkylineWindow.EditMenu.ChangeSpectrumFilter(precursorPaths, spectrumFilter, true);
+
+            if (transitionIdentityPathLists.All(list => list.Count == 0))
+            {
+                MessageDlg.Show(this, "There were no matching precursors to add any filters to.");
+                return;
+            }
+
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                SkylineWindow.ModifyDocument("Change spectrum filter", doc =>
+                        AddFilters(doc, filters, transitionIdentityPathLists),
+                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter,
+                        docPair.NewDocumentType));
+            }
+        }
+
+        private SrmDocument AddFilters(SrmDocument doc, IList<SpectrumClassFilter> filters,
+            IList<ICollection<IdentityPath>> transitionGroupIdentityPaths)
+        {
+            SrmDocument newDocument = doc;
+            using (var longWaitDlg = new LongWaitDlg(SkylineWindow))
+            {
+                longWaitDlg.PerformWork(this, 1000, broker =>
+                {
+                    for (int i = 0; i < filters.Count; i++)
+                    {
+                        broker.CancellationToken.ThrowIfCancellationRequested();
+                        broker.ProgressValue = i * 100 / filters.Count;
+                        doc = SkylineWindow.EditMenu.ChangeSpectrumFilter(doc, transitionGroupIdentityPaths[i],
+                            filters[i], true);
+                    }
+
+                    newDocument = doc;
+                });
+            }
+
+            return newDocument;
+        }
+
+        public SpectrumClassFilter MakeFilter(SpectrumClassRow row, IList<SpectrumClassColumn> activeClassColumns)
+        {
+            var filterSpecs = new List<FilterSpec>();
+            foreach (var classColumn in activeClassColumns)
+            {
+                object value = classColumn.GetValue(row.Properties);
+                FilterPredicate filterPredicate;
+                filterPredicate = FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, value);
+                filterSpecs.Add(new FilterSpec(classColumn.PropertyPath, filterPredicate));
+            }
+            return new SpectrumClassFilter(filterSpecs);
+        }
+
+        private void checkedListBoxSpectrumClassColumns_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            switch (e.CurrentValue)
+            {
+                case CheckState.Checked:
+                    e.NewValue = CheckState.Unchecked;
+                    break;
+
+                case CheckState.Indeterminate:
+                    e.NewValue = CheckState.Checked;
+                    break;
+
+                case CheckState.Unchecked:
+                    e.NewValue = CheckState.Indeterminate;
+                    break;
+            }
         }
     }
 }

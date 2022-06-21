@@ -92,6 +92,7 @@ namespace pwiz.Skyline.Model
             LibInfo = libInfo;
             ExplicitValues = explicitValues ?? ExplicitTransitionGroupValues.EMPTY;
             Results = results;
+            SpectrumClassFilter = SpectrumClassFilter.EMPTY;
         }
 
         private TransitionGroupDocNode(TransitionGroupDocNode group,
@@ -109,6 +110,7 @@ namespace pwiz.Skyline.Model
             Results = group.Results;
             ExplicitValues = group.ExplicitValues ?? ExplicitTransitionGroupValues.EMPTY;
             PrecursorConcentration = group.PrecursorConcentration;
+            SpectrumClassFilter = SpectrumClassFilter.EMPTY;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
@@ -252,6 +254,10 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
         {
+            if (Equals(SpectrumClassFilter, spectrumClassFilter))
+            {
+                return this;
+            }
             return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
         }
 
@@ -1027,11 +1033,13 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, childrenNew);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, childrenNew)
+                        .ChangeSpectrumClassFilter(SpectrumClassFilter);
                 else
                 {
                     if (precursorMz != PrecursorMz || !Equals(isotopeDist, IsotopeDist) || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, Children);
+                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, Children)
+                            .ChangeSpectrumClassFilter(SpectrumClassFilter);
                     else
                     {
                         // If nothing changed, use this node.
@@ -1123,13 +1131,16 @@ namespace pwiz.Skyline.Model
 
                     // Change as little as possible
                     if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, childrenNew);
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, childrenNew)
+                            .ChangeSpectrumClassFilter(SpectrumClassFilter);
                     else if (precursorMz != PrecursorMz || !Equals(isotopeDist, IsotopeDist) || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children);
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children)
+                            .ChangeSpectrumClassFilter(SpectrumClassFilter);
                 }
                 else if (diff.DiffTransitionGroupProps)
                 {
-                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children);
+                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children)
+                        .ChangeSpectrumClassFilter(SpectrumClassFilter);
                 }
             }
 

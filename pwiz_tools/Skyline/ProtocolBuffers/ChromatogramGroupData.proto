@@ -37,6 +37,7 @@ message ResultFileMetaDataProto {
 		string scanIdText = 3;
 		repeated int32 precursorIndex = 4;
 		int32 scanDescriptionIndex = 5;
+		int32 presetScanConfiguration = 6;
 	}
 
 	message Precursor {

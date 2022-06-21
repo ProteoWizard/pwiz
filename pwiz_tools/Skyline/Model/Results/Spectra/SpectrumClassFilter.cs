@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -8,14 +9,17 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     [XmlRoot(XML_ROOT)]
-    public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable<SpectrumClassFilter>
+    public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable, IComparable<SpectrumClassFilter>
     {
+        public static readonly SpectrumClassFilter EMPTY = new SpectrumClassFilter(ImmutableList.Empty<FilterSpec>());
         public const string XML_ROOT = "spectrum_filter";
         public SpectrumClassFilter(IEnumerable<FilterSpec> filterSpecs)
         {
@@ -23,6 +27,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         public ImmutableList<FilterSpec> FilterSpecs { get; private set; }
+
+        public bool IsEmpty
+        {
+            get { return FilterSpecs.Count == 0; }
+        }
 
         public Predicate<SpectrumMetadata> MakePredicate()
         {
@@ -174,6 +183,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return 0;
         }
 
+        int IComparable.CompareTo(object obj)
+        {
+            return CompareTo((SpectrumClassFilter) obj);
+        }
+
         public static string GetOperandDisplayText(DataSchema dataSchema, FilterSpec filterSpec)
         {
             var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
@@ -187,7 +201,55 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 return null;
             }
-            return filterSpec.Predicate.GetOperandDisplayText(dataSchema, operandType);
+
+            try
+            {
+                var value = filterSpec.Predicate.GetOperandValue(dataSchema, spectrumClassColumn.ValueType);
+                if (value == null)
+                {
+                    return string.Empty;
+                }
+
+                return spectrumClassColumn.FormatAbbreviatedValue(value);
+            }
+            catch
+            {
+                return filterSpec.Predicate.GetOperandDisplayText(dataSchema, spectrumClassColumn.ValueType);
+            }
+        }
+
+        public string GetAbbreviatedText()
+        {
+            var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var clauses = new List<string>();
+            foreach (var filterSpec in FilterSpecs)
+            {
+                var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
+                if (spectrumClassColumn == null)
+                {
+                    clauses.Add(TextUtil.SpaceSeparate(filterSpec.Column, filterSpec.Operation?.DisplayName, filterSpec.Predicate.InvariantOperandText));
+                }
+                else
+                {
+                    var clauseText = new StringBuilder(spectrumClassColumn.GetAbbreviatedColumnName());
+                    var opText = filterSpec.Operation.ShortDisplayName;
+                    if (char.IsLetterOrDigit(opText[0]) || char.IsLetterOrDigit(opText[opText.Length - 1]))
+                    {
+                        clauseText.Append(@" ");
+                        clauseText.Append(opText);
+                        clauseText.Append(@" ");
+                    }
+                    else
+                    {
+                        clauseText.Append(opText);
+                    }
+
+                    clauseText.Append(GetOperandDisplayText(dataSchema, filterSpec));
+                    clauses.Add(clauseText.ToString().Trim());
+                }
+            }
+
+            return string.Join(" AND ", clauses);
         }
 
         public ChromatogramGroupInfo FilterChromatogramGroupInfo(SrmSettings srmSettings, ChromatogramGroupInfo chromatogramGroupInfo)

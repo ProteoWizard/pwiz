@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
-            if (node.SpectrumClassFilter != null)
+            if (false == node.SpectrumClassFilter?.IsEmpty)
             {
                 writer.WriteStartElement(SpectrumClassFilter.XML_ROOT);
                 node.SpectrumClassFilter.WriteXml(writer);

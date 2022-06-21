@@ -28,7 +28,8 @@ namespace pwiz.Skyline.EditUI
             _rowBindingList = new BindingList<Row>(_rowList);
             dataGridViewEx1.DataSource = _rowBindingList;
             SpectrumClassFilter = spectrumClassFilter;
-            propertyColumn.Items.AddRange(SpectrumClassColumn.ALL.Cast<object>().ToArray());
+            propertyColumn.Items.AddRange(SpectrumClassColumn.ALL
+                .OrderBy(c=>c.ToString(), StringComparer.OrdinalIgnoreCase).Cast<object>().ToArray());
             // operationColumn.DisplayMember = @"Key";
             // operationColumn.ValueMember = @"Value";
             // operationColumn.Items.AddRange(FilterOperations.ListOperations()

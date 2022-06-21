@@ -44,7 +44,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     id = protoSpectrum.ScanIdText;
                 }
 
-                var spectrumMetadata = new SpectrumMetadata(id, protoSpectrum.RetentionTime);
+                var spectrumMetadata = new SpectrumMetadata(id, protoSpectrum.RetentionTime)
+                    .ChangePresetScanConfiguration(protoSpectrum.PresetScanConfiguration);
                 if (protoSpectrum.ScanDescriptionIndex > 0)
                 {
                     spectrumMetadata =
@@ -89,6 +90,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 {
                     RetentionTime = spectrumMetadata.RetentionTime,
                 };
+                spectrum.PresetScanConfiguration = spectrumMetadata.PresetScanConfiguration;
                 var intParts = GetScanIdParts(spectrumMetadata.Id);
                 if (intParts == null)
                 {
@@ -109,7 +111,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     }
 
                     spectrum.ScanDescriptionIndex = scanDescriptionIndex;
-                }
+                } 
 
                 for (int msLevel = 1; msLevel < spectrumMetadata.MsLevel; msLevel++)
                 {

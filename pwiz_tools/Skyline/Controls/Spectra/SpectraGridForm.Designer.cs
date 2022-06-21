@@ -28,33 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnBrowse = new System.Windows.Forms.Button();
             this.statusPanel = new System.Windows.Forms.Panel();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.lblStatus = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnBrowse = new System.Windows.Forms.Button();
+            this.btnAddSpectrumFilter = new System.Windows.Forms.Button();
             this.checkedListBoxSpectrumClassColumns = new System.Windows.Forms.CheckedListBox();
             this.listBoxFiles = new System.Windows.Forms.ListBox();
-            this.btnAddSpectrumFilter = new System.Windows.Forms.Button();
             this.statusPanel.SuspendLayout();
-            this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // databoundGridControl
             // 
-            this.databoundGridControl.Location = new System.Drawing.Point(0, 100);
-            this.databoundGridControl.Size = new System.Drawing.Size(800, 315);
-            // 
-            // btnBrowse
-            // 
-            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.Location = new System.Drawing.Point(675, 3);
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(113, 28);
-            this.btnBrowse.TabIndex = 1;
-            this.btnBrowse.Text = "Browse...";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            this.databoundGridControl.Dock = System.Windows.Forms.DockStyle.None;
+            this.databoundGridControl.Location = new System.Drawing.Point(12, 123);
+            this.databoundGridControl.Size = new System.Drawing.Size(765, 286);
             // 
             // statusPanel
             // 
@@ -65,6 +57,7 @@
             this.statusPanel.Name = "statusPanel";
             this.statusPanel.Size = new System.Drawing.Size(800, 35);
             this.statusPanel.TabIndex = 0;
+            this.statusPanel.Visible = false;
             // 
             // progressBar1
             // 
@@ -85,26 +78,57 @@
             this.lblStatus.Text = "label1";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // panel1
+            // splitContainer1
             // 
-            this.panel1.Controls.Add(this.btnAddSpectrumFilter);
-            this.panel1.Controls.Add(this.checkedListBoxSpectrumClassColumns);
-            this.panel1.Controls.Add(this.listBoxFiles);
-            this.panel1.Controls.Add(this.btnBrowse);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel1.Location = new System.Drawing.Point(0, 0);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(800, 100);
-            this.panel1.TabIndex = 1;
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnBrowse);
+            this.splitContainer1.Panel1.Controls.Add(this.btnAddSpectrumFilter);
+            this.splitContainer1.Panel1.Controls.Add(this.checkedListBoxSpectrumClassColumns);
+            this.splitContainer1.Panel1.Controls.Add(this.listBoxFiles);
+            this.splitContainer1.Size = new System.Drawing.Size(800, 415);
+            this.splitContainer1.SplitterDistance = 98;
+            this.splitContainer1.TabIndex = 2;
+            // 
+            // btnBrowse
+            // 
+            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBrowse.Location = new System.Drawing.Point(675, 3);
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.Size = new System.Drawing.Size(113, 28);
+            this.btnBrowse.TabIndex = 1;
+            this.btnBrowse.Text = "Browse...";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
+            // btnAddSpectrumFilter
+            // 
+            this.btnAddSpectrumFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAddSpectrumFilter.Location = new System.Drawing.Point(675, 72);
+            this.btnAddSpectrumFilter.Name = "btnAddSpectrumFilter";
+            this.btnAddSpectrumFilter.Size = new System.Drawing.Size(113, 23);
+            this.btnAddSpectrumFilter.TabIndex = 4;
+            this.btnAddSpectrumFilter.Text = "Add Spectrum Filter";
+            this.btnAddSpectrumFilter.UseVisualStyleBackColor = true;
+            this.btnAddSpectrumFilter.Click += new System.EventHandler(this.btnAddSpectrumFilter_Click);
             // 
             // checkedListBoxSpectrumClassColumns
             // 
+            this.checkedListBoxSpectrumClassColumns.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.checkedListBoxSpectrumClassColumns.FormattingEnabled = true;
             this.checkedListBoxSpectrumClassColumns.IntegralHeight = false;
-            this.checkedListBoxSpectrumClassColumns.Location = new System.Drawing.Point(6, 3);
+            this.checkedListBoxSpectrumClassColumns.Location = new System.Drawing.Point(3, 3);
             this.checkedListBoxSpectrumClassColumns.Name = "checkedListBoxSpectrumClassColumns";
             this.checkedListBoxSpectrumClassColumns.Size = new System.Drawing.Size(285, 91);
             this.checkedListBoxSpectrumClassColumns.TabIndex = 3;
+            this.checkedListBoxSpectrumClassColumns.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxSpectrumClassColumns_ItemCheck);
             // 
             // listBoxFiles
             // 
@@ -113,49 +137,41 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listBoxFiles.FormattingEnabled = true;
             this.listBoxFiles.IntegralHeight = false;
-            this.listBoxFiles.Location = new System.Drawing.Point(297, 3);
+            this.listBoxFiles.Location = new System.Drawing.Point(294, 3);
             this.listBoxFiles.Name = "listBoxFiles";
-            this.listBoxFiles.Size = new System.Drawing.Size(363, 91);
+            this.listBoxFiles.Size = new System.Drawing.Size(375, 92);
             this.listBoxFiles.TabIndex = 2;
-            // 
-            // btnAddSpectrumFilter
-            // 
-            this.btnAddSpectrumFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddSpectrumFilter.Location = new System.Drawing.Point(675, 71);
-            this.btnAddSpectrumFilter.Name = "btnAddSpectrumFilter";
-            this.btnAddSpectrumFilter.Size = new System.Drawing.Size(113, 23);
-            this.btnAddSpectrumFilter.TabIndex = 4;
-            this.btnAddSpectrumFilter.Text = "Add Spectrum Filter";
-            this.btnAddSpectrumFilter.UseVisualStyleBackColor = true;
-            this.btnAddSpectrumFilter.Click += new System.EventHandler(this.btnAddSpectrumFilter_Click);
             // 
             // SpectraGridForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.statusPanel);
-            this.Controls.Add(this.panel1);
             this.Name = "SpectraGridForm";
+            this.ShowIcon = false;
             this.TabText = "SpectraGridForm";
             this.Text = "SpectraGridForm";
-            this.Controls.SetChildIndex(this.panel1, 0);
             this.Controls.SetChildIndex(this.statusPanel, 0);
+            this.Controls.SetChildIndex(this.splitContainer1, 0);
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.statusPanel.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
-        private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Panel statusPanel;
-        private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label lblStatus;
-        private System.Windows.Forms.ListBox listBoxFiles;
-        private System.Windows.Forms.CheckedListBox checkedListBoxSpectrumClassColumns;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Button btnAddSpectrumFilter;
+        private System.Windows.Forms.CheckedListBox checkedListBoxSpectrumClassColumns;
+        private System.Windows.Forms.ListBox listBoxFiles;
     }
 }

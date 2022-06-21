@@ -25,6 +25,7 @@ using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 
@@ -637,6 +638,7 @@ namespace pwiz.Skyline.Controls.Graphs
                    nodeGroup != null ? nodeGroup.TransitionGroup.LabelType : null,
                    false)
         {
+            SpectrumClassFilter = nodeGroup?.SpectrumClassFilter;
         }
 
         public PaneKey(IsotopeLabelType isotopeLabelType)
@@ -654,11 +656,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public Adduct PrecursorAdduct { get; private set; }
         public IsotopeLabelType IsotopeLabelType { get; private set; }
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
         public bool? IsProducts { get; private set; }
 
-        private Tuple<Adduct, IsotopeLabelType, bool?> AsTuple()
+        private Tuple<Adduct, IsotopeLabelType, SpectrumClassFilter, bool?> AsTuple()
         {
-            return new Tuple<Adduct, IsotopeLabelType, bool?>(PrecursorAdduct, IsotopeLabelType, IsProducts);
+            return Tuple.Create(PrecursorAdduct, IsotopeLabelType, SpectrumClassFilter, IsProducts);
         }
 
         public int CompareTo(object other)
@@ -675,6 +678,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (null != IsotopeLabelType &&
                 !Equals(IsotopeLabelType, transitionGroupDocNode.TransitionGroup.LabelType))
+            {
+                return false;
+            }
+
+            if (null != SpectrumClassFilter && !Equals(SpectrumClassFilter, transitionGroupDocNode.SpectrumClassFilter))
             {
                 return false;
             }

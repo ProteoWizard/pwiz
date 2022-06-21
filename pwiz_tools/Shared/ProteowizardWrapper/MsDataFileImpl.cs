@@ -1110,6 +1110,7 @@ namespace pwiz.ProteowizardWrapper
                 level.Where(precursor => precursor.IsolationMz.HasValue)
                     .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
             metadata = metadata.ChangeScanDescription(GetScanDescription(spectrum));
+            metadata = metadata.ChangePresetScanConfiguration(GetPresetScanConfiguration(spectrum));
             IonMobilityValue ionMobilityValue = GetIonMobility(spectrum);
             if (ionMobilityValue != null)
             {
@@ -1350,6 +1351,29 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return param.value.ToString().Trim();
+        }
+
+        private static int GetPresetScanConfiguration(Spectrum spectrum)
+        {
+            try
+            {
+                if (spectrum.scanList.empty())
+                {
+                    return 0;
+                }
+
+                CVParam param = spectrum.scanList.scans[0].cvParam(CVID.MS_preset_scan_configuration);
+                if (param.empty())
+                {
+                    return 0;
+                }
+
+                return (int) param.value;
+            }
+            catch (InvalidCastException)
+            {
+                return 0;
+            }
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS

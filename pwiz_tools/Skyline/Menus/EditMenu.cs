@@ -1721,7 +1721,7 @@ namespace pwiz.Skyline.Menus
 
         }
 
-        private SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
+        public SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
             SpectrumClassFilter spectrumClassFilter, bool copy)
         {
             foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
@@ -1746,8 +1746,9 @@ namespace pwiz.Skyline.Menus
                     newTransitionGroups.AddRange(peptideDocNode.Children.Where(tg=>!idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.Id))));
                 }
                 bool changed = false;
-                foreach (var precursorGroup in transitionGroupDocNodes.GroupBy(tg =>
-                             tg.PrecursorKey.ChangeSpectrumClassFilter(null)))
+                var precursorGroups = transitionGroupDocNodes.GroupBy(tg =>
+                    tg.PrecursorKey.ChangeSpectrumClassFilter(null)).ToList();
+                foreach (var precursorGroup in precursorGroups)
                 {
                     if (precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
                     {

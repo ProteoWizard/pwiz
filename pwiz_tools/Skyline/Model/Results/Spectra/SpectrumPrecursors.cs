@@ -16,13 +16,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
     [Filterable]
     public class SpectrumPrecursors : IFormattable
     {
-        public static readonly SpectrumPrecursors EMPTY =
-            new SpectrumPrecursors(ImmutableList.Empty<SpectrumPrecursor>());
-
         private ImmutableList<SpectrumPrecursor> _precursors;
         public SpectrumPrecursors(IEnumerable<SpectrumPrecursor> precursors)
         {
             _precursors = ImmutableList.ValueOf(precursors.OrderBy(p=>p.PrecursorMz.RawValue));
+        }
+
+        public static SpectrumPrecursors FromPrecursors(IEnumerable<SpectrumPrecursor> precursors)
+        {
+            var spectrumPrecursors = new SpectrumPrecursors(precursors);
+            if (spectrumPrecursors._precursors.Count == 0)
+            {
+                return null;
+            }
+
+            return spectrumPrecursors;
         }
 
         public override string ToString()
@@ -32,7 +40,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            return string.Join(TextUtil.GetCsvSeparator(formatProvider).ToString(),
+            return string.Join(TextUtil.GetCsvSeparator(formatProvider) + @" ",
                 _precursors.Select(p => p.PrecursorMz.ToString(format, formatProvider)));
         }
 

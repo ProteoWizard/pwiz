@@ -1419,7 +1419,7 @@ namespace pwiz.Skyline
                 _graphFullScan.Hide();
         }
 
-        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        public void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
         {
             if (_graphFullScan != null)
             {

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -113,6 +114,10 @@ namespace pwiz.Skyline.Model.Results
                     if (null != rawData.ResultFileDatas)
                     {
                         _listResultFileDatas.AddRange(rawData.ResultFileDatas);
+                    }
+                    else
+                    {
+                        _listResultFileDatas.AddRange(new ResultFileMetaData[rawData.ChromCacheFiles.Count]);
                     }
                     if (rawData.CountBytesScanIds > 0)
                     {
