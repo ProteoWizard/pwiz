@@ -382,7 +382,7 @@ namespace BuildSciexMethod
                     new PropertyData(standardMethod ? typeof(DwellTimeProperty) : typeof(RetentionTimeProperty), t => t.DwellOrRt),
                     new PropertyData(typeof(DeclusteringPotentialProperty), t => t.DP),
                     new PropertyData(typeof(EntrancePotentialProperty)),
-                    new PropertyData(typeof(CollisonEnergyProperty), t => t.CE),
+                    new PropertyData(typeof(CollisionEnergyProperty), t => t.CE),
                     new PropertyData(typeof(CollisionCellExitPotentialProperty)),
                 }.Where(prop => prop.GetValueForTransition != null && prop.GetPropertiesRowObj(table.Rows[0]) != null);
             }
