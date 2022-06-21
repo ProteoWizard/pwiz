@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -36,6 +37,18 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class DocumentSerializerTest : AbstractUnitTest
     {
+        [TestMethod]
+        public void TestDocumentFormatCurrent()
+        {
+            double expectedDocumentFormat = Install.MajorVersion + Install.MinorVersion * 0.1;
+            if (expectedDocumentFormat == 21.2)
+                expectedDocumentFormat = 22.1;  // Allow for the mistake made after 21.2 release
+            double deltaAllowed = 0.099;
+            Assert.AreEqual(expectedDocumentFormat, DocumentFormat.CURRENT.AsDouble(), deltaAllowed,
+                string.Format("DocumentFormat.CURRENT {0} is expected to be less than 0.1 from the current Skyline version {1}",
+                    DocumentFormat.CURRENT, expectedDocumentFormat));
+        }
+
         [TestMethod]
         public void TestSerializePeptides()
         {

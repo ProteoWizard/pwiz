@@ -366,12 +366,10 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
                     var rawTimeIntensities = chromatogramInfo.TimeIntensities;
-                    chromatogramInfo.Transform(TransformChrom.interpolated);
-                    var interpolatedTimeIntensities = chromatogramInfo.TimeIntensities;
                     var chromKey = new ChromKey(PeptideDocNode.ModifiedTarget, transitionGroup.PrecursorMz, null,
                         transition.Mz, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
                         ChromExtractor.summed, true, false);
-                    chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, interpolatedTimeIntensities));
+                    chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, rawTimeIntensities));
                 }
 
                 if (!chromDatas.Any())

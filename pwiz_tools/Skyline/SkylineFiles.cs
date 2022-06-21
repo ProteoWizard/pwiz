@@ -2290,7 +2290,7 @@ namespace pwiz.Skyline
                 doc = doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(prediction => prediction.ChangeRetentionTime(retentionTimeRegression)));
             }
             
-            var oldPeptides = db.GetPeptides().ToList();
+            var oldPeptides = db.ReadPeptides().ToList();
             IList<DbIrtPeptide.Conflict> conflicts;
             dbIrtPeptides = DbIrtPeptide.MakeUnique(dbIrtPeptides);
             DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptides, null, out conflicts);

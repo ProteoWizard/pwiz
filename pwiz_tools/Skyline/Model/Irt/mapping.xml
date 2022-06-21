@@ -15,4 +15,12 @@
     <property name="Standard"/>
     <property name="TimeSource"/>
   </class>
+  <class name="DbIrtHistory" table="IrtHistory">
+    <id name="Id">
+        <generator class="native" />
+    </id>
+    <property name="PeptideId" index="idxPeptideId" not-null="true"/>
+    <property name="Irt" not-null="true"/>
+    <property name="SaveTime" not-null="true"/>
+  </class>
 </hibernate-mapping>
