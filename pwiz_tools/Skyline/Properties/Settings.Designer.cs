@@ -3272,5 +3272,17 @@ namespace pwiz.Skyline.Properties {
                 this["LastProteinAssociationFastaFilepath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowFullScanCE {
+            get {
+                return ((bool)(this["ShowFullScanCE"]));
+            }
+            set {
+                this["ShowFullScanCE"] = value;
+            }
+        }
     }
 }
