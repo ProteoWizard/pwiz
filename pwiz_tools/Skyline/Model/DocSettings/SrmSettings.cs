@@ -2785,6 +2785,15 @@ namespace pwiz.Skyline.Model.DocSettings
             // Force update if the bulk import has just completed
             else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
+
+            if (!settingsNew.PeptideSettings.Libraries.IsLoaded)
+            {
+                // If the libraries have not been loaded then we will not be able to determine which children
+                // should be chosen
+                DiffPeptides = false;
+                DiffTransitionGroups = false;
+                DiffTransitions = false;
+            }
         }
 
         private static bool EqualExceptAnnotations(MeasuredResults measuredResultsNew, MeasuredResults measuredResultsOld)
