@@ -49,6 +49,7 @@ namespace pwiz.Skyline.EditUI
 
         private bool _reuseLastFasta;
         private string _overrideFastaPath;
+        private bool _fastaFileIsTemporary;
         private readonly IrtStandard _irtStandard;
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
@@ -107,19 +108,22 @@ namespace pwiz.Skyline.EditUI
         }
 
         /// <summary>
-        /// Show the Associate Proteins dialog.
+        /// Show the Associate Proteins dialog without allowing the user to control the source of the FASTA records (e.g. when called from the Import Peptide Search wizard).
         /// </summary>
         /// <param name="document">The Skyline document for which to associate peptides to proteins.</param>
         /// <param name="overrideFastaPath">Set to a FASTA filepath to force using that FASTA and remove the user's ability to set the FASTA filepath (the protein source controls will be hidden).</param>
         /// <param name="irtStandard">The iRT standard to preserve iRT peptides at the top of the document.</param>
         /// <param name="decoyGenerationMethod">Decoy generation method.</param>
         /// <param name="decoysPerTarget">Number of decoys per target.</param>
-        public AssociateProteinsDlg(SrmDocument document, string overrideFastaPath, IrtStandard irtStandard, string decoyGenerationMethod, double decoysPerTarget) : this(document)
+        /// <param name="fastaFileIsTemporary">Set to true if the FASTA filepath should not be reused the next time the form is opened.</param>
+        public AssociateProteinsDlg(SrmDocument document, string overrideFastaPath, IrtStandard irtStandard,
+            string decoyGenerationMethod, double decoysPerTarget, bool fastaFileIsTemporary = false) : this(document)
         {
             _overrideFastaPath = overrideFastaPath;
             _irtStandard = irtStandard;
             _decoyGenerationMethod = decoyGenerationMethod;
             _decoysPerTarget = decoysPerTarget;
+            _fastaFileIsTemporary = fastaFileIsTemporary;
         }
 
         protected override void OnShown(EventArgs e)
@@ -500,7 +504,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            if (rbFASTA.Checked)
+            if (rbFASTA.Checked && !_fastaFileIsTemporary)
                 Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
 
             DialogResult = DialogResult.OK;

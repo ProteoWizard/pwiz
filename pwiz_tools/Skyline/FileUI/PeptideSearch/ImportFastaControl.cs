@@ -493,7 +493,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     
                     // Filter proteins based on number of peptides and add decoys
                     using (var dlg = new AssociateProteinsDlg(docNew, fastaFilepath, irtStandard, DecoyGenerationMethod,
-                               NumDecoys ?? 0))
+                               NumDecoys ?? 0, !_fastaFile))
                     {
                         if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
                             return false;
