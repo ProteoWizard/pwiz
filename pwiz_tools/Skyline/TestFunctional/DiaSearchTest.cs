@@ -213,6 +213,9 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestDiaUmpireSearch(_testDetails);
+
+            if (_testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                TestDiaUmpireSearch(_testDetails);
         }
 
         private void ValidateTargets(TestDetails.DocumentCounts targetCounts, TestDetails.DocumentCounts actualCounts, string propName)
@@ -245,8 +248,8 @@ namespace pwiz.SkylineTestFunctional
                     File.Copy(Path.Combine(diaUmpireTestDataPath, sourceName), Path.Combine(TestFilesDir.FullPath, sourceName), true);
 
             // delete -diaumpire files so they get regenerated instead of reused
-            foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
-                FileEx.SafeDelete(file);
+            //foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
+            //    FileEx.SafeDelete(file);
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -273,22 +276,26 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
             });
 
+            bool secondLoop = importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Contains(m => m == "Oxidation (M)");
             // In PerformDDASearch mode, ClickAddStructuralModification launches edit list dialog
-            var editListUI =
-                ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            if (!secondLoop)
             {
-                editModDlg.SetModification("Oxidation (M)", true); // Not L10N
-                editModDlg.OkDialog();
-            });
+                var editListUI =
+                    ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.SetModification("Oxidation (M)", true); // Not L10N
+                    editModDlg.OkDialog();
+                });
 
-            // Test a non-Unimod mod that won't affect the search
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
-            {
-                editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
-                editModDlg.OkDialog();
-            });
-            OkDialog(editListUI, editListUI.OkDialog);
+                // Test a non-Unimod mod that won't affect the search
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
+                    editModDlg.OkDialog();
+                });
+                OkDialog(editListUI, editListUI.OkDialog);
+            }
 
             // Test back/next buttons
             RunUI(() =>
@@ -315,22 +322,33 @@ namespace pwiz.SkylineTestFunctional
             });
 
             string isolationSchemeName = "DiaUmpire Test Scheme";
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus());
-            var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
-
-            RunUI(() =>
+            if (secondLoop)
             {
-                isolationScheme.IsolationSchemeName = isolationSchemeName;
-                isolationScheme.UseResults = false;
-            });
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus();
+                    importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
+                });
+            }
+            else
+            {
+                RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus());
+                var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
 
-            testDetails.EditIsolationSchemeAction(importPeptideSearchDlg, isolationScheme);
-            WaitForConditionUI(10000, () => isolationScheme.GetIsolationWindows().Any());
+                RunUI(() =>
+                {
+                    isolationScheme.IsolationSchemeName = isolationSchemeName;
+                    isolationScheme.UseResults = false;
+                });
 
-            var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
+                testDetails.EditIsolationSchemeAction(importPeptideSearchDlg, isolationScheme);
+                WaitForConditionUI(10000, () => isolationScheme.GetIsolationWindows().Any());
 
-            OkDialog(isolationGraph, isolationGraph.CloseButton);
-            OkDialog(isolationScheme, isolationScheme.OkDialog);
+                var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
+
+                OkDialog(isolationGraph, isolationGraph.CloseButton);
+                OkDialog(isolationScheme, isolationScheme.OkDialog);
+            }
 
             RunUI(() =>
             {
@@ -511,7 +529,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void PrepareDocument(string documentFile)
         {
-            RunUI(SkylineWindow.NewDocument);
+            RunUI(() => SkylineWindow.NewDocument(true));
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings", 
                 doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));

@@ -46,10 +46,10 @@ All Info  :
 ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
 ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Assigned to first protein"です
 ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
-ペプチド検索のインポート>Associate Proteins>Proteins mappedは"13649"です
-ペプチド検索のインポート>Associate Proteins>Peptides mappedは"6373"です
-ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"74878"です
-ペプチド検索のインポート>Associate Proteins>Protein targetsは"3301"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"11058"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"6438"です
+ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"77469"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"3258"です
 ペプチド検索のインポート>Associate Proteins>Peptide targetsは"6438"です
 ペプチド検索のインポート>DDA検索設定>検索エンジンは"MSFragger"です
 ペプチド検索のインポート>DDA検索設定>プリカーサー許容範囲は5ppmです
@@ -85,10 +85,10 @@ Associate Proteins =
     Remove subset proteins = 偽,
     Shared peptides option = "Assigned to first protein",
     Min peptides per protein = "1",
-    Proteins mapped = "13649",
-    Peptides mapped = "6373",
-    Proteins unmapped = "74878",
-    Protein targets = "3301",
+    Proteins mapped = "11058",
+    Peptides mapped = "6438",
+    Proteins unmapped = "77469",
+    Protein targets = "3258",
     Peptide targets = "6438"
 },
 DDA検索設定 = 
