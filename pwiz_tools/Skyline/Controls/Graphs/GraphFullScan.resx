@@ -356,6 +356,12 @@ extraction.</value>
   <data name="showScanNumberContextMenuItem.Text" xml:space="preserve">
     <value>Show Scan Number</value>
   </data>
+  <data name="showCollisionEnergyContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="showCollisionEnergyContextMenuItem.Text" xml:space="preserve">
+    <value>Show Collision Energy</value>
+  </data>
   <data name="showIonTypesRanksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
@@ -499,6 +505,12 @@ extraction.</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Name" xml:space="preserve">
+    <value>showCollisionEnergyContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>GraphFullScan</value>
