@@ -234,8 +234,7 @@ namespace pwiz.Skyline.SettingsUI
 
 
             // Need to regenerate the targets and decoys if the set of calculators has changed (backward compatibility)
-            if (!PeakScoringModelSpec.AreSameCalculators(peakScoringModel.PeakFeatureCalculators, 
-                                                         _targetDecoyGenerator.FeatureCalculators))
+            if (!peakScoringModel.PeakFeatureCalculators.Equals(_targetDecoyGenerator.FeatureCalculators))
             {
                 if (!SetScoringModel(this, peakScoringModel))
                     return;
@@ -243,15 +242,15 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Get scores for target and decoy groups.
-            List<IList<float[]>> targetTransitionGroups;
-            List<IList<float[]>> decoyTransitionGroups;
+            List<IList<FeatureScores>> targetTransitionGroups;
+            List<IList<FeatureScores>> decoyTransitionGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
             // If decoy box is checked and no decoys, throw an error
             if (decoyCheckBox.Checked && decoyTransitionGroups.Count == 0)
                 throw new InvalidDataException(string.Format(Resources.EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_));
             // Use decoys for training only if decoy box is checked
             if (!decoyCheckBox.Checked)
-                decoyTransitionGroups = new List<IList<float[]>>();
+                decoyTransitionGroups = new List<IList<FeatureScores>>();
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[peakScoringModel.PeakFeatureCalculators.Count];
@@ -947,7 +946,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private int GetUnsortedIndex(int sortedIndex)
         {
-            return _peakScoringModel.PeakFeatureCalculators.IndexOf(p => p.Name == PeakCalculatorWeights[sortedIndex].Name);
+            return _peakScoringModel.PeakFeatureCalculators.IndexOf(PeakCalculatorWeights[sortedIndex].Calculator);
         }
 
         private void UpdateCalculatorGrid()
@@ -1223,14 +1222,14 @@ namespace pwiz.Skyline.SettingsUI
 
         public int GetTargetCount()
         {
-            List<IList<float[]>> targetGroups, decoyGroups;
+            List<IList<FeatureScores>> targetGroups, decoyGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
             return targetGroups.Count;
         }
 
         public int GetDecoyCount()
         {
-            List<IList<float[]>> targetGroups, decoyGroups;
+            List<IList<FeatureScores>> targetGroups, decoyGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
             return decoyGroups.Count;
         }
@@ -1250,7 +1249,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var calculators = PeakFeatureCalculator.Calculators.ToArray();
                 for (int i = 0; i < calculators.Length; i++) 
-                    Items.Add(new PeakCalculatorWeight(calculators[i].Name, null, null, true));
+                    Items.Add(new PeakCalculatorWeight(calculators[i], null, null, true));
             }
 
             protected override void DoPaste()

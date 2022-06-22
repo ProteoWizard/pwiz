@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public class AutoTrainManager : BackgroundLoader, IFeatureScoreProvider
     {
         private SrmDocument _document;
-        private IList<IPeakFeatureCalculator> _cacheCalculators;
+        private FeatureCalculators _cacheCalculators;
         private PeakTransitionGroupFeatureSet _cachedFeatureScores;
 
         public override void ClearCache()
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             IProgressMonitor progressMonitor)
         {
             if (!ReferenceEquals(document, _document) ||
-                !ArrayUtil.EqualsDeep(_cacheCalculators, scoringModel.PeakFeatureCalculators))
+                !Equals(_cacheCalculators, scoringModel.PeakFeatureCalculators))
             {
                 _document = document;
                 _cacheCalculators = scoringModel.PeakFeatureCalculators;

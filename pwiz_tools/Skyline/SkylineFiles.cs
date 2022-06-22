@@ -933,7 +933,7 @@ namespace pwiz.Skyline
 
         private bool SaveDocumentAs()
         {
-            // Make sure results are loaded before performaing a Save As,
+            // Make sure results are loaded before performing a Save As,
             // since the results cache must be copied to the new location.
             if (!DocumentUI.IsSavable)
             {
@@ -954,7 +954,17 @@ namespace pwiz.Skyline
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    if (SaveDocument(dlg.FileName))
+                    string fileName;
+                    try
+                    {
+                        fileName = dlg.FileName;
+                    }
+                    catch (PathTooLongException e)
+                    {
+                        MessageDlg.ShowWithException(this, e.Message, e);
+                        return false;
+                    }
+                    if (SaveDocument(fileName))
                         return true;
                 }
             }
@@ -2280,7 +2290,7 @@ namespace pwiz.Skyline
                 doc = doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(prediction => prediction.ChangeRetentionTime(retentionTimeRegression)));
             }
             
-            var oldPeptides = db.GetPeptides().ToList();
+            var oldPeptides = db.ReadPeptides().ToList();
             IList<DbIrtPeptide.Conflict> conflicts;
             dbIrtPeptides = DbIrtPeptide.MakeUnique(dbIrtPeptides);
             DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptides, null, out conflicts);

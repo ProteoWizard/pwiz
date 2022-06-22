@@ -1129,6 +1129,7 @@ namespace SkylineTester
             if (saveFileDialog.ShowDialog() != DialogResult.OK)
                 return;
 
+            commandShell.RunStartTime = DateTime.UtcNow;
             TabBase.StartLog("Zip", null, true);
             commandShell.Add("{0} {1}", Assembly.GetExecutingAssembly().Location.Quote(),
                 saveFileDialog.FileName.Quote());

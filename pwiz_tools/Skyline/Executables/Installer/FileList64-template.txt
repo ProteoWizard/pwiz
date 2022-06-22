@@ -170,6 +170,7 @@ Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoW
 Microsoft.Practices.Unity.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 MIDAC.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 modifications.xml
+msconvert.exe
 MSGraph.dll
 MSGraph.pdb
 MSMSDBCntl.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

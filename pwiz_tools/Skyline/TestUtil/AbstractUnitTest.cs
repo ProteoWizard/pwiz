@@ -49,6 +49,8 @@ namespace pwiz.SkylineTestUtil
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
         public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
 
+        public const string MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST = " (test is too slow running under ReSharper analysis, skippiing.) ";
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
         public TestContext TestContext { get; set; }
@@ -226,7 +228,7 @@ namespace pwiz.SkylineTestUtil
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
             string message = string.Empty;
-            for (var retry = downloadFromS3; ; retry = false)
+            for (var retry = true; ; retry = false)
             {
                 var zipURL = downloadFromS3
                     ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
@@ -256,7 +258,7 @@ namespace pwiz.SkylineTestUtil
                         AssertEx.Fail(message);
                     }
                     Console.Write(message);
-                    downloadFromS3 = false; // Maybe it just never got copied to S3
+                    downloadFromS3 = !downloadFromS3; // Maybe it just never got copied to S3 or vice versa
                 }
             }
         }
@@ -350,6 +352,7 @@ namespace pwiz.SkylineTestUtil
         {
 
             Program.UnitTest = true;
+            Program.TestName = TestContext.TestName;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -397,6 +400,11 @@ namespace pwiz.SkylineTestUtil
 //            log.Info(
 //                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
 //                STOPWATCH.ElapsedMilliseconds / 1000.0));
+
+            // Prevent any weird interactions between tests on reused processes
+            Program.UnitTest = Program.FunctionalTest = false;
+            Program.TestName = null;
+
         }
 
         protected virtual void Initialize() {}
@@ -405,6 +413,34 @@ namespace pwiz.SkylineTestUtil
         protected bool IsProfiling
         {
             get { return DotTraceProfile.IsProfiling; }
+        }
+
+        /// <summary>
+        /// Used by tests that just take much too long under code coverage analysis
+        /// </summary>
+        /// <returns>true iff ReSharper code analysis is detected</returns>
+        public static bool SkipForResharperAnalysis()
+        {
+            if (Helpers.RunningResharperAnalysis)
+            {
+                Console.Write(MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST); // Log this via console for TestRunner
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Used by tests that convert proteomic data sets to small molecule for extra coverage - which we don't always want
+        /// </summary>
+        /// <returns>true iff we don't want the small molecule versions of tests</returns>
+        public bool SkipSmallMoleculeTestVersions()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION); // Log this via console for TestRunner
+                return true;
+            }
+            return false;
         }
     }
 }

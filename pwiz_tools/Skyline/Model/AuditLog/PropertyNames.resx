@@ -1353,13 +1353,13 @@
     <value>Associate Proteins</value>
   </data>
   <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
-    <value>Background Proteome</value>
+    <value>Background proteome</value>
   </data>
   <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
     <value>FASTA</value>
   </data>
-  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
-    <value>Proteins</value>
+  <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
+    <value>Find minimal protein list</value>
   </data>
   <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
     <value>Choose RT Prediction Replicates</value>
@@ -1666,5 +1666,38 @@
   </data>
   <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
     <value>Ignore SIM scans</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedPeptides" xml:space="preserve">
+    <value>Peptides mapped</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedProteins" xml:space="preserve">
+    <value>Proteins mapped</value>
+  </data>
+  <data name="ParsimonySettings_SharedPeptides" xml:space="preserve">
+    <value>Shared peptides option</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetPeptides" xml:space="preserve">
+    <value>Peptide targets</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteins" xml:space="preserve">
+    <value>Protein targets</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedPeptides" xml:space="preserve">
+    <value>Peptides unmapped</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedProteins" xml:space="preserve">
+    <value>Proteins unmapped</value>
+  </data>
+  <data name="ParsimonySettings_GroupProteins" xml:space="preserve">
+    <value>Group proteins</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteinGroups" xml:space="preserve">
+    <value>Protein group targets</value>
+  </data>
+  <data name="ParsimonySettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>Min peptides per protein</value>
+  </data>
+  <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
+    <value>Remove subset proteins</value>
   </data>
 </root>

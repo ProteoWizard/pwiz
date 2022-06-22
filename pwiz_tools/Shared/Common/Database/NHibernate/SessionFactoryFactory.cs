@@ -19,7 +19,6 @@
 
 using System;
 using System.Data.SQLite;
-using System.Reflection;
 using NHibernate;
 using NHibernate.Cfg;
 
@@ -29,29 +28,33 @@ namespace pwiz.Common.Database.NHibernate
     {
         private const string DEFAULT_SCHEMA_FILENAME = "mapping.xml";
 
-        public static ISessionFactory CreateSessionFactory(String path, Type typeDb, bool createSchema)
+        public static ISessionFactory CreateSessionFactory(string path, Type typeDb, bool createSchema)
         {
             return CreateSessionFactory(path, typeDb, DEFAULT_SCHEMA_FILENAME, createSchema);
         }
 
-        public static ISessionFactory CreateSessionFactory(String path, Type typeDb, string schemaFilename, bool createSchema)
+        public static ISessionFactory CreateSessionFactory(string path, Type typeDb, string schemaFilename, bool createSchema)
         {
-            Configuration configuration = new Configuration()
+            return GetConfiguration(path, typeDb, schemaFilename, createSchema).BuildSessionFactory();
+        }
+
+        public static Configuration GetConfiguration(string path, Type typeDb, bool createSchema)
+        {
+            return GetConfiguration(path, typeDb, DEFAULT_SCHEMA_FILENAME, createSchema);
+        }
+
+        public static Configuration GetConfiguration(string path, Type typeDb, string schemaFilename, bool createSchema)
+        {
+            var configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
                 //.SetProperty("generate_statistics", "true")
                 .SetProperty(@"dialect", typeof(global::NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
                 .SetProperty(@"connection.connection_string", SQLiteConnectionStringBuilderFromFilePath(path).ToString())
-                .SetProperty(@"connection.driver_class",
-                typeof(global::NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
+                .SetProperty(@"connection.driver_class", typeof(global::NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
+                .SetProperty(@"connection.provider", typeof(global::NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             if (createSchema)
-            {
                 configuration.SetProperty(@"hbm2ddl.auto", @"create");
-            }
-            configuration.SetProperty(@"connection.provider",
-                typeof(global::NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            ConfigureMappings(configuration, typeDb, schemaFilename);
-            ISessionFactory sessionFactory = configuration.BuildSessionFactory();
-            return sessionFactory;
+            return ConfigureMappings(configuration, typeDb, schemaFilename);
         }
 
         /// <summary>
@@ -76,11 +79,11 @@ namespace pwiz.Common.Database.NHibernate
 
         public static Configuration ConfigureMappings(Configuration configuration, Type typeDb, string schemaFilename = DEFAULT_SCHEMA_FILENAME)
         {
-            Assembly assembly = typeDb.Assembly;
+            var assembly = typeDb.Assembly;
             configuration.SetDefaultAssembly(assembly.FullName);
             configuration.SetDefaultNamespace(typeDb.Namespace);
-            return configuration.AddInputStream(
-                assembly.GetManifestResourceStream(typeDb.Namespace + @"." + schemaFilename));
+            using (var stream = assembly.GetManifestResourceStream(typeDb.Namespace + @"." + schemaFilename))
+                return configuration.AddInputStream(stream);
         }
     }
 }

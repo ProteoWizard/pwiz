@@ -69,6 +69,7 @@ namespace pwiz.Skyline
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string TestName { get; set; }                 // Set during unit and functional tests
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
@@ -367,6 +368,7 @@ namespace pwiz.Skyline
 
             var data = Encoding.UTF8.GetBytes(postData);
             var request = (HttpWebRequest) WebRequest.Create("http://www.google-analytics.com/collect");
+            request.UserAgent = Install.GetUserAgentString();
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;

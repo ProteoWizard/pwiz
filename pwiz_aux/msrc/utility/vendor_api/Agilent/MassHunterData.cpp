@@ -70,6 +70,7 @@ struct Device
     string Vendor;
 };
 
+#pragma unmanaged
 struct HandlerDevices : public SAXParser::Handler
 {
     vector<Device> devices;
@@ -115,6 +116,7 @@ struct HandlerDevices : public SAXParser::Handler
         return Status::Ok;
     }
 };
+#pragma managed
 
 MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
 {
@@ -521,7 +523,7 @@ std::string MassHunterData::getDeviceSerialNumber(DeviceType deviceType) const
     if (!bfs::exists(massHunterDevicesPath))
         return "";
 
-    ifstream devicesXml(massHunterDevicesPath.string().c_str());
+    ifstream devicesXml(massHunterDevicesPath.string().c_str(), ios::binary);
     HandlerDevices handler;
     SAXParser::parse(devicesXml, handler);
 

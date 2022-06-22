@@ -654,6 +654,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
                     Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = new Fill(Color.DimGray)}
                 };
+                dotpLine.Tag = selectedTreeNode.Path;
                 CurveList.Insert(0, dotpLine);
                 ToolTip.TargetCurves.ClearAndAdd(dotpLine);
             }

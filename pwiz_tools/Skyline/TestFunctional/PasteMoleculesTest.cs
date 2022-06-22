@@ -124,6 +124,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestMissingAccessionNumbers();
             TestMzOrderIndependence();
             TestNegativeModeLabels();
             TestEmptyTransitionList();
@@ -1366,6 +1367,36 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
+        private void TestMissingAccessionNumbers()
+        {
+            // If bug is not fixed, we have trouble with entries which describe the same molecule but with a different but
+            // non-conflicting set of accessions. This seems to happen when users cobble together transition lists from multiple sources.
+            var text = 
+                "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor Charge,Product m/z,Product Charge,Explicit Collision Energy,InChiKey,Explicit Declustering Potential,CAS,SMILES\n" +
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-L-fucose,C16H25N5O15P2,[M-H],-1,441.9,-1,24,LQEBEXMHBLQMDB-QIXZNPMTSA-N,168,,\n" + // Has InChiKey, no CAS
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-L-fucose,C16H25N5O15P2,[M-H],-1,158.8,-1,48,LQEBEXMHBLQMDB-QIXZNPMTSA-N,168,15839-70-0,\n" + // Has CAS in addition to InChiKey, 
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-L-fucose,C16H25N5O15P2,[M-H],-1,79,-1,92,,168,15839-70-0,\n" + // Has CAS, no InChiKey
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",,C16H25N5O15P2,[M+H],1,152,1,36,,124,15839-70-0,C[C@@H]1OC(OP(O)(=O)OP(O)(=O)OC[C@H]2O[C@H]([C@H](O)[C@@H]2O)[n]2c[n]c3c2N=C(N)NC3=O)[C@@H](O)[C@H](O)[C@@H]1O\n" + // No name, but same formula and same CAS, plus SMILES
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-L-fucose,C'16H25N5O15P2,[M16C13-H],-1,452.034,-1,32,,168,,\n" +
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-L-fucose,C'16H25N5O15P2,[M16C13-H],-1,79,-1,92,,168,,\n" +
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-mannose,C16H25N5O16P2,[M-H],-1,423.9,-1,32,,178,,\n" +
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-mannose,C16H25N5O16P2,[M-H],-1,158.8,-1,48,MVMSCBBUIHUTGJ-GDJBGNAASA-N,178,,\n" +
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-mannose,C16H25N5O16P2,[M-H],-1,79,-1,100,MVMSCBBUIHUTGJ-GDJBGNAASA-N,173,,\n" +
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",,C'16H25N5O16P2,[M16C13-H],-1,434.03355,-1,42,MVMSCBBUIHUTGJ-GDJBGNAASA-N,173,,\n" + // No name, same InChiKey, formula matches when unlabeled
+                "\"Glycan, Amino and Nucleotide sugar metabolism\",GDP-mannose,C'16H25N5O16P2,[M16C13-H],-1,79,-1,100,MVMSCBBUIHUTGJ-GDJBGNAASA-N,173,,";
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected
+            RunUI(() => SkylineWindow.Paste());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 5, 11);
+            // All those lines with bits and pieces of non-conflict accession info should unite into a single molecule with all that info
+            var accessionNumbers = SkylineWindow.Document.CustomMolecules.First().CustomMolecule.AccessionNumbers;
+            AssertEx.AreEqual("LQEBEXMHBLQMDB-QIXZNPMTSA-N", accessionNumbers.GetInChiKey());
+            AssertEx.AreEqual("15839-70-0", accessionNumbers.GetCAS());
+            AssertEx.AreEqual("C[C@@H]1OC(OP(O)(=O)OP(O)(=O)OC[C@H]2O[C@H]([C@H](O)[C@@H]2O)[n]2c[n]c3c2N=C(N)NC3=O)[C@@H](O)[C@H](O)[C@@H]1O",accessionNumbers.GetSMILES());
+            AssertEx.AreEqual("MVMSCBBUIHUTGJ-GDJBGNAASA-N", SkylineWindow.Document.CustomMolecules.Last().CustomMolecule.AccessionNumbers.GetInChiKey());
+            NewDocument();
+        }
+
         private void TestMzOrderIndependence()
         {
             // Ensure that the line order of an m/z-only mixed polarity transition list does not matter
@@ -1583,8 +1614,13 @@ namespace pwiz.SkylineTestFunctional
             Assume.IsTrue(precursors[5].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[6].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[7].PrecursorAdduct.HasIsotopeLabels);
-            NewDocument();
 
+            docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListUnsorted.Replace("M+", "[123.456]")); // This used to throw in SortSiblingsByMass()
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste()); // Instead it should show the column select dialog
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+
+            NewDocument();
         }
 
 
@@ -1884,39 +1920,39 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestInconsistentMoleculeDescriptions()
         {
-            // Check that we handle items with same name but different InChiKey, which is legitimate
+            // Check that we handle items with same name but different InChiKey, which is legitimate - they are two different molecules
             // Also checks that we handle LipidCreator output where everything is quoted
             var input =
                 "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, Explicit Declustering potential\n" +
                 "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M-H]\",\"-1\",\"97\",\"-1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",\"60\"\n" +
-                "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M+H]\",\"1\",\"99\",\"1\",\"\",\"8\",\"\",\"60\"\n";
+                "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M+H]\",\"1\",\"99\",\"1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-L\",\"60\"\n";
             var docOrig = NewDocument();
             SetClipboardText(input);
+            // Paste directly into targets area, which should proceed with no error
+            RunUI(SkylineWindow.Paste);
+            var doc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(doc, null, 1, 2, 2, 2);
 
+            // Now check that we notice items with some accessions that agree but others that do not 
+            docOrig = NewDocument();
+            input =
+                "Molecule List Name, Precursor Name,Precursor Formula, Precursor Adduct,Precursor Charge, Product m/z,Product Charge, Explicit Retention Time, Explicit Collision Energy, InChiKey, CAS, Explicit Declustering potential\n" +
+                "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M-H]\",\"-1\",\"97\",\"-1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",585-18-2,\"60\"\n" +
+                "\"bob\",\"D-Erythrose 4-phosphate\",\"C4H9O7P\",\"[M+H]\",\"1\",\"99\",\"1\",\"\",\"8\",\"NGHMDNPXVRFFGS-IUYQGCFVSA-N\",232-14-3,\"60\"\n"; // CAS conflict
+            SetClipboardText(input);
             // Paste directly into targets area, which should create an error and then send us to ColumnSelectDlg
             var errDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            WaitForDocumentLoaded();
-            // Correct the header assignments
-            RunUI(() => {
-                errDlg.radioMolecule.PerformClick();
-                errDlg.SetSelectedColumnTypes(
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                    @"InChiKey",
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
-            });
 
             // This should produce an inconsistent molecule description error
-            RunDlg<ImportTransitionListErrorDlg>(errDlg.OkDialog, msgDlg => msgDlg.Close()); // Dismiss it
+            var errmsg = string.Empty;
+            RunDlg<ImportTransitionListErrorDlg>(errDlg.OkDialog, msgDlg =>
+            {
+                errmsg = msgDlg.ErrorList.First().ErrorMessage;
+                msgDlg.Close();
+            }); // Dismiss it
             // Cancel the window
             OkDialog(errDlg, errDlg.CancelDialog);
+            AssertEx.AreComparableStrings(Resources.SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description, errmsg);
         }
 
         /// <summary>

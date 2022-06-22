@@ -35,16 +35,18 @@ namespace pwiz.SkylineTest
         public void TestFeatureTooltips()
         {
             var missingTooltips = new List<string>();
-            foreach (var calculator in PeakFeatureCalculator.Calculators.OrderBy(c => c.HeaderName,
-                StringComparer.InvariantCultureIgnoreCase))
+            foreach (var calculator in PeakFeatureCalculator.Calculators.OrderBy(c => c.FullyQualifiedName,
+                         StringComparer.InvariantCultureIgnoreCase))
             {
                 var tooltip = calculator.Tooltip;
                 if (string.IsNullOrEmpty(tooltip))
                 {
-                    Console.Out.WriteLine("<data name=\"{0}\" xml:space=\"preserve\"><value></value></data>", calculator.HeaderName);
+                    Console.Out.WriteLine("<data name=\"{0}\" xml:space=\"preserve\"><value></value></data>",
+                        calculator.FullyQualifiedName);
                     missingTooltips.Add(calculator.HeaderName);
                 }
             }
+
             Assert.AreEqual(0, missingTooltips.Count, "Missing tooltips for {0}", string.Join(",", missingTooltips));
         }
     }
