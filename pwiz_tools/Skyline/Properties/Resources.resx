@@ -11789,4 +11789,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
 	  <value>Duplicated peptides</value>
   </data>
+  <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
+      <value>CE:</value>
+  </data>
 </root>

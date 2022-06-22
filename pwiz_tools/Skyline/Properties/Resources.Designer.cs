@@ -15235,6 +15235,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CE:.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_CE_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_CE_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to IM={0}.
         /// </summary>
         public static string GraphFullScan_CreateGraph_IM__0_ {
