@@ -11774,4 +11774,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
       <value>Updating peptides</value>
   </data>
+  <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
+      <value>CE:</value>
+  </data>
 </root>
