@@ -2840,7 +2840,6 @@ namespace pwiz.Skyline.Model
             if (sciexOsDir == null)
                 throw new IOException(Resources.SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_);
 
-            // TODO starting SciexOs this way gives error for some reason??
             var sciexOsProc = SciexOsProcess ?? Process.Start(Path.Combine(sciexOsDir, SCIEX_OS_EXE));
             // Wait for main window to be present.
             IProgressStatus status = null;
