@@ -56,9 +56,17 @@ namespace pwiz.Skyline.Util.Extensions
 
             for (var i = 0; i < x1.Length && i < y1.Length; i++)
             {
-                if (x1[i] != y1[i])
+                // if both are numbers, compare as numbers
+                // else if one or other is number, it wins, return that
+                // else if string compare culture sensitive, case insensitive != 0, return that
+                // else next
+                var left = x[i];
+                var right = y[i];
+                if (!int.TryParse(left, out var x) || !int.TryParse(right, out var y))
                 {
-                    return PartCompare2(x1[i], y1[i]);
+                    var comparison =  string.Compare(left, right, StringComparison.CurrentCulture);
+                    if (comparison != 0)
+                        return comparison;
                 }
             }
             if (y1.Length > x1.Length)
@@ -73,50 +81,6 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 return 0;
             }
-        }
-
-        private static int PartCompare(string left, string right)
-        {
-            if (!int.TryParse(left, out var x) || !int.TryParse(right, out var y))
-            {
-                return string.Compare(left, right, StringComparison.CurrentCulture);
-            }
-
-            return x.CompareTo(y);
-        }
-
-        private static int PartCompare2(string left, string right)
-        {
-            bool a = false;
-            bool b = false;
-
-            if (!int.TryParse(left, out var x))
-            {
-                a = true;
-            }  
-            
-            if(!int.TryParse(right, out var y))
-            {
-                b = true;
-            }
-
-            if (a && b)
-            {
-                return string.Compare(left, right, StringComparison.CurrentCulture);
-            }
-            else if(a)
-            {
-                return -1;
-            }
-            else if (b)
-            {
-                return 1;
-            }
-            else
-            {
-                return x.CompareTo(y);
-            }
-
             
         }
     }

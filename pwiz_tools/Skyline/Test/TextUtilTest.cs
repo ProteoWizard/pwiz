@@ -103,30 +103,36 @@ namespace pwiz.SkylineTest
         public void TestNaturalSort()
         {
             var orderedSample = new List<string>() 
-                {  "0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","04ZaO","4tuzE","4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","6-v2h","7Z25C","8fMsb","8HRzI","8wqJy","9jz1y","_thKv","a5E6p","a736Q","aL4lL","alpXu","B-2ag","BRrbj","bzUgj","c8qdT","CdaAF","CDk8I","Cdm0k","CFYgZ","D9Xdy","dP8a5","e9teS","eibUe","EMNkm","EsE4z","evAra","eZUyJ","f1A-B","fB6mW","F-oT2","FUjdN","GCtkn","gLHOp","gNbrM","Go6jE","gRm0t","Gw_5C","gxuE_","GYmXe","GyquW","GZw_D","h7k2O","h7L2H","H5a9A","H6KDQ","H6oOL","h_u-u","hcFa4","hhtYn","HNKWG","HOmz9","hp_4Y","hTa-9","igDjW","IqHG0","IXRRk","j0OXu","J6fuV","jnLi3","K6rl0","kCFaa","kIcKi","KS0Ua","KxR_m","Ky9Ef","LHiBw","lMdGG","ls8Vb","lSOc_","lWk5c","mE9Bc","mKppU","mpSNi","mWsW_","naLxD","ne-LG","NhsZW","NPk3-","nsoxE","Nxsqw","o6S3j","Ol8lY","oRQN_","otCNq","OXNJo","p5-zT","pc8rL","PEpSv","pj_FZ","PQWQ0","pseOl","pxiUY","qe7ib","QGkFc","QgYG9","QOi50","QwrRK","QWwUL","qZwkK","Rhsrt","rlw8H","-RWWt","sna_M","SwvOY","TachS","thxs7","U4sCZ","-uG-g","UIQF2","UNGYS","UPLhZ","USZgP","uz-Oq","ve7Ml","vlpJ-","vscw3","W2ffg","waINu","wAYVn","wcnac","wgnCt","Whe2M","WHs9b","wj-Sy","woie2","WOrKF","XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
+                {  "0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","04ZaO","4tuzE","4VK2-","4ztTB","5QRmn","5Zcd7",
+                    "6hkS_","6qvCh","6sAzR","6-v2h","7Z25C","8fMsb","8HRzI","8wqJy","9jz1y","_thKv","a5E6p","a736Q","aL4lL","alpXu",
+                    "B-2ag","BRrbj","bzUgj","c8qdT","CdaAF","CDk8I","Cdm0k","CFYgZ","D9Xdy","dP8a5","e9teS","eibUe","EMNkm","EsE4z",
+                    "evAra","eZUyJ","f1A-B","fB6mW","F-oT2","FUjdN","GCtkn","gLHOp","gNbrM","Go6jE","gRm0t","Gw_5C","gxuE_","GYmXe",
+                    "GyquW","GZw_D","h7k2O","h7L2H","H5a9A","H6KDQ","H6oOL","h_u-u","hcFa4","hhtYn","HNKWG","HOmz9","hp_4Y","hTa-9",
+                    "igDjW","IqHG0","IXRRk","j0OXu","J6fuV","jnLi3","K6rl0","kCFaa","kIcKi","KS0Ua","KxR_m","Ky9Ef","LHiBw","lMdGG",
+                    "ls8Vb","lSOc_","lWk5c","mE9Bc","mKppU","mpSNi","mWsW_","naLxD","ne-LG","NhsZW","NPk3-","nsoxE","Nxsqw","o6S3j",
+                    "Ol8lY","oRQN_","otCNq","OXNJo","p5-zT","pc8rL","PEpSv","pj_FZ","PQWQ0","pseOl","pxiUY","qe7ib","QGkFc","QgYG9",
+                    "QOi50","QwrRK","QWwUL","qZwkK","Rhsrt","rlw8H","-RWWt","sna_M","SwvOY","TachS","thxs7","U4sCZ","-uG-g","UIQF2",
+                    "UNGYS","UPLhZ","USZgP","uz-Oq","ve7Ml","vlpJ-","vscw3","W2ffg","waINu","wAYVn","wcnac","wgnCt","Whe2M","WHs9b",
+                    "wj-Sy","woie2","WOrKF","XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
                 };
 
-            SortAndTest(orderedSample);
-            
+            SortAndTest(new List<string>() { "04ZaO", "4tuzE" });
+//            SortAndTest(new List<string>() { "04ZaO", "4tuzE", "4VK2-", "4ztTB" });
+
+            // for (var i = 0; i < 20; i++)
+            //SortAndTest(orderedSample);
+
             void SortAndTest(List<string> ordered)
             {
                 List<string> misOrdered = Shuffle(ordered); // Shuffle
 
-                Console.WriteLine("Number of unique elements: " + misOrdered.Distinct().Count() + " Number of elements: " + misOrdered.Count);
-                
+                AssertEx.AreEqual(misOrdered.Distinct().Count(), ordered.Count, "Number of unique elements: " + misOrdered.Distinct().Count() + " Number of elements: " + misOrdered.Count);
 
                 misOrdered.Sort((x, y) => NaturalComparer.Compare(x, y)); // Naturally sort
 
-                for(int i = 0; i < orderedSample.Count; i++)
-                {
-                    Console.WriteLine(orderedSample[i] + " || " + misOrdered[i]);
-                }
-
-                misOrdered.ForEach(Console.WriteLine);
-
                 for (int i = 0; i < ordered.Count; i++)
                 {
-                    Assert.AreEqual(ordered[i], misOrdered[i], "Test Natural is not sorting in the correct order");
+                    AssertEx.AreEqual(ordered[i], misOrdered[i], string.Format("Test Natural is not sorting in the correct order: at position {0}: {1} vs {2}", i, ordered[i], misOrdered[i]));
                 }
             }
 
