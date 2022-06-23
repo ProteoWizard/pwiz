@@ -31,6 +31,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
+
 namespace pwiz.Skyline.FileUI
 {
     public partial class OpenDataSourceDialog : FormEx
@@ -457,15 +458,26 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            listSourceInfo = listSourceInfo.Where(l => l != null).ToList(); // Ignore null entries
+
+            listSourceInfo.Sort((x, y) =>
+            {
+                if (x.isFolder != y.isFolder)
+                {
+                    return x.isFolder ? -1 : 1;
+                }
+                return NaturalComparer.Compare(x.name, y.name);
+            }); // Sorts by natural sort order
+
+
             // Populate the list
             var items = new List<ListViewItem>();
             foreach (var sourceInfo in listSourceInfo)
             {
-                if (sourceInfo != null &&
-                        (sourceTypeComboBox.SelectedIndex == 0 ||
+                if (sourceTypeComboBox.SelectedIndex == 0 ||
                             sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type ||
                             // Always show folders
-                            sourceInfo.isFolder))
+                            sourceInfo.isFolder)
                 {
                     ListViewItem item = new ListViewItem(sourceInfo.ToArray(), (int) sourceInfo.imageIndex)
                     {

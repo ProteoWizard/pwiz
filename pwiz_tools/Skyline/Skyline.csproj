@@ -448,6 +448,7 @@
     <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\NaturalComparer.cs" />
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
