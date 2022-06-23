@@ -11,7 +11,11 @@
     <TargetFrameworkVersion>Framework45</TargetFrameworkVersion> -->
 
   </RunConfiguration>
-  
+
+  <TestRunParameters>
+    <Parameter name="CustomTestResultsDirectory" value=".\TestResults" />
+  </TestRunParameters>
+
   <MSTest>
     <!--<ForcedLegacyMode>True</ForcedLegacyMode>
     <SettingsFile>TestSettings_x64.testsettings</SettingsFile>-->

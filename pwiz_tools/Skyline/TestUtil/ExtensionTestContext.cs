@@ -41,27 +41,35 @@ namespace pwiz.SkylineTestUtil
 
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
-            return Path.Combine(testContext.TestDir, relativePath);
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.Properties["CustomTestResultsDirectory"].ToString(), relativePath));
         }
 
-        public static String GetProjectDirectory(string relativePath)
+        public static String GetProjectDirectory()
         {
             for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                directory != null && directory.Length > 10;
-                directory = Path.GetDirectoryName(directory))
+                 directory != null && directory.Length > 10;
+                 directory = Path.GetDirectoryName(directory))
             {
                 var testZipFiles = Path.Combine(directory, "TestZipFiles");
                 if (Directory.Exists(testZipFiles))
-                    return Path.Combine(testZipFiles, relativePath);
+                    return testZipFiles;
                 if (File.Exists(Path.Combine(directory, "Skyline.sln")))
-                    return Path.Combine(directory, relativePath);
+                    return directory;
             }
 
             // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
             if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
-                return Path.Combine("pwiz_tools", "Skyline", relativePath);
+                return Path.Combine("pwiz_tools", "Skyline");
 
             return null;
+        }
+
+        public static String GetProjectDirectory(string relativePath)
+        {
+            var projectDir = GetProjectDirectory();
+            if (projectDir == null)
+                return null;
+            return Path.Combine(projectDir, relativePath);
         }
 
         public static String GetProjectDirectory(this TestContext testContext, string relativePath)
