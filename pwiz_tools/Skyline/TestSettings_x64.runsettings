@@ -13,11 +13,11 @@
   </RunConfiguration>
   
   <MSTest>
-    <ForcedLegacyMode>True</ForcedLegacyMode>
-    <SettingsFile>TestSettings_x64.testsettings</SettingsFile>
+    <!--<ForcedLegacyMode>True</ForcedLegacyMode>
+    <SettingsFile>TestSettings_x64.testsettings</SettingsFile>-->
     <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
     <CaptureTraceOutput>False</CaptureTraceOutput>
     <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
-    <DeploymentEnabled>True</DeploymentEnabled>
+    <DeploymentEnabled>False</DeploymentEnabled>
   </MSTest>
 </RunSettings>
