@@ -7,8 +7,8 @@
     <!-- [x86] | x64 -->
     <TargetPlatform>x64</TargetPlatform>  
   
-    <!-- Framework35 | [Framework40] | Framework45 -->
-    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
+    <!-- Framework35 | [Framework40] | Framework45 
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion> -->
 
   </RunConfiguration>
   
