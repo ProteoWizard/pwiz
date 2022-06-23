@@ -115,10 +115,18 @@ namespace pwiz.Skyline.FileUI
                 comboOptimizing.Items.Add(ExportOptimize.DP);
             comboOptimizing.SelectedIndex = 0;
 
-            // Set instrument type based on CE regression name for the document.
-            string cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-            if (cePredictorName != null)
+            // Set instrument type
+            var lastInstrument = Settings.Default.ExportInstrumentType;
+            var lastCePredictorName = Settings.Default.ExportCEPredictorName;
+            var cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+            if (!string.IsNullOrEmpty(lastCePredictorName) && Equals(lastCePredictorName, cePredictorName))
             {
+                // Select the last instrument if the CE predictor is the same as last time.
+                InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
+            }
+            else if (cePredictorName != null)
+            {
+                // Otherwise, set instrument type based on CE regression name for the document.
                 // Look for the first instrument type with the same prefix as the CE name
                 string cePredictorPrefix = cePredictorName.Split(' ')[0];
                 // We still may see some CE regressions that begin with ABI or AB, while all instruments
@@ -1100,6 +1108,7 @@ namespace pwiz.Skyline.FileUI
 
             // Successfully completed dialog.  Store the values in settings.
             Settings.Default.ExportInstrumentType = _instrumentType;
+            Settings.Default.ExportCEPredictorName = _document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
             Settings.Default.ExportMethodStrategy = ExportStrategy.ToString();
             Settings.Default.ExportSortByMz = SortByMz;
             Settings.Default.ExportIgnoreProteins = IgnoreProteins;
