@@ -119,14 +119,16 @@ namespace pwiz.Skyline.FileUI
             var lastInstrument = Settings.Default.ExportInstrumentType;
             var lastCePredictorName = Settings.Default.ExportCEPredictorName;
             var cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+
+            // Select the last instrument if the CE predictor is the same as last time.
             if (!string.IsNullOrEmpty(lastCePredictorName) && Equals(lastCePredictorName, cePredictorName))
             {
-                // Select the last instrument if the CE predictor is the same as last time.
                 InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
             }
-            else if (cePredictorName != null)
+
+            // Otherwise, set instrument type based on CE regression name for the document.
+            if (InstrumentType == null)
             {
-                // Otherwise, set instrument type based on CE regression name for the document.
                 // Look for the first instrument type with the same prefix as the CE name
                 string cePredictorPrefix = cePredictorName.Split(' ')[0];
                 // We still may see some CE regressions that begin with ABI or AB, while all instruments
