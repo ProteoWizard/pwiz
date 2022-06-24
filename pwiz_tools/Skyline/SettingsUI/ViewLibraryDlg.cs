@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using NHibernate.Mapping;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -109,6 +108,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private ModFontHolder ModFonts { get; set; }
 
+        private string FileFormat { get; set; }
+
         private string SelectedLibraryName
         {
             get
@@ -127,6 +128,8 @@ namespace pwiz.Skyline.SettingsUI
         public bool HasPeptides { get; private set;  }
 
         public int PeptideDisplayCount { get { return listPeptide.Items.Count; } }
+
+
 
         /// <summary>
         /// Constructor for the View Library dialog.
@@ -155,6 +158,7 @@ namespace pwiz.Skyline.SettingsUI
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
+            FileFormat = labelFilename.Text;
             _peptideImg = Resources.PeptideLib;
             _moleculeImg = Resources.MoleculeLib;
 
@@ -638,7 +642,33 @@ namespace pwiz.Skyline.SettingsUI
         }
 
 
-        private Dictionary<String, SpectrumInfoLibrary> redundantInfoLibraries;
+        public class comboOption
+        {
+            public SpectrumInfoLibrary library;
+            public comboOption(SpectrumInfoLibrary lib)
+            {
+                library = lib;
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"{0} ({1:F02} min)", library.FileName,
+                    library.RetentionTime);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return library.Equals(((comboOption)obj).library);
+            }
+
+            public override int GetHashCode()
+            {
+                return library.GetHashCode();
+            }
+        }
 
         /// <summary>
         /// Updates the spectrum graph using the currently selected peptide.
@@ -657,6 +687,7 @@ namespace pwiz.Skyline.SettingsUI
 
             labelRT.Text = string.Empty;
             labelFilename.Text = string.Empty;
+            comboRedundantSpectra.Visible = false;
 
             // Check for appropriate spectrum to load
             bool available = false;
@@ -745,62 +776,21 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
-                        //Get all redundant spectrum for the selected peptide
-                        // var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, null, 
-                        //     LibraryRedundancy.all);
+                        //Get all redundant spectrum for the selected peptide, add them to comboRedundantSpectra
                         var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, IsotopeLabelType.light,
                             LibraryRedundancy.all);
-                        comboRedundantSpectra.Visible = redundantSpectra.Count() > 1;
-                        redundantInfoLibraries = new Dictionary<string, SpectrumInfoLibrary>();
-                        var newDropDownOptions = new List<String>();
+                        var numRedundancies = 0;
+                        var newDropDownOptions = new List<comboOption>();
                         foreach (var spectra in redundantSpectra)
                         {
-                            //Do we need to change "min" for localization purposes? -Aaron
-                            String spectrumName = string.Format(@"{0} ({1:F02} min)", spectra.FileName,
-                                spectra.RetentionTime);
-                            try
-                            {
-                                redundantInfoLibraries.Add(spectrumName, spectra);
-                                newDropDownOptions.Add(spectrumName);
-                            }
-                            catch (ArgumentException ex)
-                            {
-
-                            }
+                            newDropDownOptions.Add(new comboOption(spectra));
+                            numRedundancies++;
                         }
-                        SpectrumInfoLibrary selectedLib;
-                        if (comboRedundantSpectra.SelectedItem != null && 
-                            redundantInfoLibraries.ContainsKey(comboRedundantSpectra.SelectedItem.ToString()))
-                        {
-                            selectedLib = redundantInfoLibraries[comboRedundantSpectra.SelectedItem.ToString()];
-                        }
-                        else
-                        {
-                            selectedLib = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                            if (redundantSpectra != null)
-                            {
-                                foreach (var spectra in redundantSpectra)
-                                {
-                                    if (spectra.IsBest)
-                                    {
-                                        String spectrumName = string.Format(@"{0} ({1:F02} min)", spectra.FileName,
-                                            spectra.RetentionTime);
-                                        comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
-                                        comboRedundantSpectra.Items.Clear();
-                                        newDropDownOptions.Sort();
-                                        foreach (var elt in newDropDownOptions)
-                                        {
-                                            comboRedundantSpectra.Items.Add(elt);
-                                        }
-                                        comboRedundantSpectra.SelectedItem = spectrumName;
-                                        comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
-                                    }
-                                }
-                            }
-                        }
+                        comboRedundantSpectra.Visible = numRedundancies > 1;
 
+                        //Set the spectrum being graphed to the selected spectrum in the comboBox
+                        SpectrumInfoLibrary spectrumInfo = setupComboBox(newDropDownOptions, index);
 
-                        var spectrumInfo = selectedLib;
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
@@ -838,28 +828,21 @@ namespace pwiz.Skyline.SettingsUI
                         // Update file and retention time indicators
                         // var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
                         //     IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
-                        var bestSpectrum = spectrumInfo;
-                        if (bestSpectrum != null)
+                        if (spectrumInfo != null)
                         {
-                            double? rt = libraryChromGroup?.RetentionTime ?? bestSpectrum.RetentionTime;
-                            string filename = bestSpectrum.FileName;
+                            double? rt = libraryChromGroup?.RetentionTime ?? spectrumInfo.RetentionTime;
+                            string filename = spectrumInfo.FileName;
 
                             if (!string.IsNullOrEmpty(filename))
                             {
-                                if (redundantSpectra.Count() < 2)
-                                {
-                                    labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP + filename;
-                                }
-                                else
-                                {
-                                    labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP;
-                                }
+                                labelFilename.Text = string.Format(FileFormat,
+                                    numRedundancies < 2 ? filename : string.Empty);
                             }
                             if (rt.HasValue)
                             {
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt.Value.ToString(Formats.RETENTION_TIME);
                             }
-                            IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
+                            IonMobilityAndCCS dt = spectrumInfo.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
                                 var ccsText = string.Empty;
@@ -943,6 +926,35 @@ namespace pwiz.Skyline.SettingsUI
             btnFragmentIons.Checked = btnFragmentIons.Enabled && Settings.Default.ShowFragmentIons;
             charge1Button.Checked = charge1Button.Enabled && Settings.Default.ShowCharge1;
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
+        }
+
+        private SpectrumInfoLibrary setupComboBox(List<comboOption> options, int index)
+        {
+            if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
+            {
+                return ((comboOption)comboRedundantSpectra.SelectedItem).library;
+            }
+            else
+            {
+//                var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+                foreach (var opt in options)
+                {
+                    if (opt.library.IsBest)
+                    {
+                        comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
+                        comboRedundantSpectra.Items.Clear();
+                        options.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
+                        foreach (var elt in options)
+                        {
+                            comboRedundantSpectra.Items.Add(elt);
+                        }
+                        comboRedundantSpectra.SelectedItem = opt;
+                        comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
+                    }
+                }
+
+                return _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+            }
         }
 
 
@@ -2320,6 +2332,16 @@ namespace pwiz.Skyline.SettingsUI
         /// UI thread, it is very difficult to cancel otherwise during a test.
         /// </summary>
         public bool IsUpdateCanceled { get; set; }
+
+        public bool IsVisibleRedundantSpectraBox
+        {
+            get { return comboRedundantSpectra.Visible; }
+        }
+
+        public ComboBox RedundantComboBox
+        {
+            get { return comboRedundantSpectra; }
+        }
 
         #endregion
 

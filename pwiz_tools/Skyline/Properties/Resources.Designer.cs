@@ -35360,15 +35360,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File.
-        /// </summary>
-        public static string ViewLibraryDlg_UpdateUI_File {
-            get {
-                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_File", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to IM: .
         /// </summary>
         public static string ViewLibraryDlg_UpdateUI_IM__ {

@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -458,6 +459,7 @@ namespace pwiz.SkylineTestTutorial
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 19);
+
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 
@@ -487,6 +489,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.Width = 1050);
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported", 20);
+            TestRedundantComboBox();
 
             ValidatePeakRanks(1, 176, true);
 
@@ -1008,6 +1011,42 @@ namespace pwiz.SkylineTestTutorial
                 var dotpActuals = pane.DotProducts.ToArray();
                 return dotpActuals;
             }
+        }
+
+        //Tests the redundant spectrum dropdown menu in the ViewSpectralLibraries application
+        private void TestRedundantComboBox()
+        {
+            var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
+            Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+            RunUI(() => dlg.SelectedIndex = 1);
+            Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+            Assert.AreNotEqual(144, dlg.GraphItem.PeaksCount);
+            RunUI(() => dlg.SelectedIndex = 0);
+            Assert.AreEqual(144, dlg.GraphItem.PeaksCount);
+            RunUI(() =>
+            {
+                dlg.FilterString = "ik";
+                dlg.SelectedIndex = 4;
+            });
+            Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+            Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
+            RunUI(() => dlg.RedundantComboBox.SelectedIndex = 0);
+            Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
+            RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
+            Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
+            var fileSet = new HashSet<String>();
+            var RTSet = new HashSet<String>();
+            foreach (var redundantOption in dlg.RedundantComboBox.Items)
+            {
+                var splitName = redundantOption.ToString().Split(' ');
+                fileSet.Add(splitName[0]);
+                RTSet.Add(splitName[1]);
+            }
+            Assert.AreEqual(2, fileSet.Count);
+            Assert.AreEqual(11, RTSet.Count);
+            RunUI(() => dlg.SelectedIndex = 1);
+            Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+            RunUI(() => dlg.Close());
         }
     }
 }
