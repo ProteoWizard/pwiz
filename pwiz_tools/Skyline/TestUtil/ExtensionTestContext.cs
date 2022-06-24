@@ -39,9 +39,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string GetTestDir(this TestContext testContext)
+        {
+            // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
+            // because there's no other way to override the TestDir
+            return testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
+        }
+
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
-            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.Properties["CustomTestResultsDirectory"].ToString(), relativePath));
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
         }
 
         public static String GetProjectDirectory()
