@@ -106,7 +106,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-        OUTPUT_PATH_NO_TRAILING_SLASH on $(<[1]) = [ path.native $(location) ] ; # can't pass trailing backslash in quoted path or it gets escaped
         INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
         MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
@@ -134,12 +133,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
-        
-        echo Instantiating template files...
-        msbuild $(SKYLINE_PATH)/Executables/Installer/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(PWIZ_BUILD_PATH)/SkylineDeploy/ /nologo /verbosity:minimal
-        IF ERRORLEVEL 1 exit %ERRORLEVEL%
-
-        $(PWIZ_BUILD_PATH)/SkylineDeploy/SetupDeployProject.exe "$(SKYLINE_PATH)" "$(OUTPUT_PATH_NO_TRAILING_SLASH)" "$(PWIZ_BUILD_PATH)" $(VERSION) $(ADDRESS_MODEL) $(TARGET_NAME)
     }
 
     actions do_skyline_clean
