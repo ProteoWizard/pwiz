@@ -115,8 +115,9 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             SetupDiaSearchVariableWindows();
+            _testDetails.SearchFiles = _testDetails.SearchFiles.Take(1);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 92, PeptideCount = 99, PrecursorCount = 110, TransitionCount = 990 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 85, PeptideCount = 92, PrecursorCount = 103, TransitionCount = 927 };
 
             RunFunctionalTest();
         }
@@ -127,9 +128,10 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             SetupDiaSearchVariableWindows();
+            _testDetails.SearchFiles = _testDetails.SearchFiles.Take(1);
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSGFPlus;
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 48, PeptideCount = 48, PrecursorCount = 48, TransitionCount = 432 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 38, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
 
             RunFunctionalTest();
         }

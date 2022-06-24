@@ -50,6 +50,7 @@ namespace pwiz.Skyline.EditUI
         private bool _reuseLastFasta;
         private string _overrideFastaPath;
         private bool _fastaFileIsTemporary;
+        private bool _hasExistingProteinAssociations;
         private readonly IrtStandard _irtStandard;
         private readonly string _decoyGenerationMethod;
         private readonly double _decoysPerTarget;
@@ -116,14 +117,16 @@ namespace pwiz.Skyline.EditUI
         /// <param name="decoyGenerationMethod">Decoy generation method.</param>
         /// <param name="decoysPerTarget">Number of decoys per target.</param>
         /// <param name="fastaFileIsTemporary">Set to true if the FASTA filepath should not be reused the next time the form is opened.</param>
+        /// <param name="hasExistingProteinAssociations">Set to true if the document already has protein associations (other than from Import Peptide Search's FASTA import).</param>
         public AssociateProteinsDlg(SrmDocument document, string overrideFastaPath, IrtStandard irtStandard,
-            string decoyGenerationMethod, double decoysPerTarget, bool fastaFileIsTemporary = false) : this(document)
+            string decoyGenerationMethod, double decoysPerTarget, bool fastaFileIsTemporary = false, bool hasExistingProteinAssociations = false) : this(document)
         {
             _overrideFastaPath = overrideFastaPath;
             _irtStandard = irtStandard;
             _decoyGenerationMethod = decoyGenerationMethod;
             _decoysPerTarget = decoysPerTarget;
             _fastaFileIsTemporary = fastaFileIsTemporary;
+            _hasExistingProteinAssociations = hasExistingProteinAssociations;
         }
 
         protected override void OnShown(EventArgs e)
@@ -137,7 +140,7 @@ namespace pwiz.Skyline.EditUI
                 MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height - proteinSourcePanel.Height);
                 Height -= proteinSourcePanel.Height;
                 lblDescription.Text = Resources.AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups;
-                if (_document.PeptideGroups.Any(pg => pg.IsProtein))
+                if (_hasExistingProteinAssociations)
                     lblDescription.Text += @" " + Resources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
             }
 

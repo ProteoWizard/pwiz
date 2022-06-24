@@ -395,6 +395,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
+            bool hasExistingProteinAssociations = DocumentContainer.Document.PeptideGroups.Any(p => p.IsProtein);
+
             if (!ContainsFastaContent) // The user didn't specify any FASTA content
             {
                 var docCurrent = DocumentContainer.Document;
@@ -493,7 +495,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     
                     // Filter proteins based on number of peptides and add decoys
                     using (var dlg = new AssociateProteinsDlg(docNew, fastaFilepath, irtStandard, DecoyGenerationMethod,
-                               NumDecoys ?? 0, !_fastaFile))
+                               NumDecoys ?? 0, !_fastaFile, hasExistingProteinAssociations))
                     {
                         if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
                             return false;
