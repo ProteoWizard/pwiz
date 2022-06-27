@@ -52,5 +52,15 @@ namespace pwiz.Common.Database
             }
             return false;
         }
+
+        public static void DropTable(IDbConnection connection, string tableName)
+        {
+            using (var cmd = connection.CreateCommand())
+            {
+                // Newly created IrtDbs start without IrtHistory table
+                cmd.CommandText = @"DROP TABLE IF EXISTS " + tableName;
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 }

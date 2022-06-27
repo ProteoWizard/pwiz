@@ -177,6 +177,9 @@
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="MultiInjectionReplicatesTest.cs" />
+    <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
@@ -544,11 +547,13 @@
     <None Include="MinimizeIrtTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
     <None Include="ModifyMoleculeTest.zip" />
+    <None Include="MultiInjectionReplicatesTest.zip" />
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="NewDocumentLoadLibrariesTest.zip" />
     <None Include="NoQuantitativeTransitionsTest.zip" />
+    <None Include="OpenDocWithBackgroundProteomeTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
@@ -580,6 +585,7 @@
     <None Include="RowActionsTest.zip" />
     <None Include="RunToRunRegressionTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
+    <None Include="SequenceTreeRatioTest.zip" />
     <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
