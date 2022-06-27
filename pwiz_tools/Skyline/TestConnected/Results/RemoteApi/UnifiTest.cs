@@ -24,8 +24,8 @@ using System.Net.Http;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
-using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected.Results.RemoteApi
