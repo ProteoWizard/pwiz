@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -43,6 +44,7 @@ using pwiz.Skyline.Util.Extensions;
 
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
+[assembly: InternalsVisibleTo("Test")]
 
 namespace pwiz.Skyline
 {
@@ -388,16 +390,15 @@ namespace pwiz.Skyline
             // ReSharper restore LocalizableElement
         }
 
-        private static void SendGa4AnalyticsHit()
+        internal static void SendGa4AnalyticsHit(bool validateEvent = false)
         {
-            // ReSharper disable LocalizableElement HeuristicUnreachableCode CSharpWarnings::CS0162 ConditionIsAlwaysTrueOrFalse
+            // ReSharper disable LocalizableElement
             const string measurementId = "G-CQG6T54XQR";
             const string apiSecret = "8_Ci004BQSKdL1bEazPK3A"; // does this need to be kept secret somehow?
-            const bool validation = false;
-            string analyticsUrl = $"https://www.google-analytics.com/{(validation ? "debug/" : "")}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
+            string analyticsUrl = $"https://www.google-analytics.com/{(validateEvent ? "debug/" : "")}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
 
             var postData = new Dictionary<string, object>();
-            postData["client_id"] = Settings.Default.InstallationId;
+            postData["client_id"] = validateEvent ? "test" : Settings.Default.InstallationId;
             var events = new List<Dictionary<string, object>>();
             postData["events"] = events;
             events.Add(new Dictionary<string, object>
@@ -414,7 +415,7 @@ namespace pwiz.Skyline
             var postDataString = JsonConvert.SerializeObject(postData);
 
             var data = Encoding.UTF8.GetBytes(postDataString);
-            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
+            var request = (HttpWebRequest) WebRequest.Create(analyticsUrl);
             request.UserAgent = Install.GetUserAgentString();
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
@@ -424,15 +425,15 @@ namespace pwiz.Skyline
                 stream.Write(data, 0, data.Length);
             }
 
-            var response = (HttpWebResponse)request.GetResponse();
+            var response = (HttpWebResponse) request.GetResponse();
             var responseStream = response.GetResponseStream();
             if (null != responseStream)
             {
                 var responseString = new StreamReader(responseStream).ReadToEnd();
-                if (validation)
-                    Console.WriteLine("DEBUG measurement response:\r\n" + responseString);
+                if (validateEvent)
+                    Assume.AreEqual("{\n  \"validationMessages\": [ ]\n}\n", responseString, "validation errors from analytics test: " + responseString);
             }
-            // ReSharper restore LocalizableElement HeuristicUnreachableCode CSharpWarnings::CS0162 ConditionIsAlwaysTrueOrFalse
+            // ReSharper restore LocalizableElement
         }
 
         public static void StartToolService()
