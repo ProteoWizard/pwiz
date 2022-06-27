@@ -29,6 +29,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -344,6 +345,7 @@ namespace pwiz.Skyline
                     try
                     {
                         SendAnalyticsHit();
+                        SendGa4AnalyticsHit();
                     }
                     catch (Exception ex)
                     {
@@ -384,6 +386,53 @@ namespace pwiz.Skyline
                 new StreamReader(responseStream).ReadToEnd();
             }
             // ReSharper restore LocalizableElement
+        }
+
+        private static void SendGa4AnalyticsHit()
+        {
+            // ReSharper disable LocalizableElement HeuristicUnreachableCode CSharpWarnings::CS0162 ConditionIsAlwaysTrueOrFalse
+            const string measurementId = "G-CQG6T54XQR";
+            const string apiSecret = "8_Ci004BQSKdL1bEazPK3A"; // does this need to be kept secret somehow?
+            const bool validation = false;
+            string analyticsUrl = $"https://www.google-analytics.com/{(validation ? "debug/" : "")}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
+
+            var postData = new Dictionary<string, object>();
+            postData["client_id"] = Settings.Default.InstallationId;
+            var events = new List<Dictionary<string, object>>();
+            postData["events"] = events;
+            events.Add(new Dictionary<string, object>
+            {
+                { "name", "Instance" },
+                {
+                    "params", new Dictionary<string, string>
+                    {
+                        { "version", Install.Version + "-" + (Install.Is64Bit ? "64bit" : "32bit") },
+                        { "install_type", Install.Type.ToString() }
+                    }
+                }
+            });
+            var postDataString = JsonConvert.SerializeObject(postData);
+
+            var data = Encoding.UTF8.GetBytes(postDataString);
+            var request = (HttpWebRequest)WebRequest.Create(analyticsUrl);
+            request.UserAgent = Install.GetUserAgentString();
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = data.Length;
+            using (Stream stream = request.GetRequestStream())
+            {
+                stream.Write(data, 0, data.Length);
+            }
+
+            var response = (HttpWebResponse)request.GetResponse();
+            var responseStream = response.GetResponseStream();
+            if (null != responseStream)
+            {
+                var responseString = new StreamReader(responseStream).ReadToEnd();
+                if (validation)
+                    Console.WriteLine("DEBUG measurement response:\r\n" + responseString);
+            }
+            // ReSharper restore LocalizableElement HeuristicUnreachableCode CSharpWarnings::CS0162 ConditionIsAlwaysTrueOrFalse
         }
 
         public static void StartToolService()
