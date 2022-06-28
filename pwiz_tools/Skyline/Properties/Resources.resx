@@ -11728,6 +11728,27 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
   </data>
+  <data name="IonTypeSelector_NTermLabel" xml:space="preserve">
+	  <value>N-Term:</value>
+  </data>
+  <data name="IonTypeSelector_CTermLabel" xml:space="preserve">
+	  <value>C-Term:</value>
+  </data>
+  <data name="IonTypeSelector_LossesLabel" xml:space="preserve">
+	  <value>Losses:</value>
+  </data>
+  <data name="IonTypeSelector_LossesTooltip" xml:space="preserve">
+	  <value>Formula: {0}</value>
+  </data>
+  <data name="IonTypeSelector_SelectAllLossesTooltip" xml:space="preserve">
+	  <value>Select all losses</value>
+  </data>
+  <data name="IonTypeSelector_DeselectAllLossesTooltip" xml:space="preserve">
+	  <value>Deselect all losses</value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+	  <value>(Unknown)</value>
+  </data>
   <data name="CandidatePeakGroup_Chosen_Remove_Peak" xml:space="preserve">
 	  <value>Remove Peak</value>
   </data>

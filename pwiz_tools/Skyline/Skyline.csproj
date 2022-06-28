@@ -1586,6 +1586,9 @@
     <Compile Include="FileUI\ImportResultsNameDlg.Designer.cs">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </Compile>
+	<Compile Include="Controls\IonTypeSelectorControl.cs">
+		  <SubType>Component</SubType>
+	</Compile>
     <Compile Include="Model\Annotations.cs" />
     <Compile Include="Model\BackgroundLoader.cs" />
     <Compile Include="Model\DocNode.cs" />

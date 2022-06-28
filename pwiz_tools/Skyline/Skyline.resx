@@ -317,54 +317,6 @@
   <data name="&gt;&gt;contextMenuSpectrum.Type" xml:space="preserve">
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="aionsContextMenuItem.Text" xml:space="preserve">
-    <value>A-ions</value>
-  </data>
-  <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="bionsContextMenuItem.Text" xml:space="preserve">
-    <value>B-ions</value>
-  </data>
-  <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="cionsContextMenuItem.Text" xml:space="preserve">
-    <value>C-ions</value>
-  </data>
-  <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="xionsContextMenuItem.Text" xml:space="preserve">
-    <value>X-ions</value>
-  </data>
-  <data name="yionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="yionsContextMenuItem.Text" xml:space="preserve">
-    <value>Y-ions</value>
-  </data>
-  <data name="zionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="zionsContextMenuItem.Text" xml:space="preserve">
-    <value>Z-ions</value>
-  </data>
-  <data name="zhionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="zhionsContextMenuItem.Text" xml:space="preserve">
-    <value>Z&#x2022;-ions</value>
-  </data>
-  <data name="zhhionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="zhhionsContextMenuItem.Text" xml:space="preserve">
-    <value>Z&#x2032;-ions</value>
-  </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -385,30 +337,6 @@
   </data>
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>Charges</value>
-  </data>
-  <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge1ContextMenuItem.Text" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="charge2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge2ContextMenuItem.Text" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="charge3ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge3ContextMenuItem.Text" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="charge4ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge4ContextMenuItem.Text" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -2295,42 +2223,6 @@
   <data name="&gt;&gt;bestReplicateTreeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;aionsContextMenuItem.Name" xml:space="preserve">
-    <value>aionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;aionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bionsContextMenuItem.Name" xml:space="preserve">
-    <value>bionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;bionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cionsContextMenuItem.Name" xml:space="preserve">
-    <value>cionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;cionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;xionsContextMenuItem.Name" xml:space="preserve">
-    <value>xionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;xionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;yionsContextMenuItem.Name" xml:space="preserve">
-    <value>yionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;yionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zionsContextMenuItem.Name" xml:space="preserve">
-    <value>zionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;fragmentionsContextMenuItem.Name" xml:space="preserve">
     <value>fragmentionsContextMenuItem</value>
   </data>
@@ -2353,30 +2245,6 @@
     <value>chargesContextMenuItem</value>
   </data>
   <data name="&gt;&gt;chargesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;charge1ContextMenuItem.Name" xml:space="preserve">
-    <value>charge1ContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;charge1ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;charge2ContextMenuItem.Name" xml:space="preserve">
-    <value>charge2ContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;charge2ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;charge3ContextMenuItem.Name" xml:space="preserve">
-    <value>charge3ContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;charge3ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;charge4ContextMenuItem.Name" xml:space="preserve">
-    <value>charge4ContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;charge4ContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator12.Name" xml:space="preserve">
@@ -3949,6 +3817,18 @@
     <value>synchMzScaleToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;synchMzScaleToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 24</value>
+  </data>
+  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
+    <value>Ion Types</value>
+  </data>
+  <data name="&gt;&gt;ionTypesContextMenuItem.Name" xml:space="preserve">
+    <value>ionTypesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ionTypesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
