@@ -919,24 +919,23 @@ namespace pwiz.Skyline.FileUI
                 // Check to make sure CE and DP match chosen instrument, and offer to use
                 // the correct version for the instrument, if not.
                 var predict = documentExport.Settings.TransitionSettings.Prediction;
-                var ce = predict.CollisionEnergy;
-                string ceName = (ce != null ? ce.Name : null);
-                string ceNameDefault = _instrumentType.Split(' ')[0];
+                var ceName = predict.CollisionEnergy?.Name;
+                var ceNameDefault = _instrumentType.Split(' ')[0];
 
                 // CE prediction should be None for Bruker timsTOF, since the CE is populated by the instrument control software in the method.
                 if (Equals(_instrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
                     ceNameDefault = CollisionEnergyList.ELEMENT_NONE;
 
-                bool ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
+                var ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
 
-                var dp = predict.DeclusteringPotential;
-                string dpName = (dp != null ? dp.Name : null);
-                string dpNameDefault = _instrumentType.Split(' ')[0];
-                bool dpInSynch = true;
+                var dpName = predict.DeclusteringPotential?.Name;
+                string dpNameDefault = null;
+                var dpInSynch = true;
                 if (_instrumentType == ExportInstrumentType.ABI)
+                {
+                    dpNameDefault = _instrumentType.Split(' ')[0];
                     dpInSynch = IsInSynchPredictor(dpName, dpNameDefault);
-                else
-                    dpNameDefault = null; // Ignored for all other types
+                }
 
                 if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault))) ||
                     (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault))))
