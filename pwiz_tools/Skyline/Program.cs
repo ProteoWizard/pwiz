@@ -390,15 +390,16 @@ namespace pwiz.Skyline
             // ReSharper restore LocalizableElement
         }
 
-        internal static void SendGa4AnalyticsHit(bool validateEvent = false)
+        internal static string SendGa4AnalyticsHit(bool useDebugUrl = false)
         {
             // ReSharper disable LocalizableElement
             const string measurementId = "G-CQG6T54XQR";
             const string apiSecret = "8_Ci004BQSKdL1bEazPK3A"; // does this need to be kept secret somehow?
-            string analyticsUrl = $"https://www.google-analytics.com/{(validateEvent ? "debug/" : "")}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
+            string debugModifier = useDebugUrl ? "debug/" : "";
+            string analyticsUrl = $"https://www.google-analytics.com/{debugModifier}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
 
             var postData = new Dictionary<string, object>();
-            postData["client_id"] = validateEvent ? "test" : Settings.Default.InstallationId;
+            postData["client_id"] = useDebugUrl ? "test" : Settings.Default.InstallationId;
             var events = new List<Dictionary<string, object>>();
             postData["events"] = events;
             events.Add(new Dictionary<string, object>
@@ -429,10 +430,10 @@ namespace pwiz.Skyline
             var responseStream = response.GetResponseStream();
             if (null != responseStream)
             {
-                var responseString = new StreamReader(responseStream).ReadToEnd();
-                if (validateEvent)
-                    Assume.AreEqual("{\n  \"validationMessages\": [ ]\n}\n", responseString, "validation errors from analytics test: " + responseString);
+                return new StreamReader(responseStream).ReadToEnd();
             }
+
+            return string.Empty;
             // ReSharper restore LocalizableElement
         }
 
