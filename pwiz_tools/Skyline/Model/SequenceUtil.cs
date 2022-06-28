@@ -1127,7 +1127,7 @@ namespace pwiz.Skyline.Model
         {
             int col = (int) type;
             int len = masses.GetLength(1);
-            if (Transition.IsNTerminal(type))
+            if (type.IsNTerminal())
             {
                 for (int i = 0; i < len; i++)
                     yield return masses[col, i];
@@ -1237,7 +1237,7 @@ namespace pwiz.Skyline.Model
 
             int len = seq.Length - 1;
 
-            bool nterm = Transition.IsNTerminal(type);
+            bool nterm = type.IsNTerminal();
             double mass = GetTermMass(nterm ? IonType.b : IonType.y, mods) + BioMassCalc.MassProton;
 
             int iA = (nterm ? 0 : len);
