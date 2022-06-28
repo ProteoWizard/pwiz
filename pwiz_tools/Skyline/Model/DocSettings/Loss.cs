@@ -105,6 +105,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public string FormulaNoNull
+        {
+            get { return _formula ?? Resources.Loss_FormulaUnknown; }
+        }
+
         [Track]
         public double MonoisotopicMass { get; private set; }
         [Track]

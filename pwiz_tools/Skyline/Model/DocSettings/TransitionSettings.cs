@@ -1424,7 +1424,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int length = masses.GetLength(1);
                 Debug.Assert(length > 0);
 
-                if (Transition.IsNTerminal(type))
+                if (type.IsNTerminal())
                     return Math.Min(_ordinal, length) - 1;
                 
                 return Math.Max(0, length - _ordinal);
@@ -1472,7 +1472,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Make sure to start outside the precursor m/z window
                 double thresholdMz = precursorMz + precursorMzWindow / 2;
 
-                if (Transition.IsNTerminal(type))
+                if (type.IsNTerminal())
                 {
                     for (int i = 0; i < length; i++)
                     {
@@ -1559,7 +1559,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Debug.Assert(length > 0);
 
                 int end = length - 1;
-                if (Transition.IsNTerminal(type))
+                if (type.IsNTerminal())
                     return Math.Max(0, end - _offset);
                 
                 return Math.Min(end, _offset);
@@ -1589,7 +1589,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 Debug.Assert(length > 0);
 
-                if (Transition.IsNTerminal(type))
+                if (type.IsNTerminal())
                     return Math.Min(start + _count, length) - 1;
                 
                 return Math.Max(0, start - _count + 1);
