@@ -18,12 +18,15 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -183,6 +186,56 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var sibling = ResultFileRef.PROTOTYPE.ChangeParent(Replicate.GetElementRef());
             int fileIndex = Replicate.ChromatogramSet.IndexOfId(ChromFileInfoId);
             return sibling.ListChildrenOfParent(SrmDocument).Skip(fileIndex).FirstOrDefault();
+        }
+
+        public IDictionary<string, MedianDataValues> MedianData
+        {
+            get
+            {
+                var dictionary = new Dictionary<string, MedianDataValues>();
+                var normalizationData = DataSchema.NormalizedValueCalculator.GetNormalizationData();
+                foreach (var labelType in SrmDocument.Settings.PeptideSettings.Modifications.GetHeavyModificationTypes()
+                             .Prepend(IsotopeLabelType.light))
+                {
+                    var median = normalizationData.GetMedian(ChromFileInfoId, labelType);
+                    if (!median.HasValue)
+                    {
+                        continue;
+                    }
+
+                    var normalizationFactor = double.NaN;
+                    if (DataSchema.NormalizedValueCalculator.TryGetDenominator(NormalizationMethod.EQUALIZE_MEDIANS,
+                            labelType, ChromFileInfoId, out double? denominator))
+                    {
+                        if (denominator.HasValue)
+                        {
+                            normalizationFactor = 1 / denominator.Value;
+                        }
+                    }
+                    dictionary.Add(labelType.Name, new MedianDataValues(median.Value, normalizationFactor));
+                }
+
+                return dictionary;
+            }
+        }
+        
+        public class MedianDataValues
+        {
+            public MedianDataValues(double median, double normalizationFactor)
+            {
+                MedianPeakArea = median;
+                MedianNormalizationFactor = normalizationFactor;
+            }
+
+            [Format(Formats.PEAK_AREA)]
+            public double MedianPeakArea { get; }
+            [Format(Formats.STANDARD_RATIO)]
+            public double MedianNormalizationFactor { get; }
+
+            public override string ToString()
+            {
+                return string.Format("Median: {0}", MedianPeakArea.ToString(Formats.PEAK_AREA));
+            }
         }
     }
 }

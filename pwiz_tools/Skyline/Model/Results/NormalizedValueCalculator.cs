@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Model.Results
                     return true;
                 }
 
-                denominator = 1 / Math.Pow(2, medianAdjustment.Value);
+                denominator = Math.Pow(2, medianAdjustment.Value);
                 return true;
             }
 
