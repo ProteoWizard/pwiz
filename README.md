@@ -33,4 +33,3 @@ Click [here](http://proteowizard.sourceforge.net/downloads.shtml) to visit the o
 | ------- | -------    |
 | Linux   | GCC 9.3    |
 | OS X    | Clang 12   |
-
