@@ -306,13 +306,14 @@ namespace pwiz.ProteomeDatabase.API
         public WebSearchTerm(char service, string query)
         {
             Service = service;
-            if (service == WebEnabledFastaImporter.UNIPROTKB_TAG)
+            if (service == WebEnabledFastaImporter.UNIPROTKB_TAG && !string.IsNullOrEmpty(query))
             {
-                if (query.StartsWith(@"SGD:")) // Uniprot has gotten tweaky about SGD yeast entries, only wants to see "S000000001" of "SGD:S000000001"
+                // UniprotKB has gotten tweaky about SGD yeast entries, as of 6/28/2022 only wants to see "S000000001" of "SGD:S000000001"
+                if (query.StartsWith(@"SGD:")) 
                 {
                     Query = query.Substring(4);
                 }
-                else if (query.StartsWith(@"SGDID:")) // Uniprot has gotten tweaky about SGD yeast entries, only wants to see "S000000001" of "SGDID:S000000001"
+                else if (query.StartsWith(@"SGDID:"))
                 {
                     Query = query.Substring(6);
                 }
