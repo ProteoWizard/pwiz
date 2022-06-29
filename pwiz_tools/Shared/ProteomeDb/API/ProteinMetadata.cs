@@ -306,10 +306,12 @@ namespace pwiz.ProteomeDatabase.API
         public WebSearchTerm(char service, string query)
         {
             Service = service;
-            if (service == WebEnabledFastaImporter.UNIPROTKB_TAG && !string.IsNullOrEmpty(query))
+            Query = query;
+            if (service == WebEnabledFastaImporter.UNIPROTKB_TAG && query != null)
             {
-                // UniprotKB has gotten tweaky about SGD yeast entries, as of 6/28/2022 only wants to see "S000000001" of "SGD:S000000001"
-                if (query.StartsWith(@"SGD:")) 
+                // UniprotKB has gotten tweaky about SGD yeast entries, as of 6/28/2022 only
+                // wants to see "S000000001" from "SGD:S000000001" or "SGDID:S000000001"
+                if (query.StartsWith(@"SGD:"))
                 {
                     Query = query.Substring(4);
                 }
@@ -317,14 +319,6 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     Query = query.Substring(6);
                 }
-                else
-                {
-                    Query = query;
-                }
-            }
-            else
-            {
-                Query = query;
             }
         }
         public char Service { get; private set; }
