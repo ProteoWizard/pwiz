@@ -1275,6 +1275,25 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _modifications[0].Modifications; }
         }
 
+        /// <summary>
+        /// Returns list of mods with unique formulas
+        /// </summary>
+        public ImmutableList<FragmentLoss> StaticModsDeduped
+        {
+            get
+            {
+                var modLosses = StaticModifications.SelectMany(mod => mod.Losses ?? (new List<FragmentLoss>())).ToList();
+                //Deduplicate the losses on formula
+                modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+                return ImmutableList.ValueOf(modLosses);
+            }
+        }
+
+        public ImmutableList<string> StaticModsFormulae
+        {
+            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.FormulaNoNull)); }
+        }
+
         public bool HasVariableModifications
         {
             get { return StaticModifications.Contains(mod => mod.IsVariable); }

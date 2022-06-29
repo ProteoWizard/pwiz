@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Model
                         start = startFinder.FindStartFragment(massesFilter, type, adduct,
                             precursorMz, precursorMzWindow, out startMz);
                         end = endFinder.FindEndFragment(type, start, len);
-                        if (Transition.IsCTerminal(type))
+                        if (type.IsCTerminal())
                             Helpers.Swap(ref start, ref end);
                     }
 

@@ -130,7 +130,7 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
                 null, // No explicit exceptions to this rule
-                11); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+                9); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
             // Check for using DataGridView.
             AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
                 "new System.Windows.Forms.DataGridView()", false,

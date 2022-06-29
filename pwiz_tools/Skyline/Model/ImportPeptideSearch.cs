@@ -219,10 +219,9 @@ namespace pwiz.Skyline.Model
                 newStandards = processed.RecalibrateStandards(standardPeptides).ToArray();
                 processed = RCalcIrt.ProcessRetentionTimes(monitor,
                     processed.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
-                    newStandards.ToArray(), new DbIrtPeptide[0], regressionType);
+                    newStandards.ToArray(), Array.Empty<DbIrtPeptide>(), regressionType);
             }
-            var irtDb = IrtDb.CreateIrtDb(path);
-            irtDb.AddPeptides(monitor, (newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList());
+            IrtDb.CreateIrtDb(path).UpdatePeptides((newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList(), monitor);
         }
 
         public bool VerifyRetentionTimes(IEnumerable<string> resultsFiles)

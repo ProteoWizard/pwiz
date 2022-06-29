@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -10652,6 +10652,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Saving to database.
+        /// </summary>
+        public static string EditIrtCalcDlg_OkDialog_Saving_to_database {
+            get {
+                return ResourceManager.GetString("EditIrtCalcDlg_OkDialog_Saving_to_database", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectral libraries cannot be modified. You must save this iRT calculator as a new file..
         /// </summary>
         public static string EditIrtCalcDlg_OkDialog_Spectral_libraries_cannot_be_modified__You_must_save_this_iRT_calculator_as_a_new_file_ {
@@ -15179,6 +15188,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CE:.
+        /// </summary>
+        public static string GraphFullScan_CreateGraph_CE_ {
+            get {
+                return ResourceManager.GetString("GraphFullScan_CreateGraph_CE_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to IM={0}.
         /// </summary>
         public static string GraphFullScan_CreateGraph_IM__0_ {
@@ -17167,6 +17185,60 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to C-Term:.
+        /// </summary>
+        public static string IonTypeSelector_CTermLabel {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_CTermLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deselect all losses.
+        /// </summary>
+        public static string IonTypeSelector_DeselectAllLossesTooltip {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_DeselectAllLossesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Losses:.
+        /// </summary>
+        public static string IonTypeSelector_LossesLabel {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_LossesLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Formula: {0}.
+        /// </summary>
+        public static string IonTypeSelector_LossesTooltip {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_LossesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to N-Term:.
+        /// </summary>
+        public static string IonTypeSelector_NTermLabel {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_NTermLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select all losses.
+        /// </summary>
+        public static string IonTypeSelector_SelectAllLossesTooltip {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_SelectAllLossesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding peptides.
         /// </summary>
         public static string IrtDb_AddPeptides_Adding_peptides {
@@ -17263,6 +17335,15 @@ namespace pwiz.Skyline.Properties {
         public static string IrtDb_MakeDocumentXml_iRT_standards {
             get {
                 return ResourceManager.GetString("IrtDb_MakeDocumentXml_iRT_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating peptides.
+        /// </summary>
+        public static string IrtDb_UpdatePeptides_Updating_peptides {
+            get {
+                return ResourceManager.GetString("IrtDb_UpdatePeptides_Updating_peptides", resourceCulture);
             }
         }
         
@@ -18772,6 +18853,15 @@ namespace pwiz.Skyline.Properties {
         public static string LongWaitDlg_PerformWork_canceled {
             get {
                 return ResourceManager.GetString("LongWaitDlg_PerformWork_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Unknown).
+        /// </summary>
+        public static string Loss_FormulaUnknown {
+            get {
+                return ResourceManager.GetString("Loss_FormulaUnknown", resourceCulture);
             }
         }
         
