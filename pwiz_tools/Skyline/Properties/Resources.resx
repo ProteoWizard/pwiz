@@ -11632,6 +11632,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
     <value>Import Assay Library: Identify Columns</value>
   </data>
+  <data name="CandidatePeakForm_CandidatePeakForm_Candidate_Peaks" xml:space="preserve">
+	<value>Candidate Peaks</value>
+  </data>
   <data name="AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value" xml:space="preserve">
     <value>{0} must contain a decimal value.</value>
   </data>
@@ -11718,5 +11721,54 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
+  </data>
+  <data name="CandidatePeakGroup_Chosen_Remove_Peak" xml:space="preserve">
+	  <value>Remove Peak</value>
+  </data>
+  <data name="CandidatePeakGroup_Chosen_Choose_peak" xml:space="preserve">
+	  <value>Choose peak</value>
+  </data>
+  <data name="CandidatePeakGroup_ToString___0___1__" xml:space="preserve">
+	  <value>[{0}-{1}]</value>
+      <comment>Example: [19.3-21.7]</comment>
+  </data>
+  <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
+    <value>FASTA files</value>
+  </data>
+  <data name="AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options" xml:space="preserve">
+    <value>Applying parsimony options</value>
+  </data>
+  <data name="ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_peptides" xml:space="preserve">
+    <value>Creating protein targets and assigning their peptides</value>
+  </data>
+  <data name="ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree" xml:space="preserve">
+    <value>Building peptide prefix tree</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups" xml:space="preserve">
+    <value>Calculating protein groups</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins" xml:space="preserve">
+    <value>Group of {0} proteins</value>
+  </data>
+  <data name="ProteinAssociation_Finding_minimal_protein_list" xml:space="preserve">
+	  <value>Finding minimal protein list</value>
+  </data>
+  <data name="ProteinAssociation_Calculating_protein_clusters" xml:space="preserve">
+	  <value>Calculating protein clusters</value>
+  </data>
+  <data name="ProteinAssociation_Removing_subset_proteins" xml:space="preserve">
+	  <value>Removing subset proteins</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
+	  <value>Find &amp;minimal protein group list that explains all peptides</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
+	  <value>&amp;Remove subset protein groups</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
+	  <value>Mi&amp;n peptides per protein group</value>
+  </data>
+  <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
+      <value>dotp: {0:0.0000}</value>
   </data>
 </root>

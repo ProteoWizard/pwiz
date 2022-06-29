@@ -26,7 +26,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -239,12 +239,12 @@ namespace pwiz.Skyline.Model.Results
 
         public int StatusId
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Extra.StatusId : -1; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Extra?.StatusId ?? -1 : -1; }
         }
 
         public int StatusRank
         {
-            get { return _listChromData.Count > 0 ? BestChromatogram.Extra.StatusRank : -1; }
+            get { return _listChromData.Count > 0 ? BestChromatogram.Extra?.StatusRank ?? -1 : -1; }
         }
 
         public int CountPeaks
@@ -489,11 +489,11 @@ namespace pwiz.Skyline.Model.Results
         private const int MINIMUM_PEAKS = 3;
         private const int MAX_PEAKS_CHECKED = 20;
 
-        public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
+        public void SetExplicitPeakBounds(Func<Transition, PeakBounds> peakBoundsFunc)
         {
             foreach (var chromData in _listChromData)
             {
-                chromData.SetExplicitPeakBounds(peakBounds);
+                chromData.SetExplicitPeakBounds(peakBoundsFunc(chromData.DocNode?.Transition));
 
             }
             var firstChromData = _listChromData.First();
@@ -1429,6 +1429,66 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public TimeIntervals TimeIntervals { get; set; }
+
+        public ChromGroupHeaderInfo.FlagValues GetFlagValues(TimeIntensitiesGroup groupOfTimeIntensities)
+        {
+            var scanIdsByChromSource = groupOfTimeIntensities is InterpolatedTimeIntensities
+                ? ((InterpolatedTimeIntensities)groupOfTimeIntensities).ScanIdsByChromSource()
+                : null;
+            ChromGroupHeaderInfo.FlagValues flags = 0;
+            if (groupOfTimeIntensities.HasMassErrors)
+                flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
+            if (HasCalculatedMzs)
+                flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
+            if (Extractor == ChromExtractor.base_peak)
+                flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
+            else if (Extractor == ChromExtractor.qc)
+                flags |= ChromGroupHeaderInfo.FlagValues.extracted_qc_trace;
+            if (scanIdsByChromSource != null)
+            {
+                if (scanIdsByChromSource.ContainsKey(ChromSource.ms1))
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
+                if (scanIdsByChromSource.ContainsKey(ChromSource.fragment))
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_frag_scan_ids;
+                if (scanIdsByChromSource.ContainsKey(ChromSource.sim))
+                    flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
+            }
+            if (groupOfTimeIntensities is RawTimeIntensities)
+                flags |= ChromGroupHeaderInfo.FlagValues.raw_chromatograms;
+            if (FullScanAcquisitionMethod == FullScanAcquisitionMethod.DDA)
+                flags |= ChromGroupHeaderInfo.FlagValues.dda_acquisition_method;
+            return flags;
+        }
+
+        public ChromGroupHeaderInfo MakeChromGroupHeaderInfo(TimeIntensitiesGroup groupOfTimeIntensities, int compressedSize, int uncompressedSize)
+        {
+            return new ChromGroupHeaderInfo(PrecursorMz,
+                Count,
+                CountPeaks,
+                MaxPeakIndex,
+                compressedSize,
+                uncompressedSize,
+                groupOfTimeIntensities.NumInterpolatedPoints,
+                GetFlagValues(groupOfTimeIntensities),
+                StatusId,
+                StatusRank,
+                MinRawTime,
+                MaxRawTime,
+                CollisionalCrossSectionSqA,
+                IonMobilityUnits);
+        }
+
+        public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNames featureNames, ChromCachedFile chromCachedFile)
+        {
+            var timeIntensitiesGroup = ToGroupOfTimeIntensities(true);
+            var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
+            var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
+            var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
+            var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToArray();
+            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromTransitions,
+                chromPeaks, timeIntensitiesGroup, featureNames, scores);
+            return chromatogramGroupInfo;
+        }
     }
 }
 

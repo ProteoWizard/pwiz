@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;
@@ -57,6 +56,13 @@ namespace pwiz.Skyline.Model.Results
             ProviderId = providerId;
             Peaks = new List<ChromPeak>();
             MaxPeakIndex = -1;
+        }
+
+        public ChromData(ChromKey chromKey, TransitionDocNode transitionDocNode, TimeIntensities rawTimeIntensities, TimeIntensities timeIntensities) : this(chromKey, -1)
+        {
+            DocNode = transitionDocNode;
+            RawTimeIntensities = rawTimeIntensities;
+            TimeIntensities = timeIntensities;
         }
 
         /// <summary>
@@ -200,11 +206,11 @@ namespace pwiz.Skyline.Model.Results
             RawPeaks = new IFoundPeak[0];
         }
 
-        public void SetExplicitPeakBounds(ExplicitPeakBounds peakBounds)
+        public void SetExplicitPeakBounds(PeakBounds peakBounds)
         {
             Finder = Crawdads.NewCrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
-            if (peakBounds.IsEmpty)
+            if (peakBounds == null)
             {
                 RawPeaks = new IFoundPeak[0];
             }
@@ -381,6 +387,15 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             return Key + string.Format(@" ({0})", ProviderId);
+        }
+
+        public ChromTransition MakeChromTransition()
+        {
+            return new ChromTransition(Key.Product,
+                Key.ExtractionWidth,
+                (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
+                (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
+                Key.Source);
         }
     }
 

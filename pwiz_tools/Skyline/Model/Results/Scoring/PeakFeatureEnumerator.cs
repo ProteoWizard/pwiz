@@ -20,8 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -32,7 +34,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public static class PeakFeatureEnumerator
     {
         public static PeakTransitionGroupFeatureSet GetPeakFeatures(this SrmDocument document,
-                                                                               IList<IPeakFeatureCalculator> calcs,
+                                                                               FeatureCalculators calcs,
                                                                                IProgressMonitor progressMonitor = null,
                                                                                bool verbose = false)
         {
@@ -76,7 +78,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 }
 
                 var peakFeatureList = new List<PeakTransitionGroupFeatures>();
-                foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, calcs, runEnumDict, verbose))
+                foreach (var peakFeature in GetPeakFeatures(document.Settings, nodePepGroup, nodePep, calcs, runEnumDict, verbose))
                 {
                     if (peakFeature.PeakGroupFeatures.Any())
                     {
@@ -108,10 +110,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return new PeakTransitionGroupFeatureSet(decoyCount, result);
         }
 
-        private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
+        private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(SrmSettings settings,
                                                                                 PeptideGroupDocNode nodePepGroup,
                                                                                 PeptideDocNode nodePep,
-                                                                                IList<IPeakFeatureCalculator> calcs,
+                                                                                FeatureCalculators calcs,
                                                                                 IDictionary<int, int> runEnumDict,
                                                                                 bool verbose)
         {
@@ -120,7 +122,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             {
                 var arrayGroups = nodeGroups.ToArray();
                 var labelType = arrayGroups[0].TransitionGroup.LabelType;
-                foreach (var peakFeature in document.GetPeakFeatures(nodePepGroup, nodePep, labelType, arrayGroups, calcs, runEnumDict, verbose))
+                foreach (var peakFeature in GetPeakFeatures(settings, nodePepGroup, nodePep, labelType, arrayGroups, calcs, runEnumDict, verbose))
                 {
                     yield return peakFeature;
                 }
@@ -129,35 +131,24 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public static IEnumerable<IEnumerable<TransitionGroupDocNode>> ComparableGroups(PeptideDocNode nodePep)
         {
-            // Everything with relative RT not unknown makes up a comparable set
-            yield return from nodeGroup in nodePep.TransitionGroups
-                         where nodeGroup.RelativeRT != RelativeRT.Unknown
-                         select nodeGroup;
-
-            // Each other label type makes up a comparable set, i.e. charge states of a label type
-            foreach (var nodeGroups in from nodeGroup in nodePep.TransitionGroups
-                                            where nodeGroup.RelativeRT == RelativeRT.Unknown
-                                            group nodeGroup by nodeGroup.TransitionGroup.LabelType)
-            {
-                yield return nodeGroups;
-            }
+            return nodePep.GetComparableGroups();
         }
 
-        private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(this SrmDocument document,
+        private static IEnumerable<PeakTransitionGroupFeatures> GetPeakFeatures(SrmSettings settings,
                                                                    PeptideGroupDocNode nodePepGroup,
                                                                    PeptideDocNode nodePep,
                                                                    IsotopeLabelType labelType,
                                                                    IList<TransitionGroupDocNode> nodeGroups,
-                                                                   IList<IPeakFeatureCalculator> calcs,
+                                                                   FeatureCalculators calcs,
                                                                    IDictionary<int, int> runEnumDict,
                                                                    bool verbose)
         {
-            var chromatograms = document.Settings.MeasuredResults.Chromatograms;
-            float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var chromatograms = settings.MeasuredResults.Chromatograms;
+            float mzMatchTolerance = (float)settings.TransitionSettings.Instrument.MzMatchTolerance;
             var nodeGroupChromGroupInfos = new List<List<IList<ChromatogramGroupInfo>>>();
             foreach (var nodeGroup in nodeGroups)
             {
-                var chromGroupInfos = document.Settings.MeasuredResults
+                var chromGroupInfos = settings.MeasuredResults
                     .LoadChromatogramsForAllReplicates(nodePep, nodeGroup, mzMatchTolerance);
                 Assume.AreEqual(chromGroupInfos.Count, chromatograms.Count);
                 nodeGroupChromGroupInfos.Add(chromGroupInfos);
@@ -180,8 +171,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         continue;
                     }
                     
-                    var summaryPeakData = new SummaryPeptidePeakData(document, nodePep, nodeGroups, chromatogramSet, chromFileInfo, chromGroupInfos);
-                    var context = new PeakScoringContext(document);
+                    var summaryPeakData = new SummaryPeptidePeakData(settings, nodePep, nodeGroups, chromatogramSet, chromFileInfo, chromGroupInfos);
+                    var context = new PeakScoringContext(settings);
 
                     while (summaryPeakData.NextPeakIndex())
                     {
@@ -209,7 +200,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                         int peakIndex = summaryPeakData.UsedBestPeakIndex
                             ? summaryPeakData.BestPeakIndex
                             : summaryPeakData.PeakIndex;
-                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, features));
+                        listRunFeatures.Add(new PeakGroupFeatures(peakIndex, retentionTime, startTime, endTime, new FeatureScores(calcs.FeatureNames, ImmutableList.ValueOf(features))));
                     }
 
                     yield return new PeakTransitionGroupFeatures(peakId, listRunFeatures.ToArray(), verbose);
@@ -224,7 +215,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             private readonly ChromatogramGroupInfo _chromGroupInfoPrimary;
             private int _peakIndex;
 
-            public SummaryPeptidePeakData(SrmDocument document,
+            public SummaryPeptidePeakData(SrmSettings settings,
                                           PeptideDocNode nodePep,
                                           IList<TransitionGroupDocNode> nodeGroups,
                                           ChromatogramSet chromatogramSet,
@@ -239,8 +230,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 TransitionGroupPeakData = new SummaryTransitionGroupPeakData[nodeGroups.Count];
                 for (int i = 0; i < nodeGroups.Count; i++)
                 {
-                    TransitionGroupPeakData[i] = new SummaryTransitionGroupPeakData(document,
-                        nodePep, nodeGroups[i], chromatogramSet, chromGroupInfos[i]);
+                    TransitionGroupPeakData[i] = new SummaryTransitionGroupPeakData(settings, nodeGroups[i],
+                        chromatogramSet, chromGroupInfos[i]);
                 }
                 // Avoid extra ToArray() calls, since they show up in a profiler for big files
                 bool? standard;
@@ -479,15 +470,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
             public float MedianTime { get; private set; }
         }
 
-        private sealed class SummaryTransitionGroupPeakData : ITransitionGroupPeakData<ISummaryPeakData>
+        public sealed class SummaryTransitionGroupPeakData : ITransitionGroupPeakData<ISummaryPeakData>
         {
             private static readonly IList<ITransitionPeakData<ISummaryPeakData>> EMPTY_DATA = new ITransitionPeakData<ISummaryPeakData>[0];
 
             private readonly ChromatogramGroupInfo _chromGroupInfo;
             private int _peakIndex;
 
-            public SummaryTransitionGroupPeakData(SrmDocument document,
-                                                  PeptideDocNode nodePep,
+            public SummaryTransitionGroupPeakData(SrmSettings settings,
+                PeptideDocNode nodePep,
+                TransitionGroupDocNode nodeGroup,
+                ChromatogramSet chromatogramSet,
+                MsDataFileUri filePath) : this(settings, nodeGroup, chromatogramSet,
+                settings.LoadChromatogramGroup(chromatogramSet, filePath, nodePep, nodeGroup))
+            {
+
+            }
+
+
+            public SummaryTransitionGroupPeakData(SrmSettings settings,
                                                   TransitionGroupDocNode nodeGroup,
                                                   ChromatogramSet chromatogramSet,
                                                   ChromatogramGroupInfo chromGroupInfo)
@@ -495,10 +496,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 _peakIndex = -1;
 
                 NodeGroup = nodeGroup;
-                IsStandard = document.Settings.PeptideSettings.Modifications.InternalStandardTypes
+                IsStandard = settings.PeptideSettings.Modifications.InternalStandardTypes
                     .Contains(nodeGroup.TransitionGroup.LabelType);
                 TransitionPeakData = Ms1TranstionPeakData = Ms2TranstionPeakData = EMPTY_DATA;
-                bool isDda = document.Settings.TransitionSettings.FullScan.AcquisitionMethod ==
+                bool isDda = settings.TransitionSettings.FullScan.AcquisitionMethod ==
                              FullScanAcquisitionMethod.DDA;
 
                 _chromGroupInfo = chromGroupInfo;
@@ -507,13 +508,13 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     int ms1Count = 0, ms2Count = 0, totalCount = 0;
                     // Assume there will be one per transtion
                     var listPeakData = new ITransitionPeakData<ISummaryPeakData>[nodeGroup.TransitionCount];
-                    float mzMatchTolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                    float mzMatchTolerance = (float)settings.TransitionSettings.Instrument.MzMatchTolerance;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
                         var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
                         if (tranInfo == null)
                             continue;
-                        listPeakData[totalCount++] = new SummaryTransitionPeakData(document, nodeTran, chromatogramSet, tranInfo);
+                        listPeakData[totalCount++] = new SummaryTransitionPeakData(settings, nodeTran, chromatogramSet, tranInfo);
                         if (nodeTran.IsMs1)
                             ms1Count++;
                         else
@@ -614,7 +615,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             private int _peakIndex;
             private readonly ChromatogramInfo _chromInfo;
 
-            public SummaryTransitionPeakData(SrmDocument document,
+            public SummaryTransitionPeakData(SrmSettings settings,
                                              TransitionDocNode nodeTran,
                                              ChromatogramSet chromatogramSet,
                                              ChromatogramInfo tranChromInfo)
@@ -663,7 +664,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             RawTextId = nodePep.ModifiedTarget.ToString();
             RawUnmodifiedTextId = nodePep.Target.ToString();
             IsDecoy = nodePep.IsDecoy;
-            Key = new PeakTransitionGroupIdKey(nodePep.Id.GlobalIndex, FileId.GlobalIndex);
+            Key = new PeakTransitionGroupIdKey(nodePep.Peptide, FileId);
         }
 
         public PeptideGroupDocNode NodePepGroup { get; private set; }
@@ -700,18 +701,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
     public struct PeakTransitionGroupIdKey
     {
-        public PeakTransitionGroupIdKey(int pepIndex, int fileIndex) : this()
+        public PeakTransitionGroupIdKey(Peptide peptide, ChromFileInfoId fileId) : this()
         {
-            PepIndex = pepIndex;
-            FileIndex = fileIndex;
+            Peptide = peptide;
+            FileId = fileId;
         }
 
-        public int PepIndex { get; private set; }
-        public int FileIndex { get; private set; }
+        public Peptide Peptide { get; }
+        public ChromFileInfoId FileId { get; }
 
         public bool Equals(PeakTransitionGroupIdKey other)
         {
-            return PepIndex == other.PepIndex && FileIndex == other.FileIndex;
+            return ReferenceEquals(Peptide, other.Peptide) && ReferenceEquals(FileId, other.FileId);
         }
 
         public override bool Equals(object obj)
@@ -724,7 +725,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         {
             unchecked
             {
-                return (PepIndex*397) ^ FileIndex;
+                return (RuntimeHelpers.GetHashCode(Peptide)*397) ^ RuntimeHelpers.GetHashCode(FileId);
             }
         }
     }
@@ -770,20 +771,24 @@ namespace pwiz.Skyline.Model.Results.Scoring
     public struct PeakGroupFeatures
     {
         public PeakGroupFeatures(int peakIndex, float retentionTime, float startTime, float endTime,
-            float[] features) : this()
+            FeatureScores features) : this()
         {
             OriginalPeakIndex = peakIndex;
             // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
             RetentionTime = retentionTime;
             StartTime = startTime;
             EndTime = endTime;
-            Features = features;
+            FeatureScores = features;
         }
 
         public int OriginalPeakIndex { get; private set; }
         public float RetentionTime { get; private set; }
         public float StartTime { get; private set; }
         public float EndTime { get; private set; }
-        public float[] Features { get; private set; }
+        public FeatureScores FeatureScores { get; }
+        public ImmutableList<float> Features
+        {
+            get { return FeatureScores.Values; }
+        }
     }
 }

@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model
             catch (Exception)
             {
                 return false;
-           }
+            }
         }
 
         private HashSet<Target> GetRetentionTimeStandardsOrThrow()
@@ -1111,7 +1111,12 @@ namespace pwiz.Skyline.Model
                 // Results handler changes for re-integration last only long enough
                 // to change the children
                 if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
-                    settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
+                {
+                    settingsNew = settingsNew.ChangePeptideIntegration(i =>
+                        i.ChangeResultsHandler(null)
+                            .ChangeScoreQValueMap(
+                                ScoreQValueMap.FromMoleculeGroups(childrenNew.Cast<PeptideGroupDocNode>())));
+                }
 
                 if (settingsNew.MeasuredResults != null)
                 {
@@ -2116,6 +2121,10 @@ namespace pwiz.Skyline.Model
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
+
+            Settings = Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeIntegration(
+                Settings.PeptideSettings.Integration.ChangeScoreQValueMap(
+                    ScoreQValueMap.FromMoleculeGroups(MoleculeGroups))));
 
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
 
