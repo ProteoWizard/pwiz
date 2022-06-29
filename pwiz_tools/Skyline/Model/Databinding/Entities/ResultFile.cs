@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 foreach (var labelType in SrmDocument.Settings.PeptideSettings.Modifications.GetHeavyModificationTypes()
                              .Prepend(IsotopeLabelType.light))
                 {
-                    var median = normalizationData.GetMedian(ChromFileInfoId, labelType);
+                    var median = normalizationData.GetMedian(Replicate.ReplicateIndex, ChromFileInfoId, labelType);
                     if (!median.HasValue)
                     {
                         continue;
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                     var normalizationFactor = double.NaN;
                     if (DataSchema.NormalizedValueCalculator.TryGetDenominator(NormalizationMethod.EQUALIZE_MEDIANS,
-                            labelType, ChromFileInfoId, out double? denominator))
+                            labelType, Replicate.ReplicateIndex, ChromFileInfoId, out double? denominator))
                     {
                         if (denominator.HasValue)
                         {

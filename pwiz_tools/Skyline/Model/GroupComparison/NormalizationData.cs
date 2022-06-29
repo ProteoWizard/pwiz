@@ -53,8 +53,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return EMPTY;
             }
-            var intensitiesByFileAndLabelType = new Dictionary<DataKey, List<double>>();
             var chromatogramSets = document.Settings.MeasuredResults.Chromatograms;
+            var areaAccumulators = Enumerable.Range(0, chromatogramSets.Count).Select(replicateIndex =>
+                new AreaAccumulator(replicateIndex, chromatogramSets[replicateIndex])).ToList();
+
             foreach (var peptideGroup in document.MoleculeGroups)
             {
                 foreach (var peptide in peptideGroup.Molecules)
@@ -70,14 +72,14 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     foreach (var transitionGroup in peptide.TransitionGroups)
                     {
-                        Dictionary<DataKey, double> ms1Areas = new Dictionary<DataKey, double>();
-
                         foreach (var transition in transitionGroup.Transitions)
                         {
                             if (!transition.HasResults)
                             {
                                 continue;
                             }
+
+                            bool isMs1 = transition.IsMs1;
                             for (int iResult = 0; iResult < transition.Results.Count && iResult < chromatogramSets.Count; iResult++)
                             {
                                 var results = transition.Results[iResult];
@@ -93,66 +95,37 @@ namespace pwiz.Skyline.Model.GroupComparison
                                     {
                                         continue;
                                     }
-                                    
-                                    var key = new DataKey(chromInfo.FileId, chromatogramSets[iResult].SampleType, transitionGroup.TransitionGroup.LabelType);
-                                    if (transition.IsMs1)
-                                    {
-                                        double totalArea;
-                                        ms1Areas.TryGetValue(key, out totalArea);
-                                        totalArea += area.Value;
-                                        ms1Areas[key] = totalArea;
-                                    }
-                                    else
-                                    {
-                                        List<double> fileLabelTypeIntensities;
-                                        if (!intensitiesByFileAndLabelType.TryGetValue(key, out fileLabelTypeIntensities))
-                                        {
-                                            fileLabelTypeIntensities = new List<double>();
-                                            intensitiesByFileAndLabelType.Add(key, fileLabelTypeIntensities);
-                                        }
-                                        // The logarithm of the area is stored instead of the area itself.
-                                        // This has a tiny impact on the way the median is calculated if there are 
-                                        // an even number of values
-                                        fileLabelTypeIntensities.Add(Math.Log(Math.Max(area.Value, 1), 2.0));
-                                    }
+
+                                    areaAccumulators[iResult].AddArea(chromInfo.FileId, transitionGroup.LabelType,
+                                        isMs1, area.Value);
                                 }
                             }
                         }
-                        foreach (var entry in ms1Areas)
+
+                        foreach (var areaAccumulator in areaAccumulators)
                         {
-                            List<double> fileLabelTypeIntensities;
-                            if (!intensitiesByFileAndLabelType.TryGetValue(entry.Key, out fileLabelTypeIntensities))
-                            {
-                                fileLabelTypeIntensities = new List<double>();
-                                intensitiesByFileAndLabelType.Add(entry.Key, fileLabelTypeIntensities);
-                            }
-                            fileLabelTypeIntensities.Add(Math.Log(Math.Max(entry.Value, 1), 2.0));
+                            areaAccumulator.FinishTransitionGroup();
                         }
                     }
                 }
             }
-            var data = new Dictionary<DataKey, DataValue>(intensitiesByFileAndLabelType.Count);
-            foreach (var entry in intensitiesByFileAndLabelType)
+            var data = new Dictionary<DataKey, DataValue>();
+            foreach (var areaAccumulator in areaAccumulators)
             {
-                data.Add(entry.Key, new DataValue(entry.Value));
+                foreach (var entry in areaAccumulator.GetAreaLists())
+                {
+                    var log2Areas = entry.Value.Select(area => Math.Log(Math.Max(area, 1), 2.0));
+                    data.Add(entry.Key, new DataValue(log2Areas));
+                }
             }
             return new NormalizationData(data);
         }
 
-        public static NormalizationData GetNormalizationData(
-            IEnumerable<Tuple<ChromFileInfoId, IsotopeLabelType, double>> values)
-        {
-            return new NormalizationData(
-                values.ToLookup(value => new DataKey(value.Item1, null, value.Item2), value => value.Item3)
-                .ToDictionary(grouping => grouping.Key, grouping => new DataValue(grouping))
-                );
-        }
-
-        public double? NormalizeQuantile(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType,
+        public double? NormalizeQuantile(int replicateIndex, ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType,
             double value)
         {
             DataValue dataValue;
-            if (!_data.TryGetValue(new DataKey(chromFileInfoId, null, isotopeLabelType), out dataValue))
+            if (!_data.TryGetValue(new DataKey(replicateIndex, chromFileInfoId, null, isotopeLabelType), out dataValue))
             {
                 return null;
             }
@@ -160,9 +133,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return GetMeanPercentile(isotopeLabelType, percentile).Value;
         }
 
-        public double? Percentile(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType, double percentile)
+        public double? Percentile(int replicateIndex, ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType, double percentile)
         {
-            var dataKey = new DataKey(chromFileInfoId, null, isotopeLabelType);
+            var dataKey = new DataKey(replicateIndex, chromFileInfoId, null, isotopeLabelType);
             DataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
@@ -171,9 +144,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return dataValue.GetValueAtPercentile(percentile);
         }
 
-        public double? GetMedian(ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType)
+        public double? GetMedian(int replicateIndex, ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType)
         {
-            var dataKey = new DataKey(chromFileInfoId, null, isotopeLabelType);
+            var dataKey = new DataKey(replicateIndex, chromFileInfoId, null, isotopeLabelType);
             DataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
@@ -212,20 +185,22 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private struct DataKey
         {
-            public DataKey(ChromFileInfoId chromFileInfoId, SampleType sampleType, IsotopeLabelType isotopeLabelType)
+            public DataKey(int replicateIndex, ChromFileInfoId chromFileInfoId, SampleType sampleType, IsotopeLabelType isotopeLabelType)
                 : this()
             {
+                ReplicateIndex = replicateIndex;
                 ChromFileInfoId = chromFileInfoId;
                 SampleType = sampleType;
                 IsotopeLabelType = isotopeLabelType;
             }
+            public int ReplicateIndex { get; private set; }
             public ChromFileInfoId ChromFileInfoId { get; private set; }
             public SampleType SampleType { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
 
             public bool Equals(DataKey other)
             {
-                return ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId) && Equals(IsotopeLabelType, other.IsotopeLabelType);
+                return ReplicateIndex == other.ReplicateIndex && ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId) && Equals(IsotopeLabelType, other.IsotopeLabelType);
             }
 
             public override bool Equals(object obj)
@@ -238,7 +213,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 unchecked
                 {
-                    return ((ChromFileInfoId != null ? RuntimeHelpers.GetHashCode(ChromFileInfoId) : 0) * 397) ^ (IsotopeLabelType != null ? IsotopeLabelType.GetHashCode() : 0);
+                    int result = ReplicateIndex;
+                    result = (result * 397) ^ (ChromFileInfoId != null ? RuntimeHelpers.GetHashCode(ChromFileInfoId) : 0);
+                    result = (result * 397) ^ IsotopeLabelType.GetHashCode();
+                    return result;
                 }
             }
         }
@@ -305,5 +283,104 @@ namespace pwiz.Skyline.Model.GroupComparison
                               (sortedValues[index] - sortedValues[index - 1]);
             return (index - 1 + fraction) / (sortedValues.Count - 1);
         }
+
+        /// <summary>
+        /// Keeps track of a list of transition peak areas for a single replicate.
+        /// </summary>
+        private class AreaAccumulator
+        {
+            private IDictionary<DataKey, List<double>> _areasDictionary = new Dictionary<DataKey, List<double>>();
+            private Dictionary<DataKey, double> _ms1AreasDictionary = new Dictionary<DataKey, double>();
+
+            private ChromFileInfoId _firstFileId;
+            private List<double> _firstFileLightAreasList = new List<double>();
+            private double? _firstFileLightMs1Area;
+            public AreaAccumulator(int replicateIndex, ChromatogramSet chromatogramSet)
+            {
+                ReplicateIndex = replicateIndex;
+                ChromatogramSet = chromatogramSet;
+                _firstFileId = chromatogramSet.MSDataFileInfos.First().FileId;
+            }
+            public int ReplicateIndex { get; private set; }
+
+            public ChromatogramSet ChromatogramSet { get; private set; }
+
+            public void AddArea(ChromFileInfoId fileId, IsotopeLabelType labelType, bool isMs1, double area)
+            {
+                // Avoid a dictionary lookup for the most common case where label type is light, and the fileId is the first one in the replicate
+                if (labelType.IsLight && ReferenceEquals(fileId, _firstFileId))
+                {
+                    if (isMs1)
+                    {
+                        _firstFileLightMs1Area = (_firstFileLightMs1Area ?? 0) + area;
+                    }
+                    else
+                    {
+                        _firstFileLightAreasList.Add(area);
+                    }
+
+                    return;
+                }
+
+                var key = MakeDataKey(fileId, labelType);
+                if (isMs1)
+                {
+                    _ms1AreasDictionary.TryGetValue(key, out double ms1Area);
+                    ms1Area += area;
+                    _ms1AreasDictionary[key] = ms1Area;
+                }
+                else
+                {
+                    AddArea(key, area);
+                }
+            }
+
+            private DataKey MakeDataKey(ChromFileInfoId fileId, IsotopeLabelType labelType)
+            {
+                return new DataKey(ReplicateIndex, fileId, ChromatogramSet.SampleType, labelType);
+            }
+
+            private void AddArea(DataKey key, double area)
+            {
+                if (!_areasDictionary.TryGetValue(key, out var areasList))
+                {
+                    areasList = new List<double>();
+                    _areasDictionary.Add(key, areasList);
+                }
+                areasList.Add(area);
+
+            }
+
+            /// <summary>
+            /// After processing all of the transitions in a transition group, the observed MS1 areas should be summed,
+            /// and then added to the list of areas.
+            /// </summary>
+            public void FinishTransitionGroup()
+            {
+                if (_firstFileLightMs1Area.HasValue)
+                {
+                    _firstFileLightAreasList.Add(_firstFileLightMs1Area.Value);
+                    _firstFileLightMs1Area = null;
+                }
+
+                foreach (var entry in _ms1AreasDictionary)
+                {
+                    AddArea(entry.Key, entry.Value);
+                }
+                _ms1AreasDictionary.Clear();
+            }
+
+            public IEnumerable<KeyValuePair<DataKey, List<double>>> GetAreaLists()
+            {
+                var result = _areasDictionary.AsEnumerable();
+                if (_firstFileLightAreasList.Any())
+                {
+                    result = result.Prepend(new KeyValuePair<DataKey, List<double>>(MakeDataKey(_firstFileId, IsotopeLabelType.light), _firstFileLightAreasList));
+                }
+
+                return result;
+            }
+        }
     }
+
 }

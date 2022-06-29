@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode,
-            TransitionDocNode transitionDocNode, TransitionChromInfo transitionChromInfo)
+            TransitionDocNode transitionDocNode, int replicateIndex, TransitionChromInfo transitionChromInfo)
         {
             if (peptideDocNode == null)
             {
@@ -67,18 +67,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 return null;
             }
-            return GetTransitionValue(normalizationMethod, peptideDocNode, transitionGroupDocNode, transitionDocNode,
+            return GetTransitionValue(normalizationMethod, peptideDocNode, transitionGroupDocNode, transitionDocNode, replicateIndex, 
                 transitionChromInfo);
         }
 
-        public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode, TransitionChromInfo transitionChromInfo)
+        public double? GetTransitionValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, TransitionDocNode transitionDocNode, int replicateIndex, TransitionChromInfo transitionChromInfo)
         {
             if (transitionChromInfo == null || transitionChromInfo.IsEmpty)
             {
                 return null;
             }
 
-            if (TryGetDenominator(normalizationMethod, transitionGroupDocNode.LabelType, transitionChromInfo.FileId,
+            if (TryGetDenominator(normalizationMethod, transitionGroupDocNode.LabelType, replicateIndex, transitionChromInfo.FileId,
                 out double? denominator))
             {
                 return transitionChromInfo.Area / denominator;
@@ -134,6 +134,7 @@ namespace pwiz.Skyline.Model.Results
                 transitionChromInfoData.TransitionGroupDocNode, ratioIndex);
             return GetTransitionValue(normalizationMethod, transitionChromInfoData.PeptideDocNode,
                 transitionChromInfoData.TransitionGroupDocNode, transitionChromInfoData.TransitionDocNode,
+                transitionChromInfoData.ReplicateIndex,
                 transitionChromInfoData.ChromInfo);
         }
 
@@ -144,12 +145,13 @@ namespace pwiz.Skyline.Model.Results
                 transitionGroupChromInfoData.TransitionGroupDocNode, ratioIndex);
             return GetTransitionGroupValue(normalizationMethod, transitionGroupChromInfoData.PeptideDocNode,
                 transitionGroupChromInfoData.TransitionGroupDocNode,
+                transitionGroupChromInfoData.ReplicateIndex,
                 transitionGroupChromInfoData.ChromInfo);
 
         }
 
         public double? GetTransitionGroupValue(NormalizationMethod normalizationMethod, PeptideDocNode peptideDocNode,
-            TransitionGroupDocNode transitionGroupDocNode, TransitionGroupChromInfo transitionGroupChromInfo)
+            TransitionGroupDocNode transitionGroupDocNode, int replicateIndex, TransitionGroupChromInfo transitionGroupChromInfo)
         {
             if (transitionGroupChromInfo == null)
             {
@@ -157,7 +159,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (TryGetDenominator(normalizationMethod, transitionGroupDocNode.LabelType,
-                transitionGroupChromInfo.FileId, out double? denominator))
+                replicateIndex, transitionGroupChromInfo.FileId, out double? denominator))
             {
                 return transitionGroupChromInfo.Area / denominator;
             }
@@ -378,7 +380,7 @@ namespace pwiz.Skyline.Model.Results
             get { return Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes; }
         }
 
-        public bool TryGetDenominator(NormalizationMethod normalizationMethod, IsotopeLabelType labelType, ChromFileInfoId fileId, out double? denominator)
+        public bool TryGetDenominator(NormalizationMethod normalizationMethod, IsotopeLabelType labelType, int replicateIndex, ChromFileInfoId fileId, out double? denominator)
         {
             if (Equals(normalizationMethod, NormalizationMethod.NONE))
             {
@@ -401,7 +403,7 @@ namespace pwiz.Skyline.Model.Results
             if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
             {
                 var normalizationData = _normalizationData.Value;
-                var medianAdjustment = normalizationData.GetMedian(fileId, labelType) - normalizationData.GetMedianMedian(fileInfo.SampleType, labelType);
+                var medianAdjustment = normalizationData.GetMedian(replicateIndex, fileId, labelType) - normalizationData.GetMedianMedian(fileInfo.SampleType, labelType);
                 if (!medianAdjustment.HasValue)
                 {
                     denominator = null;

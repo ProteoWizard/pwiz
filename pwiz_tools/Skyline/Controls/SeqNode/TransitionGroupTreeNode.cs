@@ -188,6 +188,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 var ratioToGlobalStandards = displaySettings.NormalizedValueCalculator.GetTransitionGroupValue(
                     displaySettings.NormalizationMethod, displaySettings.NodePep, nodeGroup,
+                    displaySettings.ResultsIndex,
                     nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
                 if (ratioToGlobalStandards.HasValue)
                 {

@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     {
                         throw new InvalidOperationException(string.Format(@"Normalization method '{0}' is not supported here.", NormalizationMethod));
                     }
-                    double? medianAdjustment = normalizationData.GetMedian(chromInfo.FileId, transitionGroup.TransitionGroup.LabelType) 
+                    double? medianAdjustment = normalizationData.GetMedian(replicateIndex, chromInfo.FileId, transitionGroup.TransitionGroup.LabelType) 
                         - normalizationData.GetMedianMedian(srmSettings.MeasuredResults.Chromatograms[replicateIndex].SampleType, transitionGroup.TransitionGroup.LabelType);
                     if (!medianAdjustment.HasValue)
                     {
