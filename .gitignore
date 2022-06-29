@@ -362,6 +362,8 @@ ASALocalRun/
 *.nvuser
 
 /build-nt-x86
+/build-macosx-x86_64
+/build-macosx-x86
 /*.log
 /libraries/boost_1_*
 /libraries/expat*
