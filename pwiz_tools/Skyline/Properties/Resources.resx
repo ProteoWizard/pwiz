@@ -8935,9 +8935,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0} (at {1} points minimum)</value>
   </data>
-  <data name="IrtDb_AddPeptides_Adding_peptides" xml:space="preserve">
-    <value>Adding peptides</value>
-  </data>
   <data name="BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_" xml:space="preserve">
     <value>The added file included {0} repeated protein sequences. Their names were added as aliases to ensure the protein list contains only one copy of each sequence.</value>
   </data>
@@ -11722,6 +11719,27 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
 	  <value>Opening database</value>
   </data>
+  <data name="IonTypeSelector_NTermLabel" xml:space="preserve">
+	  <value>N-Term:</value>
+  </data>
+  <data name="IonTypeSelector_CTermLabel" xml:space="preserve">
+	  <value>C-Term:</value>
+  </data>
+  <data name="IonTypeSelector_LossesLabel" xml:space="preserve">
+	  <value>Losses:</value>
+  </data>
+  <data name="IonTypeSelector_LossesTooltip" xml:space="preserve">
+	  <value>Formula: {0}</value>
+  </data>
+  <data name="IonTypeSelector_SelectAllLossesTooltip" xml:space="preserve">
+	  <value>Select all losses</value>
+  </data>
+  <data name="IonTypeSelector_DeselectAllLossesTooltip" xml:space="preserve">
+	  <value>Deselect all losses</value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+	  <value>(Unknown)</value>
+  </data>
   <data name="CandidatePeakGroup_Chosen_Remove_Peak" xml:space="preserve">
 	  <value>Remove Peak</value>
   </data>
@@ -11770,5 +11788,14 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
       <value>dotp: {0:0.0000}</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Saving_to_database" xml:space="preserve">
+      <value>Saving to database</value>
+  </data>
+  <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
+      <value>Updating peptides</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
+      <value>CE:</value>
   </data>
 </root>

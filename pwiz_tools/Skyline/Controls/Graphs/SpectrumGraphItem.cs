@@ -129,6 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowObservedMz { get; set; }
         public bool ShowMassError { get; set; }
         public bool ShowDuplicates { get; set; }
+        public ICollection<string> ShowLosses { get; set; }
         public float FontSize { get; set; }
         public bool Invert { get; set; }
 
