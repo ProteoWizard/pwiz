@@ -202,7 +202,7 @@ namespace pwiz.Common.Collections
             {
                 return 1;
             }
-            return Comparer.Default.Compare(o1.ToString(), o2.ToString());
+            return NaturalComparer.Compare(o1.ToString(), o2.ToString()); // Natural Compare 
         }
 
         public static Comparer<object> ColumnValueComparer

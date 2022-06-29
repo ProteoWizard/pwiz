@@ -19,9 +19,8 @@
 
 using System;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 
-namespace pwiz.Skyline.Util.Extensions
+namespace pwiz.Common.Collections
 {
     /// <summary>
     /// Added by Clark Brace (cbrace3)
@@ -56,19 +55,35 @@ namespace pwiz.Skyline.Util.Extensions
 
             for (var i = 0; i < x1.Length && i < y1.Length; i++)
             {
-                // if both are numbers, compare as numbers
-                // else if one or other is number, it wins, return that
-                // else if string compare culture sensitive, case insensitive != 0, return that
-                // else next
-                var left = x[i];
-                var right = y[i];
-                if (!int.TryParse(left, out var x) || !int.TryParse(right, out var y))
+                var left = x1[i];
+                var right = y1[i];
+                // If both values are numbers
+                if (int.TryParse(left, out var l) && int.TryParse(right, out var r))
                 {
-                    var comparison =  string.Compare(left, right, StringComparison.CurrentCulture);
-                    if (comparison != 0)
-                        return comparison;
+                    var comp  =l.CompareTo(r);
+                    if (comp != 0)
+                    {
+                        return comp;
+                    }
+                }
+                else if (!int.TryParse(left, out _) || !int.TryParse(right, out _)) // If both are letters
+                {
+                    var comp = string.Compare(left, right, StringComparison.CurrentCulture);
+                    if (comp != 0)
+                    {
+                        return comp;
+                    }
+                }
+                else if(int.TryParse(left, out _)) // If right is a number, right wins
+                {
+                    return 1;
+                }
+                else if (int.TryParse(right, out _)) //If left is a number, left wins
+                {
+                    return -1; 
                 }
             }
+            //If all else equal go by length. If length is the same they are identical
             if (y1.Length > x1.Length)
             {
                 return 1;
