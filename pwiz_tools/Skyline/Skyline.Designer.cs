@@ -645,6 +645,7 @@ namespace pwiz.Skyline
             this.zhionsContextMenuItem.Name = "zhionsContextMenuItem";
             resources.ApplyResources(this.zhionsContextMenuItem, "zhionsContextMenuItem");
             this.zhionsContextMenuItem.Click += new System.EventHandler(this.zhMenuItem_Click);
+
             // 
             // zhhionsContextMenuItem
             // 
@@ -652,6 +653,7 @@ namespace pwiz.Skyline
             this.zhhionsContextMenuItem.Name = "zhhionsContextMenuItem";
             resources.ApplyResources(this.zhhionsContextMenuItem, "zhhionsContextMenuItem");
             this.zhhionsContextMenuItem.Click += new System.EventHandler(this.zhhMenuItem_Click);
+            
             // 
             // fragmentionsContextMenuItem
             // 

@@ -262,7 +262,7 @@
     <value>ModeUIExtender</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.523, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.462, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;labelPrecursor.Name" xml:space="preserve">
     <value>labelPrecursor</value>
@@ -316,6 +316,6 @@
     <value>GraphSpectrum</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=21.2.1.523, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=21.2.1.462, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1884,7 +1884,7 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowStatusBar = show;
             statusStrip.Visible = show;
-        } 
+        }
 
         public void ShowToolBar(bool show)
         {
