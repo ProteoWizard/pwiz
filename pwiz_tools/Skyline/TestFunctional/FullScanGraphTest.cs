@@ -27,9 +27,12 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -189,6 +192,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             Assert.AreEqual(SkylineWindow.GraphSpectrum.Range, SkylineWindow.GraphFullScan.Range);
             Assert.AreEqual(testRange, SkylineWindow.GraphFullScan.Range);
+
+            TestSpecialIonsAnnotations();
         }
 
         private static void ClickFullScan(double x, double y)
@@ -266,6 +271,30 @@ namespace pwiz.SkylineTestFunctional
         private static void SetSpectrum(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(isChecked));
+        }
+
+        private void TestSpecialIonsAnnotations()
+        {
+            var testIon = new MeasuredIon("Reporter_Test", "C31H46N14O4", 679.3899, 679.3899, Adduct.M_PLUS, true);
+
+            RunUI(() =>
+            {
+                var settings = SkylineWindow.DocumentUI.Settings;
+                var newFilter = settings.TransitionSettings.Filter.ChangeMeasuredIons(new List<MeasuredIon>(new[] { testIon }));
+                var newSettings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeFilter(newFilter));
+                SkylineWindow.ModifyDocument("Set test settings",
+                    doc => doc.ChangeSettings(newSettings));
+            });
+
+            Settings.Default.ShowSpecialIons = true;
+
+            WaitForDocumentLoaded();
+
+            SetShowAnnotations(true);
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
+            RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(670, 680)));
+            WaitForGraphs();
+            TestAnnotations(new [] {"Reporter_Test+"});
         }
     }
 }
