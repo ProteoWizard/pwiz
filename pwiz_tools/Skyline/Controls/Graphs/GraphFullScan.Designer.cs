@@ -51,6 +51,7 @@
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showPeakAnnotationsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.showCollisionEnergyContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -228,6 +229,7 @@
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showScanNumberContextMenuItem,
+            this.showCollisionEnergyContextMenuItem,
             this.showPeakAnnotationsContextMenuItem,
             this.toolStripSeparator1});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
@@ -250,6 +252,12 @@
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // showCollisionEnergyContextMenuItem
+            // 
+            this.showCollisionEnergyContextMenuItem.Name = "showCollisionEnergyContextMenuItem";
+            resources.ApplyResources(this.showCollisionEnergyContextMenuItem, "showCollisionEnergyContextMenuItem");
+            this.showCollisionEnergyContextMenuItem.Click += new System.EventHandler(this.showCollisionEnergyToolStripMenuItem_Click);
             // 
             // GraphFullScan
             // 
@@ -292,5 +300,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripLabel toolStripLabelPeakType;
         private System.Windows.Forms.ToolStripComboBox comboBoxPeakType;
+        private System.Windows.Forms.ToolStripMenuItem showCollisionEnergyContextMenuItem;
     }
 }

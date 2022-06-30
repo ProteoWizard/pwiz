@@ -2046,6 +2046,14 @@ namespace pwiz.Skyline.Model.DocSettings
                     result.TransitionSettings.ChangeIonMobilityFiltering(TransitionIonMobilityFiltering.EMPTY));
             }
 
+            if (documentFormat < DocumentFormat.VERSION_21_12)
+            {
+                result = result.ChangeTransitionSettings(transitionSettings =>
+                    transitionSettings.ChangeIntegration(
+                        transitionSettings.Integration.ChangeSynchronizedIntegration(null, false,
+                            Array.Empty<string>())));
+            }
+
             return result;
         }
 

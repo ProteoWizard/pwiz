@@ -65,6 +65,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public DbProteinName ProteinDbInfo { get; set; }
         public int SeqLength { get; set; }  // Useful for disambiguation of multiple responses
         public string ReviewStatus { get; set; } // Status reviewed or unreviewed in Uniprot
+        public bool IsReviewed => string.Equals(ReviewStatus,@"reviewed", StringComparison.OrdinalIgnoreCase); // Uniprot reviewed status
         public SearchStatus Status { get; set; }
 
         public void NoteSearchFailure()
@@ -458,7 +459,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const char GENINFO_TAG = 'G'; // search on entrez, but seperate out GI number searches
         public const char ENTREZ_TAG = 'E';
         public const char UNIPROTKB_TAG = 'U';
-        public const string UNIPROTKB_PREFIX_SGD = "SGD_S"; // formerly "SGD:S", but Uniprot search behavior has changed
+        public const string UNIPROTKB_PREFIX_SGD = "S"; // formerly "SGD:S", then ""SGD_S", but Uniprot search behavior changes once in a while
         public const char SEARCHDONE_TAG = 'X'; // to note searches which have been completed
 
         private const string STANDARD_REGEX_OUTPUT_FORMAT = "name:${name}\ndescription:${description}\naccession:${accession}\npreferredname:${preferredname}\ngene:${gene}\nspecies:${species}\nsearchterm:";
@@ -557,8 +558,8 @@ namespace pwiz.ProteomeDatabase.Fasta
 
             public virtual string ConstructUniprotURL(IEnumerable<string> searches)
             {
-               return ConstructURL(searches, 
-                   @"https://www.uniprot.org/uniprot/?query=({0})&format=tab&columns=id,genes,organism,length,entry name,protein names,reviewed",
+               return ConstructURL(searches,
+                   @"https://rest.uniprot.org/uniprotkb/stream?query=({0})&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
                    @"+OR+");
             }
 
@@ -1244,15 +1245,15 @@ namespace pwiz.ProteomeDatabase.Fasta
                                     if (!reader.EndOfStream)
                                     {
                                         var header = reader.ReadLine(); // eat the header
-                                        string[] fieldNames = header.Split('\t');
-                                        // Normally comes in as Entry\tEntry name\tStatus\tProtein names\tGene names\tOrganism\tLength, but could be any order
-                                        int colAccession = Array.IndexOf(fieldNames, @"Entry");
-                                        int colPreferredName = Array.IndexOf(fieldNames, @"Entry name");
-                                        int colDescription = Array.IndexOf(fieldNames, @"Protein names");
-                                        int colGene = Array.IndexOf(fieldNames, @"Gene names");
-                                        int colSpecies = Array.IndexOf(fieldNames, @"Organism");
-                                        int colLength = Array.IndexOf(fieldNames, @"Length");
-                                        int colStatus = Array.IndexOf(fieldNames, @"Status");
+                                        var fieldNames = header.Split('\t').ToList();
+                                        // Normally comes in as Entry\tEntry name\tStatus\tProtein names\tGene names\tOrganism\tLength, but could be any order or capitialization
+                                        int colAccession = fieldNames.FindIndex(i => i.Equals(@"Entry", StringComparison.OrdinalIgnoreCase));
+                                        int colPreferredName = fieldNames.FindIndex(i => i.Equals(@"Entry name", StringComparison.OrdinalIgnoreCase));
+                                        int colDescription = fieldNames.FindIndex(i => i.Equals(@"Protein names", StringComparison.OrdinalIgnoreCase));
+                                        int colGene = fieldNames.FindIndex(i => i.Equals(@"Gene names", StringComparison.OrdinalIgnoreCase));
+                                        int colSpecies = fieldNames.FindIndex(i => i.Equals(@"Organism", StringComparison.OrdinalIgnoreCase));
+                                        int colLength = fieldNames.FindIndex(i => i.Equals(@"Length", StringComparison.OrdinalIgnoreCase));
+                                        int colStatus = fieldNames.FindIndex(i => i.Equals(@"Reviewed", StringComparison.OrdinalIgnoreCase)); // Formerly "Status"
                                         while (!reader.EndOfStream)
                                         {
                                             var line = reader.ReadLine();
@@ -1323,7 +1324,6 @@ namespace pwiz.ProteomeDatabase.Fasta
 
                 if (responses.Count>0)
                 {
-                    const string STATUS_REVIEWED = "reviewed"; // Uniprot reviewed status
                     // now see if responses are ambiguous or not
                     if (proteins.Count == 1)
                     {
@@ -1337,9 +1337,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                         if (length == 0)  
                         {
                             // From a peptide list, probably - sequence unknown
-                            if (responses.Count(r => Equals(r.ReviewStatus, STATUS_REVIEWED)) == 1)
+                            if (responses.Count(r => r.IsReviewed) == 1)
                             {
-                                result = responses.First(r => Equals(r.ReviewStatus, STATUS_REVIEWED));
+                                result = responses.First(r => r.IsReviewed);
                             }
                             else if (responses.Count(r => Equals(r.Accession, proteins[0].Accession)) == 1)
                             {
@@ -1367,9 +1367,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                         {
                             result = responses.First(r =>r.SeqLength == length);
                         }
-                        else if (responses.Count(r => r.SeqLength == length && Equals(r.ReviewStatus, STATUS_REVIEWED)) == 1) // Narrow it down to reviewed only
+                        else if (responses.Count(r => r.SeqLength == length && r.IsReviewed) == 1) // Narrow it down to reviewed only
                         {
-                            result = responses.First(r => r.SeqLength == length && Equals(r.ReviewStatus, STATUS_REVIEWED));
+                            result = responses.First(r => r.SeqLength == length && r.IsReviewed);
                         }
 
                         if (result == null)
@@ -1380,9 +1380,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 proteins[0].NoteSearchFailure();
                                 break;
                             }
-                            else if (responses.Count(r => Equals(r.ReviewStatus, STATUS_REVIEWED)) == 1)
+                            else if (responses.Count(r => r.IsReviewed) == 1)
                             {
-                                result = responses.First(r => Equals(r.ReviewStatus, STATUS_REVIEWED));
+                                result = responses.First(r => r.IsReviewed);
                             }
                             else
                             {
@@ -1474,7 +1474,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                                 // Only look at responses with proper sequence length - narrowing to reviewed only if we have ambiguity
                                 var likelyResponses = reviewedOnly == 0 ?
                                     (from r in responses where (r.SeqLength == seqLength) select r).ToArray() :
-                                    (from r in responses where (r.SeqLength == seqLength && Equals(r.ReviewStatus, STATUS_REVIEWED)) select r).ToArray();
+                                    (from r in responses where (r.SeqLength == seqLength && r.IsReviewed) select r).ToArray();
 
                                 var results = (uniqueProteinLength && likelyResponses.Length == 1) ?
                                     likelyResponses : // Unambiguous - single response that matches this length, and this protein is the only one with this length
