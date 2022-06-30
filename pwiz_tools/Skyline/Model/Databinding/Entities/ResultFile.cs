@@ -188,31 +188,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return sibling.ListChildrenOfParent(SrmDocument).Skip(fileIndex).FirstOrDefault();
         }
 
-        public IDictionary<string, MedianDataValues> MedianData
+        public IDictionary<IsotopeLabelType, MedianDataValues> MedianData
         {
             get
             {
-                var dictionary = new Dictionary<string, MedianDataValues>();
+                var dictionary = new Dictionary<IsotopeLabelType, MedianDataValues>();
                 var normalizationData = DataSchema.NormalizedValueCalculator.GetNormalizationData();
                 foreach (var labelType in SrmDocument.Settings.PeptideSettings.Modifications.GetHeavyModificationTypes()
                              .Prepend(IsotopeLabelType.light))
                 {
-                    var median = normalizationData.GetMedian(Replicate.ReplicateIndex, ChromFileInfoId, labelType);
-                    if (!median.HasValue)
+                    var log2Median = normalizationData.GetMedian(Replicate.ReplicateIndex, ChromFileInfoId, labelType);
+                    if (!log2Median.HasValue)
                     {
                         continue;
                     }
 
-                    var normalizationFactor = double.NaN;
+                    var median = Math.Pow(2, log2Median.Value);
+
+                    var normalizationDivisor = double.NaN;
                     if (DataSchema.NormalizedValueCalculator.TryGetDenominator(NormalizationMethod.EQUALIZE_MEDIANS,
                             labelType, Replicate.ReplicateIndex, ChromFileInfoId, out double? denominator))
                     {
                         if (denominator.HasValue)
                         {
-                            normalizationFactor = 1 / denominator.Value;
+                            normalizationDivisor = denominator.Value;
                         }
                     }
-                    dictionary.Add(labelType.Name, new MedianDataValues(median.Value, normalizationFactor));
+                    dictionary.Add(labelType, new MedianDataValues(median, normalizationDivisor));
                 }
 
                 return dictionary;
@@ -221,16 +223,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         
         public class MedianDataValues
         {
-            public MedianDataValues(double median, double normalizationFactor)
+            public MedianDataValues(double median, double normalizationDivisor)
             {
                 MedianPeakArea = median;
-                MedianNormalizationFactor = normalizationFactor;
+                MedianNormalizationDivisor = normalizationDivisor;
             }
 
             [Format(Formats.PEAK_AREA)]
             public double MedianPeakArea { get; }
             [Format(Formats.STANDARD_RATIO)]
-            public double MedianNormalizationFactor { get; }
+            public double MedianNormalizationDivisor { get; }
 
             public override string ToString()
             {

@@ -403,7 +403,7 @@ namespace pwiz.Skyline.Model.Results
             if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
             {
                 var normalizationData = _normalizationData.Value;
-                var medianAdjustment = normalizationData.GetMedian(replicateIndex, fileId, labelType) - normalizationData.GetMedianMedian(fileInfo.SampleType, labelType);
+                var medianAdjustment = normalizationData.GetMedian(replicateIndex, fileId, labelType) - normalizationData.GetMedianMedian(labelType);
                 if (!medianAdjustment.HasValue)
                 {
                     denominator = null;

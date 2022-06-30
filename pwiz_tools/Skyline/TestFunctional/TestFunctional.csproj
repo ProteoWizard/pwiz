@@ -175,6 +175,7 @@
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
+    <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />

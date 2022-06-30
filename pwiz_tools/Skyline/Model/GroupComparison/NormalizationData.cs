@@ -36,13 +36,12 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         public static readonly NormalizationData EMPTY = new NormalizationData(new Dictionary<DataKey, DataValue>());
         private readonly IDictionary<DataKey, DataValue> _data;
-        private readonly IDictionary<Tuple<SampleType, IsotopeLabelType>, double> _medianMedians;
+        private readonly IDictionary<IsotopeLabelType, double> _medianMedians;
 
         private NormalizationData(IDictionary<DataKey, DataValue> data)
         {
             _data = data;
-            _medianMedians = data.ToLookup(keyValuePair => Tuple.Create(keyValuePair.Key.SampleType, keyValuePair.Key.IsotopeLabelType),
-                    kvp => kvp.Value)
+            _medianMedians = data.GroupBy(keyValuePair => keyValuePair.Key.IsotopeLabelType, kvp => kvp.Value)
                 .ToDictionary(grouping => grouping.Key,
                     grouping => grouping.Select(dataValue => dataValue.Median).Median());
         }
@@ -155,10 +154,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             return dataValue.Median;
         }
 
-        public double? GetMedianMedian(SampleType sampleType, IsotopeLabelType isotopeLabelType)
+        public double? GetMedianMedian(IsotopeLabelType isotopeLabelType)
         {
             double medianMedian;
-            if (_medianMedians.TryGetValue(Tuple.Create(sampleType, isotopeLabelType), out medianMedian))
+            if (_medianMedians.TryGetValue(isotopeLabelType, out medianMedian))
             {
                 return medianMedian;
             }

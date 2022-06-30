@@ -1762,11 +1762,38 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Median Data.
+        /// </summary>
+        public static string MedianData {
+            get {
+                return ResourceManager.GetString("MedianData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Median Detection Q Value.
         /// </summary>
         public static string MedianDetectionQValue {
             get {
                 return ResourceManager.GetString("MedianDetectionQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median Normalization Divisor.
+        /// </summary>
+        public static string MedianNormalizationDivisor {
+            get {
+                return ResourceManager.GetString("MedianNormalizationDivisor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median Peak Area.
+        /// </summary>
+        public static string MedianPeakArea {
+            get {
+                return ResourceManager.GetString("MedianPeakArea", resourceCulture);
             }
         }
         
