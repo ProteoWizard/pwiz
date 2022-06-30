@@ -84,10 +84,10 @@ exec(code)
 
 print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/#'
 
-if current_branch == "master":
+if current_branch == "master" or current_branch.startswith("skyline_"):
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding).strip()
-    base_branch = "master"
+    base_branch = current_branch
 elif current_branch.startswith("pull/"):
     pullMetadata = json.loads(get("https://api.github.com/repos/ProteoWizard/pwiz/" + current_branch.replace("pull", "pulls"), True))
     base_branch = pullMetadata["base"]["ref"]
@@ -101,11 +101,13 @@ else:
 
 print("Current commit: '%s'" % current_commit)
 
-print("Changed files:\n", changed_files)
+changed_files_str = changed_files
 changed_files = changed_files.splitlines()
+print(f"Changed files ({len(changed_files)}):\n", changed_files_str)
 
 # substitute "release" for specific skyline_##.# versions
-base_branch = re.sub("Skyline/skyline_.*", "release", base_branch)
+base_branch = re.sub("(Skyline/)?skyline_.*", "release", base_branch)
+print("Base branch: '%s'" % base_branch)
 
 # promote branch-specific targets into main match dictionaries
 for tuple in matchPaths:
@@ -114,13 +116,13 @@ for tuple in matchPaths:
 
 # match changed file paths to triggers
 triggers = {}
-if current_branch == "master" and len(changed_files) == 0:
+if (current_branch == "master" or current_branch.startswith("skyline_")) and len(changed_files) == 0:
     print("Empty change list on master branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
     for target in targets['All']:
         if target not in triggers:
             isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
             if not isBaseBranchDict and target not in triggers:
-                triggers[target] = "merge to master"
+                triggers[target] = "merge to %s" % base_branch
 else:
     for path in changed_files:
         if os.path.basename(path) == "smartBuildTrigger.py":
@@ -146,7 +148,7 @@ for targetKey in targets:
             notBuildingDueToChangedFiles[target] = targets[targetKey][target]
         elif isBaseBranchDict:
             for target2 in targets[targetKey][target]:
-                if target2 not in triggers:
+                if target2 not in triggers and not base_branch == target:
                     notBuildingDueToBranch[target2] = targets[targetKey][target][target2]
         else:
             building[target] = targets[targetKey][target]
