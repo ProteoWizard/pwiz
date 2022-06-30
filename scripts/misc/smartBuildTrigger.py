@@ -27,10 +27,17 @@ import base64
 import json
 
 args = sys.argv[1:len(sys.argv)]
-current_branch = args[0]
-bearer_token = args[1]
-teamcity_username = args[2]
-teamcity_password = args[3]
+
+if len(args) < 5:
+    print("Usage:")
+    print(" %s <targets_and_paths_file> <current branch> <GitHub authorization token> <teamcity_username> <teamcity_password>" % os.path.basename(sys.argv[0]))
+    exit(0)
+
+targets_and_paths_file = args[0]
+current_branch = args[1]
+bearer_token = args[2]
+teamcity_username = args[3]
+teamcity_password = args[4]
 
 def post(url, params, headers):
     if not 'TEAMCITY_VERSION' in os.environ:
@@ -70,92 +77,10 @@ def merge(dict1, *dicts):
                 r[k] = d[k]
     return r
 
-
-if len(args) < 4:
-    print("Usage:")
-    print(" %s <current branch> <GitHub authorization token> <teamcity_username> <teamcity_password>" % os.path.basename(sys.argv[0]))
-    exit(0)
-
-targets = {}
-targets['CoreWindowsRelease'] = \
-{
-    "bt83": "Core Windows x86_64"
-    ,"bt36": "Core Windows x86"
-    ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
-}
-#targets['CoreWindowsDebug'] = \
-#{
-#    "bt84": "Core Windows x86_64 debug"
-#    ,"bt75": "Core Windows debug"
-#}
-#targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
-targets['CoreWindows'] = targets['CoreWindowsRelease']
-targets['CoreLinux'] = {"bt17": "Core Linux x86_64"}
-
-targets['SkylineRelease'] = \
-{
-    'master':
-    {
-        "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        ,"bt209": "Skyline master and PRs (Windows x86_64)"
-        #,"bt19": "Skyline master and PRs (Windows x86)"
-    },
-    'release':
-    {
-        "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
-        #,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
-    }
-}
-
-#targets['SkylineDebug'] = \
-#{
-#    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
-#    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
-#}
-#targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
-targets['Skyline'] = targets['SkylineRelease']
-
-targets['Container'] = \
-{
-    'master':
-    {
-        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
-    },
-    'release':
-    {
-        "ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"
-    }
-}
-
-targets['BumbershootRelease'] = \
-{
-    "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-    ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
-}
-targets['BumbershootLinux'] = {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}
-targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
-
-targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
-targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot'], targets['Container'])
-
-# Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
-# "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
-matchPaths = [
-    (".*/smartBuildTrigger.py", {}),
-    ("libraries/.*", targets['All']),
-    ("pwiz/.*", targets['All']),
-    ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['CoreWindows']),
-    ("scripts/.*", targets['All']),
-    ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
-    ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
-    ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
-    ("pwiz_tools/Topograph/.*", targets['Skyline']),
-    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
-    ("pwiz_tools/.*", targets['All']),
-    ("Jamroot.jam", targets['All'])
-]
+# exec the targets_and_paths_file to define the targets and matchPaths variables
+with open(targets_and_paths_file, "rb") as source_file:
+    code = compile(source_file.read(), targets_and_paths_file, "exec")
+exec(code)
 
 print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/#'
 
@@ -193,7 +118,9 @@ if current_branch == "master" and len(changed_files) == 0:
     print("Empty change list on master branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
     for target in targets['All']:
         if target not in triggers:
-            triggers[target] = "merge to master"
+            isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
+            if not isBaseBranchDict and target not in triggers:
+                triggers[target] = "merge to master"
 else:
     for path in changed_files:
         if os.path.basename(path) == "smartBuildTrigger.py":
