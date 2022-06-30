@@ -157,7 +157,7 @@ buildNodeToPOST = '<build branchName="%s"><buildType id="%s"/></build>'
 base64string = base64.b64encode(('%s:%s' % (teamcity_username, teamcity_password)).encode('ascii')).decode('ascii')
 headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/xml"}
 for trigger in triggers:
-    if trigger == "bt209":
+    if trigger == "bt209" or trigger == "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional":
         continue # special case to skip triggering this build since Skyline Code Inspection starts it as part of build chain (TODO: refactor to make this capability more generic)
     print("Triggering build %s (%s): %s" % (building[trigger], trigger, triggers[trigger]))
     data = buildNodeToPOST % (current_branch, trigger)
