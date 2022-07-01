@@ -642,18 +642,20 @@ namespace pwiz.Skyline.SettingsUI
         }
 
 
-        public class comboOption
+        public class ComboOption : IComparable
         {
-            public SpectrumInfoLibrary library;
-            public comboOption(SpectrumInfoLibrary lib)
+            public SpectrumInfoLibrary spectrumInfoLibrary;
+            public string optionName;
+            public ComboOption(SpectrumInfoLibrary spectrumInfoLib)
             {
-                library = lib;
+                spectrumInfoLibrary = spectrumInfoLib;
+                optionName = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, spectrumInfoLibrary.FileName,
+                    spectrumInfoLibrary.RetentionTime);
             }
 
             public override string ToString()
             {
-                return string.Format(@"{0} ({1:F02} min)", library.FileName,
-                    library.RetentionTime);
+                return optionName;
             }
 
             public override bool Equals(object obj)
@@ -661,12 +663,19 @@ namespace pwiz.Skyline.SettingsUI
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != GetType()) return false;
-                return library.Equals(((comboOption)obj).library);
+                return spectrumInfoLibrary.Equals(((ComboOption)obj).spectrumInfoLibrary);
             }
 
             public override int GetHashCode()
             {
-                return library.GetHashCode();
+                return spectrumInfoLibrary.GetHashCode();
+            }
+
+            public int CompareTo(object obj)
+            {
+                if (obj == null) return 1;
+                ComboOption otherComboOption = obj as ComboOption;
+                return optionName.CompareTo(otherComboOption.optionName);
             }
         }
 
@@ -733,8 +742,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (-1 != index)
                 {
-                    SpectrumPeaksInfo spectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out spectrum))
+                    SpectrumPeaksInfo isLoadableSpectrum;
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out isLoadableSpectrum))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
 
@@ -780,10 +789,10 @@ namespace pwiz.Skyline.SettingsUI
                         var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, IsotopeLabelType.light,
                             LibraryRedundancy.all);
                         var numRedundancies = 0;
-                        var newDropDownOptions = new List<comboOption>();
-                        foreach (var spectra in redundantSpectra)
+                        var newDropDownOptions = new List<ComboOption>();
+                        foreach (var spectrum in redundantSpectra)
                         {
-                            newDropDownOptions.Add(new comboOption(spectra));
+                            newDropDownOptions.Add(new ComboOption(spectrum));
                             numRedundancies++;
                         }
                         comboRedundantSpectra.Visible = numRedundancies > 1;
@@ -929,31 +938,30 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         //Sets up the redundant dropdown menu and selects the spectrum to display on the graph
-        private SpectrumInfoLibrary setupComboBox(List<comboOption> options, int index)
+        private SpectrumInfoLibrary setupComboBox(List<ComboOption> options, int index)
         {
             if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
             {
-                return ((comboOption)comboRedundantSpectra.SelectedItem).library;
+                return ((ComboOption)comboRedundantSpectra.SelectedItem).spectrumInfoLibrary;
             }
             else
             {
+                comboRedundantSpectra.Items.Clear();
+                options.Sort();
                 foreach (var opt in options)
                 {
-                    if (opt.library.IsBest)
+                    comboRedundantSpectra.Items.Add(opt);
+                    if (opt.spectrumInfoLibrary.IsBest)
                     {
                         comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
-                        comboRedundantSpectra.Items.Clear();
-                        options.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
-                        foreach (var elt in options)
-                        {
-                            comboRedundantSpectra.Items.Add(elt);
-                        }
                         comboRedundantSpectra.SelectedItem = opt;
                         comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
                     }
                 }
 
-                return _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+                var spectraOptions = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best);
+                var toReturn = spectraOptions.FirstOrDefault();
+                return toReturn;
             }
         }
 

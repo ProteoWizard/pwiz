@@ -146,7 +146,6 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(document, null, 3, expectedMoleculeCount, expectedTransitionGroupCount,
                 expectedTransitionCount);
             CheckConsistentLibraryInfo();
-
             // p. 3 Select first peptide
             RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             RunUI(() => SkylineWindow.Size = new Size(820, 554));
@@ -1036,11 +1035,11 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
             var fileSet = new HashSet<String>();
             var RTSet = new HashSet<String>();
-            foreach (var redundantOption in dlg.RedundantComboBox.Items)
+            foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
             {
-                var splitName = redundantOption.ToString().Split(' ');
+                var splitName = redundantOption.optionName.Split(' ');
                 fileSet.Add(splitName[0]);
-                RTSet.Add(splitName[1]);
+                RTSet.Add(splitName[2]);
             }
             Assert.AreEqual(2, fileSet.Count);
             Assert.AreEqual(11, RTSet.Count);
