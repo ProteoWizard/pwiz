@@ -378,11 +378,7 @@ namespace pwiz.Skyline.FileUI
         private int _numColumns = -1;
         private int GetColumnCount(bool reset)
         {
-            if (reset)
-            {
-                _numColumns = -1;
-            }
-            if (_numColumns < 0)
+            if (reset || _numColumns < 0)
             {
                 // Inspect the input for lines with more columns than headers, or more headers than columns
                 _numColumns = 0;
