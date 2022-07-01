@@ -220,7 +220,7 @@ namespace pwiz.Skyline
                             d.MeasuredResults.ChangeIsJoiningDisabled(true))));
                     }
                     DocContainer.SetDocument(_doc, null);
-
+                    WaitForDocumentLoaded();
                     bool successProcessing = ProcessDocument(commandArgs);
                     bool successExporting = true;
                     if (successProcessing)
@@ -2508,7 +2508,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                var oldPeptides = db.GetPeptides().ToList();
+                var oldPeptides = db.ReadPeptides().ToList();
                 IList<DbIrtPeptide.Conflict> conflicts;
                 dbIrtPeptidesFilter = DbIrtPeptide.MakeUnique(dbIrtPeptidesFilter);
                 DbIrtPeptide.FindNonConflicts(oldPeptides, dbIrtPeptidesFilter, null, out conflicts);
