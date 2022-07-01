@@ -31,6 +31,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -438,6 +439,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            if (Settings.Default.ShowFullScanCE && _msDataFileScanHelper.MsDataSpectra.Any())
+            {
+                var ces = _msDataFileScanHelper.MsDataSpectra.SelectMany(spectrum => spectrum.Precursors)
+                    .Select(precursor => precursor.PrecursorCollisionEnergy).Where(ce => ce.HasValue).Select(ce => ce.Value)
+                    .Distinct().ToArray();
+                if (ces.Length == 1)
+                {
+                    GraphPane.Title.Text = TextUtil.SpaceSeparate(GraphPane.Title.Text,
+                        Resources.GraphFullScan_CreateGraph_CE_, ces[0].ToString(Formats.OPT_PARAMETER));
+                }
+            }
+
             FireSelectedScanChanged(retentionTime);
         }
 
@@ -567,6 +580,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var stateProvider = (GraphSpectrum.IStateProvider) _documentContainer;
             var group = precursor.TransitionGroup;
             var types = stateProvider.ShowIonTypes(group.IsProteomic);
+            var losses = stateProvider.ShowLosses();
             var adducts =
                 (group.IsProteomic
                     ? Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES
@@ -660,6 +674,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     ShowTypes = types,
                     ShowCharges = charges,
+                    ShowLosses = losses,
                     ShowRanks = Settings.Default.ShowRanks,
                     ShowScores = Settings.Default.ShowLibraryScores,
                     ShowMz = Settings.Default.ShowIonMz,
@@ -1236,6 +1251,18 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public MenuControl<T> GetHostedControl<T>() where T:Panel, IControlSize, new()
+        {
+                if (ZedGraphControl.ContextMenuStrip != null)
+                {
+                    var chargesItem = ZedGraphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
+                        .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+                    if (chargesItem != null)
+                        return chargesItem.DropDownItems[0] as MenuControl<T>;
+                }
+                return null;
+        }
+
         #region Mouse events
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
@@ -1243,9 +1270,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
                 showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-                menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
-                menuStrip.Items.Insert(1, showPeakAnnotationsContextMenuItem);
-                menuStrip.Items.Insert(2, toolStripSeparator1);
+                menuStrip.Items.Add(showScanNumberContextMenuItem);
+                showCollisionEnergyContextMenuItem.Checked = Settings.Default.ShowFullScanCE;
+                menuStrip.Items.Add(showCollisionEnergyContextMenuItem);
+                menuStrip.Items.Add(showPeakAnnotationsContextMenuItem);
+                menuStrip.Items.Add(toolStripSeparator1);
 
                 var currentTransition =
                     _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
@@ -1283,6 +1312,9 @@ namespace pwiz.Skyline.Controls.Graphs
             var pt = new PointF(e.X, e.Y);
             var nearestLabel = GetNearestLabel(pt);
             if (nearestLabel == null || nearestLabel.Tag == null)
+                return false;
+            var transition = (int) nearestLabel.Tag;
+            if (transition < 0 || transition >= _transitionIndex.Length)
                 return false;
             if (_showIonSeriesAnnotations && _transitionIndex[(int)nearestLabel.Tag] < 0)
                 return false;
@@ -1375,6 +1407,12 @@ namespace pwiz.Skyline.Controls.Graphs
         private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowFullScanNumber = !Settings.Default.ShowFullScanNumber;
+            UpdateUI();
+        }
+
+        private void showCollisionEnergyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanCE = !Settings.Default.ShowFullScanCE;
             UpdateUI();
         }
 

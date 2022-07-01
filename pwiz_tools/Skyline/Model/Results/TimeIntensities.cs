@@ -363,7 +363,10 @@ namespace pwiz.Skyline.Model.Results
                     double massError2 = MassErrors[index];
                     double weight1 = intensity1 * (time2 - newTime);
                     double weight2 = intensity2 * (newTime - time1);
-                    newMassError = (weight1 * massError1 + weight2 * massError2) / (weight1 + weight2);
+                    if (weight1 + weight2 > 0)
+                    {
+                        newMassError = (weight1 * massError1 + weight2 * massError2) / (weight1 + weight2);
+                    }
                 }
 
                 if (ScanIds != null)

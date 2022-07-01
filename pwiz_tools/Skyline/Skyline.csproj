@@ -637,6 +637,8 @@
     <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
+    <Compile Include="Properties\MetadataRuleSetList.cs" />
+    <Compile Include="Properties\RemoteAccountList.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -673,7 +675,6 @@
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
@@ -1585,6 +1586,9 @@
     <Compile Include="FileUI\ImportResultsNameDlg.Designer.cs">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </Compile>
+	<Compile Include="Controls\IonTypeSelectorControl.cs">
+		  <SubType>Component</SubType>
+	</Compile>
     <Compile Include="Model\Annotations.cs" />
     <Compile Include="Model\BackgroundLoader.cs" />
     <Compile Include="Model\DocNode.cs" />

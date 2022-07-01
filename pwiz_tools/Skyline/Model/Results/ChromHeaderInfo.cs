@@ -1800,9 +1800,9 @@ namespace pwiz.Skyline.Model.Results
     {
         public bool Equals(TItem f1, TItem f2)
         {
-            if (ReferenceEquals(f1, null) || ReferenceEquals(f2, null))
+            if (f1 == null || f2 == null)
             {
-                return ReferenceEquals(f1, null) && ReferenceEquals(f2, null);
+                return ReferenceEquals(f1, f2);
             }
             return Equals(f1.FilePath, f2.FilePath);
         }
