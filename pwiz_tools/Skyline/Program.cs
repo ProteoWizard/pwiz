@@ -415,7 +415,6 @@ namespace pwiz.Skyline
 
             var data = Encoding.UTF8.GetBytes(postDataString);
             var request = (HttpWebRequest) WebRequest.Create(analyticsUrl);
-            request.UserAgent = Install.GetUserAgentString();
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
