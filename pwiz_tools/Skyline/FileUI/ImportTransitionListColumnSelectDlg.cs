@@ -376,8 +376,12 @@ namespace pwiz.Skyline.FileUI
         public const int N_DISPLAY_LINES = 100; // Display no more first than 100 lines of the import
 
         private int _numColumns = -1;
-        private int GetColumnCount()
+        private int GetColumnCount(bool reset)
         {
+            if (reset)
+            {
+                _numColumns = -1;
+            }
             if (_numColumns < 0)
             {
                 // Inspect the input for lines with more columns than headers, or more headers than columns
@@ -404,7 +408,7 @@ namespace pwiz.Skyline.FileUI
             var table = new DataTable("TransitionList");
 
             // Create the first row of columns
-            var numColumns = GetColumnCount();
+            var numColumns = GetColumnCount(true);
             for (var i = 0; i < numColumns; i++)
                 table.Columns.Add().DataType = typeof(string);
 
@@ -455,7 +459,7 @@ namespace pwiz.Skyline.FileUI
         private void InitializeComboBoxes()
         {
             ComboBoxes = new List<LiteDropDownList>();
-            var columnCount = GetColumnCount();
+            var columnCount = GetColumnCount(true);
             for (var i = 0; i < columnCount; i++)
             {
                 var combo = new LiteDropDownList();
@@ -545,7 +549,7 @@ namespace pwiz.Skyline.FileUI
             // If there are items on our saved column list and the file does not contain headers (or the headers are the same as the previous file),
             // and the number of columns matches the saved column count then we try using the saved columns and apply them if they work
             int savedCount = Settings.Default.CustomImportTransitionListColumnTypesList.Count;
-            if (savedCount != 0 && (headers == null || sameHeaders) && savedCount == GetColumnCount())
+            if (savedCount != 0 && (headers == null || sameHeaders) && savedCount == GetColumnCount(false))
             {
                 UseSavedColumnsIfValid();
             }
