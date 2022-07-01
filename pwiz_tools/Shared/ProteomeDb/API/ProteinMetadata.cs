@@ -307,6 +307,19 @@ namespace pwiz.ProteomeDatabase.API
         {
             Service = service;
             Query = query;
+            if (service == WebEnabledFastaImporter.UNIPROTKB_TAG && query != null)
+            {
+                // UniprotKB has gotten tweaky about SGD yeast entries, as of 6/28/2022 only
+                // wants to see "S000000001" from "SGD:S000000001" or "SGDID:S000000001"
+                if (query.StartsWith(@"SGD:"))
+                {
+                    Query = query.Substring(4);
+                }
+                else if (query.StartsWith(@"SGDID:"))
+                {
+                    Query = query.Substring(6);
+                }
+            }
         }
         public char Service { get; private set; }
         public string Query { get; private set; } // an accession id, gi number etc
