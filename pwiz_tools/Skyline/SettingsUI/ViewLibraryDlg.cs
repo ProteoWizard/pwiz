@@ -928,7 +928,6 @@ namespace pwiz.Skyline.SettingsUI
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
         }
 
-        //Sets up the redundant dropdown menu and selects the spectrum to display on the graph
         private SpectrumInfoLibrary setupComboBox(List<comboOption> options, int index)
         {
             if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
@@ -937,6 +936,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
+//                var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
                 foreach (var opt in options)
                 {
                     if (opt.library.IsBest)

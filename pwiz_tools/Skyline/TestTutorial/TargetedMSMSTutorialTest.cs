@@ -1013,7 +1013,7 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        //Tests the redundant spectrum dropdown menu in the ViewSpectralLibraries dialogue
+        //Tests the redundant spectrum dropdown menu in the ViewSpectralLibraries application
         private void TestRedundantComboBox()
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
