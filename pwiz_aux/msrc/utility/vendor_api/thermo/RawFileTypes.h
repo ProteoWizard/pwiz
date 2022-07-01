@@ -112,6 +112,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Q_Exactive_Plus,
     InstrumentModelType_Q_Exactive_HF,
     InstrumentModelType_Q_Exactive_HF_X,
+    InstrumentModelType_Q_Exactive_UHMR,
     InstrumentModelType_Surveyor_PDA,
     InstrumentModelType_Accela_PDA,
     InstrumentModelType_Orbitrap_Fusion,
@@ -229,6 +230,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"Q EXACTIVE PLUS", InstrumentModelType_Q_Exactive_Plus, Contains},
     {"Q EXACTIVE HF-X", InstrumentModelType_Q_Exactive_HF_X, Contains},
     {"Q EXACTIVE HF", InstrumentModelType_Q_Exactive_HF, Contains},
+    {"Q EXACTIVE UHMR", InstrumentModelType_Q_Exactive_UHMR, Contains},
     {"Q EXACTIVE", InstrumentModelType_Q_Exactive, Contains},
     {"EXACTIVE PLUS", InstrumentModelType_Exactive_Plus, Contains},
     {"EXACTIVE", InstrumentModelType_Exactive, Contains},
@@ -317,6 +319,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_HF_X:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -429,6 +432,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -564,6 +568,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -701,6 +706,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
