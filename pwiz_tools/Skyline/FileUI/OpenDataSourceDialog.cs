@@ -468,7 +468,7 @@ namespace pwiz.Skyline.FileUI
                     return x.isFolder ? -1 : 1;
                 }
                 return NaturalComparer.Compare(x.name, y.name);
-            }); // Sorts by natural sort order
+            }); // Sorts by natural sort order for easier more natural readability
 
 
             // Populate the list
