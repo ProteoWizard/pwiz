@@ -99,9 +99,10 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test for natural sort. Randomly shuffles random strings and then sorts in order to
-        /// ensure consistency. Tests both long and short tests.
-        ///  
+        /// Test for natural sort. Randomly shuffles sorted lists of stings and then sorts them again in order to ensure
+        /// consistency and accuracy in establishing the original natural sort order. This test is run both on a small list
+        /// and a larger stress test list to demonstrate consistency across a diverse range of strings for this sort.
+        /// 
         /// </summary>
         [TestMethod]
         public void TestNaturalSort()
