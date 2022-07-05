@@ -61,6 +61,23 @@ namespace pwiz.SkylineTest.Reporting
             }
         }
 
+        [TestMethod]
+        public void TestProteinResultTicArea()
+        {
+            PropertyPath ppProteinResults = PropertyPath.Root.Property(nameof(Protein.Results)).DictionaryValues();
+            var dataSchema = GetDataSchema();
+            var viewSpec = new ViewSpec().SetColumns(new[]
+            {
+                new ColumnSpec(PropertyPath.Root),
+                new ColumnSpec(ppProteinResults.Property(nameof(ProteinResult.Abundance))),
+                new ColumnSpec(ppProteinResults.Property(nameof(ProteinResult.Replicate))
+                    .Property(nameof(Replicate.Files))
+                    .LookupAllItems().Property(nameof(ResultFile.TicArea)))
+            }).SetRowType(typeof(Protein));
+            var viewInfo = new ViewInfo(dataSchema, typeof(Protein), viewSpec);
+            EnsureViewRoundTrips(viewInfo);
+        }
+
         private void ValidateReport(ReportSpec reportSpec, Type rowType)
         {
             var dataSchema = GetDataSchema();
