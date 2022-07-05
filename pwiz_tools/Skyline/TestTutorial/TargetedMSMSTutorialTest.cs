@@ -146,6 +146,7 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(document, null, 3, expectedMoleculeCount, expectedTransitionGroupCount,
                 expectedTransitionCount);
             CheckConsistentLibraryInfo();
+
             // p. 3 Select first peptide
             RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             RunUI(() => SkylineWindow.Size = new Size(820, 554));
@@ -458,7 +459,6 @@ namespace pwiz.SkylineTestTutorial
             var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 19);
-
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 
@@ -1012,13 +1012,18 @@ namespace pwiz.SkylineTestTutorial
             }
         }
 
-        //Tests the redundant spectrum dropdown menu in the ViewSpectralLibraries dialogue
+        /// <summary>
+        /// Tests the redundant spectra dropdown menu in the <see cref="ViewLibraryDlg"/> which allows the user to view redundant spectra
+        /// </summary>
         private void TestRedundantComboBox()
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
+            //The dropdown is only visible if the peptide has redundant spectra. Index 0 does.
             Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
             RunUI(() => dlg.SelectedIndex = 1);
+            //The peptide at index one does not have redundant spectra
             Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+            //Check that the peaks count of the graphed item matches the peaks of the selected spectra
             Assert.AreNotEqual(144, dlg.GraphItem.PeaksCount);
             RunUI(() => dlg.SelectedIndex = 0);
             Assert.AreEqual(144, dlg.GraphItem.PeaksCount);
@@ -1028,8 +1033,10 @@ namespace pwiz.SkylineTestTutorial
                 dlg.SelectedIndex = 4;
             });
             Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+            //Checks that for this peptide, there are 11 different spectra available in the dropdown
             Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
             RunUI(() => dlg.RedundantComboBox.SelectedIndex = 0);
+            //Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
             Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
             RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
             Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
@@ -1041,6 +1048,7 @@ namespace pwiz.SkylineTestTutorial
                 fileSet.Add(splitName[0]);
                 RTSet.Add(splitName[2]);
             }
+            //Checks the naming conventions are accurate, two different file names and 11 different retention times
             Assert.AreEqual(2, fileSet.Count);
             Assert.AreEqual(11, RTSet.Count);
             RunUI(() => dlg.SelectedIndex = 1);

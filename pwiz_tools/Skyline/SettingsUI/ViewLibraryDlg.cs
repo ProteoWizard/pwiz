@@ -742,8 +742,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (-1 != index)
                 {
-                    SpectrumPeaksInfo isLoadableSpectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out isLoadableSpectrum))
+                    SpectrumPeaksInfo loadedSpectrum;
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out loadedSpectrum))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
 
@@ -835,8 +835,6 @@ namespace pwiz.Skyline.SettingsUI
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
                         // Update file and retention time indicators
-                        // var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
-                        //     IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
                         if (spectrumInfo != null)
                         {
                             double? rt = libraryChromGroup?.RetentionTime ?? spectrumInfo.RetentionTime;
@@ -953,6 +951,7 @@ namespace pwiz.Skyline.SettingsUI
                     comboRedundantSpectra.Items.Add(opt);
                     if (opt.spectrumInfoLibrary.IsBest)
                     {
+                        //Sets the selected dropdown item to what is graphed without updating the UI.
                         comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
                         comboRedundantSpectra.SelectedItem = opt;
                         comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
