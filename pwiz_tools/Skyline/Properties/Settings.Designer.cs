@@ -1486,6 +1486,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string StackTraceListVersion {
+            get {
+                return ((string)(this["StackTraceListVersion"]));
+            }
+            set {
+                this["StackTraceListVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         public global::System.Collections.Specialized.StringCollection CustomFinders {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["CustomFinders"]));
@@ -3260,7 +3272,6 @@ namespace pwiz.Skyline.Properties {
                 this["ShowZHHIons"] = value;
             }
         }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
@@ -3268,8 +3279,30 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ((string)(this["LastProteinAssociationFastaFilepath"]));
             }
+
             set {
                 this["LastProteinAssociationFastaFilepath"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ShowLosses {
+            get {
+                return ((string)(this["ShowLosses"]));    		}
+            set {
+                this["ShowLosses"] = value;
+            }
+        }		
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowFullScanCE {
+            get {
+                return ((bool)(this["ShowFullScanCE"]));
+            }
+            set {
+                this["ShowFullScanCE"] = value;
             }
         }
     }

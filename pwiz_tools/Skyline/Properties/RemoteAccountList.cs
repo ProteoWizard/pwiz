@@ -16,14 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model.Results.RemoteApi
+namespace pwiz.Skyline.Properties
 {
     public sealed class RemoteAccountList : SettingsList<RemoteAccount>
     {
