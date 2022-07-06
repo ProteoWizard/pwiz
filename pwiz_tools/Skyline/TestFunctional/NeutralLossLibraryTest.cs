@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -82,8 +83,12 @@ namespace pwiz.SkylineTestFunctional
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[]
                 {
                     new FragmentLoss("NH3"),
-                    new FragmentLoss("H2O"),
                     new FragmentLoss(null, 20, 25)
+                });
+            var waterLossMod = new StaticMod("Water Loss-only", "D", null, false, null,
+                LabelAtoms.None, RelativeRT.Matching, null, null, new[]
+                {
+                    new FragmentLoss("H2O")
                 });
             var heavyKMod = new StaticMod("Heavy K", "K", ModTerminus.C, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             var librarySpec = new BiblioSpecLiteSpec("Phospho Library",
@@ -93,10 +98,13 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.StaticModList.Clear();
             Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
             Settings.Default.StaticModList.Add(phosphoLossMod);
+            Settings.Default.StaticModList.Add(multipleLossMod);
+            Settings.Default.StaticModList.Add(waterLossMod);
             Settings.Default.HeavyModList.Clear();
             Settings.Default.HeavyModList.Add(heavyKMod);
             Settings.Default.SpectralLibraryList.Clear();
             Settings.Default.SpectralLibraryList.Add(librarySpec);
+            Settings.Default.ShowLosses = "H3PO4,H2O,NH3";
 
             // Prepare document settings for this test
             const int countIons = 6;
@@ -149,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Set test settings", doc =>
                 doc.ChangeSettings(doc.Settings.ChangePeptideModifications(mod =>
                         mod.ChangeMaxNeutralLosses(2)
-                            .ChangeStaticModifications(new List<StaticMod>(mod.StaticModifications) {multipleLossMod})
+                            .ChangeStaticModifications(new List<StaticMod>(mod.StaticModifications) {multipleLossMod, waterLossMod})
                             .ChangeModifications(IsotopeLabelType.heavy, new[] { heavyKMod }))
                     .ChangeTransitionFilter(filter =>
                         filter.ChangeFragmentRangeFirstName("m/z > precursor")
@@ -231,8 +239,12 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editModsDlgNever, editModsDlgNever.OkDialog);
                 OkDialog(peptideSettingsUINever, peptideSettingsUINever.OkDialog);
                 var docAfterNever = WaitForDocumentChange(docBeforeNever);
-                Assert.AreEqual(0, GetLossCount(docAfterNever, 1));
+                Assert.AreEqual(2, GetLossCount(docAfterNever, 1));
+
+                RunUI(SkylineWindow.Undo);
             }
+            TestLossAnnotationsControl();
+
         }
 
         private static int GetLossCount(SrmDocument document, int minLosses)
@@ -251,6 +263,100 @@ namespace pwiz.SkylineTestFunctional
             nodeTree.Expand();
             return from TreeNode nodeChild in nodeTree.Nodes
                    select nodeChild.Text;
+        }
+
+        private void TestLossAnnotationsControl()
+        {
+            MenuControl<IonTypeSelectionPanel> menuControl = null;
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                menuControl = new MenuControl<IonTypeSelectionPanel>(SkylineWindow.GraphSpectrumSettings,
+                    SkylineWindow.DocumentUI.Settings.PeptideSettings);
+                //Make sure losses are visible by default after the document load
+                AssertLossLabelCount(12, 13);
+                AssertLossControlButtonCount(menuControl, 13, 7);
+            });
+            RunUI(() =>
+            {
+                SkylineWindow.ShowLosses(new[] { "H2O" });
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {   //all losses in the document, but only H2O is visible
+                menuControl.Update(SkylineWindow.GraphSpectrumSettings, SkylineWindow.DocumentUI.Settings.PeptideSettings);
+                //Make sure all displayed losses are enabled
+                AssertLossLabelCount(6,6);
+                AssertLossControlButtonCount(menuControl, 13, 3);
+            });
+
+            //Change peptide mod settings
+            var docBefore = SkylineWindow.Document;
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(() =>
+                SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Modifications));
+            RunUI(() => peptideSettingsUI.PickedStaticMods = new[] { "Water Loss-only" });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            WaitForDocumentChange(docBefore);
+            FindNode("K.SYDLDPGAGSLEI.");   //select a node without phosphate mod
+            WaitForGraphs();
+            RunUI(() =>
+            {   //water loss only in the document and only H2O is visible
+                menuControl.Update(SkylineWindow.GraphSpectrumSettings, SkylineWindow.DocumentUI.Settings.PeptideSettings);
+                AssertLossLabelCount(9, 9);
+                AssertLossControlButtonCount(menuControl, 10, 4);
+            });
+
+            docBefore = SkylineWindow.Document;
+            peptideSettingsUI = ShowDialog<PeptideSettingsUI>(() =>
+                SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Modifications));
+            RunUI(() => peptideSettingsUI.PickedStaticMods = new string[] { });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            WaitForDocumentChange(docBefore);
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                menuControl.Update(SkylineWindow.GraphSpectrumSettings, SkylineWindow.DocumentUI.Settings.PeptideSettings);
+                //No losses visible
+                AssertLossLabelCount(0, 0);
+                AssertLossControlButtonCount(menuControl, 8, 2);
+            });
+
+            RunUI(() => { menuControl.Dispose(); });
+
+        }
+
+        public static void AssertLossLabelCount(int lossLabelCount, int lossSpectrumPeaksCount)
+        {
+            //find all annotations with losses
+            var lossLabelMatch = new Regex(@"(\D)(\d+) -([^ +]+).*");
+            var ionLabelsWithLoss = SkylineWindow.GraphSpectrum.IonLabels
+                .Select(label => lossLabelMatch.Match(label)).ToList().FindAll(m => m.Success).ToList();
+            Assert.AreEqual(lossLabelCount, ionLabelsWithLoss.Count);
+
+            //get matched peaks with losses from the currently displayed spectrum
+            var showLossesProperty = SkylineWindow.GraphSpectrumSettings.ShowLosses;
+            var ionsWithLosses = SkylineWindow.GraphSpectrum.DisplayedSpectrum.PeaksMatched
+                .SelectMany(p => p.MatchedIons).ToList().FindAll(ion => ion.Losses != null && ion.HasVisibleLoss(showLossesProperty))
+                .ToList();
+
+            Assert.AreEqual(lossSpectrumPeaksCount, ionsWithLosses.Count);
+
+            //match the peak to the spectrum annotations
+            //make sure each label has a matching peak
+            var matchedList = ionLabelsWithLoss.Select(label => new {
+                label,
+                ion = ionsWithLosses.Find(
+                    ion => label.Groups[1].Value.Equals(ion.IonType.GetLocalizedString()) &&
+                           label.Groups[2].Value.Equals(ion.Ordinal.ToString()) &&
+                           Math.Abs(ion.Losses.Mass - double.Parse(label.Groups[3].Value)) < 0.1)
+            });
+
+            Assert.AreEqual(lossLabelCount, matchedList.Count());
+        }
+        public static void AssertLossControlButtonCount<T>(MenuControl<T> control, int buttonsTotal, int buttonsChecked) where T : Panel, IControlSize, new()
+        {
+            Assert.AreEqual(buttonsTotal, control.HostedControl.Controls.OfType<CheckBox>().Count());
+            Assert.AreEqual(buttonsChecked, control.HostedControl.Controls.OfType<CheckBox>().ToList().FindAll(cb => cb.Checked).Count);
         }
     }
 }

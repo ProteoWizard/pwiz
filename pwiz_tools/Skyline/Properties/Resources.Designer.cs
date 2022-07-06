@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -17232,6 +17232,69 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to C-Term:.
+        /// </summary>
+        public static string IonTypeSelector_CTermLabel {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_CTermLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deselect all losses.
+        /// </summary>
+        public static string IonTypeSelector_DeselectAllLossesTooltip {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_DeselectAllLossesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Losses:.
+        /// </summary>
+        public static string IonTypeSelector_LossesLabel {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_LossesLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Formula: {0}.
+        /// </summary>
+        public static string IonTypeSelector_LossesTooltip {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_LossesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to N-Term:.
+        /// </summary>
+        public static string IonTypeSelector_NTermLabel {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_NTermLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select all losses.
+        /// </summary>
+        public static string IonTypeSelector_SelectAllLossesTooltip {
+            get {
+                return ResourceManager.GetString("IonTypeSelector_SelectAllLossesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding peptides.
+        /// </summary>
+        public static string IrtDb_AddPeptides_Adding_peptides {
+            get {
+                return ResourceManager.GetString("IrtDb_AddPeptides_Adding_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to iRT Database Files.
         /// </summary>
         public static string IrtDb_FILTER_IRTDB_iRT_Database_Files {
@@ -18837,6 +18900,15 @@ namespace pwiz.Skyline.Properties {
         public static string LongWaitDlg_PerformWork_canceled {
             get {
                 return ResourceManager.GetString("LongWaitDlg_PerformWork_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Unknown).
+        /// </summary>
+        public static string Loss_FormulaUnknown {
+            get {
+                return ResourceManager.GetString("Loss_FormulaUnknown", resourceCulture);
             }
         }
         

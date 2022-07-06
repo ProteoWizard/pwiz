@@ -60,7 +60,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     # generate AssemblyInfo.cs for executables
     generate-skyline-AssemblyInfo.cs "Skyline" : "Targeted Mass Spec Environment" : "Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
-	generate-skyline-AssemblyInfo.cs "SkylineBatch" : "Batch Processing with Skyline" : "Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineBatch" : "Batch Processing with Skyline" : "Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs" ;
     #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "TestRunner" : "Command-line testing tool" : "TestRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;

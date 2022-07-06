@@ -580,6 +580,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var stateProvider = (GraphSpectrum.IStateProvider) _documentContainer;
             var group = precursor.TransitionGroup;
             var types = stateProvider.ShowIonTypes(group.IsProteomic);
+            var losses = stateProvider.ShowLosses();
             var adducts =
                 (group.IsProteomic
                     ? Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES
@@ -673,6 +674,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     ShowTypes = types,
                     ShowCharges = charges,
+                    ShowLosses = losses,
                     ShowRanks = Settings.Default.ShowRanks,
                     ShowScores = Settings.Default.ShowLibraryScores,
                     ShowMz = Settings.Default.ShowIonMz,
@@ -1249,6 +1251,18 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public MenuControl<T> GetHostedControl<T>() where T:Panel, IControlSize, new()
+        {
+                if (ZedGraphControl.ContextMenuStrip != null)
+                {
+                    var chargesItem = ZedGraphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
+                        .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+                    if (chargesItem != null)
+                        return chargesItem.DropDownItems[0] as MenuControl<T>;
+                }
+                return null;
+        }
+
         #region Mouse events
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
@@ -1298,6 +1312,9 @@ namespace pwiz.Skyline.Controls.Graphs
             var pt = new PointF(e.X, e.Y);
             var nearestLabel = GetNearestLabel(pt);
             if (nearestLabel == null || nearestLabel.Tag == null)
+                return false;
+            var transition = (int) nearestLabel.Tag;
+            if (transition < 0 || transition >= _transitionIndex.Length)
                 return false;
             if (_showIonSeriesAnnotations && _transitionIndex[(int)nearestLabel.Tag] < 0)
                 return false;
