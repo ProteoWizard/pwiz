@@ -417,6 +417,7 @@ namespace pwiz.Skyline.SettingsUI
             PeptideExcludeRegex[] exclusions = _driverExclusion.Chosen;
 
             var peptideUniquenessMode = ComboPeptideUniquenessConstraintSelected;
+            var parsimonySettings = _peptideSettings.Filter.ParsimonySettings;
 
             bool autoSelect = cbAutoSelect.Checked;
             PeptideFilter filter;
@@ -427,7 +428,8 @@ namespace pwiz.Skyline.SettingsUI
                                            maxPeptideLength,
                                            exclusions,
                                            autoSelect,
-                                           peptideUniquenessMode);
+                                           peptideUniquenessMode,
+                                           parsimonySettings);
             }
             catch (InvalidDataException x)
             {
