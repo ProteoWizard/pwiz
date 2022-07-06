@@ -202,7 +202,10 @@ namespace pwiz.Common.Collections
             {
                 return 1;
             }
-            return NaturalComparer.Compare(o1.ToString(), o2.ToString()); // Compare using natural non-lexicographical order for easier human readability. Compatible with both numbers (which have priority) as well as letters ex: (a1b,a20b,a3b --> a1b,a3b,a20b).
+            // Compare using natural non-lexicographical order for easier human readability.
+            // Compatible with both numbers (which have priority) as well as letter
+            // e.g. (a1b,a20b,a3b --> a1b,a3b,a20b).
+            return NaturalComparer.Compare(o1.ToString(), o2.ToString()); 
         }
 
         public static Comparer<object> ColumnValueComparer
