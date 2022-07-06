@@ -102,7 +102,9 @@ namespace pwiz.SkylineTest
         /// Test for natural sort. Randomly shuffles sorted lists of stings and then sorts them again in order to ensure
         /// consistency and accuracy in establishing the original natural sort order. This test is run both on a small list
         /// and a larger stress test list to demonstrate consistency across a diverse range of strings for this sort.
-        /// 
+        /// The longer stress test list additionally ensures that the random shuffle of the list will not simply shuffle
+        /// into the correct order.
+
         /// </summary>
         [TestMethod]
         public void TestNaturalSort()
@@ -110,8 +112,8 @@ namespace pwiz.SkylineTest
             //Short sort test 
             var orderedSample = new List<string>() 
             {   
-                "0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","04ZaO","4tuzE",
-                "4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","6-v2h","7Z25C","8fMsb","8HRzI",
+                "1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","4tuzE",
+                "4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","7Z25C","8fMsb","8HRzI",
                 "8wqJy","9jz1y","a5E6p","a736Q","aL4lL","alpXu","B-2ag","BRrbj","bzUgj","c8qdT","CdaAF",
                 "CDk8I","Cdm0k","CFYgZ","D9Xdy","dP8a5","e9teS","eibUe","EMNkm","EsE4z","evAra","eZUyJ",
                 "f1A-B","fB6mW","F-oT2","FUjdN","GCtkn","gLHOp","gNbrM","Go6jE","gRm0t","Gw_5C","gxuE_",
@@ -131,22 +133,22 @@ namespace pwiz.SkylineTest
             //Long sort stress test
             var orderSampleStressTest = new List<string>()
             {
-                "00Wv0","0aJdm","0dAx8","0gK4B","0j_7m",
-                "0LM7X","0NFwA","0RBi2","0S6Lx","0yIXs","1c54a","1eALG","1F8Zo","1fhQq","1Guoe","1H-un","1idi4",
+                
+                "1c54a","1eALG","1F8Zo","1fhQq","1Guoe","1H-un","1idi4",
                 "1iSYF","1lyBg","1MaiK","1mVak","1nS4b","1NvWw","1NVXs","1sEAM","1U2t6","1uBYH","1vxz4","1Wh3C",
                 "1ZriP","2_fCg","2_IR6","2_xrO","2CJak","2E1fK","2eW6q","2f5Y7","2FV_c","2GqxW","2h34K","2H82P",
                 "2Hi7I","2jRHl","2mqnQ","2qS09","2sdEJ","2sTQn","2t6K8","2Tkkc","2V6La","2xOqG","3CoiN","-3Dl4",
-                "3iQhM","3kHin","3Mqus","3oX2-","3pxza","3-QS7","3r5nY","3sVDq","3thfz","3W3qL","3zaP5","04g7Y",
-                "04ZaO","4C6Y5","4gAPt","4GKQ1","4l67F","4P3K6","4Q8mq","4RMqU","4rQZy","4tBvu","4TKGm","4tuzE",
+                "3iQhM","3kHin","3Mqus","3oX2-","3pxza","3-QS7","3r5nY","3sVDq","3thfz","3W3qL","3zaP5",
+                "4C6Y5","4gAPt","4GKQ1","4l67F","4P3K6","4Q8mq","4RMqU","4rQZy","4tBvu","4TKGm","4tuzE",
                 "4TZCD","4VK2-","4woQn","4yGpj","4ZS7V","4ztTB","-5_bY","5CAbI","5cDzz","5D5_M","5EEh8","5exq9",
                 "5ghAD","5LcQC","5PBY5","5pVjD","5QRmn","5uYVN","5YHzJ","5Zcd7","5zTLK","5ZWdI","6BFS8","-6f-6",
                 "6hkS_","6LlRf","6qvCh","6RBE7","6sAzR","6-v2h","6VyzH","6wbdn","6XXz_","6Z0cE","6zHdl","6Zieu",
-                "07GMA","7cmln","7cTK2","7cUuL","7ehF5","7FdxP","7g_5F","7G_Qm","7Jj5b","7LDbv","7mhol","7nKMA",
-                "7Nn2B","7PDlw","7qQfz","7rVYb","7SeFm","7TRZ1","7um2b","7W3lM","7Z25C","7zD2s","08hye","8bihR",
+                "7cmln","7cTK2","7cUuL","7ehF5","7FdxP","7g_5F","7G_Qm","7Jj5b","7LDbv","7mhol","7nKMA",
+                "7Nn2B","7PDlw","7qQfz","7rVYb","7SeFm","7TRZ1","7um2b","7W3lM","7Z25C","7zD2s","8bihR",
                 "8bjC2","8cOwj","8E3mq","8ePDP","8eQi3","8fMsb","8gyS3","8HNR0","8HRzI","-8mca","8Mdyh","8mn1R",
                 "8q4Ir","8QK9-","-8qkJ","8Tft6","8TTj3","8v1q7","8vD-4","8wOxc","8wqJy","8yHT9","9-5WX","9a17a",
                 "9b8l_","9b-J7","9eYhr","9FXr2","9hBT5","9HKBi","9jz1y","9LB44","9LP_G","9PkVk","9reUU","9Wdl7",
-                "9ytGi","17Ojl","20G0W","20k5f","23Qv0","25Aet","034UZ","36aHq","40ERX","40fYQ","43e_I","49MAr",
+                "9ytGi","17Ojl","20G0W","20k5f","23Qv0","25Aet","36aHq","40ERX","40fYQ","43e_I","49MAr",
                 "58A7l","58pHe","62Qvv","66EXt","69dfg","69EsO","82IdY","88knC","90ZGR","95yL9","206yg","267G_",
                 "357Lx","553Pa","A0iJX","A0QGC","a5E6p","a736Q","aCKh4","aFVbf","ahE9S","aHPA_","ajcr7","AL2TU",
                 "aL4lL","alpXu","AmWN-","aN2a-","aO5-F","aO8-j","AR0T0","aRrvd","arsbN","aSNgO","AsqLX","a-TvG",

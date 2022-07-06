@@ -24,13 +24,19 @@ namespace pwiz.Common.Collections
     /// <summary>
     /// Added by Clark Brace (cbrace3)
     /// Natural Sort class. Sorts strings into natural sort order rather than lexicographically.
-    /// Designed for sorting file/folders into a more human readable format.
+    /// Designed for sorting file/folders into a more human readable format. In this implementation,
+    /// numbers are prioritized over letters and the full value of the number is taken into account rather than
+    /// just the independent values of each number in series (2, 22, 3 --> 2, 3, 22)
+    /// ex: (Skyline-64_22c, Skyline-64_3a, Skyline-64_4c --> Skyline-64_3a, Skyline-64_4c, Skyline-64_22c)
+    /// ex: (1AC6, 1AC66, 1AC7, 4C47 --> 1AC6, 1AC7, 1AC66, 4C47)
     /// https://www.pinvoke.net/default.aspx/shlwapi.strcmplogicalw
     /// </summary>
     public class NaturalComparer
     {
         [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
         private static extern int StrCmpLogicalW(string x, string y);
+
+        //Compare strings with natural sort
         public static int Compare(string x, string y)
         {
             return StrCmpLogicalW(x, y);
