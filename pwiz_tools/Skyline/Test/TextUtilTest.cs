@@ -98,12 +98,19 @@ namespace pwiz.SkylineTest
                 yield return baseString + fixText.Substring(fixText.Length - i, i++);
         }
 
+        /// <summary>
+        /// Test for natural sort. Randomly shuffles sorted lists of stings and then sorts them again in order to ensure
+        /// consistency and accuracy in establishing the original natural sort order. This test is run both on a small list
+        /// and a larger stress test list to demonstrate consistency across a diverse range of strings for this sort.
+        /// 
+        /// </summary>
         [TestMethod]
         public void TestNaturalSort()
-        {
+        {   
+            //Short sort test 
             var orderedSample = new List<string>() 
             {   
-                "_thKv","0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","04ZaO","4tuzE",
+                "0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","04ZaO","4tuzE",
                 "4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","6-v2h","7Z25C","8fMsb","8HRzI",
                 "8wqJy","9jz1y","a5E6p","a736Q","aL4lL","alpXu","B-2ag","BRrbj","bzUgj","c8qdT","CdaAF",
                 "CDk8I","Cdm0k","CFYgZ","D9Xdy","dP8a5","e9teS","eibUe","EMNkm","EsE4z","evAra","eZUyJ",
@@ -113,16 +120,18 @@ namespace pwiz.SkylineTest
                 "kCFaa","kIcKi","KS0Ua","KxR_m","Ky9Ef","LHiBw","lMdGG","ls8Vb","lSOc_","lWk5c","mE9Bc",
                 "mKppU","mpSNi","mWsW_","naLxD","ne-LG","NhsZW","NPk3-","nsoxE","Nxsqw","o6S3j","Ol8lY",
                 "oRQN_","otCNq","OXNJo","p5-zT","pc8rL","PEpSv","pj_FZ","PQWQ0","pseOl","pxiUY","qe7ib",
-                "QGkFc","QgYG9","QOi50","QwrRK","QWwUL","qZwkK","Rhsrt","rlw8H","-RWWt","sna_M","SwvOY",
+                "QGkFc","QgYG9","QOi50","QwrRK","QWwUL","qZwkK","Rhsrt","rlw8H","-RWWt",
+                "Skyline-64_1_4_0_4421.zip","Skyline-64_1_4_0_4422.zip","Skyline-64_2_5_0_5675.zip","Skyline-64_20_1_0_155.zip",
+                "sna_M","SwvOY",
                 "TachS","thxs7","U4sCZ","-uG-g","UIQF2","UNGYS","UPLhZ","USZgP","uz-Oq","ve7Ml","vlpJ-",
                 "vscw3","W2ffg","waINu","wAYVn","wcnac","wgnCt","Whe2M","WHs9b","wj-Sy","woie2","WOrKF",
                 "XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
             };
 
+            //Long sort stress test
             var orderSampleStressTest = new List<string>()
             {
-                "_1pdI","-_7My","_08d-","_8HNr","_bl5Z","_f_NX","_FqJm","_hA-7","_I0Vw","_i6hD","_JwZm","_lRXu",
-                "_M0nk","_ozP-","_PBKr","_thKv","_WjIM","_YnGT","_zSWO","00Wv0","0aJdm","0dAx8","0gK4B","0j_7m",
+                "00Wv0","0aJdm","0dAx8","0gK4B","0j_7m",
                 "0LM7X","0NFwA","0RBi2","0S6Lx","0yIXs","1c54a","1eALG","1F8Zo","1fhQq","1Guoe","1H-un","1idi4",
                 "1iSYF","1lyBg","1MaiK","1mVak","1nS4b","1NvWw","1NVXs","1sEAM","1U2t6","1uBYH","1vxz4","1Wh3C",
                 "1ZriP","2_fCg","2_IR6","2_xrO","2CJak","2E1fK","2eW6q","2f5Y7","2FV_c","2GqxW","2h34K","2H82P",
@@ -194,7 +203,9 @@ namespace pwiz.SkylineTest
                 "RHuC2","rhvbR","RiJUy","rKBjB","rkbvv","rkfQI","rL7oT","rLL6t","rlw8H","rn8i8","RNLar","ROcwU",
                 "rPeOk","-RrlA","RRS7e","RtIFu","RTl2L","Rur-i","rveQ3","rvQfl","rVxej","-RWWt","Ry3v7","rYq7J",
                 "S_Cag","s0hGb","S0Uut","S1FBc","S2mEF","S2QGv","s3HBn","S6vzd","S9B8l","sAU6F","SBrbJ","sBrJT",
-                "s-d7C","-sfqs","sI5SG","SIW2y","six2m","SkGrK","SM_9d","SMP4O","sna_M","soBNX","SPkR6","sprQw",
+                "s-d7C","-sfqs","sI5SG","SIW2y","six2m","SkGrK",
+                "Skyline-64_1_4_0_4421.zip","Skyline-64_1_4_0_4422.zip","Skyline-64_2_5_0_5675.zip","Skyline-64_20_1_0_155.zip",
+                "SM_9d","SMP4O","sna_M","soBNX","SPkR6","sprQw",
                 "sqVpD","srzYs","STpr1","SUGz6","Svw8U","SWIW9","SwvOY","syhEY","SyjtP","szFB5","szMUT","T_gxI",
                 "T1d-m","T3KhJ","T3oqE","T5Hgq","t7aSK","t9YtG","T093H","TAAbp","TachS","taDt_","tchMy","Tgmug",
                 "tgXKx","TH_Wu","ThIN1","thxs7","tiZNw","TLZRY","tNe7F","TnG1f","tNJV-","tP0lD","tPNqI","tPVBw",
@@ -219,26 +230,30 @@ namespace pwiz.SkylineTest
                 "zOpUQ","Zuzaq","ZvFIb","zXdQ1","zxWHd","zz0Pq","ZzIxa","zzlPp","ZZPVw"
             };
 
+            SortAndTest(orderedSample); // Test sort on a smaller sample set
+            SortAndTest(orderSampleStressTest); // Test sort on large stress test sample
 
-            SortAndTest(orderedSample);
-            SortAndTest(orderSampleStressTest);
-
+            // Shuffle an input list and sort. Compares against original in order version to ensure consistency
             void SortAndTest(List<string> ordered)
             {
                 List<string> misOrdered = Shuffle(ordered); // Shuffle
 
                 misOrdered.Sort((x, y) => NaturalComparer.Compare(x, y)); // Naturally sort
 
+                // Compare with original
                 for (int i = 0; i < ordered.Count; i++)
                 {
-                    AssertEx.AreEqual(ordered[i], misOrdered[i], string.Format("Test Natural is not sorting in the correct order: at position {0}: {1} vs {2}", i, ordered[i], misOrdered[i]));
+                    AssertEx.AreEqual(ordered[i], misOrdered[i], string.Format("Test Natural is not sorting in the correct order: at position {0}: {1} vs {2}", i, ordered[i], misOrdered[i]) + "\nOrdered List:\n" + ordered.Aggregate((a,b) => a + "\n" + b));
                 }
             }
 
+            // Returns a shuffled copy the input list
             List<string> Shuffle(List<string> inOrder)
             {
                 List<string> misOrdered = new List<string>(inOrder); // Copy list
                 Random rand = new Random();
+                
+                // Shuffle by swapping elements positions randomly
                 for (int a = 0; a < misOrdered.Count; a++)
                 {
                     int loc = rand.Next(misOrdered.Count);
