@@ -524,7 +524,7 @@ namespace pwiz.Skyline.Model.Proteome
 
                 results.FinalPeptideCount += kvp.Key.Peptides.Count;
 
-                if (kvp.Value.Count == 0)
+                if (kvp.Value.Count == 1)
                 {
                     proteinGroupAssociations[kvp.Value[0]] = kvp.Key;
                     addPeptideAssociations(kvp.Value[0], kvp.Key);

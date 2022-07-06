@@ -96,6 +96,7 @@ namespace pwiz.Skyline.EditUI
             FindMinimalProteinList = peptideSettings.Filter.ParsimonySettings?.FindMinimalProteinList ?? false;
             RemoveSubsetProteins = peptideSettings.Filter.ParsimonySettings?.RemoveSubsetProteins ?? false;
             SelectedSharedPeptides = peptideSettings.Filter.ParsimonySettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+            MinPeptidesPerProtein = peptideSettings.Filter.ParsimonySettings?.MinPeptidesPerProtein ?? 1;
             comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
 
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
