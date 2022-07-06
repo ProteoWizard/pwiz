@@ -26,12 +26,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using CustomDataSourceDialog;
 using pwiz.CLI.msdata;
+using pwiz.Common.Collections;
 
 namespace MSConvertGUI
 {
@@ -726,7 +728,7 @@ namespace MSConvertGUI
             var commandLine = new StringBuilder();
             //Get config settings
 
-            if (OutputFormatBox.Text != OutputExtensionBox.Text)
+            if (!OutputExtensionBox.Text.IsNullOrEmpty() && OutputFormatBox.Text != OutputExtensionBox.Text)
                 commandLine.AppendFormat("--ext|{0}|", OutputExtensionBox.Text);
             ValidateNumpress(); // make sure numpress settings are reasonable
             switch (OutputFormatBox.Text)
@@ -1393,6 +1395,54 @@ namespace MSConvertGUI
 
                 DiaUmpireParamsFileTextBox.Text = ofd.FileName;
             }
+        }
+
+        private void showCommandLine_Click(object sender, EventArgs e)
+        {
+            static string Quote(string str) => $"\"{str}\"";
+
+            var rawArgs = ConstructCommandline().Split('|');
+
+            // when a Windows command-line has escaped quotes in it, handling of escaping redirection characters (<>&|) gets really tricky;
+            // inside a double quoted string, they shouldn't be escaped;
+            // outside a quoted string (""" escaped quotes behave as if ending/starting a quoted string), they must be escaped with ^
+            var escapedArgs = new List<string>();
+            foreach (var arg in rawArgs)
+            {
+                var argBuilder = new StringBuilder();
+                bool inQuote = true;
+                foreach (char c in arg)
+                {
+                    if (c == '"')
+                    {
+                        inQuote = !inQuote;
+                        argBuilder.Append('"', 3);
+                    }
+                    else if (c == '>' && !inQuote)
+                        argBuilder.Append("^>");
+                    else if (c == '<' && !inQuote)
+                        argBuilder.Append("^<");
+                    else if (c == '&' && !inQuote)
+                        argBuilder.Append("^&");
+                    else
+                        argBuilder.Append(c);
+                }
+
+                var escapedArg = argBuilder.ToString();
+                escapedArgs.Add(arg.Contains(" ") ? Quote(escapedArg) : escapedArg);
+            }
+
+            // escape double quotes with more double quotes (DOS-style escaping) and add quotes around parameters with spaces
+            var cmdLine =
+                Quote(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "msconvert.exe")) + " " +
+                String.Join(" ", escapedArgs) + " " +
+                String.Join(" ", from object item in FileListBox.Items select Quote(item.ToString()));
+
+            if (DialogResult.Cancel == MessageBox.Show(
+                $"The equivalent msconvert.exe command-line for the current settings:\r\n\r\n{cmdLine}\r\n\r\nPress OK to copy it to the clipboard.",
+                "Command-line", MessageBoxButtons.OKCancel))
+                return;
+            Clipboard.SetText(cmdLine);
         }
     }
 }
