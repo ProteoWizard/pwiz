@@ -25,6 +25,7 @@ namespace pwiz.Common.Collections
     /// Added by Clark Brace (cbrace3)
     /// Natural Sort class. Sorts strings into natural sort order rather than lexicographically.
     /// Designed for sorting file/folders into a more human readable format.
+    /// ex: (Skyline-64_22c, Skyline-64_3a, Skyline-64_4c --> Skyline-64_3a, Skyline-64_4c, Skyline-64_22c)
     /// https://www.pinvoke.net/default.aspx/shlwapi.strcmplogicalw
     /// </summary>
     public class NaturalComparer

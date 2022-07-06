@@ -110,7 +110,7 @@ namespace pwiz.SkylineTest
             //Short sort test 
             var orderedSample = new List<string>() 
             {   
-                "0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","04ZaO","4tuzE",
+                "0NFwA","1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","4tuzE",
                 "4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","6-v2h","7Z25C","8fMsb","8HRzI",
                 "8wqJy","9jz1y","a5E6p","a736Q","aL4lL","alpXu","B-2ag","BRrbj","bzUgj","c8qdT","CdaAF",
                 "CDk8I","Cdm0k","CFYgZ","D9Xdy","dP8a5","e9teS","eibUe","EMNkm","EsE4z","evAra","eZUyJ",
