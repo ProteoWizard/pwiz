@@ -34,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class RTScheduleGraphPane : SummaryGraphPane
+    public class RTScheduleGraphPane : SummaryGraphPane
     {
         private static readonly IList<Color> COLORS_WINDOW = GraphChromatogram.COLORS_LIBRARY;
         private SchedulingDataCalculator _dataCalculator;
