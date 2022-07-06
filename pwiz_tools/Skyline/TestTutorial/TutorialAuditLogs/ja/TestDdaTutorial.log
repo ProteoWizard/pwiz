@@ -41,6 +41,16 @@ All Info  :
 ペプチド検索のインポート>修飾を追加>修飾が追加されました："Label:13C(6)15N(4) (C-term R) = R[10] （同位体標識）"が含まれています
 ペプチド検索のインポート>修飾を追加>修飾が追加されました："Oxidation (M) = M[16] （変数）"が含まれています
 ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"2014_01_HUMAN_UPS.fasta"です
+ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
+ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Assigned to first protein"です
+ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"11058"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"6438"です
+ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"77469"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"3258"です
+ペプチド検索のインポート>Associate Proteins>Peptide targetsは"6438"です
 ペプチド検索のインポート>DDA検索設定>検索エンジンは"MSFragger"です
 ペプチド検索のインポート>DDA検索設定>プリカーサー許容範囲は5ppmです
 ペプチド検索のインポート>DDA検索設定>フラグメント許容範囲は10ppmです
@@ -67,6 +77,19 @@ Extra Info: クロマトグラムを抽出 =
 FASTAをインポート = 
 {
     FASTAファイル = "2014_01_HUMAN_UPS.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = 偽,
+    Find minimal protein list = 偽,
+    Remove subset proteins = 偽,
+    Shared peptides option = "Assigned to first protein",
+    Min peptides per protein = "1",
+    Proteins mapped = "11058",
+    Peptides mapped = "6438",
+    Proteins unmapped = "77469",
+    Protein targets = "3258",
+    Peptide targets = "6438"
 },
 DDA検索設定 = 
 {
