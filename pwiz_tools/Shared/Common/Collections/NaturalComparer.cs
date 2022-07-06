@@ -27,8 +27,8 @@ namespace pwiz.Common.Collections
     /// Designed for sorting file/folders into a more human readable format. In this implementation,
     /// numbers are prioritized over letters and the full value of the number is taken into account rather than
     /// just the independent values of each number in series (2, 22, 3 --> 2, 3, 22)
-    /// ex: (Skyline-64_22c, Skyline-64_3a, Skyline-64_4c --> Skyline-64_3a, Skyline-64_4c, Skyline-64_22c)
-    /// ex: (1AC6, 1AC66, 1AC7, 4C47 --> 1AC6, 1AC7, 1AC66, 4C47)
+    /// e.g. (Skyline-64_22c, Skyline-64_3a, Skyline-64_4c --> Skyline-64_3a, Skyline-64_4c, Skyline-64_22c)
+    /// e.g. (1AC6, 1AC66, 1AC7, 4C47 --> 1AC6, 1AC7, 1AC66, 4C47)
     /// https://www.pinvoke.net/default.aspx/shlwapi.strcmplogicalw
     /// </summary>
     public class NaturalComparer
