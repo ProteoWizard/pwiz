@@ -459,10 +459,10 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            listSourceInfo = listSourceInfo.Where(l => l != null).ToList(); // Ignore null entries
+            listSourceInfo = listSourceInfo.Where(l => l != null).ToList(); // Ignore null entries in order to not confuse sort
 
             // Sorts files and folders in natural order rather than lexicographically with folders being prioritized (sorted above files)
-            // ex: (a1.txt, b10.folder, b2.folder, c6.txt --> b2.folder, b10.folder, a1.txt, c6.txt)
+            // e.g. (a1.txt, b10.folder, b2.folder, c6.txt --> b2.folder, b10.folder, a1.txt, c6.txt)
             listSourceInfo.Sort((x, y) =>
             {
                 // Check to see if one element is a folder. If so regardless of name it will always prioritized over a file.
@@ -471,7 +471,7 @@ namespace pwiz.Skyline.FileUI
                     return x.isFolder ? -1 : 1; 
                 }
                 return NaturalComparer.Compare(x.name, y.name); // Use normal compare if both elements are of the same type (folder vs folder, file vs file)
-            }); // Sorts by natural sort order for easier more natural readability
+            }); // Sorts by natural sort order for easier more natural readability e.g. (A1.raw, A22.raw, A5.raw --> A1.raw, A5.raw, A22.raw)
 
 
             // Populate the list
