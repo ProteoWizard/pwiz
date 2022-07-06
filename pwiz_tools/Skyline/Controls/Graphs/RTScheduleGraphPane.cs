@@ -382,7 +382,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     lastStep = Math.Min(lastStep, stepCount - 1);
                     for (int i = firstStep; i <= lastStep; i++)
                     {
-                        overlapCounts[i]++;
+                        overlapCounts[i] += schedule.TransitionCount;
                     }
                 }
 

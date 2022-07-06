@@ -496,6 +496,22 @@ namespace pwiz.SkylineTestTutorial
             });
             // TODO: Update tutorial to mention the scheduling options dialog.
             PauseForScreenShot("Export Transition List form", 24); // Not L10N
+
+            RunDlg<ExportMethodScheduleGraph>(exportMethodDlg1.ShowSchedulingGraph, dlg =>
+            {
+                WaitForCondition(() => dlg.GraphControl.GraphPane.CurveList.Count > 0);
+                var points = dlg.GraphControl.GraphPane.CurveList[0].Points;
+                var maxTransitions = -1;
+                for (var i = 0; i < points.Count; i++)
+                {
+                    var transitions = (int)points[i].Y;
+                    if (transitions > maxTransitions)
+                        maxTransitions = transitions;
+                }
+                Assert.AreEqual(48, maxTransitions);
+                dlg.Close();
+            });
+
             RunDlg<SchedulingOptionsDlg>(() =>
                 exportMethodDlg1.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled"), // Not L10N
                 schedulingOptionsDlg => schedulingOptionsDlg.OkDialog());
