@@ -250,7 +250,9 @@ namespace pwiz.SkylineTest
                 // Compare with original
                 for (int i = 0; i < ordered.Count; i++)
                 {
-                    AssertEx.AreEqual(ordered[i], misOrdered[i], string.Format("Test Natural is not sorting in the correct order: at position {0}: {1} vs {2}", i, ordered[i], misOrdered[i]) + "\nOrdered List:\n" + ordered.Aggregate((a,b) => a + "\n" + b));
+                    AssertEx.AreEqual(ordered[i], misOrdered[i], string.Format("Test Natural is not sorting in the correct order: at position {0}: {1} vs {2}", i, ordered[i], misOrdered[i]) + 
+                                                                 "\nExpected sort:\n" + ordered.Aggregate((a,b) => a + "\n" + b) +
+                                                                 "\n\nActual sort:\n" + misOrdered.Aggregate((a, b) => a + "\n" + b));
                 }
             }
 
