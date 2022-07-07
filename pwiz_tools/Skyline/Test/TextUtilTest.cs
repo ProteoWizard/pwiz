@@ -166,11 +166,11 @@ namespace pwiz.SkylineTest
                 "ElhuC","EMNkm","Envok","eOkTW","eoTFt","eP33C","eqNDJ","ERJ7t","EsE4z","ESM1A","eTaSI","EuEc5",
                 "evAra","EvTr4","ex9KB","exM_y","eymBb","ezbby","eZUyJ","f1A-B","f3fV3","F5Z9K","F7RF1","f61RY",
                 "fB6mW","fbeV5","FD925","FE5fQ","feOq5","ff5A_","FGaDO","FgrxS","fhd_P","FHxHC","FIdY9","fjSuy",
-                "fkX94","FMra3","FNiVT","fo37F","FOdQu","FoRRD","F-oT2","F-pDp","fQQRY","Fricg","fSJ6i","fSr0X",
+                "fkX94","FMra3","FNiVT","fo37F","FOdQu","FoRRD","F-pDp","fQQRY","Fricg","fSJ6i","fSr0X",
                 "FTO2K","Fu9Rs","FUjdN","FX_yN","fxKJ1","G0J0w","g2bTh","g3i6X","GCtkn","gDRsl","gELFg","GFbjI",
                 "GIzg-","gJneB","GJOKu","GjVbR","gLHOp","gMD5F","GmUrI","gNbrM","gO06G","Go6jE","GPXaw","gQU5B",
                 "gRm0t","gSUyR","GSVBp","Gt1yx","GTp0s","guEij","Gw_5C","GweEF","GwLYJ","Gxbko","gxuE_","GXxWN",
-                "GYmXe","GyquW","GZw_D","H_K5F","h_u-u","h3Py7","h4G07","H5a9A","H5tWL","H6KDQ","H6oOL","h7k2O",
+                "GYmXe","GyquW","GZw_D","H_K5F","h3Py7","h4G07","H5a9A","H5tWL","H6KDQ","H6oOL","h7k2O",
                 "h7L2H","H8grD","H8rfS","H45kO","hABHg","hBD6f","hc78k","hcFa4","hCqwE","H-dXx","hEPdX","hhtYn",
                 "hIEGl","Hk_Pu","HkbbT","hLpEb","HNKWG","hNnXT","hNyK1","hOMkl","HOmz9","HOqJs","hp_4Y","HpJS4",
                 "HpNdm","hPuYR","hRSoX","hTa-9","Htiei","htUN1","HuYEf","HyfnH","HyXsq","hz7FP","i3X2T","i6JcT",
@@ -232,8 +232,13 @@ namespace pwiz.SkylineTest
                 "zOpUQ","Zuzaq","ZvFIb","zXdQ1","zxWHd","zz0Pq","ZzIxa","zzlPp","ZZPVw"
             };
 
-            SortAndTest(orderedSample); // Test sort on a smaller sample set
-            SortAndTest(orderSampleStressTest); // Test sort on large stress test sample
+            // Run each test 5 time to ensure consistency 
+            for (int i = 0; i < 5; i++)
+            {
+                SortAndTest(orderedSample); // Test sort on a smaller sample set
+                SortAndTest(orderSampleStressTest); // Test sort on large stress test sample
+            }
+            
 
             // Shuffle an input list and sort. Compares against original in order version to ensure consistency
             void SortAndTest(List<string> ordered)
