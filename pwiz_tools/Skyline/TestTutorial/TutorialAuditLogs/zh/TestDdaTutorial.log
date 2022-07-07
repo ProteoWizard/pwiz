@@ -41,6 +41,16 @@ All Info  :
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Label:13C(6)15N(4) (C-term R) = R[10] （同位素标签）"
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16] （可变）"
 导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "2014_01_HUMAN_UPS.fasta"
+导入肽段搜索 > Associate Proteins > Group proteins 是 假
+导入肽段搜索 > Associate Proteins > Find minimal protein list 是 假
+导入肽段搜索 > Associate Proteins > Remove subset proteins 是 假
+导入肽段搜索 > Associate Proteins > Shared peptides option 是 "Assigned to first protein"
+导入肽段搜索 > Associate Proteins > Min peptides per protein 是 "1"
+导入肽段搜索 > Associate Proteins > Proteins mapped 是 "11058"
+导入肽段搜索 > Associate Proteins > Peptides mapped 是 "6438"
+导入肽段搜索 > Associate Proteins > Proteins unmapped 是 "77469"
+导入肽段搜索 > Associate Proteins > Protein targets 是 "3258"
+导入肽段搜索 > Associate Proteins > Peptide targets 是 "6438"
 导入肽段搜索 > DDA 搜索设置 > 搜索引擎 是 "MSFragger"
 导入肽段搜索 > DDA 搜索设置 > 母离子耐受性 是 5ppm
 导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 10ppm
@@ -67,6 +77,19 @@ Extra Info: 提取色谱图 =
 导入 FASTA = 
 {
     FASTA 文件 = "2014_01_HUMAN_UPS.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = 假,
+    Find minimal protein list = 假,
+    Remove subset proteins = 假,
+    Shared peptides option = "Assigned to first protein",
+    Min peptides per protein = "1",
+    Proteins mapped = "11058",
+    Peptides mapped = "6438",
+    Proteins unmapped = "77469",
+    Protein targets = "3258",
+    Peptide targets = "6438"
 },
 DDA 搜索设置 = 
 {

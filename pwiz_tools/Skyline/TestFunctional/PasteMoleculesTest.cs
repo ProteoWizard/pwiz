@@ -57,6 +57,11 @@ namespace pwiz.SkylineTestFunctional
             string[] columnOrder)
         {
             var allErrorText = string.Empty;
+            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
+                !clipText.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
+            {
+                clipText = clipText.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
+            }
             clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = clipText);
@@ -124,6 +129,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
 
+            TestIrregularColumnCounts();
             TestMissingAccessionNumbers();
             TestMzOrderIndependence();
             TestNegativeModeLabels();
@@ -971,36 +977,65 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
+        private void TestIrregularColumnCounts()
+        {
+            var header = GetAminoAcidsTransitionListText(out var textCSV) + "\n";
+
+            for (var loop = 0; loop < 2; loop++)
+            {
+                var docOrig = SkylineWindow.Document;
+                TestError(textCSV, null, null); // That should just work
+                WaitForDocumentChange(docOrig);
+                NewDocument();
+
+                // Now see what happens when we remove the trailing field in the header
+                var shortHeader =
+                    textCSV.Replace(@"," + SmallMoleculeTransitionListColumnHeaders.rtPrecursor, string.Empty);
+                AssertEx.AreNotEqual(shortHeader, textCSV, "did something change in the test code?");
+                docOrig = SkylineWindow.Document;
+                TestError(shortHeader, null, null); 
+                WaitForDocumentChange(docOrig);
+                NewDocument();
+
+                // Now see what happens when we remove the trailing field in a data line (so fewer columns in line than in header)
+                var lineEnd = @",-1,3";
+                var shortData = textCSV.Replace(lineEnd, @",-1");
+                AssertEx.AreNotEqual(shortData, textCSV, "did something change in the test code?");
+                docOrig = SkylineWindow.Document;
+                TestError(shortData, null, null);
+                WaitForDocumentChange(docOrig);
+                NewDocument();
+
+                // Now see what happens when we add an extra trailing field in a data line (so more columns in line than in header)
+                var longData = textCSV.Replace(lineEnd, lineEnd+@",paintball");
+                AssertEx.AreNotEqual(longData, textCSV, "did something change in the test code?");
+                docOrig = SkylineWindow.Document;
+                TestError(longData, null, null);
+                WaitForDocumentChange(docOrig);
+                NewDocument();
+
+                if (loop == 0)
+                {
+                    // Now check all that when the anomaly is well past the 100 or so lines that we normally show
+                    textCSV = textCSV.Replace(header, string.Empty);
+                    var chunk = textCSV.Replace(lineEnd, @",-2,4").Split('\n');
+                    var bigText = header;
+                    for (var i = 0; i++ < ImportTransitionListColumnSelectDlg.N_DISPLAY_LINES;)
+                    {
+                        foreach (var line in chunk.Where(l => !string.IsNullOrEmpty(l)))
+                        {
+                            bigText += i.ToString() + line + "\n";
+                        }
+                    }
+                    textCSV = bigText + textCSV;
+                }
+            }
+        }
+
         private void TestToolServiceAccess()
         {
             // Test the tool service logic without actually using tool service (there's a test for that too)
-            var header = string.Join(",", new string[]
-            {
-                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-           });
-           var textCSV = header + "\n" +
-                "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
-                "Amino Acids B,ArgB,,light,,,310.2,217,-1,-1,19\n" +
-                "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
-                "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" + // NB we ignore RT conflicts
-                "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
-                "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
-                "Amino Acids B,AlaB,,light,,,225.1,45,-1,-1,3\n" +
-                "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" + // NB we ignore RT conflicts
-                "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" + // NB we ignore RT conflicts
-                "Amino Acids B,ArgB,,light,,,310.2,218,-1,-1,19\n" +
-                "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
-                "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+            var header = GetAminoAcidsTransitionListText(out var textCSV);
 
             var docOrig = SkylineWindow.Document;
             var textClean = textCSV;
@@ -1197,6 +1232,38 @@ namespace pwiz.SkylineTestFunctional
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
+        }
+
+        private static string GetAminoAcidsTransitionListText(out string textCSV)
+        {
+            var header = string.Join(",", new string[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.labelType,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+            });
+            textCSV = header + "\n" +
+                      "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
+                      "Amino Acids B,ArgB,,light,,,310.2,217,-1,-1,19\n" +
+                      "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
+                      "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" + // NB we ignore RT conflicts
+                      "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
+                      "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
+                      "Amino Acids B,AlaB,,light,,,225.1,45,-1,-1,3\n" +
+                      "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" + // NB we ignore RT conflicts
+                      "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" + // NB we ignore RT conflicts
+                      "Amino Acids B,ArgB,,light,,,310.2,218,-1,-1,19\n" +
+                      "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
+                      "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+            return header;
         }
 
         // Test uniform handling in File>Import>TransitionList, Edit>Insert>TransitionList, and pasting into Targets area
@@ -1614,8 +1681,13 @@ namespace pwiz.SkylineTestFunctional
             Assume.IsTrue(precursors[5].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[6].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[7].PrecursorAdduct.HasIsotopeLabels);
-            NewDocument();
 
+            docOrig = NewDocument();
+            SetClipboardText(precursorsTransitionListUnsorted.Replace("M+", "[123.456]")); // This used to throw in SortSiblingsByMass()
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste()); // Instead it should show the column select dialog
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+
+            NewDocument();
         }
 
 

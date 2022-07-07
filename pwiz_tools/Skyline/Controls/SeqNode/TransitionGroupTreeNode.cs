@@ -60,17 +60,14 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
         }
 
-        public TransitionGroupDocNode DocNode { get { return (TransitionGroupDocNode) Model; } }
-
         public Target ModifiedSequence
         {
             get { return GetModifiedSequence(PepNode, DocNode, SequenceTree.Document.Settings); }
         }
 
-        public PeptideDocNode PepNode
-        {
-            get { return (Parent != null ? ((PeptideTreeNode)Parent).DocNode : null); }
-        }
+        public TransitionGroupDocNode DocNode => (TransitionGroupDocNode)Model;
+        public PeptideDocNode PepNode => ((PeptideTreeNode)Parent)?.DocNode;
+        public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent)?.DocNode;
 
         public override string Heading
         {
@@ -552,7 +549,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         foreach (IonType type in types)
                         {
                             CellDesc cell = CreateHead(type.GetLocalizedString().ToLower() + plusSub, rt);
-                            if (Transition.IsNTerminal(type))
+                            if (type.IsNTerminal())
                                 headers.Insert(0, cell);
                             else
                                 headers.Add(cell);
@@ -578,7 +575,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                             foreach (IonType type in types)
                             {
                                 CellDesc cell;
-                                if (Transition.IsNTerminal(type))
+                                if (type.IsNTerminal())
                                 {
                                     if (i == len - 1)
                                         cell = CreateData(string.Empty, rt);

@@ -70,11 +70,13 @@
             this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelStatusBarResult = new System.Windows.Forms.FlowLayoutPanel();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.proteinSourcePanel = new System.Windows.Forms.Panel();
             this.gbParsimonyOptions.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAssociateResults)).BeginInit();
             this.panelStatusBarResult.SuspendLayout();
+            this.proteinSourcePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -92,10 +94,9 @@
             // btnOk
             // 
             resources.ApplyResources(this.btnOk, "btnOk");
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Name = "btnOk";
             this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnApplyChanges_Click);
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // cbGroupProteins
             // 
@@ -106,10 +107,10 @@
             // 
             // comboSharedPeptides
             // 
-            resources.ApplyResources(this.comboSharedPeptides, "comboSharedPeptides");
             this.comboSharedPeptides.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.flowLayoutPanel.SetFlowBreak(this.comboSharedPeptides, true);
             this.comboSharedPeptides.FormattingEnabled = true;
+            resources.ApplyResources(this.comboSharedPeptides, "comboSharedPeptides");
             this.comboSharedPeptides.Name = "comboSharedPeptides";
             this.comboSharedPeptides.SelectedIndexChanged += new System.EventHandler(this.comboParsimony_SelectedIndexChanged);
             // 
@@ -389,20 +390,26 @@
             this.panelStatusBarResult.Controls.Add(this.lblStatusBarResult);
             this.panelStatusBarResult.Name = "panelStatusBarResult";
             // 
+            // proteinSourcePanel
+            // 
+            resources.ApplyResources(this.proteinSourcePanel, "proteinSourcePanel");
+            this.proteinSourcePanel.Controls.Add(this.rbFASTA);
+            this.proteinSourcePanel.Controls.Add(this.rbBackgroundProteome);
+            this.proteinSourcePanel.Controls.Add(this.comboBackgroundProteome);
+            this.proteinSourcePanel.Controls.Add(this.browseFastaTargetsBtn);
+            this.proteinSourcePanel.Controls.Add(this.tbxFastaTargets);
+            this.proteinSourcePanel.Name = "proteinSourcePanel";
+            // 
             // AssociateProteinsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.proteinSourcePanel);
             this.Controls.Add(this.panelStatusBarResult);
             this.Controls.Add(this.lblResults);
             this.Controls.Add(this.dgvAssociateResults);
-            this.Controls.Add(this.tbxFastaTargets);
-            this.Controls.Add(this.browseFastaTargetsBtn);
-            this.Controls.Add(this.comboBackgroundProteome);
-            this.Controls.Add(this.rbBackgroundProteome);
-            this.Controls.Add(this.rbFASTA);
             this.Controls.Add(this.gbParsimonyOptions);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.lblDescription);
@@ -421,6 +428,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.dgvAssociateResults)).EndInit();
             this.panelStatusBarResult.ResumeLayout(false);
             this.panelStatusBarResult.PerformLayout();
+            this.proteinSourcePanel.ResumeLayout(false);
+            this.proteinSourcePanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -464,5 +473,6 @@
         private System.Windows.Forms.Label lblMinimalProteinList;
         private System.Windows.Forms.Label lblRemoveSubsetProteins;
         private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.Panel proteinSourcePanel;
     }
 }

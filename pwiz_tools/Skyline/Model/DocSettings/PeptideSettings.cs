@@ -807,7 +807,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
                              int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect,
-                             PeptideUniquenessConstraint peptideUniquenessConstraint)
+                             PeptideUniquenessConstraint peptideUniquenessConstraint,
+                             ProteinAssociation.ParsimonySettings parsimonySettings)
         {
             Exclusions = exclusions;
             ExcludeNTermAAs = excludeNTermAAs;
@@ -815,6 +816,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxPeptideLength = maxPeptideLength;
             AutoSelect = autoSelect;
             PeptideUniqueness = peptideUniquenessConstraint;
+            ParsimonySettings = parsimonySettings;
             DoValidate();
         }
 
@@ -1273,6 +1275,25 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<StaticMod> StaticModifications
         {
             get { return _modifications[0].Modifications; }
+        }
+
+        /// <summary>
+        /// Returns list of mods with unique formulas
+        /// </summary>
+        public ImmutableList<FragmentLoss> StaticModsDeduped
+        {
+            get
+            {
+                var modLosses = StaticModifications.SelectMany(mod => mod.Losses ?? (new List<FragmentLoss>())).ToList();
+                //Deduplicate the losses on formula
+                modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+                return ImmutableList.ValueOf(modLosses);
+            }
+        }
+
+        public ImmutableList<string> StaticModsFormulae
+        {
+            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.FormulaNoNull)); }
         }
 
         public bool HasVariableModifications

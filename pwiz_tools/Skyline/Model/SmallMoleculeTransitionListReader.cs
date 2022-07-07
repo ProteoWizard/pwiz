@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Model
                         var smallestMassRow = r;
                         var zString = GetCellTrimmed(row, INDEX_PRECURSOR_ADDUCT) ?? 
                                       GetCellTrimmed(row, INDEX_PRECURSOR_CHARGE) ?? string.Empty;
-                        var adductInferred = Adduct.FromStringAssumeChargeOnly(zString);
+                        Adduct.TryParse(zString, out var adductInferred, Adduct.ADDUCT_TYPE.charge_only);
                         var smallestMass = adductInferred.MassFromMz(mzParsed, MassType.Monoisotopic);
 
                         for (var r2 = r + 1; r2 < Rows.Count; r2++)
@@ -454,7 +454,7 @@ namespace pwiz.Skyline.Model
                                 {
                                     var zString2 = GetCellTrimmed(row2, INDEX_PRECURSOR_ADDUCT) ?? 
                                                    GetCellTrimmed(row2, INDEX_PRECURSOR_CHARGE) ?? string.Empty;
-                                    var adduct2 = Adduct.FromStringAssumeChargeOnly(zString2);
+                                    Adduct.TryParse(zString2, out var adduct2, Adduct.ADDUCT_TYPE.charge_only);
                                     var mass2 = adduct2.MassFromMz(mzParsed2, MassType.Monoisotopic);
                                     visited.Add(row2);
                                     if (mass2 < smallestMass)

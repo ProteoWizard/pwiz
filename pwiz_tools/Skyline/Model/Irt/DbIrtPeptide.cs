@@ -149,26 +149,24 @@ namespace pwiz.Skyline.Model.Irt
             public DbIrtPeptide NewPeptide { get; private set; }
         }
 
-        public static List<DbIrtPeptide> FindNonConflicts(IList<DbIrtPeptide> oldPeptides, 
-                                                          IList<DbIrtPeptide> newPeptides, 
-                                                          IProgressMonitor progressMonitor,
-                                                          out IList<Conflict> conflicts)
+        public static List<DbIrtPeptide> FindNonConflicts(
+            IList<DbIrtPeptide> oldPeptides, 
+            IList<DbIrtPeptide> newPeptides, 
+            IProgressMonitor progressMonitor,
+            out IList<Conflict> conflicts)
         {
-            int progressPercent = 0;
-            int i = 0;
+            var progressPercent = 0;
             IProgressStatus status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
-            if (progressMonitor != null)
-                progressMonitor.UpdateProgress(status);
+            progressMonitor?.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Conflict>();
             var dictOld = oldPeptides.ToDictionary(pep => pep.ModifiedTarget);
             var dictNew = newPeptides.ToDictionary(pep => pep.ModifiedTarget);
-            foreach (var newPeptide in newPeptides)
+            for (var i = 0; i < newPeptides.Count; i++)
             {
-                ++i;
-                DbIrtPeptide oldPeptide;
+                var newPeptide = newPeptides[i];
                 // A conflict occurs only when there is another peptide of the same sequence, and different iRT
-                if (!dictOld.TryGetValue(newPeptide.ModifiedTarget, out oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
+                if (!dictOld.TryGetValue(newPeptide.ModifiedTarget, out var oldPeptide) || Math.Abs(newPeptide.Irt - oldPeptide.Irt) < IRT_MIN_DIFF )
                 {
                     peptidesNoConflict.Add(newPeptide);
                 }
@@ -180,7 +178,7 @@ namespace pwiz.Skyline.Model.Irt
                 {
                     if (progressMonitor.IsCanceled)
                         return null;
-                    int progressNew = (i * 100 / newPeptides.Count);
+                    var progressNew = i * 100 / newPeptides.Count;
                     if (progressPercent != progressNew)
                     {
                         progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
@@ -188,12 +186,7 @@ namespace pwiz.Skyline.Model.Irt
                     }
                 }
             }
-            foreach (var oldPeptide in oldPeptides)
-            {
-                DbIrtPeptide newPeptide;
-                if (!dictNew.TryGetValue(oldPeptide.ModifiedTarget, out newPeptide))
-                    peptidesNoConflict.Add(oldPeptide);
-            }
+            peptidesNoConflict.AddRange(oldPeptides.Where(oldPeptide => !dictNew.ContainsKey(oldPeptide.ModifiedTarget)));
             return peptidesNoConflict;
         }
 

@@ -122,9 +122,9 @@
             // 
             // checkedListBoxFinders
             // 
+            resources.ApplyResources(this.checkedListBoxFinders, "checkedListBoxFinders");
             this.checkedListBoxFinders.CheckOnClick = true;
             this.checkedListBoxFinders.FormattingEnabled = true;
-            resources.ApplyResources(this.checkedListBoxFinders, "checkedListBoxFinders");
             this.checkedListBoxFinders.Name = "checkedListBoxFinders";
             this.checkedListBoxFinders.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxOptions_ItemCheck);
             // 
