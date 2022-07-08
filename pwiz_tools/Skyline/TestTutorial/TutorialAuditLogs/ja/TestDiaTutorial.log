@@ -77,6 +77,15 @@ All Info  :
 ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンの選択終了は"最後のイオン"です
 ペプチド検索のインポート>トランジション設定を行う>最大イオンm/zは"2000"です
 ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"pituitary_database.fasta"です
+ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
+ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Duplicated between proteins"です
+ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"6"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"21"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"6"です
+ペプチド検索のインポート>Associate Proteins>Peptide targetsは"21"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 空,
@@ -97,6 +106,18 @@ Extra Info: クロマトグラムを抽出 =
 FASTAをインポート = 
 {
     FASTAファイル = "pituitary_database.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = 偽,
+    Find minimal protein list = 偽,
+    Remove subset proteins = 偽,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "6",
+    Peptides mapped = "21",
+    Protein targets = "6",
+    Peptide targets = "21"
 }
 
 Undo Redo : sp|P01222|TSHB_HUMAN>K.YALSQDVCTYR.D [65, 75]>688.3192++のピーク境界が変更されました

@@ -125,6 +125,16 @@ All Info  :
 ペプチド検索のインポート>FASTAをインポート>デコイ生成法は"シークエンスのシャッフル"です
 ペプチド検索のインポート>FASTAをインポート>ターゲット毎のデコイは"1"です
 ペプチド検索のインポート>FASTAをインポート>mProphetのモデルを自動的にトレーニングするは真です
+ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
+ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Duplicated between proteins"です
+ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"11"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"134"です
+ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"1"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"11"です
+ペプチド検索のインポート>Associate Proteins>Peptide targetsは"134"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -491,6 +501,19 @@ FASTAをインポート =
     デコイ生成法 = "シークエンスのシャッフル",
     ターゲット毎のデコイ = "1",
     mProphetのモデルを自動的にトレーニングする = 真
+},
+Associate Proteins = 
+{
+    Group proteins = 偽,
+    Find minimal protein list = 偽,
+    Remove subset proteins = 偽,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "11",
+    Peptides mapped = "134",
+    Proteins unmapped = "1",
+    Protein targets = "11",
+    Peptide targets = "134"
 }
 
 Undo Redo : 注釈が変更されました

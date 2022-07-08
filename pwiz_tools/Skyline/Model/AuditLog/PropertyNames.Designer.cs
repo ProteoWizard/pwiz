@@ -1546,6 +1546,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_AssociateProteinsSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_AssociateProteinsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Build Spectral Library.
         /// </summary>
         public static string ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings {
