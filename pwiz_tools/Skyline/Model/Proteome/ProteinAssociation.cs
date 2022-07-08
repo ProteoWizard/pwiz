@@ -532,10 +532,8 @@ namespace pwiz.Skyline.Model.Proteome
                 }
 
                 var proteinGroupName = string.Join(@"/", kvp.Value.OrderBy(p => p.RecordIndex).Select(p => p.Sequence.Name));
-                var proteinGroup = new FastaRecord(kvp.Value[0].RecordIndex, 0,
-                    new FastaSequence(proteinGroupName,
-                        string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, kvp.Value.Count),
-                        null, kvp.Value[0].Sequence.Sequence));
+                var proteinFastaSequence = new FastaSequenceGroup(proteinGroupName, kvp.Value.Select(r => r.Sequence).ToList());
+                var proteinGroup = new FastaRecord(kvp.Value[0].RecordIndex, 0, proteinFastaSequence);
                 proteinGroupAssociations[proteinGroup] = kvp.Key;
                 addPeptideAssociations(proteinGroup, kvp.Key);
             }

@@ -462,6 +462,22 @@ namespace pwiz.Skyline.Model
         }
     }
 
+    public class FastaSequenceGroup : FastaSequence
+    {
+        private readonly string _name;
+        public IList<FastaSequence> FastaSequences { get; }
+
+        public FastaSequenceGroup(string name, IList<FastaSequence> fastaSequences) : base(name,
+            string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequences.Count),
+            null, fastaSequences[0].Sequence)
+        {
+            _name = name;
+            FastaSequences = fastaSequences;
+        }
+
+        public override string Name => _name;
+    }
+
 // ReSharper disable InconsistentNaming
     public enum SequenceTerminus { N, C }
 // ReSharper restore InconsistentNaming
