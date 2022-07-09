@@ -409,5 +409,45 @@ namespace pwiz.SkylineTest
                 AssertEx.AreEqual(peptide.ExplicitMods.CrosslinkStructure, roundTripExplicitMods.CrosslinkStructure);
             }
         }
+
+        [TestMethod]
+        public void TestIsConnectedFragmentIon()
+        {
+            var mainPeptide = new Peptide("MERCURY");
+            var linkedPeptide1 = new Peptide("ARSENIC");
+            var linkedPeptide2 = new Peptide("CALCIUM");
+
+
+            var crosslinkMod = new StaticMod("disulfide", null, null, "-H2");
+            var explicitMods = new ExplicitMods(mainPeptide, null, Array.Empty<TypedExplicitModifications>())
+                .ChangeCrosslinkStructure(new CrosslinkStructure(new[] { linkedPeptide1, linkedPeptide2 },
+                    new Crosslink[]
+                    {
+                        new Crosslink(crosslinkMod, new []{new CrosslinkSite(0, 3), new CrosslinkSite(2, 0)}),
+                        new Crosslink(crosslinkMod, new []{new CrosslinkSite(1, 6), new CrosslinkSite(2, 3)})
+                    }));
+
+
+            var peptideStructure = new PeptideStructure(mainPeptide, explicitMods);
+            var b4_b2 = new NeutralFragmentIon(new[] { new IonOrdinal(IonType.b, 4), IonOrdinal.Empty, new IonOrdinal(IonType.b, 2) }, null);
+            AssertEx.IsTrue(b4_b2.IsAllowed(peptideStructure));
+            AssertEx.IsTrue(b4_b2.IsConnected(peptideStructure));
+            var b2b2_= new NeutralFragmentIon(new[] { new IonOrdinal(IonType.b, 2), new IonOrdinal(IonType.b, 2), IonOrdinal.Empty},
+                null);
+            AssertEx.IsTrue(b2b2_.IsAllowed(peptideStructure));
+            AssertEx.IsFalse(b2b2_.IsConnected(peptideStructure));
+            var _y2y4 = new NeutralFragmentIon(
+                new[] { IonOrdinal.Empty, new IonOrdinal(IonType.y, 2), new IonOrdinal(IonType.y, 4) }, null);
+            AssertEx.IsTrue(_y2y4.IsAllowed(peptideStructure));
+            AssertEx.IsTrue(_y2y4.IsConnected(peptideStructure));
+            var b2y2y4 = new NeutralFragmentIon(new[] { new IonOrdinal(IonType.b, 2), new IonOrdinal(IonType.y, 2), 
+                new IonOrdinal(IonType.y, 4) }, null);
+            AssertEx.IsTrue(b2y2y4.IsAllowed(peptideStructure));
+            AssertEx.IsFalse(b2y2y4.IsConnected(peptideStructure));
+            var b4y2p = new NeutralFragmentIon(
+                new[] { new IonOrdinal(IonType.b, 4), new IonOrdinal(IonType.y, 2), IonOrdinal.Precursor }, null);
+            AssertEx.IsTrue(b4y2p.IsAllowed(peptideStructure));
+            AssertEx.IsTrue(b4y2p.IsConnected(peptideStructure));
+        }
     }
 }
