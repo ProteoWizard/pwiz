@@ -689,7 +689,7 @@ precursor.</value>
 The median peak area is calculated separately for each Result File, and each Isotope Label Type. 
 The Median Normalization Divisor is equal to the Median Peak Area for the particular Result File divided by the median of the Media Peak Area values for all of the Result Files.</value>
   </data>
-  <data name="Median">
+  <data name="MedianPeakArea">
     <value>The median transition peak area of all of the transition results in the particular result file.
 The median transition peak area is calculated separately for each Isotope Label Type.</value>
   </data>
