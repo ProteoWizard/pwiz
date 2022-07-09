@@ -222,6 +222,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
         
+        [InvariantDisplayName("MedianData")]
         public class MedianDataValues
         {
             public MedianDataValues(double median, double normalizationDivisor)
