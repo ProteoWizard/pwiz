@@ -650,7 +650,7 @@
     <value>Median Detection Q Value</value>
   </data>
   <data name="MedianNormalizationDivisor">
-	  <value>Median Normalization Divisor</value>
+    <value>Median Normalization Divisor</value>
   </data>
   <data name="MedianPeakArea">
     <value>Median Peak Area</value>
