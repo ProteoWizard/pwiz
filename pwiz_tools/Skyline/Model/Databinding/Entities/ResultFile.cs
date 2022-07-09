@@ -188,6 +188,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return sibling.ListChildrenOfParent(SrmDocument).Skip(fileIndex).FirstOrDefault();
         }
 
+        [OneToMany(ItemDisplayName = "MedianData")]
         public IDictionary<IsotopeLabelType, MedianDataValues> MedianData
         {
             get

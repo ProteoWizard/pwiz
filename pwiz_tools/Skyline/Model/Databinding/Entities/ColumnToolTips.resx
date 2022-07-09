@@ -681,6 +681,18 @@ precursor.</value>
   <data name="Median">
     <value>Median</value>
   </data>
+  <data name="MedianData">
+    <value>Median Peak Area and Median Normalization Divisor</value>
+  </data>
+  <data name="MedianNormalizationDivisor">
+    <value>Number which observed values are divided by when using the "Equalize Medians" normalization method. 
+The median peak area is calculated separately for each Result File, and each Isotope Label Type. 
+The Median Normalization Divisor is equal to the Median Peak Area for the particular Result File divided by the median of the Media Peak Area values for all of the Result Files.</value>
+  </data>
+  <data name="Median">
+    <value>The median transition peak area of all of the transition results in the particular result file.
+The median transition peak area is calculated separately for each Isotope Label Type.</value>
+  </data>
   <data name="Mean">
     <value>Mean</value>
   </data>

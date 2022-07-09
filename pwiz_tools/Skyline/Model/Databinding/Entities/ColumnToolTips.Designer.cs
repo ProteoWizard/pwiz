@@ -1809,11 +1809,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Median.
+        ///   Looks up a localized string similar to The median transition peak area of all of the transition results in the particular result file.
+        ///The median transition peak area is calculated separately for each Isotope Label Type..
         /// </summary>
         public static string Median {
             get {
                 return ResourceManager.GetString("Median", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Median Peak Area and Median Normalization Divisor.
+        /// </summary>
+        public static string MedianData {
+            get {
+                return ResourceManager.GetString("MedianData", resourceCulture);
             }
         }
         
@@ -1823,6 +1833,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MedianDetectionQValue {
             get {
                 return ResourceManager.GetString("MedianDetectionQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number which observed values are divided by when using the &quot;Equalize Medians&quot; normalization method. 
+        ///The median peak area is calculated separately for each Result File, and each Isotope Label Type. 
+        ///The Median Normalization Divisor is equal to the Median Peak Area for the particular Result File divided by the median of the Media Peak Area values for all of the Result Files..
+        /// </summary>
+        public static string MedianNormalizationDivisor {
+            get {
+                return ResourceManager.GetString("MedianNormalizationDivisor", resourceCulture);
             }
         }
         
