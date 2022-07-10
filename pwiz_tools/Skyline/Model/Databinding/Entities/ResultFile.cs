@@ -18,14 +18,12 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.ElementLocators;
-using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 
@@ -188,57 +186,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return sibling.ListChildrenOfParent(SrmDocument).Skip(fileIndex).FirstOrDefault();
         }
 
-        [OneToMany(ItemDisplayName = "MedianData")]
-        public IDictionary<IsotopeLabelType, MedianDataValues> MedianData
+        [Format(Formats.PEAK_AREA)]
+        public double? MedianPeakArea 
         {
             get
             {
-                var dictionary = new Dictionary<IsotopeLabelType, MedianDataValues>();
                 var normalizationData = DataSchema.NormalizedValueCalculator.GetNormalizationData();
-                foreach (var labelType in SrmDocument.Settings.PeptideSettings.Modifications.GetHeavyModificationTypes()
-                             .Prepend(IsotopeLabelType.light))
+                var log2Median = normalizationData.GetLog2Median(Replicate.ReplicateIndex, ChromFileInfoId);
+                if (log2Median.HasValue)
                 {
-                    var log2Median = normalizationData.GetMedian(Replicate.ReplicateIndex, ChromFileInfoId, labelType);
-                    if (!log2Median.HasValue)
-                    {
-                        continue;
-                    }
-
-                    var median = Math.Pow(2, log2Median.Value);
-
-                    var normalizationDivisor = double.NaN;
-                    if (DataSchema.NormalizedValueCalculator.TryGetDenominator(NormalizationMethod.EQUALIZE_MEDIANS,
-                            labelType, Replicate.ReplicateIndex, ChromFileInfoId, out double? denominator))
-                    {
-                        if (denominator.HasValue)
-                        {
-                            normalizationDivisor = denominator.Value;
-                        }
-                    }
-                    dictionary.Add(labelType, new MedianDataValues(median, normalizationDivisor));
+                    return Math.Pow(2, log2Median.Value);
                 }
 
-                return dictionary;
+                return null;
             }
         }
-        
-        [InvariantDisplayName("MedianData")]
-        public class MedianDataValues
+        [Format(Formats.STANDARD_RATIO)]
+        public double? NormalizationDivisor 
         {
-            public MedianDataValues(double median, double normalizationDivisor)
+            get
             {
-                MedianPeakArea = median;
-                MedianNormalizationDivisor = normalizationDivisor;
-            }
-
-            [Format(Formats.PEAK_AREA)]
-            public double MedianPeakArea { get; }
-            [Format(Formats.STANDARD_RATIO)]
-            public double MedianNormalizationDivisor { get; }
-
-            public override string ToString()
-            {
-                return string.Format("Median: {0}", MedianPeakArea.ToString(Formats.PEAK_AREA));
+                DataSchema.NormalizedValueCalculator.TryGetDenominator(SrmDocument.Settings.PeptideSettings.Quantification.NormalizationMethod,
+                    Replicate.ReplicateIndex, ChromFileInfoId, out double? denominator);
+                return denominator;
             }
         }
     }

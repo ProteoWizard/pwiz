@@ -1818,31 +1818,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Median Peak Area and Median Normalization Divisor.
-        /// </summary>
-        public static string MedianData {
-            get {
-                return ResourceManager.GetString("MedianData", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model..
         /// </summary>
         public static string MedianDetectionQValue {
             get {
                 return ResourceManager.GetString("MedianDetectionQValue", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Number which observed values are divided by when using the &quot;Equalize Medians&quot; normalization method. 
-        ///The median peak area is calculated separately for each Result File, and each Isotope Label Type. 
-        ///The Median Normalization Divisor is equal to the Median Peak Area for the particular Result File divided by the median of the Media Peak Area values for all of the Result Files..
-        /// </summary>
-        public static string MedianNormalizationDivisor {
-            get {
-                return ResourceManager.GetString("MedianNormalizationDivisor", resourceCulture);
             }
         }
         
@@ -2200,6 +2180,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string NextAa {
             get {
                 return ResourceManager.GetString("NextAa", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number which observed values are divided by when using the default normalization method.
+        ///The default normalization method is specified on the Quantification tab of the Peptide or Molecule settings dialog..
+        /// </summary>
+        public static string NormalizationDivisor {
+            get {
+                return ResourceManager.GetString("NormalizationDivisor", resourceCulture);
             }
         }
         

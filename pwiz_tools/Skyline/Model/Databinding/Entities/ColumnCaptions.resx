@@ -643,14 +643,8 @@
   <data name="Median">
     <value>Median</value>
   </data>
-  <data name="MedianData">
-    <value>Median Data</value>
-  </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>Median Detection Q Value</value>
-  </data>
-  <data name="MedianNormalizationDivisor">
-    <value>Median Normalization Divisor</value>
   </data>
   <data name="MedianPeakArea">
     <value>Median Peak Area</value>
@@ -792,6 +786,9 @@
   </data>
   <data name="NextAa">
     <value>Next Aa</value>
+  </data>
+  <data name="NormalizationDivisor">
+    <value>Normalization Divisor</value>
   </data>
   <data name="NormalizationMethod">
     <value>Normalization Method</value>

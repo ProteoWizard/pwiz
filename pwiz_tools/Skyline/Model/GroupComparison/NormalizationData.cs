@@ -22,7 +22,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
@@ -36,14 +35,16 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         public static readonly NormalizationData EMPTY = new NormalizationData(new Dictionary<DataKey, DataValue>());
         private readonly IDictionary<DataKey, DataValue> _data;
-        private readonly IDictionary<IsotopeLabelType, double> _medianMedians;
+        private readonly double _medianMedians;
 
         private NormalizationData(IDictionary<DataKey, DataValue> data)
         {
             _data = data;
-            _medianMedians = data.GroupBy(keyValuePair => keyValuePair.Key.IsotopeLabelType, kvp => kvp.Value)
-                .ToDictionary(grouping => grouping.Key,
-                    grouping => grouping.Select(dataValue => dataValue.Median).Median());
+            if (data.Count > 0)
+            {
+                _medianMedians = data.Values.Select(value => value.Median).Median();
+
+            }
         }
 
         public static NormalizationData GetNormalizationData(SrmDocument document, bool treatMissingValuesAsZero, double? qValueCutoff)
@@ -95,8 +96,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                                         continue;
                                     }
 
-                                    areaAccumulators[iResult].AddArea(chromInfo.FileId, transitionGroup.LabelType,
-                                        isMs1, area.Value);
+                                    areaAccumulators[iResult].AddArea(chromInfo.FileId, isMs1, area.Value);
                                 }
                             }
                         }
@@ -120,21 +120,20 @@ namespace pwiz.Skyline.Model.GroupComparison
             return new NormalizationData(data);
         }
 
-        public double? NormalizeQuantile(int replicateIndex, ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType,
-            double value)
+        public double? NormalizeQuantile(int replicateIndex, ChromFileInfoId chromFileInfoId, double value)
         {
             DataValue dataValue;
-            if (!_data.TryGetValue(new DataKey(replicateIndex, chromFileInfoId, null, isotopeLabelType), out dataValue))
+            if (!_data.TryGetValue(new DataKey(replicateIndex, chromFileInfoId), out dataValue))
             {
                 return null;
             }
             double percentile = dataValue.FindPercentileOfValue(value);
-            return GetMeanPercentile(isotopeLabelType, percentile).Value;
+            return GetMeanPercentile(percentile).Value;
         }
 
-        public double? Percentile(int replicateIndex, ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType, double percentile)
+        public double? Percentile(int replicateIndex, ChromFileInfoId chromFileInfoId, double percentile)
         {
-            var dataKey = new DataKey(replicateIndex, chromFileInfoId, null, isotopeLabelType);
+            var dataKey = new DataKey(replicateIndex, chromFileInfoId);
             DataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
@@ -143,9 +142,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return dataValue.GetValueAtPercentile(percentile);
         }
 
-        public double? GetMedian(int replicateIndex, ChromFileInfoId chromFileInfoId, IsotopeLabelType isotopeLabelType)
+        public double? GetLog2Median(int replicateIndex, ChromFileInfoId chromFileInfoId)
         {
-            var dataKey = new DataKey(replicateIndex, chromFileInfoId, null, isotopeLabelType);
+            var dataKey = new DataKey(replicateIndex, chromFileInfoId);
             DataValue dataValue;
             if (!_data.TryGetValue(dataKey, out dataValue))
             {
@@ -154,25 +153,19 @@ namespace pwiz.Skyline.Model.GroupComparison
             return dataValue.Median;
         }
 
-        public double? GetMedianMedian(IsotopeLabelType isotopeLabelType)
+        /// <summary>
+        /// Returns the median of the Log base 2 of peak areas of all of the replicates.
+        /// </summary>
+        public double GetMedianLog2Median()
         {
-            double medianMedian;
-            if (_medianMedians.TryGetValue(isotopeLabelType, out medianMedian))
-            {
-                return medianMedian;
-            }
-            return null;
+            return _medianMedians;
         }
 
-        public double? GetMeanPercentile(IsotopeLabelType isotopeLabelType, double percentile)
+        public double? GetMeanPercentile(double percentile)
         {
             var values = new List<double>();
             foreach (var entry in _data)
             {
-                if (!Equals(entry.Key.IsotopeLabelType, isotopeLabelType))
-                {
-                    continue;
-                }
                 values.Add(entry.Value.GetValueAtPercentile(percentile));
             }
             if (values.Count == 0)
@@ -184,22 +177,17 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private struct DataKey
         {
-            public DataKey(int replicateIndex, ChromFileInfoId chromFileInfoId, SampleType sampleType, IsotopeLabelType isotopeLabelType)
+            public DataKey(int replicateIndex, ChromFileInfoId chromFileInfoId)
                 : this()
             {
                 ReplicateIndex = replicateIndex;
                 ChromFileInfoId = chromFileInfoId;
-                SampleType = sampleType;
-                IsotopeLabelType = isotopeLabelType;
             }
             public int ReplicateIndex { get; private set; }
             public ChromFileInfoId ChromFileInfoId { get; private set; }
-            public SampleType SampleType { get; private set; }
-            public IsotopeLabelType IsotopeLabelType { get; private set; }
-
             public bool Equals(DataKey other)
             {
-                return ReplicateIndex == other.ReplicateIndex && ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId) && Equals(IsotopeLabelType, other.IsotopeLabelType);
+                return ReplicateIndex == other.ReplicateIndex && ReferenceEquals(ChromFileInfoId, other.ChromFileInfoId);
             }
 
             public override bool Equals(object obj)
@@ -214,7 +202,6 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     int result = ReplicateIndex;
                     result = (result * 397) ^ (ChromFileInfoId != null ? RuntimeHelpers.GetHashCode(ChromFileInfoId) : 0);
-                    result = (result * 397) ^ IsotopeLabelType.GetHashCode();
                     return result;
                 }
             }
@@ -304,10 +291,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public ChromatogramSet ChromatogramSet { get; private set; }
 
-            public void AddArea(ChromFileInfoId fileId, IsotopeLabelType labelType, bool isMs1, double area)
+            public void AddArea(ChromFileInfoId fileId, bool isMs1, double area)
             {
                 // Avoid a dictionary lookup for the most common case where label type is light, and the fileId is the first one in the replicate
-                if (labelType.IsLight && ReferenceEquals(fileId, _firstFileId))
+                if (ReferenceEquals(fileId, _firstFileId))
                 {
                     if (isMs1)
                     {
@@ -321,7 +308,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     return;
                 }
 
-                var key = MakeDataKey(fileId, labelType);
+                var key = MakeDataKey(fileId);
                 if (isMs1)
                 {
                     _ms1AreasDictionary.TryGetValue(key, out double ms1Area);
@@ -334,9 +321,9 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
             }
 
-            private DataKey MakeDataKey(ChromFileInfoId fileId, IsotopeLabelType labelType)
+            private DataKey MakeDataKey(ChromFileInfoId fileId)
             {
-                return new DataKey(ReplicateIndex, fileId, ChromatogramSet.SampleType, labelType);
+                return new DataKey(ReplicateIndex, fileId);
             }
 
             private void AddArea(DataKey key, double area)
@@ -374,7 +361,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 var result = _areasDictionary.AsEnumerable();
                 if (_firstFileLightAreasList.Any())
                 {
-                    result = result.Prepend(new KeyValuePair<DataKey, List<double>>(MakeDataKey(_firstFileId, IsotopeLabelType.light), _firstFileLightAreasList));
+                    result = result.Prepend(new KeyValuePair<DataKey, List<double>>(MakeDataKey(_firstFileId), _firstFileLightAreasList));
                 }
 
                 return result;

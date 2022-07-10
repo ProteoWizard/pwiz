@@ -156,7 +156,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
             {
                 var chromFileInfo = chromatograms[iReplicate].MSDataFileInfos.First();
-                var median = normalizationData.GetMedian(iReplicate, chromFileInfo.FileId, IsotopeLabelType.light);
+                var median = normalizationData.GetLog2Median(iReplicate, chromFileInfo.FileId);
                 mediansByReplicateFileIndex.Add(chromFileInfo.FileIndex, median.Value);
             }
               

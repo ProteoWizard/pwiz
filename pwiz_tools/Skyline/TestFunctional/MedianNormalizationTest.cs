@@ -55,6 +55,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MedianNormalizationTest.sky"));
+                Assert.AreEqual(NormalizationMethod.EQUALIZE_MEDIANS, SkylineWindow.Document.Settings.PeptideSettings.Quantification.NormalizationMethod);
                 SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.products);
                 SkylineWindow.SetNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
                 Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
@@ -112,14 +113,13 @@ namespace pwiz.SkylineTestFunctional
             {
                 var ppReplicates = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
                 var ppResultFiles = ppReplicates.Property(nameof(Replicate.Files)).LookupAllItems();
-                var ppMedianData = ppResultFiles.Property(nameof(ResultFile.MedianData)).DictionaryValues();
                 viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
                 foreach (var propertyPath in new[]
                          {
                              ppReplicates,
                              ppResultFiles.Property(nameof(ResultFile.ExplicitGlobalStandardArea)),
-                             ppMedianData.Property(nameof(ResultFile.MedianDataValues.MedianPeakArea)),
-                             ppMedianData.Property(nameof(ResultFile.MedianDataValues.MedianNormalizationDivisor))
+                             ppResultFiles.Property(nameof(ResultFile.MedianPeakArea)),
+                             ppResultFiles.Property(nameof(ResultFile.NormalizationDivisor))
                          })
                 {
                     viewEditor.ChooseColumnsTab.AddColumn(propertyPath);
@@ -133,18 +133,16 @@ namespace pwiz.SkylineTestFunctional
             var medianNormalizationDivisors = new List<double>();
             RunUI(() =>
             {
-                PropertyPath ppMedianData = PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems()
-                    .Property(nameof(ResultFile.MedianData)).DictionaryValues();
-                PropertyPath ppMedianPeakArea = ppMedianData.Property(nameof(ResultFile.MedianDataValues.MedianPeakArea));
-                PropertyPath ppMedianNormalizationDivisor =
-                    ppMedianData.Property(nameof(ResultFile.MedianDataValues.MedianNormalizationDivisor));
+                PropertyPath ppResultFiles = PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems();
+                PropertyPath ppMedianPeakArea = ppResultFiles.Property(nameof(ResultFile.MedianPeakArea));
+                PropertyPath ppNormalizationDivisor = ppResultFiles.Property(nameof(ResultFile.NormalizationDivisor));
                 ColumnPropertyDescriptor pdMedianPeakArea = documentGrid.DataboundGridControl.BindingListSource
-                    .ItemProperties.OfType<ColumnPropertyDescriptor>().FirstOrDefault(pd =>
-                        ppMedianPeakArea.Equals(pd.DisplayColumn.ColumnDescriptor.PropertyPath));
+                    .ItemProperties.
+                    OfType<ColumnPropertyDescriptor>().FirstOrDefault(pd => ppMedianPeakArea.Equals(pd.PropertyPath));
                 Assert.IsNotNull(pdMedianPeakArea);
                 ColumnPropertyDescriptor pdMedianNormalizationDivisor = documentGrid.DataboundGridControl
                     .BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>().FirstOrDefault(pd =>
-                        ppMedianNormalizationDivisor.Equals(pd.DisplayColumn.ColumnDescriptor.PropertyPath));
+                        ppNormalizationDivisor.Equals(pd.PropertyPath));
                 Assert.IsNotNull(pdMedianNormalizationDivisor);
                 foreach (var rowItem in documentGrid.DataboundGridControl.BindingListSource.OfType<RowItem>())
                 {

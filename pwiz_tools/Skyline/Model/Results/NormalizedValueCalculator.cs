@@ -78,8 +78,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            if (TryGetDenominator(normalizationMethod, transitionGroupDocNode.LabelType, replicateIndex, transitionChromInfo.FileId,
-                out double? denominator))
+            if (TryGetDenominator(normalizationMethod, replicateIndex, transitionChromInfo.FileId, out double? denominator))
             {
                 return transitionChromInfo.Area / denominator;
             }
@@ -158,8 +157,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            if (TryGetDenominator(normalizationMethod, transitionGroupDocNode.LabelType,
-                replicateIndex, transitionGroupChromInfo.FileId, out double? denominator))
+            if (TryGetDenominator(normalizationMethod, replicateIndex, transitionGroupChromInfo.FileId, out double? denominator))
             {
                 return transitionGroupChromInfo.Area / denominator;
             }
@@ -380,7 +378,7 @@ namespace pwiz.Skyline.Model.Results
             get { return Document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes; }
         }
 
-        public bool TryGetDenominator(NormalizationMethod normalizationMethod, IsotopeLabelType labelType, int replicateIndex, ChromFileInfoId fileId, out double? denominator)
+        public bool TryGetDenominator(NormalizationMethod normalizationMethod, int replicateIndex, ChromFileInfoId fileId, out double? denominator)
         {
             if (Equals(normalizationMethod, NormalizationMethod.NONE))
             {
@@ -403,7 +401,7 @@ namespace pwiz.Skyline.Model.Results
             if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
             {
                 var normalizationData = _normalizationData.Value;
-                var medianAdjustment = normalizationData.GetMedian(replicateIndex, fileId, labelType) - normalizationData.GetMedianMedian(labelType);
+                var medianAdjustment = normalizationData.GetLog2Median(replicateIndex, fileId) - normalizationData.GetMedianLog2Median();
                 if (!medianAdjustment.HasValue)
                 {
                     denominator = null;
