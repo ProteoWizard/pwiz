@@ -421,10 +421,10 @@ namespace pwiz.SkylineTest
             var crosslinkMod = new StaticMod("disulfide", null, null, "-H2");
             var explicitMods = new ExplicitMods(mainPeptide, null, Array.Empty<TypedExplicitModifications>())
                 .ChangeCrosslinkStructure(new CrosslinkStructure(new[] { linkedPeptide1, linkedPeptide2 },
-                    new Crosslink[]
+                    new[]
                     {
-                        new Crosslink(crosslinkMod, new []{new CrosslinkSite(0, 3), new CrosslinkSite(2, 0)}),
-                        new Crosslink(crosslinkMod, new []{new CrosslinkSite(1, 6), new CrosslinkSite(2, 3)})
+                        new Crosslink(crosslinkMod, new[] { new CrosslinkSite(0, 3), new CrosslinkSite(2, 0) }),
+                        new Crosslink(crosslinkMod, new[] { new CrosslinkSite(1, 6), new CrosslinkSite(2, 3) })
                     }));
 
 
