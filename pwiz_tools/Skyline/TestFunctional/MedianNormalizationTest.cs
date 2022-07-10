@@ -32,14 +32,21 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Tests that median normalization and TIC normalization behave correctly.
+    /// </summary>
     [TestClass]
     public class MedianNormalizationTest : AbstractFunctionalTest
     {
+        private const string REPORTNAME_RESULTFILE_NORMALIZATION = "File Normalization Values";
+        private const string REPORTNAME_PROTEINABUNDANCES = "Protein Abundances";
+        private const string ANNOTIONNAME_DIAGNOSIS = "Diagnosis";
         [TestMethod]
         public void TestMedianNormalization()
         {
@@ -49,17 +56,101 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            RunUI(() =>
+            {
+                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MedianNormalizationTest.sky"));
+            });
+            CreateReportDefinitions();
+            TestNormalizationMethod(NormalizationMethod.TIC);
+            TestNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
+        }
+
+        private void CreateReportDefinitions()
+        {
+            ViewName viewNameReplicates =
+                ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates);
+            DocumentGridForm documentGrid = null;
+            RunUI(() =>
+            {
+                SkylineWindow.ShowDocumentGrid(true);
+                documentGrid = FindOpenForm<DocumentGridForm>();
+                documentGrid.DataboundGridControl.ChooseView(viewNameReplicates);
+            });
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                var ppReplicates = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
+                var ppResultFiles = ppReplicates.Property(nameof(Replicate.Files)).LookupAllItems();
+                viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
+                foreach (var propertyPath in new[]
+                         {
+                             ppReplicates,
+                             ppResultFiles.Property(nameof(ResultFile.ExplicitGlobalStandardArea)),
+                             ppResultFiles.Property(nameof(ResultFile.MedianPeakArea)),
+                             ppResultFiles.Property(nameof(ResultFile.TicArea)),
+                             ppResultFiles.Property(nameof(ResultFile.NormalizationDivisor))
+                         })
+                {
+                    viewEditor.ChooseColumnsTab.AddColumn(propertyPath);
+                }
+
+                viewEditor.ViewName = REPORTNAME_RESULTFILE_NORMALIZATION;
+                viewEditor.OkDialog();
+            });
+            RunUI(() => documentGrid.DataboundGridControl.ChooseView(viewNameReplicates));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                var ppProtein = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems();
+                var ppProteinResult = ppProtein.Property(nameof(Protein.Results)).DictionaryValues();
+                var ppProteinAbundance = ppProteinResult.Property(nameof(ProteinResult.Abundance));
+                var ppReplicates = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
+                var ppResultFiles = ppReplicates.Property(nameof(Replicate.Files)).LookupAllItems();
+                viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
+                foreach (var propertyPath in new[]
+                         {
+                             ppReplicates,
+                             ppResultFiles.Property(nameof(ResultFile.ExplicitGlobalStandardArea)),
+                             ppResultFiles.Property(nameof(ResultFile.MedianPeakArea)),
+                             ppResultFiles.Property(nameof(ResultFile.TicArea)),
+                             ppResultFiles.Property(nameof(ResultFile.NormalizationDivisor)),
+                             ppProtein,
+                             ppProteinResult,
+                             ppProteinAbundance
+                         })
+                {
+                    viewEditor.ChooseColumnsTab.AddColumn(propertyPath);
+                }
+                viewEditor.ViewName = REPORTNAME_PROTEINABUNDANCES;
+                viewEditor.OkDialog();
+            });
+
+        }
+
+        private void TestNormalizationMethod(NormalizationMethod normalizationMethod) {
             AreaReplicateGraphPane areaReplicateGraphPane = null;
             PeptideGroupDocNode secondProtein = null;
 
+            // Change the Peptide Quantification settings to use the normalization method being tested.
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            {
+                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification;
+                peptideSettingsUi.QuantNormalizationMethod = normalizationMethod;
+                peptideSettingsUi.QuantMsLevel = 2;
+                peptideSettingsUi.OkDialog();
+            });
+            Assert.AreEqual(normalizationMethod, SkylineWindow.Document.Settings.PeptideSettings.Quantification.NormalizationMethod);
+
+            // Show the Peak Area Replicate Comparison graph, and select the normalization method being tested
             RunUI(()=>
             {
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MedianNormalizationTest.sky"));
-                Assert.AreEqual(NormalizationMethod.EQUALIZE_MEDIANS, SkylineWindow.Document.Settings.PeptideSettings.Quantification.NormalizationMethod);
                 SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.products);
-                SkylineWindow.SetNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS);
+                SkylineWindow.SetNormalizationMethod(normalizationMethod);
                 Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
                 Settings.Default.ShowLibraryPeakArea = false;
+
+                // Select the second protein in the document. The second protein has only one Peptide, which makes it simpler to calculate its expected
+                // fold change, and compare those values to what is displayed in the Peak Area graph
                 secondProtein = (PeptideGroupDocNode) SkylineWindow.Document.Children[1];
                 Assert.AreEqual(1, secondProtein.Children.Count);
                 SkylineWindow.SelectedPath = new IdentityPath(secondProtein.Id, secondProtein.Children[0].Id);
@@ -67,16 +158,19 @@ namespace pwiz.SkylineTestFunctional
                 areaReplicateGraphPane = FindGraphPane<AreaReplicateGraphPane>();
                 areaReplicateGraphPane.ExpectedVisible = AreaExpectedValue.none;
             });
+            
             var groupComparison = GroupComparisonDef.EMPTY.ChangeName("GroupComparison")
-                .ChangeControlAnnotation("Diagnosis").ChangeControlValue("AD").ChangePerProtein(true);
+                .ChangeControlAnnotation(ANNOTIONNAME_DIAGNOSIS).ChangeControlValue("AD").ChangePerProtein(true);
             var noNormalizationFoldChanges =
                 GetFoldChanges(groupComparison.ChangeNormalizationMethod(NormalizationMethod.NONE));
-            var medianNormalizedFoldChanges =
-                GetFoldChanges(groupComparison.ChangeNormalizationMethod(NormalizationMethod.EQUALIZE_MEDIANS));
+            var normalizedFoldChanges = GetFoldChanges(groupComparison.ChangeNormalizationMethod(normalizationMethod));
+
+            // Verify that the values displayed in the peak area graph are consistent with the fold change that the Group Comparer calculated for the
+            // selected protein
             WaitForGraphs();
             RunUI(() =>
             {
-                var secondProteinFoldChange = medianNormalizedFoldChanges[new IdentityPath(secondProtein.Id)];
+                var secondProteinFoldChange = normalizedFoldChanges[new IdentityPath(secondProtein.Id)];
                 Assert.AreEqual(1, secondProtein.Children.Count);
                 var peptideDocNode = secondProtein.Molecules.First();
                 Assert.AreEqual(1, peptideDocNode.Children.Count);
@@ -85,8 +179,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(productTransitions.Count, areaReplicateGraphPane.CurveList.Count);
                 var replicates = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
                 Assert.AreEqual(2, replicates.Count);
-                Assert.AreEqual("AD", replicates[0].Annotations.GetAnnotation("Diagnosis"));
-                Assert.AreEqual("PD", replicates[1].Annotations.GetAnnotation("Diagnosis"));
+                Assert.AreEqual("AD", replicates[0].Annotations.GetAnnotation(ANNOTIONNAME_DIAGNOSIS));
+                Assert.AreEqual("PD", replicates[1].Annotations.GetAnnotation(ANNOTIONNAME_DIAGNOSIS));
                 double adArea = 0;
                 double pdArea = 0;
                 foreach (var curve in areaReplicateGraphPane.CurveList)
@@ -99,71 +193,124 @@ namespace pwiz.SkylineTestFunctional
                 var ratio = pdArea / adArea;
                 AssertEx.AreEqual(secondProteinFoldChange, ratio, 1e-6);
             });
+
+            // Use the document grid to get the raw normalization values (i.e. Median or TIC Area) and normalization divisors for all of the Result Files.
             DocumentGridForm documentGrid = null;
             RunUI(()=>
             {
                 SkylineWindow.ShowDocumentGrid(true);
                 documentGrid = FindOpenForm<DocumentGridForm>();
-                documentGrid.DataboundGridControl.ChooseView(
-                    ViewGroup.BUILT_IN.Id.ViewName(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
+                documentGrid.ChooseView(REPORTNAME_RESULTFILE_NORMALIZATION);
             });
             WaitForConditionUI(() => documentGrid.IsComplete);
-            const string replicateMediansReportName = "Replicate Median Data";
-            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
-            {
-                var ppReplicates = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
-                var ppResultFiles = ppReplicates.Property(nameof(Replicate.Files)).LookupAllItems();
-                viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
-                foreach (var propertyPath in new[]
-                         {
-                             ppReplicates,
-                             ppResultFiles.Property(nameof(ResultFile.ExplicitGlobalStandardArea)),
-                             ppResultFiles.Property(nameof(ResultFile.MedianPeakArea)),
-                             ppResultFiles.Property(nameof(ResultFile.NormalizationDivisor))
-                         })
-                {
-                    viewEditor.ChooseColumnsTab.AddColumn(propertyPath);
-                }
-
-                viewEditor.ViewName = replicateMediansReportName;
-                viewEditor.OkDialog();
-            });
-            WaitForConditionUI(() => documentGrid.IsComplete);
-            var medianAreas = new List<double>();
-            var medianNormalizationDivisors = new List<double>();
+            var rawNormalizationValues = new List<double>();
+            var normalizationDivisors = new List<double>();
             RunUI(() =>
             {
                 PropertyPath ppResultFiles = PropertyPath.Root.Property(nameof(Replicate.Files)).LookupAllItems();
-                PropertyPath ppMedianPeakArea = ppResultFiles.Property(nameof(ResultFile.MedianPeakArea));
+                PropertyPath ppRawNormalizationValue;
+                if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
+                {
+                    ppRawNormalizationValue = ppResultFiles.Property(nameof(ResultFile.MedianPeakArea));
+                }
+                else
+                {
+                    Assert.AreEqual(NormalizationMethod.TIC, normalizationMethod);
+                    ppRawNormalizationValue = ppResultFiles.Property(nameof(ResultFile.TicArea));
+                }
                 PropertyPath ppNormalizationDivisor = ppResultFiles.Property(nameof(ResultFile.NormalizationDivisor));
-                ColumnPropertyDescriptor pdMedianPeakArea = documentGrid.DataboundGridControl.BindingListSource
+                ColumnPropertyDescriptor propDescRawNormalizationValue = documentGrid.DataboundGridControl.BindingListSource
                     .ItemProperties.
-                    OfType<ColumnPropertyDescriptor>().FirstOrDefault(pd => ppMedianPeakArea.Equals(pd.PropertyPath));
-                Assert.IsNotNull(pdMedianPeakArea);
-                ColumnPropertyDescriptor pdMedianNormalizationDivisor = documentGrid.DataboundGridControl
+                    OfType<ColumnPropertyDescriptor>().FirstOrDefault(pd => ppRawNormalizationValue.Equals(pd.PropertyPath));
+                Assert.IsNotNull(propDescRawNormalizationValue);
+                ColumnPropertyDescriptor propDescNormalizationDivisor = documentGrid.DataboundGridControl
                     .BindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>().FirstOrDefault(pd =>
                         ppNormalizationDivisor.Equals(pd.PropertyPath));
-                Assert.IsNotNull(pdMedianNormalizationDivisor);
+                Assert.IsNotNull(propDescNormalizationDivisor);
                 foreach (var rowItem in documentGrid.DataboundGridControl.BindingListSource.OfType<RowItem>())
                 {
-                    var medianArea = pdMedianPeakArea.GetValue(rowItem);
-                    Assert.IsNotNull(medianArea);
-                    Assert.IsInstanceOfType(medianArea, typeof(double));
-                    medianAreas.Add((double) medianArea);
-                    var medianNormalizationDivisor = pdMedianNormalizationDivisor.GetValue(rowItem);
-                    Assert.IsInstanceOfType(medianNormalizationDivisor, typeof(double));
-                    Assert.IsNotNull(medianNormalizationDivisor);
-                    medianNormalizationDivisors.Add((double) medianNormalizationDivisor);
+                    var rawNormalizationValue = propDescRawNormalizationValue.GetValue(rowItem);
+                    Assert.IsNotNull(rawNormalizationValue);
+                    Assert.IsInstanceOfType(rawNormalizationValue, typeof(double));
+                    rawNormalizationValues.Add((double) rawNormalizationValue);
+                    var normalizationDivisor = propDescNormalizationDivisor.GetValue(rowItem);
+                    Assert.IsInstanceOfType(normalizationDivisor, typeof(double));
+                    Assert.IsNotNull(normalizationDivisor);
+                    normalizationDivisors.Add((double) normalizationDivisor);
                 }
             });
-            Assert.AreEqual(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count, medianAreas.Count);
-            Assert.AreEqual(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count, medianNormalizationDivisors.Count);
-            var medianMedian = medianAreas[0] / medianNormalizationDivisors[0];
-            for (int i = 0; i < medianAreas.Count; i++)
+
+            // Verify that the Normalization Divisor values are equal to the raw normalization value (i.e. Median or TIC Area) divided by the median value across all of the replicates.
+            Assert.AreEqual(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count, rawNormalizationValues.Count);
+            Assert.AreEqual(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count, normalizationDivisors.Count);
+            var medianMedian = rawNormalizationValues[0] / normalizationDivisors[0];
+            for (int i = 0; i < rawNormalizationValues.Count; i++)
             {
-                Assert.AreEqual(medianMedian, medianAreas[i] / medianNormalizationDivisors[i], .00001);
+                Assert.AreEqual(medianMedian, rawNormalizationValues[i] / normalizationDivisors[i], .00001);
             }
 
+
+            // Use the Document Grid to get the protein abundance values for each protein
+            RunUI(()=>documentGrid.ChooseView(REPORTNAME_PROTEINABUNDANCES));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            Assert.AreEqual(2, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
+            // Since there are only two replicates in the document, we will only get two protein abundance values for each protein
+            Dictionary<IdentityPath, double> proteinAbundanceNumerators =
+                new Dictionary<IdentityPath, double>();
+            Dictionary<IdentityPath, double> proteinAbundanceDenominators =
+                new Dictionary<IdentityPath, double>();
+            RunUI(() =>
+            {
+                var colProtein = documentGrid.FindColumn(PropertyPath.Root);
+                Assert.IsNotNull(colProtein);
+                PropertyPath ppProteinResult = PropertyPath.Root.Property(nameof(Protein.Results)).DictionaryValues();
+                var colReplicate = documentGrid.FindColumn(ppProteinResult.Property(nameof(ProteinResult.Replicate)));
+                Assert.IsNotNull(colReplicate);
+                var colProteinAbundance =
+                    documentGrid.FindColumn(ppProteinResult.Property(nameof(ProteinResult.Abundance)));
+                Assert.IsNotNull(colProteinAbundance);
+                for (int rowIndex = 0; rowIndex < documentGrid.RowCount; rowIndex++)
+                {
+                    var row = documentGrid.DataGridView.Rows[rowIndex];
+                    var protein = (Protein) row.Cells[colProtein.Index].Value;
+                    Assert.IsNotNull(protein);
+                    var replicate = (Replicate) row.Cells[colReplicate.Index].Value;
+                    Assert.IsNotNull(replicate);
+                    var abundance = (double?) row.Cells[colProteinAbundance.Index].Value;
+                    Assert.IsNotNull(abundance);
+                    var diagnosis = replicate.ChromatogramSet.Annotations.GetAnnotation(ANNOTIONNAME_DIAGNOSIS);
+                    if (diagnosis == "AD")
+                    {
+                        proteinAbundanceDenominators.Add(protein.IdentityPath, abundance.Value);
+                    }
+                    else
+                    {
+                        Assert.AreEqual("PD", diagnosis);
+                        proteinAbundanceNumerators.Add(protein.IdentityPath, abundance.Value);
+                    }
+                }
+            });
+
+            // Verify that when we calculate the fold changes using the Protein Abundance values we get the same fold changes
+            // as the group comparison gave us
+            foreach (var foldChangeResultEntry in normalizedFoldChanges)
+            {
+                var identityPath = foldChangeResultEntry.Key;
+                Assert.IsTrue(proteinAbundanceNumerators.TryGetValue(identityPath, out double numerator),
+                    "Could not find numerator for {0}", identityPath);
+                Assert.IsTrue(proteinAbundanceDenominators.TryGetValue(identityPath, out double denominator),
+                    "Could not find denominator for {0}", identityPath);
+                var numeratorDenominatorRatio = numerator / denominator;
+                Assert.AreEqual(foldChangeResultEntry.Value, numeratorDenominatorRatio, .01, "Incorrect fold change for {0}", identityPath);
+            }
+
+            // Verify that if we copy the Normalization Divisor values into the "Explicit Global Standard Area" column, and change the normalization
+            // method to "Ratio to Global Standards", we get the same fold change values.
+            RunUI(() =>
+            {
+                documentGrid.ChooseView(REPORTNAME_RESULTFILE_NORMALIZATION);
+            });
+            WaitForConditionUI(() => documentGrid.IsComplete);
             SetExplicitGlobalStandardAreas(documentGrid,
                 Enumerable.Repeat(100.0, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count)
                     .ToList());
@@ -175,13 +322,13 @@ namespace pwiz.SkylineTestFunctional
                 var expectedFoldChange = noNormalizationFoldChanges[entry.Key];
                 Assert.AreEqual(expectedFoldChange, entry.Value);
             }
-            SetExplicitGlobalStandardAreas(documentGrid, medianNormalizationDivisors);
-            var normalizedToMedianDivisorsFoldChanges =
+            SetExplicitGlobalStandardAreas(documentGrid, normalizationDivisors);
+            var normalizedToDivisorsFoldChanges =
                 GetFoldChanges(groupComparison.ChangeNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS));
-            Assert.AreEqual(medianNormalizedFoldChanges.Count, normalizedToMedianDivisorsFoldChanges.Count);
-            foreach (var entry in normalizedToMedianDivisorsFoldChanges)
+            Assert.AreEqual(normalizedFoldChanges.Count, normalizedToDivisorsFoldChanges.Count);
+            foreach (var entry in normalizedToDivisorsFoldChanges)
             {
-                var expectedFoldChange = medianNormalizedFoldChanges[entry.Key];
+                var expectedFoldChange = normalizedFoldChanges[entry.Key];
                 Assert.AreEqual(expectedFoldChange, entry.Value, .00001);
             }
         }
