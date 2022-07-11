@@ -993,9 +993,9 @@ namespace pwiz.Skyline
         }
 
         //Testing support
-        public void SynchMzScale(IMzScalePlot source)
+        public void SynchMzScale(IMzScalePlot source, bool setSynchMz = true)
         {
-            synchMzScaleToolStripMenuItem.Checked = true;
+            synchMzScaleToolStripMenuItem.Checked = setSynchMz;
             SynchMzScaleToolStripMenuItemClick(source);
         }
 

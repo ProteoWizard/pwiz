@@ -32,7 +32,6 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -193,6 +192,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(SkylineWindow.GraphSpectrum.Range, SkylineWindow.GraphFullScan.Range);
             Assert.AreEqual(testRange, SkylineWindow.GraphFullScan.Range);
 
+            RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum, false)); // Sync from the library match to the full scan viewer
             TestSpecialIonsAnnotations();
         }
 
@@ -258,6 +258,12 @@ namespace pwiz.SkylineTestFunctional
                 .Select(label => label.Text).ToHashSet();
             Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
         }
+
+        private void TestLibraryMatchAnnotations(string[] annotationText)
+        {
+            var ionLabels = SkylineWindow.GraphSpectrum.IonLabels.ToHashSet();
+            Assert.IsTrue(annotationText.All(txt => ionLabels.Contains(txt)));
+        }
         private static void SetFilter(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetFilter(isChecked));
@@ -275,8 +281,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestSpecialIonsAnnotations()
         {
-            var testIon = new MeasuredIon("Reporter_Test", "C31H46N14O4", 679.3899, 679.3899, Adduct.M_PLUS, true);
-
+            var testIon = new MeasuredIon("Reporter_Test", "C31H47N14O4", 679.3899, 679.3899, Adduct.M_PLUS, true);
+            //Add special ion to the document settings
             RunUI(() =>
             {
                 var settings = SkylineWindow.DocumentUI.Settings;
@@ -286,15 +292,20 @@ namespace pwiz.SkylineTestFunctional
                     doc => doc.ChangeSettings(newSettings));
             });
 
-            Settings.Default.ShowSpecialIons = true;
 
             WaitForDocumentLoaded();
-
+            WaitForGraphs();
+            RunUI(SkylineWindow.HideFullScanGraph);
+            Settings.Default.ShowSpecialIons = true;
             SetShowAnnotations(true);
+            FindNode("679");
+            RunUI(() => SkylineWindow.GraphSpectrum.SetMzScale(new MzRange(670, 680)));
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(670, 680)));
             WaitForGraphs();
+            //check that the special ion annotation shows in both library and full scan viewers
             TestAnnotations(new [] {"Reporter_Test+"});
+            TestLibraryMatchAnnotations(new[] { "Reporter_Test+" });
         }
     }
 }
