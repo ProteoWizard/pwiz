@@ -807,7 +807,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
                              int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect,
-                             PeptideUniquenessConstraint peptideUniquenessConstraint)
+                             PeptideUniquenessConstraint peptideUniquenessConstraint,
+                             ProteinAssociation.ParsimonySettings parsimonySettings)
         {
             Exclusions = exclusions;
             ExcludeNTermAAs = excludeNTermAAs;
@@ -815,6 +816,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxPeptideLength = maxPeptideLength;
             AutoSelect = autoSelect;
             PeptideUniqueness = peptideUniquenessConstraint;
+            ParsimonySettings = parsimonySettings;
             DoValidate();
         }
 

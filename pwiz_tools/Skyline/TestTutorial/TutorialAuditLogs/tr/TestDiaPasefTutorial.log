@@ -86,6 +86,16 @@ Import Peptide Search > Import FASTA > FASTA file is "target_protein_sequences.f
 Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
 Import Peptide Search > Import FASTA > Decoys per target is "1"
 Import Peptide Search > Import FASTA > Automatically train mProphet model is True
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "10"
+Import Peptide Search > Associate Proteins > Peptides mapped is "30"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "2"
+Import Peptide Search > Associate Proteins > Protein targets is "10"
+Import Peptide Search > Associate Proteins > Peptide targets is "30"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -229,6 +239,19 @@ Import FASTA =
     Decoy generation method = "Shuffle Sequence",
     Decoys per target = "1",
     Automatically train mProphet model = True
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "10",
+    Peptides mapped = "30",
+    Proteins unmapped = "2",
+    Protein targets = "10",
+    Peptide targets = "30"
 }
 
 Undo Redo : Annotations changed

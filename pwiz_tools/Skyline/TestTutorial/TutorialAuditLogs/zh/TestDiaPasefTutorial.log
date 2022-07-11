@@ -86,6 +86,16 @@ All Info  :
 导入肽段搜索 > 导入 FASTA > 诱饵生成方法 是 "随机序列"
 导入肽段搜索 > 导入 FASTA > 每个目标的诱饵数目 是 "1"
 导入肽段搜索 > 导入 FASTA > 自动训练 mProphet 模型 是 真
+导入肽段搜索 > Associate Proteins > Group proteins 是 假
+导入肽段搜索 > Associate Proteins > Find minimal protein list 是 假
+导入肽段搜索 > Associate Proteins > Remove subset proteins 是 假
+导入肽段搜索 > Associate Proteins > Shared peptides option 是 "Duplicated between proteins"
+导入肽段搜索 > Associate Proteins > Min peptides per protein 是 "1"
+导入肽段搜索 > Associate Proteins > Proteins mapped 是 "10"
+导入肽段搜索 > Associate Proteins > Peptides mapped 是 "30"
+导入肽段搜索 > Associate Proteins > Proteins unmapped 是 "2"
+导入肽段搜索 > Associate Proteins > Protein targets 是 "10"
+导入肽段搜索 > Associate Proteins > Peptide targets 是 "30"
 Extra Info: 提取色谱图 = 
 {
     查找到结果文件 = 
@@ -229,6 +239,19 @@ Extra Info: 提取色谱图 =
     诱饵生成方法 = "随机序列",
     每个目标的诱饵数目 = "1",
     自动训练 mProphet 模型 = 真
+},
+Associate Proteins = 
+{
+    Group proteins = 假,
+    Find minimal protein list = 假,
+    Remove subset proteins = 假,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "10",
+    Peptides mapped = "30",
+    Proteins unmapped = "2",
+    Protein targets = "10",
+    Peptide targets = "30"
 }
 
 Undo Redo : 注释 已更改

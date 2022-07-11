@@ -146,7 +146,7 @@ namespace pwiz.ProteowizardWrapper
                                 {
                                     result.WindowScheme = WindowScheme.SWATH_Variable;
                                     var variableWindows = new List<TargetWindow>();
-                                    var windowRanges = up.value.ToString().Split(' '); // list of 123.4-234.5 strings
+                                    var windowRanges = up.value.ToString().Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries); // list of 123.4-234.5 strings
                                     foreach (var windowRange in windowRanges)
                                     {
                                         var rangeStartEnd = windowRange.Split('-');
