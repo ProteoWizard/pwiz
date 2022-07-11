@@ -1827,8 +1827,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The median transition peak area of all of the transition results in the particular result file.
-        ///The median transition peak area is calculated separately for each Isotope Label Type..
+        ///   Looks up a localized string similar to The median transition peak area of transition results in the particular result file.
+        ///This median peak area is used when the normalization method is &quot;Equalize Medians&quot;.
+        ///If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor&apos;s label type is an internal standard.
+        ///If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas..
         /// </summary>
         public static string MedianPeakArea {
             get {

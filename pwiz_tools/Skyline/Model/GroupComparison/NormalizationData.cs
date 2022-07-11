@@ -56,6 +56,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             var chromatogramSets = document.Settings.MeasuredResults.Chromatograms;
             var areaAccumulators = Enumerable.Range(0, chromatogramSets.Count).Select(replicateIndex =>
                 new AreaAccumulator(replicateIndex, chromatogramSets[replicateIndex])).ToList();
+            var internalStandardLabelTypes =
+                document.Settings.PeptideSettings.Modifications.InternalStandardTypes.ToHashSet();
 
             foreach (var peptideGroup in document.MoleculeGroups)
             {
@@ -72,6 +74,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                     }
                     foreach (var transitionGroup in peptide.TransitionGroups)
                     {
+                        bool isInternalStandard = internalStandardLabelTypes.Contains(transitionGroup.LabelType);
                         foreach (var transition in transitionGroup.Transitions)
                         {
                             if (!transition.HasResults)
@@ -79,7 +82,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                                 continue;
                             }
 
-                            bool isMs1 = transition.IsMs1;
+                            int msLevel = transition.IsMs1 ? 1 : 2;
                             for (int iResult = 0; iResult < transition.Results.Count && iResult < chromatogramSets.Count; iResult++)
                             {
                                 var results = transition.Results[iResult];
@@ -96,14 +99,14 @@ namespace pwiz.Skyline.Model.GroupComparison
                                         continue;
                                     }
 
-                                    areaAccumulators[iResult].AddArea(chromInfo.FileId, isMs1, area.Value);
+                                    areaAccumulators[iResult].AddArea(chromInfo.FileId, msLevel, isInternalStandard, area.Value);
                                 }
                             }
                         }
 
                         foreach (var areaAccumulator in areaAccumulators)
                         {
-                            areaAccumulator.FinishTransitionGroup();
+                            areaAccumulator.FinishTransitionGroup(isInternalStandard);
                         }
                     }
                 }
@@ -275,12 +278,10 @@ namespace pwiz.Skyline.Model.GroupComparison
         /// </summary>
         private class AreaAccumulator
         {
-            private IDictionary<DataKey, List<double>> _areasDictionary = new Dictionary<DataKey, List<double>>();
-            private Dictionary<DataKey, double> _ms1AreasDictionary = new Dictionary<DataKey, double>();
+            private IDictionary<DataKey, FileData> _fileDataDictionary = new Dictionary<DataKey, FileData>();
 
             private ChromFileInfoId _firstFileId;
-            private List<double> _firstFileLightAreasList = new List<double>();
-            private double? _firstFileLightMs1Area;
+            private FileData _firstFileData = new FileData();
             public AreaAccumulator(int replicateIndex, ChromatogramSet chromatogramSet)
             {
                 ReplicateIndex = replicateIndex;
@@ -291,34 +292,27 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public ChromatogramSet ChromatogramSet { get; private set; }
 
-            public void AddArea(ChromFileInfoId fileId, bool isMs1, double area)
+            public void AddArea(ChromFileInfoId fileId, int msLevel, bool isInternalStandard, double area)
             {
-                // Avoid a dictionary lookup for the most common case where label type is light, and the fileId is the first one in the replicate
+                GetFileData(fileId).AddArea(msLevel, isInternalStandard, area);
+            }
+
+            private FileData GetFileData(ChromFileInfoId fileId)
+            {
                 if (ReferenceEquals(fileId, _firstFileId))
                 {
-                    if (isMs1)
-                    {
-                        _firstFileLightMs1Area = (_firstFileLightMs1Area ?? 0) + area;
-                    }
-                    else
-                    {
-                        _firstFileLightAreasList.Add(area);
-                    }
-
-                    return;
+                    // Avoid a dictionary lookup for the most common case where the fileId is the first one in the replicate
+                    return _firstFileData;
                 }
 
                 var key = MakeDataKey(fileId);
-                if (isMs1)
+                if (!_fileDataDictionary.TryGetValue(key, out var fileData))
                 {
-                    _ms1AreasDictionary.TryGetValue(key, out double ms1Area);
-                    ms1Area += area;
-                    _ms1AreasDictionary[key] = ms1Area;
+                    fileData = new FileData();
+                    _fileDataDictionary.Add(key, fileData);
                 }
-                else
-                {
-                    AddArea(key, area);
-                }
+
+                return fileData;
             }
 
             private DataKey MakeDataKey(ChromFileInfoId fileId)
@@ -326,45 +320,83 @@ namespace pwiz.Skyline.Model.GroupComparison
                 return new DataKey(ReplicateIndex, fileId);
             }
 
-            private void AddArea(DataKey key, double area)
-            {
-                if (!_areasDictionary.TryGetValue(key, out var areasList))
-                {
-                    areasList = new List<double>();
-                    _areasDictionary.Add(key, areasList);
-                }
-                areasList.Add(area);
-
-            }
-
             /// <summary>
             /// After processing all of the transitions in a transition group, the observed MS1 areas should be summed,
             /// and then added to the list of areas.
             /// </summary>
-            public void FinishTransitionGroup()
+            public void FinishTransitionGroup(bool isInternalStandard)
             {
-                if (_firstFileLightMs1Area.HasValue)
+                foreach (var fileData in _fileDataDictionary.Values.Prepend(_firstFileData))
                 {
-                    _firstFileLightAreasList.Add(_firstFileLightMs1Area.Value);
-                    _firstFileLightMs1Area = null;
+                    fileData.FinishTransitionGroup(isInternalStandard);
                 }
-
-                foreach (var entry in _ms1AreasDictionary)
-                {
-                    AddArea(entry.Key, entry.Value);
-                }
-                _ms1AreasDictionary.Clear();
             }
 
             public IEnumerable<KeyValuePair<DataKey, List<double>>> GetAreaLists()
             {
-                var result = _areasDictionary.AsEnumerable();
-                if (_firstFileLightAreasList.Any())
+                var result = _fileDataDictionary.Select(entry=>new KeyValuePair<DataKey, List<double>>(entry.Key, entry.Value.GetAreasList()));
+                var firstFileAreas = _firstFileData.GetAreasList();
+                if (firstFileAreas.Any())
                 {
-                    result = result.Prepend(new KeyValuePair<DataKey, List<double>>(MakeDataKey(_firstFileId), _firstFileLightAreasList));
+                    result = result.Prepend(new KeyValuePair<DataKey, List<double>>(MakeDataKey(_firstFileId), firstFileAreas));
+                }
+                return result;
+            }
+
+            private class FileData
+            {
+                private double? _ms1Area;
+                private List<double> _areasList = new List<double>();
+                private List<double> _internalStandardAreaList = new List<double>();
+
+                public void AddArea(int msLevel, bool internalStandard, double area)
+                {
+                    if (msLevel == 1)
+                    {
+                        _ms1Area = (_ms1Area ?? 0) + area;
+                    }
+                    else
+                    {
+                        if (internalStandard)
+                        {
+                            _internalStandardAreaList.Add(area);
+                        }
+                        else
+                        {
+                            _areasList.Add(area);
+                        }
+                    }
                 }
 
-                return result;
+                public void FinishTransitionGroup(bool internalStandard)
+                {
+                    if (_ms1Area.HasValue)
+                    {
+                        if (internalStandard)
+                        {
+                            _internalStandardAreaList.Add(_ms1Area.Value);
+                        }
+                        else
+                        {
+                            _areasList.Add(_ms1Area.Value);
+                        }
+
+                        _ms1Area = null;
+                    }
+                }
+
+                /// <summary>
+                /// If there are any internal standard peak areas, then return them, otherwise return all of the areas.
+                /// </summary>
+                public List<double> GetAreasList()
+                {
+                    if (_internalStandardAreaList.Count != 0)
+                    {
+                        return _internalStandardAreaList;
+                    }
+
+                    return _areasList;
+                }
             }
         }
     }
