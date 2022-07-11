@@ -35,10 +35,13 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Ionic.Zip;
 using NetMQ;
 using NetMQ.Sockets;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
@@ -49,6 +52,7 @@ using pwiz.Skyline.Util;
 //         problem.
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
+
 
 namespace TestRunner
 {
@@ -561,28 +565,103 @@ namespace TestRunner
         private static long MinBytesPerBigWorker => MemoryInfo.Gibibyte * 6;
         //static bool testRequeue = true;
         private static string DOCKER_IMAGE_NAME = "chambm/always_up_runner";
-        
+
+        private static string RunCommand(string command, string args, string message, bool useShellExecute = false, bool elevated = false)
+        {
+            var psi = new ProcessStartInfo(command, args)
+            {
+                RedirectStandardOutput = !useShellExecute,
+                RedirectStandardError = !useShellExecute,
+                UseShellExecute = useShellExecute,
+                CreateNoWindow = !useShellExecute
+            };
+            if (elevated)
+                psi.Verb = "runas";
+
+            var p = Process.Start(psi);
+
+            var output = new StringBuilder();
+
+            if (!useShellExecute)
+            {
+                var reader = new ProcessStreamReader(p);
+                string line;
+                while (!(line = reader.ReadLine()).IsNullOrEmpty())
+                    output.AppendLine(line);
+            }
+
+            p?.WaitForExit();
+            if (p == null || p.ExitCode != 0)
+                throw new InvalidOperationException($"'{command} {args}' returned an error ({output}); {message}");
+
+            return output.ToString();
+        }
+
+        private static string GetPasswordFromConsole()
+        {
+            ConsoleKey key;
+            string pass = string.Empty;
+            do
+            {
+                var keyInfo = Console.ReadKey(intercept: true);
+                key = keyInfo.Key;
+
+                if (key == ConsoleKey.Backspace && pass.Length > 0)
+                {
+                    Console.Write("\b \b");
+                    pass = pass.Substring(0, pass.Length - 1);
+                }
+                else if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    Console.Write("*");
+                    pass += keyInfo.KeyChar;
+                }
+            } while (key != ConsoleKey.Enter);
+
+            return pass;
+        }
+
         private static void CheckDocker()
         {
-            var dockerImagesPsi = new ProcessStartInfo("docker", $"images {DOCKER_IMAGE_NAME}")
+            const string dockerRunningMessage = "is Docker daemon running?";
+
+            var dockerVersionOutput = RunCommand("docker", "version -f json", dockerRunningMessage);
+            var dockerVersionJson = JObject.Parse(dockerVersionOutput);
+            if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-            var dockerImages = Process.Start(dockerImagesPsi);
-            var dockerImagesReader = new ProcessStreamReader(dockerImages);
-            dockerImages?.WaitForExit();
-            var dockerImagesOutput = new StringBuilder();
-            string line;
-            while (!(line = dockerImagesReader.ReadLine()).IsNullOrEmpty())
-                dockerImagesOutput.AppendLine(line);
+                Console.WriteLine("Switching Docker engine to Windows containers (this will stop any running containers)...");
+                RunCommand($"{Environment.GetEnvironmentVariable("ProgramFiles")}\\Docker\\Docker\\DockerCli.exe",
+                    "-SwitchWindowsEngine",
+                    "are Hyper-V and Container features enabled?");
+            }
 
-            if (dockerImages == null || dockerImages.ExitCode != 0)
-                throw new InvalidOperationException($"'docker ps' returned an error ({dockerImagesOutput}); is Docker daemon running?");
+            //RunCommand("netsh", $"advfirewall firewall add rule name=\"TestRunner\" dir=in action=allow protocol=tcp program=\"{Assembly.GetExecutingAssembly().Location}\"", string.Empty, true, true);
 
-            if (!dockerImagesOutput.ToString().Contains(DOCKER_IMAGE_NAME))
-                throw new InvalidOperationException($"'{DOCKER_IMAGE_NAME}' is missing; cannot launch Docker workers without it");
+            var dockerImagesOutput = RunCommand("docker", $"images {DOCKER_IMAGE_NAME}", dockerRunningMessage);
+            if (!dockerImagesOutput.Contains(DOCKER_IMAGE_NAME))
+            {
+                Console.WriteLine($"'{DOCKER_IMAGE_NAME}' is missing; building it now.");
+                var buildPath = Path.Combine(PathEx.GetDownloadsPath(), "AlwaysUpRunner-master");
+                if (!File.Exists(Path.Combine(buildPath, "AlwaysUpService.exe")))
+                {
+                    using var tmpDir = new TemporaryDirectory();
+                    using var webClient = new WebClient();
+                    string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
+                    webClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
+
+                    using var alwaysUpRunnerCode = new ZipFile(tmpFile);
+                    alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+
+                    Console.Write("Enter password to extract AlwaysUpCLT_licensed_binaries: ");
+                    var pass = GetPasswordFromConsole();
+                    RunCommand(Path.Combine(buildPath, "AlwaysUpCLT_licensed_binaries.exe"), $"-y \"-p{pass}\" \"-o{buildPath}\"", "wrong password?");
+                }
+
+                var dockerBaseImage = Environment.OSVersion.Version.Build >= 22000
+                    ? string.Empty
+                    : "--build-arg BASE_WINDOWS_IMAGE=mcr.microsoft.com/windows:1809-amd64";
+                RunCommand("docker", $"build {buildPath} -t {DOCKER_IMAGE_NAME} {dockerBaseImage}", dockerRunningMessage, true);
+            }
         }
 
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, int workerPort, StreamWriter log)
@@ -593,6 +672,7 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
                 dockerRunRedirect = $"> c:\\pwiz\\TestRunner-{workerName}-docker.log 2>1";
 
+            // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
             var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log=c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
                 testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
@@ -672,16 +752,6 @@ namespace TestRunner
                 languages = new[] { "en" };
             }
 
-            Thread.Sleep(10000);
-
-            Console.CancelKeyPress += (sender, args) =>
-            {
-                Console.WriteLine("Ctrl-C pressed: closing server and clients.");
-                args.Cancel = true;
-                cts.Cancel();
-                isCanceling = true;
-            };
-
             Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, loopCount) =>
             {
                 testOutput = testOutput.Trim(' ', '\t', '\r', '\n');
@@ -703,8 +773,16 @@ namespace TestRunner
                 }
             }
 
-            // check docker daemon is working and has always_up_runner
+            // check docker daemon is working and build always_up_runner if necessary
             CheckDocker();
+
+            Console.CancelKeyPress += (sender, args) =>
+            {
+                Console.WriteLine("Ctrl-C pressed: closing server and clients.");
+                args.Cancel = true;
+                cts.Cancel();
+                isCanceling = true;
+            };
 
             // open socket that listens for workers to connect
             using (var receiver = new PullSocket())
@@ -1842,6 +1920,19 @@ Here is a list of recognized arguments:
                                     the system clipboard.  If a test uses the clipboard,
                                     stress testing might be compromised on a computer
                                     which is running other processes simultaneously.
+
+    parallelmode=[off|server]       When set to server, TestRunner will launch Docker workers
+                                    to run the configured tests in parallel. Docker Desktop
+                                    must be installed and containers must be enabled in the
+                                    operating system. Ask Matt for the Getting Started guide.
+
+    workercount=[n]                 The number of parallel workers to run. One of the workers
+                                    will be on the host, so only workercount - 1 Docker
+                                    containers will be launched.
+
+    keepworkerlogs=[on|off]         Set keepworkerlogs=on to persist individual logs from each 
+                                    Docker worker. Useful for debugging issues related to running
+                                    tests inside a container.
 ");
         }
 
