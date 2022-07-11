@@ -110,38 +110,38 @@ namespace pwiz.Skyline.Model.DdaSearch
             _progressStatus = status;
             _success = true;
 
-            fastaFilepath = FastaFileNames[0];
-            EnsureFastaHasDecoys();
-
-            var paramsFileText = new StringBuilder();
-            paramsFileText.AppendLine(@"num_threads = 0");
-            paramsFileText.AppendLine($@"database_name = {fastaFilepath}");
-            paramsFileText.AppendLine($@"decoy_prefix = {decoyPrefix}");
-            paramsFileText.AppendLine($@"precursor_mass_lower = -{precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
-            paramsFileText.AppendLine($@"precursor_mass_upper = {precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
-            paramsFileText.AppendLine($@"precursor_mass_units = {(int)precursorMzTolerance.Unit}");
-            paramsFileText.AppendLine($@"fragment_mass_tolerance = {fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
-            paramsFileText.AppendLine($@"fragment_mass_units = {(int)fragmentMzTolerance.Unit}");
-            paramsFileText.AppendLine($@"fragment_ion_series = {fragmentIons} # Ion series used in search, specify any of a,b,c,x,y,z,b~,y~,Y,b-18,y-18 (comma separated).");
-            paramsFileText.AppendLine($@"num_enzyme_termini = {ntt}");
-            paramsFileText.AppendLine($@"allowed_missed_cleavage_1 = {maxMissedCleavages}");
-            paramsFileText.AppendLine($@"search_enzyme_name_1 = {enzyme.Name ?? @"unnamed"} # Name of enzyme to be written to the pepXML file.");
-            paramsFileText.AppendLine($@"search_enzyme_cut_1 = {enzyme.CleavageC ?? enzyme.CleavageN}");
-            paramsFileText.AppendLine($@"search_enzyme_nocut_1 = {enzyme.RestrictC ?? enzyme.RestrictN}");
-            paramsFileText.AppendLine($@"search_enzyme_sense_1 = {(enzyme.IsCTerm ? 'C' : 'N')}");
-            paramsFileText.AppendLine($@"max_variable_mods_per_peptide = {maxVariableMods} # Maximum total number of variable modifications per peptide.");
-            foreach (var settingName in MSFRAGGER_SETTINGS)
-                paramsFileText.AppendLine($@"{AdditionalSettings[settingName].ToString(CultureInfo.InvariantCulture)}");
-            paramsFileText.Append(modParams);
-            paramsFileText.Append(defaultClosedConfig);
-
-            string paramsFile = Path.GetTempFileName();
-            File.WriteAllText(paramsFile, paramsFileText.ToString());
-
-            long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
-
             try
             {
+                fastaFilepath = FastaFileNames[0];
+                EnsureFastaHasDecoys();
+
+                var paramsFileText = new StringBuilder();
+                paramsFileText.AppendLine(@"num_threads = 0");
+                paramsFileText.AppendLine($@"database_name = {fastaFilepath}");
+                paramsFileText.AppendLine($@"decoy_prefix = {decoyPrefix}");
+                paramsFileText.AppendLine($@"precursor_mass_lower = -{precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.AppendLine($@"precursor_mass_upper = {precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.AppendLine($@"precursor_mass_units = {(int)precursorMzTolerance.Unit}");
+                paramsFileText.AppendLine($@"fragment_mass_tolerance = {fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.AppendLine($@"fragment_mass_units = {(int)fragmentMzTolerance.Unit}");
+                paramsFileText.AppendLine($@"fragment_ion_series = {fragmentIons} # Ion series used in search, specify any of a,b,c,x,y,z,b~,y~,Y,b-18,y-18 (comma separated).");
+                paramsFileText.AppendLine($@"num_enzyme_termini = {ntt}");
+                paramsFileText.AppendLine($@"allowed_missed_cleavage_1 = {maxMissedCleavages}");
+                paramsFileText.AppendLine($@"search_enzyme_name_1 = {enzyme.Name ?? @"unnamed"} # Name of enzyme to be written to the pepXML file.");
+                paramsFileText.AppendLine($@"search_enzyme_cut_1 = {enzyme.CleavageC ?? enzyme.CleavageN}");
+                paramsFileText.AppendLine($@"search_enzyme_nocut_1 = {enzyme.RestrictC ?? enzyme.RestrictN}");
+                paramsFileText.AppendLine($@"search_enzyme_sense_1 = {(enzyme.IsCTerm ? 'C' : 'N')}");
+                paramsFileText.AppendLine($@"max_variable_mods_per_peptide = {maxVariableMods} # Maximum total number of variable modifications per peptide.");
+                foreach (var settingName in MSFRAGGER_SETTINGS)
+                    paramsFileText.AppendLine($@"{AdditionalSettings[settingName].ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.Append(modParams);
+                paramsFileText.Append(defaultClosedConfig);
+
+                string paramsFile = Path.GetTempFileName();
+                File.WriteAllText(paramsFile, paramsFileText.ToString());
+
+                long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
+
                 // Run MSFragger
                 var pr = new ProcessRunner();
                 var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
@@ -201,8 +201,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
                 _success = false;
             }
-
-            FileEx.SafeDelete(paramsFile);
 
             if (IsCanceled && !_progressStatus.IsCanceled)
             {
@@ -432,8 +430,8 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 File.Copy(fastaFilepath, decoyFastaFilepath);
 
-                using (var fastaReader = new StreamReader(fastaFilepath))
-                using (var fastaWriter = new StreamWriter(decoyFastaFilepath, true))
+                using (var fastaReader = new StreamReader(fastaFilepath, Encoding.ASCII))
+                using (var fastaWriter = new StreamWriter(decoyFastaFilepath, true, Encoding.ASCII))
                 {
                     var fastaEntries = FastaData.ParseFastaFile(fastaReader);
                     foreach (var entry in fastaEntries)

@@ -76,15 +76,15 @@ namespace pwiz.Skyline.Model.Proteome
             _peptideToProteins = null;
         }
 
-        public void UseFastaFile(string file, ILongWaitBroker broker)
+        public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             try
             {
                 ResetMapping();
-                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     var fastaSource = new FastaSource(stream);
-                    var proteinAssociations = FindProteinMatches(fastaSource, broker);
+                    var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
                     if (proteinAssociations != null)
                     {
                         AssociatedProteins = proteinAssociations;
@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
         // find matches using the background proteome
-        public void UseBackgroundProteome(BackgroundProteome backgroundProteome, ILongWaitBroker broker)
+        public void UseBackgroundProteome(BackgroundProteome backgroundProteome, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             if (backgroundProteome.Equals(BackgroundProteome.NONE))
                 throw new InvalidOperationException(Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
@@ -106,17 +106,16 @@ namespace pwiz.Skyline.Model.Proteome
             ResetMapping();
             var proteome = backgroundProteome;
             var proteinSource = new BackgroundProteomeSource(broker.CancellationToken, proteome);
-            var proteinAssociations = FindProteinMatches(proteinSource, broker);
+            var proteinAssociations = FindProteinMatches(proteinSource, digestProteinToPeptides, broker);
             if (proteinAssociations != null)
             {
                 AssociatedProteins = proteinAssociations;
             }
         }
 
-        private Dictionary<IProteinRecord, PeptideAssociationGroup> FindProteinMatches(IProteinSource proteinSource, ILongWaitBroker broker)
+        private Dictionary<IProteinRecord, PeptideAssociationGroup> FindProteinMatches(IProteinSource proteinSource, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
             var localResults = new MappingResultsInternal();
-            var peptidesMappedSet = new HashSet<string>();
             var peptideToProteins = new Dictionary<PeptideDocNode, List<IProteinRecord>>();
 
             var proteinAssociations = new Dictionary<IProteinRecord, PeptideAssociationGroup>();
@@ -133,12 +132,18 @@ namespace pwiz.Skyline.Model.Proteome
                 // don't count the same peptide twice in a protein
                 var peptidesMatched = new HashSet<string>();
 
+                IList<Peptide> digestedPeptides = null;
+
                 foreach (var result in trieResults)
                 {
                     if (!peptidesMatched.Add(result.Keyword))
                         continue;
 
-                    // TODO(yuval): does digest matter?
+                    // check that peptide is in the digest of the protein (if the result is non-empty)
+                    digestedPeptides ??= digestProteinToPeptides(fastaRecord.Sequence).ToList();
+                    if (!digestedPeptides.Contains(p => p.Sequence == result.Keyword))
+                        continue;
+
                     matches.AddRange(_peptideToPath[result.Keyword]);
                 }
 
@@ -171,15 +176,15 @@ namespace pwiz.Skyline.Model.Proteome
                     }
                     else
                         ++localResults.ProteinsUnmapped;
-
-                    peptidesMappedSet.UnionWith(peptidesMatched);
                 }
             });
+            
+            Assume.IsTrue(localResults.ProteinsMapped + localResults.ProteinsUnmapped > 0);
 
             _peptideToProteins = peptideToProteins;
             _results = localResults;
-            _results.PeptidesMapped = peptidesMappedSet.Count;
-            _results.PeptidesUnmapped = _peptideToPath.Count - peptidesMappedSet.Count;
+            _results.PeptidesMapped = peptideToProteins.Count;
+            _results.PeptidesUnmapped = _peptideToPath.Sum(o => o.Value.Count) - _results.PeptidesMapped;
             _results.FinalProteinCount = proteinAssociations.Count;
 
             return proteinAssociations;
@@ -253,6 +258,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             int FinalProteinCount { get; }
             int FinalPeptideCount { get; }
+
+            int TotalSharedPeptideCount { get; }
+            int FinalSharedPeptideCount { get; }
         }
 
         public class MappingResultsInternal : IMappingResults
@@ -267,6 +275,8 @@ namespace pwiz.Skyline.Model.Proteome
                     ProteinsUnmapped = ProteinsUnmapped,
                     FinalPeptideCount = FinalPeptideCount,
                     FinalProteinCount = FinalProteinCount,
+                    TotalSharedPeptideCount = TotalSharedPeptideCount,
+                    FinalSharedPeptideCount = FinalSharedPeptideCount,
                     FindMinimalProteinList = FindMinimalProteinList,
                     RemoveSubsetProteins = RemoveSubsetProteins,
                     SharedPeptides = SharedPeptides,
@@ -297,6 +307,9 @@ namespace pwiz.Skyline.Model.Proteome
 
             public int FinalProteinCount { get; set; }
             public int FinalPeptideCount { get; set; }
+
+            public int TotalSharedPeptideCount { get; set; }
+            public int FinalSharedPeptideCount { get; set; }
         }
 
         public class PeptideAssociationGroup
@@ -359,6 +372,20 @@ namespace pwiz.Skyline.Model.Proteome
 
             if (broker.IsCanceled)
                 return;
+
+            // count shared peptides remaining
+            var allPeptidesRemaining = new HashSet<string>();
+            var sharedPeptidesRemaining = new Dictionary<string, int>();
+            foreach (var kvp in ParsimoniousProteins)
+            foreach (var peptide in kvp.Value.Peptides.GroupBy(p => p.ModifiedSequence))
+                if (!allPeptidesRemaining.Add(peptide.Key))
+                {
+                    if (!sharedPeptidesRemaining.ContainsKey(peptide.Key))
+                        sharedPeptidesRemaining[peptide.Key] = 2;
+                    else
+                        sharedPeptidesRemaining[peptide.Key] += 1;
+                }
+            _finalResults.TotalSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
 
             // FindProteinMatches already duplicates results between proteins
             if (sharedPeptides != SharedPeptides.DuplicatedBetweenProteins)
@@ -442,6 +469,20 @@ namespace pwiz.Skyline.Model.Proteome
                 _finalResults.FinalPeptideCount = ParsimoniousProteins.Sum(kvp => kvp.Value.Peptides.Count);
             }
             _finalResults.MinPeptidesPerProtein = minPeptidesPerProtein;
+
+            // count shared peptides remaining
+            allPeptidesRemaining.Clear();
+            sharedPeptidesRemaining.Clear();
+            foreach(var kvp in ParsimoniousProteins)
+            foreach(var peptide in kvp.Value.Peptides.GroupBy(p => p.ModifiedSequence))
+                if (!allPeptidesRemaining.Add(peptide.Key))
+                {
+                    if (!sharedPeptidesRemaining.ContainsKey(peptide.Key))
+                        sharedPeptidesRemaining[peptide.Key] = 2;
+                    else
+                        sharedPeptidesRemaining[peptide.Key] += 1;
+                }
+            _finalResults.FinalSharedPeptideCount = sharedPeptidesRemaining.Values.Sum();
         }
 
         private Dictionary<IProteinRecord, PeptideAssociationGroup> CalculateProteinGroups(MappingResultsInternal results, ILongWaitBroker broker)
@@ -483,7 +524,7 @@ namespace pwiz.Skyline.Model.Proteome
 
                 results.FinalPeptideCount += kvp.Key.Peptides.Count;
 
-                if (kvp.Value.Count == 0)
+                if (kvp.Value.Count == 1)
                 {
                     proteinGroupAssociations[kvp.Value[0]] = kvp.Key;
                     addPeptideAssociations(kvp.Value[0], kvp.Key);
@@ -879,13 +920,15 @@ namespace pwiz.Skyline.Model.Proteome
 
     public class AssociateProteinsSettings : AuditLogOperationSettings<AssociateProteinsSettings>, IAuditLogComparable
     {
-        public AssociateProteinsSettings(ProteinAssociation.IMappingResults results, string fasta, string backgroundProteome)
+        public static AssociateProteinsSettings DEFAULT = new AssociateProteinsSettings(null, null, null);
+
+        public AssociateProteinsSettings(ProteinAssociation proteinAssociation, string fasta, string backgroundProteome)
         {
-            Results = results;
+            Results = proteinAssociation?.FinalResults ?? proteinAssociation?.Results;
             FASTA = fasta;
             BackgroundProteome = backgroundProteome;
 
-            ParsimonySettings = results?.ParsimonySettings;
+            ParsimonySettings = Results?.ParsimonySettings;
         }
 
         protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
@@ -934,7 +977,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public object GetDefaultObject(ObjectInfo<object> info)
         {
-            return new AssociateProteinsSettings(null, null, null);
+            return DEFAULT;
         }
     }
 }
