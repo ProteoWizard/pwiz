@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
+#include "boost/exception_ptr.hpp"
 #include <cstring>
 
 
@@ -118,6 +119,7 @@ void testIDTranslation()
     unit_assert(cvTermInfo("MS:1000042").cvid == MS_peak_intensity);
     unit_assert(cvTermInfo("UO:0000231").cvid == UO_information_unit);
     unit_assert(cvTermInfo("XX:0000231").cvid == CVID_Unknown);
+    unit_assert(cvTermInfo("UNIMOD:915").cvid == CVID_Unknown);
     unit_assert(cvTermInfo("FOO:").cvid == CVID_Unknown);
     unit_assert(cvTermInfo(":FOO").cvid == CVID_Unknown);
     unit_assert(cvTermInfo("MS").cvid == CVID_Unknown);
@@ -140,7 +142,7 @@ void testPropertyValues()
 }
 
 
-void testThreadSafetyWorker(boost::barrier* testBarrier)
+void testThreadSafetyWorker(boost::barrier* testBarrier, vector<boost::exception_ptr>* exceptions)
 {
     testBarrier->wait(); // wait until all threads have started
 
@@ -155,7 +157,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
     }
     catch (exception& e)
     {
-        cerr << "Exception in worker thread: " << e.what() << endl;
+        exceptions->emplace_back(boost::copy_exception(e));
     }
     catch (...)
     {
@@ -167,11 +169,24 @@ void testThreadSafety(const int& testThreadCount)
 {
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
+    vector<boost::exception_ptr> exceptions;
     for (int i=0; i < testThreadCount; ++i)
-        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier));
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &exceptions));
     testThreadGroup.join_all();
+    if (!exceptions.empty())
+        boost::rethrow_exception(exceptions.front());
 }
 
+template <typename T>
+bool operator==(const vector<T>& lhs, const vector<T>& rhs)
+{
+    if (lhs.size() != rhs.size())
+        return false;
+
+    for (size_t i = 0; i < lhs.size(); ++i)
+        if (lhs[i] != rhs[i]) return false;
+    return true;
+}
 
 int main(int argc, char* argv[])
 {
