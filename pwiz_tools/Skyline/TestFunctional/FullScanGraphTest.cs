@@ -193,7 +193,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testRange, SkylineWindow.GraphFullScan.Range);
 
             RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum, false)); // Sync from the library match to the full scan viewer
-            TestSpecialIonsAnnotations();
+            //annotations are not shown in the offscreen mode
+            if (!Skyline.Program.SkylineOffscreen)
+                TestSpecialIonsAnnotations();
         }
 
         private static void ClickFullScan(double x, double y)
