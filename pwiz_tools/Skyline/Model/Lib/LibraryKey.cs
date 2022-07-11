@@ -688,7 +688,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Join(String.Empty, Crosslinks) + Transition.GetChargeIndicator(Adduct);
+            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks) + Transition.GetChargeIndicator(Adduct);
         }
 
         /// <summary>
@@ -701,6 +701,10 @@ namespace pwiz.Skyline.Model.Lib
             var consumedPeptides = new HashSet<int>();
             foreach (var crosslink in Crosslinks)
             {
+                if (!HasValidIndexes(crosslink))
+                {
+                    return false;
+                }
                 var peptideIndexesWithLinks = ImmutableList.ValueOf(crosslink.PeptideIndexesWithLinks);
                 if (peptideIndexesWithLinks.Count == 1)
                 {
@@ -756,6 +760,28 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return false;
             }
+            return true;
+        }
+
+        private bool HasValidIndexes(Crosslink crosslink)
+        {
+            if (crosslink.Positions.Count > PeptideLibraryKeys.Count)
+            {
+                return false;
+            }
+
+            for (int iPeptide = 0; iPeptide < crosslink.Positions.Count; iPeptide++)
+            {
+                var peptideSequence = PeptideLibraryKeys[iPeptide].UnmodifiedSequence;
+                foreach (var position in crosslink.Positions[iPeptide])
+                {
+                    if (position < 1 || position > peptideSequence.Length)
+                    {
+                        return false;
+                    }
+                }
+            }
+
             return true;
         }
     }

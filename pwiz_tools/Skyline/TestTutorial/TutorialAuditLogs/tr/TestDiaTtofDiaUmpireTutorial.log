@@ -9,8 +9,8 @@ Summary   : Added spectral library "DIA-TTOF-tutorial"
 All Info  :
 Added spectral library "DIA-TTOF-tutorial"
 Build Spectral Library > Cut-off score is "0,95"
-Build Spectral Library > Search files : contains "collinsb_I180316_001_SW-A-diaumpire.mzid.gz"
-Build Spectral Library > Search files : contains "collinsb_I180316_002_SW-B-diaumpire.mzid.gz"
+Build Spectral Library > Search files : contains { File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0,05" }
+Build Spectral Library > Search files : contains { File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0,05" }
 Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
 Build Spectral Library > Include ambiguous matches is True
 Build Spectral Library > Filter for document peptides is False
@@ -19,8 +19,16 @@ Build Spectral Library > Input File Type is "DIA raw (deconvolute, search, and b
 Extra Info: Cut-off score = "0,95",
 Search files = 
 [
-    "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
-    "collinsb_I180316_002_SW-B-diaumpire.mzid.gz"
+    {
+        File = "collinsb_I180316_001_SW-A-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0,05"
+    },
+    {
+        File = "collinsb_I180316_002_SW-B-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0,05"
+    }
 ],
 iRT standard peptides = "Biognosys-11 (iRT-C18)",
 Include ambiguous matches = True,
@@ -44,6 +52,16 @@ Import Peptide Search > Import FASTA > FASTA file for importing targets is "targ
 Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
 Import Peptide Search > Import FASTA > Decoys per target is "1"
 Import Peptide Search > Import FASTA > Automatically train mProphet model is True
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "9"
+Import Peptide Search > Associate Proteins > Peptides mapped is "101"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "24709"
+Import Peptide Search > Associate Proteins > Protein targets is "9"
+Import Peptide Search > Associate Proteins > Peptide targets is "102"
 Import Peptide Search > DDA search settings > Precursor tolerance is 30ppm
 Import Peptide Search > DDA search settings > Fragment tolerance is 40ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
@@ -77,6 +95,19 @@ Import FASTA =
     Decoy generation method = "Shuffle Sequence",
     Decoys per target = "1",
     Automatically train mProphet model = True
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "9",
+    Peptides mapped = "101",
+    Proteins unmapped = "24709",
+    Protein targets = "9",
+    Peptide targets = "102"
 },
 DDA search settings = 
 {

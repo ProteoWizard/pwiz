@@ -18,119 +18,347 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
     public partial class AssociateProteinsDlg : ModeUIInvariantFormEx,  // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
-                  IAuditLogModifier<AssociateProteinsDlg.AssociateProteinsSettings>
+                  IAuditLogModifier<AssociateProteinsSettings>
     {
-        private readonly SkylineWindow _parent;
-        private IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> _associatedProteins;
+        private readonly SrmDocument _document;
         private bool _isFasta;
-        private string _fileName;
+        private ProteinAssociation _proteinAssociation;
+        private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
+        public SrmDocument DocumentFinal { get; private set; }
 
-        public AssociateProteinsDlg(SkylineWindow parent)
+        private bool _reuseLastFasta;
+        private string _overrideFastaPath;
+        private bool _fastaFileIsTemporary;
+        private bool _hasExistingProteinAssociations;
+        private readonly IrtStandard _irtStandard;
+        private readonly string _decoyGenerationMethod;
+        private readonly double _decoysPerTarget;
+
+        private string _statusBarResultFormat;
+        private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
+
+        public string FastaFileName
+        {
+            get { return tbxFastaTargets.Text; }
+            set { tbxFastaTargets.Text = value; }
+        }
+
+        public bool IsBusy => DocumentFinal == null;
+        public bool DocumentFinalCalculated => !IsBusy || _document.PeptideCount == 0;
+
+
+        /// <summary>
+        /// Show the Associate Proteins dialog.
+        /// </summary>
+        /// <param name="document">The Skyline document for which to associate peptides to proteins.</param>
+        /// <param name="reuseLastFasta">Set to false to prevent the dialog from using the previously used FASTA filepath as the default textbox value.</param>
+        public AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
-            _parent = parent;
-            _associatedProteins = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
+            _document = document;
+            _reuseLastFasta = reuseLastFasta;
+            _statusBarResultFormat = string.Format(@"{{0}} {0}, {{1}} {1}, {{2}} {2}, {{3}} {3}",
+                Resources.AnnotationDef_AnnotationTarget_Proteins,
+                Resources.AnnotationDef_AnnotationTarget_Peptides,
+                Resources.AnnotationDef_AnnotationTarget_Precursors,
+                Resources.AnnotationDef_AnnotationTarget_Transitions).ToLower();
+            btnOk.Enabled = false;
+            lblStatusBarResult.Text = string.Empty;
+
+            var peptideSettings = document.Settings.PeptideSettings;
+
+            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
+            foreach (var sharedPeptides in _sharedPeptideOptionNames)
+                comboSharedPeptides.Items.Add(EnumNames.ResourceManager.GetString(@"SharedPeptides_" + sharedPeptides) ?? throw new InvalidOperationException(sharedPeptides));
+
+            GroupProteins = peptideSettings.Filter.ParsimonySettings?.GroupProteins ?? false;
+            FindMinimalProteinList = peptideSettings.Filter.ParsimonySettings?.FindMinimalProteinList ?? false;
+            RemoveSubsetProteins = peptideSettings.Filter.ParsimonySettings?.RemoveSubsetProteins ?? false;
+            SelectedSharedPeptides = peptideSettings.Filter.ParsimonySettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+            MinPeptidesPerProtein = peptideSettings.Filter.ParsimonySettings?.MinPeptidesPerProtein ?? 1;
+            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+
+            _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
+            _driverBackgroundProteome.LoadList(peptideSettings.BackgroundProteome.Name);
+
+            helpTip.SetToolTip(cbGroupProteins, helpTip.GetToolTip(lblGroupProteins));
+            helpTip.SetToolTip(cbMinimalProteinList, helpTip.GetToolTip(lblMinimalProteinList));
+            helpTip.SetToolTip(cbRemoveSubsetProteins, helpTip.GetToolTip(lblRemoveSubsetProteins));
+            helpTip.SetToolTip(comboSharedPeptides, helpTip.GetToolTip(lblSharedPeptides));
+            helpTip.SetToolTip(numMinPeptides, helpTip.GetToolTip(lblMinPeptides));
         }
 
-        private List<PeptideDocNode> ListPeptidesForMatching()
+        /// <summary>
+        /// Show the Associate Proteins dialog without allowing the user to control the source of the FASTA records (e.g. when called from the Import Peptide Search wizard).
+        /// </summary>
+        /// <param name="document">The Skyline document for which to associate peptides to proteins.</param>
+        /// <param name="overrideFastaPath">Set to a FASTA filepath to force using that FASTA and remove the user's ability to set the FASTA filepath (the protein source controls will be hidden).</param>
+        /// <param name="irtStandard">The iRT standard to preserve iRT peptides at the top of the document.</param>
+        /// <param name="decoyGenerationMethod">Decoy generation method.</param>
+        /// <param name="decoysPerTarget">Number of decoys per target.</param>
+        /// <param name="fastaFileIsTemporary">Set to true if the FASTA filepath should not be reused the next time the form is opened.</param>
+        /// <param name="hasExistingProteinAssociations">Set to true if the document already has protein associations (other than from Import Peptide Search's FASTA import).</param>
+        public AssociateProteinsDlg(SrmDocument document, string overrideFastaPath, IrtStandard irtStandard,
+            string decoyGenerationMethod, double decoysPerTarget, bool fastaFileIsTemporary = false, bool hasExistingProteinAssociations = false) : this(document)
         {
-            var peptidesForMatching = new List<PeptideDocNode>();
+            _overrideFastaPath = overrideFastaPath;
+            _irtStandard = irtStandard;
+            _decoyGenerationMethod = decoyGenerationMethod;
+            _decoysPerTarget = decoysPerTarget;
+            _fastaFileIsTemporary = fastaFileIsTemporary;
+            _hasExistingProteinAssociations = hasExistingProteinAssociations;
+        }
 
-            var doc = _parent.Document;
-            foreach (var nodePepGroup in doc.PeptideGroups)
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (_overrideFastaPath != null)
             {
-                // if is already a FastaSequence we don't want to mess with it
-                if (nodePepGroup.PeptideGroup is FastaSequence)
-                {
-                    continue;
-                }
-                peptidesForMatching.AddRange(nodePepGroup.Peptides);
+                proteinSourcePanel.Visible = false;
+                gbParsimonyOptions.Location = FormUtil.Offset(gbParsimonyOptions.Location, 0, -proteinSourcePanel.Height);
+                MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height - proteinSourcePanel.Height);
+                Height -= proteinSourcePanel.Height;
+                lblDescription.Text = Resources.AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups;
+                if (_hasExistingProteinAssociations)
+                    lblDescription.Text += @" " + Resources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
             }
-            return peptidesForMatching;
+
+            if (_document.PeptideCount == 0)
+            {
+                if (_overrideFastaPath == null)
+                {
+                    MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
+                    Close();
+                }
+                else
+                {
+                    DocumentFinal = AddIrtAndDecoys(_document);
+                    return;
+                }
+            }
+
+            if (_overrideFastaPath != null)
+                tbxFastaTargets.Text = _overrideFastaPath;
+            else if (_reuseLastFasta && !Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
+                tbxFastaTargets.Text = Settings.Default.LastProteinAssociationFastaFilepath;
+
         }
 
-        private void btnBackgroundProteomeClick(object sender, EventArgs e)
+        private void Initialize()
         {
-            UseBackgroundProteome();
+            if (_proteinAssociation != null || _document.PeptideCount == 0)
+                return;
+
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 1000, broker =>
+                {
+                    _proteinAssociation = new ProteinAssociation(_document, broker);
+                });
+
+                if (longWaitDlg.IsCanceled)
+                    _proteinAssociation = null;
+            }
+        }
+
+        public IEnumerable<KeyValuePair<ProteinAssociation.IProteinRecord, ProteinAssociation.PeptideAssociationGroup>> AssociatedProteins => _proteinAssociation?.AssociatedProteins;
+        public IEnumerable<KeyValuePair<ProteinAssociation.IProteinRecord, ProteinAssociation.PeptideAssociationGroup>> ParsimoniousProteins => _proteinAssociation?.ParsimoniousProteins;
+        public ProteinAssociation.IMappingResults Results => _proteinAssociation?.Results;
+        public ProteinAssociation.IMappingResults FinalResults => _proteinAssociation?.FinalResults;
+
+        public bool GroupProteins
+        {
+            get => cbGroupProteins.Checked;
+            set => cbGroupProteins.Checked = value;
+        }
+
+        public bool FindMinimalProteinList
+        {
+            get => cbMinimalProteinList.Checked;
+            set => cbMinimalProteinList.Checked = value;
+        }
+
+        public bool RemoveSubsetProteins
+        {
+            get => cbRemoveSubsetProteins.Checked;
+            set => cbRemoveSubsetProteins.Checked = value;
+        }
+
+        public ProteinAssociation.SharedPeptides SelectedSharedPeptides
+        {
+            get => (ProteinAssociation.SharedPeptides) comboSharedPeptides.SelectedIndex;
+            set => comboSharedPeptides.SelectedIndex = (int) value;
+        }
+
+        public int MinPeptidesPerProtein
+        {
+            get => (int) numMinPeptides.Value;
+            set => numMinPeptides.Value = value;
+        }
+
+        private void UpdateParsimonyResults()
+        {
+            DocumentFinal = null;
+            if (Results == null)
+                return;
+
+            var groupProteins = GroupProteins;
+            var findMinimalProteinList = FindMinimalProteinList;
+            var removeSubsetProteins = RemoveSubsetProteins;
+            var selectedSharedPeptides = SelectedSharedPeptides;
+            var minPeptidesPerProtein = MinPeptidesPerProtein;
+
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 1000,
+                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, findMinimalProteinList, removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, broker));
+                if (longWaitDlg.IsCanceled)
+                    return;
+            }
+
+            DocumentFinal = CreateDocTree(_document);
+
+            dgvAssociateResults.RowCount = 3;
+            dgvAssociateResults.ClearSelection();
+            dgvAssociateResults.Invalidate();
+
+            lblStatusBarResult.Text = GetStatusBarResultString();
+        }
+
+        private void checkBoxParsimony_CheckedChanged(object sender, EventArgs e)
+        {
+            // finding minimal protein list implies removing subset proteins, so force the checkbox on and disable it
+            if (FindMinimalProteinList)
+            {
+                cbRemoveSubsetProteins.Checked = true;
+                cbRemoveSubsetProteins.Enabled = false;
+            }
+            else
+                cbRemoveSubsetProteins.Enabled = true;
+
+            UpdateParsimonyResults();
+        }
+
+        private void cbGroupProteins_CheckedChanged(object sender, EventArgs e)
+        {
+            comboSharedPeptides.SelectedIndexChanged -= comboParsimony_SelectedIndexChanged;
+            // adjust labels to reflect whether proteins or protein groups are used
+            for (int i = 0; i < _sharedPeptideOptionNames.Length; ++i)
+                comboSharedPeptides.Items[i] = EnumNames.ResourceManager.GetString(
+                                                   (GroupProteins ? @"SharedPeptidesGroup_" : @"SharedPeptides_") +
+                                                   _sharedPeptideOptionNames[i]) ??
+                                               throw new InvalidOperationException(_sharedPeptideOptionNames[i]);
+            comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+
+            if (GroupProteins)
+            {
+                lblMinimalProteinList.Text = Resources.AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides;
+                lblRemoveSubsetProteins.Text = Resources.AssociateProteinsDlg_Remove_subset_protein_groups;
+                lblMinPeptides.Text = Resources.AssociateProteinsDlg_Min_peptides_per_protein_group;
+            }
+            else
+            {
+                var resources = new ComponentResourceManager(typeof(AssociateProteinsDlg));
+                lblMinimalProteinList.Text = resources.GetString("lblMinimalProteinList.Text");
+                lblRemoveSubsetProteins.Text = resources.GetString("lblRemoveSubsetProteins.Text");
+                lblMinPeptides.Text = resources.GetString("lblMinPeptides.Text");
+            }
+
+            UpdateParsimonyResults();
+        }
+
+        private void comboParsimony_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateParsimonyResults();
+        }
+
+        private void numMinPeptides_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateParsimonyResults();
+        }
+
+        private IEnumerable<Peptide> DigestProteinToPeptides(FastaSequence sequence)
+        {
+            var peptideSettings = _document.Settings.PeptideSettings;
+            return peptideSettings.Enzyme.Digest(sequence, peptideSettings.DigestSettings);
+            // CONSIDER: should AssociateProteinsDlg use the length filters? The old PeptidePerProteinDlg doesn't seem to.
+                //peptideSettings.Filter.MaxPeptideLength, peptideSettings.Filter.MinPeptideLength);
         }
 
         // find matches using the background proteome
         public void UseBackgroundProteome()
         {
-            if (_parent.Document.Settings.PeptideSettings.BackgroundProteome.Equals(BackgroundProteome.NONE))
-            {
-                MessageDlg.Show(this, Resources.AssociateProteinsDlg_UseBackgroundProteome_No_background_proteome_defined);
+            var backgroundProteome = new BackgroundProteome(_driverBackgroundProteome.SelectedItem);
+            if (backgroundProteome.Equals(BackgroundProteome.NONE))
                 return;
-            }
-            _isFasta = false;
-            _fileName = _parent.Document.Settings.PeptideSettings.BackgroundProteome.DatabasePath;
-            checkBoxListMatches.Items.Clear();
-            BackgroundProteome proteome = _parent.Document.Settings.PeptideSettings.BackgroundProteome;
-            var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
-            var peptidesForMatching = ListPeptidesForMatching();
 
-            IDictionary<String, List<Protein>> proteinsWithSequences = null;
+            Initialize();
+
+            _isFasta = false;
+            //FastaFileName = _parent.Document.Settings.PeptideSettings.BackgroundProteome.DatabasePath;
+
+            if (_document.PeptideCount == 0)
+                return;
+
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
-                {
-                    using (var proteomeDb = proteome.OpenProteomeDb(longWaitBroker.CancellationToken))
-                    {
-                        proteinsWithSequences = proteomeDb.GetDigestion()
-                            .GetProteinsWithSequences(peptidesForMatching.Select(pep => pep.Peptide.Target.Sequence));
-                    }
-                });
+                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, DigestProteinToPeptides, broker));
+                if (longWaitDlg.IsCanceled)
+                    return;
             }
-            if (proteinsWithSequences == null)
-            {
-                return;
-            }
-            HashSet<String> processedProteinSequence = new HashSet<string>();
-            foreach (var entry in proteinsWithSequences)
-            {
-                foreach (var protein in entry.Value)
-                {
-                    if (!processedProteinSequence.Add(protein.Sequence))
-                    {
-                        continue;
-                    }
-                    var matches = peptidesForMatching.Where(pep => protein.Sequence.Contains(pep.Peptide.Target.Sequence)).ToList();
-                    if (matches.Count == 0)
-                    {
-                        continue;
-                    }
-                    FastaSequence fastaSequence = proteome.MakeFastaSequence(protein);
-                    if (fastaSequence != null)
-                    {
-                        proteinAssociations.Add(new KeyValuePair<FastaSequence, List<PeptideDocNode>>(fastaSequence, matches));
-                    }
-                }
-            }
-            SetCheckBoxListItems(proteinAssociations, 
-                Resources.AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_);
-            
+
+            if (Results.PeptidesMapped == 0)
+                MessageDlg.Show(this, Resources.AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_);
+            UpdateParsimonyResults();
+            btnOk.Enabled = true;
         }
 
         private void btnUseFasta_Click(object sender, EventArgs e)
         {
             ImportFasta();
+        }
+
+        private void rbCheckedChanged(object sender, EventArgs e)
+        {
+            tbxFastaTargets.Enabled = browseFastaTargetsBtn.Enabled = rbFASTA.Checked;
+            comboBackgroundProteome.Enabled = rbBackgroundProteome.Checked;
+            if (comboBackgroundProteome.Enabled)
+                UseBackgroundProteome();
+        }
+
+        private void tbxFastaTargets_TextChanged(object sender, EventArgs e)
+        {
+            if (File.Exists(tbxFastaTargets.Text))
+                UseFastaFile(tbxFastaTargets.Text);
+        }
+
+        private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverBackgroundProteome.SelectedIndexChangedEvent(sender, e);
+            if (comboBackgroundProteome.Enabled)
+                UseBackgroundProteome();
         }
 
         // prompts user to select a fasta file to use for matching proteins
@@ -140,14 +368,14 @@ namespace pwiz.Skyline.EditUI
             {
                 Title = Resources.SkylineWindow_ImportFastaFile_Import_FASTA,
                 InitialDirectory = Settings.Default.FastaDirectory,
-                CheckPathExists = true
-                // FASTA files often have no extension as well as .fasta and others
+                CheckPathExists = true,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(Resources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA))
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
-                    UseFastaFile(dlg.FileName);
+                    FastaFileName = dlg.FileName;
                 }
             }
         }
@@ -156,233 +384,294 @@ namespace pwiz.Skyline.EditUI
         // needed for Testing purposes so we can skip ImportFasta() because of the OpenFileDialog
         public void UseFastaFile(string file)
         {
+            Initialize();
+
             _isFasta = true;
-            _fileName = file;
+            //FastaFileName = file;
 
-            checkBoxListMatches.Items.Clear();
-            try
+            if (_document.PeptideCount == 0)
+                return;
+
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                using (var stream = File.Open(file, FileMode.Open))
-                {
-                    FindProteinMatchesWithFasta(stream);
-                }
+                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, DigestProteinToPeptides, broker));
+                if (longWaitDlg.IsCanceled)
+                    return;
             }
-            catch (Exception e)
-            {
-                MessageDlg.ShowWithException(this, Resources.AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_, e);
-            }
+
+            if (Results.PeptidesMapped == 0)
+                MessageDlg.Show(this, Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
+            UpdateParsimonyResults();
+            btnOk.Enabled = true;
         }
 
-        // creates dictionary of a protein to a list of peptides that match
-        private void FindProteinMatchesWithFasta(Stream fastaFile)
+        private SrmDocument CreateDocTree(SrmDocument current)
         {
-            var proteinAssociations = new List<KeyValuePair<FastaSequence, List<PeptideDocNode>>>();
-            var peptidesForMatching = ListPeptidesForMatching();
-            using (var reader = new StreamReader(fastaFile))
+            SrmDocument result = null;
+            using (var longWaitDlg = new LongWaitDlg())
             {
-                foreach (var seq in FastaData.ParseFastaFile(reader))
+                longWaitDlg.PerformWork(this, 1000, monitor =>
                 {
-                    var fasta = new FastaSequence(seq.Name, null, null, seq.Sequence);
-                    var matches = new List<PeptideDocNode>();
-                    foreach (var peptide in peptidesForMatching)
-                    {
-                        // TODO(yuval): does digest matter?
-                        if (fasta.Sequence.IndexOf(peptide.Peptide.Target.Sequence, StringComparison.Ordinal) < 0)
-                        {
-                            continue;
-                        }
-                        matches.Add(peptide);
-                    }
-                    if(matches.Count > 0)
-                        proteinAssociations.Add(new KeyValuePair<FastaSequence, List<PeptideDocNode>>(fasta, matches));
-                }
+                    result = _proteinAssociation.CreateDocTree(current, monitor);
+                    result = AddIrtAndDecoys(result);
+
+                });
+                if (longWaitDlg.IsCanceled)
+                    return null;
             }
-            
-            SetCheckBoxListItems(proteinAssociations, 
-                Resources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
+            return result;
         }
 
-        // once proteinAssociation(matches) have been found will populate checkBoxListMatches
-        private void SetCheckBoxListItems(IList<KeyValuePair<FastaSequence, List<PeptideDocNode>>> proteinAssociations, String noMatchFoundMessage)
+        private SrmDocument AddIrtAndDecoys(SrmDocument document)
         {
-            if (proteinAssociations.Count > 0) {
-                btnApplyChanges.Enabled = true;
-            }
-            else {
-                MessageDlg.Show(this, noMatchFoundMessage);
-                btnApplyChanges.Enabled = false;
-            }
+            var result = AddDecoys(document);
 
-            var i = 0;
-            foreach (var entry in proteinAssociations)
+            if (_overrideFastaPath != null)
+                result = ImportPeptideSearch.AddStandardsToDocument(result, _irtStandard);
+
+            // Move iRT proteins to top
+            var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(result));
+            var proteins = new List<PeptideGroupDocNode>(result.PeptideGroups);
+            var proteinsIrt = new List<PeptideGroupDocNode>();
+            for (var i = 0; i < proteins.Count; i++)
             {
-                checkBoxListMatches.Items.Add(entry.Key.DisplayName);
-                checkBoxListMatches.SetItemCheckState(i, CheckState.Checked);
-                i++;
+                var nodePepGroup = proteins[i];
+                if (nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
+                {
+                    proteinsIrt.Add(nodePepGroup);
+                    proteins.RemoveAt(i--);
+                }
             }
-            _associatedProteins = proteinAssociations;
+            if (proteinsIrt.Any())
+                return (SrmDocument)result.ChangeChildrenChecked(proteinsIrt.Concat(proteins).Cast<DocNode>().ToArray());
+
+            return result;
         }
 
-        // Given the current SRMDocument and a dictionary with associated proteins this method will run the the document tree and
-        // build a new document.  The new document will contain all pre-existing FastaSequence nodes and will add the newly matches 
-        // FastaSequence nodes.  The peptides that were matched to a FastaSequence are removed from their old group.
-        private SrmDocument CreateDocTree(SrmDocument current, List<KeyValuePair<FastaSequence, List<PeptideDocNode>>> proteinAssociations)
+        private int NumDecoys(IEnumerable<PeptideGroupDocNode> pepGroups)
         {
-            var newPeptideGroups = new List<PeptideGroupDocNode>(); // all groups that will be added in the new document
-
-            // Modifies and adds old groups that still contain unmatched peptides to newPeptideGroups
-            foreach (var nodePepGroup in current.MoleculeGroups) 
-            {
-                // Adds all pre-existing proteins to list of groups that will be added in the new document
-                if (nodePepGroup.PeptideGroup is FastaSequence) 
-                {
-                    newPeptideGroups.Add(nodePepGroup);
-                    continue;
-                }
-
-                // Not a protein
-                var newNodePepGroup = new List<PeptideDocNode>();
-
-                foreach (PeptideDocNode nodePep in nodePepGroup.Children) 
-                {
-                    // If any matches contain the PeptideDocNode it no longer needs to be in the group
-                    if (!proteinAssociations.Any(entry => entry.Value.Contains(nodePep)))
-                    {
-                        // If PeptideDocNode wasn't matched it will stay in the original group
-                        newNodePepGroup.Add(nodePep);
-                    }
-                }
-                // If the count of items in the group has not changed then it can be assumed that the group is the same
-                // otherwise if there is a different count and it is not 0 then we want to add the modified group to the
-                // set of new groups that will be added to the tree
-                if (newNodePepGroup.Count == nodePepGroup.Children.Count)
-                {
-                    newPeptideGroups.Add(nodePepGroup);  // No change
-                }
-                else if (newNodePepGroup.Any())
-                {
-                    newPeptideGroups.Add((PeptideGroupDocNode) nodePepGroup.ChangeChildren(newNodePepGroup.ToArray()));
-                }
-            }
-            
-            // Adds all new groups/proteins to newPeptideGroups
-            foreach (var keyValuePair in proteinAssociations)
-            {
-                var protein = keyValuePair.Key;
-                var children = new List<PeptideDocNode>();
-                foreach (var oldChild in keyValuePair.Value)
-                {
-                    children.Add(ChangeFastaSequence(current.Settings, oldChild, protein));
-                }
-                var peptideGroupDocNode = new PeptideGroupDocNode(protein, protein.Name, protein.Description, children.ToArray());
-                newPeptideGroups.Add(peptideGroupDocNode);
-            }
-
-            return (SrmDocument) current.ChangeChildrenChecked(newPeptideGroups.ToArray());
+            return !string.IsNullOrEmpty(_decoyGenerationMethod) && _decoysPerTarget > 0
+                ? (int)Math.Round(pepGroups.Sum(pepGroup => pepGroup.PeptideCount) * _decoysPerTarget)
+                : 0;
         }
 
-        public PeptideDocNode ChangeFastaSequence(SrmSettings srmSettings, PeptideDocNode peptideDocNode, FastaSequence newSequence)
+        private SrmDocument AddDecoys(SrmDocument document)
         {
-            int begin = newSequence.Sequence.IndexOf(peptideDocNode.Peptide.Target.Sequence, StringComparison.Ordinal);
-            int end = begin + peptideDocNode.Peptide.Target.Sequence.Length;
-            var newPeptide = new Peptide(newSequence, peptideDocNode.Peptide.Target.Sequence, 
-                begin, end, peptideDocNode.Peptide.MissedCleavages);
-            var newPeptideDocNode = new PeptideDocNode(newPeptide, srmSettings, peptideDocNode.ExplicitMods, peptideDocNode.SourceKey,
-                peptideDocNode.GlobalStandardType, peptideDocNode.Rank, peptideDocNode.ExplicitRetentionTime,
-                peptideDocNode.Annotations, peptideDocNode.Results,
-                peptideDocNode.TransitionGroups.ToArray(),
-                false);  // Don't automanage this peptide
-            newPeptideDocNode = newPeptideDocNode.ChangeSettings(srmSettings, SrmSettingsDiff.ALL);
-            return newPeptideDocNode;
+            var numDecoys = NumDecoys(document.PeptideGroups);
+            return numDecoys > 0
+                ? new RefinementSettings { DecoysMethod = _decoyGenerationMethod, NumberOfDecoys = numDecoys }.GenerateDecoys(document)
+                : document;
         }
 
-        private void btnApplyChanges_Click(object sender, EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
-           ApplyChanges();
+            OkDialog();
         }
 
         public AssociateProteinsSettings FormSettings
         {
             get
             {
-                var proteins = checkBoxListMatches.CheckedIndices.OfType<int>()
-                    .Select(i => _associatedProteins[i].Key.DisplayName)
-                    .ToList();
-
-                var fileName = Path.GetFileName(_fileName);
-                return new AssociateProteinsSettings(proteins, _isFasta ? fileName : null, _isFasta ? null : fileName);
+                var fileName = FastaFileName;
+                return new AssociateProteinsSettings(_proteinAssociation, _isFasta && _overrideFastaPath == null ? fileName : null, _isFasta ? null : fileName);
             }
         }
 
-        public class AssociateProteinsSettings : AuditLogOperationSettings<AssociateProteinsSettings>, IAuditLogComparable
+        public int MinPeptides
         {
-            public AssociateProteinsSettings(List<string> proteins, string fasta, string backgroundProteome)
-            {
-                FASTA = fasta;
-                BackgroundProteome = backgroundProteome;
-                Proteins = proteins;
-            }
-
-            protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)
-            {
-                var entry = AuditLogEntry.CreateCountChangeEntry(
-                    MessageType.associated_peptides_with_protein,
-                    MessageType.associated_peptides_with_proteins, docPair.NewDocumentType, Proteins);
-
-                return entry.Merge(base.CreateEntry(docPair));
-            }
-
-            [Track]
-            public List<string> Proteins { get; private set; }
-
-            [Track]
-            public string FASTA { get; private set; }
-
-            [Track]
-            public string BackgroundProteome { get; private set; }
-
-            public object GetDefaultObject(ObjectInfo<object> info)
-            {
-                return new AssociateProteinsSettings(null, null, null);
-            }
+            //get => MinPeptidesPerProtein;
+            set => MinPeptidesPerProtein = value;
         }
 
-        // Will only be called if there are changes to apply
-        // user cannot click apply button(disabled) without checking any items
-        public void ApplyChanges()
+        public void SetRepeatedDuplicatePeptides(bool removeRepeated, bool removeDuplicate)
         {
-            var selectedProteins =
-                checkBoxListMatches.CheckedIndices.OfType<int>().Select(i => _associatedProteins[i]).ToList();
+            if (removeDuplicate)
+                SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
+            else if (removeRepeated)
+                SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToFirstProtein;
+            else
+                SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+        }
 
-            _parent.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
-                doc => CreateDocTree(_parent.Document, selectedProteins), FormSettings.EntryCreator.Create);
+        public bool RemoveRepeatedPeptides
+        {
+            get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.AssignedToFirstProtein ||
+                   SelectedSharedPeptides == ProteinAssociation.SharedPeptides.Removed;
+            set => SetRepeatedDuplicatePeptides(value, RemoveDuplicatePeptides);
+        }
+
+        public bool RemoveDuplicatePeptides
+        {
+            get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.Removed;
+            set => SetRepeatedDuplicatePeptides(RemoveRepeatedPeptides, value);
+        }
+
+        public void OkDialog()
+        {
+            if (rbFASTA.Checked && !_fastaFileIsTemporary)
+                Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
 
             DialogResult = DialogResult.OK;
         }
 
-        // if no items are checked to match will disable the apply button
-        private void checkBoxListMatches_ItemCheck(object sender, ItemCheckEventArgs e)
+        private string GetStatusBarResultString()
         {
-            // checkBoxListMatches.CheckedItems gets updates after this event is called which
-            // is why wehave to check the e.NewValue check state
-            List<string> checkedItems = new List<string>();
-            foreach (var item in checkBoxListMatches.CheckedItems)
-                checkedItems.Add(item.ToString());
+            if (FinalResults == null || DocumentFinal == null)
+                return string.Empty;
 
-            if (e.NewValue == CheckState.Unchecked)
-                checkedItems.RemoveAt(0);
-            if (e.NewValue == CheckState.Checked)
-                checkedItems.Add(string.Empty);
+            const int separatorThreshold = 10000;
+            var culture = LocalizationHelper.CurrentCulture;
+            Func<int, string> resultToString = count => count < separatorThreshold ? count.ToString(culture) : count.ToString(@"N0", culture);
 
-            if (checkedItems.Count == 0)
-                btnApplyChanges.Enabled = false;
+            return string.Format(_statusBarResultFormat, resultToString(FinalResults.FinalProteinCount),
+                resultToString(FinalResults.FinalPeptideCount),
+                resultToString(DocumentFinal.PeptideTransitionGroupCount),
+                resultToString(DocumentFinal.PeptideTransitionCount));
+        }
+
+        private void dgvAssociateResults_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
+        {
+            if (FinalResults == null || DocumentFinal == null)
+                return;
+
+            const int separatorThreshold = 10000;
+            var culture = LocalizationHelper.CurrentCulture;
+            Func<int, string> resultToString = count => count < separatorThreshold ? count.ToString(culture) : count.ToString(@"N0", culture);
+            
+            const int proteinRowIndex = 0;
+            const int peptideRowIndex = 1;
+            const int sharedRowIndex = 2;
+
+            if (e.ColumnIndex == headerColumn.Index)
+            {
+                if (e.RowIndex == proteinRowIndex)
+                    e.Value = Resources.AnnotationDef_AnnotationTarget_Proteins;
+                else if (e.RowIndex == peptideRowIndex)
+                    e.Value = Resources.AnnotationDef_AnnotationTarget_Peptides;
+                else if (e.RowIndex == sharedRowIndex)
+                    e.Value = Resources.AssociateProteinsDlg_CellValueNeeded_Shared_Peptides;
+            }
+            else if (e.ColumnIndex == mappedColumn.Index)
+            {
+                if (e.RowIndex == proteinRowIndex)
+                    e.Value = resultToString(FinalResults.ProteinsMapped);
+                else if (e.RowIndex == peptideRowIndex)
+                    e.Value = resultToString(FinalResults.PeptidesMapped);
+                else if (e.RowIndex == sharedRowIndex)
+                    e.Value = resultToString(FinalResults.TotalSharedPeptideCount);
+            }
+            else if (e.ColumnIndex == unmappedColumn.Index)
+            {
+                if (e.RowIndex == proteinRowIndex)
+                    e.Value = resultToString(FinalResults.ProteinsUnmapped);
+                else if (e.RowIndex == peptideRowIndex)
+                    e.Value = resultToString(FinalResults.PeptidesUnmapped);
+            }
+            else if (e.ColumnIndex == targetsColumn.Index)
+            {
+                if (e.RowIndex == proteinRowIndex)
+                    e.Value = resultToString(FinalResults.FinalProteinCount);
+                else if (e.RowIndex == peptideRowIndex)
+                    e.Value = resultToString(FinalResults.FinalPeptideCount);
+                else if (e.RowIndex == sharedRowIndex)
+                    e.Value = resultToString(FinalResults.FinalSharedPeptideCount);
+            }
+        }
+
+        private void lnkHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            AssociateProteinsDlg_HelpButtonClicked(sender, e);
+        }
+
+        // NB: I'm using a CheckBox/Label pair because there was too much space between just a LinkLabel and the CheckBox text
+        private void lblGroupProtein_Click(object sender, EventArgs e)
+        {
+            cbGroupProteins.Checked = !cbGroupProteins.Checked;
+        }
+
+        private void lblMinimalProteinList_Click(object sender, EventArgs e)
+        {
+            cbMinimalProteinList.Checked = !cbMinimalProteinList.Checked;
+        }
+
+        private void lblRemoveSubsetProtein_Click(object sender, EventArgs e)
+        {
+            cbRemoveSubsetProteins.Checked = !cbRemoveSubsetProteins.Checked;
+        }
+
+        private void AssociateProteinsDlg_HelpButtonClicked(object sender, EventArgs e)
+        {
+            const string proteinAssociationWikiPath = @"/wiki/home/software/Skyline/page.view?name=Skyline%20Protein%20Association%2022.1"; // CONSIDER: get version programatically
+            if (sender == lnkHelpFindMinimalProteinList)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#minimal-protein-list");
+            else if (sender == lnkHelpProteinGroups)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#protein-grouping");
+            else if (sender == lnkHelpRemoveSubsetProteins)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#remove-subset-proteins");
+            else if (sender == lnkHelpSharedPeptides)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#shared-peptides");
             else
-                btnApplyChanges.Enabled = true;
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath);
+        }
+
+        private void numMinPeptides_Enter(object sender, EventArgs e)
+        {
+            // prevent Enter from closing the form when confirming the value of UpDown box
+            AcceptButton = null;
+        }
+
+        private void numMinPeptides_Leave(object sender, EventArgs e)
+        {
+            AcceptButton = btnOk;
         }
 
 
-        // required for testing
-        public Button ApplyButton { get { return btnApplyChanges; } }
-        public CheckedListBox CheckboxListMatches { get { return checkBoxListMatches; } }
+        /*public void NewTargetsAll(out int proteins, out int peptides, out int precursors, out int transitions)
+        {
+            var pepGroups = new List<PeptideGroupDocNode>(_document.PeptideGroups);
+            var numDecoys = NumDecoys(pepGroups);
+            if (numDecoys > 0)
+            {
+                var decoyGroups = AddDecoys(_document).PeptideGroups.Where(pepGroup => Equals(pepGroup.Name, PeptideGroup.DECOYS));
+                pepGroups.AddRange(decoyGroups);
+            }
+
+            var docWithStandards = ImportPeptideSearch.AddStandardsToDocument(_document, _irtStandard);
+            if (!ReferenceEquals(docWithStandards, _document))
+            {
+                pepGroups.Add(docWithStandards.PeptideGroups.First());
+            }
+
+            proteins = pepGroups.Count + Results.ProteinsUnmapped;
+            peptides = pepGroups.Sum(pepGroup => pepGroup.PeptideCount);
+            precursors = pepGroups.Sum(pepGroup => pepGroup.TransitionGroupCount);
+            transitions = pepGroups.Sum(pepGroup => pepGroup.TransitionCount);
+        }*/
+
+        public void NewTargetsFinal(out int proteins, out int peptides, out int precursors, out int transitions)
+        {
+            if (DocumentFinal == null)
+                throw new Exception();
+            proteins = DocumentFinal.PeptideGroupCount;
+            peptides = DocumentFinal.PeptideCount;
+            precursors = DocumentFinal.PeptideTransitionGroupCount;
+            transitions = DocumentFinal.PeptideTransitionCount;
+        }
+
+        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions)
+        {
+            int? emptyProteins;
+            NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out emptyProteins);
+        }
+
+        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int? emptyProteins)
+        {
+            var doc = DocumentFinal;
+            emptyProteins = 0;
+            proteins = doc.PeptideGroupCount;
+            peptides = doc.PeptideCount;
+            precursors = doc.PeptideTransitionGroupCount;
+            transitions = doc.PeptideTransitionCount;
+        }
     }
 }

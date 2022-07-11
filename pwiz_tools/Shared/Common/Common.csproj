@@ -96,6 +96,9 @@
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Controls\LiteDropDownList.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
@@ -141,7 +144,6 @@
     <Compile Include="DataAnalysis\PValues.cs" />
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
-    <Compile Include="DataAnalysis\ThreadingHelper.cs" />
     <Compile Include="Database\NHibernate\AbstractSessionWithLock.cs" />
     <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
@@ -518,6 +520,7 @@
     <None Include="Resources\up-pro32.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\DropImageNoBackground.png" />
     <Content Include="Resources\HiddenColumns.bmp" />
     <Content Include="Resources\Cluster.bmp" />
     <Content Include="Resources\UnknownUiMode.png" />

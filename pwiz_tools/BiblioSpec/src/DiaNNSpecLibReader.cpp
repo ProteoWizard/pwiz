@@ -18,10 +18,12 @@
 
 #include "DiaNNSpecLibReader.h"
 #include "pwiz/data/common/Unimod.hpp"
+#include "libraries/csv.h"
+#include <boost/type_index.hpp>
 
 namespace BiblioSpec
 {
-const int LATEST_SUPPORTED_VERSION = -2;
+const int LATEST_SUPPORTED_VERSION = -3;
 
 // code adapted from CC4-by-licensed diann.cpp by Vadim Demichev (https://github.com/vdemichev/DiaNN)
 namespace {
@@ -43,7 +45,8 @@ template<class F> void read_string(F &in, std::string &s) {
 }
 
 template <class F, class T> void read_array(F &in, std::vector<T> &a, int v = 0) {
-    int size = 0; in.read((char*)&size, sizeof(int)); 
+    int size = 0; in.read((char*)&size, sizeof(int));
+    Verbosity::debug("array of %d %s", size, boost::typeindex::type_index(typeid(T)).pretty_name().c_str());
     if (size) {
         a.resize(size);
         for (int i = 0; i < size; i++) a[i].read(in, v);
@@ -413,7 +416,10 @@ class Library {
         std::string name; // precursor id
         std::set<PG>::iterator prot;
         int pid_index = 0, pg_index = 0, eg_id, best_run = -1, peak = 0, apex = 0, window = 0;
-        float qvalue = 0.0, pg_qvalue = 0.0, best_fr_mz = 0.0;
+        float qvalue = 0.0, pg_qvalue = 0.0, best_fr_mz = 0.0, ptm_qvalue, site_conf;
+
+        // temporary variables used while processing rows from a single run in the report file
+        float curQValue, curPEP, curRT, curRTStart, curRTStop, curIM;
 
         friend bool operator < (const Entry &left, const Entry &right) { return left.name < right.name; }
 
@@ -433,10 +439,16 @@ class Library {
             entry_flags = ff, proteotypic = prt;
             in.read((char*)&pid_index, sizeof(int));
             read_string(in, name);
+            if (v <= -3) {
+                in.read((char*)&pg_qvalue, sizeof(float));
+                in.read((char*)&ptm_qvalue, sizeof(float));
+                in.read((char*)&site_conf, sizeof(float));
+            }
         }
     };
 
     std::vector<Entry> entries;
+    std::map<string, std::reference_wrapper<Entry>> entryByModPeptideAndCharge;
 
     template<class F> void read(F &in) {
         int gd = 0, gc = 0, ip = 0, version = 0;
@@ -447,6 +459,8 @@ class Library {
 
         if (version < LATEST_SUPPORTED_VERSION)
             Verbosity::error("speclib file has version %d, but BiblioSpec only supports up to version %d", -1*version, -1*LATEST_SUPPORTED_VERSION);
+        else
+            Verbosity::debug("speclib file has version %d",  -1*version);
 
         in.read((char*)&gc, sizeof(int));
         in.read((char*)&ip, sizeof(int));
@@ -462,7 +476,11 @@ class Library {
         in.read((char*)&iRT_min, sizeof(double));
         in.read((char*)&iRT_max, sizeof(double));
         read_array(in, entries, version);
-        for (auto &e : entries) e.lib = this;
+        for (auto &e : entries)
+        {
+            e.lib = this;
+            entryByModPeptideAndCharge.emplace(e.name, std::ref(e));
+        }
         if (version <= -1 && in.peek() != std::char_traits<char>::eof()) read_vector(in, elution_groups);
     }
 
@@ -569,18 +587,117 @@ bool DiaNNSpecLibReader::parseFile()
         impl_->specLib.read(specLibStream);
     }
 
-    for (const auto& entry : impl_->specLib.entries)
+    typedef io::CSVReader<8, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> ReportReaderType;
+
+    auto diannReportFilepath = bal::replace_last_copy(string(impl_->specLibFile_), "-lib.tsv.speclib", "-report.tsv");
+    /*if (diannReportFilepath == impl_->specLibFile_)
+        throw BlibException(true, "unable to determine DIA-NN report filename for '%s': speclib must end in -lib.tsv.speclib and report must end in -report.tsv", impl_->specLibFile_);
+    if (!bfs::exists(diannReportFilepath))
+        throw BlibException(true, "could not find DIA-NN report file '%s' for '%s'", bfs::path(diannReportFilepath).filename().string().c_str(), impl_->specLibFile_);*/
+    if (diannReportFilepath == impl_->specLibFile_ || !bfs::exists(diannReportFilepath))
     {
-        PSM* psm = new PSM;
-        psm->charge = entry.target.charge;
-        psm->unmodSeq = get_aas(entry.name, psm->mods);
-        psm->specIndex = entry.target.index;
-        psms_.emplace_back(psm);
+        // iterate all TSV files in the same directory as the speclib, check the ones sharing the most leading characters, and look for the report headers in them
+        vector<bfs::path> siblingTsvFiles;
+        pwiz::util::expand_pathmask(bfs::path(impl_->specLibFile_).parent_path() / "*.tsv", siblingTsvFiles);
+        multimap<int, bfs::path> tsvFilepathBySharedPrefixLength;
+        auto speclibFilename = bfs::path(impl_->specLibFile_).filename().string();
+        for (const auto& tsvFilepath : siblingTsvFiles)
+        {
+            if (!bfs::is_regular_file(tsvFilepath))
+                continue;
+            if (bal::contains(tsvFilepath.filename().string(), "first-pass") && !bal::contains(speclibFilename, "first-pass"))
+                continue;
+            int sharedPrefixLength = 0, i;
+            auto tsvFilename = tsvFilepath.filename().string();
+            for (i = 0; i < tsvFilename.length() && i < speclibFilename.length(); ++i)
+                if (tsvFilename[i] != speclibFilename[i])
+                    break;
+            sharedPrefixLength = i;
+            tsvFilepathBySharedPrefixLength.emplace(sharedPrefixLength, tsvFilepath);
+        }
+
+        diannReportFilepath.clear();
+        for (const auto& kvp : boost::make_iterator_range(tsvFilepathBySharedPrefixLength.rbegin(), tsvFilepathBySharedPrefixLength.rend()))
+        {
+            if (kvp.first < 1)
+                break;
+
+            io::CSVReader<1, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> reportReader(kvp.second.string().c_str());
+            reportReader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id");
+            if (reportReader.has_column("Precursor.Id"))
+            {
+                diannReportFilepath = kvp.second.string();
+                break;
+            }
+        }
+
+        if (diannReportFilepath.empty())
+            throw BlibException(true, "unable to determine DIA-NN report filename for '%s': the TSV report is required to read speclib files and must be in the same directory as the speclib and share some leading characters (e.g. somedata-tsv.speclib and somedata-report.tsv)",
+                impl_->specLibFile_);
     }
 
-    buildTables(UNKNOWN_SCORE_TYPE, impl_->specLibFile_);
+    auto& speclib = impl_->specLib;
+    set<string> processedRuns;
+    map<string, int> runNameByIndex;
+    map<int, string> runIndexByName;
+    bool hasSkippedRuns = false;
+    // read runs one at a time from the report file in a loop until all runs have been processed
+    do
+    {
+        ReportReaderType reportReader(diannReportFilepath.c_str());
+        reportReader.read_header(io::ignore_extra_column, "Run", "Precursor.Id", "Q.Value", "PEP", "RT", "RT.Start", "RT.Stop", "IM");
+        char *run, *precursorId;
+        float qValue, pep, rt, rtStart, rtStop, im;
+        string currentRun;
+        hasSkippedRuns = false;
+        while (reportReader.read_row(run, precursorId, qValue, pep, rt, rtStart, rtStop, im))
+        {
+            if (currentRun.empty())
+            {
+                // skip rows from runs that have already been processed
+                if (processedRuns.count(run) > 0)
+                    continue;
+                currentRun = run;
+            }
+            else if (!bal::equals(currentRun.c_str(), run))
+            {
+                // skip rows not from the current runs being processed; another loop iteration will be required
+                hasSkippedRuns = processedRuns.count(run) == 0;
+                continue;
+            }
+
+            auto findItr = speclib.entryByModPeptideAndCharge.find(precursorId);
+            if (findItr == speclib.entryByModPeptideAndCharge.end())
+                throw BlibException(false, "could not find precursorId '%s' in speclib; is '%s' the correct report TSV file?", precursorId, bfs::path(diannReportFilepath).filename().string().c_str());
+
+            auto& speclibEntry = findItr->second.get();
+            speclibEntry.curQValue = qValue;
+            speclibEntry.curPEP = pep;
+            speclibEntry.curRT = rt;
+            speclibEntry.curRTStart = rtStart;
+            speclibEntry.curRTStop = rtStop;
+            speclibEntry.curIM = im;
+
+            PSM* psm = new PSM;
+            psm->charge = speclibEntry.target.charge;
+            psm->unmodSeq = get_aas(speclibEntry.name, psm->mods);
+            psm->specIndex = speclibEntry.target.index;
+            psm->score = qValue;
+            psms_.emplace_back(psm);
+        }
+
+        // insert PSMs for the current run
+        buildTables(GENERIC_QVALUE, currentRun);
+        processedRuns.insert(currentRun);
+        currentRun.clear();
+    }
+    while (hasSkippedRuns);
 
     return true;
+}
+
+vector<PSM_SCORE_TYPE> DiaNNSpecLibReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, GENERIC_QVALUE);
 }
 
 // SpecFileReader methods
@@ -604,7 +721,12 @@ bool DiaNNSpecLibReader::getSpectrum(int identifier, SpecData& returnData, SPEC_
     returnData.id = entry.target.index;
     returnData.numPeaks = entry.target.fragments.size();
     returnData.mz = entry.target.mz;
-    returnData.retentionTime = entry.target.iRT;
+    returnData.retentionTime = entry.curRT;
+    returnData.startTime = entry.curRTStart;
+    returnData.endTime = entry.curRTStop;
+    returnData.ionMobility = entry.curIM;
+    if (returnData.ionMobility > 0)
+        returnData.ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
 
     if (!getPeaks)
         return true;

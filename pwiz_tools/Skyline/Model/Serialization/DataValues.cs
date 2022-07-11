@@ -118,6 +118,10 @@ namespace pwiz.Skyline.Model.Serialization
                     return IonType.y;
                 case SkylineDocumentProto.Types.IonType.Z:
                     return IonType.z;
+                case SkylineDocumentProto.Types.IonType.ZH:
+                    return IonType.zh;
+                case SkylineDocumentProto.Types.IonType.ZHh:
+                    return IonType.zhh;
             }
             throw new InvalidEnumArgumentException();
         }
@@ -142,6 +146,10 @@ namespace pwiz.Skyline.Model.Serialization
                     return SkylineDocumentProto.Types.IonType.Y;
                 case IonType.z:
                     return SkylineDocumentProto.Types.IonType.Z;
+                case IonType.zh:
+                    return SkylineDocumentProto.Types.IonType.ZH;
+                case IonType.zhh:
+                    return SkylineDocumentProto.Types.IonType.ZHh;
             }
             throw new InvalidEnumArgumentException();
         }

@@ -2,8 +2,8 @@
 # Copyright 2017-2021 Rene Ferdinand Rivera Morell
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This module defines function to help with two main tasks:
 #
@@ -467,7 +467,7 @@ rule find-builds ( what : properties * : * )
     return [ find-builds-raw $(p) : $(ps) : $(what) :
         $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) :
         $(10) : $(11) : $(12) : $(13) : $(14) : $(15) :
-        $(16) : $(17) : $(18) : $(19)  ] ;
+        $(16) : $(17) : $(18) ] ;
 }
 
 
@@ -531,7 +531,7 @@ class configure-choose-worker
     {
         local project = [ project.current ] ;
         self.message = $(message) ;
-        for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
+        for i in 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
         {
             local name = [ CALC $(i) - 1 ] ;
             self.targets.$(name) = $($(i)[1]) ;
@@ -550,7 +550,7 @@ class configure-choose-worker
     }
     rule all-properties ( )
     {
-        local i = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ;
+        local i = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ;
         return $(self.props.$(i)) ;
     }
     rule check ( properties * )
@@ -572,9 +572,7 @@ class configure-choose-worker
             : $(self.targets.14) $(self.what.14)
             : $(self.targets.15) $(self.what.15)
             : $(self.targets.16) $(self.what.16)
-            : $(self.targets.17) $(self.what.17)
-            : $(self.targets.18) $(self.what.18)
-            : $(self.targets.19) $(self.what.19) ] ;
+            : $(self.targets.17) $(self.what.17) ] ;
         if $(self.props.$(i))
         {
             return [ property.evaluate-conditionals-in-context $(self.props.$(i)) : $(properties) ] ;

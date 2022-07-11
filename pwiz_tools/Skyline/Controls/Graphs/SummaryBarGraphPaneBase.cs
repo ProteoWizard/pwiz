@@ -17,18 +17,224 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public abstract class SummaryBarGraphPaneBase : SummaryGraphPane
     {
+        public class ToolTipImplementation : ITipProvider
+        {
+            public class TargetCurveList : List<CurveItem>
+            {
+                private SummaryBarGraphPaneBase _parent;
+
+                public TargetCurveList(SummaryBarGraphPaneBase parent)
+                {
+                    _parent = parent;
+                }
+                public new void Add(CurveItem curve)
+                {
+                    //all targets must be on the same axis
+                    if (Count > 0)
+                        Assume.AreEqual(base[0].GetYAxis(_parent), curve.GetYAxis(_parent), @"All target curves for a tooltip must be on the same axis.");
+                    base.Add(curve);
+                }
+
+                public CurveItem ClearAndAdd(CurveItem curve)
+                {
+                    Clear();
+                    Add(curve);
+                    return curve;
+                }
+
+                public Axis GetYAxis()
+                {
+                    if (Count == 0)
+                        return null;
+                    return base[0].GetYAxis(_parent);
+                }
+
+                public bool IsTarget(CurveItem curve)
+                {
+                    return this.Any(c => ReferenceEquals(c, curve));
+                }
+            }
+
+            private SummaryBarGraphPaneBase _parent;
+            private bool _isVisible;
+            private NodeTip _tip;
+            private TableDesc _table;
+            internal RenderTools RenderTools = new RenderTools();
+
+            public int ReplicateIndex { get; private set; }
+            public TargetCurveList TargetCurves {  get; private set; }
+
+            public ToolTipImplementation(SummaryBarGraphPaneBase parent)
+            {
+                _parent = parent;
+                TargetCurves = new TargetCurveList(parent);
+            }
+
+            public ITipProvider TipProvider { get { return this; } }
+
+            bool ITipProvider.HasTip => true;
+
+            Size ITipProvider.RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                var size = _table.CalcDimensions(g);
+                if (draw)
+                    _table.Draw(g);
+                return new Size((int)size.Width + 2, (int)size.Height + 2);
+            }
+
+            public void AddLine(string description, string data)
+            {
+                if (_table == null)
+                    _table = new TableDesc();
+                _table.AddDetailRow(description, data, RenderTools);
+            }
+
+            public void ClearData()
+            {
+                _table?.Clear();
+            }
+
+            public void Draw(int dataIndex, Point cursorPos)
+            {
+                if (_isVisible)
+                {
+                    if (ReplicateIndex == dataIndex)
+                        return;
+                    Hide();
+                }
+                if (_table == null || _table.Count == 0 || !TargetCurves.Any()) return;
+
+                ReplicateIndex = dataIndex;
+                var basePoint = new UserPoint(dataIndex + 1,
+                    _parent.GetToolTipDataSeries()[ReplicateIndex] / _parent.YScale, _parent, TargetCurves.GetYAxis() ?? _parent.YAxis);
+
+                using (var g = _parent.GraphSummary.GraphControl.CreateGraphics())
+                {
+                    var size = _table.CalcDimensions(g);
+                    var offset = new Size(0, -(int)(size.Height + size.Height / _table.Count));
+                    if (_tip == null)
+                        _tip = new NodeTip(_parent);
+                    _tip.SetTipProvider(TipProvider, new Rectangle(basePoint.Screen(offset), new Size()), cursorPos);
+                }
+                _isVisible = true;
+            }
+
+            public void Hide()
+            {
+                if (_isVisible)
+                {
+                    _tip?.HideTip();
+                    _isVisible = false;
+                }
+            }
+
+            #region Test Methods
+            public List<string> TipLines
+            {
+                get
+                {
+                    return _table.Select((rowDesc) =>
+                        string.Join(TextUtil.SEPARATOR_TSV_STR, rowDesc.Select(cell => cell.Text))
+                    ).ToList();
+                }
+            }
+
+            #endregion
+            private class UserPoint
+            {
+                private GraphPane _graph;
+                private Axis _yAxis;
+                public int X { get; private set; }
+                public float Y { get; private set; }
+
+                public UserPoint(int x, float y, GraphPane graph)
+                {
+                    X = x;
+                    Y = y;
+                    _graph = graph;
+                    _yAxis = graph.YAxis;
+                }
+                public UserPoint(int x, float y, GraphPane graph, Axis yAxis) : this(x, y, graph)
+                {
+                    if(yAxis is Y2Axis)
+                        _yAxis = yAxis;
+                }
+
+                public PointF User()
+                {
+                    return new PointF(X, Y);
+                }
+
+                public Point Screen()
+                {
+                    return new Point(
+                        (int)_graph.XAxis.Scale.Transform(X),
+                        (int)_yAxis.Scale.Transform(Y));
+                }
+                public Point Screen(Size OffsetScreen)
+                {
+                    return new Point(
+                        (int)(_graph.XAxis.Scale.Transform(X) + OffsetScreen.Width),
+                        (int)(_yAxis.Scale.Transform(Y) + OffsetScreen.Height));
+                }
+
+                public PointF PF()
+                {
+                    return new PointF(
+                        _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width,
+                        _yAxis.Scale.Transform(Y) / _graph.Rect.Height);
+                }
+                public PointD PF(SizeF OffsetPF)
+                {
+                    return new PointD(
+                        _graph.XAxis.Scale.Transform(X) / _graph.Rect.Width + OffsetPF.Width,
+                        _yAxis.Scale.Transform(Y) / _graph.Rect.Height + OffsetPF.Height);
+                }
+            }
+        }
+
+        public virtual void PopulateTooltip(int index){}
+
+        /// <summary>
+        /// Override if you need to implement tooltips in your graph.
+        /// </summary>
+        /// <returns>A list of y-coordinates where tooltips should be displayed.
+        /// List index is the replicate index.</returns>
+        public virtual ImmutableList<float> GetToolTipDataSeries()
+        {
+            //This provides a clear error message if this method is invoked by mistake in a class that doesn't implement tooltips.
+            throw new NotImplementedException(@"Method GetToolTipDataSeries is not implemented.");
+        }
+        /// <summary>
+        /// Additional scaling factor for tooltip's vertical position.
+        /// </summary>
+        public virtual float YScale
+        {
+            get { return 1.0f; }
+        }
+        /// <summary>
+        /// Create a new tooltip instance in the child class constructor if you
+        /// want to show thw tooltips.
+        /// </summary>
+        public ToolTipImplementation ToolTip { get; protected set; }
+
         protected static bool ShowSelection
         {
             get
@@ -55,6 +261,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             CurveList.Clear();
             GraphObjList.Clear();
+            ToolTip?.Hide();
         }
 
         protected virtual int FirstDataIndex { get { return 0; } }
@@ -90,6 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int iNearest;
             if (!FindNearestPoint(new PointF(mouseEventArgs.X, mouseEventArgs.Y), out nearestCurve, out iNearest))
             {
+                ToolTip?.Hide();
                 var axis = GetNearestXAxis(sender, mouseEventArgs);
                 if (axis != null)
                 {
@@ -98,6 +306,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 return false;
             }
+
+            if (ToolTip != null && ToolTip.TargetCurves.IsTarget(nearestCurve))
+            {
+                PopulateTooltip(iNearest);
+                ToolTip.Draw(iNearest, mouseEventArgs.Location);
+                sender.Cursor = Cursors.Hand;
+                return true;
+            }
+            else
+                ToolTip?.Hide();
+
             IdentityPath identityPath = GetIdentityPath(nearestCurve, iNearest);
             if (identityPath == null)
             {
@@ -105,6 +324,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             GraphSummary.Cursor = Cursors.Hand;
             return true;
+        }
+
+        public override void HandleMouseOutEvent(object sender, EventArgs e)
+        {
+            ToolTip?.Hide();
         }
 
         private XAxis GetNearestXAxis(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
@@ -151,6 +375,15 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
+        public override void OnClose(EventArgs e)
+        {
+            if (ToolTip != null)
+            {
+                ToolTip.Hide();
+                ToolTip.RenderTools.Dispose();
+            }
+        }
+
         public override void Draw(Graphics g)
         {
             _chartBottom = Chart.Rect.Bottom;
@@ -194,5 +427,14 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return _axisLabelScaler.IsRepeatRemovalAllowed; }
             set { _axisLabelScaler.IsRepeatRemovalAllowed = value; }
         }
+
+        #region Test Support Methods
+        public string[] GetOriginalXAxisLabels()
+        {
+            return _axisLabelScaler.OriginalTextLabels ?? XAxis.Scale.TextLabels;
+        }
+
+        #endregion
+
     }
 }

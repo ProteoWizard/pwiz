@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
                });
            }
 
-	        XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = selectionChanged;
+            XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = selectionChanged;
             YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = true;
             if (Settings.Default.MinMassError != 0)
                 YAxis.Scale.Min = Settings.Default.MinMassError;

@@ -905,6 +905,8 @@ namespace pwiz.SkylineTest
                 "precursor_res=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
                 "precursor_res=\"" + validHiRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
+                "precursor_res=\"" + validHiRes + "\" ignore_sim_scans=\"true\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\"/>");  // Use defaults
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
@@ -952,6 +954,8 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"Unknown\" " +
                 "product_resolution=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" ignore_sim_scans=\"true\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 "Unknown" + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
@@ -1202,7 +1206,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(widthAtDt0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
             Assert.AreEqual(widthAtDtMax, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
-            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor3.Replace("100", "0"), DocumentFormat.VERSION_19_1); // Accept 0 resolving power as "no IMS filtering, thanks"
 
             predictor3 = predictor3.Replace("\"resolving_power\"", "\"linear_range\"");
             pred = CheckIonMobilitySettingsBackwardCompatibility(predictor3);

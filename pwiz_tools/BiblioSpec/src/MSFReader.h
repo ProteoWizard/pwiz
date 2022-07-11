@@ -43,7 +43,9 @@ namespace BiblioSpec
                   const char* msfFile,
                   const ProgressIndicator* parent_progress);
         ~MSFReader();
+        void openFile();
         bool parseFile();   // BuildParser virtual function
+        vector<PSM_SCORE_TYPE> getScoreTypes();   // BuildParser virtual function
 
     private:
         /* These are for decompressing the spectrum archives */
@@ -107,6 +109,7 @@ namespace BiblioSpec
         string unzipSpectrum(const string& specId, const void* src, size_t srcLen);
         void readSpectrum(const string& specId, string& spectrumXml, int* numPeaks, double** mzs, float** intensities);
         void collectPsms();
+        void getScoreInfo(sqlite3_stmt** outStmt, int* outResultCount, PSM_SCORE_TYPE* outScoreType, int* outPepConfidence, int* outProtConfidence);
         void initFileNameMap();
         void removeFromFileMap(PSM* psm);
         string fileIdToName(int fileId);

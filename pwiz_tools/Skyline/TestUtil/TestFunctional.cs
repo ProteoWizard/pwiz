@@ -298,6 +298,7 @@ namespace pwiz.SkylineTestUtil
             ActivateReplicate(chromName);
 
             WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GetGraphChrom(chromName).ChromGroupInfos != null);
 
             RunUIWithDocumentWait(() => // adjust integration
             {
@@ -389,12 +390,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void SetCsvFileClipboardText(string filePath, bool hasHeader = false)
+        protected static void SetCsvFileClipboardText(string filePath)
         {
-            SetClipboardText(GetCsvFileText(filePath, hasHeader));
+            SetClipboardText(GetCsvFileText(filePath));
         }
 
-        protected static string GetCsvFileText(string filePath, bool hasHeader = false)
+        protected static string GetCsvFileText(string filePath)
         {
             string resultStr;
             if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
@@ -418,10 +419,6 @@ namespace pwiz.SkylineTestUtil
                     sb.AppendLine(fields.ToCsvLine());
                 }
                 resultStr = sb.ToString();
-            }
-            if (hasHeader)
-            {
-                resultStr = resultStr.Substring(resultStr.IndexOf('\n') + 1);
             }
             return resultStr;
         }
@@ -534,33 +531,31 @@ namespace pwiz.SkylineTestUtil
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
-            int waitCycles = millis / SLEEP_INTERVAL;
-
-            // Wait a little longer for stress test.
-            if (Program.StressTest)
-            {
-                waitCycles = waitCycles * 2;
-            }
+            var waitMultiplier = 1; // Various conditions may require longer timeouts
 
             if (System.Diagnostics.Debugger.IsAttached)
             {
                 // When debugger is attached, some vendor readers are S-L-O-W!
-                waitCycles *= 10;
+                waitMultiplier = 10;
+            }
+            else if (ExtensionTestContext.IsDebugMode || Helpers.RunningResharperAnalysis)
+            {
+                // Wait a little longer for debug build.
+                waitMultiplier = 4;
+            }
+            else if (Program.StressTest)
+            {
+                // Wait a little longer for stress test.
+                waitMultiplier = 2;
             }
 
             // Wait longer if running multiple processes simultaneously.
-            if (Program.UnitTestTimeoutMultiplier != 0)
+            if (Program.UnitTestTimeoutMultiplier > 0)
             {
-                waitCycles *= Program.UnitTestTimeoutMultiplier;
+                waitMultiplier *= Program.UnitTestTimeoutMultiplier;
             }
 
-            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
-            if (ExtensionTestContext.IsDebugMode)
-            {
-                waitCycles = waitCycles * 4;
-            }
-
-            return waitCycles;
+            return  (millis * waitMultiplier) / SLEEP_INTERVAL; // Return the wait cycle count
         }
 
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
@@ -786,12 +781,15 @@ namespace pwiz.SkylineTestUtil
         private static string GetOpenFormsString()
         {
             var result =  string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, GetTextForForm(form))));
-            if (SkylineWindow.Document != null)
+            RunUI(() =>
             {
-                var state = string.Join("\", \"", SkylineWindow.Document.NonLoadedStateDescriptions);
-                if (!string.IsNullOrEmpty(state))
-                   result += " Also, document is not fully loaded: \"" + state + "\"";
-            }
+                if (SkylineWindow.DocumentUI != null)
+                {
+                    var state = string.Join("\", \"", SkylineWindow.DocumentUI.NonLoadedStateDescriptions);
+                    if (!string.IsNullOrEmpty(state))
+                        result += " Also, SkylineWindow.DocumentUI is not fully loaded: \"" + state + "\"";
+                }
+            });
             // Without line numbers, this isn't terribly useful.  Disable for now.
             // result += GetAllThreadsStackTraces();
             return result;
@@ -1203,7 +1201,7 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout);
+                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
             }
             else
             {
@@ -1670,17 +1668,17 @@ namespace pwiz.SkylineTestUtil
 
         private string AuditLogEntryToString(AuditLogEntry entry)
         {
-            var result = string.Format("Undo Redo : {0}\r\n", entry.UndoRedo);
-            result += string.Format("Summary   : {0}\r\n", entry.Summary);
-            result += "All Info  :\r\n";
+            var result = new StringBuilder(string.Format("Undo Redo : {0}\r\n", entry.UndoRedo));
+            result.Append(string.Format("Summary   : {0}\r\n", entry.Summary));
+            result.Append("All Info  :\r\n");
 
             foreach (var allInfoItem in entry.AllInfo)
-                result += allInfoItem + "\r\n";
+                result.AppendLine(allInfoItem.ToString());
 
             if (entry.ExtraInfo != null)
-                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType));
+                result.Append(string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType)));
 
-            return result;
+            return result.ToString();
         }
 
         private void WaitForSkyline()
@@ -1763,7 +1761,6 @@ namespace pwiz.SkylineTestUtil
             if (null != SkylineWindow)
             {
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
-                NormalizedValueCalculatorVerifier.VerifyRatioCalculations(SkylineWindow.Document);
             }
 
             if (doClipboardCheck)
@@ -1970,12 +1967,15 @@ namespace pwiz.SkylineTestUtil
 
         public void FindNode(string searchText)
         {
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true);
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
+            var findDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+            RunUI(() => findDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true));
+            SkylineWindow.BeginInvoke((Action) findDlg.FindNext);
+            WaitForConditionUI(5*1000, () => SkylineWindow.SelectedNode.Text.Contains(searchText) || FindOpenForm<MessageDlg>() != null);
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+                Assert.Fail(TextUtil.LineSeparate("Unexpected message form with the text:", messageDlg.Message));
+            RunUI(() => AssertEx.Contains(SkylineWindow.SelectedNode.Text, searchText));
+            OkDialog(findDlg, findDlg.Close);
         }
 
         protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
@@ -2126,6 +2126,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
+        {
+            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
+            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            Assert.IsTrue(match.Success);
+            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
+            if (sign == "+") sign = string.Empty;
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+        }
+
         #region Modification helpers
 
         public static PeptideSettingsUI ShowPeptideSettings()
@@ -2223,7 +2233,16 @@ namespace pwiz.SkylineTestUtil
             LockMassParameters lockMassParameters = null)
         {
             var docBefore = SkylineWindow.Document;
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(docBefore))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
                {
@@ -2284,7 +2303,16 @@ namespace pwiz.SkylineTestUtil
 
         public void ImportResultsFiles(IEnumerable<MsDataFileUri> fileNames, int waitForLoadSeconds = 420)
         {
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
             string prefix = fileNames.Select(f => f.GetFileName()).GetCommonPrefix();

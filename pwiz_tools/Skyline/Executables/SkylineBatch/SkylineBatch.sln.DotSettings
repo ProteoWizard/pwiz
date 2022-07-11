@@ -3,4 +3,6 @@
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=LocalizableElement/@EntryIndexedValue">HINT</s:String>
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=NonReadonlyMemberInGetHashCode/@EntryIndexedValue">HINT</s:String>
 	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=NotOverriddenInSpecificCulture/@EntryIndexedValue">HINT</s:String>
-	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ResxNotResolved/@EntryIndexedValue">HINT</s:String></wpf:ResourceDictionary>
+	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=ResxNotResolved/@EntryIndexedValue">HINT</s:String>
+	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=UnusedMethodReturnValue_002EGlobal/@EntryIndexedValue">HINT</s:String>
+	<s:String x:Key="/Default/CodeInspection/Highlighting/InspectionSeverities/=UnusedMethodReturnValue_002ELocal/@EntryIndexedValue">HINT</s:String></wpf:ResourceDictionary>

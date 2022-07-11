@@ -94,7 +94,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
                 if (testloop < 2)
                     DebugLog.Info("lockmass {0} load time = {1}", (testloop == 0) ? "corrected" : "uncorrected", loadStopwatch.ElapsedMilliseconds);
-
+                document = ResultsUtil.ClearFileImportTimes(document);
                 if (testloop == 0)
                 {
                     corrected = document;

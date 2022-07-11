@@ -22,6 +22,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -144,6 +145,10 @@ namespace pwiz.SkylineTestFunctional
             TestAnnotations(new[] { y4 });
 
             TestScale(516, 520, 0, 80);
+
+            var noVendorCentroidedMessage = ShowDialog<MessageDlg>(() =>
+                SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided));
+            OkDialog(noVendorCentroidedMessage, noVendorCentroidedMessage.OkDialog);
 
             //Check the annotation functionality if we run in onscreen mode
             SetShowAnnotations(true);

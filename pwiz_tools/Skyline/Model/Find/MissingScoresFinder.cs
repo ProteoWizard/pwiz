@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Find
             var nodePep = bookmarkEnumerator.CurrentDocNode as PeptideDocNode;
             if (nodePep == null)
                 return null;
-            if (bookmarkEnumerator.CurrentChromInfo == null)
+            if (bookmarkEnumerator.ResultsIndex < 0)
             {
                 _isLastNodeMatch = IsMatch(nodePep);
                 if (_isLastNodeMatch)
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Find
 
         private bool IsMatch(ChromInfo chromInfo, PeptideDocNode nodePep)
         {
-            var key = new PeakTransitionGroupIdKey(nodePep.Id.GlobalIndex, chromInfo.FileId.GlobalIndex);
+            var key = new PeakTransitionGroupIdKey(nodePep.Peptide, chromInfo.FileId);
             if (!_featureDictionary.ContainsKey(key))
                 return false;
             var listFeatures = _featureDictionary[key];

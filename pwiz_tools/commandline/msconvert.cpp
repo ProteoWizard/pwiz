@@ -213,6 +213,7 @@ Config parseCommandLine(int argc, char** argv)
     string runIndexSet;
     bool detailedHelp = false;
     string helpForFilter;
+    bool showExamples = false;
 
     pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
 
@@ -334,7 +335,7 @@ Config parseCommandLine(int argc, char** argv)
             ": write selected reaction monitoring as spectra, not chromatograms")
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
-            ": write all drift bins/scans in a frame/block as one spectrum instead of individual spectra")
+            ": write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra")
         ("acceptZeroLengthSpectra",
             po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")
@@ -351,7 +352,7 @@ Config parseCommandLine(int argc, char** argv)
             po::value<bool>(&config.stripVersionFromSoftware)->zero_tokens(),
             ": if true, software elements will be stripped of version information, so the same file converted with different versions will produce the same mzML")
         ("singleThreaded",
-            po::value<boost::tribool>(&config.singleThreaded)->zero_tokens()->default_value(boost::indeterminate),
+            po::value<boost::tribool>(&config.singleThreaded)->implicit_value(true)->default_value(boost::indeterminate),
             ": if true, reading and writing spectra will be done on a single thread")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
@@ -359,6 +360,9 @@ Config parseCommandLine(int argc, char** argv)
         ("help-filter",
             po::value<string>(&helpForFilter),
             ": name of a single filter to get detailed help for")
+        ("show-examples",
+            po::value<bool>(&showExamples)->zero_tokens(),
+            ": show examples of how to run msconvert.exe")
         ;
 
     // handle positional arguments
@@ -391,14 +395,8 @@ Config parseCommandLine(int argc, char** argv)
     {
         usage << SpectrumListFactory::usage(helpForFilter) << endl;
     }
-    else
+    else if (showExamples)
     {
-        // append options description to usage string
-        usage << od_config;
-
-        // extra usage
-        usage << SpectrumListFactory::usage(detailedHelp, "run this command with --help to see more detail", consoleBounds.first) << endl;
-
         usage << "Examples:\n"
               << endl
               << "# convert data.RAW to data.mzML\n"
@@ -461,9 +459,18 @@ Config parseCommandLine(int argc, char** argv)
               << "filter=\"index [3,7]\"\n"
               << "filter=\"precursorRecalculation\"\n"
               << endl
-              << endl
+              << endl;
+    }
+    else
+    {
+        // append options description to usage string
+        usage << od_config;
 
-              << "Questions, comments, and bug reports:\n"
+        // extra usage
+        usage << SpectrumListFactory::usage(detailedHelp, "(run this program with --help to see details for all filters)", consoleBounds.first);
+        usage << ChromatogramListFactory::usage(detailedHelp, nullptr, consoleBounds.first) << endl;
+
+        usage << "Questions, comments, and bug reports:\n"
               << "https://github.com/ProteoWizard\n"
               << "support@proteowizard.org\n"
               << "\n"
@@ -471,7 +478,7 @@ Config parseCommandLine(int argc, char** argv)
               << "Build date: " << __DATE__ << " " << __TIME__ << endl;
     }
 
-    if ((argc <= 1) || detailedHelp || !helpForFilter.empty())
+    if ((argc <= 1) || detailedHelp || !helpForFilter.empty() || showExamples)
         throw usage_exception(usage.str().c_str());
 
     // parse config file if required
@@ -768,6 +775,10 @@ class UserFeedbackIterationListener : public IterationListener
         lastIterationIndex = updateMessage.iterationIndex;
         lastIterationCount = updateMessage.iterationCount;
 
+        // spectrum and chromatogram lists both iterate; put them on different lines
+        if (messageIsChanged || (updateMessage.message.empty() && updateMessage.iterationIndex + 1 >= updateMessage.iterationCount))
+            *os_ << endl;
+
         stringstream updateString;
         if (updateMessage.message.empty())
             updateString << updateMessage.iterationIndex + 1 << "/" << updateMessage.iterationCount;
@@ -778,9 +789,6 @@ class UserFeedbackIterationListener : public IterationListener
         updateString << string(longestMessage - updateString.tellp(), ' '); // add whitespace to erase all of the previous line
         *os_ << updateString.str() << "\r" << flush;
 
-        // spectrum and chromatogram lists both iterate; put them on different lines
-        if (messageIsChanged || (updateMessage.message.empty() && updateMessage.iterationIndex+1 >= updateMessage.iterationCount))
-            *os_ << endl;
         return Status_Ok;
     }
 };
@@ -841,14 +849,14 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     {
         MSDataMerger msd(msdList);
 
-        *os_ << "calculating source file checksums" << endl;
-        calculateSHA1Checksums(msd);
-
         if (!config.contactFilename.empty())
             addContactInfo(msd, config.contactFilename);
 
         SpectrumListFactory::wrap(msd, config.filters, pILR);
         ChromatogramListFactory::wrap(msd, config.chromatogramFilters, pILR);
+
+        *os_ << "calculating source file checksums" << endl;
+        calculateSHA1Checksums(msd);
 
         // if config.singleThreaded is not explicitly set, determine whether to use worker threads by querying SpectrumListWrappers
         Config configCopy(config);
@@ -857,7 +865,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         configCopy.writeConfig.useWorkerThreads = !bool(config.singleThreaded);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
-        *os_ << "writing output file: " << outputFilename << endl;
+        *os_ << endl << "writing output file: " << outputFilename << endl;
 
         if (config.stripLocationFromSourceFiles)
             stripSourceFileLocation(msd);
@@ -914,15 +922,13 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             throw user_error("[msconvert] No runs correspond to the specified indices");
     }
 
+    int failedRuns = 0;
+
     for (size_t i=0; i < msdList.size(); ++i)
     {
         MSData& msd = *msdList[i];
         try
         {
-            *os_ << "calculating source file checksums" << endl;
-            os_->flush();
-            calculateSHA1Checksums(msd);
-
             // process the data 
 
             if (!config.contactFilename.empty())
@@ -930,6 +936,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
             SpectrumListFactory::wrap(msd, config.filters, pILR);
             ChromatogramListFactory::wrap(msd, config.chromatogramFilters, pILR);
+
+            *os_ << "calculating source file checksums" << endl;
+            calculateSHA1Checksums(msd);
 
             // if config.singleThreaded is not explicitly set, determine whether to use worker threads by querying SpectrumListWrappers
             Config configCopy(config);
@@ -940,7 +949,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
             //*os_ << "writing output file" << (configCopy.writeConfig.useWorkerThreads ? " (multithreaded)" : "") << ": " << outputFilename << endl;
-            *os_ << "writing output file: " << outputFilename << endl;
+            *os_ << endl << "writing output file: " << outputFilename << endl;
 
             if (config.stripLocationFromSourceFiles)
                 stripSourceFileLocation(msd);
@@ -966,10 +975,14 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         }
         catch (exception& e)
         {
-            cerr << "Error writing run " << (i+1) << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
+            cerr << "Error writing run " << (i+1) << ":\n" << e.what() << endl;
+            ++failedRuns;
         }
     }
     *os_ << endl;
+
+    if (failedRuns > 0)
+        throw runtime_error("Conversion failed for " + toString(failedRuns) + " runs in " + bfs::path(filename).leaf().string() + ".");
 }
 
 

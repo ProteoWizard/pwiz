@@ -9,7 +9,7 @@ Summary   : スペクトルライブラリ「DIA-QE-tutorial」が追加され�
 All Info  :
 スペクトルライブラリ「DIA-QE-tutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："interact.pep.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "interact.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0.95" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドは"Biognosys-11 (iRT-C18)"です
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
@@ -18,7 +18,11 @@ All Info  :
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "interact.pep.xml"
+    {
+        File = "interact.pep.xml",
+        Score type = "PeptideProphet confidence",
+        Score threshold = "0.95"
+    }
 ],
 iRT標準ペプチド = "Biognosys-11 (iRT-C18)",
 曖昧な一致を含める = 偽,
@@ -45,6 +49,9 @@ All Info  :
 ペプチド検索のインポート>トランジション設定を行う>イオン許容誤差は"0.05"です
 ペプチド検索のインポート>トランジション設定を行う>最小プロダクトイオンを選択は"6"です
 ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンを選択は"6"です
+ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンの選択開始は"イオン3"です
+ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンの選択終了は"最後のイオン"です
+ペプチド検索のインポート>トランジション設定を行う>最大イオンm/zは"2000"です
 ペプチド検索のインポート>フルスキャン設定を行う>取得メソッドは"DIA"です
 ペプチド検索のインポート>フルスキャン設定を行う>単離スキームは"ETH QE (18 variable)"です
 ペプチド検索のインポート>フルスキャン設定を行う>単離スキーム>事前に指定した単離ウィンドウ：{ 開始 = "401", 終了 = "429", マージン = "1" }が含まれています
@@ -73,6 +80,16 @@ All Info  :
 ペプチド検索のインポート>FASTAをインポート>デコイ生成法は"シークエンスのシャッフル"です
 ペプチド検索のインポート>FASTAをインポート>ターゲット毎のデコイは"1"です
 ペプチド検索のインポート>FASTAをインポート>mProphetのモデルを自動的にトレーニングするは真です
+ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
+ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Removed (peptides must be unique to a single protein)"です
+ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"2"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"3991"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"13439"です
+ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"57113"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"2037"です
+ペプチド検索のインポート>Associate Proteins>Peptide targetsは"10980"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -95,7 +112,10 @@ Extra Info: クロマトグラムを抽出 =
     除外にDIAプリカーサーウィンドウを使用する = 真,
     イオン許容誤差 = "0.05",
     最小プロダクトイオンを選択 = "6",
-    プロダクトイオンを選択 = "6"
+    プロダクトイオンを選択 = "6",
+    プロダクトイオンの選択開始 = "イオン3",
+    プロダクトイオンの選択終了 = "最後のイオン",
+    最大イオンm/z = "2000"
 },
 フルスキャン設定を行う = 
 {
@@ -211,6 +231,19 @@ FASTAをインポート =
     デコイ生成法 = "シークエンスのシャッフル",
     ターゲット毎のデコイ = "1",
     mProphetのモデルを自動的にトレーニングする = 真
+},
+Associate Proteins = 
+{
+    Group proteins = 偽,
+    Find minimal protein list = 偽,
+    Remove subset proteins = 偽,
+    Shared peptides option = "Removed (peptides must be unique to a single protein)",
+    Min peptides per protein = "2",
+    Proteins mapped = "3991",
+    Peptides mapped = "13439",
+    Proteins unmapped = "57113",
+    Protein targets = "2037",
+    Peptide targets = "10980"
 }
 
 Undo Redo : 注釈が変更されました

@@ -245,6 +245,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return TryGetPrecursorCalc(labelType, mods) != null;
         }
 
+        public bool SupportsPrecursor(TransitionGroupDocNode transitionGroup, ExplicitMods mods)
+        {
+            if (transitionGroup.IsLight)
+            {
+                return true;
+            }
+            if (transitionGroup.IsCustomIon)
+            {
+                return PeptideSettings.Modifications.GetHeavyModificationTypes().Contains(transitionGroup.LabelType);
+            }
+            return HasPrecursorCalc(transitionGroup.LabelType, mods);
+        }
+
         public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
         {
             var precursorCalc =  TryGetPrecursorCalc(labelType, mods);
@@ -740,6 +753,44 @@ namespace pwiz.Skyline.Model.DocSettings
                     }
                 }
             }
+            return false;
+        }
+
+
+        /// <summary>
+        /// Returns true if the settings have changed in a way that might require
+        /// all of the results text in the SequenceTree to be updated.
+        /// </summary>
+        public bool IsGlobalRatioChange(SrmSettings other)
+        {
+            if (PeptideSettings.Quantification.SimpleRatios != other.PeptideSettings.Quantification.SimpleRatios)
+            {
+                return true;
+            }
+
+            if (_cachedPeptideStandards == null)
+            {
+                return other._cachedPeptideStandards != null;
+            }
+
+            if (other._cachedPeptideStandards == null)
+            {
+                return true;
+            }
+
+            foreach (var entry in _cachedPeptideStandards)
+            {
+                if (!other._cachedPeptideStandards.TryGetValue(entry.Key, out var otherValue))
+                {
+                    return true;
+                }
+
+                if (!Equals(entry.Value, otherValue))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -1981,6 +2032,10 @@ namespace pwiz.Skyline.Model.DocSettings
                         MeasuredResults.Chromatograms.Select(c => c.RestoreLegacyUriParameters()).ToArray()));
                 }
             }
+            if (documentFormat < DocumentFormat.VERSION_21_11)
+            {
+                result = result.ChangeMeasuredResults(result.MeasuredResults?.ClearImportTimes());
+            }
             if (documentFormat < DocumentFormat.TRANSITION_SETTINGS_ION_MOBILITY &&
                 !TransitionIonMobilityFiltering.IsNullOrEmpty(result.TransitionSettings.IonMobilityFiltering))
             {
@@ -1991,7 +2046,33 @@ namespace pwiz.Skyline.Model.DocSettings
                     result.TransitionSettings.ChangeIonMobilityFiltering(TransitionIonMobilityFiltering.EMPTY));
             }
 
+            if (documentFormat < DocumentFormat.VERSION_21_12)
+            {
+                result = result.ChangeTransitionSettings(transitionSettings =>
+                    transitionSettings.ChangeIntegration(
+                        transitionSettings.Integration.ChangeSynchronizedIntegration(null, false,
+                            Array.Empty<string>())));
+            }
+
             return result;
+        }
+
+        public ChromatogramGroupInfo LoadChromatogramGroup(ChromatogramSet chromatogramSet, MsDataFileUri dataFilePath, PeptideDocNode peptide,
+            TransitionGroupDocNode transitionGroup)
+        {
+            if (!HasResults)
+            {
+                return null;
+            }
+
+            if (!MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
+                (float) TransitionSettings.Instrument.MzMatchTolerance, out var infoSet))
+            {
+                return null;
+            }
+
+            return infoSet.FirstOrDefault(chromatogramGroupInfo =>
+                Equals(chromatogramGroupInfo.FilePath, dataFilePath));
         }
 
         #region Implementation of IXmlSerializable
@@ -2712,6 +2793,15 @@ namespace pwiz.Skyline.Model.DocSettings
             // Force update if the bulk import has just completed
             else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
+
+            if (!settingsNew.PeptideSettings.Libraries.IsLoaded)
+            {
+                // If the libraries have not been loaded then we will not be able to determine which children
+                // should be chosen
+                DiffPeptides = false;
+                DiffTransitionGroups = false;
+                DiffTransitions = false;
+            }
         }
 
         private static bool EqualExceptAnnotations(MeasuredResults measuredResultsNew, MeasuredResults measuredResultsOld)
@@ -2730,6 +2820,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (!ArrayUtil.EqualsDeep(measuredResultsNew.CachedFilePaths.ToArray(),
                                       measuredResultsOld.CachedFilePaths.ToArray()))
+            {
+                return false;
+            }
+            if (!measuredResultsNew.CachedFileInfos.Select(info => info.ImportTime)
+                .SequenceEqual(measuredResultsOld.CachedFileInfos.Select(info => info.ImportTime)))
             {
                 return false;
             }

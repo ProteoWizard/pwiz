@@ -135,9 +135,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
+    <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />
+    <Compile Include="DiaUmpireVendorFormatTest.cs" />
     <Compile Include="DiaUmpireTutorialTest.cs" />
     <Compile Include="DiaSwathTutorialTest.cs" />
+    <Compile Include="PerfAssociateProteinsTest.cs" />
+    <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
     <Compile Include="ImportMassOnlyMoleculesTest.cs" />
@@ -171,6 +175,7 @@
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="PerfWatersSonarTest.cs" />
+    <Compile Include="OrbiPrmTutorialTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
     <Compile Include="SmallMolLibrariesTutorialTest.cs" />
   </ItemGroup>
@@ -243,6 +248,7 @@
     <None Include="DiaSwathTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
+    <None Include="OrbiPrmViews.zip" />
     <None Include="PerfImportHundredsOfReplicatesTest.zip" />
     <None Include="HiResMetabolomicsViews.zip" />
     <None Include="PerfMs3ChromatogramTest.zip" />

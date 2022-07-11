@@ -88,9 +88,8 @@ namespace pwiz.SkylineTestData.Results
             IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType driftWindowWidthCalcType,
             RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules = RefinementSettings.ConvertToSmallMoleculesMode.none)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -127,7 +126,7 @@ namespace pwiz.SkylineTestData.Results
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
                     AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
+                        tolerance, out chromGroupInfo));
                     AssertEx.AreEqual(1, chromGroupInfo.Length, testModeStr + " chromGroupInfo.Length");
                     var chromGroup = chromGroupInfo[0];
                     int expectedPeaks;

@@ -1,4 +1,6 @@
-﻿namespace AutoQC
+﻿using System;
+
+namespace AutoQC
 {
     partial class MainForm
     {
@@ -156,7 +158,7 @@
             this.listViewConfigs.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listViewConfigs_ItemCheck);
             this.listViewConfigs.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewConfigs_PreventItemSelectionChanged);
             this.listViewConfigs.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.HandleEditEvent);
-            this.listViewConfigs.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseDown);
+            this.listViewConfigs.MouseUp += new System.Windows.Forms.MouseEventHandler(this.listViewConfigs_MouseUp);
             // 
             // columnName2
             // 

@@ -56,7 +56,6 @@ namespace pwiz.Skyline.Controls.Graphs
             void OnDocumentChanged(SrmDocument oldDocument, SrmDocument newDocument);
             void OnActiveLibraryChanged();
             void OnResultsIndexChanged();
-            void OnNormalizeOptionChanged();
 
             void OnUpdateGraph();
 
@@ -95,6 +94,8 @@ namespace pwiz.Skyline.Controls.Graphs
             void ActivateSpectrum();
 
             void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousPt, IController controller);
+
+            NormalizeOption AreaNormalizeOption { get; set; }
         }
 
         private class DefaultStateProvider : IStateProvider
@@ -111,6 +112,12 @@ namespace pwiz.Skyline.Controls.Graphs
             public PeptideGraphInfo GetPeptideGraphInfo(DocNode docNode)
             {
                 return null;
+            }
+
+            public NormalizeOption AreaNormalizeOption
+            {
+                get => NormalizeOption.NONE;
+                set { }
             }
         }
 
@@ -136,8 +143,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
-
-        private NormalizeOption _normalizeOption;
 
         public GraphTypeSummary Type { get; set; }
 
@@ -205,22 +210,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 _controller.OnResultsIndexChanged();
         }
 
-        /// <summary>
-        /// Not all summary graphs care about this value, but since the
-        /// peak area summary graph uses this class directly, this is the
-        /// only way to get it the ratio index value.
-        /// </summary>
         public NormalizeOption NormalizeOption
         {
-            get { return _normalizeOption; }
+            get { return StateProvider.AreaNormalizeOption; }
             set
             {
-                if (_normalizeOption != value)
-                {
-                    _normalizeOption = value;
-
-                    _controller.OnNormalizeOptionChanged();
-                }
+                StateProvider.AreaNormalizeOption = value;
             }
         }
 
@@ -274,7 +269,12 @@ namespace pwiz.Skyline.Controls.Graphs
         internal IEnumerable<SummaryGraphPane> GraphPanes
         {
             get { return graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>(); }
-            set { graphControl.MasterPane.PaneList.Clear(); graphControl.MasterPane.PaneList.AddRange(value); }
+            set
+            {
+                graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>().ForEach(panel => panel.OnClose(EventArgs.Empty));
+                graphControl.MasterPane.PaneList.Clear();
+                graphControl.MasterPane.PaneList.AddRange(value);
+            }
         }
 
         public bool TryGetGraphPane<TPane>(out TPane pane) where TPane : class
@@ -386,6 +386,12 @@ namespace pwiz.Skyline.Controls.Graphs
             if (sender != null && e.Button == sender.PanButtons && ModifierKeys == sender.PanModifierKeys)
                 graphPane.EnsureYMin();
             return graphPane.HandleMouseMoveEvent(sender, e);
+        }
+
+        private void graphControl_MouseOutEvent(object sender, EventArgs e)
+        {
+            foreach(var pane in graphControl.MasterPane.PaneList)
+                (pane as SummaryGraphPane)?.HandleMouseOutEvent(sender, e);
         }
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)

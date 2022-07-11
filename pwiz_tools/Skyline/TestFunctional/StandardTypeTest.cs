@@ -62,9 +62,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void RunTestStandardType(bool asSmallMolecules)
         {
-            if (asSmallMolecules && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules && SkipSmallMoleculeTestVersions())
             {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -344,9 +343,9 @@ namespace pwiz.SkylineTestFunctional
                                 string labelType = row.Cells[iLabelType].Value.ToString();
                                 float precursorRatio = (float)(double)row.Cells[iPrecRatio].Value;
                                 if (string.Equals(labelType, IsotopeLabelType.light.Name))
-                                    Assert.AreEqual(peptideLightRatio, precursorRatio);
+                                    Assert.AreEqual(peptideLightRatio, precursorRatio, .000001);
                                 else
-                                    Assert.AreEqual(peptideHeavyRatio, precursorRatio);
+                                    Assert.AreEqual(peptideHeavyRatio.Value, precursorRatio, .000001);
                                 if (iPeptide == SELECTED_PEPTIDE_INDEX)
                                 {
                                     Assert.AreEqual(lightValues[i], peptideLightRatio);

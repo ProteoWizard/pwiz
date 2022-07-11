@@ -807,7 +807,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
                              int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect,
-                             PeptideUniquenessConstraint peptideUniquenessConstraint)
+                             PeptideUniquenessConstraint peptideUniquenessConstraint,
+                             ProteinAssociation.ParsimonySettings parsimonySettings)
         {
             Exclusions = exclusions;
             ExcludeNTermAAs = excludeNTermAAs;
@@ -815,6 +816,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxPeptideLength = maxPeptideLength;
             AutoSelect = autoSelect;
             PeptideUniqueness = peptideUniquenessConstraint;
+            ParsimonySettings = parsimonySettings;
             DoValidate();
         }
 
@@ -846,6 +848,9 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
+        [TrackChildren(ignoreName: true)]
+        public ProteinAssociation.ParsimonySettings ParsimonySettings { get; private set; }
+
         #region Property change methods
 
         public PeptideFilter ChangeExcludeNTermAAs(int prop)
@@ -876,6 +881,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideFilter ChangePeptideUniqueness(PeptideUniquenessConstraint prop)
         {
             return ChangeProp(ImClone(this), im => im.PeptideUniqueness = prop);
+        }
+
+        public PeptideFilter ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ParsimonySettings = prop);
         }
         #endregion
 
@@ -1136,6 +1146,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    obj.MaxPeptideLength == MaxPeptideLength &&
                    obj.AutoSelect.Equals(AutoSelect) &&
                    obj.PeptideUniqueness.Equals(PeptideUniqueness) &&
+                   Equals(obj.ParsimonySettings, ParsimonySettings) &&
                    ArrayUtil.EqualsDeep(obj._exclusions, _exclusions);
         }
 
@@ -1157,6 +1168,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 result = (result*397) ^ _exclusions.GetHashCodeDeep();
                 result = (result*397) ^ PeptideUniqueness.GetHashCode();
+                result = (result*397) ^ ParsimonySettings?.GetHashCode() ?? 0;
                 return result;
             }
         }
@@ -1263,6 +1275,25 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<StaticMod> StaticModifications
         {
             get { return _modifications[0].Modifications; }
+        }
+
+        /// <summary>
+        /// Returns list of mods with unique formulas
+        /// </summary>
+        public ImmutableList<FragmentLoss> StaticModsDeduped
+        {
+            get
+            {
+                var modLosses = StaticModifications.SelectMany(mod => mod.Losses ?? (new List<FragmentLoss>())).ToList();
+                //Deduplicate the losses on formula
+                modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+                return ImmutableList.ValueOf(modLosses);
+            }
+        }
+
+        public ImmutableList<string> StaticModsFormulae
+        {
+            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.FormulaNoNull)); }
         }
 
         public bool HasVariableModifications
@@ -2679,25 +2710,19 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public PeptideIntegration(PeakScoringModelSpec peakScoringModel)
         {
+            AutoTrain = AutoTrainType.none;
             PeakScoringModel = peakScoringModel ?? LegacyScoringModel.DEFAULT_UNTRAINED_MODEL;
+            ScoreQValueMap = ScoreQValueMap.EMPTY;
         }
 
-        public bool AutoTrain { get; private set; }
+        public enum AutoTrainType { none, default_model, mprophet_model }
+
+        public AutoTrainType AutoTrain { get; private set; }
+        public bool IsAutoTrain => !Equals(AutoTrain, AutoTrainType.none);
         [TrackChildren]
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
-        public bool IsSerializable { get { return PeakScoringModel.IsTrained; } }
+        public bool IsSerializable { get { return IsAutoTrain || PeakScoringModel.IsTrained; } }
         public MProphetResultsHandler ResultsHandler { get; private set; }
-
-        public static bool AutoTrainCompleted(SrmDocument current, SrmDocument previous)
-        {
-            if (current == null || previous == null)
-                return false;
-                    
-            var curIntegration = current.Settings.PeptideSettings.Integration;
-            var prevIntegration = previous.Settings.PeptideSettings.Integration;
-        
-            return !curIntegration.AutoTrain && !Equals(curIntegration.PeakScoringModel, LegacyScoringModel.DEFAULT_UNTRAINED_MODEL) && prevIntegration.AutoTrain;
-        }
 
         #region Property change methods
 
@@ -2706,7 +2731,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.PeakScoringModel = prop);
         }
 
-        public PeptideIntegration ChangeAutoTrain(bool prop)
+        public PeptideIntegration ChangeAutoTrain(AutoTrainType prop)
         {
             return ChangeProp(ImClone(this), im => im.AutoTrain = prop);
         }
@@ -2722,6 +2747,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     im.PeakScoringModel = prop.ScoringModel;
                 im.ResultsHandler = prop;
             });
+        }
+
+        public ScoreQValueMap ScoreQValueMap { get; private set; }
+
+        public PeptideIntegration ChangeScoreQValueMap(ScoreQValueMap scoreQValueMap)
+        {
+            return ChangeProp(ImClone(this), im => im.ScoreQValueMap = scoreQValueMap);
         }
 
         #endregion
@@ -2756,7 +2788,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
-            AutoTrain = reader.GetBoolAttribute(ATTR.auto_train);
+            if (Enum.TryParse<AutoTrainType>(reader.GetAttribute(ATTR.auto_train), out var autoTrain))
+                AutoTrain = autoTrain;
 
             // Consume tag
             if (reader.IsEmptyElement)
@@ -2775,8 +2808,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write child elements
-            writer.WriteAttribute(ATTR.auto_train, AutoTrain);
-            if (IsSerializable)
+            if (IsAutoTrain)
+                writer.WriteAttribute(ATTR.auto_train, AutoTrain);
+            if (PeakScoringModel.IsTrained)
             {
                 var helper = XmlUtil.FindHelper(PeakScoringModel, PEAK_SCORING_MODEL_SPEC_HELPERS);
                 if (helper == null)
@@ -2791,7 +2825,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private bool Equals(PeptideIntegration other)
         {
-            return AutoTrain == other.AutoTrain && Equals(PeakScoringModel, other.PeakScoringModel);
+            return AutoTrain == other.AutoTrain && Equals(PeakScoringModel, other.PeakScoringModel) &&
+                   Equals(ScoreQValueMap, other.ScoreQValueMap);
         }
 
         public override bool Equals(object obj)
@@ -2806,7 +2841,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                return (AutoTrain.GetHashCode() * 397) ^ (PeakScoringModel != null ? PeakScoringModel.GetHashCode() : 0);
+                int result = AutoTrain.GetHashCode();
+                result = (result * 397) ^ (PeakScoringModel != null ? PeakScoringModel.GetHashCode() : 0);
+                result = (result * 397) ^ ScoreQValueMap.GetHashCode();
+                return result;
             }
         }
 

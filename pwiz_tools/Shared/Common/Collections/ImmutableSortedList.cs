@@ -288,7 +288,7 @@ namespace pwiz.Common.Collections
 
 
         #region object overrides
-		public bool Equals(ImmutableSortedList<TKey, TValue> other)
+        public bool Equals(ImmutableSortedList<TKey, TValue> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;

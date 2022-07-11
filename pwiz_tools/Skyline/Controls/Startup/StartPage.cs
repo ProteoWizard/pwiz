@@ -339,6 +339,17 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new TutorialActionBoxControl
                 {
+                    Caption = TutorialTextResources.DDASearch_Caption,
+                    Icon = TutorialImageResources.DDASearch_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.DDASearch_zip,
+                        TutorialLinkResources.DDSearch_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.MS1Filtering_Description
+                },
+                new TutorialActionBoxControl
+                {
                     Caption = TutorialTextResources.TargetedMSMS_Caption,
                     Icon = TutorialImageResources.TargetedMSMS_start,
                     EventAction = () => Tutorial(
@@ -369,6 +380,17 @@ namespace pwiz.Skyline.Controls.Startup
                         string.Empty
                     ),
                     Description = TutorialTextResources.DIA_SWATH_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.DIA_PASEF_Caption,
+                    Icon = TutorialImageResources.DIA_PASEF_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.DIA_PASEF_zip,
+                        TutorialLinkResources.DIA_PASEF_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.DIA_PASEF_Description
                 }
             };
             var tutorialSmallMoleculeBoxPanels = new Control[]
@@ -782,6 +804,12 @@ namespace pwiz.Skyline.Controls.Startup
                 TutorialLinkResources.LibraryExplorer_pdf,
                 string.Empty
                 );
+        }
+
+        public void ClickWizardAction(string actionName)
+        {
+            flowLayoutPanelWizard.Controls.Cast<ActionBoxControl>().First(c => Equals(c.Caption, actionName))
+                .EventAction();
         }
     }
 }

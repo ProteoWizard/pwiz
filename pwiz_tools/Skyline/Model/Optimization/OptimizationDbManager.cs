@@ -49,10 +49,6 @@ namespace pwiz.Skyline.Model.Optimization
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (previous == null)
-            {
-                return true;
-            }
             return !ReferenceEquals(GetOptimizationLibrary(document), GetOptimizationLibrary(previous));
         }
 

@@ -50,7 +50,8 @@ namespace pwiz.SkylineTestUtil
                         DestDirPath = DirectoryEx.GetUniqueName(DestDirPath);
                     }
 
-                    Helpers.TryTwice(() => Directory.Move(SrcDirPath, DestDirPath));
+                    Helpers.TryTwice(() => Directory.Move(SrcDirPath, DestDirPath),
+                        $@"Directory.Move({SrcDirPath}, {DestDirPath})");
                 }
             }
         }
@@ -64,10 +65,12 @@ namespace pwiz.SkylineTestUtil
             {
                 // Get rid of the tools directory created for this test
                 if (Directory.Exists(SrcDirPath))
-                    Helpers.TryTwice(() => Directory.Delete(SrcDirPath, true), 10, 1000); // More generous retry than default Helper.TryTwice: 10, with 1 sec pause
+                    Helpers.TryTwice(() => Directory.Delete(SrcDirPath, true), 10, 1000, // More generous retry than default Helper.TryTwice: 10, with 1 sec pause
+                        $@"Directory.Delete({SrcDirPath})");
                 // If there was an existing tools directory move it back
                 if (DestDirPath != null)
-                    Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath), 10, 1000);  // More generous retry than default Helper.TryTwice: 10, with 1 sec pause
+                    Helpers.TryTwice(() => Directory.Move(DestDirPath, SrcDirPath), 10, 1000,  // More generous retry than default Helper.TryTwice: 10, with 1 sec pause
+                        $@"Directory.Move({DestDirPath},{SrcDirPath})");
             }
         }
     }

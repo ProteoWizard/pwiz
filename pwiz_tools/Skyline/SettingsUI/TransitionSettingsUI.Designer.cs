@@ -562,6 +562,7 @@
             this.radioAllAndFiltered.Name = "radioAllAndFiltered";
             this.radioAllAndFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioAllAndFiltered, resources.GetString("radioAllAndFiltered.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioAllAndFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
@@ -570,6 +571,7 @@
             this.radioFiltered.Name = "radioFiltered";
             this.radioFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioFiltered, resources.GetString("radioFiltered.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -578,6 +580,7 @@
             this.radioAll.Name = "radioAll";
             this.radioAll.TabStop = true;
             this.helpTip.SetToolTip(this.radioAll, resources.GetString("radioAll.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioAll, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14

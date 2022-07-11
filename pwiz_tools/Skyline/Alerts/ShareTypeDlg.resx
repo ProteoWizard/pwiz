@@ -399,7 +399,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>5, 5, 5, 5</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterScreen</value>
+    <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Share Skyline Document</value>

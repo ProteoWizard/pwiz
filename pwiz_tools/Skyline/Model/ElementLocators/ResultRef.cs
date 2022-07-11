@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.ElementLocators
 {
@@ -75,19 +76,15 @@ namespace pwiz.Skyline.Model.ElementLocators
             return Name == chromatogramSet.Name;
         }
 
-        public ChromFileInfo FindChromFileInfo(SrmDocument document)
+        public int FindReplicateIndex(SrmDocument document)
         {
             var measuredResults = document.Settings.MeasuredResults;
             if (measuredResults == null)
             {
-                return null;
+                return -1;
             }
-            var chromatogramSet = measuredResults.Chromatograms.FirstOrDefault(chromSet => chromSet.Name == Name);
-            if (chromatogramSet == null)
-            {
-                return null;
-            }
-            return FindChromFileInfo(chromatogramSet);
+
+            return measuredResults.Chromatograms.IndexOf(chromatogramSet => chromatogramSet.Name == Name);
         }
 
         public ChromFileInfo FindChromFileInfo(ChromatogramSet chromatogramSet)

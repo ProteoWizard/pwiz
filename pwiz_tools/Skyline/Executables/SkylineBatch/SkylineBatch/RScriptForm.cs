@@ -11,10 +11,9 @@ namespace SkylineBatch
         private static string _lastChosenVersion;
 
         private readonly RDirectorySelector _rDirectorySelector;
-        private DownloadingFileControl _fileControl;
 
 
-        public RScriptForm(string currentPath, string currentVersion, PanoramaFile remoteFile, RDirectorySelector rDirectorySelector)
+        public RScriptForm(string currentPath, string currentVersion, PanoramaFile remoteFile, RDirectorySelector rDirectorySelector, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
         {
             InitializeComponent();
             Icon = Program.Icon();
@@ -35,14 +34,22 @@ namespace SkylineBatch
             Version = currentVersion ?? _lastChosenVersion;
             _rDirectorySelector = rDirectorySelector;
 
-            _fileControl = new DownloadingFileControl(Resources.RScriptForm_RScriptForm_R_script_file_path,
+            fileControl = new DownloadingFileControl(Resources.RScriptForm_RScriptForm_R_script_file_path,
                 Resources.RScriptForm_RScriptForm_R_Script, currentPath,
-                TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama");
-            _fileControl.Dock = DockStyle.Fill;
-            _fileControl.Show();
-            panelPath.Controls.Add(_fileControl);
-            
+                TextUtil.FILTER_R, remoteFile, false, "Download R script from Panorama", mainControl, 
+                new Action<SkylineBatchConfigManagerState>((newState) => State = newState),
+                new Func<SkylineBatchConfigManagerState>(() => State));
+            fileControl.Dock = DockStyle.Fill;
+            fileControl.Show();
+            panelPath.Controls.Add(fileControl);
+
+            State = state;
+
         }
+
+        public DownloadingFileControl fileControl;
+
+        public SkylineBatchConfigManagerState State { get; private set; }
 
         public string Version
         {
@@ -60,13 +67,14 @@ namespace SkylineBatch
             }
         }
 
-        public PanoramaFile RemoteFile => (PanoramaFile)_fileControl.Server;
+        public PanoramaFile RemoteFile => (PanoramaFile)fileControl.Server;
 
-        public string Path => _fileControl.Path;
+        public string Path => fileControl.Path;
 
         private void btnAddRLocation_Click(object sender, EventArgs e)
         {
-            _rDirectorySelector.ShowAddDirectoryDialog();
+            if (_rDirectorySelector.ShowAddDirectoryDialog(State))
+                State = _rDirectorySelector.State;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -81,7 +89,6 @@ namespace SkylineBatch
                 AlertDlg.ShowError(this, Program.AppName(), ex.Message);
                 return;
             }
-
             DialogResult = DialogResult.OK;
         }
         

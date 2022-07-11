@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Globalization;
 using System.Text;
@@ -73,7 +74,7 @@ namespace SkylineBatch
 
         public readonly SkylineSettings SkylineSettings;
 
-        public bool Enabled;
+        public readonly bool Enabled;
 
         public bool LogTestFormat;
 
@@ -137,6 +138,24 @@ namespace SkylineBatch
                 FileSettings, RefineSettings, ReportSettings, SkylineSettings);
         }
 
+        public IConfig UpdateRemoteFileSet(ImmutableDictionary<string, RemoteFileSource> remoteFileSources, out ImmutableDictionary<string, RemoteFileSource> newRemoteFileSources)
+        {
+            newRemoteFileSources = remoteFileSources;
+            var newMainSettings = MainSettings.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            var newReportSettings = ReportSettings.UpdateRemoteFileSet(newRemoteFileSources, out newRemoteFileSources);
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, newMainSettings,
+                FileSettings, RefineSettings, newReportSettings, SkylineSettings);
+        }
+
+        public IConfig ReplacedRemoteFileSource(RemoteFileSource existingSource, RemoteFileSource newSource, out bool replaced)
+        {
+            var newMainSettings = MainSettings.ReplacedRemoteFileSource(existingSource, newSource, out bool mainSettingsReplaced);
+            var newReportSettings = ReportSettings.ReplacedRemoteFileSource(existingSource, newSource, out bool reportsReplaced);
+            replaced = mainSettingsReplaced || reportsReplaced;
+            return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, newMainSettings,
+                FileSettings, RefineSettings, newReportSettings, SkylineSettings);
+        }
+
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
             return new SkylineBatchConfig(Name, Enabled, LogTestFormat, DateTime.Now, MainSettings,
@@ -170,6 +189,12 @@ namespace SkylineBatch
             DateTime modified;
             switch (version)
             {
+                case 21.12M:
+                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
+                case 21.11M:
+                    ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
+                    break;
                 case 21.1M:
                     ReadConfigVariables(reader, out name, out enabled, out logTestFormat, out modified);
                     break;
@@ -193,11 +218,25 @@ namespace SkylineBatch
             {
                 switch (version)
                 {
-                    case 21.1M:
+                    case 21.12M:
                         mainSettings = MainSettings.ReadXml(reader);
                         fileSettings = FileSettings.ReadXml(reader);
                         refineSettings = RefineSettings.ReadXml(reader);
                         reportSettings = ReportSettings.ReadXml(reader);
+                        skylineSettings = SkylineSettings.ReadXml(reader);
+                        break;
+                    case 21.11M:
+                        mainSettings = MainSettings.ReadXml(reader);
+                        fileSettings = FileSettings.ReadXml(reader);
+                        refineSettings = RefineSettings.ReadXml(reader);
+                        reportSettings = ReportSettings.ReadXml(reader);
+                        skylineSettings = SkylineSettings.ReadXml(reader);
+                        break;
+                    case 21.1M:
+                        mainSettings = MainSettings.ReadXmlVersion_21_1(reader);
+                        fileSettings = FileSettings.ReadXml(reader);
+                        refineSettings = RefineSettings.ReadXml(reader);
+                        reportSettings = ReportSettings.ReadXmlVersion_21_1(reader);
                         skylineSettings = SkylineSettings.ReadXml(reader);
                         break;
                     default: // 20.2M

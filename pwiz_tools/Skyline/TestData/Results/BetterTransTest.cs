@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -58,9 +57,8 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -87,7 +85,9 @@ namespace pwiz.SkylineTestData.Results
                     var docResults =
                         docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 3, 3);
                     var nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    double ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                    var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
+                    double ratio = normalizedValueCalculator.GetTransitionGroupValue(normalizedValueCalculator.GetFirstRatioNormalizationMethod(), 
+                        docResults.Molecules.First(), nodeGroup, nodeGroup.Results[0][0]).GetValueOrDefault();
                     // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) // Can't use labels without a formula
                         Assert.AreEqual(0.008, ratio, 0.001);

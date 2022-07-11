@@ -22,6 +22,7 @@ using System.Threading;
 using AutoQC;
 using SharedBatch;
 using SharedBatch.Properties;
+using SharedBatchTest;
 
 namespace AutoQCTest
 {
@@ -29,31 +30,34 @@ namespace AutoQCTest
     {
         public static string GetTestFilePath(string fileName)
         {
-            var currentPath = Directory.GetCurrentDirectory();
-            var autoQcTestPath = Path.GetDirectoryName(Path.GetDirectoryName(currentPath));
-            return autoQcTestPath + "\\Test\\" + fileName;
+            return Path.Combine(GetTestDataPath(), fileName);
         }
 
-        public static string CreateTestFolder(string folderName)
+        private static string GetTestDataPath()
         {
-            var newFolder = GetTestFilePath(folderName);
-            Directory.CreateDirectory(newFolder);
-            return newFolder;
+            return Path.Combine(GetAutoQcPath(), "TestData");
         }
 
-        public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty);
-        
-
-        public static MainSettings GetTestMainSettings(string changedVariable, string value)
+        private static string GetAutoQcPath()
         {
-            var skylineFilePath = GetTestFilePath("QEP_2015_0424_RJ.sky");
-            var folderToWatch = changedVariable.Equals("folderToWatch")? GetTestFilePath(value) : GetTestFilePath("Config");
+            // ExtensionTestContext looks for paths relative to Skyline.sln.
+            return ExtensionTestContext.GetProjectDirectory(@"Executables\AutoQC");
+        }
+
+        public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);
+
+        public static MainSettings GetTestMainSettings(string changedVariable, string value) => GetTestMainSettings(string.Empty, changedVariable, value);
+
+        public static MainSettings GetTestMainSettings(string skyFilePath, string changedVariable, string value)
+        {
+            var skylineFilePath = !string.Empty.Equals(skyFilePath) ? skyFilePath : GetTestFilePath("emptyTemplate.sky");
+            var folderToWatch = changedVariable.Equals("folderToWatch")? value : GetTestDataPath();
 
             var includeSubfolders = changedVariable.Equals("includeSubfolders") && value.Equals("true");
             var fileFilter = MainSettings.GetDefaultQcFileFilter();
             var resultsWindow = MainSettings.GetDefaultResultsWindow();
             var removeResults = MainSettings.GetDefaultRemoveResults();
-            var acquisitionTime = MainSettings.GetDefaultAcquisitionTime();
+            var acquisitionTime = "0"; // Set to 0 so that AutoQC does not wait to import results files
             var instrumentType = MainSettings.GetDefaultInstrumentType();
             
             
@@ -80,9 +84,9 @@ namespace AutoQCTest
             if (SkylineInstallations.FindSkyline())
             {
                 if (SkylineInstallations.HasSkyline)
-                    return new SkylineSettings(SkylineType.Skyline);
+                    return new SkylineSettings(SkylineType.Skyline, null);
                 if (SkylineInstallations.HasSkylineDaily)
-                    return new SkylineSettings(SkylineType.SkylineDaily);
+                    return new SkylineSettings(SkylineType.SkylineDaily, null);
             }
 
             return null;
@@ -101,7 +105,7 @@ namespace AutoQCTest
 
         public static Logger GetTestLogger(AutoQcConfig config)
         {
-            var logFile = GetTestFilePath("TestLogs\\AutoQC.log");
+            var logFile = Path.Combine(config.GetConfigDir(), "AutoQC.log");
             return new Logger(logFile, config.Name, false);
         }
 
@@ -129,8 +133,9 @@ namespace AutoQCTest
                 };
             }
 
-            foreach(var config in configs)
-                testConfigManager.UserAddConfig(config);
+            foreach (var config in configs)
+                testConfigManager.SetState(testConfigManager.State,
+                    testConfigManager.State.UserAddConfig(config, null));
             
             return testConfigManager;
         }
@@ -149,8 +154,7 @@ namespace AutoQCTest
         public static void InitializeSettingsImportExport()
         {
             ConfigList.Importer = AutoQcConfig.ReadXml;
-            AutoQC.Properties.Settings.Default.InstalledVersion = "1000.0.0.0";
-            // ConfigList.Version = "1000.0.0.0"; // Don't set this here.  We expect this to get set when AutoQcConfigManager is initialized
+            ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
     }
     

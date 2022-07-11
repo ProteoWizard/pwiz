@@ -187,7 +187,7 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
 
-        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+        public static string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
         public string RunAndPost()
         {
@@ -306,7 +306,8 @@ namespace SkylineNightly
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterDirBasis + ".zip");
-            const int attempts = 120; // Retry for up to two hours
+            const int retryTimeoutInMinutes = 10;
+            const int attempts = 120/ retryTimeoutInMinutes; // Retry for up to two hours
             var useLastSuccessfulInsteadOfLastFinished = false;
             string branchUrl = null;
             for (int i = 0; i < attempts; i++)
@@ -323,7 +324,7 @@ namespace SkylineNightly
                     }
 
                     // After 30 minutes, start trying for lastSuccessful build instead
-                    useLastSuccessfulInsteadOfLastFinished = i > 30; 
+                    useLastSuccessfulInsteadOfLastFinished = i > (30 / retryTimeoutInMinutes); 
                     if (useLastSuccessfulInsteadOfLastFinished)
                     {
                         Log("Exception while downloading SkylineTester: " + ex.Message + " (TeamCity outage? Retrying every 60 seconds for an additional 90 minutes, attempting download of lastSuccessful build instead of lastFinished.)");
@@ -332,7 +333,7 @@ namespace SkylineNightly
                     {
                         Log("Exception while downloading SkylineTester: " + ex.Message + " (Retrying every 60 seconds for 30 minutes.)");
                     }
-                    Thread.Sleep(60*1000);  // one minute
+                    Thread.Sleep(60*1000 * retryTimeoutInMinutes);
                     continue;
                 }
 
@@ -370,7 +371,7 @@ namespace SkylineNightly
                     {
                         QuitWithError("Unable to identify branch from Version.cpp in SkylineTester");
                     }
-                    Thread.Sleep(60 * 1000);  // one minute
+                    Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                 }
             }
             // Create ".skytr" file to execute nightly build in SkylineTester.
@@ -515,7 +516,8 @@ namespace SkylineNightly
                         retryTester = ParseTests(File.ReadAllText(logFile), false) == 0;
                     if (retryTester)
                     {
-                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes retrying.");
+                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes. Will try again in " + retryTimeoutInMinutes + " minutes.");
+                        Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                     }
                 }
             }
@@ -901,6 +903,12 @@ namespace SkylineNightly
                     xml = doc.ToString();
                 }
             }
+
+            if (string.IsNullOrEmpty(xml) || !xml.Contains("<test id"))
+            {
+                return @"No tests found in log. No results posted";
+            }
+
             string url;
             // Post to server.
             if (mode == RunMode.integration)
@@ -958,40 +966,41 @@ namespace SkylineNightly
                 wr.KeepAlive = true;
                 wr.Credentials = CredentialCache.DefaultCredentials;
 
-                SetCSRFToken(wr, LogFileName);
-
-                var rs = wr.GetRequestStream();
-
-                rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
-                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                rs.Write(headerbytes, 0, headerbytes.Length);
-                var bytes = Encoding.UTF8.GetBytes(postData);
-                rs.Write(bytes, 0, bytes.Length);
-
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-                rs.Write(trailer, 0, trailer.Length);
-                rs.Close();
-
-                WebResponse wresp = null;
-                try
+                if (SetCSRFToken(wr, LogFileName))
                 {
-                    wresp = wr.GetResponse();
-                    var stream2 = wresp.GetResponseStream();
-                    if (stream2 != null)
+                    var rs = wr.GetRequestStream();
+
+                    rs.Write(boundarybytes, 0, boundarybytes.Length);
+                    const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                    string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
+                    byte[] headerbytes = Encoding.UTF8.GetBytes(header);
+                    rs.Write(headerbytes, 0, headerbytes.Length);
+                    var bytes = Encoding.UTF8.GetBytes(postData);
+                    rs.Write(bytes, 0, bytes.Length);
+
+                    byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                    rs.Write(trailer, 0, trailer.Length);
+                    rs.Close();
+
+                    WebResponse wresp = null;
+                    try
                     {
-                        var reader2 = new StreamReader(stream2);
-                        var result = reader2.ReadToEnd();
-                        return result;
+                        wresp = wr.GetResponse();
+                        var stream2 = wresp.GetResponseStream();
+                        if (stream2 != null)
+                        {
+                            var reader2 = new StreamReader(stream2);
+                            var result = reader2.ReadToEnd();
+                            return result;
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    Log(errmessage = e.ToString());
-                    if (wresp != null)
+                    catch (Exception e)
                     {
-                        wresp.Close();
+                        Log(errmessage = e.ToString());
+                        if (wresp != null)
+                        {
+                            wresp.Close();
+                        }
                     }
                 }
                 if (retry > 1)
@@ -1025,32 +1034,34 @@ namespace SkylineNightly
                 request.Credentials = CredentialCache.DefaultCredentials;
                 request.Timeout = 30000; // 30 second timeout
 
-                SetCSRFToken(request, null);
-
-                using (var stream = request.GetRequestStream())
+                if (SetCSRFToken(request, null))
                 {
-                    stream.Write(postData, 0, postData.Length);
-                }
-
-                try
-                {
-                    using (var response = (HttpWebResponse)request.GetResponse())
-                    using (var responseStream = response.GetResponseStream())
+                    try
                     {
-                        if (responseStream != null)
+                        using (var stream = request.GetRequestStream())
                         {
-                            using (var responseReader = new StreamReader(responseStream))
+                            stream.Write(postData, 0, postData.Length);
+                        }
+
+                        using (var response = (HttpWebResponse)request.GetResponse())
+                        using (var responseStream = response.GetResponseStream())
+                        {
+                            if (responseStream != null)
                             {
-                                return responseReader.ReadToEnd();
+                                using (var responseReader = new StreamReader(responseStream))
+                                {
+                                    return responseReader.ReadToEnd();
+                                }
                             }
                         }
                     }
+                    catch (Exception)
+                    {
+                        // We will retry
+                    }
                 }
-                catch (Exception)
-                {
-                    if (retry > 1)
-                        Thread.Sleep(30000);
-                }
+                if (retry > 1)
+                    Thread.Sleep(30000);
             }
             return null;
         }
@@ -1199,7 +1210,7 @@ namespace SkylineNightly
             }
         }
 
-        private static void SetCSRFToken(HttpWebRequest postReq, string logFileName)
+        private static bool SetCSRFToken(HttpWebRequest postReq, string logFileName)
         {
             var url = LABKEY_HOME_URL;
 
@@ -1223,10 +1234,12 @@ namespace SkylineNightly
                         Log(logFileName, @"CSRF token not found.");
                     }
                 }
+                return true;
             }
             catch (Exception e)
             {
                 Log(logFileName, $@"Error establishing a session and getting a CSRF token: {e}");
+                return false;
             }
         }
 

@@ -107,15 +107,9 @@ namespace SharedBatch
         void UpdateUiLogFiles();
 
         // Checks there are no configurations with the name addingName
-        void AssertUniqueConfigName(string addingName, bool replacing);
 
         // Updates the Ui running buttons
         void UpdateRunningButtons(bool canStart, bool canStop);
-
-        void AddConfiguration(IConfig config);
-        void ReplaceSelectedConfig(IConfig config);
-        bool? ReplaceAllSkylineVersions(SkylineSettings skylineSettings);
-
         void DisplayError(string message);
         void DisplayWarning(string message);
         void DisplayInfo(string message);

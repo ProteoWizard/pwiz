@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -180,6 +181,7 @@ namespace pwiz.Skyline.Controls
             _pickTimer.Tick += tick_ShowPickList;
 
             _nodeTip = new NodeTip(this) {Parent = TopLevelControl};
+            _normalizeOption = Settings.Default.AreaNormalizeOption;
 
             OnTextZoomChanged();
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
@@ -309,14 +311,24 @@ namespace pwiz.Skyline.Controls
             Document = document;
             NormalizedValueCalculator = new NormalizedValueCalculator(Document);
 
-            bool integrateAllChanged = e.DocumentPrevious != null &&
-                                       e.DocumentPrevious.Settings.TransitionSettings.Integration.IsIntegrateAll !=
-                                       document.Settings.TransitionSettings.Integration.IsIntegrateAll;
-            // If none of the children changed, then do nothing
-            if (!integrateAllChanged && e.DocumentPrevious != null &&
-                    ReferenceEquals(document.Children, e.DocumentPrevious.Children))
+            bool updateNodeStates = false;
+            if (e.DocumentPrevious != null)
             {
-                return;                
+                if (e.DocumentPrevious.Settings.TransitionSettings.Integration.IsIntegrateAll !=
+                    document.Settings.TransitionSettings.Integration.IsIntegrateAll)
+                {
+                    updateNodeStates = true;
+                }
+                else if (document.Settings.IsGlobalRatioChange(e.DocumentPrevious.Settings))
+                {
+                    updateNodeStates = true;
+                }
+            }
+            // If none of the children changed, then do nothing
+            if (!updateNodeStates && e.DocumentPrevious != null &&
+                ReferenceEquals(document.Children, e.DocumentPrevious.Children))
+            {
+                return;
             }
 
             HideEffects();
@@ -347,14 +359,21 @@ namespace pwiz.Skyline.Controls
                     _resultsIndex = settings.HasResults
                         ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
                         : 0;
-                    _normalizeOption = NormalizeOption.Constrain(settings, _normalizeOption);
+                    if (IsSupportedNormalizeOption(_normalizeOption))
+                    {
+                        _normalizeOption = NormalizeOption.Constrain(settings, _normalizeOption);
+                    }
+                    else
+                    {
+                        _normalizeOption = NormalizeOption.RatioToFirstStandard(settings);
+                    }
                 }
 
                 BeginUpdateMS();
 
                 SrmTreeNodeParent.UpdateNodes(this, Nodes, document.Children,
                     true, PeptideGroupTreeNode.CreateInstance, changeAll);
-                if (integrateAllChanged)
+                if (updateNodeStates)
                 {
                     UpdateNodeStates();
                 }
@@ -451,6 +470,12 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private static bool IsSupportedNormalizeOption(NormalizeOption normalizeOption)
+        {
+            return normalizeOption == NormalizeOption.GLOBAL_STANDARDS ||
+                   normalizeOption?.NormalizationMethod is NormalizationMethod.RatioToLabel;
+        }
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NormalizeOption NormalizeOption
@@ -458,10 +483,13 @@ namespace pwiz.Skyline.Controls
             get { return _normalizeOption; }
             set
             {
-                if (_normalizeOption != value)
+                if (IsSupportedNormalizeOption(value))
                 {
-                    _normalizeOption = value;
-                    UpdateNodeStates();
+                    if (_normalizeOption != value)
+                    {
+                        _normalizeOption = value;
+                        UpdateNodeStates();
+                    }
                 }
             }
         }

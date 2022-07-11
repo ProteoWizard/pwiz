@@ -45,6 +45,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -54,6 +55,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -234,7 +236,7 @@ namespace pwiz.Skyline.Model
             get { return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
         }
 
-		public static string FILTER_DOC_AND_SKY_ZIP
+        public static string FILTER_DOC_AND_SKY_ZIP
         {
             // Used only in the open file dialog.
             get
@@ -565,7 +567,7 @@ namespace pwiz.Skyline.Model
             catch (Exception)
             {
                 return false;
-           }
+            }
         }
 
         private HashSet<Target> GetRetentionTimeStandardsOrThrow()
@@ -975,6 +977,21 @@ namespace pwiz.Skyline.Model
         /// <returns>A new document revision</returns>
         private SrmDocument ChangeSettingsInternal(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor = null)
         {
+            try
+            {
+                return ChangeSettingsInternalOrThrow(settingsNew, progressMonitor);
+            }
+            catch (Exception)
+            {
+                if (progressMonitor != null && progressMonitor.IsCanceled())
+                {
+                    throw new OperationCanceledException();
+                }
+                throw;
+            }
+        }
+        private SrmDocument ChangeSettingsInternalOrThrow(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor)
+        {
             settingsNew = UpdateHasHeavyModifications(settingsNew);
             // First figure out what changed.
             SrmSettingsDiff diff = new SrmSettingsDiff(Settings, settingsNew);
@@ -1075,9 +1092,12 @@ namespace pwiz.Skyline.Model
                         {
                             if (progressMonitor.IsCanceled())
                                 throw new OperationCanceledException();
-                            var percentComplete = ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair, moleculeGroupPairs.Length);
+                            var percentComplete =
+                                ProgressStatus.ThreadsafeIncementPercent(ref currentMoleculeGroupPair,
+                                    moleculeGroupPairs.Length);
                             if (percentComplete.HasValue && percentComplete.Value < 100)
-                                progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
+                                progressMonitor.ChangeProgress(status =>
+                                    status.ChangePercentComplete(percentComplete.Value));
                         }
 
                         var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
@@ -1091,8 +1111,22 @@ namespace pwiz.Skyline.Model
                 // Results handler changes for re-integration last only long enough
                 // to change the children
                 if (settingsNew.PeptideSettings.Integration.ResultsHandler != null)
-                    settingsNew = settingsNew.ChangePeptideIntegration(i => i.ChangeResultsHandler(null));
+                {
+                    settingsNew = settingsNew.ChangePeptideIntegration(i =>
+                        i.ChangeResultsHandler(null)
+                            .ChangeScoreQValueMap(
+                                ScoreQValueMap.FromMoleculeGroups(childrenNew.Cast<PeptideGroupDocNode>())));
+                }
 
+                if (settingsNew.MeasuredResults != null)
+                {
+                    var updatedImportTimes = settingsNew.MeasuredResults.UpdateImportTimes();
+                    if (!ReferenceEquals(updatedImportTimes, settingsNew.MeasuredResults))
+                    {
+                        settingsNew = settingsNew.ChangeMeasuredResults(updatedImportTimes);
+                    }
+                }
+                
                 // Don't change the children, if the resulting list contains
                 // only reference equal children of the same length and in the
                 // same order.
@@ -1429,7 +1463,7 @@ namespace pwiz.Skyline.Model
                                           out List<PeptideGroupDocNode> peptideGroups,
                                           List<string> columnPositions = null,
                                           DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none,
-                                          bool hasHeaders = true)
+                                          bool hasHeaders = true, Dictionary<string, FastaSequence> dictNameSeq = null)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1442,16 +1476,26 @@ namespace pwiz.Skyline.Model
             // Is this a small molecule transition list, or trying to be?
             if (((importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules) && radioType == DOCUMENT_TYPE.none) || radioType == DOCUMENT_TYPE.small_molecules)
             {
+                IList<string> lines = null;
                 try
                 {
-                    var lines = inputs.ReadLines(progressMonitor);
+                    lines = inputs.ReadLines(progressMonitor);
                     var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions, hasHeaders);
                     docNew = reader.CreateTargets(this, to, out firstAdded);
+                    foreach (var error in reader.ErrorList)
+                    {
+                        var lineIndex  = error.Line + (hasHeaders ? 1 : 0); // Account for parser not including header in its line count
+                        var line =
+                            ((lineIndex >= 0 && lineIndex < lines.Count) ? lines[lineIndex] : null)?.Replace(
+                                TextUtil.SEPARATOR_TSV_STR, @" ");
+                        errorList.Add(new TransitionImportErrorInfo(error.Message, error.Column, lineIndex + 1, line)); // Show line number as 1 based
+                    }
                 }
                 catch (LineColNumberedIoException x)
                 {
-                    // TODO(brianp): Better to return a complete list of all rows with errors and allow skipping
-                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber, null));  // CONSIDER: worth the effort to pull row and column info from error message?
+                    var line = (lines != null && x.LineNumber >=0 && x.LineNumber < lines.Count ? lines[(int)x.LineNumber] : null)?.
+                        Replace(TextUtil.SEPARATOR_TSV_STR, @" ");
+                    errorList.Add(new TransitionImportErrorInfo(x.PlainMessage, x.ColumnIndex, x.LineNumber + 1, line));  // CONSIDER: worth the effort to pull row and column info from error message?
                 }
             }
             else
@@ -1464,8 +1508,12 @@ namespace pwiz.Skyline.Model
                     {
                         IdentityPath nextAdd;
                         //peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
-                        var dictNameSeqAll = new Dictionary<string, FastaSequence>();
-                        var imported = importer.DoImport(progressMonitor, dictNameSeqAll, irtPeptides, librarySpectra, errorList);
+                        if (dictNameSeq == null)
+                        {
+                            dictNameSeq = new Dictionary<string, FastaSequence>();
+                        }
+
+                        var imported = importer.DoImport(progressMonitor, dictNameSeq, irtPeptides, librarySpectra, errorList);
                         if (progressMonitor != null && progressMonitor.IsCanceled)
                         {
                             return this;
@@ -1512,17 +1560,15 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgressMonitor progressMonitor)
         {
-            var retentionTimeRegression = Settings.PeptideSettings.Prediction.RetentionTime;
-            if (retentionTimeRegression == null || !(retentionTimeRegression.Calculator is RCalcIrt))
+            var regression = Settings.PeptideSettings.Prediction.RetentionTime;
+            if (!(regression?.Calculator is RCalcIrt calculator))
             {
                 throw new InvalidDataException(Resources.SrmDocument_AddIrtPeptides_Must_have_an_active_iRT_calculator_to_add_iRT_peptides);
             }
-            var calculator = (RCalcIrt) retentionTimeRegression.Calculator;
-            string dbPath = calculator.DatabasePath;
-            IrtDb db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
-            var oldPeptides = db.GetPeptides().Select(p => new DbIrtPeptide(p)).ToList();
-            IList<DbIrtPeptide.Conflict> conflicts;
-            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out conflicts);
+            var dbPath = calculator.DatabasePath;
+            var db = File.Exists(dbPath) ? IrtDb.GetIrtDb(dbPath, null) : IrtDb.CreateIrtDb(dbPath);
+            var oldPeptides = db.ReadPeptides().Select(p => new DbIrtPeptide(p)).ToList();
+            var peptidesCombined = DbIrtPeptide.FindNonConflicts(oldPeptides, irtPeptides, progressMonitor, out var conflicts);
             if (peptidesCombined == null)
                 return null;
             foreach (var conflict in conflicts)
@@ -1531,19 +1577,18 @@ namespace pwiz.Skyline.Model
                 // The same peptide must not appear in both places
                 if (conflict.NewPeptide.Standard ^ conflict.ExistingPeptide.Standard)
                 {
-                    throw new InvalidDataException(string.Format(Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
-                                                    conflict.NewPeptide.ModifiedTarget));
+                    throw new InvalidDataException(string.Format(
+                        Resources.SkylineWindow_AddIrtPeptides_Imported_peptide__0__with_iRT_library_value_is_already_being_used_as_an_iRT_standard_,
+                        conflict.NewPeptide.ModifiedTarget));
                 }
             }
             // Peptides that were already present in the database can be either kept or overwritten 
-            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.NewPeptide  : conflict.ExistingPeptide));
-            db = db.UpdatePeptides(peptidesCombined, oldPeptides);
+            peptidesCombined.AddRange(conflicts.Select(conflict => overwriteExisting ? conflict.NewPeptide : conflict.ExistingPeptide));
+            db = db.UpdatePeptides(peptidesCombined, progressMonitor);
             calculator = calculator.ChangeDatabase(db);
-            retentionTimeRegression = retentionTimeRegression.ChangeCalculator(calculator);
-            var srmSettings = Settings.ChangePeptidePrediction(pred => pred.ChangeRetentionTime(retentionTimeRegression));
-            if (ReferenceEquals(srmSettings, Settings))
-                return this;
-            return ChangeSettings(srmSettings);
+            regression = regression.ChangeCalculator(calculator);
+            var srmSettings = Settings.ChangePeptidePrediction(pred => pred.ChangeRetentionTime(regression));
+            return ReferenceEquals(srmSettings, Settings) ? this : ChangeSettings(srmSettings);
         }
 
         public static bool IsConvertedFromProteomicTestDocNode(DocNode node)
@@ -1816,10 +1861,12 @@ namespace pwiz.Skyline.Model
             double mzMatchTolerance = Settings.TransitionSettings.Instrument.MzMatchTolerance;
             ChromatogramGroupInfo[] arrayChromInfo;
             if (!Settings.MeasuredResults.TryLoadChromatogram(chromatograms, nodePep, nodeGroup,
-                                                              (float) mzMatchTolerance, loadPoints, out arrayChromInfo))
+                (float) mzMatchTolerance, out arrayChromInfo))
             {
-                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
-                                                                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty), nameSet));
+                throw new ArgumentOutOfRangeException(string.Format(
+                    Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
+                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
+                    nameSet));
             }
             // Get the chromatograms for only the file of interest
             int indexInfo = arrayChromInfo.IndexOf(info => Equals(filePath, info.FilePath));
@@ -1977,6 +2024,45 @@ namespace pwiz.Skyline.Model
             doc = (SrmDocument) doc.ChangeChildren(Children.ToArray());
             return doc;
         }
+        public IEnumerable<ChromatogramSet> GetSynchronizeIntegrationChromatogramSets()
+        {
+            if (!Settings.HasResults)
+                yield break;
+
+            if (Settings.TransitionSettings.Integration.SynchronizedIntegrationAll)
+            {
+                // Synchronize all
+                foreach (var chromSet in MeasuredResults.Chromatograms)
+                    yield return chromSet;
+                yield break;
+            }
+
+            var targets = Settings.TransitionSettings.Integration.SynchronizedIntegrationTargets?.ToHashSet();
+            if (targets == null || targets.Count == 0)
+            {
+                // Synchronize none
+                yield break;
+            }
+
+            var groupBy = Settings.TransitionSettings.Integration.SynchronizedIntegrationGroupBy;
+            if (string.IsNullOrEmpty(groupBy))
+            {
+                // Synchronize individual replicates
+                foreach (var chromSet in MeasuredResults.Chromatograms.Where(chromSet => targets.Contains(chromSet.Name)))
+                    yield return chromSet;
+                yield break;
+            }
+
+            // Synchronize by annotation
+            var replicateValue = ReplicateValue.FromPersistedString(Settings, groupBy);
+            var annotationCalculator = new AnnotationCalculator(this);
+            foreach (var chromSet in MeasuredResults.Chromatograms)
+            {
+                var value = replicateValue.GetValue(annotationCalculator, chromSet);
+                if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
+                    yield return chromSet;
+            }
+        }
 
         private object _referenceId = new object();
         /// <summary>
@@ -2032,6 +2118,10 @@ namespace pwiz.Skyline.Model
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
+
+            Settings = Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeIntegration(
+                Settings.PeptideSettings.Integration.ChangeScoreQValueMap(
+                    ScoreQValueMap.FromMoleculeGroups(MoleculeGroups))));
 
             SetDocumentType(); // Note proteomic vs small_molecules vs mixed
 
@@ -2111,7 +2201,8 @@ namespace pwiz.Skyline.Model
 
             if (Settings.DataSettings.AuditLogging && AuditLog != null)
             {
-                var auditLog = AuditLog.RecalculateHashValues(skylineVersion.SrmDocumentVersion, hash);
+                var auditLog = AuditLog.RecomputeEnExtraInfos()
+                    .RecalculateHashValues(skylineVersion.SrmDocumentVersion, hash);
                 auditLog.WriteToFile(auditLogPath, hash, skylineVersion.SrmDocumentVersion);
             }
             else if (File.Exists(auditLogPath))

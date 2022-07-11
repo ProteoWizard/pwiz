@@ -87,16 +87,20 @@ namespace pwiz.Common.SystemUtil
     public class CurrentCultureSetter : IDisposable
     {
         private CultureInfo PreviousCulture { get; }
+        private CultureInfo PreviousUICulture { get; }
 
         public CurrentCultureSetter(CultureInfo newCultureInfo)
         {
             PreviousCulture = Thread.CurrentThread.CurrentCulture;
+            PreviousUICulture = Thread.CurrentThread.CurrentUICulture;
             Thread.CurrentThread.CurrentCulture = newCultureInfo;
+            Thread.CurrentThread.CurrentUICulture = newCultureInfo;
         }
 
         public void Dispose()
         {
             Thread.CurrentThread.CurrentCulture = PreviousCulture;
+            Thread.CurrentThread.CurrentUICulture = PreviousUICulture;
         }
     }
 }

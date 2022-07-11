@@ -257,7 +257,12 @@ namespace pwiz.SkylineTestData.Results
                     {
                         ChromatogramGroupInfo[] chromGroupInfo;
                         Assert.IsTrue(results.TryLoadChromatogram(chromSet, pair.NodePep, pair.NodeGroup,
-                                                                  tolerance, true, out chromGroupInfo));
+                            tolerance, out chromGroupInfo));
+                        foreach (var group in chromGroupInfo)
+                        {
+                            // Force the points to be read from disk
+                            Assert.IsNotNull(group.TimeIntensitiesGroup);
+                        }
                     }
                 }
                 
@@ -338,7 +343,7 @@ namespace pwiz.SkylineTestData.Results
                     for (int i = 0; i < 2; i++)
                     {
                         ChromatogramGroupInfo[] chromInfos;
-                        Assert.IsTrue(measuredResults.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromInfos),
+                        Assert.IsTrue(measuredResults.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, out chromInfos),
                             string.Format("Missing chromatogram {0} - {1}", nodeGroup, i));
                         Assert.AreEqual(2, chromInfos.Length);
                         double[] peakAreas = new double[2];

@@ -39,13 +39,14 @@ namespace AutoQC
         private TabPage _lastSelectedTab;
         private SkylineSettings _currentSkylineSettings;
 
-        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, RunnerStatus status = RunnerStatus.Stopped)
+        public AutoQcConfigForm(IMainUiControl mainControl, AutoQcConfig config, ConfigAction action, AutoQcConfigManagerState state, RunnerStatus status = RunnerStatus.Stopped)
         {
             InitializeComponent();
             
             _action = action;
             _initialCreated = config?.Created ?? DateTime.MinValue;
             _mainControl = mainControl;
+            State = state;
 
             // Initialize file filter combobox
             var filterOptions = new object[]
@@ -76,6 +77,7 @@ namespace AutoQC
             ActiveControl = textConfigName;
         }
 
+        public AutoQcConfigManagerState State { get; private set; }
 
         private void InitInputFieldsFromConfig(AutoQcConfig config)
         {
@@ -251,7 +253,7 @@ namespace AutoQC
         private void InitSkylineTab(AutoQcConfig config)
         {
             if (config != null)
-                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath);
+                _skylineTypeControl = new SkylineTypeControl(_mainControl, config.UsesSkyline, config.UsesSkylineDaily, config.UsesCustomSkylinePath, config.SkylineSettings.CmdPath, State.GetRunningConfigs(), State.BaseState);
             else
                 _skylineTypeControl = new SkylineTypeControl();
 
@@ -277,7 +279,7 @@ namespace AutoQC
             if (!changedSkylineSettings.Equals(_currentSkylineSettings))
             {
                 _currentSkylineSettings = changedSkylineSettings;
-                _mainControl.ReplaceAllSkylineVersions(_currentSkylineSettings);
+                State.ReplaceSkylineSettings(_currentSkylineSettings, _mainControl, out bool? replaced);
             }
         }
 
@@ -312,7 +314,7 @@ namespace AutoQC
             AutoQcConfig newConfig = GetConfigFromUi();
             try
             {
-                _mainControl.AssertUniqueConfigName(newConfig.Name, _action == ConfigAction.Edit);
+                State.BaseState.AssertUniqueName(newConfig.Name, _action == ConfigAction.Edit);
                 newConfig.Validate(true);
             }
             catch (ArgumentException e)
@@ -322,10 +324,10 @@ namespace AutoQC
             }
 
             if (_action == ConfigAction.Edit)
-                _mainControl.ReplaceSelectedConfig(newConfig);
+                State.ReplaceSelectedConfig(newConfig, _mainControl);
             else
-                _mainControl.AddConfiguration(newConfig);
-
+                State.UserAddConfig(newConfig, _mainControl);
+            DialogResult = DialogResult.OK;
             Close();
         }
 

@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -60,9 +61,8 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -95,8 +95,7 @@ namespace pwiz.SkylineTestData.Results
                 {
                     // Import with symmetric isolation window
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                    ratio = GetFirstTransitionGroupRatio(docResults).Value;
                     // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(poorRatio, ratio, 0.05);
@@ -114,8 +113,7 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(docContainer.SetDocument(docAsym, doc, false));
 
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                    ratio = GetFirstTransitionGroupRatio(docResults).Value;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(fixedRatio, ratio, 0.05);
@@ -139,7 +137,10 @@ namespace pwiz.SkylineTestData.Results
 
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
                     nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                    var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
+                    ratio = normalizedValueCalculator.GetTransitionGroupValue(
+                        normalizedValueCalculator.GetFirstRatioNormalizationMethod(),
+                        docResults.Molecules.First(), nodeGroup, nodeGroup.Results[0][0]).Value;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(fixedRatio, ratio, 0.05);
@@ -162,8 +163,7 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(docContainer.SetDocument(docPrespecified, doc, false));
 
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 2, 2);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                    ratio = GetFirstTransitionGroupRatio(docResults).Value;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(fixedRatio, ratio, 0.05);
@@ -212,8 +212,7 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(docContainer.SetDocument(docOneWindow, doc, false));
 
                     SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 0, 2, 0);
-                    nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    Assert.IsNull(nodeGroup.Results[0][0].Ratio);
+                    Assert.IsNull(GetFirstTransitionGroupRatio(docResults));
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
@@ -222,6 +221,17 @@ namespace pwiz.SkylineTestData.Results
             }
 
             testFilesDir.Dispose();
+        }
+
+        private double? GetFirstTransitionGroupRatio(SrmDocument document)
+        {
+            var normalizedValueCalculator = new NormalizedValueCalculator(document);
+            var normalizationMethod = normalizedValueCalculator.GetFirstRatioNormalizationMethod();
+            Assert.IsInstanceOfType(normalizationMethod, typeof(NormalizationMethod.RatioToLabel));
+            var peptideDocNode = document.Molecules.First();
+            var transitionGroupDocNode = peptideDocNode.TransitionGroups.First();
+            return normalizedValueCalculator.GetTransitionGroupValue(normalizationMethod, peptideDocNode,
+                transitionGroupDocNode, transitionGroupDocNode.Results[0][0]);
         }
     }
 }

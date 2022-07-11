@@ -138,7 +138,11 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 else
                 {
-                    pivotKeys = rowItem.PivotKeys.Where(key => key.Last.Key.Equals(parent.PropertyPath)).ToArray();
+                    pivotKeys = rowItem.PivotKeys.Where(key => key.Last.Key.Equals(parent.PropertyPath)).ToList();
+                    if (pivotKeys.Count == 0)
+                    {
+                        pivotKeys = new PivotKey[] {null};
+                    }
                 }
                 foreach (var pivotKey in pivotKeys)
                 {

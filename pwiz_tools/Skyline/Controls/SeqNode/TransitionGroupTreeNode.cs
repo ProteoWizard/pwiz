@@ -60,17 +60,14 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
         }
 
-        public TransitionGroupDocNode DocNode { get { return (TransitionGroupDocNode) Model; } }
-
         public Target ModifiedSequence
         {
             get { return GetModifiedSequence(PepNode, DocNode, SequenceTree.Document.Settings); }
         }
 
-        public PeptideDocNode PepNode
-        {
-            get { return (Parent != null ? ((PeptideTreeNode)Parent).DocNode : null); }
-        }
+        public TransitionGroupDocNode DocNode => (TransitionGroupDocNode)Model;
+        public PeptideDocNode PepNode => ((PeptideTreeNode)Parent)?.DocNode;
+        public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent)?.DocNode;
 
         public override string Heading
         {
@@ -103,6 +100,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // Make sure children are up to date
             OnUpdateChildren(SequenceTree.ExpandPrecursors);
+            // Refresh the text on the TransitionTreeNodes.
+            foreach (var child in Nodes.OfType<TransitionTreeNode>())
+            {
+                child.Model = child.Model;
+            }
         }
 
         public int TypeImageIndex
@@ -182,6 +184,16 @@ namespace pwiz.Skyline.Controls.SeqNode
                 ratio = displaySettings.NormalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
                     displaySettings.NodePep, nodeGroup, nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
             }
+            else if (NormalizationMethod.GLOBAL_STANDARDS.Equals(displaySettings.NormalizationMethod))
+            {
+                var ratioToGlobalStandards = displaySettings.NormalizedValueCalculator.GetTransitionGroupValue(
+                    displaySettings.NormalizationMethod, displaySettings.NodePep, nodeGroup,
+                    nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
+                if (ratioToGlobalStandards.HasValue)
+                {
+                    ratio = new RatioValue(ratioToGlobalStandards.Value);
+                }
+            }
             if (null == ratio && !isotopeProduct.HasValue && !libraryProduct.HasValue)
                 return string.Empty;
             StringBuilder sb = new StringBuilder(@" (");
@@ -198,16 +210,23 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (sb.Length > len)
                     sb.Append(CS_SEPARATOR);
-                if (ratio.HasDotProduct)
-                {
-                    sb.Append(string.Format(@"rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT)));
-                    sb.Append(CS_SEPARATOR);
-                }
-
-                sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
-                                        MathEx.RoundAboveZero(ratio.Ratio, 2, 4)));
+                sb.Append(FormatRatioValue(ratio));
             }
             sb.Append(@")");
+            return sb.ToString();
+        }
+
+        public static string FormatRatioValue(RatioValue ratio)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (ratio.HasDotProduct)
+            {
+                sb.Append(string.Format(@"rdotp {0}", ratio.DotProduct.ToString(DOTP_FORMAT)));
+                sb.Append(CS_SEPARATOR);
+            }
+
+            sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__,
+                MathEx.RoundAboveZero(ratio.Ratio, 2, 4)));
             return sb.ToString();
         }
 
@@ -529,8 +548,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                         string plusSub = Transition.GetChargeIndicator(charge);
                         foreach (IonType type in types)
                         {
-                            CellDesc cell = CreateHead(type.ToString().ToLower() + plusSub, rt);
-                            if (Transition.IsNTerminal(type))
+                            CellDesc cell = CreateHead(type.GetLocalizedString().ToLower() + plusSub, rt);
+                            if (type.IsNTerminal())
                                 headers.Insert(0, cell);
                             else
                                 headers.Add(cell);
@@ -556,7 +575,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                             foreach (IonType type in types)
                             {
                                 CellDesc cell;
-                                if (Transition.IsNTerminal(type))
+                                if (type.IsNTerminal())
                                 {
                                     if (i == len - 1)
                                         cell = CreateData(string.Empty, rt);

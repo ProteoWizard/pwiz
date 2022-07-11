@@ -68,7 +68,7 @@ class ProteinList_FASTA : public ProteinList
         set<string> idSet;
 
         Index::stream_offset indexOffset = 0;
-        while (getlinePortable(*fsPtr_, buf))
+        while (getline(*fsPtr_, buf))
         {
             size_t bufLength = buf.length() + 1; // include newline
             indexOffset += bufLength;
@@ -160,7 +160,7 @@ class ProteinList_FASTA : public ProteinList
         fsPtr_->seekg(entryPtr->offset);
 
         string buf;
-        getlinePortable(*fsPtr_, buf);
+        getline(*fsPtr_, buf);
 
         // test that the index offset is valid
         if (buf.empty() || buf[0] != '>')
@@ -179,7 +179,7 @@ class ProteinList_FASTA : public ProteinList
             fsPtr_->seekg(entryPtr->offset);
 
             string buf;
-            getlinePortable(*fsPtr_, buf);
+            getline(*fsPtr_, buf);
 
             // if the offset is still invalid, throw
             if (buf.empty() || buf[0] != '>')
@@ -208,7 +208,7 @@ class ProteinList_FASTA : public ProteinList
 
         string sequence;
         if (getSequence)
-            while (getlinePortable(*fsPtr_, buf))
+            while (getline(*fsPtr_, buf))
             {
                 if (buf.empty() || buf[0] == '\r') // skip blank lines
                     continue;

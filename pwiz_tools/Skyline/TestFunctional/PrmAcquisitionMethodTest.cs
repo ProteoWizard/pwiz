@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(peptideDocNode);
 
             return doc.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode,
-                transitionGroupDocNode, tolerance, true, out _);
+                transitionGroupDocNode, tolerance, out _);
         }
     }
 }

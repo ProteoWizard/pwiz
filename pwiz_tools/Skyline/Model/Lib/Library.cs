@@ -68,9 +68,8 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return previous == null ||
-                !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
+                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -233,14 +232,18 @@ namespace pwiz.Skyline.Model.Lib
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
                                 docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }
-                        catch (InvalidDataException x)
-                        {
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
                         catch (OperationCanceledException)
                         {
                             docNew = docCurrent;    // Just continue
+                        }
+                        catch (Exception x)
+                        {
+                            if (ExceptionUtil.IsProgrammingDefect(x))
+                            {
+                                throw;
+                            }
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                            break;
                         }
                     }
                 }
@@ -426,7 +429,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
                     if (iRTCapableBuilder.IrtStandard != null &&
-                        !iRTCapableBuilder.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+                        !iRTCapableBuilder.IrtStandard.IsEmpty)
                     {
                         buildState.IrtStandard = iRTCapableBuilder.IrtStandard;
                     }
@@ -641,7 +644,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Some details for the library. 
         /// This can be the library revision, program version, 
-		/// build date or a hyperlink to the library source 
+        /// build date or a hyperlink to the library source 
         /// (e.g. http://peptide.nist.gov/ for NIST libraries)
         /// </summary>
         public abstract LibraryDetails LibraryDetails { get; }
@@ -2167,7 +2170,9 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 if (!string.IsNullOrEmpty(OtherKeys))
                 {
-                    smallMolLines.Add(new KeyValuePair<string, string> (Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs, OtherKeys.Replace('\t','\n')));
+                    // Add a separate line for each molecule accession number
+                    var accessionNumDict = MoleculeAccessionNumbers.FormatAccessionNumbers(OtherKeys);
+                    smallMolLines.AddRange(accessionNumDict);
                 }
                 return smallMolLines;
             }
@@ -2199,6 +2204,51 @@ namespace pwiz.Skyline.Model.Lib
                 hashCode = (hashCode * 397) ^ (OtherKeys != null ? OtherKeys.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        /// <summary>
+        /// Return a SmallMoleculeLibraryAttributes object that represents the union of this and other, or null if
+        /// conflicts prevent that
+        /// </summary>
+        public SmallMoleculeLibraryAttributes Merge(SmallMoleculeLibraryAttributes other)
+        {
+            if (other == null || Equals(other))
+                return this;
+
+            // If only one is named, could still be a match
+            var consensusName = MoleculeName;
+            if (!Equals(MoleculeName, other.MoleculeName))
+            {
+                if (string.IsNullOrEmpty(MoleculeName))
+                {
+                    consensusName = other.MoleculeName;
+                }
+                else if (!string.IsNullOrEmpty(other.MoleculeName))
+                {
+                    return null; // Conflict
+                }
+            }
+
+            if (!Equals(ChemicalFormulaOrMassesString, other.ChemicalFormulaOrMassesString))
+            {
+                return null; // Conflict
+            }
+
+            var consensusInChiKey = InChiKey;
+            var consensusOtherKeys = OtherKeys;
+            if (!Equals(InChiKey, other.InChiKey) || !Equals(OtherKeys, other.OtherKeys))
+            {
+                var consensusAccession = this.CreateMoleculeID().Union(other.CreateMoleculeID());
+                if (consensusAccession == null)
+                {
+                    return null; // Conflict
+                }
+                consensusInChiKey = consensusAccession.GetInChiKey();
+                consensusOtherKeys = consensusAccession.GetNonInChiKeys();
+            }
+            
+            return Create(consensusName, ChemicalFormulaOrMassesString, consensusInChiKey,
+                consensusOtherKeys);
         }
 
         public override string ToString()

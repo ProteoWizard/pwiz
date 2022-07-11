@@ -36,6 +36,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -69,6 +73,10 @@
     <Folder Include="Test\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj">
+      <Project>{69531d2c-bad8-4e79-9df3-482a74d6d0bf}</Project>
+      <Name>SharedBatchTest</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
       <Project>{8DC37752-C356-446F-A1EE-6AA6D8A23B6F}</Project>
       <Name>SharedBatch</Name>

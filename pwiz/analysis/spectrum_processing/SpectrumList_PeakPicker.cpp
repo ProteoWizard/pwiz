@@ -133,6 +133,10 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
     else if (algorithm != NULL)
         method.userParams.emplace_back(algorithm->name());
 
+    string msLevelsToPeakPickStr = lexical_cast<string>(msLevelsToPeakPick);
+    if (msLevelsToPeakPickStr != "1-")
+        method.userParams.emplace_back("ms levels", msLevelsToPeakPickStr);
+
     if (algorithm_)
         noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this data; falling back to ") + algorithm_->name();
 
@@ -222,7 +226,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, Detail
     if (!msLevelsToPeakPick_.contains(s->cvParam(MS_ms_level).valueAs<int>()))
         return s;
 
-    bool hasSpectrumRepresentation = s->hasCVParam(MS_spectrum_representation);
+    bool hasSpectrumRepresentation = s->hasCVParamChild(MS_spectrum_representation);
     if (!hasSpectrumRepresentation && detailLevel < DetailLevel_FullMetadata)
     {
         minDetailLevel_ = (DetailLevel) (detailLevel + 1);
@@ -292,6 +296,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, Detail
 
     if (itr != cvParams.end())
         *itr = MS_centroid_spectrum;
+    s->dataProcessingPtr = dp_;
+
+    if (detailLevel < DetailLevel_FullMetadata)
+        return s;
 
     try
     {
@@ -321,7 +329,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, Detail
         throw std::runtime_error(std::string("[SpectrumList_PeakPicker::spectrum()] Error picking peaks: ") + e.what());
     }
 
-    s->dataProcessingPtr = dp_;
     return s;
 }
 

@@ -27,7 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
@@ -169,12 +169,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
 
             var doc = SkylineWindow.Document;
             RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton()));
@@ -228,7 +227,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("SwissProt.bsa-mature"));
             });
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
@@ -369,8 +368,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
-                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
+                    out chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

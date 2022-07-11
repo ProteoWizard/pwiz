@@ -33,7 +33,7 @@
     <!-- Make the assembly name configurable -->
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <PublishUrl>T:\labkey\static\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>105</ApplicationRevision>
-    <ApplicationVersion>21.0.9.105</ApplicationVersion>
+    <ApplicationRevision>476</ApplicationRevision>
+    <ApplicationVersion>21.2.1.476</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -210,17 +210,17 @@
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
+    <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MsFraggerDownloadDlg.Designer.cs">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\NoModeUIDlg.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Alerts\NoModeUIDlg.Designer.cs">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Alerts\PeptidesPerProteinDlg.Designer.cs">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\MessageDlg.cs">
       <SubType>Form</SubType>
@@ -303,6 +303,7 @@
     <Compile Include="Alerts\DetailedReportErrorDlg.Designer.cs">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\SimpleFileDownloaderDlg.cs" />
     <Compile Include="Alerts\SpectrumLibraryInfoDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -352,6 +353,12 @@
       <DependentUpon>PcaPlot.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Clustering\StripePainter.cs" />
+    <Compile Include="Controls\Databinding\CandidatePeakForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Databinding\CandidatePeakForm.Designer.cs">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
@@ -408,6 +415,12 @@
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SynchronizedIntegrationDlg.Designer.cs">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
@@ -423,6 +436,31 @@
       <DependentUpon>DocumentChangeLogEntryDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\AreaCVGraphData.cs" />
+    <Compile Include="FileUI\InsertTransitionListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PropertyNames.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
+    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnCaptions.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ColumnToolTips.resx</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\SkypSupport.cs" />
     <Compile Include="Menus\ChromatogramContextMenu.cs">
       <SubType>UserControl</SubType>
@@ -492,11 +530,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>PropertyElementNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>PropertyNames.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\ReflectorEnumerator.cs" />
     <Compile Include="Model\AuditLog\ReflectorToString.cs" />
     <Compile Include="Model\Crosslinking\ComplexFragmentIon.cs" />
@@ -518,17 +551,10 @@
     <Compile Include="Model\Crosslinking\SimpleFragmentIon.cs" />
     <Compile Include="Model\Databinding\CellLocator.cs" />
     <Compile Include="Model\Databinding\DataGridId.cs" />
-    <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ColumnCaptions.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ColumnToolTips.resx</DependentUpon>
-    </Compile>
+    <Compile Include="Model\Databinding\Entities\CandidatePeakGroup.cs" />
     <Compile Include="Model\Databinding\Entities\IonMobilityObject.cs" />
+    <Compile Include="Model\Databinding\Entities\PeakGroupScore.cs" />
+    <Compile Include="Model\Databinding\FeaturePropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListColumnPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\ListLookupDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
@@ -537,6 +563,7 @@
     <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
     <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
@@ -573,10 +600,12 @@
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\ExplicitTransitionValues.cs" />
+    <Compile Include="Model\Find\DuplicatedPeptideFinder.cs" />
     <Compile Include="Model\FragmentedMolecule.cs" />
     <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\IonMobility\DbPrecursorAndIonMobility.cs" />
     <Compile Include="Model\IonMobility\ValidatingIonMobilityPrecursor.cs" />
+    <Compile Include="Model\Irt\DbIrtHistory.cs" />
     <Compile Include="Model\Irt\IrtPeptidePicker.cs" />
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
@@ -586,8 +615,30 @@
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
+    <Compile Include="Model\MoleculeNameAndAccessions.cs" />
+    <Compile Include="Model\Proteome\ProteinAssociation.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
+    <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
+    <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
+    <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\OptStepChromatograms.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Results\Scoring\AutoTrainManager.cs" />
+    <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
+    <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
+    <Compile Include="Properties\MetadataRuleSetList.cs" />
+    <Compile Include="Properties\RemoteAccountList.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -619,7 +670,6 @@
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteAccountList.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
     <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
@@ -685,11 +735,6 @@
     <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ProtocolBuffers\GeneratedCode\Model.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\Predict.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\PredictionService.cs" />
@@ -740,6 +785,7 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\FormGroup.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
@@ -1535,6 +1581,9 @@
     <Compile Include="FileUI\ImportResultsNameDlg.Designer.cs">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </Compile>
+	<Compile Include="Controls\IonTypeSelectorControl.cs">
+		  <SubType>Component</SubType>
+	</Compile>
     <Compile Include="Model\Annotations.cs" />
     <Compile Include="Model\BackgroundLoader.cs" />
     <Compile Include="Model\DocNode.cs" />
@@ -2044,6 +2093,15 @@
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.zh-CHS.resx">
+      <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\NoModeUIDlg.ja.resx">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2073,15 +2131,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.ja.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.zh-CHS.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
@@ -2173,6 +2222,9 @@
       <DependentUpon>PcaPlot.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2252,6 +2304,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.ja.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.zh-CHS.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
@@ -2527,6 +2580,15 @@
     <EmbeddedResource Include="EditUI\RefineProteinListDlg.zh-CHS.resx">
       <DependentUpon>RefineProteinListDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.ja.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.zh-CHS.resx">
+      <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseIrtStandardPeptidesDlg.ja.resx">
       <DependentUpon>ChooseIrtStandardPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2560,6 +2622,12 @@
       <DependentUpon>ImportResultsLockMassDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.ja.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ImportTransitionListColumnSelectDlg.ja.resx">
       <DependentUpon>ImportTransitionListColumnSelectDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2579,6 +2647,9 @@
     <EmbeddedResource Include="FileUI\ImportTransitionListErrorDlg.zh-CHS.resx">
       <DependentUpon>ImportTransitionListErrorDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\InsertTransitionListDlg.zh-CHS.resx">
+      <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
@@ -2661,6 +2732,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ViewMenu.resx">
       <DependentUpon>ViewMenu.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Menus\ViewMenu.zh-CHS.resx">
       <DependentUpon>ViewMenu.cs</DependentUpon>
@@ -3151,6 +3223,19 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Prosit\PrositResources.zh-CHS.resx">
       <DependentUpon>PrositResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.ja.resx">
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FeatureTooltips.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Scoring\FeatureTooltips.zh-CHS.resx">
+      <DependentUpon>FeatureTooltips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
@@ -5388,171 +5473,211 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PublishFile Include="BiblioSpec.pdb">
+    <PublishFile Include="BaseCommon">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BaseDataAccess">
+      <Visible>False</Visible>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BaseTof">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="BiblioSpec.pdb">
+      <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="enzymes.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Instruments.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="JetBrains.Annotations">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="MassSpecDataReader">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.CRT">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Microsoft.VC90.MFC">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="modifications.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="MSGraph.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
+      <FileType>File</FileType>
+    </PublishFile>
+    <PublishFile Include="OFX.Core.Contracts">
+      <Visible>False</Visible>
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
-      <FileType>File</FileType>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteowizardWrapper.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.Common.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="pwiz.CommonUtil.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Skyline-daily.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="SkylineTool.pdb">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="unimod.xml">
       <Visible>False</Visible>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublish.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; password &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
