@@ -249,20 +249,20 @@ namespace pwiz.SkylineTestTutorial
                     importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod = string.Empty;
                 });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Fasta page", 24);
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
 
-                WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
+            WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             PauseForScreenShot("Peptides per protein form", 25);
-                RunUI(() =>
-                {
-                    int proteinCount, peptideCount, precursorCount, transitionCount;
-                    peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+            RunUI(() =>
+            {
+                int proteinCount, peptideCount, precursorCount, transitionCount;
+                //peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                //ValidateNewTargetCounts(proteinCount, peptideCount, precursorCount, transitionCount);
+                peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 ValidateNewTargetCounts(proteinCount, peptideCount, precursorCount, transitionCount);
-                    peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateNewTargetCounts(proteinCount, peptideCount, precursorCount, transitionCount);
-                });
-                OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
-                WaitForClosedForm(importPeptideSearchDlg);
+            });
+            OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
+            WaitForClosedForm(importPeptideSearchDlg);
             WaitForConditionUI(() => SkylineWindow.DocumentUI.PeptideGroupCount == 6);
             RunUI(() => SkylineWindow.ExpandPrecursors());
             if (IsPauseForScreenShots)
