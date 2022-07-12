@@ -22,6 +22,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.AuditLog;
@@ -190,7 +193,8 @@ namespace pwiz.Skyline.Model.Proteome
             return proteinAssociations;
         }
 
-        public class ParsimonySettings
+        [XmlRoot("protein_association")]
+        public class ParsimonySettings : IXmlSerializable
         {
             [Track(ignoreDefaultParent:true)]
             public bool GroupProteins { get; set; }
@@ -238,6 +242,52 @@ namespace pwiz.Skyline.Model.Proteome
                     result = (result * 397) ^ SharedPeptides.GetHashCode();
                     return result;
                 }
+            }
+            #endregion
+
+            #region Implementation of IXmlSerializable
+            private enum Attr
+            {
+                min_peptides_per_protein,
+                group_proteins,
+                find_minimal_protein_list,
+                remove_subset_proteins,
+                shared_peptides
+            }
+
+            public XmlSchema GetSchema()
+            {
+                return null;
+            }
+
+            public void ReadXml(XmlReader reader)
+            {
+                MinPeptidesPerProtein = reader.GetIntAttribute(Attr.min_peptides_per_protein, 1);
+                GroupProteins = reader.GetBoolAttribute(Attr.group_proteins);
+                FindMinimalProteinList = reader.GetBoolAttribute(Attr.find_minimal_protein_list);
+                RemoveSubsetProteins = reader.GetBoolAttribute(Attr.remove_subset_proteins);
+                SharedPeptides = reader.GetEnumAttribute(Attr.shared_peptides, SharedPeptides.DuplicatedBetweenProteins);
+
+                bool empty = reader.IsEmptyElement;
+                reader.Read();
+                if (!empty)
+                {
+                    reader.ReadEndElement();
+                }
+            }
+
+            public void WriteXml(XmlWriter writer)
+            {
+                writer.WriteAttribute(Attr.min_peptides_per_protein, MinPeptidesPerProtein, 1);
+                writer.WriteAttribute(Attr.group_proteins, GroupProteins, false);
+                writer.WriteAttribute(Attr.find_minimal_protein_list, FindMinimalProteinList, false);
+                writer.WriteAttribute(Attr.remove_subset_proteins, RemoveSubsetProteins, false);
+                writer.WriteAttribute(Attr.shared_peptides, SharedPeptides, SharedPeptides.DuplicatedBetweenProteins);
+            }
+
+            public static ParsimonySettings Deserialize(XmlReader reader)
+            {
+                return reader.Deserialize(new ParsimonySettings());
             }
             #endregion
         }
@@ -798,8 +848,7 @@ namespace pwiz.Skyline.Model.Proteome
                 monitor.UpdateProgress(status.ChangePercentComplete(newPeptideGroups.Count * 100 / totalPeptideGroups));
             }
 
-            var newFilterSettings = current.Settings.PeptideSettings.ChangeFilter(
-                current.Settings.PeptideSettings.Filter.ChangeParsimonySettings(FinalResults.ParsimonySettings));
+            var newFilterSettings = current.Settings.PeptideSettings.ChangeParsimonySettings(FinalResults.ParsimonySettings);
             if (!Equals(newFilterSettings, current.Settings.PeptideSettings))
             {
                 current = current.ChangeSettings(current.Settings.ChangePeptideSettings(newFilterSettings));

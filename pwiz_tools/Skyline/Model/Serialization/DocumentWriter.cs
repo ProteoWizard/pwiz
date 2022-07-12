@@ -60,7 +60,10 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
             {
-                if (nodeGroup.Id is FastaSequence)
+                if (nodeGroup.Id is FastaSequenceGroup &&
+                    SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_22_13)
+                    writer.WriteStartElement(EL.protein_group);
+                else if (nodeGroup.Id is FastaSequence)
                     writer.WriteStartElement(EL.protein);
                 else
                     writer.WriteStartElement(EL.peptide_list);
@@ -101,7 +104,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeString(ATTR.name, node.PeptideGroup.Name);
             }
-            if (node.PeptideGroup.Description != null)
+            if (node.PeptideGroup.Description != null && !(node.PeptideGroup is FastaSequenceGroup))
             {
                 writer.WriteAttributeString(ATTR.description, node.PeptideGroup.Description);
             }
@@ -122,8 +125,7 @@ namespace pwiz.Skyline.Model.Serialization
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
 
-            FastaSequence seq = node.PeptideGroup as FastaSequence;
-            if (seq != null)
+            Action<FastaSequence> writeFastaSequence = seq =>
             {
                 if (seq.Alternatives.Count > 0)
                 {
@@ -134,12 +136,35 @@ namespace pwiz.Skyline.Model.Serialization
                         WriteProteinMetadataXML(writer, alt, false); // don't skip name and description
                         writer.WriteEndElement();
                     }
+
                     writer.WriteEndElement();
                 }
 
                 writer.WriteStartElement(EL.sequence);
                 writer.WriteString(FormatProteinSequence(seq.Sequence));
                 writer.WriteEndElement();
+            };
+
+            FastaSequenceGroup group = node.PeptideGroup as FastaSequenceGroup;
+            if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_22_13)
+            {
+                writer.WriteStartElement(EL.proteins);
+                foreach (var seq in group.FastaSequences)
+                {
+                    writer.WriteStartElement(EL.protein);
+                    writer.WriteAttributeString(ATTR.name, seq.Name);
+                    if (!seq.Description.IsNullOrEmpty())
+                        writer.WriteAttributeString(ATTR.description, seq.Description);
+                    writeFastaSequence(seq);
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement();
+            }
+            else
+            {
+                FastaSequence seq = node.PeptideGroup as FastaSequence;
+                if (seq != null)
+                    writeFastaSequence(seq);
             }
 
             foreach (PeptideDocNode nodePeptide in node.Children)

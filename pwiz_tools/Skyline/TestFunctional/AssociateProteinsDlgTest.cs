@@ -430,9 +430,9 @@ namespace pwiz.SkylineTestFunctional
                             .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DDA, null));
                     srmSettings = srmSettings.ChangePeptideSettings(srmSettings.PeptideSettings.ChangeFilter(
                                 new PeptideFilter(0, 2, 20, new List<PeptideExcludeRegex>(), true,
-                                    PeptideFilter.PeptideUniquenessConstraint.none, null))
+                                    PeptideFilter.PeptideUniquenessConstraint.none))
                             .ChangeEnzyme(new Enzyme("non-specific", "ACDEFGHIKLMNPQRSTUVWY", ""))
-                            .ChangeDigestSettings(new DigestSettings(100, false)))
+                            .ChangeDigestSettings(new DigestSettings(9, false)))
                         .ChangeTransitionSettings(transSettings);
 
                     var peptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", string.Empty, peptideNodes.ToArray());

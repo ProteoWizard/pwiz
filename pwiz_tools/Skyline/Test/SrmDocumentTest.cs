@@ -1399,6 +1399,15 @@ namespace pwiz.SkylineTest
             "<srm_settings><selected_proteins>\n" +
             "  <peptide_list/>\n" +
             "</selected_proteins></srm_settings>",
+            // Protein group name and 2 proteins
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein_group name=\"test1/test2\">\n" +
+            "    <proteins>\n" +
+            "      <protein name=\"test1\" description=\"desc1\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
+            "      <protein name=\"test2\" description=\"desc2\"><sequence>ABCDEFG HIJKLMNP QRSTUV</sequence></protein>\n" +
+            "    </proteins>\n" +
+            "  </protein_group>\n" +
+            "</selected_proteins></srm_settings>",
         };
 
         private readonly string[] _peptideGroupInvalid =

@@ -38,8 +38,10 @@ namespace pwiz.Skyline.Model.Serialization
             public const string selected_transitions = "selected_transitions";
 
             public const string protein = "protein";
+            public const string protein_group = "protein_group";
             public const string note = "note";
             public const string annotation = "annotation";
+            public const string proteins = "proteins";
             public const string alternatives = "alternatives";
             public const string alternative_protein = "alternative_protein";
             public const string sequence = "sequence";
