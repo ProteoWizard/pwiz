@@ -1018,41 +1018,56 @@ namespace pwiz.SkylineTestTutorial
         private void TestRedundantComboBox()
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
-            //The dropdown is only visible if the peptide has redundant spectra. Index 0 does.
-            Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
-            RunUI(() => dlg.SelectedIndex = 1);
-            //The peptide at index one does not have redundant spectra
-            Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
-            //Check that the peaks count of the graphed item matches the peaks of the selected spectra
-            Assert.AreNotEqual(144, dlg.GraphItem.PeaksCount);
-            RunUI(() => dlg.SelectedIndex = 0);
-            Assert.AreEqual(144, dlg.GraphItem.PeaksCount);
-            RunUI(() =>
+            WaitForConditionUI(() => dlg.IsUpdateComplete);
+            // Checks the number of peptides displayed to determine if this is a small molecule test which uses 10 or the full data set
+            if (dlg.PeptideDisplayCount > 11)
             {
-                dlg.FilterString = "ik";
-                dlg.SelectedIndex = 4;
-            });
-            Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
-            //Checks that for this peptide, there are 11 different spectra available in the dropdown
-            Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
-            RunUI(() => dlg.RedundantComboBox.SelectedIndex = 0);
-            //Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
-            Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
-            RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
-            Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
-            var fileSet = new HashSet<String>();
-            var RTSet = new HashSet<String>();
-            foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
-            {
-                var splitName = redundantOption.optionName.Split(' ');
-                fileSet.Add(splitName[0]);
-                RTSet.Add(splitName[2]);
+                // The dropdown is only visible if the peptide has redundant spectra. Index 0 does.
+                Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+                RunUI(() => dlg.SelectedIndex = 1);
+                // The peptide at index one does not have redundant spectra
+                Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+                // Check that the peaks count of the graphed item matches the peaks of the selected spectra
+                Assert.AreNotEqual(144, dlg.GraphItem.PeaksCount);
+                RunUI(() => dlg.SelectedIndex = 0);
+                Assert.AreEqual(144, dlg.GraphItem.PeaksCount);
+                RunUI(() =>
+                {
+                    dlg.FilterString = "ik";
+                    dlg.SelectedIndex = 4;
+                });
+                Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+                // Checks that for this peptide, there are 11 different spectra available in the dropdown
+                Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
+                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 0);
+                // Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
+                Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
+                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
+                Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
+                var fileSet = new HashSet<String>();
+                var RTSet = new HashSet<String>();
+                var splitterChars = new char[] { '(', '（' };
+                foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
+                {
+                    var splitName = redundantOption.optionName.Split(splitterChars);
+                    fileSet.Add(splitName[0]);
+                    RTSet.Add(splitName[1]);
+                }
+                // Checks the naming conventions are accurate, two different file names and 11 different retention times
+                Assert.AreEqual(2, fileSet.Count);
+                Assert.AreEqual(11, RTSet.Count);
+                RunUI(() => dlg.SelectedIndex = 1);
+                Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
             }
-            //Checks the naming conventions are accurate, two different file names and 11 different retention times
-            Assert.AreEqual(2, fileSet.Count);
-            Assert.AreEqual(11, RTSet.Count);
-            RunUI(() => dlg.SelectedIndex = 1);
-            Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+            else
+            {
+                // For small molecules, all have redundancies. Check to make sure the dropdown is visible for all of them
+                for (var i = 0; i < 10; i++)
+                {
+                    RunUI(() => dlg.SelectedIndex = i);
+                    Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+                }
+            }
             RunUI(() => dlg.Close());
         }
     }

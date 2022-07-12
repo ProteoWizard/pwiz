@@ -79,9 +79,10 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave = new System.Windows.Forms.ToolStripButton();
             this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.labelFilename = new System.Windows.Forms.Label();
             this.comboRedundantSpectra = new System.Windows.Forms.ComboBox();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
-            this.labelFilename = new System.Windows.Forms.Label();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -132,6 +133,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolBar.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.ViewLibraryPanel.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.SuspendLayout();
@@ -522,9 +524,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.comboRedundantSpectra);
+            this.panel2.Controls.Add(this.tableLayoutPanel2);
             this.panel2.Controls.Add(this.cbAssociateProteins);
-            this.panel2.Controls.Add(this.labelFilename);
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
@@ -532,14 +533,26 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
             // 
+            // tableLayoutPanel2
+            // 
+            resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
+            this.tableLayoutPanel2.Controls.Add(this.labelFilename, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.comboRedundantSpectra, 1, 0);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            // 
+            // labelFilename
+            // 
+            resources.ApplyResources(this.labelFilename, "labelFilename");
+            this.labelFilename.Name = "labelFilename";
+            // 
             // comboRedundantSpectra
             // 
             resources.ApplyResources(this.comboRedundantSpectra, "comboRedundantSpectra");
             this.comboRedundantSpectra.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRedundantSpectra.DropDownWidth = 400;
+            this.comboRedundantSpectra.DropDownWidth = 200;
             this.comboRedundantSpectra.FormattingEnabled = true;
             this.comboRedundantSpectra.Name = "comboRedundantSpectra";
-            this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.redundantSpectrum_changed);
+            this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.comboRedundantSpectra_SelectedIndexChanged);
             // 
             // cbAssociateProteins
             // 
@@ -547,11 +560,6 @@ namespace pwiz.Skyline.SettingsUI
             this.cbAssociateProteins.Name = "cbAssociateProteins";
             this.modeUIHandler.SetUIMode(this.cbAssociateProteins, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.cbAssociateProteins.UseVisualStyleBackColor = true;
-            // 
-            // labelFilename
-            // 
-            resources.ApplyResources(this.labelFilename, "labelFilename");
-            this.labelFilename.Name = "labelFilename";
             // 
             // btnAdd
             // 
@@ -842,6 +850,8 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStrip1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.tableLayoutPanel2.PerformLayout();
             this.ViewLibraryPanel.ResumeLayout(false);
             this.contextMenuSpectrum.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -915,7 +925,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge3ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge4ContextMenuItem;
-        private System.Windows.Forms.Label labelFilename;
         private System.Windows.Forms.Label labelRT;
         private System.Windows.Forms.Button btnLibDetails;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
@@ -935,6 +944,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripComboBox comboMirrorSpectrum;
         private System.Windows.Forms.ToolStripLabel ceLabel;
         private System.Windows.Forms.ToolStripComboBox comboCE;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Label labelFilename;
         private System.Windows.Forms.ComboBox comboRedundantSpectra;
     }
 }

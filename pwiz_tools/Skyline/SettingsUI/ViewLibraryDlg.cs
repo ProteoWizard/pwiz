@@ -182,7 +182,6 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
-            comboRedundantSpectra.AutoSize = true;
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -642,7 +641,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
 
-        public class ComboOption : IComparable
+        public class ComboOption : IComparable<ComboOption>
         {
             public SpectrumInfoLibrary spectrumInfoLibrary;
             public string optionName;
@@ -671,11 +670,11 @@ namespace pwiz.Skyline.SettingsUI
                 return spectrumInfoLibrary.GetHashCode();
             }
 
-            public int CompareTo(object obj)
+            public int CompareTo(ComboOption obj)
             {
+                // Compare with culture-specific comparison because these are file names
                 if (obj == null) return 1;
-                ComboOption otherComboOption = obj as ComboOption;
-                return optionName.CompareTo(otherComboOption.optionName);
+                else return string.Compare(optionName, obj.optionName, StringComparison.CurrentCultureIgnoreCase);
             }
         }
 
@@ -785,7 +784,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
-                        //Get all redundant spectrum for the selected peptide, add them to comboRedundantSpectra
+                        // Get all redundant spectrum for the selected peptide, add them to comboRedundantSpectra
                         var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, IsotopeLabelType.light,
                             LibraryRedundancy.all);
                         var numRedundancies = 0;
@@ -797,7 +796,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         comboRedundantSpectra.Visible = numRedundancies > 1;
 
-                        //Set the spectrum being graphed to the selected spectrum in the comboBox
+                        // Set the spectrum being graphed to the selected spectrum in the comboBox
                         SpectrumInfoLibrary spectrumInfo = setupComboBox(newDropDownOptions, index);
 
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
@@ -935,7 +934,7 @@ namespace pwiz.Skyline.SettingsUI
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
         }
 
-        //Sets up the redundant dropdown menu and selects the spectrum to display on the graph
+        // Sets up the redundant dropdown menu and selects the spectrum to display on the graph
         private SpectrumInfoLibrary setupComboBox(List<ComboOption> options, int index)
         {
             if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
@@ -951,7 +950,7 @@ namespace pwiz.Skyline.SettingsUI
                     comboRedundantSpectra.Items.Add(opt);
                     if (opt.spectrumInfoLibrary.IsBest)
                     {
-                        //Sets the selected dropdown item to what is graphed without updating the UI.
+                        // Sets the selected dropdown item to what is graphed without updating the UI.
                         comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
                         comboRedundantSpectra.SelectedItem = opt;
                         comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
@@ -2876,6 +2875,11 @@ namespace pwiz.Skyline.SettingsUI
         private void redundantSpectrum_changed(object sender, EventArgs e)
         {
             UpdateUI();
+        }
+
+        private void comboRedundantSpectra_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
