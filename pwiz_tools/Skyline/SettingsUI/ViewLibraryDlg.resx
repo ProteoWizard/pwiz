@@ -687,77 +687,158 @@
   <data name="&gt;&gt;splitMain.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>436, 17</value>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>331, 17</value>
   </metadata>
-  <data name="labelPrecursor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 15</value>
+  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Right</value>
   </data>
-  <data name="labelPrecursor.Text" xml:space="preserve">
-    <value>Precursor:</value>
+  <data name="btnAIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="comboPrecursor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 25</value>
+  <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
   </data>
-  <data name="labelSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61, 15</value>
+  <data name="btnAIons.ToolTipText" xml:space="preserve">
+    <value>A-ions</value>
   </data>
-  <data name="labelSpectrum.Text" xml:space="preserve">
-    <value>Spectrum:</value>
+  <data name="btnBIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="comboSpectrum.MaxDropDownItems" type="System.Int32, mscorlib">
-    <value>15</value>
+  <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
   </data>
-  <data name="comboSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 25</value>
+  <data name="btnBIons.ToolTipText" xml:space="preserve">
+    <value>B-ions</value>
   </data>
-  <data name="mirrorLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>43, 15</value>
+  <data name="btnCIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="mirrorLabel.Text" xml:space="preserve">
-    <value>Mirror:</value>
+  <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
   </data>
-  <data name="comboMirrorSpectrum.MaxDropDownItems" type="System.Int32, mscorlib">
-    <value>15</value>
+  <data name="btnCIons.ToolTipText" xml:space="preserve">
+    <value>C-ions</value>
   </data>
-  <data name="comboMirrorSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 25</value>
+  <data name="btnXIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 15</value>
+  <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
   </data>
-  <data name="ceLabel.Text" xml:space="preserve">
-    <value>CE:</value>
+  <data name="btnXIons.ToolTipText" xml:space="preserve">
+    <value>X-ions</value>
   </data>
-  <data name="comboCE.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 25</value>
+  <data name="btnYIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
   </data>
-  <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>651, 25</value>
+  <data name="btnYIons.ToolTipText" xml:space="preserve">
+    <value>Y-ions</value>
   </data>
-  <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="btnZIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="toolBar.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
   </data>
-  <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
-    <value>toolBar</value>
+  <data name="btnZIons.ToolTipText" xml:space="preserve">
+    <value>Z-ions</value>
   </data>
-  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
+  <data name="btnFragmentIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
+    <value>fragment ions</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 6</value>
+  </data>
+  <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="charge1Button.ToolTipText" xml:space="preserve">
+    <value>Charge 1 ions</value>
+  </data>
+  <data name="charge2Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="charge2Button.ToolTipText" xml:space="preserve">
+    <value>Charge 2 ions</value>
+  </data>
+  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 6</value>
+  </data>
+  <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
+    <value>Copy Metafile</value>
+  </data>
+  <data name="btnCopy.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnCopy.ToolTipText" xml:space="preserve">
+    <value>Copy Bitmap</value>
+  </data>
+  <data name="btnSave.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnSave.ToolTipText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="btnPrint.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnPrint.ToolTipText" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>587, 0</value>
+  </data>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>24, 407</value>
+  </data>
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name="&gt;&gt;toolBar.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+    <value>Left</value>
   </data>
   <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -782,156 +863,6 @@
   </data>
   <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>331, 17</value>
-  </metadata>
-  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="btnAIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnAIons.ToolTipText" xml:space="preserve">
-    <value>A-ions</value>
-  </data>
-  <data name="btnBIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnBIons.ToolTipText" xml:space="preserve">
-    <value>B-ions</value>
-  </data>
-  <data name="btnCIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnCIons.ToolTipText" xml:space="preserve">
-    <value>C-ions</value>
-  </data>
-  <data name="btnXIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnXIons.ToolTipText" xml:space="preserve">
-    <value>X-ions</value>
-  </data>
-  <data name="btnYIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnYIons.ToolTipText" xml:space="preserve">
-    <value>Y-ions</value>
-  </data>
-  <data name="btnZIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnZIons.ToolTipText" xml:space="preserve">
-    <value>Z-ions</value>
-  </data>
-  <data name="btnFragmentIons.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
-    <value>fragment ions</value>
-  </data>
-  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>6, 407</value>
-  </data>
-  <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="charge1Button.ToolTipText" xml:space="preserve">
-    <value>Charge 1 ions</value>
-  </data>
-  <data name="charge2Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="charge2Button.ToolTipText" xml:space="preserve">
-    <value>Charge 2 ions</value>
-  </data>
-  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>6, 407</value>
-  </data>
-  <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
-    <value>Copy Metafile</value>
-  </data>
-  <data name="btnCopy.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnCopy.ToolTipText" xml:space="preserve">
-    <value>Copy Bitmap</value>
-  </data>
-  <data name="btnSave.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnSave.ToolTipText" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="btnPrint.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 404</value>
-  </data>
-  <data name="btnPrint.ToolTipText" xml:space="preserve">
-    <value>Print</value>
-  </data>
-  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>611, 407</value>
-  </data>
-  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
-    <value>GraphPanel</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="GraphPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -1482,144 +1413,6 @@
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.523, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;labelPrecursor.Name" xml:space="preserve">
-    <value>labelPrecursor</value>
-  </data>
-  <data name="&gt;&gt;labelPrecursor.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboPrecursor.Name" xml:space="preserve">
-    <value>comboPrecursor</value>
-  </data>
-  <data name="&gt;&gt;comboPrecursor.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelSpectrum.Name" xml:space="preserve">
-    <value>labelSpectrum</value>
-  </data>
-  <data name="&gt;&gt;labelSpectrum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboSpectrum.Name" xml:space="preserve">
-    <value>comboSpectrum</value>
-  </data>
-  <data name="&gt;&gt;comboSpectrum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;mirrorLabel.Name" xml:space="preserve">
-    <value>mirrorLabel</value>
-  </data>
-  <data name="&gt;&gt;mirrorLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboMirrorSpectrum.Name" xml:space="preserve">
-    <value>comboMirrorSpectrum</value>
-  </data>
-  <data name="&gt;&gt;comboMirrorSpectrum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
-    <value>ceLabel</value>
-  </data>
-  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboCE.Name" xml:space="preserve">
-    <value>comboCE</value>
-  </data>
-  <data name="&gt;&gt;comboCE.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
-    <value>btnAIons</value>
-  </data>
-  <data name="&gt;&gt;btnAIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnBIons.Name" xml:space="preserve">
-    <value>btnBIons</value>
-  </data>
-  <data name="&gt;&gt;btnBIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCIons.Name" xml:space="preserve">
-    <value>btnCIons</value>
-  </data>
-  <data name="&gt;&gt;btnCIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnXIons.Name" xml:space="preserve">
-    <value>btnXIons</value>
-  </data>
-  <data name="&gt;&gt;btnXIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnYIons.Name" xml:space="preserve">
-    <value>btnYIons</value>
-  </data>
-  <data name="&gt;&gt;btnYIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnZIons.Name" xml:space="preserve">
-    <value>btnZIons</value>
-  </data>
-  <data name="&gt;&gt;btnZIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentIons.Name" xml:space="preserve">
-    <value>btnFragmentIons</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
-    <value>toolStripSeparator1</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;charge1Button.Name" xml:space="preserve">
-    <value>charge1Button</value>
-  </data>
-  <data name="&gt;&gt;charge1Button.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;charge2Button.Name" xml:space="preserve">
-    <value>charge2Button</value>
-  </data>
-  <data name="&gt;&gt;charge2Button.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
-    <value>toolStripSeparator2</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;copyMetafileButton.Name" xml:space="preserve">
-    <value>copyMetafileButton</value>
-  </data>
-  <data name="&gt;&gt;copyMetafileButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCopy.Name" xml:space="preserve">
-    <value>btnCopy</value>
-  </data>
-  <data name="&gt;&gt;btnCopy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnSave.Name" xml:space="preserve">
-    <value>btnSave</value>
-  </data>
-  <data name="&gt;&gt;btnSave.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnPrint.Name" xml:space="preserve">
-    <value>btnPrint</value>
-  </data>
-  <data name="&gt;&gt;btnPrint.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;aionsContextMenuItem.Name" xml:space="preserve">
     <value>aionsContextMenuItem</value>
   </data>
@@ -1787,6 +1580,96 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator27.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
+    <value>btnAIons</value>
+  </data>
+  <data name="&gt;&gt;btnAIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBIons.Name" xml:space="preserve">
+    <value>btnBIons</value>
+  </data>
+  <data name="&gt;&gt;btnBIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCIons.Name" xml:space="preserve">
+    <value>btnCIons</value>
+  </data>
+  <data name="&gt;&gt;btnCIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnXIons.Name" xml:space="preserve">
+    <value>btnXIons</value>
+  </data>
+  <data name="&gt;&gt;btnXIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnYIons.Name" xml:space="preserve">
+    <value>btnYIons</value>
+  </data>
+  <data name="&gt;&gt;btnYIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnZIons.Name" xml:space="preserve">
+    <value>btnZIons</value>
+  </data>
+  <data name="&gt;&gt;btnZIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnFragmentIons.Name" xml:space="preserve">
+    <value>btnFragmentIons</value>
+  </data>
+  <data name="&gt;&gt;btnFragmentIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;charge1Button.Name" xml:space="preserve">
+    <value>charge1Button</value>
+  </data>
+  <data name="&gt;&gt;charge1Button.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;charge2Button.Name" xml:space="preserve">
+    <value>charge2Button</value>
+  </data>
+  <data name="&gt;&gt;charge2Button.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
+    <value>toolStripSeparator2</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;copyMetafileButton.Name" xml:space="preserve">
+    <value>copyMetafileButton</value>
+  </data>
+  <data name="&gt;&gt;copyMetafileButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCopy.Name" xml:space="preserve">
+    <value>btnCopy</value>
+  </data>
+  <data name="&gt;&gt;btnCopy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnSave.Name" xml:space="preserve">
+    <value>btnSave</value>
+  </data>
+  <data name="&gt;&gt;btnSave.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnPrint.Name" xml:space="preserve">
+    <value>btnPrint</value>
+  </data>
+  <data name="&gt;&gt;btnPrint.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ViewLibraryDlg</value>
