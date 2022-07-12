@@ -102,32 +102,32 @@ namespace TestPerf
             {
                 Assert.AreEqual(425484, proteinsDlg.FinalResults.PeptidesMapped);
                 Assert.AreEqual(0, proteinsDlg.FinalResults.PeptidesUnmapped);
-                Assert.AreEqual(84463, proteinsDlg.FinalResults.ProteinsMapped);
-                Assert.AreEqual(4016, proteinsDlg.FinalResults.ProteinsUnmapped);
+                Assert.AreEqual(84198, proteinsDlg.FinalResults.ProteinsMapped);
+                Assert.AreEqual(4281, proteinsDlg.FinalResults.ProteinsUnmapped);
 
                 proteinsDlg.GroupProteins = true;
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein;
                 //Console.WriteLine($"KeepAllProteins AssignedToBestProtein {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(466483, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(42491, proteinsDlg.FinalResults.FinalProteinCount);
+                Assert.AreEqual(471387, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(48572, proteinsDlg.FinalResults.FinalProteinCount);
 
                 proteinsDlg.FindMinimalProteinList = true;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
                 //Console.WriteLine($"MinimalProteinList DuplicatedBetweenProteins {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(721703, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(43364, proteinsDlg.FinalResults.FinalProteinCount);
+                Assert.AreEqual(744438, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(49193, proteinsDlg.FinalResults.FinalProteinCount);
 
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
                 //Console.WriteLine($"KeepAllProteins Removed {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(159725, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(35598, proteinsDlg.FinalResults.FinalProteinCount);
+                Assert.AreEqual(167189, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(41606, proteinsDlg.FinalResults.FinalProteinCount);
 
                 proteinsDlg.MinPeptidesPerProtein = 10;
                 //Console.WriteLine($"MinPeptidesPerProtein 10 {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
-                Assert.AreEqual(87720, proteinsDlg.FinalResults.FinalPeptideCount);
-                Assert.AreEqual(3963, proteinsDlg.FinalResults.FinalProteinCount);
+                Assert.AreEqual(88242, proteinsDlg.FinalResults.FinalPeptideCount);
+                Assert.AreEqual(3987, proteinsDlg.FinalResults.FinalProteinCount);
             });
             // PauseTest();
             using (new WaitDocumentChange(null, true))
@@ -147,7 +147,7 @@ namespace TestPerf
                     else
                         nonProteins.Add(docNode);
                 }
-                Assert.AreEqual(3963, proteins.Count);
+                Assert.AreEqual(3987, proteins.Count);
                 Assert.AreEqual(0, nonProteins.Count);
             });
         }

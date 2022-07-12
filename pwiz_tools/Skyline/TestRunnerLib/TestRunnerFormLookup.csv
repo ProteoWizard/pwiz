@@ -159,7 +159,6 @@ PeptideSettingsUI.ModificationsTab,TestNeutralLoss
 PeptideSettingsUI.LabelsTab,UIModeSettingsTest
 PeptideSettingsUI.PredictionTab,IrtFunctionalTest
 PeptideSettingsUI.QuantificationTab,TestCalibration
-PeptidesPerProteinDlg,TestImportPeptideSearch
 PermuteIsotopeModificationsDlg,TestModificationPermuter
 PivotEditor,TestPivotEditor
 PopupPickList,TestPrecursorIon
