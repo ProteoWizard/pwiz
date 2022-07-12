@@ -23,6 +23,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -95,6 +96,76 @@ namespace pwiz.SkylineTest
         {
             foreach (string baseString in baseStrings)
                 yield return baseString + fixText.Substring(fixText.Length - i, i++);
+        }
+
+        /// <summary>
+        /// Test for natural sort. Randomly shuffles sorted lists of stings and then sorts them again in order to ensure
+        /// consistency and accuracy in establishing the original natural sort order. This test is run on a set of strings
+        /// spanning nearly every number and letter in order to demonstrate consistency across a diverse range of possible
+        /// file names. Should this test be working correctly it will demonstrate that on each shuffle sort cycle that
+        /// the sorting algorithm renders the same sort outcome every time.
+
+        /// </summary>
+        [TestMethod]
+        public void TestNaturalSort()
+        {   
+            //Sample test strings
+            var orderedSample = new List<string>() 
+            {   
+                "1NvWw","1U2t6","1uBYH","2E1fK","2V6La","3pxza","3sVDq","4tuzE",
+                "4VK2-","4ztTB","5QRmn","5Zcd7","6hkS_","6qvCh","6sAzR","7Z25C","8fMsb","8HRzI",
+                "8wqJy","9jz1y","a5E6p","a736Q","aL4lL","alpXu","B-2ag","BRrbj","bzUgj","c8qdT","CdaAF",
+                "CDk8I","Cdm0k","CFYgZ","D9Xdy","dP8a5","e9teS","eibUe","EMNkm","EsE4z","evAra","eZUyJ",
+                "f1A-B","fB6mW","FUjdN","GCtkn","gLHOp","gNbrM","Go6jE","gRm0t","Gw_5C","gxuE_",
+                "GYmXe","GyquW","GZw_D","H5a9A","H6KDQ","H6oOL","h7k2O","h7L2H","hcFa4","hhtYn",
+                "HNKWG","HOmz9","hp_4Y","hTa-9","igDjW","IqHG0","IXRRk","j0OXu","J6fuV","jnLi3","K6rl0",
+                "kCFaa","kIcKi","KS0Ua","KxR_m","Ky9Ef","LHiBw","lMdGG","ls8Vb","lSOc_","lWk5c","mE9Bc",
+                "mKppU","mpSNi","mWsW_","naLxD","ne-LG","NhsZW","NPk3-","nsoxE","Nxsqw","o6S3j","Ol8lY",
+                "oRQN_","otCNq","OXNJo","p5-zT","pc8rL","PEpSv","pj_FZ","PQWQ0","pseOl","pxiUY","qe7ib",
+                "QGkFc","QgYG9","QOi50","QwrRK","QWwUL","qZwkK","Rhsrt","rlw8H",
+                "Skyline-64_1_4_0_4421.zip","Skyline-64_1_4_0_4422.zip","Skyline-64_2_5_0_5675.zip","Skyline-64_20_1_0_155.zip",
+                "sna_M","SwvOY",
+                "TachS","thxs7","U4sCZ","UIQF2","UNGYS","UPLhZ","USZgP","uz-Oq","ve7Ml","vlpJ-",
+                "vscw3","W2ffg","waINu","wAYVn","wcnac","wgnCt","Whe2M","WHs9b","wj-Sy","woie2","WOrKF",
+                "XfWhr","XfY9w","xlt5k","XPCHC","XxgDy","Zdrnb","zXdQ1"
+            };
+
+            // Run test 12 time to ensure consistency 
+            for (int i = 0; i < 12; i++)
+            {
+                SortAndTest(orderedSample); // Test sort on a smaller sample set
+            }
+
+            // Shuffle an input list and sort. Compares against original in order version to ensure consistency
+            void SortAndTest(List<string> ordered)
+            {
+                List<string> misOrdered = Shuffle(ordered); // Shuffle
+
+                misOrdered.Sort((x, y) => NaturalComparer.Compare(x, y)); // Naturally sort
+
+                // Compare with original. Prints out discrepancies between sort and original if they should occur
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    AssertEx.AreEqual(ordered[i], misOrdered[i], string.Format("Test Natural is not sorting in the correct order: at position {0}: {1} vs {2}", i, ordered[i], misOrdered[i]) + 
+                                                                 "\nExpected sort:\n" + ordered.Aggregate((a,b) => a + "\n" + b) +
+                                                                 "\n\nActual sort:\n" + misOrdered.Aggregate((a, b) => a + "\n" + b));
+                }
+            }
+
+            // Returns a shuffled copy the input list
+            List<string> Shuffle(List<string> inOrder)
+            {
+                List<string> misOrdered = new List<string>(inOrder); // Copy list
+                Random rand = new Random();
+                
+                // Shuffle by swapping elements positions randomly
+                for (int a = 0; a < misOrdered.Count; a++)
+                {
+                    int loc = rand.Next(misOrdered.Count);
+                    (misOrdered[loc], misOrdered[a]) = (misOrdered[a], misOrdered[loc]);
+                }
+                return misOrdered;
+            }
         }
     }
 }
