@@ -52,6 +52,22 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.btnAIons = new System.Windows.Forms.ToolStripButton();
+            this.btnBIons = new System.Windows.Forms.ToolStripButton();
+            this.btnCIons = new System.Windows.Forms.ToolStripButton();
+            this.btnXIons = new System.Windows.Forms.ToolStripButton();
+            this.btnYIons = new System.Windows.Forms.ToolStripButton();
+            this.btnZIons = new System.Windows.Forms.ToolStripButton();
+            this.btnFragmentIons = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.charge1Button = new System.Windows.Forms.ToolStripButton();
+            this.charge2Button = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.copyMetafileButton = new System.Windows.Forms.ToolStripButton();
+            this.btnCopy = new System.Windows.Forms.ToolStripButton();
+            this.btnSave = new System.Windows.Forms.ToolStripButton();
+            this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
@@ -93,22 +109,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.btnAIons = new System.Windows.Forms.ToolStripButton();
-            this.btnBIons = new System.Windows.Forms.ToolStripButton();
-            this.btnCIons = new System.Windows.Forms.ToolStripButton();
-            this.btnXIons = new System.Windows.Forms.ToolStripButton();
-            this.btnYIons = new System.Windows.Forms.ToolStripButton();
-            this.btnZIons = new System.Windows.Forms.ToolStripButton();
-            this.btnFragmentIons = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.charge1Button = new System.Windows.Forms.ToolStripButton();
-            this.charge2Button = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.copyMetafileButton = new System.Windows.Forms.ToolStripButton();
-            this.btnCopy = new System.Windows.Forms.ToolStripButton();
-            this.btnSave = new System.Windows.Forms.ToolStripButton();
-            this.btnPrint = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
             this.splitPeptideList.Panel2.SuspendLayout();
@@ -121,11 +121,11 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideEditPanel.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.GraphPanel.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.ViewLibraryPanel.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
-            this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitPeptideList
@@ -292,6 +292,129 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel.Controls.Add(this.graphControl);
             resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
+            // 
+            // toolStrip1
+            // 
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnAIons,
+            this.btnBIons,
+            this.btnCIons,
+            this.btnXIons,
+            this.btnYIons,
+            this.btnZIons,
+            this.btnFragmentIons,
+            this.toolStripSeparator1,
+            this.charge1Button,
+            this.charge2Button,
+            this.toolStripSeparator2,
+            this.copyMetafileButton,
+            this.btnCopy,
+            this.btnSave,
+            this.btnPrint});
+            this.toolStrip1.Name = "toolStrip1";
+            // 
+            // btnAIons
+            // 
+            this.btnAIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnAIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_A;
+            resources.ApplyResources(this.btnAIons, "btnAIons");
+            this.btnAIons.Name = "btnAIons";
+            // 
+            // btnBIons
+            // 
+            this.btnBIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnBIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_B;
+            resources.ApplyResources(this.btnBIons, "btnBIons");
+            this.btnBIons.Name = "btnBIons";
+            // 
+            // btnCIons
+            // 
+            this.btnCIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnCIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_C;
+            resources.ApplyResources(this.btnCIons, "btnCIons");
+            this.btnCIons.Name = "btnCIons";
+            // 
+            // btnXIons
+            // 
+            this.btnXIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnXIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_X;
+            resources.ApplyResources(this.btnXIons, "btnXIons");
+            this.btnXIons.Name = "btnXIons";
+            // 
+            // btnYIons
+            // 
+            this.btnYIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnYIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Y;
+            resources.ApplyResources(this.btnYIons, "btnYIons");
+            this.btnYIons.Name = "btnYIons";
+            // 
+            // btnZIons
+            // 
+            this.btnZIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnZIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Z;
+            resources.ApplyResources(this.btnZIons, "btnZIons");
+            this.btnZIons.Name = "btnZIons";
+            // 
+            // btnFragmentIons
+            // 
+            this.btnFragmentIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnFragmentIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_fragments;
+            resources.ApplyResources(this.btnFragmentIons, "btnFragmentIons");
+            this.btnFragmentIons.Name = "btnFragmentIons";
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // charge1Button
+            // 
+            this.charge1Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.charge1Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_1;
+            resources.ApplyResources(this.charge1Button, "charge1Button");
+            this.charge1Button.Name = "charge1Button";
+            // 
+            // charge2Button
+            // 
+            this.charge2Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.charge2Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_2;
+            resources.ApplyResources(this.charge2Button, "charge2Button");
+            this.charge2Button.Name = "charge2Button";
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
+            // 
+            // copyMetafileButton
+            // 
+            this.copyMetafileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.copyMetafileButton.Image = global::pwiz.Skyline.Properties.Resources.Copy;
+            resources.ApplyResources(this.copyMetafileButton, "copyMetafileButton");
+            this.copyMetafileButton.Name = "copyMetafileButton";
+            // 
+            // btnCopy
+            // 
+            this.btnCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy_Bitmap;
+            resources.ApplyResources(this.btnCopy, "btnCopy");
+            this.btnCopy.Name = "btnCopy";
+            // 
+            // btnSave
+            // 
+            this.btnSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnSave.Image = global::pwiz.Skyline.Properties.Resources.Save;
+            resources.ApplyResources(this.btnSave, "btnSave");
+            this.btnSave.Name = "btnSave";
+            // 
+            // btnPrint
+            // 
+            this.btnPrint.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnPrint.Image = global::pwiz.Skyline.Properties.Resources.Print;
+            resources.ApplyResources(this.btnPrint, "btnPrint");
+            this.btnPrint.Name = "btnPrint";
             // 
             // graphControl
             // 
@@ -599,129 +722,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
             // 
-            // toolStrip1
-            // 
-            resources.ApplyResources(this.toolStrip1, "toolStrip1");
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnAIons,
-            this.btnBIons,
-            this.btnCIons,
-            this.btnXIons,
-            this.btnYIons,
-            this.btnZIons,
-            this.btnFragmentIons,
-            this.toolStripSeparator1,
-            this.charge1Button,
-            this.charge2Button,
-            this.toolStripSeparator2,
-            this.copyMetafileButton,
-            this.btnCopy,
-            this.btnSave,
-            this.btnPrint});
-            this.toolStrip1.Name = "toolStrip1";
-            // 
-            // btnAIons
-            // 
-            this.btnAIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnAIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_A;
-            resources.ApplyResources(this.btnAIons, "btnAIons");
-            this.btnAIons.Name = "btnAIons";
-            // 
-            // btnBIons
-            // 
-            this.btnBIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnBIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_B;
-            resources.ApplyResources(this.btnBIons, "btnBIons");
-            this.btnBIons.Name = "btnBIons";
-            // 
-            // btnCIons
-            // 
-            this.btnCIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnCIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_C;
-            resources.ApplyResources(this.btnCIons, "btnCIons");
-            this.btnCIons.Name = "btnCIons";
-            // 
-            // btnXIons
-            // 
-            this.btnXIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnXIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_X;
-            resources.ApplyResources(this.btnXIons, "btnXIons");
-            this.btnXIons.Name = "btnXIons";
-            // 
-            // btnYIons
-            // 
-            this.btnYIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnYIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Y;
-            resources.ApplyResources(this.btnYIons, "btnYIons");
-            this.btnYIons.Name = "btnYIons";
-            // 
-            // btnZIons
-            // 
-            this.btnZIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnZIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Z;
-            resources.ApplyResources(this.btnZIons, "btnZIons");
-            this.btnZIons.Name = "btnZIons";
-            // 
-            // btnFragmentIons
-            // 
-            this.btnFragmentIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnFragmentIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_fragments;
-            resources.ApplyResources(this.btnFragmentIons, "btnFragmentIons");
-            this.btnFragmentIons.Name = "btnFragmentIons";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
-            // 
-            // charge1Button
-            // 
-            this.charge1Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.charge1Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_1;
-            resources.ApplyResources(this.charge1Button, "charge1Button");
-            this.charge1Button.Name = "charge1Button";
-            // 
-            // charge2Button
-            // 
-            this.charge2Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.charge2Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_2;
-            resources.ApplyResources(this.charge2Button, "charge2Button");
-            this.charge2Button.Name = "charge2Button";
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
-            // 
-            // copyMetafileButton
-            // 
-            this.copyMetafileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.copyMetafileButton.Image = global::pwiz.Skyline.Properties.Resources.Copy;
-            resources.ApplyResources(this.copyMetafileButton, "copyMetafileButton");
-            this.copyMetafileButton.Name = "copyMetafileButton";
-            // 
-            // btnCopy
-            // 
-            this.btnCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy_Bitmap;
-            resources.ApplyResources(this.btnCopy, "btnCopy");
-            this.btnCopy.Name = "btnCopy";
-            // 
-            // btnSave
-            // 
-            this.btnSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnSave.Image = global::pwiz.Skyline.Properties.Resources.Save;
-            resources.ApplyResources(this.btnSave, "btnSave");
-            this.btnSave.Name = "btnSave";
-            // 
-            // btnPrint
-            // 
-            this.btnPrint.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnPrint.Image = global::pwiz.Skyline.Properties.Resources.Print;
-            resources.ApplyResources(this.btnPrint, "btnPrint");
-            this.btnPrint.Name = "btnPrint";
-            // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
@@ -757,14 +757,14 @@ namespace pwiz.Skyline.SettingsUI
             this.tableLayoutPanel1.ResumeLayout(false);
             this.GraphPanel.ResumeLayout(false);
             this.GraphPanel.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
             this.ViewLibraryPanel.ResumeLayout(false);
             this.contextMenuSpectrum.ResumeLayout(false);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
