@@ -30,6 +30,7 @@ using SCIEX.Apis.Control.v1.DeviceMethods.Properties;
 using SCIEX.Apis.Control.v1.DeviceMethods.Requests;
 using SCIEX.Apis.Control.v1.DeviceMethods.Responses;
 using SCIEX.Apis.Control.v1.Security.Requests;
+using SCIEX.Apis.Control.v1.Security.Responses;
 
 namespace BuildSciexMethod
 {
@@ -241,6 +242,11 @@ namespace BuildSciexMethod
         private static void Check(IControlResponse response)
         {
             if (response.IsSuccessful)
+                return;
+
+            // This error message actually means that the server is older version (< SCIEX OS 3.0) and will not support newer functionality.
+            // It actually doesn’t impact any further functionality that was already supported previously, including 7500 method editing.
+            if (response is ConnectionResponse && Equals(response.ErrorCode, "System-InternalServerError"))
                 return;
 
             var msgs = new List<string> { $"{response.GetType().Name} failure." };
