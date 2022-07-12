@@ -1046,7 +1046,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
                 var fileSet = new HashSet<String>();
                 var RTSet = new HashSet<String>();
-                var splitterChars = new char[] { '(', '（' };
+                // Different languages have different parenthesis characters - split on either
+                var splitterChars = new[] { '(', '（' };
                 foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
                 {
                     var splitName = redundantOption.optionName.Split(splitterChars);
