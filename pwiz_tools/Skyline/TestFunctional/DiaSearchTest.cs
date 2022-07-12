@@ -25,6 +25,7 @@ using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
@@ -114,8 +115,9 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             SetupDiaSearchVariableWindows();
+            _testDetails.SearchFiles = _testDetails.SearchFiles.Take(1);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 78, PeptideCount = 82, PrecursorCount = 89, TransitionCount = 801 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 85, PeptideCount = 92, PrecursorCount = 103, TransitionCount = 927 };
 
             RunFunctionalTest();
         }
@@ -126,6 +128,7 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
 
             SetupDiaSearchVariableWindows();
+            _testDetails.SearchFiles = _testDetails.SearchFiles.Take(1);
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSGFPlus;
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
             _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 38, PeptideCount = 38, PrecursorCount = 38, TransitionCount = 342 };
@@ -140,10 +143,10 @@ namespace pwiz.SkylineTestFunctional
 
             SetupDiaSearchVariableWindows();
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
-            _testDetails.PrecursorMzTolerance = new MzTolerance(100, MzTolerance.Units.ppm);
+            _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 77, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 104, PeptideCount = 109, PrecursorCount = 128, TransitionCount = 1152 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0")
@@ -175,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
                 FragmentMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
 
                 Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 90, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
+                Final = new TestDetails.DocumentCounts { ProteinCount = 103, PeptideCount = 108, PrecursorCount = 110, TransitionCount = 990 },
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -212,6 +215,9 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestDiaUmpireSearch(_testDetails);
+
+            if (_testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
+                TestDiaUmpireSearch(_testDetails);
         }
 
         private void ValidateTargets(TestDetails.DocumentCounts targetCounts, TestDetails.DocumentCounts actualCounts, string propName)
@@ -244,8 +250,8 @@ namespace pwiz.SkylineTestFunctional
                     File.Copy(Path.Combine(diaUmpireTestDataPath, sourceName), Path.Combine(TestFilesDir.FullPath, sourceName), true);
 
             // delete -diaumpire files so they get regenerated instead of reused
-            foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
-                FileEx.SafeDelete(file);
+            //foreach (var file in Directory.GetFiles(TestFilesDir.FullPath, "*-diaumpire.*"))
+            //    FileEx.SafeDelete(file);
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
@@ -272,22 +278,26 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
             });
 
+            bool secondLoop = importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Contains(m => m == "Oxidation (M)");
             // In PerformDDASearch mode, ClickAddStructuralModification launches edit list dialog
-            var editListUI =
-                ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            if (!secondLoop)
             {
-                editModDlg.SetModification("Oxidation (M)", true); // Not L10N
-                editModDlg.OkDialog();
-            });
+                var editListUI =
+                    ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.SetModification("Oxidation (M)", true); // Not L10N
+                    editModDlg.OkDialog();
+                });
 
-            // Test a non-Unimod mod that won't affect the search
-            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
-            {
-                editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
-                editModDlg.OkDialog();
-            });
-            OkDialog(editListUI, editListUI.OkDialog);
+                // Test a non-Unimod mod that won't affect the search
+                RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+                {
+                    editModDlg.Modification = new StaticMod("NotUniModMod (U)", "U", null, "C3P1O1", LabelAtoms.None, null, null);
+                    editModDlg.OkDialog();
+                });
+                OkDialog(editListUI, editListUI.OkDialog);
+            }
 
             // Test back/next buttons
             RunUI(() =>
@@ -314,22 +324,33 @@ namespace pwiz.SkylineTestFunctional
             });
 
             string isolationSchemeName = "DiaUmpire Test Scheme";
-            RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus());
-            var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
-
-            RunUI(() =>
+            if (secondLoop)
             {
-                isolationScheme.IsolationSchemeName = isolationSchemeName;
-                isolationScheme.UseResults = false;
-            });
+                RunUI(() =>
+                {
+                    importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus();
+                    importPeptideSearchDlg.FullScanSettingsControl.IsolationSchemeName = isolationSchemeName;
+                });
+            }
+            else
+            {
+                RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.ComboIsolationSchemeSetFocus());
+                var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
 
-            testDetails.EditIsolationSchemeAction(importPeptideSearchDlg, isolationScheme);
-            WaitForConditionUI(10000, () => isolationScheme.GetIsolationWindows().Any());
+                RunUI(() =>
+                {
+                    isolationScheme.IsolationSchemeName = isolationSchemeName;
+                    isolationScheme.UseResults = false;
+                });
 
-            var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
+                testDetails.EditIsolationSchemeAction(importPeptideSearchDlg, isolationScheme);
+                WaitForConditionUI(10000, () => isolationScheme.GetIsolationWindows().Any());
 
-            OkDialog(isolationGraph, isolationGraph.CloseButton);
-            OkDialog(isolationScheme, isolationScheme.OkDialog);
+                var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
+
+                OkDialog(isolationGraph, isolationGraph.CloseButton);
+                OkDialog(isolationScheme, isolationScheme.OkDialog);
+            }
 
             RunUI(() =>
             {
@@ -486,24 +507,23 @@ namespace pwiz.SkylineTestFunctional
             if(IsRecordMode)
                 Console.WriteLine();
 
-            RunDlg<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, emptyProteinsDlg =>
+            var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+            RunUI(() =>
             {
                 var aic = new TestDetails.DocumentCounts();
 
-                emptyProteinsDlg.NewTargetsAll(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
+                /*emptyProteinsDlg.NewTargetsAll(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
                 if (Environment.Is64BitProcess)
                     // TODO: reenable these checks for 32 bit once intermittent failures are debugged
-                    ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");
+                    ValidateTargets(testDetails.Initial, aic, "_testDetails.Initial");*/
 
                 emptyProteinsDlg.NewTargetsFinalSync(out aic.ProteinCount, out aic.PeptideCount, out aic.PrecursorCount, out aic.TransitionCount);
 
-                WaitForCondition(() => emptyProteinsDlg.DocumentFinalCalculated); // Dialog won't actually close on OkDialog until this is set
-
                 if (Environment.Is64BitProcess)
                     ValidateTargets(testDetails.Final, aic, "_testDetails.Final");
-
-                emptyProteinsDlg.OkDialog();
             });
+            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
@@ -511,7 +531,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void PrepareDocument(string documentFile)
         {
-            RunUI(SkylineWindow.NewDocument);
+            RunUI(() => SkylineWindow.NewDocument(true));
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings", 
                 doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));

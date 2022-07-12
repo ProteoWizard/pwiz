@@ -1923,6 +1923,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shared Peptides.
+        /// </summary>
+        public static string AssociateProteinsDlg_CellValueNeeded_Shared_Peptides {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_CellValueNeeded_Shared_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find &amp;minimal protein group list that explains all peptides.
         /// </summary>
         public static string AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides {
@@ -1956,6 +1965,25 @@ namespace pwiz.Skyline.Properties {
         public static string AssociateProteinsDlg_Min_peptides_per_protein_group {
             get {
                 return ResourceManager.GetString("AssociateProteinsDlg_Min_peptides_per_protein_group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Existing protein associations will be discarded..
+        /// </summary>
+        public static string AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Organize all document peptides into associated proteins or protein groups..
+        /// </summary>
+        public static string AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_prote" +
+                        "ins_or_protein_groups", resourceCulture);
             }
         }
         
@@ -9704,6 +9732,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Duplicated peptides.
+        /// </summary>
+        public static string DuplicatedPeptideFinder_DisplayName_Duplicated_peptides {
+            get {
+                return ResourceManager.GetString("DuplicatedPeptideFinder_DisplayName_Duplicated_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
@@ -13855,6 +13892,16 @@ namespace pwiz.Skyline.Properties {
         public static string FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__ {
             get {
                 return ResourceManager.GetString("FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error on line {0}: invalid non-ASCII character &apos;{1}&apos; at position {2}; are you sure this is a FASTA file?.
+        /// </summary>
+        public static string FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_ {
+            get {
+                return ResourceManager.GetString("FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_" +
+                        "position__2___are_you_sure_this_is_a_FASTA_file_", resourceCulture);
             }
         }
         
