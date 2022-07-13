@@ -956,7 +956,7 @@ namespace pwiz.Skyline.SettingsUI
                         comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
                     }
                 }
-
+                ComboHelper.AutoSizeDropDown(comboRedundantSpectra);
                 var spectraOptions = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best);
                 var toReturn = spectraOptions.FirstOrDefault();
                 return toReturn;
