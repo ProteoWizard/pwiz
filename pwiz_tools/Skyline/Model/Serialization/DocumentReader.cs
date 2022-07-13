@@ -675,6 +675,7 @@ namespace pwiz.Skyline.Model.Serialization
         /// either a FASTA sequence or a peptide list.
         /// </summary>
         /// <param name="reader">The reader positioned at a protein tag</param>
+        /// <param name="readPeptideList">Set to false to skip reading peptides for the protein (e.g. when the protein is inside a protein_group)</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
         private PeptideGroupDocNode ReadProteinXml(XmlReader reader, bool readPeptideList = true)
         {
