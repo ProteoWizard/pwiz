@@ -637,27 +637,38 @@ namespace MSConvertGUI
                         scanTimeHigh = String.IsNullOrEmpty(ScanTimeHigh.Text) ? "1e8" : ScanTimeHigh.Text;
                     }
 
+                    Action<string, string> addOrUpdateFilter = (filter, args) =>
+                    {
+                        foreach(DataGridViewRow row in FilterDGV.Rows)
+                            if (row.Cells[0].Value.ToString() == filter)
+                            {
+                                row.SetValues(filter, args);
+                                return;
+                            }
+                        FilterDGV.Rows.Add(filter, args);
+                    };
+
                     if (!String.IsNullOrEmpty(MSLevelLow.Text) || !String.IsNullOrEmpty(MSLevelHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "msLevel", String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text) });
+                        addOrUpdateFilter("msLevel", String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text));
                     if (!String.IsNullOrEmpty(ScanNumberLow.Text) || !String.IsNullOrEmpty(ScanNumberHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "scanNumber", String.Format("{0}-{1}", ScanNumberLow.Text, ScanNumberHigh.Text) });
+                        addOrUpdateFilter("scanNumber", String.Format("{0}-{1}", ScanNumberLow.Text, ScanNumberHigh.Text));
                     if (!String.IsNullOrEmpty(scanTimeLow) || !String.IsNullOrEmpty(scanTimeHigh))
-                        FilterDGV.Rows.Add(new[] { "scanTime", String.Format("[{0},{1}]", scanTimeLow, scanTimeHigh) });
+                        addOrUpdateFilter("scanTime", String.Format("[{0},{1}]", scanTimeLow, scanTimeHigh));
                     if (!String.IsNullOrEmpty(ScanEventLow.Text) || !String.IsNullOrEmpty(ScanEventHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "scanEvent", String.Format("{0}-{1}", ScanEventLow.Text, ScanEventHigh.Text) });
+                        addOrUpdateFilter("scanEvent", String.Format("{0}-{1}", ScanEventLow.Text, ScanEventHigh.Text));
                     if (!String.IsNullOrEmpty(ChargeStatesLow.Text) || !String.IsNullOrEmpty(ChargeStatesHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "chargeState", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text) });
+                        addOrUpdateFilter("chargeState", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text));
                     if (!String.IsNullOrEmpty(DefaultArrayLengthLow.Text) || !String.IsNullOrEmpty(DefaultArrayLengthHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "defaultArrayLength", String.Format("{0}-{1}", DefaultArrayLengthLow.Text, DefaultArrayLengthHigh.Text) });
+                        addOrUpdateFilter("defaultArrayLength", String.Format("{0}-{1}", DefaultArrayLengthLow.Text, DefaultArrayLengthHigh.Text));
                     if (!String.IsNullOrEmpty(CollisionEnergyLow.Text) && !String.IsNullOrEmpty(CollisionEnergyHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "collisionEnergy", String.Format("low={0} high={1} acceptNonCID={2} acceptMissingCE={3}", CollisionEnergyLow.Text, CollisionEnergyHigh.Text,
-                                                                                    CollisionEnergyAcceptNonCIDMSnSpectra.Checked, CollisionEnergyAcceptCIDSpectraWithMissingCE.Checked) });
+                        addOrUpdateFilter("collisionEnergy", String.Format("low={0} high={1} acceptNonCID={2} acceptMissingCE={3}", CollisionEnergyLow.Text, CollisionEnergyHigh.Text,
+                                                                           CollisionEnergyAcceptNonCIDMSnSpectra.Checked, CollisionEnergyAcceptCIDSpectraWithMissingCE.Checked));
                     if (ActivationTypeBox.Text != "Any")
-                        FilterDGV.Rows.Add(new[] { "activation", ActivationTypeBox.Text });
+                        addOrUpdateFilter("activation", ActivationTypeBox.Text);
                     if (AnalyzerTypeBox.Text != "Any")
-                        FilterDGV.Rows.Add(new[] { "analyzer", AnalyzerTypeBox.Text });
+                        addOrUpdateFilter("analyzer", AnalyzerTypeBox.Text);
                     if (PolarityBox.Text != "Any")
-                        FilterDGV.Rows.Add(new[] { "polarity", PolarityBox.Text.ToLowerInvariant() });
+                        addOrUpdateFilter("polarity", PolarityBox.Text.ToLowerInvariant());
                     //if (!String.IsNullOrEmpty(mzWinLow.Text) || !String.IsNullOrEmpty(mzWinHigh.Text))
                     //    FilterDGV.Rows.Add(new[] { "mzWindow", String.Format("[{0},{1}]", mzWinLow.Text, mzWinHigh.Text) });
                     break;
@@ -789,29 +800,9 @@ namespace MSConvertGUI
             if (SrmSpectraBox.Checked)
                 commandLine.Append("--srmAsSpectra|");
 
-            var msLevelsTotal = String.Empty;
-            var scanNumberTotal = String.Empty;
             foreach (DataGridViewRow row in FilterDGV.Rows)
-            {
-                switch ((string)row.Cells[0].Value)
-                {
-                    case "msLevel":
-                        msLevelsTotal += (string)row.Cells[1].Value + " ";
-                        break;
-                    case "scanNumber":
-                        scanNumberTotal += (string)row.Cells[1].Value + " ";
-                        break;
-                    default:
-                        commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
-                        break;
-                }
-            }
-
-            if (!String.IsNullOrEmpty(msLevelsTotal))
-                commandLine.AppendFormat("--filter|msLevel {0}|", msLevelsTotal.Trim());
-            if (!String.IsNullOrEmpty(scanNumberTotal))
-                commandLine.AppendFormat("--filter|scanNumber {0}|", scanNumberTotal.Trim());
-
+                commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
+            
             if (MakeTPPCompatibleOutputButton.Checked)
             {
                 String tppline = "--filter|titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState> File:\"<SourcePath>\", NativeID:\"<Id>\"|";
@@ -862,8 +853,11 @@ namespace MSConvertGUI
                         break;
                     case "--filter":
                         var space = words[++i].IndexOf(' ');
-                        FilterDGV.Rows.Add(new[] { words[i].Substring(0,space),
-                            words[i].Substring(space+1) });
+                        string filterName = words[i].Substring(0, space);
+                        if (filterName == "titleMaker")
+                            MakeTPPCompatibleOutputButton.Checked = true;
+                        else
+                            FilterDGV.Rows.Add(filterName, words[i].Substring(space+1));
                         break;
                     case "--32":
                     case "--noindex":
