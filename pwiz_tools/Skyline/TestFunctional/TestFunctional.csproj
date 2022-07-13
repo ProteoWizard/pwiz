@@ -170,6 +170,7 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
@@ -478,6 +479,7 @@
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
     <None Include="CrosslinkNeutralLossTest.zip" />
     <None Include="DdaPeakIntegrationTest.zip" />
