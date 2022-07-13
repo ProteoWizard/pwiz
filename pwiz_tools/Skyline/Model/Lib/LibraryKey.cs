@@ -534,7 +534,15 @@ namespace pwiz.Skyline.Model.Lib
 
         public override Target Target
         {
-            get { return PeptideLibraryKeys.First().Target; }
+            get { return new Target(ModifiedSequence); }
+        }
+
+        public string ModifiedSequence
+        {
+            get
+            {
+                return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks);
+            }
         }
 
         public int Charge { get; private set; }
@@ -688,7 +696,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks) + Transition.GetChargeIndicator(Adduct);
+            return ModifiedSequence + Transition.GetChargeIndicator(Adduct);
         }
 
         /// <summary>
