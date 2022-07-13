@@ -93,20 +93,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 foreach (var precursor in peptide.TransitionGroups)
                 {
-                    if (ComparisonDef.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    if (ComparisonDef.NormalizationMethod.HideLabelType(SrmDocument.Settings, precursor.LabelType))
                     {
-                        if (ratioToLabel.Matches(precursor.LabelType))
-                        {
-                            continue;
-                        }
-                    }
-                    else if (NormalizationMethod.EQUALIZE_MEDIANS.Equals(ComparisonDef.NormalizationMethod))
-                    {
-                        if (SrmDocument.Settings.PeptideSettings.Modifications.InternalStandardTypes.Contains(
-                                precursor.LabelType))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
                     labelTypes.Add(precursor.TransitionGroup.LabelType);
                 }

@@ -97,10 +97,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod(@"none", () => GroupComparisonStrings.NormalizationMethod_NONE_None, value=>value);
-        public static readonly NormalizationMethod EQUALIZE_MEDIANS 
-            = new SingletonNormalizationMethod(@"equalize_medians", 
-                () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians, value=>string.Format(GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_, value));
-
+        public static readonly NormalizationMethod EQUALIZE_MEDIANS = new EqualizeMedians();
         public static readonly NormalizationMethod GLOBAL_STANDARDS
             = new SingletonNormalizationMethod(@"global_standards",
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards,
@@ -168,6 +165,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             return result.AsReadOnly();
         }
 
+        /// <summary>
+        /// Returns true if the label type should not be shown (because the label type is used for normalization)
+        /// </summary>
+        public virtual bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+        {
+            return false;
+        }
+
         public class RatioToLabel : NormalizationMethod
         {
             private readonly IsotopeLabelType _isotopeLabelType;
@@ -220,6 +225,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return settings.PeptideSettings.Modifications.HeavyModifications
                     .FirstOrDefault(mods => Matches(mods.LabelType))?.LabelType ?? _isotopeLabelType;
+            }
+
+            public override bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+            {
+                return Matches(labelType);
             }
         }
 
@@ -390,6 +400,24 @@ namespace pwiz.Skyline.Model.GroupComparison
             public override string GetAxisTitle(string plottedValue)
             {
                 return _getAxisTitleFunc(plottedValue);
+            }
+        }
+
+        private class EqualizeMedians : NormalizationMethod
+        {
+            public EqualizeMedians() : base(@"equalize_medians",
+                () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians) {
+            }
+
+            public override bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+            {
+                return settings.PeptideSettings.Modifications.InternalStandardTypes.Contains(labelType);
+            }
+
+            public override string GetAxisTitle(string plottedValue)
+            {
+                return string.Format(
+                    GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_, plottedValue);
             }
         }
 
