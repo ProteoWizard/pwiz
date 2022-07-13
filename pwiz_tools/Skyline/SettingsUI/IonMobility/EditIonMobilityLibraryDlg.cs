@@ -385,7 +385,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             {
                 var seqModified = ion.Precursor;
                 // CONSIDER: Select the peptide row
-                if (seqModified.Target.IsProteomic && !FastaSequence.IsValidPeptideSequence(seqModified.Sequence))
+                if (seqModified.Target.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
                 {
                     MessageDlg.Show(this, 
                         string.Format(Resources.EditIonMobilityLibraryDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence_, seqModified));
@@ -969,7 +969,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var target = columns[EditIonMobilityLibraryDlg.COLUMN_TARGET] == null
                 ? String.Empty
                 : columns[EditIonMobilityLibraryDlg.COLUMN_TARGET].ToString();
-            var isPeptide = FastaSequence.IsValidPeptideSequence(target);
+            var isPeptide = FastaSequence.IsExSequence(target);
             var adduct = columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT] == null
                 ? String.Empty
                 : columns[EditIonMobilityLibraryDlg.COLUMN_ADDUCT].ToString();

@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -733,10 +732,6 @@ namespace pwiz.Skyline.Model
 
          public static string NormalizeModifiedSequence(string rawModifiedSequence)
         {
-            if (CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(rawModifiedSequence, 0) != null)
-            {
-                return rawModifiedSequence;
-            }
             var normalizedSeq = new StringBuilder();
             int ichLast = 0;
             for (int ichOpenBracket = rawModifiedSequence.IndexOf('[');

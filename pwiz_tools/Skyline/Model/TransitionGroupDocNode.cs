@@ -203,8 +203,10 @@ namespace pwiz.Skyline.Model
                     PrecursorAdduct);
             }
 
-            return new LibKey(settings.GetModifiedSequence(nodePep.Peptide.Target, LabelType, nodePep.ExplicitMods),
-                PrecursorAdduct.AdductCharge);
+            var modifiedSequence = settings
+                .GetPrecursorCalc(TransitionGroup.LabelType, nodePep.ExplicitMods)
+                .GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.full_precision, false).ToString();
+            return new LibKey(modifiedSequence, PrecursorAdduct.AdductCharge);
         }
 
         /// <summary>
