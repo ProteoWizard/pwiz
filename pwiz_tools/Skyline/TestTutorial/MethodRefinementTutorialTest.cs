@@ -37,6 +37,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
 
 
 namespace pwiz.SkylineTestTutorial
@@ -468,8 +469,20 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(21);
             PauseForScreenShot("Main window", 21); // Not L10N
 
-            RunUI(() => SkylineWindow.ShowRTSchedulingGraph());
-            WaitForCondition(() => SkylineWindow.GraphRetentionTime != null);
+            RTScheduleGraphPane pane = null;
+            RunUI(() =>
+            {
+                SkylineWindow.ShowRTSchedulingGraph();
+                WaitForCondition(() => SkylineWindow.GraphRetentionTime != null);
+                Assert.IsTrue(SkylineWindow.GraphRetentionTime.TryGetGraphPane(out pane));
+            });
+            WaitForConditionUI(() => pane.CurveList.Count == 3);
+            RunUI(() =>
+            {
+                Assert.AreEqual(33, GetMaxPoint(pane.CurveList[0]));
+                Assert.AreEqual(57, GetMaxPoint(pane.CurveList[1]));
+                Assert.AreEqual(93, GetMaxPoint(pane.CurveList[2]));
+            });
 
             PauseForScreenShot("Retention Times - Scheduling graph metafile", 22);
 
@@ -496,6 +509,14 @@ namespace pwiz.SkylineTestTutorial
             });
             // TODO: Update tutorial to mention the scheduling options dialog.
             PauseForScreenShot("Export Transition List form", 24); // Not L10N
+
+            RunDlg<ExportMethodScheduleGraph>(exportMethodDlg1.ShowSchedulingGraph, dlg =>
+            {
+                WaitForCondition(() => dlg.GraphControl.GraphPane.CurveList.Count > 0);
+                Assert.AreEqual(48, GetMaxPoint(dlg.GraphControl.GraphPane.CurveList[0]));
+                dlg.Close();
+            });
+
             RunDlg<SchedulingOptionsDlg>(() =>
                 exportMethodDlg1.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled"), // Not L10N
                 schedulingOptionsDlg => schedulingOptionsDlg.OkDialog());
@@ -549,6 +570,20 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private static int GetMaxPoint(CurveItem curve)
+        {
+            var points = curve.Points;
+            var maxTransitions = -1;
+            for (var i = 0; i < points.Count; i++)
+            {
+                var transitions = (int)points[i].Y;
+                if (transitions > maxTransitions)
+                    maxTransitions = transitions;
+            }
+
+            return maxTransitions;
         }
 
         private static void TestRTResidualsSwitch()
