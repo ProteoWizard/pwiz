@@ -238,10 +238,6 @@ namespace pwiz.Skyline.Model.Lib
                             }
 
                             var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
-                            if (libKey.UnmodifiedSequence == "NNKDSHSLTTNIMEILR")
-                            {
-                                Console.Out.WriteLine("HEre");
-                            }
                             // Tuple of filename, score, FileData
                             Dictionary<string, ScoredFileData> dataByFilename;
                             
@@ -274,10 +270,6 @@ namespace pwiz.Skyline.Model.Lib
                         while (reader.Read())
                         {
                             var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
-                            if (libKey.UnmodifiedSequence == "NNKDSHSLTTNIMEILR")
-                            {
-                                Console.Out.WriteLine("HEre");
-                            }
                             quantPeptides.Add(libKey);
                             // Tuple of filename, score, FileData
                             Dictionary<string, ScoredFileData> dataByFilename;
@@ -741,10 +733,6 @@ namespace pwiz.Skyline.Model.Lib
         private static ElibSpectrumInfo MakeSpectrumInfo(PeptideLibraryKey libraryKey,
             IDictionary<string, ScoredFileData> fileDatas, IDictionary<string, int> sourceFileIds)
         {
-            if (libraryKey.UnmodifiedSequence == "NNKDSHSLTTNIMEILR")
-            {
-                Console.Out.WriteLine("Here");
-            }
             double bestScore = double.MaxValue;
             string bestFileName = null;
 
