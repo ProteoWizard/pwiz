@@ -26,12 +26,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using CustomDataSourceDialog;
 using pwiz.CLI.msdata;
+using pwiz.Common.Collections;
 
 namespace MSConvertGUI
 {
@@ -635,27 +637,38 @@ namespace MSConvertGUI
                         scanTimeHigh = String.IsNullOrEmpty(ScanTimeHigh.Text) ? "1e8" : ScanTimeHigh.Text;
                     }
 
+                    Action<string, string> addOrUpdateFilter = (filter, args) =>
+                    {
+                        foreach(DataGridViewRow row in FilterDGV.Rows)
+                            if (row.Cells[0].Value.ToString() == filter)
+                            {
+                                row.SetValues(filter, args);
+                                return;
+                            }
+                        FilterDGV.Rows.Add(filter, args);
+                    };
+
                     if (!String.IsNullOrEmpty(MSLevelLow.Text) || !String.IsNullOrEmpty(MSLevelHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "msLevel", String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text) });
+                        addOrUpdateFilter("msLevel", String.Format("{0}-{1}", MSLevelLow.Text, MSLevelHigh.Text));
                     if (!String.IsNullOrEmpty(ScanNumberLow.Text) || !String.IsNullOrEmpty(ScanNumberHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "scanNumber", String.Format("{0}-{1}", ScanNumberLow.Text, ScanNumberHigh.Text) });
+                        addOrUpdateFilter("scanNumber", String.Format("{0}-{1}", ScanNumberLow.Text, ScanNumberHigh.Text));
                     if (!String.IsNullOrEmpty(scanTimeLow) || !String.IsNullOrEmpty(scanTimeHigh))
-                        FilterDGV.Rows.Add(new[] { "scanTime", String.Format("[{0},{1}]", scanTimeLow, scanTimeHigh) });
+                        addOrUpdateFilter("scanTime", String.Format("[{0},{1}]", scanTimeLow, scanTimeHigh));
                     if (!String.IsNullOrEmpty(ScanEventLow.Text) || !String.IsNullOrEmpty(ScanEventHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "scanEvent", String.Format("{0}-{1}", ScanEventLow.Text, ScanEventHigh.Text) });
+                        addOrUpdateFilter("scanEvent", String.Format("{0}-{1}", ScanEventLow.Text, ScanEventHigh.Text));
                     if (!String.IsNullOrEmpty(ChargeStatesLow.Text) || !String.IsNullOrEmpty(ChargeStatesHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "chargeState", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text) });
+                        addOrUpdateFilter("chargeState", String.Format("{0}-{1}", ChargeStatesLow.Text, ChargeStatesHigh.Text));
                     if (!String.IsNullOrEmpty(DefaultArrayLengthLow.Text) || !String.IsNullOrEmpty(DefaultArrayLengthHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "defaultArrayLength", String.Format("{0}-{1}", DefaultArrayLengthLow.Text, DefaultArrayLengthHigh.Text) });
+                        addOrUpdateFilter("defaultArrayLength", String.Format("{0}-{1}", DefaultArrayLengthLow.Text, DefaultArrayLengthHigh.Text));
                     if (!String.IsNullOrEmpty(CollisionEnergyLow.Text) && !String.IsNullOrEmpty(CollisionEnergyHigh.Text))
-                        FilterDGV.Rows.Add(new[] { "collisionEnergy", String.Format("low={0} high={1} acceptNonCID={2} acceptMissingCE={3}", CollisionEnergyLow.Text, CollisionEnergyHigh.Text,
-                                                                                    CollisionEnergyAcceptNonCIDMSnSpectra.Checked, CollisionEnergyAcceptCIDSpectraWithMissingCE.Checked) });
+                        addOrUpdateFilter("collisionEnergy", String.Format("low={0} high={1} acceptNonCID={2} acceptMissingCE={3}", CollisionEnergyLow.Text, CollisionEnergyHigh.Text,
+                                                                           CollisionEnergyAcceptNonCIDMSnSpectra.Checked, CollisionEnergyAcceptCIDSpectraWithMissingCE.Checked));
                     if (ActivationTypeBox.Text != "Any")
-                        FilterDGV.Rows.Add(new[] { "activation", ActivationTypeBox.Text });
+                        addOrUpdateFilter("activation", ActivationTypeBox.Text);
                     if (AnalyzerTypeBox.Text != "Any")
-                        FilterDGV.Rows.Add(new[] { "analyzer", AnalyzerTypeBox.Text });
+                        addOrUpdateFilter("analyzer", AnalyzerTypeBox.Text);
                     if (PolarityBox.Text != "Any")
-                        FilterDGV.Rows.Add(new[] { "polarity", PolarityBox.Text.ToLowerInvariant() });
+                        addOrUpdateFilter("polarity", PolarityBox.Text.ToLowerInvariant());
                     //if (!String.IsNullOrEmpty(mzWinLow.Text) || !String.IsNullOrEmpty(mzWinHigh.Text))
                     //    FilterDGV.Rows.Add(new[] { "mzWindow", String.Format("[{0},{1}]", mzWinLow.Text, mzWinHigh.Text) });
                     break;
@@ -726,7 +739,7 @@ namespace MSConvertGUI
             var commandLine = new StringBuilder();
             //Get config settings
 
-            if (OutputFormatBox.Text != OutputExtensionBox.Text)
+            if (!OutputExtensionBox.Text.IsNullOrEmpty() && OutputFormatBox.Text != OutputExtensionBox.Text)
                 commandLine.AppendFormat("--ext|{0}|", OutputExtensionBox.Text);
             ValidateNumpress(); // make sure numpress settings are reasonable
             switch (OutputFormatBox.Text)
@@ -787,29 +800,9 @@ namespace MSConvertGUI
             if (SrmSpectraBox.Checked)
                 commandLine.Append("--srmAsSpectra|");
 
-            var msLevelsTotal = String.Empty;
-            var scanNumberTotal = String.Empty;
             foreach (DataGridViewRow row in FilterDGV.Rows)
-            {
-                switch ((string)row.Cells[0].Value)
-                {
-                    case "msLevel":
-                        msLevelsTotal += (string)row.Cells[1].Value + " ";
-                        break;
-                    case "scanNumber":
-                        scanNumberTotal += (string)row.Cells[1].Value + " ";
-                        break;
-                    default:
-                        commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
-                        break;
-                }
-            }
-
-            if (!String.IsNullOrEmpty(msLevelsTotal))
-                commandLine.AppendFormat("--filter|msLevel {0}|", msLevelsTotal.Trim());
-            if (!String.IsNullOrEmpty(scanNumberTotal))
-                commandLine.AppendFormat("--filter|scanNumber {0}|", scanNumberTotal.Trim());
-
+                commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
+            
             if (MakeTPPCompatibleOutputButton.Checked)
             {
                 String tppline = "--filter|titleMaker <RunId>.<ScanNumber>.<ScanNumber>.<ChargeState> File:\"<SourcePath>\", NativeID:\"<Id>\"|";
@@ -860,8 +853,11 @@ namespace MSConvertGUI
                         break;
                     case "--filter":
                         var space = words[++i].IndexOf(' ');
-                        FilterDGV.Rows.Add(new[] { words[i].Substring(0,space),
-                            words[i].Substring(space+1) });
+                        string filterName = words[i].Substring(0, space);
+                        if (filterName == "titleMaker")
+                            MakeTPPCompatibleOutputButton.Checked = true;
+                        else
+                            FilterDGV.Rows.Add(filterName, words[i].Substring(space+1));
                         break;
                     case "--32":
                     case "--noindex":
@@ -1393,6 +1389,54 @@ namespace MSConvertGUI
 
                 DiaUmpireParamsFileTextBox.Text = ofd.FileName;
             }
+        }
+
+        private void showCommandLine_Click(object sender, EventArgs e)
+        {
+            static string Quote(string str) => $"\"{str}\"";
+
+            var rawArgs = ConstructCommandline().Split('|');
+
+            // when a Windows command-line has escaped quotes in it, handling of escaping redirection characters (<>&|) gets really tricky;
+            // inside a double quoted string, they shouldn't be escaped;
+            // outside a quoted string (""" escaped quotes behave as if ending/starting a quoted string), they must be escaped with ^
+            var escapedArgs = new List<string>();
+            foreach (var arg in rawArgs)
+            {
+                var argBuilder = new StringBuilder();
+                bool inQuote = true;
+                foreach (char c in arg)
+                {
+                    if (c == '"')
+                    {
+                        inQuote = !inQuote;
+                        argBuilder.Append('"', 3);
+                    }
+                    else if (c == '>' && !inQuote)
+                        argBuilder.Append("^>");
+                    else if (c == '<' && !inQuote)
+                        argBuilder.Append("^<");
+                    else if (c == '&' && !inQuote)
+                        argBuilder.Append("^&");
+                    else
+                        argBuilder.Append(c);
+                }
+
+                var escapedArg = argBuilder.ToString();
+                escapedArgs.Add(arg.Contains(" ") ? Quote(escapedArg) : escapedArg);
+            }
+
+            // escape double quotes with more double quotes (DOS-style escaping) and add quotes around parameters with spaces
+            var cmdLine =
+                Quote(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "msconvert.exe")) + " " +
+                String.Join(" ", escapedArgs) + " " +
+                String.Join(" ", from object item in FileListBox.Items select Quote(item.ToString()));
+
+            if (DialogResult.Cancel == MessageBox.Show(
+                $"The equivalent msconvert.exe command-line for the current settings:\r\n\r\n{cmdLine}\r\n\r\nPress OK to copy it to the clipboard.",
+                "Command-line", MessageBoxButtons.OKCancel))
+                return;
+            Clipboard.SetText(cmdLine);
         }
     }
 }
