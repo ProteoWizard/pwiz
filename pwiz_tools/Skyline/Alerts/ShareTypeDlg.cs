@@ -24,6 +24,10 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Linq;
+using JetBrains.Annotations;
+using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results;
+
 
 namespace pwiz.Skyline.Alerts
 {
@@ -34,6 +38,7 @@ namespace pwiz.Skyline.Alerts
     public partial class ShareTypeDlg : FormEx
     {
         private List<SkylineVersion> _skylineVersionOptions;
+        private SrmDocument _document; // Global document from which replicate files and information can be extracted
         public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
         {
         }
@@ -42,6 +47,7 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
+            _document = document;
             if (savedFileFormat.HasValue && maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0)
             {
                 _skylineVersionOptions.Add(null);
@@ -116,6 +122,25 @@ namespace pwiz.Skyline.Alerts
         public IList<string> GetAvailableVersionItems()
         {
             return comboSkylineVersion.Items.OfType<string>().ToList();
+        }
+
+
+        private void Select_Rep_Files_Click(object sender, EventArgs e)
+        {
+            using (ReplicateSelectViewDlg select = new ReplicateSelectViewDlg(_document))
+            {
+                DialogResult result = select.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    //Return selected files to be zipped up and sent off
+                    //Update some container for 
+                    foreach (var a in select._checkedRepList)
+                    { 
+                        //Zip it up   
+                    }
+                    select._checkedRepList.ForEach(Console.WriteLine);
+                }
+            }
         }
     }
 }

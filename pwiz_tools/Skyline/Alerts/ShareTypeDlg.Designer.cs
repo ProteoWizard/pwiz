@@ -39,6 +39,7 @@
             this.radioMinimal = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.button1 = new System.Windows.Forms.Button();
             this.panelButtonBar.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -98,6 +99,13 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
+            // button1
+            // 
+            resources.ApplyResources(this.button1, "button1");
+            this.button1.Name = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.Select_Rep_Files_Click);
+            // 
             // ShareTypeDlg
             // 
             this.AcceptButton = this.btnShare;
@@ -107,6 +115,7 @@
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.radioMinimal);
             this.Controls.Add(this.label2);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.radioComplete);
             this.Controls.Add(this.comboSkylineVersion);
             this.Controls.Add(this.label3);
@@ -133,5 +142,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox comboSkylineVersion;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button button1;
     }
 }
