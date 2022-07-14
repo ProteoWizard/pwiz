@@ -57,9 +57,10 @@ namespace pwiz.SkylineTestFunctional
             string[] columnOrder)
         {
             var allErrorText = string.Empty;
-            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()))
+            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
+                !clipText.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
             {
-                clipText = clipText.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_CSV_INTL);
+                clipText = clipText.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
             }
             clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
