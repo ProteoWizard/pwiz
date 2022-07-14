@@ -97,7 +97,15 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod(@"none", () => GroupComparisonStrings.NormalizationMethod_NONE_None, value=>value);
-        public static readonly NormalizationMethod EQUALIZE_MEDIANS = new EqualizeMedians();
+
+        public static readonly NormalizationMethod EQUALIZE_MEDIANS
+            = new SingletonNormalizationMethod(@"equalize_medians",
+                () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians,
+                value => string.Format(
+                    GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_, value),
+                (settings, labelType) =>
+                    settings.PeptideSettings.Modifications.InternalStandardTypes.Contains(labelType));
+
         public static readonly NormalizationMethod GLOBAL_STANDARDS
             = new SingletonNormalizationMethod(@"global_standards",
                 () => GroupComparisonStrings.NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards,
@@ -379,8 +387,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             private Func<string> _getNormalizeToCaptionFunc;
             private Func<string, string> _getAxisTitleFunc;
-            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc, Func<string, string> getAxisTitleFunc) : this(
-                name, getNormalizationMethodCaptionFunc, getNormalizationMethodCaptionFunc, getAxisTitleFunc)
+            private Func<SrmSettings, IsotopeLabelType, bool> _hideLabelFunc;
+            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc, Func<string, string> getAxisTitleFunc) 
+                : this(name, getNormalizationMethodCaptionFunc, getNormalizationMethodCaptionFunc, getAxisTitleFunc)
             {
 
             }
@@ -392,6 +401,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _getAxisTitleFunc = getAxisTitleFunc;
             }
 
+            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc,
+                Func<string, string> getAxisTitleFunc, Func<SrmSettings, IsotopeLabelType, bool> hideLabelFunc)
+                : this(name, getNormalizationMethodCaptionFunc, getAxisTitleFunc)
+            {
+                _hideLabelFunc = hideLabelFunc;
+            }
+
             public override string NormalizeToCaption
             {
                 get { return _getNormalizeToCaptionFunc(); }
@@ -401,23 +417,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return _getAxisTitleFunc(plottedValue);
             }
-        }
-
-        private class EqualizeMedians : NormalizationMethod
-        {
-            public EqualizeMedians() : base(@"equalize_medians",
-                () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians) {
-            }
 
             public override bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
             {
-                return settings.PeptideSettings.Modifications.InternalStandardTypes.Contains(labelType);
-            }
-
-            public override string GetAxisTitle(string plottedValue)
-            {
-                return string.Format(
-                    GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_, plottedValue);
+                return _hideLabelFunc?.Invoke(settings, labelType) ?? false;
             }
         }
 
