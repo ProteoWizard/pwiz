@@ -1050,7 +1050,7 @@ namespace pwiz.SkylineTestTutorial
                 var splitterChars = new[] { '(', '（' };
                 foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
                 {
-                    var splitName = redundantOption.optionName.Split(splitterChars);
+                    var splitName = redundantOption.OptionName.Split(splitterChars);
                     fileSet.Add(splitName[0]);
                     RTSet.Add(splitName[1]);
                 }
