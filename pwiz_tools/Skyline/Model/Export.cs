@@ -935,9 +935,8 @@ namespace pwiz.Skyline.Model
                 }
 
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
                 if (predictedRT.HasValue)
                 {
@@ -1251,9 +1250,8 @@ namespace pwiz.Skyline.Model
             else
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
                 if (predictedRT.HasValue)
                 {
@@ -1429,9 +1427,8 @@ namespace pwiz.Skyline.Model
             else
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
                 if (predictedRT.HasValue)
                 {
@@ -1608,15 +1605,14 @@ namespace pwiz.Skyline.Model
             else
             {
                 // Scheduling information
-                double rtWindow;
                 rt = Document.Settings.PeptideSettings.Prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out rtWindow);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
                 if (rt.HasValue)
                     writer.Write(rt);
                 writer.Write(FieldSeparator);
                 // Retention Time Window
                 if (rt.HasValue)
-                    writer.Write(rtWindow);
+                    writer.Write(rtWindow.ToString(CultureInfo));
                 writer.Write(FieldSeparator);
             }
             // CAS Number
@@ -2123,7 +2119,7 @@ namespace pwiz.Skyline.Model
         }
 
         public double DwellTime { get; set; }
-        protected double? RTWindow { get; private set; }
+        protected PeptidePrediction.WindowRT RTWindow { get; private set; }
 
         private int OptimizeStepIndex { get; set; }
 
@@ -2220,13 +2216,8 @@ namespace pwiz.Skyline.Model
             string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
             string q3 = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo);
 
-            double? predictedRT;
-            string dwellOrRt;
-            GetTransitionTimeValues(nodePep, nodeTranGroup, out predictedRT, out dwellOrRt);
-
-            string extPeptideId;
-            string extGroupId;
-            GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out extPeptideId, out extGroupId);
+            GetTransitionTimeValues(nodePep, nodeTranGroup, out var predictedRT, out var dwellOrRt);
+            GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out var extPeptideId, out var extGroupId);
 
             double ceValue = GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step);
             if (ceValue < 10) // SCIEX does not allow CE below 10
@@ -2258,9 +2249,12 @@ namespace pwiz.Skyline.Model
             }
             string averagePeakAreaText = averagePeakArea.HasValue ? averagePeakArea.Value.ToString(CultureInfo) : string.Empty;
 
-            double? variableRtWindow;
-            string variableRtWindowText;
-            GetVariableRtWindow(maxRtDiff, out variableRtWindow, out variableRtWindowText);
+            var rtWindowText = RTWindow.Window.ToString(CultureInfo);
+            if (!RTWindow.IsExplicit)
+            {
+                var variableRtWindow = GetVariableRtWindow(maxRtDiff);
+                rtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(CultureInfo) : string.Empty;
+            }
 
             string primaryOrSecondary = string.Empty;
             if (MethodType == ExportMethodType.Triggered)
@@ -2277,16 +2271,16 @@ namespace pwiz.Skyline.Model
                 compensationVoltage =  string.Format(@",{0}", coV.ToString(@"0.00", CultureInfo));
             }
 
-           string oneLine = string.Format(@"{0},{1},{2},{3}{4}{5}", q1, q3, dwellOrRt, extPeptideId,
-                                           GetOptionalColumns(dp,
-                                                              ce,
-                                                              precursorWindow,
-                                                              productWindow,
-                                                              extGroupId,
-                                                              averagePeakAreaText,
-                                                              variableRtWindowText,
-                                                              primaryOrSecondary),
-                                           compensationVoltage);
+            string oneLine = string.Format(@"{0},{1},{2},{3}{4}{5}", q1, q3, dwellOrRt, extPeptideId,
+                GetOptionalColumns(dp,
+                    ce,
+                    precursorWindow,
+                    productWindow,
+                    extGroupId,
+                    averagePeakAreaText,
+                    rtWindowText,
+                    primaryOrSecondary),
+                compensationVoltage);
 
             writer.Write(oneLine.Replace(',', FieldSeparator));
             writer.WriteLine();
@@ -2320,19 +2314,16 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private void GetVariableRtWindow(double maxRtDiff, out double? variableRtWindow, out string variableRtWindowText)
+        private double? GetVariableRtWindow(double maxRtDiff)
         {
             // increase window size if observed data goes close to window edge
-            double maxWindowObservedInData = (maxRtDiff*2);
+            double maxWindowObservedInData = maxRtDiff*2;
             double? measuredWindow = Document.Settings.PeptideSettings.Prediction.MeasuredRTWindow;
             double triggerFraction = Settings.Default.FractionOfRtWindowAtWhichVariableSizeIsTriggered;
-            variableRtWindow = null;
-            if (measuredWindow.HasValue && maxWindowObservedInData > triggerFraction*measuredWindow.Value)
-            {
-                variableRtWindow = maxWindowObservedInData +
-                                   (Settings.Default.VariableRtWindowIncreaseFraction*measuredWindow);
-            }
-            variableRtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(CultureInfo) : string.Empty;
+
+            return measuredWindow.HasValue && maxWindowObservedInData > triggerFraction * measuredWindow.Value
+                ? maxWindowObservedInData + Settings.Default.VariableRtWindowIncreaseFraction * measuredWindow
+                : null;
         }
 
         private void GetPeptideAndGroupNames(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, TransitionDocNode nodeTran, int step, out string extPeptideId,
@@ -2408,24 +2399,24 @@ namespace pwiz.Skyline.Model
 
         private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt)
         {
-            predictedRT = null;
             if (MethodType == ExportMethodType.Standard)
+            {
+                predictedRT = new PeptidePrediction.WindowRT(0, false);
                 dwellOrRt = Math.Round(DwellTime, 2).ToString(CultureInfo);
+                return;
+            }
+
+            var prediction = Document.Settings.PeptideSettings.Prediction;
+            predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var windowRT);
+            if (predictedRT.HasValue)
+            {
+                RTWindow = windowRT; // Store for later use
+                dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+            }
             else
             {
-                var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
-                predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out windowRT);
-                if (predictedRT.HasValue)
-                {
-                    RTWindow = windowRT; // Store for later use
-                    dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
-                }
-                else
-                {
-                    dwellOrRt = 0.ToString(CultureInfo);
-                }
+                dwellOrRt = 0.ToString(CultureInfo);
             }
         }
 
@@ -2693,10 +2684,10 @@ namespace pwiz.Skyline.Model
         protected override List<string> GetArgs()
         {
             var argv = new List<string>();
-            if (RTWindow.HasValue)
+            if (RTWindow > 0)
             {
                 argv.Add(@"-w");
-                argv.Add(RTWindow.Value.ToString(CultureInfo.InvariantCulture));
+                argv.Add(RTWindow.ToString(CultureInfo.InvariantCulture));
             }
             return argv;
         }
@@ -2739,10 +2730,10 @@ namespace pwiz.Skyline.Model
                 argv.Add(@"-i");
             if (MethodType == ExportMethodType.Scheduled)
                 argv.Add(@"-r");
-            if (RTWindow.HasValue)
+            if (RTWindow > 0)
             {
                 argv.Add(@"-w");
-                argv.Add(RTWindow.Value.ToString(CultureInfo.InvariantCulture));
+                argv.Add(RTWindow.ToString(CultureInfo.InvariantCulture));
             }
             if (ExportMultiQuant)
                 argv.Add(@"-mq");
@@ -3049,9 +3040,8 @@ namespace pwiz.Skyline.Model
 
                 // Scheduling information
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
 
                 if (predictedRT.HasValue)
                 {
@@ -3208,9 +3198,8 @@ namespace pwiz.Skyline.Model
             {
                 // Scheduling information
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 if (predictedRT.HasValue)
                 {
                     retentionTime = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);  // Ret. Time (min)
@@ -3289,9 +3278,8 @@ namespace pwiz.Skyline.Model
             {
                 // Scheduling information
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
 
                 if (predictedRT.HasValue)
                 {
@@ -3807,9 +3795,8 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Scheduled)
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 // Start Time and End Time
                 if (predictedRT.HasValue)
                 {
@@ -3926,9 +3913,8 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Scheduled)
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 // Start Time and End Time
                 if (predictedRT.HasValue)
                 {
@@ -4104,9 +4090,8 @@ namespace pwiz.Skyline.Model
             {
                 // Scheduling information
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, HasResults, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, HasResults, out var windowRT);
                 if (predictedRT.HasValue)
                 {
                     RTWindow = windowRT;    // Store for later use
@@ -4249,9 +4234,8 @@ namespace pwiz.Skyline.Model
             if (MethodType != ExportMethodType.Standard)
             {
                 var prediction = Document.Settings.PeptideSettings.Prediction;
-                double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out var windowRT);
                 if (predictedRT.HasValue)
                 {
                     rtStart = predictedRT.Value - windowRT/2;

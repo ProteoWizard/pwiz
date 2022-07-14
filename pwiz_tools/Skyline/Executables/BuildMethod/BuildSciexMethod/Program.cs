@@ -100,6 +100,7 @@ namespace BuildSciexMethod
 
         private string TemplateMethod { get; set; }
         private bool StandardMethod { get; set; }
+        private bool ScheduledMethod => !StandardMethod;
 
         public void ParseCommandArgs(string[] args)
         {
@@ -314,14 +315,22 @@ namespace BuildSciexMethod
             ExecuteAndCheck(new MsMethodSaveRequest(method, transitions.OutputMethod));
         }
 
-        private static PropertiesTable InitMethod(IMsMethod method, int numTransitions)
+        private PropertiesTable InitMethod(IMsMethod method, int numTransitions)
         {
+
             // Check that there is at least one experiment
-            if (method.Experiments.Count == 0)
+            var experiment = method.Experiments.FirstOrDefault();
+            if (experiment == null)
                 throw new Exception("Method does not contain any experiments.");
 
+            // Set the method's IsScanScheduleAppliedProperty.
+            var scheduledProp = experiment.Properties.TryGet<IsScanScheduleAppliedProperty>();
+            if (scheduledProp == null)
+                throw new Exception("Experiment does not have IsScanScheduleAppliedProperty.");
+            scheduledProp.Value = ScheduledMethod;
+
             // Check that there is at least one row in the mass table
-            var massTable = method.Experiments[0].MassTable;
+            var massTable = experiment.MassTable;
             if (massTable.Rows.Count == 0)
                 throw new Exception("Mass table does not contain any rows.");
 
@@ -386,6 +395,7 @@ namespace BuildSciexMethod
                     new PropertyData(typeof(PrecursorIonProperty), t => t.PrecursorMz),
                     new PropertyData(typeof(FragmentIonProperty), t => t.ProductMz),
                     new PropertyData(standardMethod ? typeof(DwellTimeProperty) : typeof(RetentionTimeProperty), t => t.DwellOrRt),
+                    new PropertyData(typeof(RetentionTimeToleranceProperty), !standardMethod ? t => t.RTWindow : (Func<MethodTransition, object>)null),
                     new PropertyData(typeof(DeclusteringPotentialProperty), t => t.DP),
                     new PropertyData(typeof(EntrancePotentialProperty)),
                     new PropertyData(typeof(CollisionEnergyProperty), t => t.CE),
@@ -449,7 +459,7 @@ namespace BuildSciexMethod
             [7] = (t, s) => { t.ProductWindow = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [8] = (t, s) => { t.Group = s; },
             [9] = (t, s) => { t.AveragePeakArea = string.IsNullOrEmpty(s) ? (float?)null : float.Parse(s, CultureInfo.InvariantCulture); },
-            [10] = (t, s) => { t.VariableRtWindow = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [10] = (t, s) => { t.RTWindow = string.IsNullOrEmpty(s) ? (double?)null : 60 * double.Parse(s, CultureInfo.InvariantCulture); },
             [11] = (t, s) => { t.Threshold = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [12] = (t, s) => { t.Primary = string.IsNullOrEmpty(s) ? (int?)null : int.Parse(s, CultureInfo.InvariantCulture); },
             [13] = (t, s) => { t.CoV = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
@@ -486,7 +496,7 @@ namespace BuildSciexMethod
         public int? Primary { get; private set; }
         public string Group { get; private set; }
         public float? AveragePeakArea { get; private set; }
-        public double? VariableRtWindow { get; private set; }
+        public double? RTWindow { get; private set; }
         public double? CoV { get; private set; }
 
         public override string ToString()
