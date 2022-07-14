@@ -123,8 +123,13 @@ namespace pwiz.Skyline.Util
             try
             {
                 Settings.Default.ResultsGridSynchSelection = false;
-                var cellAddress = DataGridView.CurrentCellAddress;
                 DataGridView.Enabled = false;
+                var cellAddress = DataGridView.CurrentCellAddress;
+                if (cellAddress.Y < 0 || cellAddress.Y >= DataGridView.RowCount ||
+                    cellAddress.X < 0 || cellAddress.X >= DataGridView.ColumnCount)
+                {
+                    return false;
+                }
                 DataGridView.CurrentCell = DataGridView.Rows[cellAddress.Y].Cells[cellAddress.X];
                 lock (skylineDataSchema.SkylineWindow.GetDocumentChangeLock())
                 {
