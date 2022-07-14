@@ -432,9 +432,13 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher, comboFilterCategory.SelectedText, out var allPeptides);
-            MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
-            MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
+            MoleculeLabel.Visible = HasSmallMolecules = !PeptideLabel.Visible;
+            if (MoleculeLabel.Visible)
+            {
+                MoleculeLabel.Left = PeptideLabel.Left;
+                MoleculeLabel.TabIndex = PeptideLabel.TabIndex;
+            }
             InitializeMatchCategoryComboBox();
             _currentRange = _peptides.Filter(null, comboFilterCategory.SelectedItem.ToString());
         }
@@ -695,7 +699,7 @@ namespace pwiz.Skyline.SettingsUI
 
             labelRT.Text = string.Empty;
             labelFilename.Text = string.Empty;
-            comboRedundantSpectra.Visible = false;
+            bool showComboRedundantSpectra = false; // Careful not to actually hide this responding to a selection change
 
             // Check for appropriate spectrum to load
             bool available = false;
@@ -794,10 +798,11 @@ namespace pwiz.Skyline.SettingsUI
                             newDropDownOptions.Add(new ComboOption(spectrum));
                             numRedundancies++;
                         }
-                        comboRedundantSpectra.Visible = numRedundancies > 1;
+
+                        showComboRedundantSpectra = numRedundancies > 1;
 
                         // Set the spectrum being graphed to the selected spectrum in the comboBox
-                        SpectrumInfoLibrary spectrumInfo = setupComboBox(newDropDownOptions, index);
+                        SpectrumInfoLibrary spectrumInfo = SetupRedundantSpectraCombo(newDropDownOptions, index);
 
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
@@ -923,6 +928,10 @@ namespace pwiz.Skyline.SettingsUI
                 SetGraphItem(new UnavailableMSGraphItem());
             }
 
+            // Be sure to only change visibility of this combo box when necessary or it will lose
+            // focus when the user is changing its selection, which makes it impossible to use arrow keys
+            comboRedundantSpectra.Visible = showComboRedundantSpectra;
+
             btnAIons.Checked = btnAIons.Enabled && Settings.Default.ShowAIons;
             btnBIons.Checked = btnBIons.Enabled && Settings.Default.ShowBIons;
             btnCIons.Checked = btnCIons.Enabled && Settings.Default.ShowCIons;
@@ -934,8 +943,10 @@ namespace pwiz.Skyline.SettingsUI
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
         }
 
-        // Sets up the redundant dropdown menu and selects the spectrum to display on the graph
-        private SpectrumInfoLibrary setupComboBox(List<ComboOption> options, int index)
+        /// <summary>
+        /// Sets up the redundant dropdown menu and selects the spectrum to display on the graph
+        /// </summary>
+        private SpectrumInfoLibrary SetupRedundantSpectraCombo(List<ComboOption> options, int index)
         {
             if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
             {
@@ -2875,16 +2886,6 @@ namespace pwiz.Skyline.SettingsUI
         private void redundantSpectrum_changed(object sender, EventArgs e)
         {
             UpdateUI();
-        }
-
-        private void comboRedundantSpectra_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
         }
     }
 }

@@ -205,7 +205,7 @@
     <value>270, 315</value>
   </data>
   <data name="PeptideListPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;PeptideListPanel.Name" xml:space="preserve">
     <value>PeptideListPanel</value>
@@ -376,7 +376,7 @@
     <value>318</value>
   </data>
   <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Name" xml:space="preserve">
     <value>splitPeptideList</value>
@@ -409,7 +409,7 @@
     <value>22, 13</value>
   </data>
   <data name="byLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="byLabel.Text" xml:space="preserve">
     <value>&amp;By:</value>
@@ -436,7 +436,7 @@
     <value>112, 21</value>
   </data>
   <data name="comboFilterCategory.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;comboFilterCategory.Name" xml:space="preserve">
     <value>comboFilterCategory</value>
@@ -460,7 +460,7 @@
     <value>32, 13</value>
   </data>
   <data name="filterLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="filterLabel.Text" xml:space="preserve">
     <value>&amp;Filter:</value>
@@ -583,7 +583,7 @@
     <value>270, 24</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
     <value>tableLayoutPanel1</value>
@@ -610,7 +610,7 @@
     <value>46, 13</value>
   </data>
   <data name="PeptideLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="PeptideLabel.Text" xml:space="preserve">
     <value>&amp;Peptide:</value>
@@ -637,7 +637,7 @@
     <value>154, 20</value>
   </data>
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
@@ -913,7 +913,7 @@
     <value>43, 13</value>
   </data>
   <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="labelFilename.Text" xml:space="preserve">
     <value>Fil&amp;e: {0}</value>
@@ -940,7 +940,7 @@
     <value>395, 21</value>
   </data>
   <data name="comboRedundantSpectra.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;comboRedundantSpectra.Name" xml:space="preserve">
     <value>comboRedundantSpectra</value>
@@ -964,7 +964,7 @@
     <value>450, 26</value>
   </data>
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
     <value>tableLayoutPanel2</value>
@@ -1099,7 +1099,7 @@
     <value>403, 16</value>
   </data>
   <data name="labelRT.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="labelRT.Text" xml:space="preserve">
     <value>RT</value>

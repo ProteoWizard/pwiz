@@ -465,7 +465,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRedundantSpectra.DropDownWidth = 200;
             this.comboRedundantSpectra.FormattingEnabled = true;
             this.comboRedundantSpectra.Name = "comboRedundantSpectra";
-            this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.comboRedundantSpectra_SelectedIndexChanged);
+            this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.redundantSpectrum_changed);
             // 
             // cbAssociateProteins
             // 
