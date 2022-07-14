@@ -789,14 +789,23 @@ namespace pwiz.Skyline.SettingsUI
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         // Get all redundant spectrum for the selected peptide, add them to comboRedundantSpectra
-                        var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, IsotopeLabelType.light,
-                            LibraryRedundancy.all);
+                        var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.all);
                         var newDropDownOptions = new List<ComboOption>(redundantSpectra.Select(s => new ComboOption(s)));
-
-                        showComboRedundantSpectra = newDropDownOptions.Count > 1;
-
-                        // Set the spectrum being graphed to the selected spectrum in the comboBox
-                        var spectrumInfo = SetupRedundantSpectraCombo(newDropDownOptions);
+                        SpectrumInfoLibrary spectrumInfo;
+                        if (newDropDownOptions.Count > 0)
+                        {
+                            // Get the spectrum to be graphed from the combo box and fill the combo box
+                            // if the selected peptide has changed
+                            showComboRedundantSpectra = newDropDownOptions.Count > 1;
+                            spectrumInfo = SetupRedundantSpectraCombo(newDropDownOptions);
+                        }
+                        else
+                        {
+                            // Some older libraries don't support getting redundant spectra, so fall
+                            // back to asking for the best spectrum.
+                            spectrumInfo = _selectedLibrary
+                                .GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+                        }
 
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
