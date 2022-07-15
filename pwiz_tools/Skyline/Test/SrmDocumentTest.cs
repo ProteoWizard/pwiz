@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using pwiz.Skyline.Model;
@@ -1402,10 +1403,8 @@ namespace pwiz.SkylineTest
             // Protein group name and 2 proteins
             "<srm_settings><selected_proteins>\n" +
             "  <protein_group name=\"test1/test2\">\n" +
-            "    <proteins>\n" +
-            "      <protein name=\"test1\" description=\"desc1\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
-            "      <protein name=\"test2\" description=\"desc2\"><sequence>ABCDEFG HIJKLMNP QRSTUV</sequence></protein>\n" +
-            "    </proteins>\n" +
+            "    <protein name=\"test1\" description=\"desc1\" accession=\"test1\" preferred_name=\"test1\" websearch_status=\"X#test1\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
+            "    <protein name=\"test2\" description=\"desc2\" accession=\"test2\" preferred_name=\"test2\" websearch_status=\"X#test2\"><sequence>ABCDEFG HIJKLMNP QRSTUV</sequence></protein>\n" +
             "  </protein_group>\n" +
             "</selected_proteins></srm_settings>",
         };

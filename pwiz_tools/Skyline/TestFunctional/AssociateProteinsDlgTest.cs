@@ -508,6 +508,11 @@ namespace pwiz.SkylineTestFunctional
 
                     OkDialog(dlg, dlg.AcceptButton.PerformClick);
 
+                    if (testCase.OptionsAndResults.Last().GroupProteins)
+                    {
+                        AssertEx.Serializable(SkylineWindow.Document);
+                    }
+
                     var findNodeDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
                     int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides;
                     RunUI(() =>

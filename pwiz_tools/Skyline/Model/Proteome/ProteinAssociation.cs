@@ -194,22 +194,31 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
         [XmlRoot("protein_association")]
-        public class ParsimonySettings : IXmlSerializable
+        public class ParsimonySettings : Immutable, IXmlSerializable
         {
+            public ParsimonySettings(bool groupProteins, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein)
+            {
+                GroupProteins = groupProteins;
+                FindMinimalProteinList = findMinimalProteinList;
+                RemoveSubsetProteins = removeSubsetProteins;
+                SharedPeptides = sharedPeptides;
+                MinPeptidesPerProtein = minPeptidesPerProtein;
+            }
+
             [Track(ignoreDefaultParent:true)]
-            public bool GroupProteins { get; set; }
+            public bool GroupProteins { get; private set; }
 
             [Track(ignoreDefaultParent: true)]
-            public bool FindMinimalProteinList { get; set; }
+            public bool FindMinimalProteinList { get; private set; }
 
             [Track(ignoreDefaultParent: true)]
-            public bool RemoveSubsetProteins { get; set; }
+            public bool RemoveSubsetProteins { get; private set; }
 
             [Track(ignoreDefaultParent: true)]
-            public SharedPeptides SharedPeptides { get; set; }
+            public SharedPeptides SharedPeptides { get; private set; }
 
             [Track(ignoreDefaultParent: true)]
-            public int MinPeptidesPerProtein { get; set; }
+            public int MinPeptidesPerProtein { get; private set; }
 
             #region object overrides
             public bool Equals(ParsimonySettings obj)
@@ -284,6 +293,9 @@ namespace pwiz.Skyline.Model.Proteome
                 writer.WriteAttribute(Attr.remove_subset_proteins, RemoveSubsetProteins, false);
                 writer.WriteAttribute(Attr.shared_peptides, SharedPeptides, SharedPeptides.DuplicatedBetweenProteins);
             }
+            private ParsimonySettings()
+            {
+            }
 
             public static ParsimonySettings Deserialize(XmlReader reader)
             {
@@ -346,14 +358,8 @@ namespace pwiz.Skyline.Model.Proteome
             public SharedPeptides SharedPeptides { get; set; }
             public int MinPeptidesPerProtein { get; set; }
 
-            public ParsimonySettings ParsimonySettings => new ParsimonySettings
-            {
-                GroupProteins = GroupProteins,
-                FindMinimalProteinList = FindMinimalProteinList,
-                RemoveSubsetProteins = RemoveSubsetProteins,
-                SharedPeptides = SharedPeptides,
-                MinPeptidesPerProtein = MinPeptidesPerProtein
-            };
+            public ParsimonySettings ParsimonySettings => new ParsimonySettings(GroupProteins, FindMinimalProteinList,
+                RemoveSubsetProteins, SharedPeptides, MinPeptidesPerProtein);
 
             public int FinalProteinCount { get; set; }
             public int FinalPeptideCount { get; set; }
@@ -581,8 +587,9 @@ namespace pwiz.Skyline.Model.Proteome
                     continue;
                 }
 
-                var proteinGroupName = string.Join(@"/", kvp.Value.OrderBy(p => p.RecordIndex).Select(p => p.Sequence.Name));
-                var proteinFastaSequence = new FastaSequenceGroup(proteinGroupName, kvp.Value.Select(r => r.Sequence).ToList());
+                var proteinsByRecordIndex = kvp.Value.OrderBy(p => p.RecordIndex).ToList();
+                var proteinGroupName = string.Join(@"/", proteinsByRecordIndex.Select(p => p.Sequence.Name));
+                var proteinFastaSequence = new FastaSequenceGroup(proteinGroupName, proteinsByRecordIndex.Select(r => r.Sequence).ToList());
                 var proteinGroup = new FastaRecord(kvp.Value[0].RecordIndex, 0, proteinFastaSequence);
                 proteinGroupAssociations[proteinGroup] = kvp.Key;
                 addPeptideAssociations(proteinGroup, kvp.Key);
@@ -840,7 +847,12 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     children.Add(peptideDocNode.ChangeFastaSequence(protein));
                 }
-                var peptideGroupDocNode = new PeptideGroupDocNode(protein, protein.Name, protein.Description, children.ToArray());
+
+                var proteinOrGroupMetadata = protein is FastaSequenceGroup
+                    ? new ProteinGroupMetadata(protein.Name, protein.Description,
+                        (protein as FastaSequenceGroup).FastaSequences.Select(s => new ProteinMetadata(s.Name, s.Description)).ToList())
+                    : new ProteinMetadata(protein.Name, protein.Description);
+                var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray());
                 newPeptideGroups.Add(peptideGroupDocNode);
 
                 if (monitor.IsCanceled)

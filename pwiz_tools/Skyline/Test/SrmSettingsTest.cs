@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1139,6 +1140,24 @@ namespace pwiz.SkylineTest
             
         }
 
+
+        [TestMethod]
+        public void SerializeProteinAssociationSettingsTest()
+        {
+            const string proteinAssociationSerialized = "<protein_association min_peptides_per_protein=\"3\" " +
+                                                        "group_proteins=\"true\" " +
+                                                        "find_minimal_protein_list=\"true\" " +
+                                                        "remove_subset_proteins=\"true\" " +
+                                                        "shared_peptides=\"AssignedToBestProtein\" />";
+            AssertEx.DeserializeNoError<ProteinAssociation.ParsimonySettings>(proteinAssociationSerialized, DocumentFormat.VERSION_22_13);
+
+            var parsimonySettings = AssertEx.Deserialize<ProteinAssociation.ParsimonySettings>(proteinAssociationSerialized);
+            Assert.AreEqual(3, parsimonySettings.MinPeptidesPerProtein);
+            Assert.AreEqual(true, parsimonySettings.GroupProteins);
+            Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
+            Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
+        }
 
         /// <summary>
         /// Test serialization of ion mobility data

@@ -859,7 +859,7 @@
     <xs:complexContent>
       <xs:extension base="doc_parent_node_type">
         <xs:sequence>
-          <xs:element name="protein_type" minOccurs="1" maxOccurs="unbounded" />
+          <xs:element name="protein" type="protein_type" minOccurs="1" maxOccurs="unbounded" />
           <xs:element name="peptide" type="peptide_type" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <!-- name for the identity object (description is automatically generated) -->

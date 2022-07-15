@@ -332,11 +332,12 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._name, _name) &&
-                Equals(obj._description, _description) &&
-                Equals(obj._sequence, _sequence) &&
-                ArrayUtil.EqualsDeep(obj.Alternatives, Alternatives) &&
-                obj.IsDecoy == IsDecoy;
+            var equal = Equals(obj._name, _name) &&
+                        Equals(obj._description, _description) &&
+                        Equals(obj._sequence, _sequence) &&
+                        ArrayUtil.EqualsDeep(obj.Alternatives, Alternatives) &&
+                        obj.IsDecoy == IsDecoy;
+            return equal;
         }
 
         public override bool Equals(object obj)
@@ -476,6 +477,35 @@ namespace pwiz.Skyline.Model
         }
 
         public override string Name => _name;
+
+        public bool Equals(FastaSequenceGroup obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return base.Equals(obj) &&
+                   Equals(obj._name, _name) &&
+                   ArrayUtil.EqualsDeep(obj.FastaSequences, FastaSequences) &&
+                   obj.IsDecoy == IsDecoy;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(FastaSequenceGroup)) return false;
+            return Equals((FastaSequenceGroup) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode() ^ (_name != null ? _name.GetHashCode() : 0);
+                result = (result*397) ^ FastaSequences.GetHashCodeDeep();
+                result = (result*397) ^ IsDecoy.GetHashCode();
+                return result;
+            }
+        }
     }
 
 // ReSharper disable InconsistentNaming

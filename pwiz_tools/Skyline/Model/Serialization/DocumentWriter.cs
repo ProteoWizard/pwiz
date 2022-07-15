@@ -29,6 +29,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -117,7 +118,8 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeString(ATTR.label_description, node.ProteinMetadataOverrides.Description);
             }
-            WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
+            if (!(node.PeptideGroup is FastaSequenceGroup) || SkylineVersion.SrmDocumentVersion < DocumentFormat.VERSION_22_13)
+                WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
             writer.WriteAttributeNullable(ATTR.decoy_match_proportion, node.ProportionDecoysMatch);
@@ -148,17 +150,20 @@ namespace pwiz.Skyline.Model.Serialization
             FastaSequenceGroup group = node.PeptideGroup as FastaSequenceGroup;
             if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_22_13)
             {
-                writer.WriteStartElement(EL.proteins);
-                foreach (var seq in group.FastaSequences)
+                var proteinGroupMetadata = (node.ProteinMetadataOverrides as ProteinGroupMetadata)!.ProteinMetadata;
+                Assume.AreEqual(proteinGroupMetadata.Count, group.FastaSequences.Count);
+                for (var i = 0; i < group.FastaSequences.Count; i++)
                 {
+                    var seq = group.FastaSequences[i];
+                    var md = proteinGroupMetadata[i];
                     writer.WriteStartElement(EL.protein);
                     writer.WriteAttributeString(ATTR.name, seq.Name);
                     if (!seq.Description.IsNullOrEmpty())
                         writer.WriteAttributeString(ATTR.description, seq.Description);
+                    WriteProteinMetadataXML(writer, md, true); // write the protein metadata, skipping the name and description we already wrote
                     writeFastaSequence(seq);
                     writer.WriteEndElement();
                 }
-                writer.WriteEndElement();
             }
             else
             {

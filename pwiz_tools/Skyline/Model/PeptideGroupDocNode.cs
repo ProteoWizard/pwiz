@@ -525,7 +525,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata); 
+            var equal = base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata);
+            return equal; 
         }
 
         protected override IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)
