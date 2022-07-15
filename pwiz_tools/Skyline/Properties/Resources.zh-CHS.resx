@@ -3330,9 +3330,6 @@
   <data name="IdentityNotFoundException_IdentityNotFoundException_Failed_to_find_document_node" xml:space="preserve">
     <value>未能发现文档节点。</value>
   </data>
-  <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
-    <value>文件</value>
-  </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>尝试导入{0}库时出现错误。</value>
   </data>
