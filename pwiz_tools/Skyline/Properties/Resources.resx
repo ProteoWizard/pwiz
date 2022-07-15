@@ -3341,9 +3341,6 @@ Are you sure you want to continue?</value>
   <data name="IdentityNotFoundException_IdentityNotFoundException_Failed_to_find_document_node" xml:space="preserve">
     <value>Failed to find document node.</value>
   </data>
-  <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
-    <value>File</value>
-  </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>An error occurred attempting to import the {0} library.</value>
   </data>
