@@ -439,9 +439,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public Target GetModifiedSequence(PeptideDocNode nodePep)
         {
-            if (nodePep.Peptide.IsCustomMolecule)
-                return nodePep.ModifiedTarget;
-            Assume.IsNotNull(nodePep.ModifiedSequence);
             return nodePep.ModifiedTarget;
         }
 

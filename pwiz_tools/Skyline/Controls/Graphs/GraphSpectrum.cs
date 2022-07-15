@@ -569,9 +569,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     return spectra[0];
                 if (spectra.Count > 1 && comboSpectrum.SelectedIndex >= 0)
                     return spectra[comboSpectrum.SelectedIndex];
-                    return null;
-                }
+                return null;
             }
+        }
 
         public SpectrumDisplayInfo SelectedMirrorSpectrum
         {

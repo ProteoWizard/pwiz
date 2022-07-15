@@ -1397,6 +1397,7 @@ namespace pwiz.SkylineTestTutorial
             foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
             if (!IsCoverShotMode)
                 RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
