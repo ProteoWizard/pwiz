@@ -309,7 +309,7 @@
     <value>54, 13</value>
   </data>
   <data name="labelFilename.Text" xml:space="preserve">
-    <value>文件(&amp;E)： {0}</value>
+    <value>文件(&amp;E)：</value>
   </data>
   <data name="comboRedundantSpectra.Location" type="System.Drawing.Point, System.Drawing">
     <value>63, 3</value>

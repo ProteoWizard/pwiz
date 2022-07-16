@@ -3331,7 +3331,7 @@
     <value>未能发现文档节点。</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
-    <value>文件： </value>
+    <value>文件：{0}</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>尝试导入{0}库时出现错误。</value>
@@ -6775,9 +6775,6 @@
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
     <value>{0} 个现有的</value>
   </data>
-  <data name="SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List" xml:space="preserve">
-    <value>混合离子对列表</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
     <value>最优去簇电压</value>
   </data>
@@ -8926,9 +8923,6 @@
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0}（至少 {1} 点）</value>
-  </data>
-  <data name="IrtDb_AddPeptides_Adding_peptides" xml:space="preserve">
-    <value>添加肽段</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_" xml:space="preserve">
     <value>添加的文件包含 {0} 个重复的蛋白质序列。它们的名称作为别名添加，以确保蛋白质列表只包含每个序列的一个副本。</value>

@@ -3331,7 +3331,7 @@
     <value>ドキュメントノードの検索に失敗しました。</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
-    <value>ファイル： </value>
+    <value>ファイル：{0}</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>{0}ライブラリをインポートしようとした際にエラーが発生しました。</value>
@@ -6775,9 +6775,6 @@
   <data name="ViewLibraryDlg_AddAllPeptides__0__existing" xml:space="preserve">
     <value>{0}既存</value>
   </data>
-  <data name="SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List" xml:space="preserve">
-    <value>混合トランジションリスト</value>
-  </data>
   <data name="ResultsGrid_ResultsGrid_Opt_Declustering_Potential" xml:space="preserve">
     <value>最適デクラスタリングポテンシャル</value>
   </data>
@@ -8926,9 +8923,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="RegressionGraphPane_RegressionGraphPane__0___at__1__points_minimum_" xml:space="preserve">
     <value>{0}（最低{1}点）</value>
-  </data>
-  <data name="IrtDb_AddPeptides_Adding_peptides" xml:space="preserve">
-    <value>ペプチドを追加しています</value>
   </data>
   <data name="BuildBackgroundProteomeDlg_AddFastaFile_The_added_file_included__0__repeated_protein_sequences__Their_names_were_added_as_aliases_to_ensure_the_protein_list_contains_only_one_copy_of_each_sequence_" xml:space="preserve">
     <value>追加されたファイルには、{0}個の反復タンパク質シークエンスが含まれていました。タンパク質リストに各シークエンスのコピーが1つしか含まれないようにするために、これらの名前はエイリアスとして追加されました。</value>

@@ -855,7 +855,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             else
                             {
-                                labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + filename;
+                                labelFilename.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_File, filename);
                             }
                             if (rt.HasValue)
                             {

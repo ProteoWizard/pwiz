@@ -3342,7 +3342,7 @@ Are you sure you want to continue?</value>
     <value>Failed to find document node.</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
-    <value>File: </value>
+    <value>File: {0}</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>An error occurred attempting to import the {0} library.</value>
