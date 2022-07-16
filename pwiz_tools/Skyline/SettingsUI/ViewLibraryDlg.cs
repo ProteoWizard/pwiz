@@ -105,10 +105,10 @@ namespace pwiz.Skyline.SettingsUI
         private bool _hasChromatograms;
         private bool _hasScores;
         private readonly GraphHelper _graphHelper;
+        private string _originalFileLabelText;
+        private string _sourceFile;
 
         private ModFontHolder ModFonts { get; set; }
-
-        private string FileFormat { get; set; }
 
         private string SelectedLibraryName
         {
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.SettingsUI
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
-            FileFormat = labelFilename.Text;
+            _originalFileLabelText = labelFilename.Text;
             _peptideImg = Resources.PeptideLib;
             _moleculeImg = Resources.MoleculeLib;
 
@@ -699,6 +699,7 @@ namespace pwiz.Skyline.SettingsUI
 
             labelRT.Text = string.Empty;
             labelFilename.Text = string.Empty;
+            _sourceFile = null;
             bool showComboRedundantSpectra = false; // Careful not to actually hide this responding to a selection change
 
             // Check for appropriate spectrum to load
@@ -841,16 +842,20 @@ namespace pwiz.Skyline.SettingsUI
 
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
+                        _sourceFile = spectrumInfo?.FileName;
                         // Update file and retention time indicators
                         if (spectrumInfo != null)
                         {
                             double? rt = libraryChromGroup?.RetentionTime ?? spectrumInfo.RetentionTime;
                             string filename = spectrumInfo.FileName;
 
-                            if (!string.IsNullOrEmpty(filename))
+                            if (showComboRedundantSpectra)
                             {
-                                labelFilename.Text = string.Format(FileFormat,
-                                    !showComboRedundantSpectra ? filename : string.Empty);
+                                labelFilename.Text = _originalFileLabelText;
+                            }
+                            else
+                            {
+                                labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + filename;
                             }
                             if (rt.HasValue)
                             {
@@ -2292,7 +2297,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public string SourceFile
         {
-            get { return GetLabelValue(labelFilename); }
+            get { return _sourceFile; }
         }
 
         public double RetentionTime
