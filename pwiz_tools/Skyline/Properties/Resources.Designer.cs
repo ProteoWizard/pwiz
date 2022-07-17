@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -17282,15 +17282,6 @@ namespace pwiz.Skyline.Properties {
         public static string IonTypeSelector_SelectAllLossesTooltip {
             get {
                 return ResourceManager.GetString("IonTypeSelector_SelectAllLossesTooltip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Adding peptides.
-        /// </summary>
-        public static string IrtDb_AddPeptides_Adding_peptides {
-            get {
-                return ResourceManager.GetString("IrtDb_AddPeptides_Adding_peptides", resourceCulture);
             }
         }
         
@@ -35493,6 +35484,15 @@ namespace pwiz.Skyline.Properties {
         public static string ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_Failure_loading_spectrum_Library_may_be_corrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File: {0}.
+        /// </summary>
+        public static string ViewLibraryDlg_UpdateUI_File {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_UpdateUI_File", resourceCulture);
             }
         }
         
