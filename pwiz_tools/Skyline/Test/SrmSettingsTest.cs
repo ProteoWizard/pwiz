@@ -1144,19 +1144,39 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SerializeProteinAssociationSettingsTest()
         {
-            const string proteinAssociationSerialized = "<protein_association min_peptides_per_protein=\"3\" " +
+            const string proteinAssociationSerialized = "<srm_settings>\n" +
+                                                        "  <settings_summary name=\"Default\">\n" +
+                                                        "    <peptide_settings>\n" +
+                                                        "      <protein_association min_peptides_per_protein=\"0\" " +
                                                         "group_proteins=\"true\" " +
                                                         "find_minimal_protein_list=\"true\" " +
                                                         "remove_subset_proteins=\"true\" " +
-                                                        "shared_peptides=\"AssignedToBestProtein\" />";
-            AssertEx.DeserializeNoError<ProteinAssociation.ParsimonySettings>(proteinAssociationSerialized, DocumentFormat.VERSION_22_13);
+                                                        "shared_peptides=\"AssignedToBestProtein\" />\n" +
+                                                        "    </peptide_settings>\n" +
+                                                        "  </settings_summary>\n" +
+                                                        "</srm_settings>";
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.VERSION_22_13);
 
-            var parsimonySettings = AssertEx.Deserialize<ProteinAssociation.ParsimonySettings>(proteinAssociationSerialized);
-            Assert.AreEqual(3, parsimonySettings.MinPeptidesPerProtein);
+            var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
+            var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
+            Assert.AreEqual(0, parsimonySettings.MinPeptidesPerProtein);
             Assert.AreEqual(true, parsimonySettings.GroupProteins);
             Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
             Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
+
+            // test ProteinAssociationSettings removed from formats before 22_13
+            string xml = null;
+            var actual = AssertEx.RoundTrip(doc, SkylineVersion.V21_2, ref xml);
+            Assert.AreEqual(false, actual.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+
+            const string proteinAssociationMinPeptidesErrorSerialized = "<protein_association min_peptides_per_protein=\"-1\" />";
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationMinPeptidesErrorSerialized, DocumentFormat.VERSION_22_13,
+                "The value -1 for Min peptides per protein is not valid: it must be greater than or equal to 0.");
+
+            const string proteinAssociationSharedPeptidesErrorSerialized = "<protein_association shared_peptides=\"SomethingIsWrong\" />";
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationSharedPeptidesErrorSerialized, DocumentFormat.VERSION_22_13,
+                "The value 'SomethingIsWrong' is not valid for the attribute shared_peptides.");
         }
 
         /// <summary>

@@ -2051,6 +2051,12 @@ namespace pwiz.Skyline.Model.DocSettings
                             Array.Empty<string>())));
             }
 
+            if (documentFormat < DocumentFormat.VERSION_22_13)
+            {
+                result = result.ChangePeptideSettings(peptideSettings =>
+                    peptideSettings.ChangeParsimonySettings(ProteinAssociation.ParsimonySettings.DEFAULT));
+            }
+
             return result;
         }
 

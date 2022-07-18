@@ -58,6 +58,24 @@ namespace pwiz.ProteomeDatabase.API
         // if this does not start with the "search complete" tag, we owe a trip to the internet to try to dig out more metadata
         public virtual WebSearchInfo WebSearchInfo { get; private set; }
 
+        /// <summary>
+        /// For a single protein, returns an ImmutableList with just that protein's ProteinMetadata.
+        /// For a protein group, returns all of the group's proteins' ProteinMetadata
+        /// </summary>
+        public virtual ImmutableList<ProteinMetadata> ProteinMetadataList => ImmutableList<ProteinMetadata>.Singleton(this);
+        
+        public virtual ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata other)
+        {
+            Name = other.Name;
+            Description = other.Description;
+            PreferredName = other.PreferredName;
+            Accession = other.Accession;
+            Gene = other.Gene;
+            Species = other.Species;
+            WebSearchInfo = other.WebSearchInfo;
+            return this;
+        }
+
         public virtual ProteinMetadata ChangeName(string name)
         {
             return new ProteinMetadata(this){Name = name};
@@ -179,6 +197,11 @@ namespace pwiz.ProteomeDatabase.API
             };
         }
 
+        public virtual ProteinMetadata Merge(string name, string description)
+        {
+            return Merge(new ProteinMetadata(name, description));
+        }
+
         public bool HasMissingMetadata()
         {
             return
@@ -293,7 +316,6 @@ namespace pwiz.ProteomeDatabase.API
         {
             return String.Format(@"name='{0}' accession='{1}' preferredname='{2}' description='{3}' gene='{4}' species='{5}' websearch='{6}'", Name, Accession, PreferredName, Description, Gene, Species, WebSearchInfo);
         }
-
     }
 
     /// <summary>

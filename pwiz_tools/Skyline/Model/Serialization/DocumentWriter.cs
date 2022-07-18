@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Model.Serialization
             FastaSequenceGroup group = node.PeptideGroup as FastaSequenceGroup;
             if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_22_13)
             {
-                var proteinGroupMetadata = (node.ProteinMetadataOverrides as ProteinGroupMetadata)!.ProteinMetadata;
+                var proteinGroupMetadata = node.ProteinMetadataOverrides.ProteinMetadataList;
                 Assume.AreEqual(proteinGroupMetadata.Count, group.FastaSequences.Count);
                 for (var i = 0; i < group.FastaSequences.Count; i++)
                 {

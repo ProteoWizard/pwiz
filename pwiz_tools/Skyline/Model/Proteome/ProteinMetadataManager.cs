@@ -228,13 +228,8 @@ namespace pwiz.Skyline.Model.Proteome
                                     }
                                 }
 
-                                if (node.ProteinMetadata is ProteinGroupMetadata proteinGroupMetadata)
-                                {
-                                    foreach (var proteinMetadata in proteinGroupMetadata.ProteinMetadata)
-                                        ProcessNode(proteinMetadata, nResolved, ref progressStatus);
-                                }
-                                else
-                                    ProcessNode(node.ProteinMetadata, nResolved, ref progressStatus);
+                                foreach (var proteinMetadata in node.ProteinMetadata.ProteinMetadataList)
+                                    ProcessNode(proteinMetadata, nResolved, ref progressStatus);
                             }
                         }
 
@@ -249,18 +244,10 @@ namespace pwiz.Skyline.Model.Proteome
                                 Assume.IsTrue(!result.GetProteinMetadata().NeedsSearch());
                                 var node = docNodesWithUnresolvedProteinMetadata[result];
                                 var resultMetadata = result.GetProteinMetadata();
-                                if (node.ProteinMetadata is ProteinGroupMetadata proteinGroupMetadata)
-                                {
-                                    if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedProteinGroupMetadata))
-                                        resultMetadata = (processedProteinGroupMetadata as ProteinGroupMetadata)!.ChangeSingleProteinMetadata(resultMetadata);
-                                    else
-                                        resultMetadata = proteinGroupMetadata.ChangeSingleProteinMetadata(resultMetadata);
-                                }
-
-                                if (_processedNodes.ContainsKey(node.Id.GlobalIndex))
-                                    _processedNodes[node.Id.GlobalIndex] = resultMetadata;
+                                if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedProteinGroupMetadata))
+                                    _processedNodes[node.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(resultMetadata);
                                 else
-                                    _processedNodes.Add(node.Id.GlobalIndex, resultMetadata);
+                                    _processedNodes.Add(node.Id.GlobalIndex, node.ProteinMetadata.ChangeSingleProteinMetadata(resultMetadata));
                                 if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved++ / nUnresolved, ref progressStatus))
                                     return null;
                             }

@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                PeptideModifications modifications,
                                PeptideIntegration integration,
                                BackgroundProteome backgroundProteome,
-                               ProteinAssociation.ParsimonySettings proteinAssociationSettings = null
+                               ProteinAssociation.ParsimonySettings proteinAssociationSettings
                                )
         {
             Enzyme = enzyme;
@@ -168,14 +168,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideSettings MergeDefaults(PeptideSettings defPep)
         {
             PeptideSettings newPeptideSettings = ImClone(this);
-            newPeptideSettings.Enzyme = newPeptideSettings.Enzyme ?? defPep.Enzyme;
-            newPeptideSettings.DigestSettings = newPeptideSettings.DigestSettings ?? defPep.DigestSettings;
-            newPeptideSettings.Prediction = newPeptideSettings.Prediction ?? defPep.Prediction;
-            newPeptideSettings.Filter = newPeptideSettings.Filter ?? defPep.Filter;
-            newPeptideSettings.Libraries = newPeptideSettings.Libraries ?? defPep.Libraries;
-            newPeptideSettings.BackgroundProteome = newPeptideSettings.BackgroundProteome ?? defPep.BackgroundProteome;
-            newPeptideSettings.Modifications = newPeptideSettings.Modifications ?? defPep.Modifications;
-            newPeptideSettings.Integration = newPeptideSettings.Integration ?? defPep.Integration;
+            newPeptideSettings.Enzyme ??= defPep.Enzyme;
+            newPeptideSettings.DigestSettings ??= defPep.DigestSettings;
+            newPeptideSettings.Prediction ??= defPep.Prediction;
+            newPeptideSettings.Filter ??= defPep.Filter;
+            newPeptideSettings.Libraries ??= defPep.Libraries;
+            newPeptideSettings.BackgroundProteome ??= defPep.BackgroundProteome;
+            newPeptideSettings.Modifications ??= defPep.Modifications;
+            newPeptideSettings.Integration ??= defPep.Integration;
+            newPeptideSettings.ProteinAssociationSettings ??= defPep.ProteinAssociationSettings;
             return Equals(newPeptideSettings, this) ? this : newPeptideSettings;
         }
 
@@ -250,7 +251,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(Integration);
             if (!Equals(Quantification, QuantificationSettings.DEFAULT))
                 writer.WriteElement(Quantification);
-            if (ProteinAssociationSettings != null)
+            if (!Equals(ProteinAssociationSettings, ProteinAssociation.ParsimonySettings.DEFAULT))
                 writer.WriteElement(ProteinAssociationSettings);
         }
 

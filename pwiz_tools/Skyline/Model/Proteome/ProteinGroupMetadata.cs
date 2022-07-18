@@ -31,45 +31,67 @@ namespace pwiz.Skyline.Model.Proteome
         const string GROUP_SEPARATOR = @"/";
         public new static readonly ProteinGroupMetadata EMPTY = new ProteinGroupMetadata();
 
-        public ImmutableList<ProteinMetadata> ProteinMetadata { get; }
+        private ProteinGroupMetadata() : base(null, null)
+        {
+        }
+
+        private ProteinGroupMetadata(ProteinGroupMetadata other, WebSearchInfo webSearchInfo = null) : base(other.Name, other.Description)
+        {
+            webSearchInfo ??= other.ProteinMetadataList.First().WebSearchInfo;
+            ProteinMetadataList = ImmutableList<ProteinMetadata>.ValueOf(other.ProteinMetadataList);
+            //ProteinMetadataList[0] = ProteinMetadataList[0].ChangeWebSearchInfo(webSearchInfo);
+            /*    Name = ProteinMetadataList.All(p => p.Name == null)
+                ? null
+                : string.Join(GROUP_SEPARATOR, ProteinMetadataList.OrderBy(p => p.).Select(p => p.Name));*/
+        }
+
+        public ProteinGroupMetadata(string name, string description, IList<ProteinMetadata> proteinMetadata) : base(name, description)
+        {
+            ProteinMetadataList = ImmutableList<ProteinMetadata>.ValueOf(proteinMetadata);
+        }
+
+        public override ImmutableList<ProteinMetadata> ProteinMetadataList { get; }
 
         [Track]
-        public override string Name => ProteinMetadata.All(p => p.Name == null)
+        public override string Name => ProteinMetadataList.All(p => p.Name == null)
             ? null
-            : string.Join(GROUP_SEPARATOR, ProteinMetadata.Select(p => p.Name));
+            : string.Join(GROUP_SEPARATOR, ProteinMetadataList.Select(p => p.Name));
 
         [Track]
-        public override string Description => ProteinMetadata.All(p => p.Description == null)
-            ? null
-            : string.Join(GROUP_SEPARATOR,
-                ProteinMetadata.Where(p => !string.IsNullOrWhiteSpace(p.Description)).Select(p => p.Description));
-
-        [Track]
-        public override string PreferredName => ProteinMetadata.All(p => p.PreferredName == null)
-            ? null
-            : string.Join(GROUP_SEPARATOR,
-                ProteinMetadata.Where(p => !string.IsNullOrWhiteSpace(p.PreferredName)).Select(p => p.PreferredName));
-
-        [Track]
-        public override string Accession => ProteinMetadata.All(p => p.Accession == null)
-            ? null
-            : string.Join(GROUP_SEPARATOR,
-                ProteinMetadata.Where(p => !string.IsNullOrWhiteSpace(p.Accession)).Select(p => p.Accession));
-
-        [Track]
-        public override string Gene => ProteinMetadata.All(p => p.Gene == null)
-            ? null
-            : string.Join(GROUP_SEPARATOR,
-                ProteinMetadata.Where(p => !string.IsNullOrWhiteSpace(p.Gene)).Select(p => p.Gene));
-
-        [Track]
-        public override string Species => ProteinMetadata.All(p => p.Species == null)
+        public override string Description => ProteinMetadataList.All(p => p.Description == null)
             ? null
             : string.Join(GROUP_SEPARATOR,
-                ProteinMetadata.Where(p => !string.IsNullOrWhiteSpace(p.Species)).Select(p => p.Species));
-        [Track]
-        public override WebSearchInfo WebSearchInfo => ProteinMetadata.Select(p => p.WebSearchInfo).First();
+                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Description)).Select(p => p.Description));
 
+        [Track]
+        public override string PreferredName => ProteinMetadataList.All(p => p.PreferredName == null)
+            ? null
+            : string.Join(GROUP_SEPARATOR,
+                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.PreferredName)).Select(p => p.PreferredName));
+
+        [Track]
+        public override string Accession => ProteinMetadataList.All(p => p.Accession == null)
+            ? null
+            : string.Join(GROUP_SEPARATOR,
+                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Accession)).Select(p => p.Accession));
+
+        [Track]
+        public override string Gene => ProteinMetadataList.All(p => p.Gene == null)
+            ? null
+            : string.Join(GROUP_SEPARATOR,
+                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Gene)).Select(p => p.Gene));
+
+        [Track]
+        public override string Species => ProteinMetadataList.All(p => p.Species == null)
+            ? null
+            : string.Join(GROUP_SEPARATOR,
+                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Species)).Select(p => p.Species));
+
+        public override WebSearchInfo WebSearchInfo => ProteinMetadataList.Select(p => p.WebSearchInfo).First();
+
+        /// <summary>
+        /// The Change* functions do nothing for a protein group. Protein groups' properties are always computed from their constituents' properties.
+        /// </summary>
         public override ProteinMetadata ChangeName(string name)
         {
             return new ProteinGroupMetadata(this);
@@ -100,14 +122,11 @@ namespace pwiz.Skyline.Model.Proteome
             return new ProteinGroupMetadata(this);
         }
 
-        public ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata singleProteinMetadata)
+        public override ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata singleProteinMetadata)
         {
-            Assume.IsTrue(singleProteinMetadata != null && !(singleProteinMetadata is ProteinGroupMetadata));
-            var proteinMetadataList = new List<ProteinMetadata>(ProteinMetadata);
-            var matchingProteinIndex = proteinMetadataList.IndexOf(m => m.Name == singleProteinMetadata?.Name);
-            Assume.IsTrue(matchingProteinIndex >= 0, $@"no matching protein in group {this} for protein {singleProteinMetadata}");
-            proteinMetadataList[matchingProteinIndex] = singleProteinMetadata;
-            return new ProteinGroupMetadata(Name, Description, proteinMetadataList);
+            Assume.IsTrue(singleProteinMetadata?.ProteinMetadataList?.Count == 1);
+            return new ProteinGroupMetadata(Name, Description,
+                ProteinMetadataList.ReplaceElement(singleProteinMetadata, m => m.Name == singleProteinMetadata!.Name));
         }
 
         public override ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
@@ -145,32 +164,16 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return new ProteinGroupMetadata(String.IsNullOrEmpty(Name) ? sourceGroup.Name : Name,
                     String.IsNullOrEmpty(Description) ? sourceGroup.Description : Description,
-                    sourceGroup.ProteinMetadata);
+                    sourceGroup.ProteinMetadataList);
             }
 
-            return new ProteinGroupMetadata(String.IsNullOrEmpty(Name) ? source.Name : Name,
-                String.IsNullOrEmpty(Description) ? source.Description : Description,
-                ProteinMetadata);
-            //throw new InvalidOperationException("cannot merge ProteinMetadata into ProteinGroupMetadata");
+            Assume.Fail(@"cannot merge ProteinMetadata into ProteinGroupMetadata");
+            return null;
         }
 
-        private ProteinGroupMetadata() : base(null, null)
+        public override ProteinMetadata Merge(string name, string description)
         {
-        }
-
-        private ProteinGroupMetadata(ProteinGroupMetadata other, WebSearchInfo webSearchInfo = null) : base(other.Name, other.Description)
-        {
-            webSearchInfo ??= other.ProteinMetadata.First().WebSearchInfo;
-            ProteinMetadata = ImmutableList<ProteinMetadata>.ValueOf(other.ProteinMetadata);
-            //ProteinMetadata[0] = ProteinMetadata[0].ChangeWebSearchInfo(webSearchInfo);
-            /*    Name = ProteinMetadata.All(p => p.Name == null)
-                ? null
-                : string.Join(GROUP_SEPARATOR, ProteinMetadata.OrderBy(p => p.).Select(p => p.Name));*/
-        }
-
-        public ProteinGroupMetadata(string name, string description, IList<ProteinMetadata> proteinMetadata) : base(name, description)
-        {
-            ProteinMetadata = ImmutableList<ProteinMetadata>.ValueOf(proteinMetadata);
+            return Merge(new ProteinGroupMetadata(name, description, ProteinMetadataList));
         }
 
         public new object GetDefaultObject(ObjectInfo<object> info)
@@ -184,7 +187,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return false;
             if (!string.Equals(Name, other.Name))
                 return false;
-            if (!ArrayUtil.EqualsDeep(ProteinMetadata, other.ProteinMetadata))
+            if (!ArrayUtil.EqualsDeep(ProteinMetadataList, other.ProteinMetadataList))
                 return false;
             return true;
         }
@@ -201,7 +204,7 @@ namespace pwiz.Skyline.Model.Proteome
             unchecked
             {
                 int result = (Name != null ? Name.GetHashCode() : 0);
-                result = (result * 397) ^ ProteinMetadata.GetHashCodeDeep();
+                result = (result * 397) ^ ProteinMetadataList.GetHashCodeDeep();
                 return result;
             }
         }

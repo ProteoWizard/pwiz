@@ -194,8 +194,10 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
         [XmlRoot("protein_association")]
-        public class ParsimonySettings : Immutable, IXmlSerializable
+        public class ParsimonySettings : Immutable, IXmlSerializable, IValidating
         {
+            public static ParsimonySettings DEFAULT = new ParsimonySettings() { MinPeptidesPerProtein = 1 };
+
             public ParsimonySettings(bool groupProteins, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein)
             {
                 GroupProteins = groupProteins;
@@ -252,6 +254,15 @@ namespace pwiz.Skyline.Model.Proteome
                     return result;
                 }
             }
+
+            public void Validate()
+            {
+                if (MinPeptidesPerProtein < 0)
+                    throw new InvalidDataException(string.Format(
+                        Resources.ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__,
+                        MinPeptidesPerProtein, PropertyNames.ParsimonySettings_MinPeptidesPerProtein, 0));
+            }
+
             #endregion
 
             #region Implementation of IXmlSerializable
@@ -283,6 +294,8 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     reader.ReadEndElement();
                 }
+
+                Validate();
             }
 
             public void WriteXml(XmlWriter writer)
@@ -860,10 +873,10 @@ namespace pwiz.Skyline.Model.Proteome
                 monitor.UpdateProgress(status.ChangePercentComplete(newPeptideGroups.Count * 100 / totalPeptideGroups));
             }
 
-            var newFilterSettings = current.Settings.PeptideSettings.ChangeParsimonySettings(FinalResults.ParsimonySettings);
-            if (!Equals(newFilterSettings, current.Settings.PeptideSettings))
+            var newPeptideSettings = current.Settings.PeptideSettings.ChangeParsimonySettings(FinalResults.ParsimonySettings);
+            if (!Equals(newPeptideSettings, current.Settings.PeptideSettings))
             {
-                current = current.ChangeSettings(current.Settings.ChangePeptideSettings(newFilterSettings));
+                current = current.ChangeSettings(current.Settings.ChangePeptideSettings(newPeptideSettings));
             }
 
             return (SrmDocument)current.ChangeChildrenChecked(newPeptideGroups.ToArray());
@@ -987,7 +1000,7 @@ namespace pwiz.Skyline.Model.Proteome
             FASTA = fasta;
             BackgroundProteome = backgroundProteome;
 
-            ParsimonySettings = Results?.ParsimonySettings;
+            ParsimonySettings = Results?.ParsimonySettings ?? ProteinAssociation.ParsimonySettings.DEFAULT;
         }
 
         protected override AuditLogEntry CreateEntry(SrmDocumentPair docPair)

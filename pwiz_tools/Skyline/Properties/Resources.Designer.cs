@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -17286,15 +17286,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Adding peptides.
-        /// </summary>
-        public static string IrtDb_AddPeptides_Adding_peptides {
-            get {
-                return ResourceManager.GetString("IrtDb_AddPeptides_Adding_peptides", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to iRT Database Files.
         /// </summary>
         public static string IrtDb_FILTER_IRTDB_iRT_Database_Files {
@@ -21648,6 +21639,16 @@ namespace pwiz.Skyline.Properties {
         public static string ParseExceptionDetail_ToString__at_position__0_ {
             get {
                 return ResourceManager.GetString("ParseExceptionDetail_ToString__at_position__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value {0} for {1} is not valid: it must be greater than or equal to {2}..
+        /// </summary>
+        public static string ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__ {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater" +
+                        "_than_or_equal_to__2__", resourceCulture);
             }
         }
         
