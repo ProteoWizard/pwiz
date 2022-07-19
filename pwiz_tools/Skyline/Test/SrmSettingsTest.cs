@@ -1155,7 +1155,7 @@ namespace pwiz.SkylineTest
                                                         "    </peptide_settings>\n" +
                                                         "  </settings_summary>\n" +
                                                         "</srm_settings>";
-            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.VERSION_22_13);
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.PROTEIN_GROUPS);
 
             var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
             var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
@@ -1171,11 +1171,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(false, actual.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
 
             const string proteinAssociationMinPeptidesErrorSerialized = "<protein_association min_peptides_per_protein=\"-1\" />";
-            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationMinPeptidesErrorSerialized, DocumentFormat.VERSION_22_13,
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationMinPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
                 "The value -1 for Min peptides per protein is not valid: it must be greater than or equal to 0.");
 
             const string proteinAssociationSharedPeptidesErrorSerialized = "<protein_association shared_peptides=\"SomethingIsWrong\" />";
-            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationSharedPeptidesErrorSerialized, DocumentFormat.VERSION_22_13,
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationSharedPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
                 "The value 'SomethingIsWrong' is not valid for the attribute shared_peptides.");
         }
 

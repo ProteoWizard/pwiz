@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Serialization
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
             {
                 if (nodeGroup.Id is FastaSequenceGroup &&
-                    SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_22_13)
+                    SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
                     writer.WriteStartElement(EL.protein_group);
                 else if (nodeGroup.Id is FastaSequence)
                     writer.WriteStartElement(EL.protein);
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeString(ATTR.label_description, node.ProteinMetadataOverrides.Description);
             }
-            if (!(node.PeptideGroup is FastaSequenceGroup) || SkylineVersion.SrmDocumentVersion < DocumentFormat.VERSION_22_13)
+            if (!(node.PeptideGroup is FastaSequenceGroup) || SkylineVersion.SrmDocumentVersion < DocumentFormat.PROTEIN_GROUPS)
                 WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Serialization
             };
 
             FastaSequenceGroup group = node.PeptideGroup as FastaSequenceGroup;
-            if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.VERSION_22_13)
+            if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
             {
                 var proteinGroupMetadata = node.ProteinMetadataOverrides.ProteinMetadataList;
                 Assume.AreEqual(proteinGroupMetadata.Count, group.FastaSequences.Count);
