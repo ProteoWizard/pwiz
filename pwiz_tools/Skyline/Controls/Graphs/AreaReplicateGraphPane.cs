@@ -562,7 +562,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // correspond with the other graphs.
                     if (nodeGroup != null && countNodes > 1)
                     {
-                        if (NormalizationMethod.RatioToLabel.Matches(normalizeOption.NormalizationMethod, nodeGroup.TransitionGroup.LabelType))
+                        if (normalizeOption.HideLabelType(document.Settings, nodeGroup.LabelType))
                             continue;
                     }
 

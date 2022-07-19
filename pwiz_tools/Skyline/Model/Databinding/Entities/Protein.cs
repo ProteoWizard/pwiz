@@ -259,8 +259,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     foreach (var entry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, iReplicate,
                         false))
                     {
-                        totalNumerator += Math.Max(entry.Value.Intensity, 1.0);
-                        totalDenomicator += Math.Max(entry.Value.Denominator, 1.0);
+                        totalNumerator += entry.Value.Intensity;
+                        totalDenomicator += entry.Value.Denominator;
                         allTransitionIdentityPaths.Add(entry.Key);
                         transitionCount++;
                     }
