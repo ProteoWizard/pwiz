@@ -3649,6 +3649,27 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} CiRT peptides were found, but a valid regression could not be calculated..
+        /// </summary>
+        public static string CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_ {
+            get {
+                return ResourceManager.GetString("CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_" +
+                        "regression_could_not_be_calculated_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} CiRT peptides were found and a regression was calculated using {1} of them, but they did not sufficiently span the retention time range:.
+        /// </summary>
+        public static string CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_ {
+            get {
+                return ResourceManager.GetString("CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regress" +
+                        "ion_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_ret" +
+                        "ention_time_range_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Candidate Peaks.
         /// </summary>
         public static string CandidatePeakForm_CandidatePeakForm_Candidate_Peaks {

@@ -11813,4 +11813,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
       <value>CE:</value>
   </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_" xml:space="preserve">
+      <value>{0} CiRT peptides were found, but a valid regression could not be calculated.</value>
+  </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_" xml:space="preserve">
+      <value>{0} CiRT peptides were found and a regression was calculated using {1} of them, but they did not sufficiently span the retention time range:</value>
+  </data>
 </root>

@@ -306,17 +306,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            var useCirt = false;
-            if (_picker.TryGetCirtRegression(count, out _, out _))
+            var cirtResult = _picker.GetCirtRegressionResult(count);
+            if (cirtResult.Valid)
             {
                 switch (MultiButtonMsgDlg.Show(this, string.Format(
-                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
-                    _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
+                            _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
                     case DialogResult.Yes:
-                        useCirt = true;
                         break;
                     case DialogResult.No:
+                        cirtResult = null;
                         break;
                     case DialogResult.Cancel:
                         return;
@@ -324,7 +324,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
 
             comboProteins.SelectedIndex = 0;
-            PeptideLines = _picker.Pick(count, null, useCirt).Select(pep => pep.Target.ToString()).ToArray();
+            PeptideLines = _picker.Pick(count, null, cirtResult).Select(pep => pep.Target.ToString()).ToArray();
         }
     }
 }
