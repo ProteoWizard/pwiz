@@ -2314,7 +2314,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private double? GetVariableRtWindow(double maxRtDiff)
+        protected virtual double? GetVariableRtWindow(double maxRtDiff)
         {
             // increase window size if observed data goes close to window edge
             double maxWindowObservedInData = maxRtDiff*2;
@@ -2408,16 +2408,10 @@ namespace pwiz.Skyline.Model
 
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var windowRT);
-            if (predictedRT.HasValue)
-            {
-                RTWindow = windowRT; // Store for later use
-                dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
-            }
-            else
-            {
-                dwellOrRt = 0.ToString(CultureInfo);
-            }
+                SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
+
+            dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+            RTWindow = rtWindow; // Store for later use
         }
 
         private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
@@ -2808,6 +2802,11 @@ namespace pwiz.Skyline.Model
 
         public SciexOsMethodExporter(SrmDocument document) : base(document)
         {
+        }
+
+        protected override double? GetVariableRtWindow(double maxRtDiff)
+        {
+            return RTWindow.Window;
         }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
