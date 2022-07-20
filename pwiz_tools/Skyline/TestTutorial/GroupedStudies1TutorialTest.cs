@@ -1402,6 +1402,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var foldChangeResultColumn =
                     foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                Assert.IsNotNull(foldChangeResultColumn);
                 foldChangeGrid.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);

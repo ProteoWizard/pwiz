@@ -916,7 +916,7 @@
     <value>0</value>
   </data>
   <data name="labelFilename.Text" xml:space="preserve">
-    <value>Fil&amp;e: {0}</value>
+    <value>Fil&amp;e:</value>
   </data>
   <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
     <value>labelFilename</value>
@@ -1411,7 +1411,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.523, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.555, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>

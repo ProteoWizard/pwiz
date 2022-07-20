@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return DataSchema.NormalizedValueCalculator.GetTransitionValue(normalizationMethod,
-                Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, ChromInfo);
+                Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, GetResultFile().Replicate.ReplicateIndex, ChromInfo);
         }
     }
 }

@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return DataSchema.NormalizedValueCalculator.GetTransitionGroupValue(normalizationMethod,
-                Precursor.Peptide.DocNode, Precursor.DocNode, ChromInfo);
+                Precursor.Peptide.DocNode, Precursor.DocNode, GetResultFile().Replicate.ReplicateIndex, ChromInfo);
         }
 
         public RatioValue GetRatioValue(NormalizationMethod.RatioToLabel ratioToLabel)
