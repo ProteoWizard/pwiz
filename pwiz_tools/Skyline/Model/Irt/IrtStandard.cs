@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"DSTLIMQLLR",                 101.79),
             });
 
-        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", null, null,
+        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", @"CiRT_all.sky", null,
             new[] {
                 MakePeptide(@"ADTLDPALLRPGR",               35.99),
                 MakePeptide(@"AFEEAEK",                    -21.36),
