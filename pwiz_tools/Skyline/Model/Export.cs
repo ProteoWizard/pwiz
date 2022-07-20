@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model
         public const string ABI = "SCIEX";
         public const string ABI_QTRAP = "SCIEX QTRAP";
         public const string ABI_TOF = "SCIEX QTOF";
-        public const string ABI_7500 = "SCIEX 7500";
+        public const string ABI_SCIEX_OS = "SCIEX OS";
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model
                 BRUKER_TIMSTOF,
                 ABI_QTRAP,
                 ABI_TOF,
-                ABI_7500,
+                ABI_SCIEX_OS,
                 SHIMADZU,
                 THERMO_TSQ,
                 THERMO_LTQ,
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model
                                    {
                                        {ABI_QTRAP, EXT_AB_SCIEX},
                                        {ABI_TOF, EXT_AB_SCIEX},
-                                       {ABI_7500, EXT_SCIEX_OS},
+                                       {ABI_SCIEX_OS, EXT_SCIEX_OS},
                                        {AGILENT6400, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Model
                     if (type == ExportFileType.IsolationList)
                         return ExportAbiTofIsolationList(doc, path, template);
                     return ExportAbiTofMethod(doc, path, template);
-                case ExportInstrumentType.ABI_7500:
+                case ExportInstrumentType.ABI_SCIEX_OS:
                     return ExportSciexOsMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT:
                 case ExportInstrumentType.AGILENT6400:
