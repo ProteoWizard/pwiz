@@ -66,14 +66,8 @@ namespace pwiz.ProteomeDatabase.API
         
         public virtual ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata other)
         {
-            Name = other.Name;
-            Description = other.Description;
-            PreferredName = other.PreferredName;
-            Accession = other.Accession;
-            Gene = other.Gene;
-            Species = other.Species;
-            WebSearchInfo = other.WebSearchInfo;
-            return this;
+            return new ProteinMetadata(other.Name, other.Description, other.PreferredName, other.Accession, other.Gene,
+                other.Species, other.WebSearchInfo.ToString());
         }
 
         public virtual ProteinMetadata ChangeName(string name)

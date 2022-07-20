@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Proteome
                 : string.Join(GROUP_SEPARATOR, ProteinMetadataList.OrderBy(p => p.).Select(p => p.Name));*/
         }
 
-        public ProteinGroupMetadata(string name, string description, IList<ProteinMetadata> proteinMetadata) : base(name, description)
+        public ProteinGroupMetadata(IList<ProteinMetadata> proteinMetadata) : this()
         {
             ProteinMetadataList = ImmutableList<ProteinMetadata>.ValueOf(proteinMetadata);
         }
@@ -97,26 +97,31 @@ namespace pwiz.Skyline.Model.Proteome
             return new ProteinGroupMetadata(this);
         }
 
+        /// <summary><see cref="ChangeName"/></summary>
         public override ProteinMetadata ChangeDescription(string descr)
         {
             return new ProteinGroupMetadata(this);
         }
 
+        /// <summary><see cref="ChangeName"/></summary>
         public override ProteinMetadata ChangePreferredName(string preferredname)
         {
             return new ProteinGroupMetadata(this);
         }
 
+        /// <summary><see cref="ChangeName"/></summary>
         public override ProteinMetadata ChangeAccession(string accession)
         {
             return new ProteinGroupMetadata(this);
         }
 
+        /// <summary><see cref="ChangeName"/></summary>
         public override ProteinMetadata ChangeGene(string gene)
         {
             return new ProteinGroupMetadata(this);
         }
 
+        /// <summary><see cref="ChangeName"/></summary>
         public override ProteinMetadata ChangeSpecies(string species)
         {
             return new ProteinGroupMetadata(this);
@@ -125,8 +130,7 @@ namespace pwiz.Skyline.Model.Proteome
         public override ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata singleProteinMetadata)
         {
             Assume.IsTrue(singleProteinMetadata?.ProteinMetadataList?.Count == 1);
-            return new ProteinGroupMetadata(Name, Description,
-                ProteinMetadataList.ReplaceElement(singleProteinMetadata, m => m.Name == singleProteinMetadata!.Name));
+            return new ProteinGroupMetadata(ProteinMetadataList.ReplaceElement(singleProteinMetadata, m => m.Name == singleProteinMetadata!.Name));
         }
 
         public override ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
@@ -162,9 +166,7 @@ namespace pwiz.Skyline.Model.Proteome
                 return this;
             if (source is ProteinGroupMetadata sourceGroup)
             {
-                return new ProteinGroupMetadata(String.IsNullOrEmpty(Name) ? sourceGroup.Name : Name,
-                    String.IsNullOrEmpty(Description) ? sourceGroup.Description : Description,
-                    sourceGroup.ProteinMetadataList);
+                return new ProteinGroupMetadata(sourceGroup.ProteinMetadataList);
             }
 
             Assume.Fail(@"cannot merge ProteinMetadata into ProteinGroupMetadata");
@@ -173,7 +175,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public override ProteinMetadata Merge(string name, string description)
         {
-            return Merge(new ProteinGroupMetadata(name, description, ProteinMetadataList));
+            return Merge(new ProteinGroupMetadata(ProteinMetadataList));
         }
 
         public new object GetDefaultObject(ObjectInfo<object> info)

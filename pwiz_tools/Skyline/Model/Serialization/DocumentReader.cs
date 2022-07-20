@@ -772,7 +772,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             var proteinMetadataList = new List<ProteinMetadata>();
             var proteins = ReadProteinGroupProteinsXml(reader, proteinMetadataList);
-            var proteinGroupMetadata = new ProteinGroupMetadata(labelName, labelDescription, proteinMetadataList);
+            var proteinGroupMetadata = new ProteinGroupMetadata(proteinMetadataList);
 
             PeptideGroup group;
             if (peptideList)
