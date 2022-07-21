@@ -127,6 +127,7 @@
     <Compile Include="Collections\BindingLists.cs" />
     <Compile Include="Collections\IdentityEqualityComparer.cs" />
     <Compile Include="Collections\LinqExtensions.cs" />
+    <Compile Include="Collections\NaturalComparer.cs" />
     <Compile Include="Collections\PrimitiveArrays.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Collections\ImmutableCollection.cs" />

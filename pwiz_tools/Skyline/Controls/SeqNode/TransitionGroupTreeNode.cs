@@ -200,6 +200,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 var ratioToGlobalStandards = displaySettings.NormalizedValueCalculator.GetTransitionGroupValue(
                     displaySettings.NormalizationMethod, displaySettings.NodePep, nodeGroup,
+                    displaySettings.ResultsIndex,
                     nodeGroup.GetChromInfoEntry(displaySettings.ResultsIndex));
                 if (ratioToGlobalStandards.HasValue)
                 {
@@ -563,7 +564,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         foreach (IonType type in types)
                         {
                             CellDesc cell = CreateHead(type.GetLocalizedString().ToLower() + plusSub, rt);
-                            if (Transition.IsNTerminal(type))
+                            if (type.IsNTerminal())
                                 headers.Insert(0, cell);
                             else
                                 headers.Add(cell);
@@ -589,7 +590,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                             foreach (IonType type in types)
                             {
                                 CellDesc cell;
-                                if (Transition.IsNTerminal(type))
+                                if (type.IsNTerminal())
                                 {
                                     if (i == len - 1)
                                         cell = CreateData(string.Empty, rt);

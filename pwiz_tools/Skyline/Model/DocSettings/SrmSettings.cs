@@ -439,9 +439,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public Target GetModifiedSequence(PeptideDocNode nodePep)
         {
-            if (nodePep.Peptide.IsCustomMolecule)
-                return nodePep.ModifiedTarget;
-            Assume.IsNotNull(nodePep.ModifiedSequence);
             return nodePep.ModifiedTarget;
         }
 
@@ -2044,6 +2041,14 @@ namespace pwiz.Skyline.Model.DocSettings
                     result.PeptideSettings.Prediction.ChangeObsoleteIonMobilityValues(result.TransitionSettings
                         .IonMobilityFiltering))).ChangeTransitionSettings(
                     result.TransitionSettings.ChangeIonMobilityFiltering(TransitionIonMobilityFiltering.EMPTY));
+            }
+
+            if (documentFormat < DocumentFormat.VERSION_21_12)
+            {
+                result = result.ChangeTransitionSettings(transitionSettings =>
+                    transitionSettings.ChangeIntegration(
+                        transitionSettings.Integration.ChangeSynchronizedIntegration(null, false,
+                            Array.Empty<string>())));
             }
 
             return result;

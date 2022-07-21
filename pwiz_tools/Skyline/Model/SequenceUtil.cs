@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -732,6 +733,10 @@ namespace pwiz.Skyline.Model
 
          public static string NormalizeModifiedSequence(string rawModifiedSequence)
         {
+            if (CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(rawModifiedSequence, 0) != null)
+            {
+                return rawModifiedSequence;
+            }
             var normalizedSeq = new StringBuilder();
             int ichLast = 0;
             for (int ichOpenBracket = rawModifiedSequence.IndexOf('[');
@@ -1127,7 +1132,7 @@ namespace pwiz.Skyline.Model
         {
             int col = (int) type;
             int len = masses.GetLength(1);
-            if (Transition.IsNTerminal(type))
+            if (type.IsNTerminal())
             {
                 for (int i = 0; i < len; i++)
                     yield return masses[col, i];
@@ -1237,7 +1242,7 @@ namespace pwiz.Skyline.Model
 
             int len = seq.Length - 1;
 
-            bool nterm = Transition.IsNTerminal(type);
+            bool nterm = type.IsNTerminal();
             double mass = GetTermMass(nterm ? IonType.b : IonType.y, mods) + BioMassCalc.MassProton;
 
             int iA = (nterm ? 0 : len);

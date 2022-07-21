@@ -906,45 +906,46 @@ namespace pwiz.Skyline
             _graphSpectrumSettings.ShowCharge4 = show;
         }
 
-        private void aMenuItem_Click(object sender, EventArgs e)
+        public void ShowLosses(IEnumerable<string> losses)
         {
-            ShowAIons(!_graphSpectrumSettings.ShowAIons);
+            _graphSpectrumSettings.ShowLosses = new List<string>(losses);
         }
 
-        private void bMenuItem_Click(object sender, EventArgs e)
+        private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
         {
-            ShowBIons(!_graphSpectrumSettings.ShowBIons);
+            switch (type)
+            {
+                case IonType.a:
+                    ShowAIons(show);
+                    break;
+                case IonType.b:
+                    ShowBIons(show);
+                    break;
+                case IonType.c:
+                    ShowCIons(show);
+                    break;
+                case IonType.x:
+                    ShowXIons(show);
+                    break;
+                case IonType.y:
+                    ShowYIons(show);
+                    break;
+                case IonType.z:
+                    ShowZIons(show);
+                    break;
+                case IonType.zh:
+                    ShowZHIons(show);
+                    break;
+                case IonType.zhh:
+                    ShowZHHIons(show);
+                    break;
+            }
         }
 
-        private void cMenuItem_Click(object sender, EventArgs e)
+        private void IonTypeSelector_LossChanged(string[] losses)
         {
-            ShowCIons(!_graphSpectrumSettings.ShowCIons);
+            ShowLosses(losses);
         }
-
-        private void xMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowXIons(!_graphSpectrumSettings.ShowXIons);
-        }
-
-        private void yMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowYIons(!_graphSpectrumSettings.ShowYIons);
-        }
-
-        private void zMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowZIons(!_graphSpectrumSettings.ShowZIons);
-        }
-        private void zhMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowZHIons(!_graphSpectrumSettings.ShowZHIons);
-        }
-
-        private void zhhMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowZHHIons(!_graphSpectrumSettings.ShowZHHIons);
-        }
-
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
@@ -954,27 +955,6 @@ namespace pwiz.Skyline
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
             ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
-        }
-
-        // Update the Ion Types menu for document contents
-        private void charge1MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge1(!_graphSpectrumSettings.ShowCharge1);
-        }
-
-        private void charge2MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge2(!_graphSpectrumSettings.ShowCharge2);
-        }
-
-        private void charge3MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge3(!_graphSpectrumSettings.ShowCharge3);
-        }
-
-        private void charge4MenuItem_Click(object sender, EventArgs e)
-        {
-            ShowCharge4(!_graphSpectrumSettings.ShowCharge4);
         }
 
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
@@ -1012,14 +992,39 @@ namespace pwiz.Skyline
 
         public void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var set = _graphSpectrumSettings;
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            charge3ContextMenuItem.Checked = set.ShowCharge3;
-            charge4ContextMenuItem.Checked = set.ShowCharge4;
+            if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
+            {
+                chargeSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                chargesContextMenuItem.DropDownItems.Clear();
+                var selectorControl = new MenuControl<ChargeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+                chargesContextMenuItem.DropDownItems.Add(selectorControl);
+                selectorControl.HostedControl.OnCharge1Changed += ShowCharge1;
+                selectorControl.HostedControl.OnCharge2Changed += ShowCharge2;
+                selectorControl.HostedControl.OnCharge3Changed += ShowCharge3;
+                selectorControl.HostedControl.OnCharge4Changed += ShowCharge4;
+            }
         }
 
-
+        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
+                ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
+            {
+                ionSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                ionTypesContextMenuItem.DropDownItems.Clear();
+                var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+                ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
+                ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
+                //ionTypeSelector.Invalidate();
+            }
+        }
 
         private void editToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
@@ -1099,22 +1104,7 @@ namespace pwiz.Skyline
             {
                 if (isProteomic)
                 {
-                    aionsContextMenuItem.Checked = set.ShowAIons;
-                    menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-                    bionsContextMenuItem.Checked = set.ShowBIons;
-                    menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-                    cionsContextMenuItem.Checked = set.ShowCIons;
-                    menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-                    xionsContextMenuItem.Checked = set.ShowXIons;
-                    menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-                    yionsContextMenuItem.Checked = set.ShowYIons;
-                    menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-                    zionsContextMenuItem.Checked = set.ShowZIons;
-                    menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
-                    zhionsContextMenuItem.Checked = set.ShowZHIons;
-                    menuStrip.Items.Insert(iInsert++, zhionsContextMenuItem);
-                    zhhionsContextMenuItem.Checked = set.ShowZHHIons;
-                    menuStrip.Items.Insert(iInsert++, zhhionsContextMenuItem);
+                    menuStrip.Items.Insert(iInsert++, ionTypesContextMenuItem);
                 }
                 else
                 {
@@ -1126,16 +1116,6 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
                 menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-                if (chargesContextMenuItem.DropDownItems.Count == 0)
-                {
-                    chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        charge1ContextMenuItem,
-                        charge2ContextMenuItem,
-                        charge3ContextMenuItem,
-                        charge4ContextMenuItem,
-                    });
-                }
 
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
                 ranksContextMenuItem.Checked = set.ShowRanks;
@@ -1383,6 +1363,12 @@ namespace pwiz.Skyline
         {
             return _graphSpectrumSettings.ShowIonTypes(isProteomic); 
         }
+
+        IList<string> GraphSpectrum.IStateProvider.ShowLosses()
+        {
+            return _graphSpectrumSettings.ShowLosses.ToList();
+        }
+
 
         private void CheckIonTypes(IEnumerable<IonType> types, bool check, bool visible)
         {
