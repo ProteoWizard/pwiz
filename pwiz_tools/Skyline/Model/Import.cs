@@ -3463,9 +3463,14 @@ namespace pwiz.Skyline.Model
             string line;
             string name = string.Empty;
             StringBuilder sequence = new StringBuilder();
+            int lineNum = 0;
 
             while ((line = reader.ReadLine()) != null)
             {
+                for (int i=0; i < line.Length; ++i)
+                    if (line[i] < 32 || line[i] > 126)
+                        throw new InvalidDataException(string.Format(Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_, lineNum, line[i], i));
+                    
                 if (line.StartsWith(@">"))
                 {
                     if (!string.IsNullOrEmpty(name))
@@ -3485,7 +3490,8 @@ namespace pwiz.Skyline.Model
             }
 
             // Add the last fasta sequence
-            yield return new FastaData(name, sequence.ToString());
+            if (!string.IsNullOrEmpty(name))
+                yield return new FastaData(name, sequence.ToString());
         }
     }
 }

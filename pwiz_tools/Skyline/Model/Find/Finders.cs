@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Model.Find
             AddFinder(new UnintegratedTransitionFinder());
             AddFinder(new ManuallyIntegratedPeakFinder());
             AddFinder(new TruncatedPeakFinder());
+            AddFinder(new DuplicatedPeptideFinder());
         }
     }
 }

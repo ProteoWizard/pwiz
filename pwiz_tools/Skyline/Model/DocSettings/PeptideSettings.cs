@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -341,14 +342,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     foreach(TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
-                        double windowRT;
                         double? centerTime = PredictRetentionTime(document,
                                                                   nodePep,
                                                                   nodeGroup,
                                                                   i,
                                                                   ExportSchedulingAlgorithm.Trends,
                                                                   true,
-                                                                  out windowRT);
+                                                                  out var windowRT);
                         if (centerTime.HasValue && windowRT > MeasuredRTWindow.Value)
                             return i - 1;
                     }
@@ -363,14 +363,14 @@ namespace pwiz.Skyline.Model.DocSettings
             int? replicateNum,
             ExportSchedulingAlgorithm algorithm,
             bool singleWindow,
-            out double windowRT)
+            out WindowRT windowRT)
         {
             return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, replicateNum, algorithm,
                 singleWindow, null, out windowRT);
         }
 
         public double? PredictRetentionTimeForChromImport(SrmDocument document, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, out double windowRt)
+            TransitionGroupDocNode nodeGroup, out WindowRT windowRt)
         {
             return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, null,
                 ExportSchedulingAlgorithm.Average, false, chromatogramSet => chromatogramSet.UseForRetentionTimeFilter, out windowRt);
@@ -383,19 +383,19 @@ namespace pwiz.Skyline.Model.DocSettings
                                             ExportSchedulingAlgorithm algorithm,
                                             bool singleWindow,
                                             Predicate<ChromatogramSet> replicateFilter, 
-                                            out double windowRT)
+                                            out WindowRT windowRT)
         {
             // If peptide has an explicitly set RT, use that
             if (nodePep.ExplicitRetentionTime != null  && 
                 (MeasuredRTWindow.HasValue || nodePep.ExplicitRetentionTime.RetentionTimeWindow.HasValue))
             {
                 // If peptide has an explicitly set RT window, use that, or the global setting
-                windowRT = nodePep.ExplicitRetentionTime.RetentionTimeWindow ?? MeasuredRTWindow.Value;
+                windowRT = new WindowRT(nodePep.ExplicitRetentionTime.RetentionTimeWindow ?? MeasuredRTWindow.Value, true);
                 return nodePep.ExplicitRetentionTime.RetentionTime;
             }
             // Safe defaults
             double? predictedRT = null;
-            windowRT = 0;
+            windowRT = new WindowRT(0, false);
             // Use measurements, if set and available
             bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue && document.Settings.HasResults);
             if (useMeasured)
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (peakTime != null)
                     predictedRT = peakTime.CenterTime;
                 if (predictedRT.HasValue)
-                    windowRT = MeasuredRTWindow.Value;
+                    windowRT.Window = MeasuredRTWindow.Value;
                 else if (nodePep.Children.Count > 1)
                 {
                     // If their are other children of this peptide, look for one
@@ -420,7 +420,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                             if (predictedRT.HasValue)
                             {
-                                windowRT = MeasuredRTWindow.Value;
+                                windowRT.Window = MeasuredRTWindow.Value;
                                 break;
                             }
                         }
@@ -467,10 +467,27 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         predictedRT = RetentionTime.GetRetentionTime(modifiedSequence);
                     }
-                    windowRT = RetentionTime.TimeWindow;
+                    windowRT.Window = RetentionTime.TimeWindow;
                 }
             }
             return predictedRT;
+        }
+
+        public struct WindowRT
+        {
+            public double Window { get; set; }
+            public bool IsExplicit { get; set; }
+
+            public WindowRT(double window, bool isExplicit)
+            {
+                Window = window;
+                IsExplicit = isExplicit;
+            }
+
+            public static implicit operator double(WindowRT windowRT) => windowRT.Window;
+
+            public override string ToString() => Window.ToString(CultureInfo.CurrentCulture);
+            public string ToString(CultureInfo cultureInfo) => Window.ToString(cultureInfo);
         }
 
         /// <summary>
@@ -532,8 +549,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    double windowRT;
-                    if (PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out windowRT).HasValue)
+                    if (PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out _).HasValue)
                         anyTimes = true;
                     else if (schedulingStrategy != SchedulingStrategy.any)
                         return false;
@@ -807,7 +823,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
                              int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect,
-                             PeptideUniquenessConstraint peptideUniquenessConstraint)
+                             PeptideUniquenessConstraint peptideUniquenessConstraint,
+                             ProteinAssociation.ParsimonySettings parsimonySettings)
         {
             Exclusions = exclusions;
             ExcludeNTermAAs = excludeNTermAAs;
@@ -815,6 +832,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxPeptideLength = maxPeptideLength;
             AutoSelect = autoSelect;
             PeptideUniqueness = peptideUniquenessConstraint;
+            ParsimonySettings = parsimonySettings;
             DoValidate();
         }
 
@@ -1273,6 +1291,25 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<StaticMod> StaticModifications
         {
             get { return _modifications[0].Modifications; }
+        }
+
+        /// <summary>
+        /// Returns list of mods with unique formulas
+        /// </summary>
+        public ImmutableList<FragmentLoss> StaticModsDeduped
+        {
+            get
+            {
+                var modLosses = StaticModifications.SelectMany(mod => mod.Losses ?? (new List<FragmentLoss>())).ToList();
+                //Deduplicate the losses on formula
+                modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+                return ImmutableList.ValueOf(modLosses);
+            }
+        }
+
+        public ImmutableList<string> StaticModsFormulae
+        {
+            get { return ImmutableList.ValueOf(StaticModsDeduped.Select(loss => loss.FormulaNoNull)); }
         }
 
         public bool HasVariableModifications

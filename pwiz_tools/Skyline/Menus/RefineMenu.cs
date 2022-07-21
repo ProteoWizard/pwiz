@@ -224,11 +224,16 @@ namespace pwiz.Skyline.Menus
             ShowAssociateProteinsDlg();
         }
 
-        public void ShowAssociateProteinsDlg()
+        public void ShowAssociateProteinsDlg(IWin32Window owner = null)
         {
-            using (var associateFasta = new AssociateProteinsDlg(SkylineWindow))
+            using (var associateProteinsDlg = new AssociateProteinsDlg(DocumentUI))
             {
-                associateFasta.ShowDialog(SkylineWindow);
+                if (associateProteinsDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
+                {
+                    ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
+                        current => associateProteinsDlg.DocumentFinal,
+                        associateProteinsDlg.FormSettings.EntryCreator.Create);
+                }
             }
         }
 
