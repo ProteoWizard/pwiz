@@ -25,13 +25,17 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.Serialization
 {
     /// <summary>
-    /// Constants listing version numbers which identify times when changes were made to the way
-    /// that Skyline saves documents in the .sky file.
-    /// The current schema is described in a file called "Skyline_Current.xsd".
+    /// <para>Constants listing version numbers which identify times when changes were made to the way
+    /// that Skyline saves documents in the .sky file.</para>
+    /// <para>Whenever we release we make a changeless format version update to match
+    /// Install.MajorVersion.Install.MinorVersion.
+    /// Between releases we increment by 0.01 from the last release format version.
+    /// e.g. 21.1 (release), 21.11 (daily), 21.12 (daily), ... 21.2 (release)</para>
+    /// <para>The current schema is described in a file called "Skyline_Current.xsd".
     /// The current version number should be changed if you make a change to "Skyline_Current.xsd", and there
     /// is already a released build of Skyline-Daily that is using the current version.
     /// When changing the current version number, you should copy "Skyline_Current.xsd" to "Skyline_###.xsd" representing
-    /// the old version number.
+    /// the old version number.</para>
     /// </summary>
     public struct DocumentFormat : IComparable<DocumentFormat>
     {

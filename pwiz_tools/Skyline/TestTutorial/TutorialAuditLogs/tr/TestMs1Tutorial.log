@@ -48,6 +48,15 @@ Import Peptide Search > Configure Full-Scan Settings > Resolving power is "10000
 Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
 Import Peptide Search > Import FASTA > Max missed cleavages is "2"
 Import Peptide Search > Import FASTA > FASTA file is "12_proteins.062011.fasta"
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "11"
+Import Peptide Search > Associate Proteins > Peptides mapped is "50"
+Import Peptide Search > Associate Proteins > Protein targets is "11"
+Import Peptide Search > Associate Proteins > Peptide targets is "50"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -79,6 +88,18 @@ Import FASTA =
 {
     Max missed cleavages = "2",
     FASTA file = "12_proteins.062011.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "11",
+    Peptides mapped = "50",
+    Protein targets = "11",
+    Peptide targets = "50"
 }
 
 Undo Redo : Changed peak bounds of sp|Q09666|AHNK_HUMAN > R.ISMSEVDLNVAAPK.V [569, 582] > 777,3677++

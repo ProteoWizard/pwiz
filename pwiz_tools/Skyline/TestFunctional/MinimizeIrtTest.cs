@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
             // of IrtDbManager._loadedCalculators, it is required that you exit Skyline if you want to change
             // the file location of a particular irt database.
             var minimizedIrtDb = IrtDb.GetIrtDb(minimizedIrtPath, null);
-            irtPeptideSequences = minimizedIrtDb.GetPeptides()
+            irtPeptideSequences = minimizedIrtDb.ReadPeptides()
                 .Select(peptide => FastaSequence.StripModifications(peptide.ModifiedTarget.Sequence)).ToHashSet();
             // Verify that a peptide sequence can be found in the iRT database if and only if the peptide had not
             // been deleted from the document.

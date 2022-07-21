@@ -133,6 +133,7 @@ namespace pwiz.SkylineTestFunctional
                                 var ratioToGlobalStandards =
                                     normalizedValueCalculator.GetTransitionGroupValue(
                                         NormalizationMethod.GLOBAL_STANDARDS, peptideTreeNode.DocNode, transitionGroup,
+                                        SkylineWindow.SelectedResultsIndex,
                                         transitionGroupChromInfo);
                                 if (ratioToGlobalStandards.HasValue)
                                 {
@@ -177,14 +178,14 @@ namespace pwiz.SkylineTestFunctional
                                     expectedRatioValue =
                                         normalizedValueCalculator.GetTransitionValue(
                                             NormalizationMethod.GLOBAL_STANDARDS, peptideTreeNode.DocNode, transitionTreeNode.DocNode,
-                                            transitionChromInfo);
+                                            SkylineWindow.SelectedResultsIndex, transitionChromInfo);
                                 }
                                 else if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
                                 {
                                     if (!Equals(ratioToLabel.IsotopeLabelTypeName, transitionGroup.LabelType.Name))
                                     {
                                         expectedRatioValue = normalizedValueCalculator.GetTransitionValue(ratioToLabel,
-                                            peptideTreeNode.DocNode, transitionTreeNode.DocNode, transitionChromInfo);
+                                            peptideTreeNode.DocNode, transitionTreeNode.DocNode, SkylineWindow.SelectedResultsIndex, transitionChromInfo);
                                     }
                                 }
 
