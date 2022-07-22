@@ -24,7 +24,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Proteome
 {

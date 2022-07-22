@@ -169,7 +169,6 @@ namespace pwiz.Skyline.Model
         public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence)
             : this(name, description, alternatives, sequence, false)
         {
-            FastaSequenceList = ImmutableList<FastaSequence>.Singleton(this);
         }
 
         public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence, bool isDecoy)
@@ -191,7 +190,7 @@ namespace pwiz.Skyline.Model
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }
         public ImmutableList<ProteinMetadata> Alternatives { get; private set; }
-        public virtual ImmutableList<FastaSequence> FastaSequenceList { get; protected set; }
+        public virtual ImmutableList<FastaSequence> FastaSequenceList => ImmutableList<FastaSequence>.Singleton(this);
         public IEnumerable<string> AlternativesText
         {
             get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name ?? String.Empty, alt.Description ?? String.Empty)); }  // CONSIDER (bspratt) - include accession, preferredName etc?
@@ -467,19 +466,18 @@ namespace pwiz.Skyline.Model
     public class FastaSequenceGroup : FastaSequence
     {
         private readonly string _name;
-        public sealed override ImmutableList<FastaSequence> FastaSequenceList { get; protected set; }
+        private ImmutableList<FastaSequence> _fastaSequenceList;
 
         public FastaSequenceGroup(string name, IList<FastaSequence> fastaSequenceList) : base(name,
             string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequenceList.Count),
             null, fastaSequenceList[0].Sequence)
         {
             _name = name;
-            FastaSequenceList = ImmutableList<FastaSequence>.ValueOf(fastaSequenceList);
+            _fastaSequenceList = ImmutableList<FastaSequence>.ValueOf(fastaSequenceList);
         }
 
         public override string Name => _name;
-
-        //public override ImmutableList<FastaSequence> FastaSequenceList => FastaSequenceList;
+        public override ImmutableList<FastaSequence> FastaSequenceList => _fastaSequenceList;
 
         public bool Equals(FastaSequenceGroup obj)
         {
