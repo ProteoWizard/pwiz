@@ -229,7 +229,7 @@ namespace pwiz.Skyline.Model.Results
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {
                                 double? centerTime = null;
-                                double windowRT = 0;
+                                var windowRT = new PeptidePrediction.WindowRT(0, false);
                                 if (retentionTimePredictor != null)
                                 {
                                     centerTime = retentionTimePredictor.GetPredictedRetentionTime(nodePep);
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.Results
                                     centerTime = 0;
                                 if (_fullScan.RetentionTimeFilterLength != 0)
                                 {
-                                    windowRT = _fullScan.RetentionTimeFilterLength * 2;
+                                    windowRT.Window = _fullScan.RetentionTimeFilterLength * 2;
                                 }
                                 if (centerTime != null)
                                 {
