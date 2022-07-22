@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Model.Proteome
                                     if (proteinMetadata != null)
                                     {
                                         // We note the sequence length because it's useful in disambiguating search results
-                                        proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), seq.Sequence.Length));
+                                        proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), seq?.Sequence.Length ?? 0));
                                         docNodesWithUnresolvedProteinMetadata.Add(proteinsToSearch.Last(), node);
                                     }
                                 }
@@ -232,9 +232,7 @@ namespace pwiz.Skyline.Model.Proteome
                                 {
                                     var proteinMetadata = node.ProteinMetadata.ProteinMetadataList[i];
                                     var fastaSequenceOrGroup = node.PeptideGroup as FastaSequence;
-                                    if (fastaSequenceOrGroup == null)
-                                        continue;
-                                    ProcessNode(fastaSequenceOrGroup.FastaSequenceList[i], proteinMetadata, nResolved, ref progressStatus);
+                                    ProcessNode(fastaSequenceOrGroup?.FastaSequenceList[i], proteinMetadata, nResolved, ref progressStatus);
                                 }
                             }
                         }
