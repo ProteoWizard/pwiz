@@ -601,7 +601,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
 
                 var proteinsByRecordIndex = kvp.Value.OrderBy(p => p.RecordIndex).ToList();
-                var proteinGroupName = string.Join(@"/", proteinsByRecordIndex.Select(p => p.Sequence.Name));
+                var proteinGroupName = string.Join(ProteinGroupMetadata.GROUP_SEPARATOR, proteinsByRecordIndex.Select(p => p.Sequence.Name));
                 var proteinFastaSequence = new FastaSequenceGroup(proteinGroupName, proteinsByRecordIndex.Select(r => r.Sequence).ToList());
                 var proteinGroup = new FastaRecord(kvp.Value[0].RecordIndex, 0, proteinFastaSequence);
                 proteinGroupAssociations[proteinGroup] = kvp.Key;
@@ -862,7 +862,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
 
                 var proteinOrGroupMetadata = protein is FastaSequenceGroup
-                    ? new ProteinGroupMetadata((protein as FastaSequenceGroup).FastaSequences.Select(s => new ProteinMetadata(s.Name, s.Description)).ToList())
+                    ? new ProteinGroupMetadata((protein as FastaSequenceGroup).FastaSequenceList.Select(s => new ProteinMetadata(s.Name, s.Description)).ToList())
                     : new ProteinMetadata(protein.Name, protein.Description);
                 var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray());
                 newPeptideGroups.Add(peptideGroupDocNode);

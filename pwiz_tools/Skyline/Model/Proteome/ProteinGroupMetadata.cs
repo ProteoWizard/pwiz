@@ -22,13 +22,15 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Proteome
 {
     public class ProteinGroupMetadata : ProteinMetadata
     {
-        const string GROUP_SEPARATOR = @"/";
+        public const string GROUP_SEPARATOR = @" / ";
         public new static readonly ProteinGroupMetadata EMPTY = new ProteinGroupMetadata();
 
         private ProteinGroupMetadata() : base(null, null)
@@ -39,10 +41,6 @@ namespace pwiz.Skyline.Model.Proteome
         {
             webSearchInfo ??= other.ProteinMetadataList.First().WebSearchInfo;
             ProteinMetadataList = ImmutableList<ProteinMetadata>.ValueOf(other.ProteinMetadataList);
-            //ProteinMetadataList[0] = ProteinMetadataList[0].ChangeWebSearchInfo(webSearchInfo);
-            /*    Name = ProteinMetadataList.All(p => p.Name == null)
-                ? null
-                : string.Join(GROUP_SEPARATOR, ProteinMetadataList.OrderBy(p => p.).Select(p => p.Name));*/
         }
 
         public ProteinGroupMetadata(IList<ProteinMetadata> proteinMetadata) : this()
@@ -53,39 +51,47 @@ namespace pwiz.Skyline.Model.Proteome
         public override ImmutableList<ProteinMetadata> ProteinMetadataList { get; }
 
         [Track]
-        public override string Name => ProteinMetadataList.All(p => p.Name == null)
+        public override string Name => ProteinMetadataList.All(p => string.IsNullOrWhiteSpace(p.Name))
             ? null
             : string.Join(GROUP_SEPARATOR, ProteinMetadataList.Select(p => p.Name));
 
         [Track]
-        public override string Description => ProteinMetadataList.All(p => p.Description == null)
+        public override string Description => ProteinMetadataList.All(p => string.IsNullOrWhiteSpace(p.Description))
             ? null
-            : string.Join(GROUP_SEPARATOR,
-                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Description)).Select(p => p.Description));
+            : string.Join(Environment.NewLine,
+                ProteinMetadataList.Select(p => string.IsNullOrWhiteSpace(p.Description) ? EnumNames.SampleType_unknown : p.Description));
 
         [Track]
-        public override string PreferredName => ProteinMetadataList.All(p => p.PreferredName == null)
+        public override string PreferredName => ProteinMetadataList.All(p => string.IsNullOrWhiteSpace(p.PreferredName))
             ? null
             : string.Join(GROUP_SEPARATOR,
-                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.PreferredName)).Select(p => p.PreferredName));
+                ProteinMetadataList.Select(p => string.IsNullOrWhiteSpace(p.PreferredName) ? EnumNames.SampleType_unknown : p.PreferredName));
 
         [Track]
-        public override string Accession => ProteinMetadataList.All(p => p.Accession == null)
+        public override string Accession => ProteinMetadataList.All(p => string.IsNullOrWhiteSpace(p.Accession))
             ? null
             : string.Join(GROUP_SEPARATOR,
-                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Accession)).Select(p => p.Accession));
+                ProteinMetadataList.Select(p => string.IsNullOrWhiteSpace(p.Accession) ? EnumNames.SampleType_unknown : p.Accession));
 
         [Track]
-        public override string Gene => ProteinMetadataList.All(p => p.Gene == null)
+        public override string Gene => ProteinMetadataList.All(p => string.IsNullOrWhiteSpace(p.Gene))
             ? null
             : string.Join(GROUP_SEPARATOR,
-                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Gene)).Select(p => p.Gene));
+                ProteinMetadataList.Select(p => string.IsNullOrWhiteSpace(p.Gene) ? EnumNames.SampleType_unknown : p.Gene));
 
         [Track]
-        public override string Species => ProteinMetadataList.All(p => p.Species == null)
-            ? null
-            : string.Join(GROUP_SEPARATOR,
-                ProteinMetadataList.Where(p => !string.IsNullOrWhiteSpace(p.Species)).Select(p => p.Species));
+        public override string Species
+        {
+            get
+            {
+                var allSpecies = ProteinMetadataList.Select(p => p.Species).ToList();
+                if (allSpecies.All(string.IsNullOrWhiteSpace))
+                    return null;
+                if (allSpecies.Distinct().Count() == 1)
+                    return allSpecies.First();
+                return string.Join(GROUP_SEPARATOR, allSpecies.Select(s => string.IsNullOrWhiteSpace(s) ? EnumNames.SampleType_unknown : s));
+            }
+        }
 
         public override WebSearchInfo WebSearchInfo => ProteinMetadataList.Select(p => p.WebSearchInfo).First();
 

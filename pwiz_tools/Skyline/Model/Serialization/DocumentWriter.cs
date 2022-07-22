@@ -150,15 +150,17 @@ namespace pwiz.Skyline.Model.Serialization
             if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
             {
                 var proteinGroupMetadata = node.ProteinMetadataOverrides.ProteinMetadataList;
-                Assume.AreEqual(proteinGroupMetadata.Count, group.FastaSequences.Count);
-                for (var i = 0; i < group.FastaSequences.Count; i++)
+                Assume.AreEqual(proteinGroupMetadata.Count, group.FastaSequenceList.Count);
+                for (var i = 0; i < group.FastaSequenceList.Count; i++)
                 {
-                    var seq = group.FastaSequences[i];
+                    var seq = group.FastaSequenceList[i];
                     var md = proteinGroupMetadata[i];
                     writer.WriteStartElement(EL.protein);
                     writer.WriteAttributeString(ATTR.name, seq.Name);
                     if (!seq.Description.IsNullOrEmpty())
                         writer.WriteAttributeString(ATTR.description, seq.Description);
+                    else if (!md.Description.IsNullOrEmpty())
+                        writer.WriteAttributeString(ATTR.description, md.Description);
                     WriteProteinMetadataXML(writer, md, true); // write the protein metadata, skipping the name and description we already wrote
                     writeFastaSequence(seq);
                     writer.WriteEndElement();

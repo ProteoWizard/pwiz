@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Model.Proteome
                         {
                             if (node.ProteinMetadata.NeedsSearch() && !_processedNodes.ContainsKey(node.Id.GlobalIndex)) // Did we already process this?
                             {
-                                void ProcessNode(ProteinMetadata proteinMetadata, int nResolved2, ref IProgressStatus progressStatus2)
+                                void ProcessNode(FastaSequence seq, ProteinMetadata proteinMetadata, int nResolved2, ref IProgressStatus progressStatus2)
                                 {
                                     if (proteinMetadata.WebSearchInfo.IsEmpty()) // Never even been hit with regex
                                     {
@@ -223,13 +223,19 @@ namespace pwiz.Skyline.Model.Proteome
                                     if (proteinMetadata != null)
                                     {
                                         // We note the sequence length because it's useful in disambiguating search results
-                                        proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), node.PeptideGroup.Sequence == null ? 0 : node.PeptideGroup.Sequence.Length));
+                                        proteinsToSearch.Add(new ProteinSearchInfo(new DbProteinName(null, proteinMetadata), seq.Sequence.Length));
                                         docNodesWithUnresolvedProteinMetadata.Add(proteinsToSearch.Last(), node);
                                     }
                                 }
 
-                                foreach (var proteinMetadata in node.ProteinMetadata.ProteinMetadataList)
-                                    ProcessNode(proteinMetadata, nResolved, ref progressStatus);
+                                for (var i = 0; i < node.ProteinMetadata.ProteinMetadataList.Count; i++)
+                                {
+                                    var proteinMetadata = node.ProteinMetadata.ProteinMetadataList[i];
+                                    var fastaSequenceOrGroup = node.PeptideGroup as FastaSequence;
+                                    if (fastaSequenceOrGroup == null)
+                                        continue;
+                                    ProcessNode(fastaSequenceOrGroup.FastaSequenceList[i], proteinMetadata, nResolved, ref progressStatus);
+                                }
                             }
                         }
 

@@ -166,11 +166,11 @@ namespace pwiz.Skyline.Model
         private readonly string _sequence;
         private readonly bool _isDecoy;
 
-        public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence) 
+        public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence)
             : this(name, description, alternatives, sequence, false)
         {
+            FastaSequenceList = ImmutableList<FastaSequence>.Singleton(this);
         }
-
 
         public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence, bool isDecoy)
         {
@@ -191,6 +191,7 @@ namespace pwiz.Skyline.Model
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }
         public ImmutableList<ProteinMetadata> Alternatives { get; private set; }
+        public virtual ImmutableList<FastaSequence> FastaSequenceList { get; protected set; }
         public IEnumerable<string> AlternativesText
         {
             get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name ?? String.Empty, alt.Description ?? String.Empty)); }  // CONSIDER (bspratt) - include accession, preferredName etc?
@@ -466,17 +467,19 @@ namespace pwiz.Skyline.Model
     public class FastaSequenceGroup : FastaSequence
     {
         private readonly string _name;
-        public IList<FastaSequence> FastaSequences { get; }
+        public sealed override ImmutableList<FastaSequence> FastaSequenceList { get; protected set; }
 
-        public FastaSequenceGroup(string name, IList<FastaSequence> fastaSequences) : base(name,
-            string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequences.Count),
-            null, fastaSequences[0].Sequence)
+        public FastaSequenceGroup(string name, IList<FastaSequence> fastaSequenceList) : base(name,
+            string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequenceList.Count),
+            null, fastaSequenceList[0].Sequence)
         {
             _name = name;
-            FastaSequences = fastaSequences;
+            FastaSequenceList = ImmutableList<FastaSequence>.ValueOf(fastaSequenceList);
         }
 
         public override string Name => _name;
+
+        //public override ImmutableList<FastaSequence> FastaSequenceList => FastaSequenceList;
 
         public bool Equals(FastaSequenceGroup obj)
         {
@@ -484,7 +487,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) &&
                    Equals(obj._name, _name) &&
-                   ArrayUtil.EqualsDeep(obj.FastaSequences, FastaSequences) &&
+                   ArrayUtil.EqualsDeep(obj.FastaSequenceList, FastaSequenceList) &&
                    obj.IsDecoy == IsDecoy;
         }
 
@@ -501,7 +504,7 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = base.GetHashCode() ^ (_name != null ? _name.GetHashCode() : 0);
-                result = (result*397) ^ FastaSequences.GetHashCodeDeep();
+                result = (result*397) ^ FastaSequenceList.GetHashCodeDeep();
                 result = (result*397) ^ IsDecoy.GetHashCode();
                 return result;
             }
