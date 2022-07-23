@@ -331,13 +331,25 @@ namespace pwiz.Skyline.Model.Results
                     fileIndexesFound.Add(entry.FileIndex);
                 }
 
-                if (chromatograms != null && fileIndexesFound.Any())
+                if (chromatograms == null)
                 {
-                    // If we were asked to find chromatograms for a particular replicate,
-                    // and we found any, then we are done.
+                    if (fileIndexesFound.Count == _rawData.ChromCacheFiles.Count)
+                    {
+                        // If matching chromatograms were found in every file, then we are finished
+                        yield break;
+                    }
+                    // Otherwise, there might be some matching chromatograms in other replicates which have no TextId
                 }
-                // Otherwise keep looking as there may be matching chromatograms which do not have a TextId
+                else
+                {
+                    if (fileIndexesFound.Any())
+                    {
+                        // If searching for chromatograms in a particular replicate, then we are done if we find any matches
+                        yield break;
+                    }
+                }
             }
+            // Look for matching chromatograms which do not have a text id.
             int i = FindEntry(precursorMz, tolerance);
             if (i < 0)
             {

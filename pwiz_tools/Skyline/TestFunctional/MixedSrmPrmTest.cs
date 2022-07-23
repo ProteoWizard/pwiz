@@ -56,13 +56,19 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Document.Settings.TransitionSettings.FullScan.RetentionTimeFilterType);
             ImportResultsFiles(testFiles.Select(file=>file.MsDataFileUri));
             var featureCalculators = new FeatureCalculators(new[] { new MQuestRetentionTimePredictionCalc() });
-            var featureSet = PeakFeatureEnumerator.GetPeakFeatures(SkylineWindow.Document, featureCalculators);
-            foreach (var feature in featureSet.Features)
+            var featuresByFile = GetFeaturesByFile(featureCalculators);
+            Assert.AreEqual(testFiles.Length, featuresByFile.Count);
+            foreach (var fileFeatures in featuresByFile)
             {
-                foreach (var peakGroup in feature.PeakGroupFeatures)
+                var testFile = testFiles.FirstOrDefault(testFile => Equals(testFile.MsDataFileUri, fileFeatures.Key));
+                Assert.IsNotNull(testFile);
+                foreach (var peptide in fileFeatures)
                 {
-                    var retentionTimeScore = peakGroup.Features[0];
-                    Assert.AreEqual(float.NaN, retentionTimeScore);
+                    foreach (var peakGroup in peptide.PeakGroupFeatures)
+                    {
+                        var retentionTimeScore = peakGroup.Features[0];
+                        Assert.AreEqual(float.NaN, retentionTimeScore);
+                    }
                 }
             }
 
@@ -77,27 +83,34 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUi.OkDialog();
             });
             WaitForCondition(() => transitionSettingsClosed);
-            featureSet = PeakFeatureEnumerator.GetPeakFeatures(SkylineWindow.Document, featureCalculators);
-            foreach (var feature in featureSet.Features)
+            featuresByFile = GetFeaturesByFile(featureCalculators);
+            Assert.AreEqual(testFiles.Length, featuresByFile.Count);
+            foreach (var fileFeatures in featuresByFile)
             {
-                var fileUri = GetMsDataFileUri(feature.Key.FileId);
-                Assert.IsNotNull(fileUri);
-                var testFile = testFiles.FirstOrDefault(testFile => Equals(testFile.MsDataFileUri, fileUri));
+                var testFile = testFiles.FirstOrDefault(testFile => Equals(testFile.MsDataFileUri, fileFeatures.Key));
                 Assert.IsNotNull(testFile);
-                foreach (var peakGroup in feature.PeakGroupFeatures)
+                foreach (var peptide in fileFeatures)
                 {
-                    var retentionTimeScore = peakGroup.Features[0];
-                    if (testFile.IsSrm)
+                    foreach (var peakGroup in peptide.PeakGroupFeatures)
                     {
-                        AssertEx.AreEqual(float.NaN, retentionTimeScore);
-                    }
-                    else
-                    {
-                        AssertEx.AreNotEqual(float.NaN, retentionTimeScore, fileUri.ToString());
+                        var retentionTimeScore = peakGroup.Features[0];
+                        if (testFile.IsSrm)
+                        {
+                            AssertEx.AreEqual(float.NaN, retentionTimeScore);
+                        }
+                        else
+                        {
+                            AssertEx.AreNotEqual(float.NaN, retentionTimeScore, null);
+                        }
                     }
                 }
             }
+        }
 
+        private ILookup<MsDataFileUri, PeakTransitionGroupFeatures> GetFeaturesByFile(FeatureCalculators featureCalculators)
+        {
+            return PeakFeatureEnumerator.GetPeakFeatures(SkylineWindow.Document, featureCalculators).Features
+                .ToLookup(featureSet => GetMsDataFileUri(featureSet.Key.FileId));
         }
 
         private MsDataFileUri GetMsDataFileUri(ChromFileInfoId fileId)
