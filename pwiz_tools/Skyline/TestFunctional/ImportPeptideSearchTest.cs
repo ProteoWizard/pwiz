@@ -287,8 +287,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, peptideCount);
                 Assert.AreEqual(1, precursorCount);
                 Assert.AreEqual(3, transitionCount);
+                emptyProteinsDlg.CancelDialog();
             });
-            emptyProteinsDlg.CancelDialog();
 
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
             using (new EmptyProteinGroupSetter(5))
