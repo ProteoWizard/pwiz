@@ -596,12 +596,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
     public class PrecursorResultSummary : SkylineObject
     {
+        private readonly Precursor _precursor;
         public PrecursorResultSummary(Precursor precursor, IEnumerable<PrecursorResult> results)
-            : base(precursor.DataSchema)
         {
-#pragma warning disable 612
-            Precursor = precursor;
-#pragma warning restore 612
+            _precursor = precursor;
             var bestRetentionTimes = new List<double>();
             var maxFhwms = new List<double>();
             var totalAreas = new List<double>();
@@ -669,9 +667,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 MaxHeight = new AreaSummary(new Statistics(maxHeights));
             }
         }
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return _precursor.DataSchema;
+        }
 
         [Obsolete]
-        public Precursor Precursor { get; private set; }
+        public Precursor Precursor
+        {
+            get { return _precursor; }
+        }
+
         [Obsolete]
         public string ReplicatePath { get { return @"/"; } }
         [ChildDisplayName("{0}BestRetentionTime")]

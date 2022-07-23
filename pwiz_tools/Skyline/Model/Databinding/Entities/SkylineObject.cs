@@ -26,14 +26,15 @@ using pwiz.Skyline.Model.ElementLocators;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public class SkylineObject
+    public abstract class SkylineObject
     {
-        public SkylineObject(SkylineDataSchema dataSchema)
-        {
-            DataSchema = dataSchema;
-        }
         [Browsable(false)]
-        public SkylineDataSchema DataSchema { get; private set; }
+        public SkylineDataSchema DataSchema
+        {
+            get { return GetDataSchema(); }
+        }
+
+        protected abstract SkylineDataSchema GetDataSchema();
 
         [Browsable(false)]
         protected SrmDocument SrmDocument
@@ -74,6 +75,20 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             string auditLogParseString = AuditLogParseHelper.GetParseString(ParseStringType.column_caption, 
                 columnCaption.GetCaption(DataSchemaLocalizer.INVARIANT));
             return new EditDescription(columnCaption, auditLogParseString, GetElementRef(), value);
+        }
+    }
+
+    public class RootSkylineObject : SkylineObject
+    {
+        private SkylineDataSchema _dataSchema;
+        public RootSkylineObject(SkylineDataSchema dataSchema)
+        {
+            _dataSchema = dataSchema;
+        }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return _dataSchema;
         }
     }
 }
