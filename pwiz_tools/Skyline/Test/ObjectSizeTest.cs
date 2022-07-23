@@ -65,6 +65,8 @@ namespace pwiz.SkylineTest
         public void TestPivotKeySize()
         {
             DumpTypeAndFields(typeof(PivotKey));
+            DumpTypeAndFields(typeof(PivotKey.TopLevel));
+            DumpTypeAndFields(typeof(PivotKey.Child));
         }
 
         [TestMethod]

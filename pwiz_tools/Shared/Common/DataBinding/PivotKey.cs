@@ -283,7 +283,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        private class TopLevel : PivotKey
+        public class TopLevel : PivotKey
         {
             public TopLevel(PropertyPath propertyPath, object value) : base(propertyPath, value)
             {
@@ -304,7 +304,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        private class Child : PivotKey
+        public class Child : PivotKey
         {
             private PivotKey _parent;
             private int _length;
