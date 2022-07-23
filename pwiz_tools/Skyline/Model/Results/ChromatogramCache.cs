@@ -309,9 +309,9 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SignedMz precursorMz,
             float tolerance, ChromatogramSet chromatograms)
         {
+            var fileIndexesFound = new HashSet<int>();
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {
-                bool anyFound = false;
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
                 {
@@ -326,13 +326,17 @@ namespace pwiz.Skyline.Model.Results
                     {
                         continue;
                     }
-                    anyFound = true;
+
                     yield return chromatogramIndex;
+                    fileIndexesFound.Add(entry.FileIndex);
                 }
-                if (anyFound)
+
+                if (chromatograms != null && fileIndexesFound.Any())
                 {
-                    yield break;
+                    // If we were asked to find chromatograms for a particular replicate,
+                    // and we found any, then we are done.
                 }
+                // Otherwise keep looking as there may be matching chromatograms which do not have a TextId
             }
             int i = FindEntry(precursorMz, tolerance);
             if (i < 0)
@@ -344,6 +348,10 @@ namespace pwiz.Skyline.Model.Results
                 var entry = ChromGroupHeaderInfos[i];
                 if (!MatchMz(precursorMz, entry.Precursor, tolerance))
                     break;
+                if (fileIndexesFound.Contains(entry.FileIndex))
+                {
+                    continue;
+                }
                 if (chromatograms != null &&
                     !chromatograms.ContainsFile(_rawData.ChromCacheFiles[entry.FileIndex]
                         .FilePath))
