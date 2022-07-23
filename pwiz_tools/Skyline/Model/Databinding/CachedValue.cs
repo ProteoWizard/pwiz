@@ -53,4 +53,93 @@ namespace pwiz.Skyline.Model.Databinding
             return new CachedValue<T>(dataSchema, getterFunc);
         }
     }
+
+    public abstract class CachedValue<TOwner, TValue>
+    {
+        private ushort _flags;
+        private object _documentReferenceId;
+        private TValue _value;
+
+        private ushort GetFlagMask(int index)
+        {
+            if (index < 0 || index >= 16)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            return (ushort)(1u << index);
+        }
+        private bool GetFlag(int index)
+        {
+            return 0 == (_flags & GetFlagMask(index));
+        }
+
+        private void SetFlag(int index, bool value)
+        {
+            if (value)
+            {
+                _flags |= GetFlagMask(index);
+            }
+            else
+            {
+                _flags &= (ushort)~GetFlagMask(index);
+            }
+        }
+
+        public TValue GetValue(TOwner owner)
+        {
+            return GetOrCalculate(owner, 0, CalculateValue, ref _value);
+        }
+
+        protected abstract SrmDocument GetDocument(TOwner owner);
+        protected abstract TValue CalculateValue(TOwner owner);
+
+        protected TValueX GetOrCalculate<TValueX>(TOwner owner, int valueIndex, Func<TOwner, TValueX> calculateFunc,
+            ref TValueX backingField)
+        {
+            var document = GetDocument(owner);
+            if (!ReferenceEquals(document.ReferenceId, _documentReferenceId))
+            {
+                _flags = 0;
+                _documentReferenceId = document.ReferenceId;
+            }
+
+            if (!GetFlag(valueIndex))
+            {
+                // Value is stale. Calculate it again.
+                TValueX calculatedValue = calculateFunc(owner);
+                // Update the value in the backing field, unless the new value is null.
+                // If the new value is null, then we keep the last value that was calculated.
+                if (!ReferenceEquals(calculatedValue, null))
+                {
+                    backingField = calculatedValue;
+                }
+            }
+            return backingField;
+        }
+    }
+
+    public abstract class CachedValues<TOwner, TValue, TValue1> : CachedValue<TOwner, TValue>
+    {
+        private TValue1 _value1;
+
+        public TValue1 GetValue1(TOwner owner)
+        {
+            return GetOrCalculate(owner, 1, CalculateValue1, ref _value1);
+        }
+
+        protected abstract TValue1 CalculateValue1(TOwner owner);
+    }
+
+    public abstract class CachedValues<TOwner, TValue, TValue1, TValue2> : CachedValues<TOwner, TValue, TValue1>
+    {
+        private TValue2 _value2;
+
+        public TValue2 GetValue2(TOwner owner)
+        {
+            return GetOrCalculate(owner, 2, CalculateValue2, ref _value2);
+        }
+
+        protected abstract TValue2 CalculateValue2(TOwner owner);
+    }
 }
