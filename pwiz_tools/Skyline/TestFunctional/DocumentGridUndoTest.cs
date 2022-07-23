@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.AreEqual(3, documentGrid.RowCount);
-                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[2].Cells[1];
+                documentGrid.DataGridView.CurrentCell = documentGrid.DataGridView.Rows[1].Cells[1];
             });
             RunUI(() =>
             {
@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.Undo();
                 Assert.AreEqual(3, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(new Point(1, 2), documentGrid.DataGridView.CurrentCellAddress);
+                Assert.AreEqual(new Point(1, 1), documentGrid.DataGridView.CurrentCellAddress);
                 documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions);
             });
             WaitForConditionUI(() => documentGrid.IsComplete);

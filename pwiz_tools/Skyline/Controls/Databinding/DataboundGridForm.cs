@@ -81,15 +81,9 @@ namespace pwiz.Skyline.Controls.Databinding
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        private ViewName? GetCurrentViewName()
-        {
-            var viewInfo = BindingListSource.ViewInfo;
-            return viewInfo?.ViewGroup?.Id.ViewName(viewInfo.Name);
-        }
-
         public UndoState GetUndoState()
         {
-            var viewName = GetCurrentViewName();
+            var viewName = GetViewName();
             if (!viewName.HasValue)
             {
                 return null;
@@ -100,7 +94,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void RestoreUndoState(UndoState undoState)
         {
-            if (!Equals(GetCurrentViewName(), undoState.ViewName))
+            if (!Equals(GetViewName(), undoState.ViewName))
             {
                 // If name of the report in the undo state is different than the current report
                 // then do nothing.
