@@ -1503,6 +1503,7 @@ namespace pwiz.Skyline.Model.Results
             // 0x80 available
             used_ms1_centroids = 0x100,
             used_ms2_centroids = 0x200,
+            is_srm = 0x400
         }
 
         public static DateTime GetLastWriteTime(MsDataFileUri filePath)
@@ -1547,11 +1548,14 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.used_ms2_centroids) != 0;
         }
 
-        public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
-                               float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, string sampleId, string serialNumber,
-                               IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, null, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
+        public ChromCachedFile(ChromFileInfo fileInfo)
+            : this(fileInfo.FilePath, 0, fileInfo.FileWriteTime ?? DateTime.FromBinary(0), fileInfo.FileWriteTime, null, 
+                (float) fileInfo.MaxRetentionTime, (float) fileInfo.MaxIntensity, 0, 0, default(float?), fileInfo.IonMobilityUnits, fileInfo.SampleId, fileInfo.SampleId, fileInfo.InstrumentInfoList)
         {
+            if (fileInfo.IsSrm)
+            {
+                Flags |= FlagValues.is_srm;
+            }
         }
 
         public ChromCachedFile(MsDataFileUri fileUri,
@@ -1636,6 +1640,29 @@ namespace pwiz.Skyline.Model.Results
         public bool UsedMs2Centroids
         {
             get { return UsedMs2CentroidsFlags(Flags); }
+        }
+
+        public bool IsSrm
+        {
+            get
+            {
+                return 0 != (Flags & FlagValues.is_srm);
+            }
+        }
+
+        public ChromCachedFile ChangeIsSrm(bool isSrm)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                if (isSrm)
+                {
+                    im.Flags |= FlagValues.is_srm;
+                }
+                else
+                {
+                    im.Flags &= ~FlagValues.is_srm;
+                }
+            });
         }
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)
