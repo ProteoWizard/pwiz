@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Databinding
         }
         private bool GetFlag(int index)
         {
-            return 0 == (_flags & GetFlagMask(index));
+            return 0 != (_flags & GetFlagMask(index));
         }
 
         private void SetFlag(int index, bool value)
@@ -106,6 +106,7 @@ namespace pwiz.Skyline.Model.Databinding
 
             if (!GetFlag(valueIndex))
             {
+                SetFlag(valueIndex, true);
                 // Value is stale. Calculate it again.
                 TValueX calculatedValue = calculateFunc(owner);
                 // Update the value in the backing field, unless the new value is null.
