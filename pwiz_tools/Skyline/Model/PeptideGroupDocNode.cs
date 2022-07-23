@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model
         }
 
         [TrackChildren(ignoreName: true)]
-        public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(new ProteinMetadata(PeptideGroup.Name, PeptideGroup.Description)); } } // prefer our name and description over peptidegroup
+        public ProteinMetadata ProteinMetadata { get { return _proteinMetadata.Merge(PeptideGroup.Name, PeptideGroup.Description); } } // prefer our name and description over peptidegroup
 
         /// <summary>
         /// returns our actual metadata, not merged with that of the ID object
@@ -525,7 +525,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata); 
+            var equal = base.Equals(obj) && Equals(obj._proteinMetadata, _proteinMetadata);
+            return equal; 
         }
 
         protected override IList<DocNode> OnChangingChildren(DocNodeParent clone, int indexReplaced)

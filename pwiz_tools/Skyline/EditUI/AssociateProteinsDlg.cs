@@ -92,11 +92,11 @@ namespace pwiz.Skyline.EditUI
             foreach (var sharedPeptides in _sharedPeptideOptionNames)
                 comboSharedPeptides.Items.Add(EnumNames.ResourceManager.GetString(@"SharedPeptides_" + sharedPeptides) ?? throw new InvalidOperationException(sharedPeptides));
 
-            GroupProteins = peptideSettings.Filter.ParsimonySettings?.GroupProteins ?? false;
-            FindMinimalProteinList = peptideSettings.Filter.ParsimonySettings?.FindMinimalProteinList ?? false;
-            RemoveSubsetProteins = peptideSettings.Filter.ParsimonySettings?.RemoveSubsetProteins ?? false;
-            SelectedSharedPeptides = peptideSettings.Filter.ParsimonySettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
-            MinPeptidesPerProtein = peptideSettings.Filter.ParsimonySettings?.MinPeptidesPerProtein ?? 1;
+            GroupProteins = peptideSettings.ProteinAssociationSettings?.GroupProteins ?? false;
+            FindMinimalProteinList = peptideSettings.ProteinAssociationSettings?.FindMinimalProteinList ?? false;
+            RemoveSubsetProteins = peptideSettings.ProteinAssociationSettings?.RemoveSubsetProteins ?? false;
+            SelectedSharedPeptides = peptideSettings.ProteinAssociationSettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+            MinPeptidesPerProtein = peptideSettings.ProteinAssociationSettings?.MinPeptidesPerProtein ?? 1;
             comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
 
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);

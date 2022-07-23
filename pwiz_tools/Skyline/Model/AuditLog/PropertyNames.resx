@@ -1703,4 +1703,7 @@
   <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
     <value>Associate Proteins</value>
   </data>
+  <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
+    <value>Protein association settings</value>
+  </data>
 </root>

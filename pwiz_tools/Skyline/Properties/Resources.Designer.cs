@@ -21643,6 +21643,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The value {0} for {1} is not valid: it must be greater than or equal to {2}..
+        /// </summary>
+        public static string ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__ {
+            get {
+                return ResourceManager.GetString("ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater" +
+                        "_than_or_equal_to__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Paste {
