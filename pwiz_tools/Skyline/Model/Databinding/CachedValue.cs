@@ -137,24 +137,25 @@ namespace pwiz.Skyline.Model.Databinding
             ref TValueX backingField)
         {
             var document = GetDocument(owner);
-            if (!ReferenceEquals(document.ReferenceId, _documentReferenceId))
+            var documentReferenceId = document.ReferenceId;
+            if (!ReferenceEquals(documentReferenceId, _documentReferenceId))
             {
                 _flags = 0;
-                _documentReferenceId = document.ReferenceId;
+                _documentReferenceId = documentReferenceId;
+            }
+            if (GetFlag(valueIndex))
+            {
+                return backingField;
             }
 
-            if (!GetFlag(valueIndex))
+            TValueX calculatedValue = calculateFunc(owner);
+            // Update the value in the backing field, unless the new value is null.
+            // If the new value is null, then we keep the last value that was calculated.
+            if (!ReferenceEquals(calculatedValue, null))
             {
-                SetFlag(valueIndex, true);
-                // Value is stale. Calculate it again.
-                TValueX calculatedValue = calculateFunc(owner);
-                // Update the value in the backing field, unless the new value is null.
-                // If the new value is null, then we keep the last value that was calculated.
-                if (!ReferenceEquals(calculatedValue, null))
-                {
-                    backingField = calculatedValue;
-                }
+                backingField = calculatedValue;
             }
+            SetFlag(valueIndex, true);
             return backingField;
         }
     }
