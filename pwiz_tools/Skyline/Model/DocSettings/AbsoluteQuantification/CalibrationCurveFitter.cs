@@ -766,6 +766,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                    srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
         }
 
+        /// <summary>
+        /// Given a flat list of <see cref="GroupComparison.PeptideQuantifier.Quantity"/>  objects,
+        /// create a dictionary using the elements from <see cref="_identityPaths"/> as the keys.
+        /// </summary>
         private IDictionary<IdentityPath, PeptideQuantifier.Quantity> MakeQuantityDictionary(
             IList<PeptideQuantifier.Quantity> quantities)
         {
