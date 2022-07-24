@@ -296,7 +296,7 @@ namespace pwiz.Common.DataBinding
 
             public override int Length
             {
-                get { return 2; }
+                get { return 1; }
             }
             protected override PivotKey MakeChild(PropertyPath propertyPath, object value)
             {
