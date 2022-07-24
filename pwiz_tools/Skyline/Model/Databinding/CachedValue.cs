@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2014 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 
 namespace pwiz.Skyline.Model.Databinding
 {
@@ -54,10 +72,28 @@ namespace pwiz.Skyline.Model.Databinding
         }
     }
 
+    /// <summary>
+    /// Holds a value which needs to be recalculated if the Document changes.
+    /// Derived classes might hold additional values that need to be recalculated at the same time.
+    /// </summary>
+    /// <typeparam name="TOwner">The object that the value(s) can be calculated from. In order to save memory, this
+    /// owner object is not held onto by this object, but must be passed in whenever a value is requested.</typeparam>
+    /// <typeparam name="TValue">The Type of the first calculated value which is held in this object.</typeparam>
     public abstract class CachedValue<TOwner, TValue>
     {
-        private ushort _flags;
+        /// <summary>
+        /// The <see cref="SrmDocument.ReferenceId"/> of the SrmDocument when the values in this object were last calculated.
+        /// Whenever a value is requested from this object, the Document Reference Id is compared against that of the current
+        /// document to see whether all of the values need to be recalculated.
+        /// </summary>
         private object _documentReferenceId;
+        /// <summary>
+        /// A bitfield indicating which values have been calculated since the last time that the Document Reference Id was changed.
+        /// </summary>
+        private ushort _flags;
+        /// <summary>
+        /// The first value which is stored in this object.
+        /// </summary>
         private TValue _value;
 
         private ushort GetFlagMask(int index)
@@ -86,6 +122,9 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
+        /// <summary>
+        /// Returns the first calculated value which is stored in this object.
+        /// </summary>
         public TValue GetValue(TOwner owner)
         {
             return GetOrCalculate(owner, 0, CalculateValue, ref _value);
