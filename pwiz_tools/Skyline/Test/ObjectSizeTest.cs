@@ -19,7 +19,6 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -59,14 +58,6 @@ namespace pwiz.SkylineTest
         public void TestTransitionGroupChromInfoSize()
         {
             DumpTypeAndFields(typeof(TransitionGroupChromInfo));
-        }
-
-        [TestMethod]
-        public void TestPivotKeySize()
-        {
-            DumpTypeAndFields(typeof(PivotKey));
-            DumpTypeAndFields(typeof(PivotKey.TopLevel));
-            DumpTypeAndFields(typeof(PivotKey.Child));
         }
 
         [TestMethod]

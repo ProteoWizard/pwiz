@@ -78,6 +78,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
     }
 
+    /// <summary>
+    /// <see cref="SkylineObject" /> which holds onto a reference to the <see cref="SkylineDataSchema"/>
+    /// and returns it in <see cref="GetDataSchema"/>.
+    /// </summary>
     public class RootSkylineObject : SkylineObject
     {
         private SkylineDataSchema _dataSchema;
