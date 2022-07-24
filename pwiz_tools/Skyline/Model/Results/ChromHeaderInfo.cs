@@ -1500,10 +1500,9 @@ namespace pwiz.Skyline.Model.Results
             has_midas_spectra = 0x04,
             has_combined_ion_mobility = 0x08,
             ion_mobility_type_bitmask = 0x70, // 3 bits for ion mobility type drift, inverse_mobility, spares
-            // 0x80 available
+            is_srm = 0x80,
             used_ms1_centroids = 0x100,
             used_ms2_centroids = 0x200,
-            is_srm = 0x400
         }
 
         public static DateTime GetLastWriteTime(MsDataFileUri filePath)
@@ -1518,16 +1517,6 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.single_match_mz) != 0;            
         }
 
-        private static bool HasMidasSpectraFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.has_midas_spectra) != 0;
-        }
-
-        private static bool HasCombinedIonMobilityFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.has_combined_ion_mobility) != 0;
-        }
-
         public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
             var ionMobilityBits = flags & FlagValues.ion_mobility_type_bitmask;
@@ -1536,16 +1525,6 @@ namespace pwiz.Skyline.Model.Results
                 return (eIonMobilityUnits)(-1);
             }
             return (eIonMobilityUnits)((int)ionMobilityBits >> 4);
-        }
-
-        private static bool UsedMs1CentroidsFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.used_ms1_centroids) != 0;
-        }
-
-        private static bool UsedMs2CentroidsFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.used_ms2_centroids) != 0;
         }
 
         public ChromCachedFile(ChromFileInfo fileInfo)
@@ -1624,45 +1603,27 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasMidasSpectra
         {
-            get { return HasMidasSpectraFlags(Flags); }
+            get { return (Flags & FlagValues.has_midas_spectra) != 0; }
         }
 
         public bool HasCombinedIonMobility
         {
-            get { return HasCombinedIonMobilityFlags(Flags); }
+            get { return (Flags & FlagValues.has_combined_ion_mobility) != 0; }
         }
 
         public bool UsedMs1Centroids
         {
-            get { return UsedMs1CentroidsFlags(Flags); }
+            get { return (Flags & FlagValues.used_ms1_centroids) != 0; }
         }
 
         public bool UsedMs2Centroids
         {
-            get { return UsedMs2CentroidsFlags(Flags); }
+            get { return (Flags & FlagValues.used_ms2_centroids) != 0; }
         }
 
         public bool IsSrm
         {
-            get
-            {
-                return 0 != (Flags & FlagValues.is_srm);
-            }
-        }
-
-        public ChromCachedFile ChangeIsSrm(bool isSrm)
-        {
-            return ChangeProp(ImClone(this), im =>
-            {
-                if (isSrm)
-                {
-                    im.Flags |= FlagValues.is_srm;
-                }
-                else
-                {
-                    im.Flags &= ~FlagValues.is_srm;
-                }
-            });
+            get { return (Flags & FlagValues.is_srm) != 0; }
         }
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)

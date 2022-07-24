@@ -1479,17 +1479,7 @@ namespace pwiz.Skyline.Model.Results
         public bool IsSrm
         {
             get { return 0 != (Flags & ChromCachedFile.FlagValues.is_srm); }
-            set
-            {
-                if (value)
-                {
-                    Flags |= ChromCachedFile.FlagValues.is_srm;
-                }
-                else
-                {
-                    Flags &= ~ChromCachedFile.FlagValues.is_srm;
-                }
-            }
+            set { SetFlag(value, ChromCachedFile.FlagValues.is_srm); }
         }
 
         public bool UsedMs1Centroids

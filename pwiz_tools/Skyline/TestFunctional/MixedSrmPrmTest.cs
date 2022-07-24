@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testFiles.Length, featuresByFile.Count);
             foreach (var fileFeatures in featuresByFile)
             {
-                var testFile = testFiles.FirstOrDefault(testFile => Equals(testFile.MsDataFileUri, fileFeatures.Key));
+                var testFile = testFiles.FirstOrDefault(file => Equals(file.MsDataFileUri, fileFeatures.Key));
                 Assert.IsNotNull(testFile);
                 foreach (var peptide in fileFeatures)
                 {
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(testFiles.Length, featuresByFile.Count);
             foreach (var fileFeatures in featuresByFile)
             {
-                var testFile = testFiles.FirstOrDefault(testFile => Equals(testFile.MsDataFileUri, fileFeatures.Key));
+                var testFile = testFiles.FirstOrDefault(file => Equals(file.MsDataFileUri, fileFeatures.Key));
                 Assert.IsNotNull(testFile);
                 foreach (var peptide in fileFeatures)
                 {
