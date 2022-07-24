@@ -998,10 +998,8 @@ namespace pwiz.Skyline.Model.Results
         }
         internal IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos(IEnumerable<ChromDataSet> dataSets)
         {
-            var chromCachedFile = new ChromCachedFile(FileInfo.FilePath, default(ChromCachedFile.FlagValues),
-                FileInfo.FileWriteTime ?? DateTime.FromBinary(0), FileInfo.FileWriteTime, (float) FileInfo.MaxRetentionTime, (float) FileInfo.MaxIntensity, FileInfo.IonMobilityUnits, 
-                FileInfo.SampleId, FileInfo.InstrumentSerialNumber, FileInfo.InstrumentInfoList);
-            
+            var chromCachedFile = new ChromCachedFile(FileInfo);
+
             foreach (var chromDataSet in dataSets)
             {
                 yield return chromDataSet.ToChromatogramGroupInfo(DetailedPeakFeatureCalculators.FeatureNames, chromCachedFile);
