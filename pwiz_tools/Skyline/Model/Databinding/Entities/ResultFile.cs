@@ -33,12 +33,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class ResultFile : SkylineObject, IComparable
     {
         private readonly CachedValue<ChromFileInfo> _chromFileInfo;
-        public ResultFile(Replicate replicate, ChromFileInfoId chromFileInfoId, int optStep) : base(replicate.DataSchema)
+        public ResultFile(Replicate replicate, ChromFileInfoId chromFileInfoId, int optStep)
         {
             Replicate = replicate;
             ChromFileInfoId = chromFileInfoId;
             _chromFileInfo = CachedValue.Create(DataSchema, () => Replicate.ChromatogramSet.GetFileInfo(ChromFileInfoId));
             OptimizationStep = optStep;
+        }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return Replicate.DataSchema;
         }
 
         [Browsable(false)]
