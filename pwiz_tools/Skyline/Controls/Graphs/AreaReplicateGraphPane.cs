@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
