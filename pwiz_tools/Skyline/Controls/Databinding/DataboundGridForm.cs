@@ -76,6 +76,9 @@ namespace pwiz.Skyline.Controls.Databinding
                     case Keys.Y | Keys.Control:
                         skylineWindow.Redo();
                         return true;
+                    case Keys.D | Keys.Control:
+                        DataboundGridControl.FillDown();
+                        return true;
                 }
             }
             return base.ProcessCmdKey(ref msg, keyData);
