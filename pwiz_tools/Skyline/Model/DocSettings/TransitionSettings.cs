@@ -1626,11 +1626,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_ION_COUNT = 1;
         public const int MAX_ION_COUNT = 50;
         public const double MIN_MATCH_TOLERANCE = 0.001;    // Reduced from 0.1 to 0.001 (1 ppm at 1000 m/z) for high accuracy MS/MS
-        public const double MAX_MATCH_TOLERANCE = 1.0;
+        public const double MAX_MATCH_TOLERANCE = 100.0;    // Increased from 1 to 100 for ppm tolerance units
 
-        public TransitionLibraries(double ionMatchTolerance, int minIonCount, int ionCount, TransitionLibraryPick pick)
+        public TransitionLibraries(double ionMatchTolerance, MzTolerance.Units ionMatchToleranceUnit, int minIonCount, int ionCount, TransitionLibraryPick pick)
         {
             IonMatchTolerance = ionMatchTolerance;
+            IonMatchToleranceUnit = ionMatchToleranceUnit;
             MinIonCount = minIonCount;
             IonCount = ionCount;
             Pick = pick;
@@ -1640,6 +1641,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public double IonMatchTolerance { get; private set; }
+
+        [Track]
+        public MzTolerance.Units IonMatchToleranceUnit { get; private set; }
+
+        public MzTolerance IonMatchMzTolerance
+        {
+            get
+            {
+                return new MzTolerance(IonMatchTolerance, IonMatchToleranceUnit);
+            }
+        }
 
         [Track]
         public int MinIonCount { get; private set; }
@@ -1675,6 +1687,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), (im, v) => im.IonMatchTolerance = v, prop);
         }
 
+        public TransitionLibraries ChangeIonMatchToleranceUnit(MzTolerance.Units prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.IonMatchToleranceUnit = v, prop);
+        }
+
         public TransitionLibraries ChangeMinIonCount(int prop)
         {
             return ChangeProp(ImClone(this), im => im.MinIonCount = prop);
@@ -1704,6 +1721,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum ATTR
         {
             ion_match_tolerance,
+            ion_match_tolerance_unit,
             min_ion_count,
             ion_count,
             pick_from,
@@ -1752,6 +1770,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read start tag attributes
             IonMatchTolerance = reader.GetDoubleAttribute(ATTR.ion_match_tolerance);
+            IonMatchToleranceUnit = reader.GetEnumAttribute(ATTR.ion_match_tolerance_unit, MzTolerance.Units.mz);
             MinIonCount = reader.GetIntAttribute(ATTR.min_ion_count);
             IonCount = reader.GetIntAttribute(ATTR.ion_count);
             Pick = reader.GetEnumAttribute(ATTR.pick_from, TransitionLibraryPick.all);
@@ -1766,6 +1785,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write attributes
             writer.WriteAttribute(ATTR.ion_match_tolerance, IonMatchTolerance);
+            writer.WriteAttribute(ATTR.ion_match_tolerance_unit, IonMatchToleranceUnit);
             writer.WriteAttribute(ATTR.min_ion_count, MinIonCount);
             writer.WriteAttribute(ATTR.ion_count, IonCount);
             writer.WriteAttribute(ATTR.pick_from, Pick);
@@ -1779,7 +1799,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.IonMatchTolerance == IonMatchTolerance && obj.MinIonCount == MinIonCount && obj.IonCount == IonCount && Equals(obj.Pick, Pick);
+            return obj.IonMatchTolerance == IonMatchTolerance && obj.IonMatchToleranceUnit == IonMatchToleranceUnit &&
+                   obj.MinIonCount == MinIonCount && obj.IonCount == IonCount && Equals(obj.Pick, Pick);
         }
 
         public override bool Equals(object obj)
@@ -1795,6 +1816,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = IonMatchTolerance.GetHashCode();
+                result = (result * 397) ^ IonMatchToleranceUnit.GetHashCode();
                 result = (result*397) ^ MinIonCount;
                 result = (result*397) ^ IonCount;
                 result = (result*397) ^ Pick.GetHashCode();

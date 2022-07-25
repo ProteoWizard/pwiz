@@ -55,6 +55,8 @@
             this.txtMaxMz = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.panelIonFilter = new System.Windows.Forms.Panel();
+            this.comboMatchToleranceUnit = new System.Windows.Forms.ComboBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.panelIonFilter.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -203,11 +205,27 @@
             resources.ApplyResources(this.panelIonFilter, "panelIonFilter");
             this.panelIonFilter.Name = "panelIonFilter";
             // 
+            // comboMatchToleranceUnit
+            // 
+            this.comboMatchToleranceUnit.FormattingEnabled = true;
+            this.comboMatchToleranceUnit.Items.AddRange(new object[] {
+            resources.GetString("comboMatchToleranceUnit.Items"),
+            resources.GetString("comboMatchToleranceUnit.Items1")});
+            resources.ApplyResources(this.comboMatchToleranceUnit, "comboMatchToleranceUnit");
+            this.comboMatchToleranceUnit.Name = "comboMatchToleranceUnit";
+            // 
+            // label7
+            // 
+            resources.ApplyResources(this.label7, "label7");
+            this.label7.Name = "label7";
+            // 
             // TransitionSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Transparent;
+            this.BackColor = System.Drawing.Color.DarkGray;
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.comboMatchToleranceUnit);
             this.Controls.Add(this.panelIonFilter);
             this.Controls.Add(this.lblMinIonCountUnits);
             this.Controls.Add(this.txtMinIonCount);
@@ -260,5 +278,7 @@
         private System.Windows.Forms.TextBox txtMaxMz;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Panel panelIonFilter;
+        private System.Windows.Forms.ComboBox comboMatchToleranceUnit;
+        private System.Windows.Forms.Label label7;
     }
 }

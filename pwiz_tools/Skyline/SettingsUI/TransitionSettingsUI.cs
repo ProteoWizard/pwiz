@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -143,6 +144,7 @@ namespace pwiz.Skyline.SettingsUI
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
             panelPick.Visible = cbLibraryPick.Checked;
             textTolerance.Text = Libraries.IonMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
+            comboToleranceUnits.SelectedItem = comboToleranceUnits.Items[(int)Libraries.IonMatchToleranceUnit];
             textMinIonCount.Text = Libraries.MinIonCount != 0 ? Libraries.MinIonCount.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
             textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
@@ -476,6 +478,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateDecimalTextBox(textTolerance,
                     minTol, maxTol, out ionMatchTolerance))
                 return;
+            MzTolerance.Units ionMatchToleranceUnit = (MzTolerance.Units)comboToleranceUnits.SelectedIndex;
 
             int minIonCount = Libraries.MinIonCount;
             int ionCount = Libraries.IonCount;
@@ -499,7 +502,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
+            TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, ionMatchToleranceUnit, minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // This dialog does not yet change integration settings

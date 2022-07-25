@@ -401,6 +401,7 @@
       <xs:element name="transition_libraries">
         <xs:complexType>
           <xs:attribute name="ion_match_tolerance" type="xs:double" use="required"/>
+          <xs:attribute name="ion_match_tolerance_unit" type="xs:double" use="required"/>
           <xs:attribute name="min_ion_count" type="xs:nonNegativeInteger"/>
           <xs:attribute name="ion_count" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="pick_from" type="transition_library_pick_type"

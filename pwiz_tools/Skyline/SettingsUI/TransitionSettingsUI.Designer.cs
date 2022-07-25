@@ -81,6 +81,8 @@
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
             this.lbPrecursorMzWindow = new System.Windows.Forms.Label();
             this.tabLibrary = new System.Windows.Forms.TabPage();
+            this.label23 = new System.Windows.Forms.Label();
+            this.comboToleranceUnits = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
             this.panelPick = new System.Windows.Forms.Panel();
             this.label22 = new System.Windows.Forms.Label();
@@ -123,7 +125,6 @@
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.label16 = new System.Windows.Forms.Label();
-            this.cbHighResolutionTolerance = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -517,7 +518,8 @@
             // 
             // tabLibrary
             // 
-            this.tabLibrary.Controls.Add(this.cbHighResolutionTolerance);
+            this.tabLibrary.Controls.Add(this.label23);
+            this.tabLibrary.Controls.Add(this.comboToleranceUnits);
             this.tabLibrary.Controls.Add(this.label9);
             this.tabLibrary.Controls.Add(this.panelPick);
             this.tabLibrary.Controls.Add(this.textTolerance);
@@ -526,6 +528,21 @@
             resources.ApplyResources(this.tabLibrary, "tabLibrary");
             this.tabLibrary.Name = "tabLibrary";
             this.tabLibrary.UseVisualStyleBackColor = true;
+            // 
+            // label23
+            // 
+            resources.ApplyResources(this.label23, "label23");
+            this.label23.Name = "label23";
+            // 
+            // comboToleranceUnits
+            // 
+            this.comboToleranceUnits.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboToleranceUnits.FormattingEnabled = true;
+            this.comboToleranceUnits.Items.AddRange(new object[] {
+            resources.GetString("comboToleranceUnits.Items"),
+            resources.GetString("comboToleranceUnits.Items1")});
+            resources.ApplyResources(this.comboToleranceUnits, "comboToleranceUnits");
+            this.comboToleranceUnits.Name = "comboToleranceUnits";
             // 
             // label9
             // 
@@ -804,12 +821,6 @@
             resources.ApplyResources(this.label16, "label16");
             this.label16.Name = "label16";
             // 
-            // cbHighResolutionTolerance
-            // 
-            resources.ApplyResources(this.cbHighResolutionTolerance, "cbHighResolutionTolerance");
-            this.cbHighResolutionTolerance.Name = "cbHighResolutionTolerance";
-            this.cbHighResolutionTolerance.UseVisualStyleBackColor = true;
-            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -942,6 +953,7 @@
         private System.Windows.Forms.TextBox textMinIonCount;
         private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
         private System.Windows.Forms.Label label16;
-        private System.Windows.Forms.CheckBox cbHighResolutionTolerance;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.ComboBox comboToleranceUnits;
     }
 }

@@ -60,16 +60,30 @@ namespace pwiz.Common.Chemistry
             return 0;
         }
 
-        /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
-        public static bool IsWithinTolerance(double a, double b, MzTolerance tolerance)
+        public double GetMzTolerance(double mz)
         {
-            return (a > b - tolerance) && (a < b + tolerance);
+            switch (Unit)
+            {
+                case Units.mz:
+                    return Value;
+                case Units.ppm:
+                    return Math.Abs(mz) * Value * 1e-6;
+            }
+
+            return 0;
+
+        }
+
+        /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
+        public bool IsWithinTolerance(double a, double b)
+        {
+            return (a > b - this) && (a < b + this);
         }
 
         /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
-        public static bool LessThanTolerance(double a, double b, MzTolerance tolerance)
+        public bool LessThanTolerance(double a, double b)
         {
-            return (a < b - tolerance);
+            return (a < b - this);
         }
 
         public override string ToString()
