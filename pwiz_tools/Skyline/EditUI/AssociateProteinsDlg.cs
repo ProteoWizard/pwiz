@@ -506,6 +506,11 @@ namespace pwiz.Skyline.EditUI
             set => SetRepeatedDuplicatePeptides(RemoveRepeatedPeptides, value);
         }
 
+        public bool IsOkEnabled
+        {
+            get => btnOk.Enabled;
+        }
+
         public void OkDialog()
         {
             if (rbFASTA.Checked && !_fastaFileIsTemporary)
