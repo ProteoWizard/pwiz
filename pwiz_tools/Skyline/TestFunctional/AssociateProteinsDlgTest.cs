@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             //PauseTest();
-            OkDialog(associateProteinsDlg, associateProteinsDlg.AcceptButton.PerformClick);
+            OkAssociateProteinsDialog(associateProteinsDlg);
 
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
@@ -150,6 +150,15 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        /// <summary>
+        /// Special function for calling <see cref="AssociateProteinsDlg.OkDialog"/> because
+        /// it does background processing before enabling the OK button.
+        /// </summary>
+        private void OkAssociateProteinsDialog(AssociateProteinsDlg dlg)
+        {
+            WaitForConditionUI(() => dlg.IsOkEnabled);
+            OkDialog(dlg, dlg.OkDialog);
+        }
 
         private class ParsimonyTestCase
         {
@@ -472,7 +481,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.AreEqual(testCase.ExpectedProteinsUnmapped, dlg.FinalResults.ProteinsUnmapped, $"Test case {i + 1}.{j + 1} ProteinsUnmapped");
                         });
                     }
-                    OkDialog(dlg, dlg.AcceptButton.PerformClick);
+                    OkAssociateProteinsDialog(dlg);
                 }
 
                 // test all cases again after an association has already been applied (all peptides should have been kept so the results should be the same)
@@ -506,7 +515,7 @@ namespace pwiz.SkylineTestFunctional
                         });
                     }
 
-                    OkDialog(dlg, dlg.AcceptButton.PerformClick);
+                    OkAssociateProteinsDialog(dlg);
 
                     if (testCase.OptionsAndResults.Last().GroupProteins)
                     {
