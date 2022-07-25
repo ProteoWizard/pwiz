@@ -52,7 +52,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.msGraphExtension();
+            this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.MsGraphExtension();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnAIons = new System.Windows.Forms.ToolStripButton();
             this.btnBIons = new System.Windows.Forms.ToolStripButton();
@@ -300,7 +300,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(32, 32);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnAIons,
             this.btnBIons,
@@ -835,7 +834,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label filterLabel;
         private System.Windows.Forms.Label byLabel;
         private System.Windows.Forms.ComboBox comboFilterCategory;
-        private msGraphExtension msGraphExtension1;
+        private MsGraphExtension msGraphExtension1;
         private System.Windows.Forms.ToolStripButton propertiesButton;
     }
 }

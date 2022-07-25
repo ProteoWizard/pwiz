@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -461,7 +462,8 @@ namespace pwiz.Skyline.Model.Lib
             copies,
             numPeaks,
             score,
-            scoreType
+            scoreType,
+            SpecIDinFile
         }
 
         private enum RefSpectraPeaks
@@ -1974,6 +1976,86 @@ namespace pwiz.Skyline.Model.Lib
         private bool HasRedundantModificationsTable()
         {
             return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, @"Modifications");
+        }
+
+        public class BiblioSpecGridInfo
+        {
+            public string SpecIdInFile { get; set; }
+        }
+        [CanBeNull]
+        public BiblioSpecGridInfo GetRedundantGridInfo(LibKey key, int redundantId)
+        {
+            // No redundant spectra before schema version 1
+            if (SchemaVersion == 0)
+                return null;
+            int i = FindEntry(key);
+            if (i == -1)
+                return null;
+
+            var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
+            var info = _libraryEntries[i];
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = hasRetentionTimesTable
+                    ? @"SELECT * " +
+                      @"FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
+                      @"WHERE t.[RefSpectraID] = ?":
+                    @"SELECT * " +
+                    @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
+                    @"WHERE t.[id] = ?";
+
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)redundantId));
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
+                    if (reader.Read())
+                    {
+                        var gridInfo = new BiblioSpecGridInfo();
+                        gridInfo.SpecIdInFile = reader.GetString(iSpecIdInFile);
+                        return gridInfo;
+                    }
+
+                    return null;
+                }
+            }
+        }
+
+        [CanBeNull]
+        public BiblioSpecGridInfo GetBestGridInfo(LibKey key)
+        {
+            // No redundant spectra before schema version 1
+            if (SchemaVersion == 0)
+                return null;
+            int i = FindEntry(key);
+            if (i == -1)
+                return null;
+
+            var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
+            var info = _libraryEntries[i];
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = 
+                    @"SELECT * " +
+                    @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
+                    @"WHERE t.[id] = ?";
+
+                // if (hasRetentionTimesTable)
+                //     select.CommandText += @" AND t.[bestSpectrum] = 1";
+
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
+                    while (reader.Read())
+                    {
+                        var gridInfo = new BiblioSpecGridInfo();
+                        gridInfo.SpecIdInFile = reader.GetString(iSpecIdInFile);
+                        return gridInfo;
+                    }
+                    return null;
+                }
+            }
         }
 
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)

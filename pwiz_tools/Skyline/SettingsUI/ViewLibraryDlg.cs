@@ -53,7 +53,7 @@ using pwiz.Skyline.Util.Extensions;
 using Label = System.Windows.Forms.Label;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
-
+using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -183,8 +183,6 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
-            _currentProperties = new SpectrumProperties();
-            msGraphExtension1.setPropertiesObject(_currentProperties);
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -760,13 +758,29 @@ namespace pwiz.Skyline.SettingsUI
                                                                           rankTypes,
                                                                           (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
 
+                        _currentProperties = new SpectrumProperties();
                         _currentProperties.retentionTime = spectrumInfo.RetentionTime;
                         _currentProperties.fileName = spectrumInfo.FileName;
                         _currentProperties.libraryName = spectrumInfo.Name;
                         _currentProperties.precursorMz = ViewLibraryDlg.CalcMz(pepInfo, _matcher);
                         _currentProperties.score = spectrumInfoR.Score;
                         _currentProperties.charge = pepInfo.Charge;
-                        
+                        var selectedBiblioSpecLib = _selectedLibrary as BiblioSpecLiteLibrary;
+                        if (selectedBiblioSpecLib != null)
+                        {
+                            BiblioSpecGridInfo biblioAdditionalInfo;
+                            if (spectrumInfo.IsBest)
+                            {
+                                biblioAdditionalInfo = selectedBiblioSpecLib.GetBestGridInfo(_peptides[index].Key);
+                            }
+                            else
+                            {
+                                biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(_peptides[index].Key, ((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
+                            }
+
+                            _currentProperties.specIdInFile = biblioAdditionalInfo.SpecIdInFile;
+                        }
+
                         LibraryChromGroup libraryChromGroup = null;
                         if (spectrumInfo != null)
                         {
@@ -898,7 +912,7 @@ namespace pwiz.Skyline.SettingsUI
             btnFragmentIons.Checked = btnFragmentIons.Enabled && Settings.Default.ShowFragmentIons;
             charge1Button.Checked = charge1Button.Enabled && Settings.Default.ShowCharge1;
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
-            msGraphExtension1.propertiesGrid.Refresh();
+            msGraphExtension1.SetPropertiesObject(_currentProperties);
         }
 
         private void SetGraphItem(IMSGraphItemInfo item)
@@ -1395,7 +1409,7 @@ namespace pwiz.Skyline.SettingsUI
         private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
             propertiesButton.Checked = !propertiesButton.Checked;
-            msGraphExtension1.setPropertiesVisibility(propertiesButton.Checked);
+            msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2808,14 +2822,6 @@ namespace pwiz.Skyline.SettingsUI
         public class SpectrumProperties : GlobalizedObject
         {
 
-
-
-            // public SpectrumProperties(SpectrumInfoLibrary spectrum)
-            // {
-            //     fileName = spectrum.FileName;
-            //     retentionTime = spectrum.RetentionTime;
-            //     
-            // }
             [Category("Peptide Info")]
             public double? precursorMz { get; set; }
 
@@ -2825,6 +2831,9 @@ namespace pwiz.Skyline.SettingsUI
             public string fileName { get; set; }
             [Category("File Info")]
             public string libraryName { get; set; }
+
+            [Category("Peptide Info")]
+            public string specIdInFile { get; set; }
 
             public double? retentionTime { get; set; }
 
