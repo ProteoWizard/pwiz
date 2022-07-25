@@ -23,22 +23,28 @@ using System.Linq;
 
 namespace pwiz.Common.DataBinding
 {
-    public class PivotKey
+    public abstract class PivotKey
     {
-        private readonly int _hashCode;
-        public static readonly PivotKey EMPTY = new PivotKey();
+        public static readonly PivotKey EMPTY = new Empty();
+        protected int _hashCode;
 
-        private PivotKey()
+        protected PivotKey(PropertyPath propertyPath, object value)
         {
+            PropertyPath = propertyPath;
+            Value = value;
+            _hashCode = PropertyPath.GetHashCode();
+            if (Value != null)
+            {
+                _hashCode = (_hashCode * 397) ^ Value.GetHashCode();
+            }
         }
-
         public static PivotKey GetPivotKey(IDictionary<PivotKey, PivotKey> pivotKeys,
             IEnumerable<KeyValuePair<PropertyPath, object>> keyPairs)
         {
             var result = EMPTY;
             foreach (var entry in keyPairs)
             {
-                result = new PivotKey(result, entry.Key, entry.Value);
+                result = result.AppendValue(entry.Key, entry.Value);
                 PivotKey existing;
                 if (pivotKeys.TryGetValue(result, out existing))
                 {
@@ -52,40 +58,6 @@ namespace pwiz.Common.DataBinding
             return result;
         }
 
-        public PivotKey(IEnumerable<KeyValuePair<PropertyPath, object>> keyPairs)
-        {
-            Parent = EMPTY;
-            foreach (var keyPair in keyPairs)
-            {
-                Parent = new PivotKey(Parent, keyPair.Key, keyPair.Value);
-            }
-        }
-
-        public PivotKey(PivotKey parent, PropertyPath propertyPath, object value)
-        {
-            Parent = parent;
-            if (null != parent)
-            {
-                Length = parent.Length + 1;
-            }
-            PropertyPath = propertyPath;
-            Value = value;
-            if (null != Parent)
-            {
-                Length = Parent.Length + 1;
-                _hashCode = Parent.GetHashCode();
-            }
-            else
-            {
-                Length = 1;
-            }
-            _hashCode = _hashCode * 397 ^ PropertyPath.GetHashCode();
-            if (Value != null)
-            {
-                _hashCode = _hashCode * 397 ^ Value.GetHashCode();
-            }
-        }
-
         public PivotKey Concat(PivotKey pivotKey)
         {
             if (Length == 0)
@@ -96,12 +68,13 @@ namespace pwiz.Common.DataBinding
             {
                 return this;
             }
-            return new PivotKey(Concat(pivotKey.Parent), pivotKey.PropertyPath, pivotKey.Value);
+
+            return Concat(pivotKey.Parent).AppendValue(pivotKey.PropertyPath, pivotKey.Value);
         }
 
-        private PivotKey Parent { get; set; }
-        private PropertyPath PropertyPath { get; set; }
-        private object Value { get; set; }
+        protected abstract PivotKey Parent { get; }
+        protected PropertyPath PropertyPath { get; set; }
+        protected object Value { get; set; }
 
         public IEnumerable<KeyValuePair<PropertyPath, object>> KeyPairs
         {
@@ -125,7 +98,7 @@ namespace pwiz.Common.DataBinding
                 return new KeyValuePair<PropertyPath, object>(PropertyPath, Value);
             }
         }
-        public int Length { get; private set; }
+        public abstract int Length { get; }
         public object FindValue(PropertyPath propertyPath)
         {
             for (var pivotKey = this; pivotKey != null; pivotKey = pivotKey.Parent)
@@ -157,8 +130,10 @@ namespace pwiz.Common.DataBinding
 #else
             Debug.Assert(true);
 #endif
-            return new PivotKey(this, propertyPath, value);
+            return MakeChild(propertyPath, value);
         }
+
+        protected abstract PivotKey MakeChild(PropertyPath propertyPath, object value);
 
         #region Equality Members
         public bool Equals(PivotKey other)
@@ -172,8 +147,11 @@ namespace pwiz.Common.DataBinding
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(PivotKey)) return false;
-            return Equals((PivotKey)obj);
+            if (obj is PivotKey pivotKey)
+            {
+                return Equals(pivotKey);
+            }
+            return false;
         }
 
         public override int GetHashCode()
@@ -281,6 +259,73 @@ namespace pwiz.Common.DataBinding
                     return _dataSchema.Compare(x.Value, y.Value);
                 }
                 // ReSharper restore PossibleNullReferenceException
+            }
+        }
+
+        private class Empty : PivotKey
+        {
+            public Empty() : base(PropertyPath.Root, null)
+            {
+            }
+
+            protected override PivotKey Parent
+            {
+                get { return null; }
+            }
+
+            public override int Length
+            {
+                get { return 0; }
+            }
+            protected override PivotKey MakeChild(PropertyPath propertyPath, object value)
+            {
+                return new TopLevel(propertyPath, value);
+            }
+        }
+
+        private class TopLevel : PivotKey
+        {
+            public TopLevel(PropertyPath propertyPath, object value) : base(propertyPath, value)
+            {
+            }
+
+            protected override PivotKey Parent
+            {
+                get { return EMPTY; }
+            }
+
+            public override int Length
+            {
+                get { return 1; }
+            }
+            protected override PivotKey MakeChild(PropertyPath propertyPath, object value)
+            {
+                return new Child(this, propertyPath, value);
+            }
+        }
+
+        private class Child : PivotKey
+        {
+            private PivotKey _parent;
+            private int _length;
+            public Child(PivotKey parent, PropertyPath propertyPath, object value) : base(propertyPath, value)
+            {
+                _parent = parent;
+                _length = parent.Length + 1;
+                _hashCode = (_hashCode * 397) ^ parent.GetHashCode();
+            }
+
+            protected override PivotKey Parent
+            {
+                get { return _parent; }
+            }
+            public override int Length
+            {
+                get { return _length; }
+            }
+            protected override PivotKey MakeChild(PropertyPath propertyPath, object value)
+            {
+                return new Child(this, propertyPath, value);
             }
         }
     }
