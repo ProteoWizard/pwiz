@@ -41,7 +41,6 @@ using NetMQ.Sockets;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
@@ -688,10 +687,10 @@ namespace TestRunner
             psi.CreateNoWindow = false;
             psi.UseShellExecute = true;
             var proc = Process.Start(psi);
-            if (proc.WaitForExit(1000))
+            if (proc?.WaitForExit(1000) ?? true)
             {
-                Console.WriteLine($"Error launching docker worker: {proc.ExitCode}");
-                log?.WriteLine($"Error launching docker worker: {proc.ExitCode}");
+                Console.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
+                log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
             }
             return workerName;
         }
