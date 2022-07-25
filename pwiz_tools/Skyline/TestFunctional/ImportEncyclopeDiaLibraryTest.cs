@@ -16,12 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -44,14 +46,17 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(()=>SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("ImportLibraryTest.sky")));
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
+            var originalDocument = SkylineWindow.Document;
+            string elibPath = TestFilesDir.GetTestPath("importlibsearchtest.elib");
             RunUI(()=>
             {
                 var buildPepSearchCtrl = importPeptideSearchDlg.BuildPepSearchLibControl;
                 buildPepSearchCtrl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
                 buildPepSearchCtrl.UseExistingLibrary = true;
-                buildPepSearchCtrl.ExistingLibraryPath = TestFilesDir.GetTestPath("importlibsearchtest.elib");
+                buildPepSearchCtrl.ExistingLibraryPath = elibPath;
                 importPeptideSearchDlg.ClickNextButton();
             });
+            VerifyAuditLogPathAdded(originalDocument, elibPath);
             RunUI(()=>
             {
                 string resultFilePath = TestFilesDir.GetTestPath("22jun2016_mcf7_phospho_1a.mzML");
@@ -90,6 +95,38 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForDocumentLoaded();
             RunUI(()=>SkylineWindow.SaveDocument());
+        }
+
+        /// <summary>
+        /// Looks through the new audit log entries in the current document, and makes
+        /// sure that at least one entry contains the specified path.
+        /// </summary>
+        private void VerifyAuditLogPathAdded(SrmDocument originalDocument, string expectedPath)
+        {
+            var expectedName = LogMessage.Quote(AuditLogPath.Create(expectedPath).ToString());
+            bool found = false;
+            for (var auditLogEntry = SkylineWindow.Document.AuditLog.AuditLogEntries;
+                 auditLogEntry != null;
+                 auditLogEntry = auditLogEntry.Parent)
+            {
+                if (!found)
+                {
+                    foreach (var detail in auditLogEntry.AllInfo ?? Array.Empty<DetailLogMessage>())
+                    {
+                        if (detail.Names.Contains(expectedName))
+                        {
+                            found = true;
+                        }
+                    }
+                }
+
+                if (Equals(auditLogEntry, originalDocument.AuditLog.AuditLogEntries))
+                {
+                    Assert.IsTrue(found, "Did not find path {0} in new audit log entries", expectedPath);
+                    return;
+                }
+            }
+            Assert.Fail("Audit log of current document is not a descendent of previous document's audit log");
         }
     }
 }
