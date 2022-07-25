@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -183,6 +184,32 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var sibling = ResultFileRef.PROTOTYPE.ChangeParent(Replicate.GetElementRef());
             int fileIndex = Replicate.ChromatogramSet.IndexOfId(ChromFileInfoId);
             return sibling.ListChildrenOfParent(SrmDocument).Skip(fileIndex).FirstOrDefault();
+        }
+
+        [Format(Formats.PEAK_AREA)]
+        public double? MedianPeakArea 
+        {
+            get
+            {
+                var normalizationData = DataSchema.NormalizedValueCalculator.GetNormalizationData();
+                var log2Median = normalizationData.GetLog2Median(Replicate.ReplicateIndex, ChromFileInfoId);
+                if (log2Median.HasValue)
+                {
+                    return Math.Pow(2, log2Median.Value);
+                }
+
+                return null;
+            }
+        }
+        [Format(Formats.STANDARD_RATIO)]
+        public double? NormalizationDivisor 
+        {
+            get
+            {
+                DataSchema.NormalizedValueCalculator.TryGetDenominator(SrmDocument.Settings.PeptideSettings.Quantification.NormalizationMethod,
+                    Replicate.ReplicateIndex, ChromFileInfoId, out double? denominator);
+                return denominator;
+            }
         }
     }
 }

@@ -417,7 +417,6 @@ namespace pwiz.Skyline.SettingsUI
             PeptideExcludeRegex[] exclusions = _driverExclusion.Chosen;
 
             var peptideUniquenessMode = ComboPeptideUniquenessConstraintSelected;
-            var parsimonySettings = _peptideSettings.Filter.ParsimonySettings;
 
             bool autoSelect = cbAutoSelect.Checked;
             PeptideFilter filter;
@@ -428,8 +427,7 @@ namespace pwiz.Skyline.SettingsUI
                                            maxPeptideLength,
                                            exclusions,
                                            autoSelect,
-                                           peptideUniquenessMode,
-                                           parsimonySettings);
+                                           peptideUniquenessMode);
             }
             catch (InvalidDataException x)
             {
@@ -562,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI
 
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
-            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
+            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
                     .ChangeAbsoluteQuantification(quantification);
         }
 

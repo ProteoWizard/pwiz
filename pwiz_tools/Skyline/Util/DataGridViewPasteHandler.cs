@@ -120,11 +120,17 @@ namespace pwiz.Skyline.Util
             }
             bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
             bool enabledOld = DataGridView.Enabled;
+            bool focusedOld = DataGridView.Focused;
             try
             {
                 Settings.Default.ResultsGridSynchSelection = false;
-                var cellAddress = DataGridView.CurrentCellAddress;
                 DataGridView.Enabled = false;
+                var cellAddress = DataGridView.CurrentCellAddress;
+                if (cellAddress.Y < 0 || cellAddress.Y >= DataGridView.RowCount ||
+                    cellAddress.X < 0 || cellAddress.X >= DataGridView.ColumnCount)
+                {
+                    return false;
+                }
                 DataGridView.CurrentCell = DataGridView.Rows[cellAddress.Y].Cells[cellAddress.X];
                 lock (skylineDataSchema.SkylineWindow.GetDocumentChangeLock())
                 {
@@ -145,6 +151,10 @@ namespace pwiz.Skyline.Util
             finally
             {
                 DataGridView.Enabled = enabledOld;
+                if (focusedOld && !DataGridView.Focused)
+                {
+                    DataGridView.Focus();
+                }
                 Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 skylineDataSchema.RollbackBatchModifyDocument();
             }

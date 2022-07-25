@@ -568,10 +568,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                    string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
-                    ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
-                    Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
-                }
+                        string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
+                        ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
+                        Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
+                    }
                 }
 
                 public Target ModifiedSequence { get; private set; }
