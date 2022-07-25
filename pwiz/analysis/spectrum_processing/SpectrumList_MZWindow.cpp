@@ -25,6 +25,7 @@
 
 #include "SpectrumList_MZWindow.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 
 
 namespace pwiz {
@@ -32,6 +33,7 @@ namespace analysis {
 
 
 using namespace msdata;
+using namespace util;
 
 
 PWIZ_API_DECL
@@ -51,25 +53,38 @@ msdata::SpectrumPtr SpectrumList_MZWindow::spectrum(size_t index, bool getBinary
     SpectrumPtr spectrum = inner_->spectrum(index, getBinaryData);
     if (!getBinaryData) return spectrum;
 
-    vector<MZIntensityPair> data;
-    spectrum->getMZIntensityPairs(data);
+    auto mzBDA = spectrum->getMZArray();
+    auto mz = mzBDA->data;
 
-    vector<MZIntensityPair>::const_iterator begin = lower_bound(
-        data.begin(), data.end(), MZIntensityPair(mzLow_,0), hasLowerMZ);
+    vector<boost::iterator_range<BinaryData<double>::iterator>> equalLengthArrays;
+    for (const auto& bda : spectrum->binaryDataArrayPtrs)
+        if (bda != mzBDA && bda->data.size() == mz.size())
+            equalLengthArrays.emplace_back(bda->data);
+    sort_together(mz, equalLengthArrays);
 
-    vector<MZIntensityPair>::const_iterator end = upper_bound(
-        data.begin(), data.end(), MZIntensityPair(mzHigh_,0), hasLowerMZ);
+    size_t begin = lower_bound(mz.cbegin(), mz.cend(), mzLow_) - mz.cbegin();
+    size_t end = upper_bound(mz.cbegin(), mz.cend(), mzHigh_) - mz.cbegin();
 
-    vector<MZIntensityPair> newData;
-    copy(begin, end, back_inserter(newData));
-
-    BinaryDataArrayPtr intensityArray = spectrum->getIntensityArray();
-    CVID intensityUnits = intensityArray.get() ? intensityArray->cvParam(MS_intensity_unit).cvid : CVID_Unknown;
-    
     SpectrumPtr newSpectrum(new Spectrum(*spectrum));
     newSpectrum->binaryDataArrayPtrs.clear();
-    newSpectrum->setMZIntensityPairs(newData, intensityUnits);
 
+    BinaryDataArrayPtr newMZ(new BinaryDataArray);
+    reinterpret_cast<ParamContainer&>(*newMZ) = reinterpret_cast<const ParamContainer&>(*mzBDA);
+    newMZ->data.resize(end - begin);
+    copy(mz.begin() + begin, mz.begin() + end, newMZ->data.begin());
+    newSpectrum->binaryDataArrayPtrs.emplace_back(newMZ);
+    newSpectrum->defaultArrayLength = newMZ->data.size();
+
+    for (const auto& bda : spectrum->binaryDataArrayPtrs)
+        if (bda != mzBDA && bda->data.size() == mz.size())
+        {
+            BinaryDataArrayPtr newBDA(new BinaryDataArray);
+            reinterpret_cast<ParamContainer&>(*newBDA) = reinterpret_cast<const ParamContainer&>(*bda);
+
+            newBDA->data.assign(bda->data.begin() + begin, bda->data.begin() + end);
+            newSpectrum->binaryDataArrayPtrs.emplace_back(newBDA);
+        }
+    
     return newSpectrum;
 }
 

@@ -1320,7 +1320,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nearestLabel == null || nearestLabel.Tag == null)
                 return false;
             var transition = (int) nearestLabel.Tag;
-            if (transition < 0 || transition >= _transitionIndex.Length)
+            if (transition < 0 || _transitionIndex == null || transition >= _transitionIndex.Length)
                 return false;
             if (_showIonSeriesAnnotations && _transitionIndex[(int)nearestLabel.Tag] < 0)
                 return false;

@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             //PauseTest();
-            OkDialog(associateProteinsDlg, associateProteinsDlg.AcceptButton.PerformClick);
+            OkAssociateProteinsDialog(associateProteinsDlg);
 
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
@@ -150,6 +150,15 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
+        /// <summary>
+        /// Special function for calling <see cref="AssociateProteinsDlg.OkDialog"/> because
+        /// it does background processing before enabling the OK button.
+        /// </summary>
+        private void OkAssociateProteinsDialog(AssociateProteinsDlg dlg)
+        {
+            WaitForConditionUI(() => dlg.IsOkEnabled);
+            OkDialog(dlg, dlg.OkDialog);
+        }
 
         private class ParsimonyTestCase
         {
@@ -430,9 +439,9 @@ namespace pwiz.SkylineTestFunctional
                             .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DDA, null));
                     srmSettings = srmSettings.ChangePeptideSettings(srmSettings.PeptideSettings.ChangeFilter(
                                 new PeptideFilter(0, 2, 20, new List<PeptideExcludeRegex>(), true,
-                                    PeptideFilter.PeptideUniquenessConstraint.none, null))
+                                    PeptideFilter.PeptideUniquenessConstraint.none))
                             .ChangeEnzyme(new Enzyme("non-specific", "ACDEFGHIKLMNPQRSTUVWY", ""))
-                            .ChangeDigestSettings(new DigestSettings(100, false)))
+                            .ChangeDigestSettings(new DigestSettings(9, false)))
                         .ChangeTransitionSettings(transSettings);
 
                     var peptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", string.Empty, peptideNodes.ToArray());
@@ -472,7 +481,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.AreEqual(testCase.ExpectedProteinsUnmapped, dlg.FinalResults.ProteinsUnmapped, $"Test case {i + 1}.{j + 1} ProteinsUnmapped");
                         });
                     }
-                    OkDialog(dlg, dlg.AcceptButton.PerformClick);
+                    OkAssociateProteinsDialog(dlg);
                 }
 
                 // test all cases again after an association has already been applied (all peptides should have been kept so the results should be the same)
@@ -506,7 +515,12 @@ namespace pwiz.SkylineTestFunctional
                         });
                     }
 
-                    OkDialog(dlg, dlg.AcceptButton.PerformClick);
+                    OkAssociateProteinsDialog(dlg);
+
+                    if (testCase.OptionsAndResults.Last().GroupProteins)
+                    {
+                        AssertEx.Serializable(SkylineWindow.Document);
+                    }
 
                     var findNodeDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
                     int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides;

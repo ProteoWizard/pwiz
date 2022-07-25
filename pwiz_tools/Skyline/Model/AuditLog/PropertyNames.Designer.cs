@@ -2923,6 +2923,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein association settings.
+        /// </summary>
+        public static string PeptideSettings_ProteinAssociationSettings {
+            get {
+                return ResourceManager.GetString("PeptideSettings_ProteinAssociationSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quantification.
         /// </summary>
         public static string PeptideSettings_Quantification {

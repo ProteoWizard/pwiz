@@ -255,6 +255,7 @@ namespace pwiz.Skyline.Model.Results
 
                     _currentFileInfo.IsSingleMatchMz = provider.IsSingleMzMatch;
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
+                    _currentFileInfo.IsSrm = provider.IsSrm;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -754,7 +755,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var fullScan = _document.Settings.TransitionSettings.FullScan;
-            if (prediction == null && fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+            bool isFullScan = fullScan.IsEnabled && !_currentFileInfo.IsSrm;
+            if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 if (retentionTimes.Length == 0)
                     retentionTimes = _document.Settings.GetUnalignedRetentionTimes(lookupSequence, lookupMods);
@@ -1441,6 +1443,7 @@ namespace pwiz.Skyline.Model.Results
             HasCombinedIonMobility = cachedFile.HasCombinedIonMobility;
             SampleId = cachedFile.SampleId;
             SerialNumber = cachedFile.InstrumentSerialNumber;
+            IsSrm = cachedFile.IsSrm;
         }
 
         public FileBuildInfo(DateTime? startTime, DateTime lastWriteTime)
@@ -1471,6 +1474,12 @@ namespace pwiz.Skyline.Model.Results
                         Flags |= ChromCachedFile.FlagValues.single_match_mz;
                 }
             }
+        }
+
+        public bool IsSrm
+        {
+            get { return 0 != (Flags & ChromCachedFile.FlagValues.is_srm); }
+            set { SetFlag(value, ChromCachedFile.FlagValues.is_srm); }
         }
 
         public bool UsedMs1Centroids
