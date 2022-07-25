@@ -270,15 +270,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /t:TestConnected /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
-        docker > nul 2>&1
-        if ERRORLEVEL 1 (
+        REM docker > nul 2>&1
+        REM if ERRORLEVEL 1 (
             echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
             $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
             set status=%ERRORLEVEL%
-        ) ELSE (
-            echo Functional testing Skyline in $(CONFIGURATION:L) configuration with $(WORKERS) Docker workers...
-            FOR /L %I IN (1,1,10) DO $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log parallelmode=server workercount=$(WORKERS) keepworkerlogs=1 waitforworkers=1 buildcheck=1 language=en loop=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
-        )
+        REM ) ELSE (
+        REM    echo Functional testing Skyline in $(CONFIGURATION:L) configuration with $(WORKERS) Docker workers...
+        REM     FOR /L %I IN (1,1,10) DO $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log parallelmode=server workercount=$(WORKERS) keepworkerlogs=1 waitforworkers=1 buildcheck=1 language=en loop=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
+        REM )
         exit %status%
     }
     
