@@ -173,6 +173,7 @@
     <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
