@@ -1397,10 +1397,12 @@ namespace pwiz.SkylineTestTutorial
             foldChangeGrid = WaitForOpenForm<FoldChangeGrid>();
             if (!IsCoverShotMode)
                 RunUI(() => foldChangeGraph.Show(foldChangeGraph.DockPanel, DockState.Floating));
+            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             RunUI(() =>
             {
                 var foldChangeResultColumn =
                     foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                Assert.IsNotNull(foldChangeResultColumn);
                 foldChangeGrid.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);

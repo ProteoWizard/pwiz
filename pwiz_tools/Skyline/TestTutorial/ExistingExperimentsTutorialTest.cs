@@ -281,7 +281,7 @@ namespace pwiz.SkylineTestTutorial
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
             var ratioActual = normalizedValueCalculator.GetTransitionGroupValue(
                 normalizedValueCalculator.GetFirstRatioNormalizationMethod(), precursorTreeNode.PepNode,
-                precursorTreeNode.DocNode, precursorTreeNode.DocNode.Results[0][0]);
+                precursorTreeNode.DocNode, 0, precursorTreeNode.DocNode.Results[0][0]);
             Assert.AreEqual(ratioExpected, ratioActual.Value, 0.005);
         }
 
@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestTutorial
             var ratioActual = normalizedValueCalculator.GetTransitionValue(
                 normalizedValueCalculator.GetFirstRatioNormalizationMethod(), transitionTreeNode.PepNode,
                 transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
-                transitionTreeNode.DocNode.Results[0][0]);
+                0, transitionTreeNode.DocNode.Results[0][0]);
 
             if (ratioExpected.HasValue)
                 Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);
