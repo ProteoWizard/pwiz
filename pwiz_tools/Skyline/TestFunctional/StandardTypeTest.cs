@@ -253,9 +253,14 @@ namespace pwiz.SkylineTestFunctional
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
-            var documentationViewer = ShowDialog<DocumentationViewer>(() => viewEditor.ShowColumnDocumentation(true));
-            Assert.IsNotNull(documentationViewer);
-            OkDialog(documentationViewer, documentationViewer.Close);
+
+            // don't launch browser when running as a service under AlwaysUp
+            if (System.IO.Directory.GetCurrentDirectory().Equals(System.Environment.SystemDirectory, System.StringComparison.CurrentCultureIgnoreCase))
+            {
+                var documentationViewer = ShowDialog<DocumentationViewer>(() => viewEditor.ShowColumnDocumentation(true));
+                Assert.IsNotNull(documentationViewer);
+                OkDialog(documentationViewer, documentationViewer.Close);
+            }
 
             var columnsToAdd = new[]
                     {

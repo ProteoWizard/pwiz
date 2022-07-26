@@ -156,7 +156,7 @@ namespace pwiz.SkylineTest
 
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.
