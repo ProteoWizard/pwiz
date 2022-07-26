@@ -150,8 +150,8 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
-    <Compile Include="ProtocolBuffers\AlternativeProtocolBufferFormatsTest.cs" />
-    <Compile Include="ProtocolBuffers\GeneratedCode\AlternativeFormats.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
+    <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
@@ -331,7 +331,7 @@
     <EmbeddedResource Include="Study7_0-7.sky" />
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
     <None Include="ProtocolBuffers\generatecode.bat" />
-    <None Include="ProtocolBuffers\AlternativeFormats.proto" />
+    <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
