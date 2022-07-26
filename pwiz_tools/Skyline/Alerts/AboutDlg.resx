@@ -214,7 +214,7 @@
     <value>4</value>
   </data>
   <data name="labelSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline (64-bit : developer build) 19.0.0.000 (abc123456)</value>
+    <value>Skyline (64-bit : developer build) 22.0.0.000 (abc123456)</value>
   </data>
   <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
     <value>labelSoftwareVersion</value>
