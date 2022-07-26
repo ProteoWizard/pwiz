@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -1458,6 +1459,89 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(0, expectedStandards.Count);
             Assert.AreEqual(0, expectedLibrary.Count);
+        }
+    }
+
+    [TestClass]
+    public class CiRTTest : AbstractFunctionalTestEx
+    {
+        [TestMethod]
+        public void CiRTFunctionalTest()
+        {
+            TestFilesZip = @"TestFunctional\CiRTTest.zip";
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            // Standards will be the first 20 CiRT peptides that are not in the short CiRT set.
+            var standards = IrtStandard.CIRT.Peptides.Where(pep => !IrtStandard.CIRT_SHORT.Contains(pep.ModifiedTarget))
+                .Take(20).ToArray();
+            const int numTransitions = 3;
+
+            // Add iRT calculator.
+            RunDlg<EditIrtCalcDlg>(peptideSettings.AddCalculator, dlg =>
+            {
+                dlg.CalcName = "CiRT Test Calculator";
+                dlg.CreateDatabase(testFilesDir.GetTestPath("CiRT_Test.irtdb"));
+
+                dlg.StandardPeptides = standards;
+
+                dlg.OkDialog();
+            });
+
+            // Add the iRT standards to the document.
+            RunDlg<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog, dlg =>
+            {
+                dlg.NumTransitions = numTransitions;
+                dlg.BtnYesClick();
+            });
+
+            WaitForCondition(() => SkylineWindow.Document.Peptides.Any());
+
+            // Check that the document contains the standards.
+            var doc = SkylineWindow.Document;
+            Assert.AreEqual(standards.Length, doc.PeptideCount);
+            var docTargets = new TargetMap<PeptideDocNode>(doc.Peptides.Select(pep =>
+                new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+            Assert.IsTrue(standards.All(pep => docTargets.ContainsKey(pep.ModifiedTarget)));
+
+            // Compare the added standards to the reference CiRT document.
+            var refDoc = (SrmDocument)(new XmlSerializer(typeof(SrmDocument))).Deserialize(IrtStandard.CIRT.GetReader());
+            Assert.AreEqual(IrtStandard.CIRT.Peptides.Count, refDoc.PeptideCount);
+            var refDocTargets = new TargetMap<PeptideDocNode>(refDoc.Peptides.Select(pep =>
+                new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+            foreach (var pep in docTargets)
+            {
+                var target = pep.Key;
+                var nodePep = pep.Value;
+
+                Assert.IsTrue(refDocTargets.TryGetValue(target, out var refNodePep));
+
+                // Check precursors.
+                var nodeTranGroups = nodePep.TransitionGroups.ToArray();
+                var refNodeTranGroups = refNodePep.TransitionGroups.ToArray();
+                Assert.AreEqual(refNodeTranGroups.Length, nodeTranGroups.Length);
+                for (var i = 0; i < nodeTranGroups.Length; i++)
+                {
+                    // Check transitions.
+                    var nodeTranGroup = nodeTranGroups[i];
+                    var refNodeTranGroup = refNodeTranGroups[i];
+
+                    Assert.IsTrue(refNodeTranGroup.Transitions.All(nodeTran => nodeTran.HasLibInfo));
+                    var expectedTransitions = refNodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.LibInfo.Rank)
+                        .Take(numTransitions).Select(nodeTran => nodeTran.FragmentIonName).ToHashSet();
+
+                    Assert.AreEqual(expectedTransitions.Count, nodeTranGroup.TransitionCount);
+                    Assert.IsTrue(nodeTranGroup.Transitions.All(nodeTran => expectedTransitions.Contains(nodeTran.FragmentIonName)));
+                }
+            }
+
+            RunUI(() => SkylineWindow.SaveDocument(testFilesDir.GetTestPath("CiRT_Test.sky")));
         }
     }
 }

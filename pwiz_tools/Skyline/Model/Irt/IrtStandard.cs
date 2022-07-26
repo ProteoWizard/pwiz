@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Model.Irt
         public static IrtStandard WhichStandard(IEnumerable<Target> peptides)
         {
             var list = peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList();
-            return ALL.FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
+            return ALL.Append(CIRT).FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
         }
 
         public IrtStandard ChangePeptides(IEnumerable<DbIrtPeptide> peptides)

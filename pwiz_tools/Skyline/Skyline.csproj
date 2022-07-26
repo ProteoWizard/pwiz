@@ -3409,7 +3409,7 @@
     <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Model\Irt\StandardsDocuments\CiRT_all.sky" />
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT_all.sky" />
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="Resources\Locked.bmp" />
