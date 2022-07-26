@@ -565,7 +565,7 @@
     <value>gridViewStandard</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.474, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewStandard.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -640,7 +640,7 @@
     <value>gridViewLibrary</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=21.2.1.474, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -805,7 +805,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.474, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>
@@ -841,7 +841,7 @@
     <value>columnStandardSequence</value>
   </data>
   <data name="&gt;&gt;columnStandardSequence.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=21.2.1.474, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnStandardIrt.Name" xml:space="preserve">
     <value>columnStandardIrt</value>
@@ -853,7 +853,7 @@
     <value>columnLibrarySequence</value>
   </data>
   <data name="&gt;&gt;columnLibrarySequence.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetColumn, Skyline-daily, Version=21.2.1.474, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;columnLibraryIrt.Name" xml:space="preserve">
     <value>columnLibraryIrt</value>
@@ -865,6 +865,6 @@
     <value>EditIrtCalcDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.474, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
