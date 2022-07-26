@@ -594,7 +594,7 @@ namespace pwiz.Skyline.Model.Irt
             // Minimize document to only the peptides we need
             var minimalPeptides = standards.ToHashSet();
 
-            var oldPeptides = new Dictionary<Target, PeptideDocNode>();
+            var addPeptides = new Dictionary<Target, PeptideDocNode>();
             if (!string.IsNullOrEmpty(oldXml))
             {
                 try
@@ -602,7 +602,8 @@ namespace pwiz.Skyline.Model.Irt
                     using (var reader = new StringReader(oldXml))
                     {
                         var oldDoc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
-                        oldPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)).ToDictionary(pep => pep.Target, pep => pep);
+                        addPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.ModifiedTarget))
+                            .ToDictionary(pep => pep.ModifiedTarget, pep => pep);
                     }
                 }
                 catch
@@ -611,23 +612,16 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
 
-            var addPeptides = new List<PeptideDocNode>();
-            foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)))
+            foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.ModifiedTarget)))
             {
-                if (oldPeptides.TryGetValue(nodePep.Target, out var nodePepOld))
-                {
-                    addPeptides.Add(nodePep.Merge(nodePepOld));
-                    oldPeptides.Remove(nodePep.Target);
-                }
-                else
-                {
-                    addPeptides.Add(nodePep);
-                }
+                var addPep = nodePep;
+                if (addPeptides.TryGetValue(nodePep.ModifiedTarget, out var existing))
+                    addPep = addPep.Merge(existing);
+                addPeptides[nodePep.ModifiedTarget] = nodePep.Merge(addPep);
             }
-            addPeptides.AddRange(oldPeptides.Values);
 
             var peptides = new List<PeptideDocNode>();
-            foreach (var nodePep in addPeptides)
+            foreach (var nodePep in addPeptides.Values)
             {
                 var precursors = new List<DocNode>();
                 foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
