@@ -125,7 +125,7 @@
     <value>databoundGridControl</value>
   </data>
   <data name="&gt;&gt;databoundGridControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline-daily, Version=21.2.1.420, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;databoundGridControl.Parent" xml:space="preserve">
     <value>$this</value>
@@ -152,12 +152,12 @@
     <value>ModeUIExtender</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.420, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CandidatePeakForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline-daily, Version=21.2.1.420, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
