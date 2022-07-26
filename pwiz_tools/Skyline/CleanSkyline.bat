@@ -18,6 +18,7 @@ IF EXIST EULA.MSFileReader del /q EULA.MSFileReader
 IF EXIST Interop.EDAL.SxS.manifest del /q Interop.EDAL.SxS.manifest
 IF EXIST MassLynxRaw.dll del /q MassLynxRaw.dll
 IF EXIST Skyline.sln.cache del /q Skyline.sln.cache
+IF EXIST Model\Prosit\Config\PrositConfig.xml del /q Model\Prosit\Config\PrositConfig.xml
 IF EXIST Test\bin rmdir /s /q Test\bin
 IF EXIST Test\obj rmdir /s /q Test\obj
 IF EXIST TestA\bin rmdir /s /q TestA\bin

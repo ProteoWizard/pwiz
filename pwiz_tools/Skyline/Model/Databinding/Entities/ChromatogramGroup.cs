@@ -6,10 +6,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class ChromatogramGroup : SkylineObject
     {
         private readonly Lazy<ChromatogramGroupInfo> _chromatogramGroupInfo;
-        public ChromatogramGroup(PrecursorResult precursorResult) : base(precursorResult.DataSchema)
+        public ChromatogramGroup(PrecursorResult precursorResult)
         {
             PrecursorResult = precursorResult;
             _chromatogramGroupInfo = new Lazy<ChromatogramGroupInfo>(()=>GetChromatogramGroup(false));
+        }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return PrecursorResult.DataSchema;
         }
 
         public PrecursorResult PrecursorResult { get; private set; }

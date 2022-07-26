@@ -681,6 +681,12 @@ precursor.</value>
   <data name="Median">
     <value>Median</value>
   </data>
+  <data name="MedianPeakArea">
+    <value>The median transition peak area of transition results in the particular result file.
+This median peak area is used when the normalization method is "Equalize Medians".
+If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor's label type is an internal standard.
+If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas.</value>
+  </data>
   <data name="Mean">
     <value>Mean</value>
   </data>
@@ -841,6 +847,10 @@ The Molecule List Abundance will be blank if any transitions have missing values
   </data>
   <data name="NextAa">
     <value>Next Aa</value>
+  </data>
+  <data name="NormalizationDivisor">
+    <value>Number which observed values are divided by when using the default normalization method.
+The default normalization method is specified on the Quantification tab of the Peptide or Molecule settings dialog.</value>
   </data>
   <data name="NormalizationMethod">
     <value>Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons.</value>

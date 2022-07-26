@@ -2939,8 +2939,7 @@ namespace pwiz.Skyline.Properties
                         25,  // MaxPeptideLength
                         new PeptideExcludeRegex[0], // Exclusions
                         true, // AutoSelect
-                        PeptideFilter.PeptideUniquenessConstraint.none, // Peptide uniqueness constraint measured against background proteome
-                        null
+                        PeptideFilter.PeptideUniquenessConstraint.none // Peptide uniqueness constraint measured against background proteome
                     ),
                     new PeptideLibraries
                     (
@@ -2960,7 +2959,8 @@ namespace pwiz.Skyline.Properties
                         new[] {IsotopeLabelType.heavy}
                     ),
                     new PeptideIntegration(null), 
-                    BackgroundProteome.NONE
+                    BackgroundProteome.NONE,
+                    ProteinAssociation.ParsimonySettings.DEFAULT
                 ),
                 new TransitionSettings
                 (
