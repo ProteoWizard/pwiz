@@ -158,9 +158,12 @@ namespace pwiz.SkylineTestTutorial
                 string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
                 var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
                 WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for associate proteins to complete
+                Assert.IsTrue(colDlg.checkBoxAssociateProteins.Checked);
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
                 OkDialog(colDlg, colDlg.OkDialog);
             }
+
+            Assert.IsTrue(SkylineWindow.Document.Children.All(c => c.Id is FastaSequence));
 
             RunUI(() =>
             {
