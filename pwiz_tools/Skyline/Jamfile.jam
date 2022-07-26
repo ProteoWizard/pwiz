@@ -435,7 +435,25 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     }
 
 
-    alias InspectCode
+    make InspectCode
+        : # sources
+        : # actions
+            @do_Inspect_Code
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <assembly>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler
+            <conditional>@build-location
+            <dependency>Skyline.exe
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<runtime-debugging>off/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
     ;
         
     
@@ -467,13 +485,21 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         
     
         
-    alias Test
+    make Test
+        : # sources
+        : # actions
+            @do_skyline_test
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
         ;
     
     if [ modules.peek : WIX ]
     {
-        #alias TestData : Executables/Installer//Test ;
-        alias TestData ;
+        alias TestData : Executables/Installer//Test ;
     }
     else
     {
@@ -490,7 +516,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             ;
     }
 
-    alias TestPass1Subset
+    make TestPass1Subset
+        : # sources
+        : # actions
+            @do_skyline_test_pass1_subset
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
         ;
 
     make TestFunctional
@@ -518,7 +553,16 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
         ;
 
-    alias SkylineTester.zip
+    make SkylineTester.zip
+        : # sources
+        : # actions
+            @create_skyline_zips
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
         ;
 
     explicit InspectCode ;
