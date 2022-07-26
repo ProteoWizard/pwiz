@@ -173,6 +173,7 @@
     <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
@@ -180,6 +181,7 @@
     <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />

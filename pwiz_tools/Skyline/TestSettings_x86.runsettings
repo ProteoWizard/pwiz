@@ -7,11 +7,15 @@
     <!-- [x86] | x64 -->
     <TargetPlatform>x86</TargetPlatform>  
   
-    <!-- Framework35 | [Framework40] | Framework45 -->
-    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
+    <!-- Framework35 | [Framework40] | Framework45 
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion> -->
 
   </RunConfiguration>
-  
+
+  <TestRunParameters>
+    <Parameter name="CustomTestResultsDirectory" value=".\TestResults" />
+  </TestRunParameters>
+
   <MSTest>
     <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
     <CaptureTraceOutput>false</CaptureTraceOutput>
