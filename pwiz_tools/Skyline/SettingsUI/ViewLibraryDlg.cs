@@ -50,6 +50,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
+using Array = System.Array;
 using Label = System.Windows.Forms.Label;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
@@ -104,6 +105,8 @@ namespace pwiz.Skyline.SettingsUI
         private bool _hasChromatograms;
         private bool _hasScores;
         private readonly GraphHelper _graphHelper;
+        private string _originalFileLabelText;
+        private string _sourceFile;
 
         private ModFontHolder ModFonts { get; set; }
 
@@ -125,6 +128,8 @@ namespace pwiz.Skyline.SettingsUI
         public bool HasPeptides { get; private set;  }
 
         public int PeptideDisplayCount { get { return listPeptide.Items.Count; } }
+
+
 
         /// <summary>
         /// Constructor for the View Library dialog.
@@ -153,6 +158,7 @@ namespace pwiz.Skyline.SettingsUI
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
+            _originalFileLabelText = labelFilename.Text;
             _peptideImg = Resources.PeptideLib;
             _moleculeImg = Resources.MoleculeLib;
 
@@ -426,9 +432,13 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             _peptides = new ViewLibraryPepInfoList(pepInfos, _matcher, comboFilterCategory.SelectedText, out var allPeptides);
-            MoleculeLabel.Left = PeptideLabel.Left;
             PeptideLabel.Visible = HasPeptides = allPeptides;
-            MoleculeLabel.Visible = HasSmallMolecules = !allPeptides;
+            MoleculeLabel.Visible = HasSmallMolecules = !PeptideLabel.Visible;
+            if (MoleculeLabel.Visible)
+            {
+                MoleculeLabel.Left = PeptideLabel.Left;
+                MoleculeLabel.TabIndex = PeptideLabel.TabIndex;
+            }
             InitializeMatchCategoryComboBox();
             _currentRange = _peptides.Filter(null, comboFilterCategory.SelectedItem.ToString());
         }
@@ -492,6 +502,7 @@ namespace pwiz.Skyline.SettingsUI
             // Enable the Next link if we have more than one page
             NextLink.Enabled = _pageInfo.Items > _pageInfo.PageSize;
         }
+
 
         /// <summary>
         /// Updates the status area showing which peptides are being shown.
@@ -633,6 +644,44 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+
+        public class ComboOption : IComparable<ComboOption>
+        {
+            public SpectrumInfoLibrary SpectrumInfoLibrary { get; }
+            public string OptionName { get; }
+            public ComboOption(SpectrumInfoLibrary spectrumInfoLib)
+            {
+                SpectrumInfoLibrary = spectrumInfoLib;
+                OptionName = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, SpectrumInfoLibrary.FileName,
+                    SpectrumInfoLibrary.RetentionTime);
+            }
+
+            public override string ToString()
+            {
+                return OptionName;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return SpectrumInfoLibrary.Equals(((ComboOption)obj).SpectrumInfoLibrary);
+            }
+
+            public override int GetHashCode()
+            {
+                return SpectrumInfoLibrary.GetHashCode();
+            }
+
+            public int CompareTo(ComboOption obj)
+            {
+                // Compare with culture-specific comparison because these are file names
+                if (obj == null) return 1;
+                else return string.Compare(OptionName, obj.OptionName, StringComparison.CurrentCultureIgnoreCase);
+            }
+        }
+
         /// <summary>
         /// Updates the spectrum graph using the currently selected peptide.
         /// </summary>
@@ -650,6 +699,8 @@ namespace pwiz.Skyline.SettingsUI
 
             labelRT.Text = string.Empty;
             labelFilename.Text = string.Empty;
+            _sourceFile = null;
+            bool showComboRedundantSpectra = false; // Careful not to actually hide this responding to a selection change
 
             // Check for appropriate spectrum to load
             bool available = false;
@@ -695,8 +746,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (-1 != index)
                 {
-                    SpectrumPeaksInfo spectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out spectrum))
+                    SpectrumPeaksInfo loadedSpectrum;
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out loadedSpectrum))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
 
@@ -738,8 +789,26 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
-                        var spectrumInfo = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
-                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrum,
+                        // Get all redundant spectrum for the selected peptide, add them to comboRedundantSpectra
+                        var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.all);
+                        var newDropDownOptions = new List<ComboOption>(redundantSpectra.Select(s => new ComboOption(s)));
+                        SpectrumInfoLibrary spectrumInfo;
+                        if (newDropDownOptions.Count > 0)
+                        {
+                            // Get the spectrum to be graphed from the combo box and fill the combo box
+                            // if the selected peptide has changed
+                            showComboRedundantSpectra = newDropDownOptions.Count > 1;
+                            spectrumInfo = SetupRedundantSpectraCombo(newDropDownOptions);
+                        }
+                        else
+                        {
+                            // Some older libraries don't support getting redundant spectra, so fall
+                            // back to asking for the best spectrum.
+                            spectrumInfo = _selectedLibrary
+                                .GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
+                        }
+
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
                                                                           transitionGroupDocNode.TransitionGroup.LabelType,
                                                                           transitionGroupDocNode,
                                                                           settings,
@@ -773,23 +842,26 @@ namespace pwiz.Skyline.SettingsUI
 
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
+                        _sourceFile = spectrumInfo?.FileName;
                         // Update file and retention time indicators
-                        var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
-                            IsotopeLabelType.light, LibraryRedundancy.best).FirstOrDefault();
-                        if (bestSpectrum != null)
+                        if (spectrumInfo != null)
                         {
-                            double? rt = libraryChromGroup?.RetentionTime ?? bestSpectrum.RetentionTime;
-                            string filename = bestSpectrum.FileName;
+                            double? rt = libraryChromGroup?.RetentionTime ?? spectrumInfo.RetentionTime;
+                            string filename = spectrumInfo.FileName;
 
-                            if (!string.IsNullOrEmpty(filename))
+                            if (showComboRedundantSpectra)
                             {
-                                labelFilename.Text = Resources.ViewLibraryDlg_UpdateUI_File + COLON_SEP + filename;
+                                labelFilename.Text = _originalFileLabelText;
+                            }
+                            else
+                            {
+                                labelFilename.Text = string.Format(Resources.ViewLibraryDlg_UpdateUI_File, filename);
                             }
                             if (rt.HasValue)
                             {
                                 labelRT.Text = Resources.ViewLibraryDlg_UpdateUI_RT + COLON_SEP + rt.Value.ToString(Formats.RETENTION_TIME);
                             }
-                            IonMobilityAndCCS dt = bestSpectrum.IonMobilityInfo;
+                            IonMobilityAndCCS dt = spectrumInfo.IonMobilityInfo;
                             if (dt != null && !dt.IsEmpty)
                             {
                                 var ccsText = string.Empty;
@@ -864,6 +936,10 @@ namespace pwiz.Skyline.SettingsUI
                 SetGraphItem(new UnavailableMSGraphItem());
             }
 
+            // Be sure to only change visibility of this combo box when necessary or it will lose
+            // focus when the user is changing its selection, which makes it impossible to use arrow keys
+            comboRedundantSpectra.Visible = showComboRedundantSpectra;
+
             btnAIons.Checked = btnAIons.Enabled && Settings.Default.ShowAIons;
             btnBIons.Checked = btnBIons.Enabled && Settings.Default.ShowBIons;
             btnCIons.Checked = btnCIons.Enabled && Settings.Default.ShowCIons;
@@ -874,6 +950,41 @@ namespace pwiz.Skyline.SettingsUI
             charge1Button.Checked = charge1Button.Enabled && Settings.Default.ShowCharge1;
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
         }
+
+        /// <summary>
+        /// Sets up the redundant dropdown menu and selects the spectrum to display on the graph
+        /// </summary>
+        private SpectrumInfoLibrary SetupRedundantSpectraCombo(List<ComboOption> options)
+        {
+            if (options.Count == 1)
+                return options.First().SpectrumInfoLibrary;
+            if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
+            {
+                return ((ComboOption)comboRedundantSpectra.SelectedItem).SpectrumInfoLibrary;
+            }
+            else
+            {
+                ComboOption bestOption = null;
+
+                comboRedundantSpectra.Items.Clear();
+                options.Sort();
+                foreach (var opt in options)
+                {
+                    comboRedundantSpectra.Items.Add(opt);
+                    if (opt.SpectrumInfoLibrary.IsBest)
+                    {
+                        // Sets the selected dropdown item to what is graphed without updating the UI.
+                        comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
+                        comboRedundantSpectra.SelectedItem = opt;
+                        comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
+                        bestOption = opt;
+                    }
+                }
+                ComboHelper.AutoSizeDropDown(comboRedundantSpectra);
+                return bestOption?.SpectrumInfoLibrary;
+            }
+        }
+
 
         private void SetGraphItem(IMSGraphItemInfo item)
         {
@@ -2186,7 +2297,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public string SourceFile
         {
-            get { return GetLabelValue(labelFilename); }
+            get { return _sourceFile; }
         }
 
         public double RetentionTime
@@ -2249,6 +2360,16 @@ namespace pwiz.Skyline.SettingsUI
         /// UI thread, it is very difficult to cancel otherwise during a test.
         /// </summary>
         public bool IsUpdateCanceled { get; set; }
+
+        public bool IsVisibleRedundantSpectraBox
+        {
+            get { return comboRedundantSpectra.Visible; }
+        }
+
+        public ComboBox RedundantComboBox
+        {
+            get { return comboRedundantSpectra; }
+        }
 
         #endregion
 
@@ -2770,6 +2891,11 @@ namespace pwiz.Skyline.SettingsUI
         private void showChromatogramsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             _showChromatograms = !_showChromatograms;
+            UpdateUI();
+        }
+
+        private void redundantSpectrum_changed(object sender, EventArgs e)
+        {
             UpdateUI();
         }
     }

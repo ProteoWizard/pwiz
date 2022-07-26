@@ -97,7 +97,7 @@ namespace TestRunner
         {
             get
             {
-                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + " "));
+                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + "=" + ArgAsString(arg) + " "));
             }
         }
 
@@ -115,6 +115,11 @@ namespace TestRunner
         public string SearchArgs(string argList)
         {
             return argList.Split(';').FirstOrDefault(HasArg);
+        }
+
+        public void SetArg(string argName, string value)
+        {
+            _args[argName] = value;
         }
     }
 }

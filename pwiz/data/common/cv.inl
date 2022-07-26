@@ -98,6 +98,7 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id)
 
 PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char* id)
 {
+    const map<CVID, CVTermInfo>& infoMap = CVTermData::instance->infoMap();
     if (id)
         for (int o=0;o<oboPrefixesSize_;++o)
         {
@@ -108,16 +109,17 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char* id)
             if ((!*op) && (*ip++==':')) 
             {   // id has form "FOO:nnnnnn", and ip points at "nnnnnn"
                 CVID cvid = (CVID)(o*enumBlockSize_ + strtoul(ip,NULL,10));
-                const map<CVID, CVTermInfo>& infoMap = CVTermData::instance->infoMap();
                 map<CVID, CVTermInfo>::const_iterator find = infoMap.find(cvid);
                 if (find == infoMap.end())
                 {
+                    if (bal::equals("UNIMOD", oboPrefixes_[o]))
+                        return infoMap.find(CVID_Unknown)->second;
                     throw out_of_range("Invalid cvParam accession \"" + lexical_cast<string>(cvid) + "\"");
                 }
                 return find->second;
             }
         }
-    return CVTermData::instance->infoMap().find(CVID_Unknown)->second;
+    return infoMap.find(CVID_Unknown)->second;
 }
 
 

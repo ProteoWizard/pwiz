@@ -110,6 +110,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Q_Exactive_Plus:           return MS_Q_Exactive_Plus;
         case InstrumentModelType_Q_Exactive_HF:             return MS_Q_Exactive_HF;
         case InstrumentModelType_Q_Exactive_HF_X:           return MS_Q_Exactive_HF_X;
+        case InstrumentModelType_Q_Exactive_UHMR:           return MS_Q_Exactive_UHMR;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
         case InstrumentModelType_Orbitrap_Fusion:           return MS_Orbitrap_Fusion;
@@ -227,6 +228,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_HF_X:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:

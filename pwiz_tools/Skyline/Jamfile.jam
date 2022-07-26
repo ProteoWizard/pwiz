@@ -21,11 +21,12 @@
 import modules generate-version ;
 if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-    import path feature errors regex ;
+    import path feature errors regex notfile ;
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
     path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
     path-constant PFX_PATH : "$(SKYLINE_PATH)/University of Washington (MacCoss Lab).pfx" ;
+    path-constant NUGET_PATH : "C:/Program Files/Microsoft Visual Studio/2022/Community/dotnet/runtime/dotnet.exe" ;
 
     local ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : [ modules.peek : JAMDATE ] ] ;
     local year_2digit = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(ymd) ] ;
@@ -60,7 +61,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     # generate AssemblyInfo.cs for executables
     generate-skyline-AssemblyInfo.cs "Skyline" : "Targeted Mass Spec Environment" : "Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineCmd" : "Command-line access to Skyline" : "SkylineCmd/Properties/AssemblyInfo.cs" ;
-	generate-skyline-AssemblyInfo.cs "SkylineBatch" : "Batch Processing with Skyline" : "Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs" ;
+    generate-skyline-AssemblyInfo.cs "SkylineBatch" : "Batch Processing with Skyline" : "Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs" ;
     #generate-skyline-AssemblyInfo.cs "SkylineRunner" : "Command-line access to Skyline" : "SkylineRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "TestRunner" : "Command-line testing tool" : "TestRunner/Properties/AssemblyInfo.cs" ;
     generate-skyline-AssemblyInfo.cs "SkylineTester" : "Testing GUI" : "SkylineTester/Properties/AssemblyInfo.cs" ;
@@ -71,6 +72,17 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     if --teamcity-test-decoration in [ modules.peek : ARGV ]
     {
         .teamcity-test-decoration = "offscreen=0 teamcitytestdecoration=1" ;
+    }
+
+    rule do_nuget_restore ( targets + : source * : properties * )
+    {
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script "<toolset-msvc:version>14.3" ] ;
+    }
+
+    actions do_nuget_restore
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        "$(NUGET_PATH)" restore $(SKYLINE_PATH)/Skyline.sln
     }
 
     rule build-properties ( targets + : sources * : properties * )
@@ -109,6 +121,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
         MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
+        WORKERS on $(targets) = [ CALC [ modules.peek : NUMBER_OF_CORES ] - 2 ] ;
     }
     
     rule do_skyline_build ( targets + : sources * : properties * )
@@ -250,9 +263,15 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestFunctional /t:TestConnected /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
 
-        echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-        $(OUTPUT_PATH)/TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
-        set status=%ERRORLEVEL%
+        REM docker > nul 2>&1
+        REM if ERRORLEVEL 1 (
+            echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
+            $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
+            set status=%ERRORLEVEL%
+        REM ) ELSE (
+        REM    echo Functional testing Skyline in $(CONFIGURATION:L) configuration with $(WORKERS) Docker workers...
+        REM     FOR /L %I IN (1,1,10) DO $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log parallelmode=server workercount=$(WORKERS) keepworkerlogs=1 waitforworkers=1 buildcheck=1 language=en loop=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
+        REM )
         exit %status%
     }
     
@@ -356,6 +375,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     }
     
 
+    notfile NugetRestore : @do_nuget_restore ;
+
     # this is really the main action for building Skyline and leaving Skyline.exe intact, but it is explicit 
     make Skyline.exe
         : # sources
@@ -371,6 +392,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <assembly>TestDiagnostics//TestDiagnostics
             <conditional>@build-location
             <conditional>@install-vendor-api-dependencies
+            <dependency>NugetRestore
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)

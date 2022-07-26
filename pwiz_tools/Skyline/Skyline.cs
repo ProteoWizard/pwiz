@@ -933,6 +933,7 @@ namespace pwiz.Skyline
             private readonly IdentityPath _treeSelection;
             private readonly IList<IdentityPath> _treeSelections;
             private readonly string _resultName;
+            private IDictionary<DataGridId, DataboundGridForm.UndoState> _gridStates;
 
             public UndoState(SkylineWindow window)
             {
@@ -941,16 +942,18 @@ namespace pwiz.Skyline
                 _treeSelections = window.SequenceTree.SelectedPaths;
                 _treeSelection = window.SequenceTree.SelectedPath;
                 _resultName = ResultNameCurrent;
+                _gridStates = DataboundGridForm.GetUndoStates();
             }
 
             private UndoState(SkylineWindow window, SrmDocument document, IList<IdentityPath> treeSelections,
-                IdentityPath treeSelection, string resultName)
+                IdentityPath treeSelection, string resultName, IDictionary<DataGridId, DataboundGridForm.UndoState> gridStates)
             {
                 _window = window;
                 _document = document;
                 _treeSelections = treeSelections;
                 _treeSelection = treeSelection;
                 _resultName = resultName;
+                _gridStates = gridStates;
             }
 
             private string ResultNameCurrent
@@ -973,6 +976,8 @@ namespace pwiz.Skyline
                 // Get results name
                 string resultName = ResultNameCurrent;
 
+                var gridStates = DataboundGridForm.GetUndoStates();
+
                 // Restore document state
                 SrmDocument docReplaced = _window.RestoreDocument(_document);
 
@@ -988,9 +993,12 @@ namespace pwiz.Skyline
                 if (_resultName != null)
                     _window.ComboResults.SelectedItem = _resultName;
 
+                if (_gridStates != null)
+                    DataboundGridForm.RestoreUndoStates(_gridStates);
+
                 // Return a record that can be used to restore back to the state
                 // before this action.
-                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName);
+                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName, gridStates);
             }
         }
 
@@ -1092,6 +1100,24 @@ namespace pwiz.Skyline
             
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
+
+            if (_graphFullScan != null)
+            {
+                var chargeSelector = _graphFullScan.GetHostedControl<ChargeSelectionPanel>();
+                if(chargeSelector != null)
+                {
+                    chargeSelector.HostedControl.OnCharge1Changed -= ShowCharge1;
+                    chargeSelector.HostedControl.OnCharge2Changed -= ShowCharge2;
+                    chargeSelector.HostedControl.OnCharge3Changed -= ShowCharge3;
+                    chargeSelector.HostedControl.OnCharge4Changed -= ShowCharge4;
+                }
+                var ionTypeSelector = _graphFullScan.GetHostedControl<IonTypeSelectionPanel>();
+                if (ionTypeSelector != null)
+                {
+                    ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                    ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
+                }
+            }
         }
 
         protected override void OnClosed(EventArgs e)
