@@ -26,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -214,7 +215,7 @@ namespace pwiz.Skyline.Model
         {
             SpectrumHeaderInfo libInfo = null;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
-            GetLibraryInfo(settings, mods, useFilter, ref libInfo, transitionRanks);
+            GetLibraryInfo(settings, mods, false, useFilter, ref libInfo, transitionRanks);
 
             var listChoices = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in GetTransitions(settings, mods,
@@ -921,6 +922,9 @@ namespace pwiz.Skyline.Model
 
             bool autoSelectTransitions = diff.DiffTransitions &&
                                          settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren;
+            var preserveLibInfo =
+                settingsNew.PeptideSettings.Prediction.RetentionTime?.Calculator is RCalcIrt irt &&
+                (!irt.IsUsable || irt.IsStandard(nodePep.ModifiedTarget));
 
             if (!IsDecoy && (diff.DiffTransitionGroupProps || diff.DiffTransitions || diff.DiffTransitionProps))
             {
@@ -932,7 +936,7 @@ namespace pwiz.Skyline.Model
                 //       Otherwise, this can cause a lot of unnecessary work loading MS1 filtering documents.
                 // If transitions are not changing, then it is necessary to get all rankings,
                 // since any group may contain reranked transitions
-                GetLibraryInfo(settingsNew, mods, autoSelectTransitions, ref libInfo, transitionRanksLib);
+                GetLibraryInfo(settingsNew, mods, preserveLibInfo, autoSelectTransitions, ref libInfo, transitionRanksLib);
             }
 
             CrosslinkBuilder crosslinkBuilder = null;
@@ -1066,6 +1070,8 @@ namespace pwiz.Skyline.Model
                         var massH = settingsNew.RecalculateTransitionMass(mods, nodeTransition, isotopeDist);
                         var quantInfo = TransitionDocNode.TransitionQuantInfo.GetTransitionQuantInfo(nodeTransition.ComplexFragmentIon, isotopeDist,
                             Transition.CalcMass(massH, losses), transitionRanks).UseValuesFrom(nodeTransition.QuantInfo);
+                        if (quantInfo.LibInfo == null && nodeTransition.LibInfo != null && preserveLibInfo)
+                            quantInfo = quantInfo.ChangeLibInfo(nodeTransition.LibInfo);
                         if (!ReferenceEquals(quantInfo.LibInfo, nodeTransition.LibInfo))
                             dotProductChange = true;
 
@@ -3112,15 +3118,16 @@ namespace pwiz.Skyline.Model
 
         #endregion
 
-        public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool useFilter,
-            ref SpectrumHeaderInfo libInfo,
-            Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+        public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool preserveLibInfo, bool useFilter,
+            ref SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
-            PeptideLibraries libraries = settings.PeptideSettings.Libraries;
+            var libraries = settings.PeptideSettings.Libraries;
+            var noLibInfo = preserveLibInfo ? libInfo : null;
+
             // No libraries means no library info
             if (!libraries.HasLibraries)
             {
-                libInfo = null;
+                libInfo = noLibInfo;
                 return;
             }
             // If not loaded, leave everything alone, and let the update
@@ -3128,10 +3135,13 @@ namespace pwiz.Skyline.Model
             if (!libraries.IsLoaded)
                 return;
 
-            IsotopeLabelType labelType;
-            if (!settings.TryGetLibInfo(TransitionGroup.Peptide, TransitionGroup.PrecursorAdduct, mods, out labelType, out libInfo))
-                libInfo = null;                
-            else if (transitionRanks != null)
+            if (!settings.TryGetLibInfo(TransitionGroup.Peptide, TransitionGroup.PrecursorAdduct, mods, out var labelType, out libInfo))
+            {
+                libInfo = noLibInfo;
+                return;
+            }
+
+            if (transitionRanks != null)
             {
                 try
                 {

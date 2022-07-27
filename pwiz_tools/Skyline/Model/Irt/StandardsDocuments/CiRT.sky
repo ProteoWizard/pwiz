@@ -69,6 +69,7 @@
           <precursor_mz>421.758352</precursor_mz>
           <product_mz>743.441014</product_mz>
           <collision_energy>15.557751</collision_energy>
+          <transition_lib_info rank="4" intensity="3406.7" />
         </transition>
       </precursor>
     </peptide>
@@ -379,30 +380,31 @@
           <precursor_mz>441.276378</precursor_mz>
           <product_mz>501.303124</product_mz>
           <collision_energy>16.143291</collision_energy>
-          <transition_lib_info rank="1" intensity="2377.4" />
+          <transition_lib_info rank="2" intensity="2377.4" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="613.379912" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
           <precursor_mz>441.276378</precursor_mz>
           <product_mz>614.387188</product_mz>
           <collision_energy>16.143291</collision_energy>
-          <transition_lib_info rank="2" intensity="1138.2" />
+          <transition_lib_info rank="3" intensity="1138.2" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="710.432676" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
           <precursor_mz>441.276378</precursor_mz>
           <product_mz>711.439952</product_mz>
           <collision_energy>16.143291</collision_energy>
-          <transition_lib_info rank="3" intensity="1117.3" />
+          <transition_lib_info rank="4" intensity="1117.3" />
         </transition>
         <transition fragment_type="b" fragment_ordinal="6" calc_neutral_mass="550.347883" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
           <precursor_mz>441.276378</precursor_mz>
           <product_mz>551.355159</product_mz>
           <collision_energy>16.143291</collision_energy>
-          <transition_lib_info rank="4" intensity="119.7" />
+          <transition_lib_info rank="5" intensity="119.7" />
         </transition>
         <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="767.454139" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
           <precursor_mz>441.276378</precursor_mz>
           <product_mz>768.461415</product_mz>
           <collision_energy>16.143291</collision_energy>
+          <transition_lib_info rank="1" intensity="2858.8" />
         </transition>
       </precursor>
     </peptide>

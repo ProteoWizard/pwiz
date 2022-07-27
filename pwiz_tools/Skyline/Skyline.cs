@@ -2296,7 +2296,7 @@ namespace pwiz.Skyline
                         var tranGroupList = new List<DocNode>();
                         foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                         {
-                            var transitions = nodeTranGroup.Transitions.Take(numTransitions).ToArray();
+                            var transitions = nodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.LibInfo?.Rank).Take(numTransitions).ToArray();
                             Array.Sort(transitions, TransitionGroup.CompareTransitions);
                             tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
                         }

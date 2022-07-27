@@ -161,6 +161,13 @@ namespace pwiz.Skyline.Model.Irt
             return ChooseRegressionPeptides(peptides, out _);
         }
 
+        public bool IsStandard(Target seq)
+        {
+            RequireUsable();
+
+            return _database.IsStandard(seq);
+        }
+
         public override double? ScoreSequence(Target seq)
         {
             return _database?.ScoreSequence(seq);
