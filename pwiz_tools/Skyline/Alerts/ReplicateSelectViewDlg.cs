@@ -26,6 +26,7 @@ namespace pwiz.Skyline.Alerts
             PopulateListView();
         }
 
+
         private void  PopulateListView()
         {
             List<string> repFiles = new List<string>(); //List of file paths
