@@ -30,12 +30,9 @@
         {
             this.label1 = new System.Windows.Forms.Label();
             this.listView = new System.Windows.Forms.ListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.LV_FilePath = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Btn_Accept = new System.Windows.Forms.Button();
             this.Btn_Cancel = new System.Windows.Forms.Button();
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // label1
@@ -54,10 +51,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listView.CheckBoxes = true;
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2,
-            this.LV_FilePath,
-            this.columnHeader4});
+            this.columnHeader3});
             this.listView.HideSelection = false;
             this.listView.Location = new System.Drawing.Point(12, 25);
             this.listView.Name = "listView";
@@ -65,25 +59,6 @@
             this.listView.TabIndex = 1;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Text = "Name";
-            this.columnHeader1.Width = 227;
-            // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Text = "Time since last edit";
-            this.columnHeader2.Width = 186;
-            // 
-            // LV_FilePath
-            // 
-            this.LV_FilePath.Text = "File Path";
-            this.LV_FilePath.Width = 252;
-            // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Text = "Id";
             // 
             // Btn_Accept
             // 
@@ -107,6 +82,11 @@
             this.Btn_Cancel.UseVisualStyleBackColor = true;
             this.Btn_Cancel.Click += new System.EventHandler(this.Btn_Cancel_Click);
             // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "File Path";
+            this.columnHeader3.Width = 559;
+            // 
             // ReplicateSelectViewDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -127,11 +107,8 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ListView listView;
-        private System.Windows.Forms.ColumnHeader columnHeader1;
-        private System.Windows.Forms.ColumnHeader columnHeader2;
-        private System.Windows.Forms.ColumnHeader LV_FilePath;
         private System.Windows.Forms.Button Btn_Accept;
         private System.Windows.Forms.Button Btn_Cancel;
-        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
     }
 }

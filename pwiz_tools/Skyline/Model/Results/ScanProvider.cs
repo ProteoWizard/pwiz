@@ -131,6 +131,20 @@ namespace pwiz.Skyline.Model.Results
             return tester.FindDataFilePath() != null;
         }
 
+        /// <summary>
+        /// Added variant to return file path if found
+        /// </summary>
+        /// <param name="docFilePath"></param>
+        /// <param name="dataFilePath"></param>
+        /// <param name="dataFileActualPath"></param>
+        /// <returns></returns>
+        public static bool FileExists(string docFilePath, MsDataFileUri dataFilePath, out string dataFileActualPath)
+        {
+            var tester = new ScanProvider(docFilePath, dataFilePath, ChromSource.unknown, null, null, null);
+            dataFileActualPath = tester.FindDataFilePath();
+            return dataFileActualPath != null;
+        }
+
         public bool Adopt(IScanProvider other)
         {
             if (!Equals(DocFilePath, other.DocFilePath) || !Equals(DataFilePath, other.DataFilePath))

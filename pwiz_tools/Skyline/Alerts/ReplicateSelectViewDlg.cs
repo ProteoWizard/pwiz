@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NHibernate.Criterion;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 
@@ -26,29 +28,32 @@ namespace pwiz.Skyline.Alerts
 
         private void  PopulateListView()
         {
-            List<string> repFiles = new List<string>();
+            List<string> repFiles = new List<string>(); //List of file paths
             if (_document.Settings.MeasuredResults != null)
             {
                 foreach (var a in _document.Settings.MeasuredResults.Chromatograms)
                 {
                     IEnumerable<ChromFileInfo> temp = a.MSDataFileInfos;
-                    //IEnumerable<ChromFileInfo> temp2 = a.MSDataFileInfos.GetEnumerator(MsDataFilePath);
 
                     foreach (ChromFileInfo b in temp)
                     {
-                        ListViewItem x = new ListViewItem(b.FilePath.GetFileName());
-                        x.SubItems.Add(b.FilePath.GetFileLastWriteTime().ToString());
-                        x.SubItems.Add(b.FilePath.GetFilePath());
-                        listView.Items.Add(x);
-                        repFiles.Add(b.FilePath.GetFileName());
+                        //Check for path validity
+                        if (ScanProvider.FileExists(Program.MainWindow.DocumentFilePath, b.FilePath, out string path))
+                        {
+                            repFiles.Add(path);
+                        }
                     }
                 }
+                repFiles.Distinct(); // Only keep unique paths
+                repFiles.Sort((x, y) => NaturalComparer.Compare(x, y)); // Natural Sort
+                
+                // Add to list view for selection
+                foreach (var a in repFiles)
+                {
+                    ListViewItem item = new ListViewItem(a);
+                    listView.Items.Add(item);
+                }
             }
-
-                //Testing
-            // Console.WriteLine("File Paths: \n");
-            // repFiles.ForEach(Console.WriteLine);
-            // Console.WriteLine("End \n");
         }
 
         private void Btn_Cancel_Click(object sender, EventArgs e)
@@ -62,13 +67,17 @@ namespace pwiz.Skyline.Alerts
             OkDialog();
         }
 
+        /// <summary>
+        /// Add all checked boxes to list
+        /// </summary>
         private void OkDialog()
         {
             _checkedRepList = new List<string>();
             foreach (ListViewItem a in listView.CheckedItems)
             {
-                _checkedRepList.Add(a.SubItems[2].Text); //Get the file path of each checked item
+                _checkedRepList.Add(a.Text); //Get the file path of each checked item
             }
+
 
             this.DialogResult = DialogResult.OK;
             this.Close();

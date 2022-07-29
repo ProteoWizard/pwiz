@@ -1276,7 +1276,7 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    longWaitDlg.PerformWork(this, 1000, sharing.Share);
+                    longWaitDlg.PerformWork(this, 1000, sharing.Share); // Added share type to pass  file Info
                     success = !longWaitDlg.IsCanceled;
                 }
                 return success;
