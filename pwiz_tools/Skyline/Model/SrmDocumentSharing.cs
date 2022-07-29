@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Ionic.Zip;
+using NHibernate.Mapping.ByCode;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -193,7 +194,9 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     if (ShareType.Complete)
-                        ShareComplete(zip);
+                        ShareComplete(zip, this.ShareType); //Include result files added
+
+
                     else
                         ShareMinimal(zip);
                 }
@@ -211,7 +214,7 @@ namespace pwiz.Skyline.Model
                    DocumentFormat.VERSION_4_13;
         }
 
-        private void ShareComplete(ZipFileShare zip)
+        private void ShareComplete(ZipFileShare zip, ShareType share) //Added include result files
         {
             // If complete sharing, just zip up existing files
             var pepSettings = Document.Settings.PeptideSettings;
@@ -224,7 +227,7 @@ namespace pwiz.Skyline.Model
                 zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
             if (Document.Settings.HasIonMobilityLibraryPersisted)
                 zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath);
-                
+
             var libFiles = new HashSet<string>();
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
@@ -240,6 +243,11 @@ namespace pwiz.Skyline.Model
                         IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
                     }
                 }
+            }
+
+            foreach (var a in share.IncludeResultFiles)
+            {
+                zip.AddDirectory(a);
             }
 
             ShareDataAndView(zip);
@@ -558,7 +566,26 @@ namespace pwiz.Skyline.Model
                     return;
                 }
                 _dictNameToPath.Add(fileName, path);
-                _zip.AddFile(path, string.Empty);
+                _zip.AddDirectory(path, string.Empty);
+            }
+
+            public void AddDirectory(string path)
+            {
+                string existingPath;
+                string DirName = Path.GetDirectoryName(path) ?? string.Empty;
+                if (_dictNameToPath.TryGetValue(DirName, out existingPath))
+                {
+                    if (path != existingPath)
+                    {
+                        throw new IOException(TextUtil.LineSeparate(string.Format(Resources.DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__, path),
+                            string.Format(Resources.DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__, DirName, existingPath)));
+                    }
+
+                    // No need to add exactly the same path twice
+                    return;
+                }
+                _dictNameToPath.Add(DirName, path);
+                _zip.AddDirectory(path, string.Empty);
             }
 
             public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
@@ -597,13 +624,14 @@ namespace pwiz.Skyline.Model
 
     public class ShareType : Immutable
     {
-        public static readonly ShareType COMPLETE = new ShareType(true, null);
-        public static readonly ShareType MINIMAL = new ShareType(false, null);
+        public static readonly ShareType COMPLETE = new ShareType(true, null, new List<string>());
+        public static readonly ShareType MINIMAL = new ShareType(false, null, new List<string>());
         public static readonly ShareType DEFAULT = COMPLETE;
-        public ShareType(bool complete, SkylineVersion skylineVersion)
+        public ShareType(bool complete, SkylineVersion skylineVersion, List<string> includeResultFiles) // Added list of additional files to be zipped
         {
             Complete = complete;
             SkylineVersion = skylineVersion;
+            IncludeResultFiles = includeResultFiles; // Added additional file boolean to constructor
         }
         public bool Complete { get; private set; }
 
@@ -612,10 +640,21 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im=>im.Complete = complete);
         }
         public SkylineVersion SkylineVersion { get; private set; }
+        public List<string> IncludeResultFiles { get; private set; } // Added getter setter functionality to the list of additional files to be added and zipped
 
         public ShareType ChangeSkylineVersion(SkylineVersion skylineVersion)
         {
             return ChangeProp(ImClone(this), im => im.SkylineVersion = skylineVersion);
+        }
+
+        /// <summary>
+        /// Added this change property command (similar to the two methods before) from immutable.cs
+        /// </summary>
+        /// <param name="includeResultFiles"></param>
+        /// <returns></returns>
+        public ShareType ChangeIncludeResultFiles(List<string> includeResultFiles)
+        { 
+            return ChangeProp(ImClone(this), im => im.IncludeResultFiles = includeResultFiles);
         }
 
         public bool MustSaveNewDocument

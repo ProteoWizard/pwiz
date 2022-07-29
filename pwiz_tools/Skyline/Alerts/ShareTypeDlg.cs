@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Alerts
     {
         private List<SkylineVersion> _skylineVersionOptions;
         private SrmDocument _document; // Global document from which replicate files and information can be extracted
+        private List<string> _fileAttachments; // List of extra files to add
         public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
         {
         }
@@ -48,6 +49,7 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
             _document = document;
+
             if (savedFileFormat.HasValue && maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0)
             {
                 _skylineVersionOptions.Add(null);
@@ -72,7 +74,7 @@ namespace pwiz.Skyline.Alerts
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
-            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex]);
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], _fileAttachments); //Added file attachment argument
             Close();
         }
 
@@ -124,21 +126,20 @@ namespace pwiz.Skyline.Alerts
             return comboSkylineVersion.Items.OfType<string>().ToList();
         }
 
-
+        /// <summary>
+        /// Creates and collects user information on present raw files
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Select_Rep_Files_Click(object sender, EventArgs e)
         {
-            using (ReplicateSelectViewDlg select = new ReplicateSelectViewDlg(_document))
+            using (ReplicateSelectViewDlg replicateSelectDlg = new ReplicateSelectViewDlg(_document))
             {
-                DialogResult result = select.ShowDialog();
+                DialogResult result = replicateSelectDlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    //Return selected files to be zipped up and sent off
-                    //Update some container for 
-                    foreach (var a in select._checkedRepList)
-                    { 
-                        //Zip it up   
-                    }
-                    select._checkedRepList.ForEach(Console.WriteLine);
+                    //Should there be files to send notify share
+                    _fileAttachments = replicateSelectDlg._checkedRepList;
                 }
             }
         }
