@@ -231,7 +231,9 @@
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Alerts\ReplicateSelectViewDlg.cs" />
+    <Compile Include="Alerts\ReplicateSelectViewDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Alerts\ReplicateSelectViewDlg.Designer.cs">
       <DependentUpon>ReplicateSelectViewDlg.cs</DependentUpon>
     </Compile>
