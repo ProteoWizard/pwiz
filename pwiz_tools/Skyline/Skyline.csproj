@@ -231,6 +231,10 @@
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ReplicateSelectViewDlg.cs" />
+    <Compile Include="Alerts\ReplicateSelectViewDlg.Designer.cs">
+      <DependentUpon>ReplicateSelectViewDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\ReportShutdownDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1581,9 +1585,9 @@
     <Compile Include="FileUI\ImportResultsNameDlg.Designer.cs">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </Compile>
-	<Compile Include="Controls\IonTypeSelectorControl.cs">
-		  <SubType>Component</SubType>
-	</Compile>
+    <Compile Include="Controls\IonTypeSelectorControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Model\Annotations.cs" />
     <Compile Include="Model\BackgroundLoader.cs" />
     <Compile Include="Model\DocNode.cs" />
@@ -2131,6 +2135,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ReplicateSelectViewDlg.resx">
+      <DependentUpon>ReplicateSelectViewDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
