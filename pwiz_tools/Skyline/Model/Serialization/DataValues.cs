@@ -65,39 +65,6 @@ namespace pwiz.Skyline.Model.Serialization
             return SkylineDocumentProto.Types.UserSet.False;
         }
 
-        public static double? FromOptional(SkylineDocumentProto.Types.OptionalDouble optionalDouble)
-        {
-            return optionalDouble == null ? (double?) null : optionalDouble.Value;
-        }
-
-        public static SkylineDocumentProto.Types.OptionalDouble ToOptional(double? doubleValue)
-        {
-            return doubleValue.HasValue
-                ? new SkylineDocumentProto.Types.OptionalDouble {Value = doubleValue.Value} : null;
-        }
-
-        public static float? FromOptional(SkylineDocumentProto.Types.OptionalFloat optionalFloat)
-        {
-            return optionalFloat == null ? (float?)null : optionalFloat.Value;
-        }
-
-        public static string FromOptional(SkylineDocumentProto.Types.OptionalString optionalString)
-        {
-            return optionalString == null ? null : optionalString.Value;
-        }
-
-        public static SkylineDocumentProto.Types.OptionalString ToOptional(string value)
-        {
-            return value == null ? null : new SkylineDocumentProto.Types.OptionalString {Value = value};
-        }
-
-        public static SkylineDocumentProto.Types.OptionalFloat ToOptional(float? floatValue)
-        {
-            return floatValue.HasValue
-                ? new SkylineDocumentProto.Types.OptionalFloat {Value = floatValue.Value}
-                : null;
-        }
-
         public static IonType FromIonType(SkylineDocumentProto.Types.IonType ionType)
         {
             switch (ionType)
