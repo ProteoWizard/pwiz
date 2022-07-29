@@ -451,3 +451,6 @@ SkylineTester Results
 /BrowseOnly
 /x64/BrowseOnly
 /qb64.bat
+/pwiz_tools/Skyline/Test/ProtocolBuffers/GeneratedCode/*.cs
+/pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
+/pwiz_tools/Skyline/Test/ProtocolBuffers/tmp

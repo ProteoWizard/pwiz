@@ -150,14 +150,14 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void IsTrue(bool expected, string message = null)
+        public static void IsTrue(bool actual, string message = null)
         {
-            AreEqual(expected, true, message);
+            AreEqual(true, actual, message);
         }
 
-        public static void IsFalse(bool expected, string message = null)
+        public static void IsFalse(bool actual, string message = null)
         {
-            AreEqual(expected, false, message);
+            AreEqual(false, actual, message);
         }
 
         public static void IsNull(object obj, string message = null)
@@ -1213,6 +1213,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries, defPep.Libraries);
             Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications, defPep.Modifications);
             Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction, defPep.Prediction);
+            Cloned(target.PeptideSettings.ProteinAssociationSettings, target.PeptideSettings.ProteinAssociationSettings);
             Cloned(target.PeptideSettings, copy.PeptideSettings);
             var defTran = defSet.TransitionSettings;
             Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction, defTran.Prediction);
