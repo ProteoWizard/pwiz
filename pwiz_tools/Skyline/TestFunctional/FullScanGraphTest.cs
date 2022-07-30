@@ -154,26 +154,23 @@ namespace pwiz.SkylineTestFunctional
 
             //Check the annotation functionality if we run in onscreen mode
             SetShowAnnotations(true);
-            if (!Skyline.Program.SkylineOffscreen)
-            {
-                TestAnnotations(new []{ y4Annotated });
-                RunUI(() => SkylineWindow.SetShowMassError(true));
-                TestAnnotations(new []{new StringBuilder(y4Annotated).AppendLine().Append(
-                            string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,"+", 155.5)).ToString()});
-                RunUI(() => SkylineWindow.SetShowMassError(false));
-                SetZoom(false);
-                TestAnnotations(ionsAnnotated);
-                RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(500,700)));
-                ClickFullScan(618, 120);
-                TestScale(617, 621, 0, 60);
-                SetShowAnnotations(false);
-                TestAnnotations(new[] { "y5" });
-            }
-            else
-                SetShowAnnotations(false);
+            TestAnnotations(new []{ y4Annotated });
+            RunUI(() => SkylineWindow.SetShowMassError(true));
+            TestAnnotations(new []{new StringBuilder(y4Annotated).AppendLine().Append(
+                        string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,"+", 155.5)).ToString()});
+            RunUI(() => SkylineWindow.SetShowMassError(false));
+            SetZoom(false);
+            TestAnnotations(ionsAnnotated);
+            ClickFullScan(618, 120);
+            RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(500, 700)));
+            TestScale(500, 700, 0, 1050.5);
+            SetShowAnnotations(false);
+            TestAnnotations(new[] { "y5" });
 
             // Check split graph
             ShowSplitChromatogramGraph(true);
+            SetZoom(true);
+
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             TestScale(529, 533, 0, 50);
             ClickChromatogram(33.06, 68.8, PaneKey.PRECURSORS);
@@ -252,12 +249,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAnnotations(string[] annotationText)
         {
-            double xAxisMin = SkylineWindow.GraphFullScan.XAxisMin;
-            double xAxisMax = SkylineWindow.GraphFullScan.XAxisMax;
-
-            var graphLabels = SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane.GraphObjList.OfType<TextObj>()
-                .ToList().FindAll(txt => txt.Location.X >= xAxisMin && txt.Location.X <= xAxisMax)      //select only annotations visible in the current window)
-                .Select(label => label.Text).ToHashSet();
+            var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
             Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
         }
 
