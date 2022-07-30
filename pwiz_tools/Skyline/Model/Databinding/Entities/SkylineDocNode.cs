@@ -31,7 +31,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public abstract class SkylineDocNode : SkylineObject, ILinkValue
+    public abstract class SkylineDocNode : RootSkylineObject, ILinkValue
     {
         protected SkylineDocNode(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema)
         {

@@ -355,12 +355,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
     public class TransitionResultSummary : SkylineObject
     {
+        private Transition _transition;
         public TransitionResultSummary(Transition transition, IEnumerable<TransitionResult> results)
-            : base(transition.DataSchema)
         {
-#pragma warning disable 612
-            Transition = transition;
-#pragma warning restore 612
+            _transition = transition;
             var retentionTimes = new List<double>();
             var fwhms = new List<double>();
             var areas = new List<double>();
@@ -412,10 +410,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return _transition.DataSchema;
+        }
+
         [Obsolete]
         public string ReplicatePath { get { return @"/"; } }
         [Obsolete]
-        public Transition Transition { get; private set; }
+        public Transition Transition
+        {
+            get { return _transition; }
+        }
         [ChildDisplayName("{0}RetentionTime")]
         public RetentionTimeSummary RetentionTime { get; private set; }
         [ChildDisplayName("{0}Fwhm")]

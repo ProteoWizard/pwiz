@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
@@ -39,14 +40,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public class Precursor : SkylineDocNode<TransitionGroupDocNode>
     {
         private readonly Lazy<Peptide> _peptide;
-        private readonly CachedValue<Transition[]> _transitions;
-        private readonly CachedValue<IDictionary<ResultKey, PrecursorResult>> _results;
+        private readonly CachedValues _cachedValues = new CachedValues();
         public Precursor(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema, identityPath)
         {
             _peptide = new Lazy<Peptide>(() => new Peptide(DataSchema, IdentityPath.Parent));
-            _transitions = CachedValue.Create(dataSchema, () => DocNode.Children
-                .Select(child => new Transition(DataSchema, new IdentityPath(IdentityPath, child.Id))).ToArray());
-            _results = CachedValue.Create(dataSchema, MakeResults);
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -61,7 +58,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return _transitions.Value;
+                return _cachedValues.GetValue(this);
             }
         }
 
@@ -69,12 +66,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [OneToMany(ForeignKey = "Precursor")]
         public IDictionary<ResultKey, PrecursorResult> Results
         {
-            get { return _results.Value; }
-        }
-
-        private IDictionary<ResultKey, PrecursorResult> MakeResults()
-        {
-            return MakeChromInfoResultsMap(DocNode.Results, file => new PrecursorResult(this, file));
+            get { return _cachedValues.GetValue1(this); }
         }
 
         protected override TransitionGroupDocNode CreateEmptyNode()
@@ -581,16 +573,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get { return typeof(Precursor); }
         }
+
+        private class CachedValues : CachedValues<Precursor, ImmutableList<Transition>, IDictionary<ResultKey, PrecursorResult>> 
+        {
+            protected override SrmDocument GetDocument(Precursor owner)
+            {
+                return owner.SrmDocument;
+            }
+
+            protected override ImmutableList<Transition> CalculateValue(Precursor owner)
+            {
+                return ImmutableList.ValueOf(owner.DocNode.Children
+                    .Select(child => new Transition(owner.DataSchema, new IdentityPath(owner.IdentityPath, child.Id))));
+            }
+
+            protected override IDictionary<ResultKey, PrecursorResult> CalculateValue1(Precursor owner)
+            {
+                return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
+            }
+        }
     }
 
     public class PrecursorResultSummary : SkylineObject
     {
+        private readonly Precursor _precursor;
         public PrecursorResultSummary(Precursor precursor, IEnumerable<PrecursorResult> results)
-            : base(precursor.DataSchema)
         {
-#pragma warning disable 612
-            Precursor = precursor;
-#pragma warning restore 612
+            _precursor = precursor;
             var bestRetentionTimes = new List<double>();
             var maxFhwms = new List<double>();
             var totalAreas = new List<double>();
@@ -658,9 +667,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 MaxHeight = new AreaSummary(new Statistics(maxHeights));
             }
         }
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return _precursor.DataSchema;
+        }
 
         [Obsolete]
-        public Precursor Precursor { get; private set; }
+        public Precursor Precursor
+        {
+            get { return _precursor; }
+        }
+
         [Obsolete]
         public string ReplicatePath { get { return @"/"; } }
         [ChildDisplayName("{0}BestRetentionTime")]

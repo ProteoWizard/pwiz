@@ -391,9 +391,8 @@ namespace pwiz.Skyline.Model
                     var peptideSchedule = new PeptideSchedule(nodePep, maxInstrumentTrans);
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.TransitionGroups.Where(PassesPolarityFilter))
                     {
-                        double timeWindow;
                         double retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
-                            SchedulingAlgorithm, singleWindow, out timeWindow) ?? 0;
+                            SchedulingAlgorithm, singleWindow, out var timeWindow) ?? 0;
                         var nodeTranGroupPrimary = PrimaryTransitionCount > 0
                                                    ? nodePep.GetPrimaryResultsGroup(nodeTranGroup)
                                                    : null;
