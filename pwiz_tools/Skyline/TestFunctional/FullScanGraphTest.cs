@@ -30,7 +30,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using ZedGraph;
 using System.Collections.Generic;
 
 namespace pwiz.SkylineTestFunctional
@@ -191,8 +190,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum, false)); // Sync from the library match to the full scan viewer
             //annotations are not shown in the offscreen mode
-            if (!Skyline.Program.SkylineOffscreen)
-                TestSpecialIonsAnnotations();
+            TestSpecialIonsAnnotations();
         }
 
         private static void ClickFullScan(double x, double y)
@@ -292,8 +290,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.HideFullScanGraph);
             Settings.Default.ShowSpecialIons = true;
             SetShowAnnotations(true);
+            SetZoom(true);
             FindNode("679");
-            RunUI(() => SkylineWindow.GraphSpectrum.SetMzScale(new MzRange(670, 680)));
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(670, 680)));
             WaitForGraphs();
