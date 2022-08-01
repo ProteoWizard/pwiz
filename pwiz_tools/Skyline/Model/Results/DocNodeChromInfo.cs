@@ -956,11 +956,11 @@ namespace pwiz.Skyline.Model.Results
             var msDataFileInfo = measuredResults.Chromatograms[transitionPeak.ReplicateIndex]
                 .MSDataFileInfos[transitionPeak.FileIndexInReplicate];
             var fileId = msDataFileInfo.FileId;
-            var ionMobilityValue = DataValues.FromOptional(transitionPeak.IonMobility);
+            var ionMobilityValue = transitionPeak.IonMobility;
             IonMobilityFilter ionMobility;
             if (ionMobilityValue.HasValue)
             {
-                var ionMobilityWidth = DataValues.FromOptional(transitionPeak.IonMobilityWindow);
+                var ionMobilityWidth = transitionPeak.IonMobilityWindow;
                 var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
                 ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, null);
             }
@@ -989,7 +989,7 @@ namespace pwiz.Skyline.Model.Results
             return new TransitionChromInfo(
                 fileId, 
                 transitionPeak.OptimizationStep,
-                DataValues.FromOptional(transitionPeak.MassError),
+                transitionPeak.MassError,
                 transitionPeak.RetentionTime,
                 transitionPeak.StartRetentionTime,
                 transitionPeak.EndRetentionTime,

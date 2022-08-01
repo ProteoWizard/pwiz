@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog.Databinding
 {
-    public class AuditLogRow : SkylineObject
+    public class AuditLogRow : RootSkylineObject
     {
         private readonly AuditLogEntry _entry;
         private readonly bool _isMultipleUndo;

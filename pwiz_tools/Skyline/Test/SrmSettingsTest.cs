@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -1140,10 +1141,50 @@ namespace pwiz.SkylineTest
         }
 
 
+        [TestMethod]
+        public void SerializeProteinAssociationSettingsTest()
+        {
+            const string proteinAssociationSerialized = "<srm_settings>\n" +
+                                                        "  <settings_summary name=\"Default\">\n" +
+                                                        "    <peptide_settings>\n" +
+                                                        "      <protein_association min_peptides_per_protein=\"0\" " +
+                                                        "group_proteins=\"true\" " +
+                                                        "find_minimal_protein_list=\"true\" " +
+                                                        "remove_subset_proteins=\"true\" " +
+                                                        "shared_peptides=\"AssignedToBestProtein\" />\n" +
+                                                        "    </peptide_settings>\n" +
+                                                        "  </settings_summary>\n" +
+                                                        "</srm_settings>";
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.PROTEIN_GROUPS);
+
+            var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
+            var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
+            Assert.AreEqual(0, parsimonySettings.MinPeptidesPerProtein);
+            Assert.AreEqual(true, parsimonySettings.GroupProteins);
+            Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
+            Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
+
+            // test ProteinAssociationSettings removed from formats before 22_13
+            string xml = null;
+            var actual = AssertEx.RoundTrip(doc, SkylineVersion.V21_2, ref xml);
+            Assert.AreEqual(false, actual.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+
+            const string proteinAssociationMinPeptidesErrorSerialized = "<protein_association min_peptides_per_protein=\"-1\" />";
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationMinPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
+                "The value -1 for Min peptides per protein is not valid: it must be greater than or equal to 0.");
+
+            const string proteinAssociationSharedPeptidesErrorSerialized = "<protein_association shared_peptides=\"SomethingIsWrong\" />";
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(
+                proteinAssociationSharedPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
+                string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__,
+                    "SomethingIsWrong", "shared_peptides"));
+        }
+
         /// <summary>
         /// Test serialization of ion mobility data
         /// </summary>
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void SerializeIonMobilityTest()
         {
 

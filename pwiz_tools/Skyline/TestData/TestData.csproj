@@ -224,10 +224,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\app.config">
-      <Link>app.config</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineRefine.zip" />
