@@ -1,14 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using NHibernate.Criterion;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -18,7 +11,7 @@ namespace pwiz.Skyline.Alerts
     public partial class ReplicateSelectViewDlg : Form
     {
         private readonly SrmDocument _document;
-        public List<string> _checkedRepList; // Allow ShareTypeDlg to be returned and thus be zipped up.
+        public List<string> ReplicateFilesToInclude { get; private set; } // Data files that user wants to include in the .sky.zip file
         public ReplicateSelectViewDlg(SrmDocument document)
         {
             InitializeComponent();
@@ -29,29 +22,27 @@ namespace pwiz.Skyline.Alerts
 
         private void  PopulateListView()
         {
-            List<string> repFiles = new List<string>(); //List of file paths
+            var paths = new HashSet<string>(); // List of file paths
             if (_document.Settings.MeasuredResults != null)
             {
-                foreach (var a in _document.Settings.MeasuredResults.Chromatograms)
+                foreach (var chromatogramSet in _document.Settings.MeasuredResults.Chromatograms)
                 {
-                    IEnumerable<ChromFileInfo> temp = a.MSDataFileInfos;
-
-                    foreach (ChromFileInfo b in temp)
+                    foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
                     {
-                        //Check for path validity
-                        if (ScanProvider.FileExists(Program.MainWindow.DocumentFilePath, b.FilePath, out string path))
+                        // Check for path validity, using our standard rules for locating data files when they aren't in current working directory
+                        if (ScanProvider.FileExists(Program.MainWindow.DocumentFilePath, chromFileInfo.FilePath, out var path))
                         {
-                            repFiles.Add(path);
+                            paths.Add(path);
                         }
                     }
                 }
-                repFiles.Distinct(); // Only keep unique paths
-                repFiles.Sort((x, y) => NaturalComparer.Compare(x, y)); // Natural Sort
+                var repFiles = paths.ToList();
+                repFiles.Sort(NaturalComparer.Compare); // Natural Sort
                 
                 // Add to list view for selection
-                foreach (var a in repFiles)
+                foreach (var fileName in repFiles)
                 {
-                    ListViewItem item = new ListViewItem(a);
+                    ListViewItem item = new ListViewItem(fileName);
                     listView.Items.Add(item);
                 }
             }
@@ -73,10 +64,10 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         private void OkDialog()
         {
-            _checkedRepList = new List<string>();
+            ReplicateFilesToInclude = new List<string>();
             foreach (ListViewItem a in listView.CheckedItems)
             {
-                _checkedRepList.Add(a.Text); //Get the file path of each checked item
+                ReplicateFilesToInclude.Add(a.Text); //Get the file path of each checked item
             }
 
 
