@@ -24,9 +24,6 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Linq;
-using JetBrains.Annotations;
-using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.Results;
 
 
 namespace pwiz.Skyline.Alerts
@@ -139,7 +136,7 @@ namespace pwiz.Skyline.Alerts
                 if (result == DialogResult.OK)
                 {
                     //Should there be files to send notify share
-                    _fileAttachments = replicateSelectDlg._checkedRepList;
+                    _fileAttachments = replicateSelectDlg.ReplicateFilesToInclude;
                 }
             }
         }
