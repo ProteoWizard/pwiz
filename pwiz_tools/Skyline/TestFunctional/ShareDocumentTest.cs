@@ -364,7 +364,7 @@ namespace pwiz.SkylineTestFunctional
             string documentName,
             bool expectAuditLog = true)
         {
-            var shareType = new ShareType(completeSharing, null);
+            var shareType = new ShareType(completeSharing, null, new List<string>());
             RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
 
             bool extract = !completeSharing;
