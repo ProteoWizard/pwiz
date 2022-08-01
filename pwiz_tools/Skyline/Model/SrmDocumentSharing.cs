@@ -247,7 +247,19 @@ namespace pwiz.Skyline.Model
 
             foreach (var a in share.IncludeResultFiles)
             {
-                zip.AddDirectory(a);
+                
+                // Check if the given path is a file or directory 
+                FileAttributes attr = File.GetAttributes(a);
+
+                if((attr & FileAttributes.Directory) == FileAttributes.Directory)
+                {
+                    zip.AddDirectory(a);
+                }
+                else
+                {
+                    zip.AddFile(a);
+                }
+                
             }
 
             ShareDataAndView(zip);
@@ -566,9 +578,14 @@ namespace pwiz.Skyline.Model
                     return;
                 }
                 _dictNameToPath.Add(fileName, path);
-                _zip.AddDirectory(path, string.Empty);
+                _zip.AddFile(path, string.Empty);
             }
 
+            /// <summary>
+            /// Add a directory to zip
+            /// </summary>
+            /// <param name="path"></param>
+            /// <exception cref="IOException"></exception>
             public void AddDirectory(string path)
             {
                 string existingPath;
@@ -585,7 +602,7 @@ namespace pwiz.Skyline.Model
                     return;
                 }
                 _dictNameToPath.Add(DirName, path);
-                _zip.AddDirectory(path, string.Empty);
+                _zip.AddDirectory(path, Path.GetFileName(path));
             }
 
             public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
@@ -631,7 +648,7 @@ namespace pwiz.Skyline.Model
         {
             Complete = complete;
             SkylineVersion = skylineVersion;
-            IncludeResultFiles = includeResultFiles; // Added additional file boolean to constructor
+            IncludeResultFiles = includeResultFiles; // Add list of files
         }
         public bool Complete { get; private set; }
 
@@ -640,7 +657,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im=>im.Complete = complete);
         }
         public SkylineVersion SkylineVersion { get; private set; }
-        public List<string> IncludeResultFiles { get; private set; } // Added getter setter functionality to the list of additional files to be added and zipped
+        public List<string> IncludeResultFiles { get; private set; } // List of additional files (usually mass spec data files) to ba added and zipped)
 
         public ShareType ChangeSkylineVersion(SkylineVersion skylineVersion)
         {
