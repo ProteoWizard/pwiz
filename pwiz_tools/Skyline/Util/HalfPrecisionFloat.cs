@@ -444,7 +444,7 @@ namespace pwiz.Skyline.Util
                 }
                 else
                 {
-                    throw new ArgumentException("Object must be of type Half.");
+                    throw new ArgumentException(@"Object must be of type Half.");
                 }
             }
 
@@ -565,7 +565,7 @@ namespace pwiz.Skyline.Util
             {
                 if (value != 0)
                 {
-                    throw new ArithmeticException("Function does not accept floating point Not-a-Number values.");
+                    throw new ArithmeticException(@"Function does not accept floating point Not-a-Number values.");
                 }
             }
 
@@ -840,11 +840,11 @@ namespace pwiz.Skyline.Util
         }
         char IConvertible.ToChar(IFormatProvider provider)
         {
-            throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, "Invalid cast from '{0}' to '{1}'.", "Half", "Char"));
+            throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, @"Invalid cast from '{0}' to '{1}'.", @"Half", @"Char"));
         }
         DateTime IConvertible.ToDateTime(IFormatProvider provider)
         {
-            throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, "Invalid cast from '{0}' to '{1}'.", "Half", "DateTime"));
+            throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, @"Invalid cast from '{0}' to '{1}'.", @"Half", @"DateTime"));
         }
         decimal IConvertible.ToDecimal(IFormatProvider provider)
         {
