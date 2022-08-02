@@ -75,6 +75,7 @@ static vector<string> supportedTypes = {
     ".xtan.xml",
     ".idpXML",
     ".group.xml",
+    ".group", // getting score type only
     ".pride.xml",
     ".msf",
     ".pdResult",
