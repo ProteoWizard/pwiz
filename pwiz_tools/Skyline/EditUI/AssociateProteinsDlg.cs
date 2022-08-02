@@ -155,6 +155,8 @@ namespace pwiz.Skyline.EditUI
                 else
                 {
                     DocumentFinal = AddIrtAndDecoys(_document);
+                    UpdateTargetCounts();
+                    btnOk.Enabled = true;
                     return;
                 }
             }
@@ -218,6 +220,15 @@ namespace pwiz.Skyline.EditUI
             set => numMinPeptides.Value = value;
         }
 
+        private void UpdateTargetCounts()
+        {
+            dgvAssociateResults.RowCount = 3;
+            dgvAssociateResults.ClearSelection();
+            dgvAssociateResults.Invalidate();
+
+            lblStatusBarResult.Text = GetStatusBarResultString();
+        }
+
         private void UpdateParsimonyResults()
         {
             DocumentFinal = null;
@@ -239,12 +250,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             DocumentFinal = CreateDocTree(_document);
-
-            dgvAssociateResults.RowCount = 3;
-            dgvAssociateResults.ClearSelection();
-            dgvAssociateResults.Invalidate();
-
-            lblStatusBarResult.Text = GetStatusBarResultString();
+            UpdateTargetCounts();
         }
 
         private void checkBoxParsimony_CheckedChanged(object sender, EventArgs e)
