@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestFunctional
         private const string FILE_NAME = "TestToolAPI.sky";
         private TestToolClient _testToolClient;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestToolService()
         {
             Run(@"TestFunctional\ToolServiceTest.zip"); 

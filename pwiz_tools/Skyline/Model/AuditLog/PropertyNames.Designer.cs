@@ -1546,6 +1546,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Associate Proteins.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_AssociateProteinsSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_AssociateProteinsSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Build Spectral Library.
         /// </summary>
         public static string ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings {
@@ -2910,6 +2919,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PeptideSettings_Prediction {
             get {
                 return ResourceManager.GetString("PeptideSettings_Prediction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Protein association settings.
+        /// </summary>
+        public static string PeptideSettings_ProteinAssociationSettings {
+            get {
+                return ResourceManager.GetString("PeptideSettings_ProteinAssociationSettings", resourceCulture);
             }
         }
         

@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>476</ApplicationRevision>
-    <ApplicationVersion>21.2.1.476</ApplicationVersion>
+    <ApplicationRevision>207</ApplicationRevision>
+    <ApplicationVersion>22.1.9.207</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -221,12 +221,6 @@
     </Compile>
     <Compile Include="Alerts\NoModeUIDlg.Designer.cs">
       <DependentUpon>NoModeUIDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Alerts\PeptidesPerProteinDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Alerts\PeptidesPerProteinDlg.Designer.cs">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\MessageDlg.cs">
       <SubType>Form</SubType>
@@ -456,12 +450,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -606,6 +600,7 @@
     <Compile Include="Model\AuditLog\DiffNode.cs" />
     <Compile Include="Model\AuditLog\PropertyName.cs" />
     <Compile Include="Model\ExplicitTransitionValues.cs" />
+    <Compile Include="Model\Find\DuplicatedPeptideFinder.cs" />
     <Compile Include="Model\FragmentedMolecule.cs" />
     <Compile Include="Model\GroupComparisonRefinementData.cs" />
     <Compile Include="Model\IonMobility\DbPrecursorAndIonMobility.cs" />
@@ -622,6 +617,7 @@
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\MoleculeNameAndAccessions.cs" />
     <Compile Include="Model\Proteome\ProteinAssociation.cs" />
+    <Compile Include="Model\Proteome\ProteinGroupMetadata.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
@@ -1602,6 +1598,9 @@
     <Compile Include="FileUI\ImportResultsNameDlg.Designer.cs">
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\IonTypeSelectorControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Model\Annotations.cs" />
     <Compile Include="Model\BackgroundLoader.cs" />
     <Compile Include="Model\DocNode.cs" />
@@ -2149,15 +2148,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.ja.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Alerts\PeptidesPerProteinDlg.zh-CHS.resx">
-      <DependentUpon>PeptidesPerProteinDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
@@ -3373,6 +3363,18 @@
     <Content Include="Instruments.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\AbSciex\SciexOS\BuildSciexMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\SciexOS\BuildSciexMethod.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\SciexOS\Microsoft.IO.RecyclableMemoryStream.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\SciexOS\SCIEX.Apis.Control.v1.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\Shimadzu\BuildShimadzuMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3443,6 +3445,7 @@
     </Content>
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
+    <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />

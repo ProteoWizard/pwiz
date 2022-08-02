@@ -87,6 +87,21 @@ namespace pwiz.Skyline.Model
             return result;
         }
 
+        public static bool IsNTerminal(this IonType type)
+        {
+            return type == IonType.a || type == IonType.b || type == IonType.c || type == IonType.precursor;
+        }
+
+        public static bool IsCTerminal(this IonType type)
+        {
+            return type == IonType.x || type == IonType.y || type == IonType.z || type == IonType.zh || type == IonType.zhh;
+        }
+
+        public static List<IonType> GetFragmentList()
+        {
+            return Enumerable.Range(0, 1 + (int) IonType.zhh).Select(i => (IonType) i).ToList();
+        }
+
         public static Color GetTypeColor(IonType? type, int rank = 0)
         {
             Color color;
@@ -173,16 +188,6 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public static bool IsNTerminal(IonType type)
-        {
-            return type == IonType.a || type == IonType.b || type == IonType.c || type == IonType.precursor;
-        }
-
-        public static bool IsCTerminal(IonType type)
-        {
-            return type == IonType.x || type == IonType.y || type == IonType.z || type == IonType.zh || type == IonType.zhh;
-        }
-
         public static bool IsPrecursor(IonType type)
         {
             return type == IonType.precursor;
@@ -226,7 +231,7 @@ namespace pwiz.Skyline.Model
 
         public static int OrdinalToOffset(IonType type, int ordinal, int len)
         {
-            if (IsNTerminal(type))
+            if (type.IsNTerminal())
                 return ordinal - 1;
             else
                 return len - ordinal - 1;
@@ -234,7 +239,7 @@ namespace pwiz.Skyline.Model
 
         public static int OffsetToOrdinal(IonType type, int offset, int len)
         {
-            if (IsNTerminal(type) || type==IonType.custom) // Custom for small molecule work
+            if (type.IsNTerminal() || type==IonType.custom) // Custom for small molecule work
                 return offset + 1;
             else
                 return len - offset - 1;
@@ -606,12 +611,12 @@ namespace pwiz.Skyline.Model
 
         public bool IsNTerminal()
         {
-            return IsNTerminal(IonType);
+            return IonType.IsNTerminal();
         }
 
         public bool IsCTerminal()
         {
-            return IsCTerminal(IonType);
+            return IonType.IsCTerminal();
         }
 
         public bool IsPrecursor()

@@ -24,11 +24,13 @@ using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -42,6 +44,7 @@ using pwiz.Skyline.Util.Extensions;
 
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
+[assembly: InternalsVisibleTo("Test")]
 
 namespace pwiz.Skyline
 {
@@ -344,6 +347,7 @@ namespace pwiz.Skyline
                     try
                     {
                         SendAnalyticsHit();
+                        SendGa4AnalyticsHit();
                     }
                     catch (Exception ex)
                     {
@@ -383,6 +387,53 @@ namespace pwiz.Skyline
             {
                 new StreamReader(responseStream).ReadToEnd();
             }
+            // ReSharper restore LocalizableElement
+        }
+
+        internal static string SendGa4AnalyticsHit(bool useDebugUrl = false)
+        {
+            // ReSharper disable LocalizableElement
+            const string measurementId = "G-CQG6T54XQR";
+            const string apiSecret = "8_Ci004BQSKdL1bEazPK3A"; // does this need to be kept secret somehow?
+            string debugModifier = useDebugUrl ? "debug/" : "";
+            string analyticsUrl = $"https://www.google-analytics.com/{debugModifier}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
+
+            var postData = new Dictionary<string, object>();
+            postData["client_id"] = useDebugUrl ? "test" : Settings.Default.InstallationId;
+            var events = new List<Dictionary<string, object>>();
+            postData["events"] = events;
+            events.Add(new Dictionary<string, object>
+            {
+                { "name", "Instance" },
+                {
+                    "params", new Dictionary<string, string>
+                    {
+                        { "version", Install.Version + "-" + (Install.Is64Bit ? "64bit" : "32bit") },
+                        { "install_type", Install.Type.ToString() }
+                    }
+                }
+            });
+            var postDataString = JsonConvert.SerializeObject(postData);
+
+            var data = Encoding.UTF8.GetBytes(postDataString);
+            var request = (HttpWebRequest) WebRequest.Create(analyticsUrl);
+            request.UserAgent = Install.GetUserAgentString();
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = data.Length;
+            using (Stream stream = request.GetRequestStream())
+            {
+                stream.Write(data, 0, data.Length);
+            }
+
+            var response = (HttpWebResponse) request.GetResponse();
+            var responseStream = response.GetResponseStream();
+            if (null != responseStream)
+            {
+                return new StreamReader(responseStream).ReadToEnd();
+            }
+
+            return string.Empty;
             // ReSharper restore LocalizableElement
         }
 

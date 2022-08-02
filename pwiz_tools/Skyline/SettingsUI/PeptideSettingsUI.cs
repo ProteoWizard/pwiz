@@ -560,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI
 
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
-            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
+            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
                     .ChangeAbsoluteQuantification(quantification);
         }
 
