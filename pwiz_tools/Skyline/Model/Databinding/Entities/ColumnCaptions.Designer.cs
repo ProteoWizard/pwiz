@@ -3319,6 +3319,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shape Correlation.
+        /// </summary>
+        public static string ShapeCorrelation {
+            get {
+                return ResourceManager.GetString("ShapeCorrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skewness.
         /// </summary>
         public static string Skewness {

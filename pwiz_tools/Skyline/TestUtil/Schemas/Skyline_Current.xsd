@@ -1931,6 +1931,8 @@
         <xs:attribute name="forced_integration" type="xs:boolean"/>
         <xs:attribute name="skewness" type="xs:double" />
         <xs:attribute name="kurtosis" type="xs:double" />
+        <xs:attribute name="std_dev" type="xs:double" />
+        <xs:attribute name="shape_correlation" type="xs:double" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

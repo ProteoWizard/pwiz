@@ -1176,6 +1176,9 @@
   <data name="Score">
     <value>Score</value>
   </data>
+  <data name="ShapeCorrelation">
+    <value>Shape Correlation</value>
+  </data>
   <data name="Skewness">
     <value>Skewness</value>
   </data>

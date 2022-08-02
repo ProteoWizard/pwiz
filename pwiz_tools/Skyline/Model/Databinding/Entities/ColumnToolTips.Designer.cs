@@ -2337,6 +2337,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The standard deviation of the chromatographic peak..
+        /// </summary>
+        public static string PeakStandardDeviation {
+            get {
+                return ResourceManager.GetString("PeakStandardDeviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide.
         /// </summary>
         public static string Peptide {
@@ -3417,6 +3426,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Score {
             get {
                 return ResourceManager.GetString("Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Pearson correlation of this transition&apos;s chromatographic peak compared to the median peak shape of all of the transitions under the same precursor..
+        /// </summary>
+        public static string ShapeCorrelation {
+            get {
+                return ResourceManager.GetString("ShapeCorrelation", resourceCulture);
             }
         }
         
