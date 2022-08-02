@@ -3340,7 +3340,7 @@ Are you sure you want to continue?</value>
     <value>Failed to find document node.</value>
   </data>
   <data name="ViewLibraryDlg_UpdateUI_File" xml:space="preserve">
-    <value>File</value>
+    <value>File: {0}</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_" xml:space="preserve">
     <value>An error occurred attempting to import the {0} library.</value>
@@ -11666,6 +11666,16 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
     <value>Associate Proteins</value>
   </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
+	<value>Waiting for SCIEX OS to start</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
+	  <value>Working...</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
+	  <value>Failed to find a valid SCIEX OS installation.</value>
+
+  </data>
   <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
     <value>File</value>
   </data>
@@ -11717,6 +11727,27 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
     <value>Opening database</value>
   </data>
+  <data name="IonTypeSelector_NTermLabel" xml:space="preserve">
+    <value>N-Term:</value>
+  </data>
+  <data name="IonTypeSelector_CTermLabel" xml:space="preserve">
+    <value>C-Term:</value>
+  </data>
+  <data name="IonTypeSelector_LossesLabel" xml:space="preserve">
+    <value>Losses:</value>
+  </data>
+  <data name="IonTypeSelector_LossesTooltip" xml:space="preserve">
+    <value>Formula: {0}</value>
+  </data>
+  <data name="IonTypeSelector_SelectAllLossesTooltip" xml:space="preserve">
+    <value>Select all losses</value>
+  </data>
+  <data name="IonTypeSelector_DeselectAllLossesTooltip" xml:space="preserve">
+    <value>Deselect all losses</value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+    <value>(Unknown)</value>
+  </data>
   <data name="CandidatePeakGroup_Chosen_Remove_Peak" xml:space="preserve">
     <value>Remove Peak</value>
   </data>
@@ -11766,13 +11797,34 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>dotp: {0:0.0000}</value>
   </data>
+  <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
+    <value>Error on line {0}: invalid non-ASCII character '{1}' at position {2}; are you sure this is a FASTA file?</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
+    <value>Organize all document peptides into associated proteins or protein groups.</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
+    <value>Existing protein associations will be discarded.</value>
+  </data>
   <data name="EditIrtCalcDlg_OkDialog_Saving_to_database" xml:space="preserve">
     <value>Saving to database</value>
   </data>
   <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
     <value>Updating peptides</value>
   </data>
-  <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+	<data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
+		<value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+	</data>
+	  <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
+    <value>Shared Peptides</value>
+  </data>
+  <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
+    <value>Duplicated peptides</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
+    <value>CE:</value>
+  </data>
+  <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
+    <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
   </data>
 </root>

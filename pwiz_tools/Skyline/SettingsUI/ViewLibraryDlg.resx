@@ -145,7 +145,7 @@
     <value>0, 0</value>
   </data>
   <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 239</value>
+    <value>270, 298</value>
   </data>
   <data name="listPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -169,10 +169,10 @@
     <value>Bottom</value>
   </data>
   <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 239</value>
+    <value>0, 298</value>
   </data>
   <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 17</value>
+    <value>270, 17</value>
   </data>
   <data name="cbShowModMasses.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -202,10 +202,10 @@
     <value>0, 3</value>
   </data>
   <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 256</value>
+    <value>270, 315</value>
   </data>
   <data name="PeptideListPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;PeptideListPanel.Name" xml:space="preserve">
     <value>PeptideListPanel</value>
@@ -247,7 +247,7 @@
     <value>31, 13</value>
   </data>
   <data name="PageCount.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="PageCount.Text" xml:space="preserve">
     <value>page</value>
@@ -277,7 +277,7 @@
     <value>47, 13</value>
   </data>
   <data name="PeptideCount.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="PeptideCount.Text" xml:space="preserve">
     <value>peptides</value>
@@ -301,13 +301,13 @@
     <value>Right</value>
   </data>
   <data name="NextLink.Location" type="System.Drawing.Point, System.Drawing">
-    <value>307, 0</value>
+    <value>226, 0</value>
   </data>
   <data name="NextLink.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 13</value>
   </data>
   <data name="NextLink.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="NextLink.Text" xml:space="preserve">
     <value>Next &gt;&gt;</value>
@@ -370,13 +370,13 @@
     <value>50</value>
   </data>
   <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 335</value>
+    <value>270, 390</value>
   </data>
   <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
-    <value>259</value>
+    <value>318</value>
   </data>
   <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Name" xml:space="preserve">
     <value>splitPeptideList</value>
@@ -403,13 +403,13 @@
     <value>True</value>
   </data>
   <data name="byLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 24</value>
+    <value>155, 24</value>
   </data>
   <data name="byLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>22, 13</value>
   </data>
   <data name="byLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="byLabel.Text" xml:space="preserve">
     <value>&amp;By:</value>
@@ -430,13 +430,13 @@
     <value>Top, Right</value>
   </data>
   <data name="comboFilterCategory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 39</value>
+    <value>158, 39</value>
   </data>
   <data name="comboFilterCategory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98, 21</value>
+    <value>112, 21</value>
   </data>
   <data name="comboFilterCategory.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;comboFilterCategory.Name" xml:space="preserve">
     <value>comboFilterCategory</value>
@@ -460,7 +460,7 @@
     <value>32, 13</value>
   </data>
   <data name="filterLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="filterLabel.Text" xml:space="preserve">
     <value>&amp;Filter:</value>
@@ -490,7 +490,7 @@
     <value>53, 13</value>
   </data>
   <data name="MoleculeLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="MoleculeLabel.Text" xml:space="preserve">
     <value>&amp;Molecule:</value>
@@ -523,7 +523,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>316, 21</value>
+    <value>243, 21</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -541,16 +541,16 @@
     <value>0</value>
   </data>
   <data name="btnLibDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>316, 0</value>
+    <value>243, 0</value>
   </data>
   <data name="btnLibDetails.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="btnLibDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 21</value>
+    <value>25, 21</value>
   </data>
   <data name="btnLibDetails.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>1</value>
   </data>
   <data name="btnLibDetails.Text" xml:space="preserve">
     <value>...</value>
@@ -580,10 +580,10 @@
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 24</value>
+    <value>270, 24</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
     <value>tableLayoutPanel1</value>
@@ -610,7 +610,7 @@
     <value>46, 13</value>
   </data>
   <data name="PeptideLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="PeptideLabel.Text" xml:space="preserve">
     <value>&amp;Peptide:</value>
@@ -631,10 +631,10 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 40</value>
+    <value>1, 39</value>
   </data>
   <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>244, 20</value>
+    <value>154, 20</value>
   </data>
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -658,7 +658,7 @@
     <value>0, 0</value>
   </data>
   <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>351, 77</value>
+    <value>270, 77</value>
   </data>
   <data name="PeptideEditPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -694,7 +694,7 @@
     <value>0, 0</value>
   </data>
   <data name="msGraphExtension1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 352</value>
+    <value>497, 407</value>
   </data>
   <data name="msGraphExtension1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -870,13 +870,13 @@
     <value>Print</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>632, 0</value>
+    <value>497, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 352</value>
+    <value>24, 407</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
@@ -897,7 +897,7 @@
     <value>0, 0</value>
   </data>
   <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>660, 356</value>
+    <value>525, 411</value>
   </data>
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -914,6 +914,99 @@
   <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="tableLayoutPanel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tableLayoutPanel2.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelFilename.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="labelFilename.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFilename.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelFilename.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 7</value>
+  </data>
+  <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 13</value>
+  </data>
+  <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelFilename.Text" xml:space="preserve">
+    <value>Fil&amp;e:</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
+    <value>labelFilename</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboRedundantSpectra.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="comboRedundantSpectra.Location" type="System.Drawing.Point, System.Drawing">
+    <value>35, 3</value>
+  </data>
+  <data name="comboRedundantSpectra.Size" type="System.Drawing.Size, System.Drawing">
+    <value>412, 21</value>
+  </data>
+  <data name="comboRedundantSpectra.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.Name" xml:space="preserve">
+    <value>comboRedundantSpectra</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 1</value>
+  </data>
+  <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>450, 26</value>
+  </data>
+  <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelFilename" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="comboRedundantSpectra" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
   <data name="cbAssociateProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -924,7 +1017,7 @@
     <value>112, 17</value>
   </data>
   <data name="cbAssociateProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="cbAssociateProteins.Text" xml:space="preserve">
     <value>Asso&amp;ciate proteins</value>
@@ -939,33 +1032,6 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;cbAssociateProteins.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="labelFilename.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelFilename.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 6</value>
-  </data>
-  <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 13</value>
-  </data>
-  <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="labelFilename.Text" xml:space="preserve">
-    <value>File</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
-    <value>labelFilename</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -978,7 +1044,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
     <value>&amp;Add</value>
@@ -1005,7 +1071,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnAddAll.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="btnAddAll.Text" xml:space="preserve">
     <value>A&amp;dd All...</value>
@@ -1026,13 +1092,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>585, 33</value>
+    <value>450, 30</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>6</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Close</value>
@@ -1053,13 +1119,13 @@
     <value>Top, Right</value>
   </data>
   <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
-    <value>255, 6</value>
+    <value>119, 7</value>
   </data>
   <data name="labelRT.Size" type="System.Drawing.Size, System.Drawing">
     <value>403, 16</value>
   </data>
   <data name="labelRT.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="labelRT.Text" xml:space="preserve">
     <value>RT</value>
@@ -1083,13 +1149,13 @@
     <value>Bottom</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 356</value>
+    <value>0, 411</value>
   </data>
   <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>660, 56</value>
+    <value>525, 56</value>
   </data>
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
@@ -1116,10 +1182,10 @@
     <value>1</value>
   </data>
   <data name="splitMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1015, 412</value>
+    <value>799, 467</value>
   </data>
   <data name="splitMain.SplitterDistance" type="System.Int32, mscorlib">
-    <value>351</value>
+    <value>270</value>
   </data>
   <data name="splitMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1143,7 +1209,7 @@
     <value>10, 25</value>
   </data>
   <data name="ViewLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1015, 412</value>
+    <value>799, 467</value>
   </data>
   <data name="ViewLibraryPanel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1359,7 +1425,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1035, 447</value>
+    <value>819, 502</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>10, 25, 10, 10</value>

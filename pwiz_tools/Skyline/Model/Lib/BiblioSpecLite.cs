@@ -2032,30 +2032,56 @@ namespace pwiz.Skyline.Model.Lib
             if (i == -1)
                 return null;
 
-            var hasRetentionTimesTable = RetentionTimesPsmCount() != 0;
             var hasScores = HasScoreTypesTable();
             var info = _libraryEntries[i];
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
             {
-                select.CommandText = hasRetentionTimesTable
-                    ? @"SELECT * " +
-                      @"FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
-                      @"WHERE t.[RefSpectraID] = ?":
-                    @"SELECT * " +
-                    @"FROM [RefSpectra] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[FileID] = s.[id] " +
-                    @"WHERE t.[id] = ?";
+                string selectString;
+                if (hasScores)
+                {
+                    // Resolves issue with RefSpectra and ScoreTypes table both having a column named scoreType
+                    selectString = @"SELECT s.*, u.SpecIDinFile, u.retentionTime, u.score, u.copies, q.* ";
+                }
+                else
+                {
+                    selectString = @"SELECT * ";
+                }
+                select.CommandText =
+                    selectString +
+                    @"FROM [RefSpectra] as u INNER JOIN [SpectrumSourceFiles] as s ON u.[FileID] = s.[id] ";
+
+                if (hasScores)
+                    select.CommandText += @"INNER JOIN [ScoreTypes] as q ON u.[scoreType] = q.[id] ";
+
+                select.CommandText += @"WHERE u.[id] = ?";
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)redundantId));
-
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
+                    var iIdFileName = reader.GetOrdinal(SpectrumSourceFiles.idFileName);
+                    var iFileName = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                    var iCopies = reader.GetOrdinal(RefSpectra.copies);
+                    var iScore = reader.GetOrdinal(RefSpectra.score);
+                    var iScoreType = reader.GetOrdinal(ScoreTypes.scoreType);
+                    var iProbabilityType = reader.GetOrdinal(ScoreTypes.probabilityType);
+                    var gridInfo = new BiblioSpecGridInfo();
                     if (reader.Read())
                     {
-                        var gridInfo = new BiblioSpecGridInfo();
-                        gridInfo.SpecIdInFile = reader.GetString(iSpecIdInFile);
+                        gridInfo.SpecIdInFile = reader.IsDBNull(iSpecIdInFile) ? null : reader.GetString(iSpecIdInFile);
+                        gridInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
+                        gridInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
+                        gridInfo.Count = reader.GetInt32(iCopies);
+                        if (hasScores)
+                        {
+                            gridInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
+                            var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
+                            var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
+                            gridInfo.ScoreType = new BiblioSpecScoreType(scoreType, probabilityType).ToString();
+                        }
                         return gridInfo;
                     }
+                    // Should never reach here, as there should always be an sql entry matching the query
                     return null;
                 }
             }
@@ -2097,7 +2123,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (hasScores)
                     select.CommandText += @"INNER JOIN [ScoreTypes] as q ON u.[scoreType] = q.[id] ";
 
-                select.CommandText += hasRetentionTimesTable ? @"WHERE t.[RefSpectraID] = ? AND t.[bestSpectrum] = 1" : @"WHERE t.[id] = ?";
+                select.CommandText += hasRetentionTimesTable ? @"WHERE t.[RefSpectraID] = ? AND t.[bestSpectrum] = 1" : @"WHERE u.[id] = ?";
 
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
