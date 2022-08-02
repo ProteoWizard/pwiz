@@ -174,6 +174,15 @@ int main(int argc, char* argv[])
                     reader = std::make_shared<TandemNativeParser>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".group.xml")) {
                     reader = std::make_shared<ProteinPilotReader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".group")) {
+                    // Allow getting score type of .group files.
+                    if (!builder.isScoreLookupMode()) {
+                        Verbosity::error(".group files must be converted to .group.xml files "
+                                         "(e.g. with group2xml or GroupFileExtractor) before building a library.");
+                        throw "Failed to parse " + result_file;
+                    }
+                    WriteScoreTypesLine(result_file, ProteinPilotReader::getScoreTypesHelper());
+                    continue;
                 } else if (has_extension(result_file, "pride.xml")) {
                     reader = std::make_shared<PrideXmlReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, "msms.txt")) {
