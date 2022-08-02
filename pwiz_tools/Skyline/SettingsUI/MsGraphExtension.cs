@@ -1,6 +1,8 @@
 ﻿using pwiz.MSGraph;
 using System;
 using System.ComponentModel;
+using System.Reflection;
+using System.Resources;
 using System.Windows.Forms;
 
 namespace pwiz.Skyline.SettingsUI
@@ -64,11 +66,9 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public class GlobalizedPropertyDescriptor : PropertyDescriptor
     {
-        private static System.Resources.ResourceManager resourceMan;
-
-        private static System.Globalization.CultureInfo resourceCulture;
         private readonly PropertyDescriptor basePropertyDescriptor;
         public bool ReadOnly = true;
+        private static string _descriptionPrefix = @"Description_";
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor) : base(basePropertyDescriptor)
         {
@@ -85,39 +85,37 @@ namespace pwiz.Skyline.SettingsUI
             get => basePropertyDescriptor.ComponentType;
         }
 
-        // public override string DisplayName
-        // {
-        //     get
-        //     {
-        //         // Get display name from CommandArgName
-        //         var displayNameKey = basePropertyDescriptor.Name;
-        //         return resourceMan.GetString(displayNameKey, resourceCulture);
-        //     }
-        // }
-        //
-        // public override string Description
-        // {
-        //     get
-        //     {
-        //         var displayNameKey = RefineInputObject.REFINE_RESOURCE_KEY_PREFIX + basePropertyDescriptor.Name;
-        //         var description = CommandArgUsage.ResourceManager.GetString(displayNameKey);
-        //         // Remove newlines
-        //         description = description != null ? description.Replace('\n', ' ') : string.Empty;
-        //         return description;
-        //     }
-        // }
-        //
-        // public override string Category
-        // {
-        //     get
-        //     {
-        //         var variableName = basePropertyDescriptor.Name;
-        //         var variable = (RefineVariable)Enum.Parse(typeof(RefineVariable), variableName);
-        //         return (int)variable <= (int)RefineVariable.auto_select_transitions
-        //             ? CommandArgUsage.ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT")
-        //             : CommandArgUsage.ResourceManager.GetString("CommandArgs_GROUP_REFINEMENT_W_RESULTS");
-        //     }
-        // }
+        public override string DisplayName
+        {
+            get
+            {
+                // Get display name from CommandArgName
+                var displayNameKey = basePropertyDescriptor.Name;
+                return MsGraphExtensionResx.ResourceManager.GetString(displayNameKey);
+            }
+        }
+        
+        public override string Description
+        {
+            get
+            {
+                return MsGraphExtensionResx.ResourceManager.GetString(_descriptionPrefix +
+                                                                      basePropertyDescriptor.Name) ?? String.Empty;
+            }
+        }
+        
+        public override string Category
+        {
+            get
+            {
+                if (basePropertyDescriptor.Category != null)
+                {
+                    return MsGraphExtensionResx.ResourceManager.GetString(basePropertyDescriptor.Category);
+                }
+
+                return null;
+            }
+        }
 
         public override object GetValue(object component)
         {
@@ -209,7 +207,11 @@ namespace pwiz.Skyline.SettingsUI
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
-                    globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp));
+                    // Only display properties whose values have been set
+                    if (oProp.GetValue(this) != null)
+                    {
+                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp));
+                    }
                 }
             }
             return globalizedProps;
@@ -227,7 +229,11 @@ namespace pwiz.Skyline.SettingsUI
                 // For each property use a property descriptor of our own that is able to be globalized
                 foreach (PropertyDescriptor oProp in baseProps)
                 {
-                    globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp));
+                    // Only display properties whose values have been set
+                    if (oProp.GetValue(this) != null)
+                    {
+                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp));
+                    }
                 }
             }
             return globalizedProps;

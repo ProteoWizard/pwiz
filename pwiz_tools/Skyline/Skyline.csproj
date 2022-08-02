@@ -644,11 +644,21 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="PropertyGridItemsViewLibraryDlg.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PropertyGridItemsViewLibraryDlg.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\MsGraphExtension.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -3255,6 +3265,11 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="PropertyGridItemsViewLibraryDlg.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PropertyGridItemsViewLibraryDlg.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
@@ -3553,6 +3568,8 @@
     </Content>
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
+    <Content Include="Resources\Properties.bmp" />
+    <Content Include="Properties.jpg" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -3929,8 +3946,10 @@
       <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
-      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx">
+      <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>MsGraphExtensionResx.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
@@ -4491,26 +4510,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <FileAssociation Include=".sky">
-      <Visible>False</Visible>
-      <Description>Skyline Document</Description>
-      <Progid>Skyline.Document.0</Progid>
-      <DefaultIcon>SkylineDoc.ico</DefaultIcon>
-    </FileAssociation>
-    <FileAssociation Include=".skyd">
-      <Visible>False</Visible>
-      <Description>Skyline Chromatogram Data</Description>
-      <Progid>Skyline.Data.0</Progid>
-      <DefaultIcon>SkylineData.ico</DefaultIcon>
-    </FileAssociation>
-    <FileAssociation Include=".skyp">
-      <Visible>False</Visible>
-      <Description>Skyline Document Pointer</Description>
-      <Progid>Skyline.Pointer.0</Progid>
-      <DefaultIcon>SkylineDocPointer.ico</DefaultIcon>
-    </FileAssociation>
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="..\Shared\Lib\Microsoft.VC90.CRT\x64\msvcr90.dll">
       <Link>percolator\msvcr90.DLL</Link>

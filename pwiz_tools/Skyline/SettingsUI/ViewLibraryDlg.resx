@@ -145,7 +145,7 @@
     <value>0, 0</value>
   </data>
   <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 201</value>
+    <value>351, 239</value>
   </data>
   <data name="listPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -169,10 +169,10 @@
     <value>Bottom</value>
   </data>
   <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 201</value>
+    <value>0, 239</value>
   </data>
   <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 17</value>
+    <value>351, 17</value>
   </data>
   <data name="cbShowModMasses.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -202,7 +202,7 @@
     <value>0, 3</value>
   </data>
   <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 218</value>
+    <value>351, 256</value>
   </data>
   <data name="PeptideListPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -301,7 +301,7 @@
     <value>Right</value>
   </data>
   <data name="NextLink.Location" type="System.Drawing.Point, System.Drawing">
-    <value>288, 0</value>
+    <value>307, 0</value>
   </data>
   <data name="NextLink.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 13</value>
@@ -370,10 +370,10 @@
     <value>50</value>
   </data>
   <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 297</value>
+    <value>351, 335</value>
   </data>
   <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
-    <value>221</value>
+    <value>259</value>
   </data>
   <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -403,7 +403,7 @@
     <value>True</value>
   </data>
   <data name="byLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>231, 24</value>
+    <value>250, 24</value>
   </data>
   <data name="byLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>22, 13</value>
@@ -430,7 +430,7 @@
     <value>Top, Right</value>
   </data>
   <data name="comboFilterCategory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>231, 39</value>
+    <value>250, 39</value>
   </data>
   <data name="comboFilterCategory.Size" type="System.Drawing.Size, System.Drawing">
     <value>98, 21</value>
@@ -523,7 +523,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>299, 21</value>
+    <value>316, 21</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -541,7 +541,7 @@
     <value>0</value>
   </data>
   <data name="btnLibDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>299, 0</value>
+    <value>316, 0</value>
   </data>
   <data name="btnLibDetails.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -580,7 +580,7 @@
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 24</value>
+    <value>351, 24</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -634,7 +634,7 @@
     <value>0, 40</value>
   </data>
   <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>225, 20</value>
+    <value>244, 20</value>
   </data>
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -658,7 +658,7 @@
     <value>0, 0</value>
   </data>
   <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 77</value>
+    <value>351, 77</value>
   </data>
   <data name="PeptideEditPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -694,7 +694,7 @@
     <value>0, 0</value>
   </data>
   <data name="msGraphExtension1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 314</value>
+    <value>632, 352</value>
   </data>
   <data name="msGraphExtension1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -712,7 +712,7 @@
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>331, 17</value>
+    <value>17, 95</value>
   </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
@@ -721,7 +721,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnAIons.ToolTipText" xml:space="preserve">
     <value>A-ions</value>
@@ -730,7 +730,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnBIons.ToolTipText" xml:space="preserve">
     <value>B-ions</value>
@@ -739,7 +739,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnCIons.ToolTipText" xml:space="preserve">
     <value>C-ions</value>
@@ -748,7 +748,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnXIons.ToolTipText" xml:space="preserve">
     <value>X-ions</value>
@@ -757,7 +757,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnYIons.ToolTipText" xml:space="preserve">
     <value>Y-ions</value>
@@ -766,7 +766,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnZIons.ToolTipText" xml:space="preserve">
     <value>Z-ions</value>
@@ -775,19 +775,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
     <value>fragment ions</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 6</value>
+    <value>21, 6</value>
   </data>
   <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
     <value>Charge 1 ions</value>
@@ -796,43 +796,48 @@
     <value>Magenta</value>
   </data>
   <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
     <value>Charge 2 ions</value>
   </data>
+  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 6</value>
+  </data>
   <data name="propertiesButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAJ+SURBVDhPjVPdS1NxGD5/R9DmCmqzu0AogqiLQWBBF0EX
+        lUKQ3RQjZGQZLM1YkF9BSNBVJBVFEK2MGsywMJEpKikxkDTXzuc+vKh5znb29LxnmfQFXjz8Duf83ud9
+        3ud9jqIWavgNeUC15KwhZ1WhFSp8dng6PKuEy/cV6Ly7otn4B4HAZYGLr6YNc9XhWSbpGgttPjvQi/xm
+        VPittkGg/YQUC6RYL1YwMZVBrGcAHVfimPm4TJK6ElEh9/8iEBjsbharmEh/QtPeMIK7mhDt6Mbich5W
+        iWNQjcaxjJIQyMyU7RV73TmzUYbOS6fbIvAFQjjZcgaZxSw0q4ylbAlzC184Au8UqlA0EmgegQud0nQy
+        WzTOIMGefWH4/UG0tp5FenoeC5ks2i92I3qphyqpgFByZo1M0rkKi+aoNEyKjXwZh5qPwefbgcC2EE6R
+        5ERLG7bv3I3ewbtUwzEIRbVcZA3bm0c116jAhmZ8x/OXozgX6UBDQyMRgj/QiC1bgzgYPorZ+SV2t5Ff
+        dcUD1yvWaVpW++axJkcncfVaP1Jv0zgfuYzmI8ex/8BhXGiPcYwcDa4gxy2JX4oEpb4aByYdHnkzjvjN
+        IQw/SpBkAC9evYMp8zIDGhWaJccrFgOlTpFwSLFedPDkWRJd12/h/sMEbvTeQWps2vPEFFPpkcHOKkdc
+        z4pAEekS06eJFDq7+jCS/IAYO4+NzyKnSzG9Yepyej1AKzoN5siSRC9IWe5TFPTfvofhx68R7YwjmZqi
+        F5IHSpUV02ghWg+a/CPe5vjPUIHEt4rJmc8YHHqA1Pu5Xxc3A5oouRcjZb6NjG8WJJAVioqKR2Ryt39e
+        +j9q+AF+9H7OYQs4ewAAAABJRU5ErkJggg==
 </value>
   </data>
   <data name="propertiesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="propertiesButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="propertiesButton.ToolTipText" xml:space="preserve">
     <value>Spectrum Properties</value>
   </data>
-  <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 6</value>
+  <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 6</value>
   </data>
   <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
     <value>Copy Metafile</value>
@@ -841,7 +846,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnCopy.ToolTipText" xml:space="preserve">
     <value>Copy Bitmap</value>
@@ -850,7 +855,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnSave.ToolTipText" xml:space="preserve">
     <value>Save</value>
@@ -859,16 +864,16 @@
     <value>Magenta</value>
   </data>
   <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnPrint.ToolTipText" xml:space="preserve">
     <value>Print</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>588, 0</value>
+    <value>632, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 314</value>
+    <value>24, 352</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -892,7 +897,7 @@
     <value>0, 0</value>
   </data>
   <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 318</value>
+    <value>660, 356</value>
   </data>
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1021,7 +1026,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>549, 33</value>
+    <value>585, 33</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -1048,7 +1053,7 @@
     <value>Top, Right</value>
   </data>
   <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
-    <value>219, 6</value>
+    <value>255, 6</value>
   </data>
   <data name="labelRT.Size" type="System.Drawing.Size, System.Drawing">
     <value>403, 16</value>
@@ -1078,10 +1083,10 @@
     <value>Bottom</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 318</value>
+    <value>0, 356</value>
   </data>
   <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 56</value>
+    <value>660, 56</value>
   </data>
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1111,10 +1116,10 @@
     <value>1</value>
   </data>
   <data name="splitMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>960, 374</value>
+    <value>1015, 412</value>
   </data>
   <data name="splitMain.SplitterDistance" type="System.Int32, mscorlib">
-    <value>332</value>
+    <value>351</value>
   </data>
   <data name="splitMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1138,7 +1143,7 @@
     <value>10, 25</value>
   </data>
   <data name="ViewLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>960, 374</value>
+    <value>1015, 412</value>
   </data>
   <data name="ViewLibraryPanel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1183,7 +1188,7 @@
     <value>1</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
+    <value>17, 56</value>
   </metadata>
   <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1354,7 +1359,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>980, 409</value>
+    <value>1035, 447</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>10, 25, 10, 10</value>
@@ -1428,16 +1433,22 @@
   <data name="&gt;&gt;charge2Button.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
+    <value>toolStripSeparator2</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;propertiesButton.Name" xml:space="preserve">
     <value>propertiesButton</value>
   </data>
   <data name="&gt;&gt;propertiesButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
-    <value>toolStripSeparator2</value>
+  <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
+    <value>toolStripSeparator3</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;copyMetafileButton.Name" xml:space="preserve">

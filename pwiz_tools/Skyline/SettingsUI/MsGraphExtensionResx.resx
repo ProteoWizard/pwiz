@@ -117,20 +117,62 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-	<data name="CCS" xml:space="preserve">
+  <data name="CCS" xml:space="preserve">
     <value>CCS</value>
   </data>
   <data name="Charge" xml:space="preserve">
     <value>Charge</value>
   </data>
+  <data name="Desciption_SpecIdInFile" xml:space="preserve">
+    <value>&lt;Insert SpecIdInFile Description&gt;</value>
+  </data>
+  <data name="Description_CCS" xml:space="preserve">
+    <value>&lt;Insert CCS Description&gt;</value>
+  </data>
+  <data name="Description_Charge" xml:space="preserve">
+    <value>&lt;Insert Charge Description&gt;</value>
+  </data>
+  <data name="Description_FileName" xml:space="preserve">
+    <value>&lt;Insert FileName Description&gt;</value>
+  </data>
+  <data name="Description_IdFileName" xml:space="preserve">
+    <value>&lt;Insert IdFileName Description&gt;</value>
+  </data>
+  <data name="Description_Ion Mobility" xml:space="preserve">
+    <value>&lt;Insert Ion Mobility Description&gt;</value>
+  </data>
+  <data name="Description_LibraryName" xml:space="preserve">
+    <value>&lt;Insert LibraryName Description&gt;</value>
+  </data>
+  <data name="Description_PrecursorMz" xml:space="preserve">
+    <value>&lt;Insert PrecursorMz Description&gt;</value>
+  </data>
+  <data name="Description_RetentionTime" xml:space="preserve">
+    <value>&lt;Insert RetentionTime Description&gt;</value>
+  </data>
+  <data name="Description_Score" xml:space="preserve">
+    <value>&lt;Insert Score Description&gt;</value>
+  </data>
+  <data name="Description_ScoreType" xml:space="preserve">
+    <value>&lt;Insert ScoreType Description&gt;</value>
+  </data>
+  <data name="Description_SpectrumCount" xml:space="preserve">
+    <value>Number of measured spectra for this peptide in the library</value>
+  </data>
   <data name="File Info" xml:space="preserve">
     <value>File Info</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>File Name</value>
   </data>
   <data name="IdFileName" xml:space="preserve">
     <value>Id File Name</value>
   </data>
-  <data name="Ion Mobility" xml:space="preserve">
+  <data name="IonMobility" xml:space="preserve">
     <value>Ion Mobility</value>
+  </data>
+  <data name="LibraryName" xml:space="preserve">
+    <value>Library Name</value>
   </data>
   <data name="Peptide Info" xml:space="preserve">
     <value>Peptide Info</value>
@@ -152,5 +194,8 @@
   </data>
   <data name="SpecIdInFile" xml:space="preserve">
     <value>Spectra Id in File</value>
+  </data>
+  <data name="SpectrumCount" xml:space="preserve">
+    <value>Spectrum Count</value>
   </data>
 </root>

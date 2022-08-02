@@ -759,12 +759,12 @@ namespace pwiz.Skyline.SettingsUI
                                                                           (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
 
                         _currentProperties = new SpectrumProperties();
-                        _currentProperties.retentionTime = spectrumInfo.RetentionTime;
-                        _currentProperties.fileName = spectrumInfo.FileName;
-                        _currentProperties.libraryName = spectrumInfo.Name;
-                        _currentProperties.precursorMz = ViewLibraryDlg.CalcMz(pepInfo, _matcher);
-                        _currentProperties.score = spectrumInfoR.Score;
-                        _currentProperties.charge = pepInfo.Charge;
+                        _currentProperties.RetentionTime = string.Format(@"{0:F2}", spectrumInfo.RetentionTime);
+                        _currentProperties.FileName = spectrumInfo.FileName;
+                        _currentProperties.LibraryName = spectrumInfo.Name;
+                        _currentProperties.PrecursorMz = string.Format(@"{0:F2}", CalcMz(pepInfo, _matcher));
+                        _currentProperties.Score = spectrumInfoR.Score;
+                        _currentProperties.Charge = pepInfo.Charge;
                         var selectedBiblioSpecLib = _selectedLibrary as BiblioSpecLiteLibrary;
                         if (selectedBiblioSpecLib != null)
                         {
@@ -777,8 +777,12 @@ namespace pwiz.Skyline.SettingsUI
                             {
                                 biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(_peptides[index].Key, ((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
                             }
-
-                            _currentProperties.specIdInFile = biblioAdditionalInfo.SpecIdInFile;
+                            _currentProperties.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
+                            _currentProperties.IdFileName = biblioAdditionalInfo.IDFileName;
+                            _currentProperties.FileName = biblioAdditionalInfo.FileName;
+                            _currentProperties.Score = biblioAdditionalInfo.Score;
+                            _currentProperties.ScoreType = biblioAdditionalInfo.ScoreType;
+                            _currentProperties.SpectrumCount = biblioAdditionalInfo.Count;
                         }
 
                         LibraryChromGroup libraryChromGroup = null;
@@ -787,13 +791,6 @@ namespace pwiz.Skyline.SettingsUI
                             libraryChromGroup = _selectedLibrary.LoadChromatogramData(spectrumInfo.SpectrumKey);
                         }
                         _hasChromatograms = libraryChromGroup != null;
-                        _hasScores = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo) != null;
-                        if (_hasScores)
-                        {
-                            _currentProperties.score =
-                                (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo).Score;
-                            _currentProperties.scoreType = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo).ScoreType;
-                        }
 
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroupDocNode.TransitionGroup, _selectedLibrary, pepInfo.Key)
                         {
@@ -833,14 +830,17 @@ namespace pwiz.Skyline.SettingsUI
                                 var imText = string.Empty;
                                 var ccs = libraryChromGroup?.CCS ?? dt.CollisionalCrossSectionSqA;
                                 if (ccs.HasValue)
+                                {
                                     ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F2}", ccs.Value);
+                                    _currentProperties.CCS = string.Format(@"{0:F2}", ccs.Value);
+                                }
                                 if (dt.HasIonMobilityValue)
                                     imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                                 if ((dt.HighEnergyIonMobilityValueOffset??0) != 0) // Show the high energy value (as in Waters MSe) if different
                                     imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
                                 labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
-                                _currentProperties.ccs = ccsText;
-                                _currentProperties.ionMobility = imText;
+                                
+                                _currentProperties.IonMobility = string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                             }
                         }
                         if (!_showChromatograms || !_hasChromatograms)
@@ -2823,35 +2823,39 @@ namespace pwiz.Skyline.SettingsUI
         {
 
             [Category("Peptide Info")]
-            public double? precursorMz { get; set; }
-
-            public string idFileName { get; set; }
+            public string? PrecursorMz { get; set; }
 
             [Category("File Info")]
-            public string fileName { get; set; }
+            public string IdFileName { get; set; }
+
             [Category("File Info")]
-            public string libraryName { get; set; }
+            public string FileName { get; set; }
+            [Category("File Info")]
+            public string LibraryName { get; set; }
 
             [Category("Peptide Info")]
-            public string specIdInFile { get; set; }
-
-            public double? retentionTime { get; set; }
-
-            // [Category("Ion Mobility")]
-            // public double? ionMobility { get; set; }
-
-            public string ionMobility { get; set; }
-
-            public string ccs { get; set; }
-
-            [Category("Score")]
-            public double? score { get; set; }
-
-            [Category("Score")]
-            public string scoreType { get; set; }
+            public string SpecIdInFile { get; set; }
 
             [Category("Peptide Info")]
-            public int charge { get; set; }
+            public string? RetentionTime { get; set; }
+
+            [Category("Peptide Info")]
+            public int Charge { get; set; }
+
+            [Category("Peptide Info")]
+            public int SpectrumCount { get; set; }
+
+            [Category("Small Molecule Info")]
+            public string IonMobility { get; set; }
+
+            [Category("Small Molecule Info")]
+            public string CCS { get; set; }
+
+            [Category("Score")]
+            public double? Score { get; set; }
+
+            [Category("Score")]
+            public string ScoreType { get; set; }
         }
     }
 }

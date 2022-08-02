@@ -64,8 +64,9 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.charge1Button = new System.Windows.Forms.ToolStripButton();
             this.charge2Button = new System.Windows.Forms.ToolStripButton();
-            this.propertiesButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.propertiesButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.copyMetafileButton = new System.Windows.Forms.ToolStripButton();
             this.btnCopy = new System.Windows.Forms.ToolStripButton();
             this.btnSave = new System.Windows.Forms.ToolStripButton();
@@ -311,8 +312,9 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator1,
             this.charge1Button,
             this.charge2Button,
-            this.propertiesButton,
             this.toolStripSeparator2,
+            this.propertiesButton,
+            this.toolStripSeparator3,
             this.copyMetafileButton,
             this.btnCopy,
             this.btnSave,
@@ -396,6 +398,11 @@ namespace pwiz.Skyline.SettingsUI
             this.charge2Button.Name = "charge2Button";
             this.charge2Button.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
             // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
+            // 
             // propertiesButton
             // 
             this.propertiesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
@@ -403,10 +410,10 @@ namespace pwiz.Skyline.SettingsUI
             this.propertiesButton.Name = "propertiesButton";
             this.propertiesButton.Click += new System.EventHandler(this.propertiesMenuItem_Click);
             // 
-            // toolStripSeparator2
+            // toolStripSeparator3
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
             // copyMetafileButton
             // 
@@ -836,5 +843,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ComboBox comboFilterCategory;
         private MsGraphExtension msGraphExtension1;
         private System.Windows.Forms.ToolStripButton propertiesButton;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
     }
 }
