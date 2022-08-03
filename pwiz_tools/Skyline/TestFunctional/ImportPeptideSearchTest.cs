@@ -630,7 +630,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             //RunUI(() => peptidesPerProteinDlg.KeepAll = true);
-            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
+            WaitForConditionUI(() => peptidesPerProteinDlg.IsOkEnabled);
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
