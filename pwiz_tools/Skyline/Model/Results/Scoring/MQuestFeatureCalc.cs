@@ -72,6 +72,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     measuredRT = tranPeakData.PeakData.RetentionTime;
                 }
             }
+            bool isFullScan = context.Settings.TransitionSettings.FullScan.IsEnabled && !(summaryPeakData.FileInfo?.IsSrm ?? false);
+
             if (!measuredRT.HasValue)
                 return float.NaN;
 
@@ -95,18 +97,18 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     var settings = context.Settings;
                     var predictor = settings.PeptideSettings.Prediction.RetentionTime;
                     var fullScan = settings.TransitionSettings.FullScan;
-                    var seqModified = settings.GetSourceTarget(summaryPeakData.NodePep); 
+                    var seqModified = settings.GetSourceTarget(summaryPeakData.NodePep);
                     if (predictor != null)
                     {
                         double window = predictor.TimeWindow;
-                        if (fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+                        if (isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
                             window = fullScan.RetentionTimeFilterLength*2;
 
                         prediction = new RetentionTimePrediction(predictor.GetRetentionTime(seqModified, fileId),
                             window);
                     }
 
-                    if (prediction == null && fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                    if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
                     {
                         var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
                         var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
@@ -136,7 +138,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 // like a negative coefficient for delta-RT^2 can result in far away peaks having huge scores.
                 // So, here we limit the delta scores. But, this was too invasive to do for everything.
                 var fullScan = context.Settings.TransitionSettings.FullScan;
-                if (fullScan.IsEnabled && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+                if (isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
                     rtDelta = maxDelta;
             }
             return (float) RtScoreFunction(rtDelta) / (float) RtScoreNormalizer(prediction.Window);

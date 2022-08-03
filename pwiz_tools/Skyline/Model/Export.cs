@@ -4566,39 +4566,45 @@ namespace pwiz.Skyline.Model
                     stdinBuilder.Append(pair.Value);
                 }
 
-                // Resharper disable LocalizableElement
-                argv.AddRange(new[] { "-s", "-m", "\"" + templateName + "\"" });  // Read from stdin, multi-file format
-                // Resharper restore LocalizableElement
-
-                string dirWork = Path.GetDirectoryName(fileName);
-                var psiExporter = new ProcessStartInfo(exeName)
+                string dirWork = Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory;
+                using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, Path.GetRandomFileName())))
                 {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    // Common directory includes the directory separator
-                    WorkingDirectory = dirWork ?? string.Empty,
-                    Arguments = string.Join(@" ", argv.ToArray()), 
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true
-                };
+                    var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
+                    File.WriteAllText(transitionsFile, stdinBuilder.ToString());
 
-                IProgressStatus status;
-                if (dictTranLists.Count == 1)
-                    status = new ProgressStatus(string.Format(Resources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
-                else
-                {
-                    status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
-                    status = status.ChangeSegments(0, dictTranLists.Count);
-                }
-                progressMonitor?.UpdateProgress(status);
+                    // Resharper disable LocalizableElement
+                    argv.AddRange(new[] { "-m", templateName.Quote(), transitionsFile.Quote() });  // Read from stdin, multi-file format
+                    // Resharper restore LocalizableElement
 
-                psiExporter.RunProcess(stdinBuilder.ToString(), @"MESSAGE: ", progressMonitor, ref status); 
+                    var psiExporter = new ProcessStartInfo(exeName)
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        // Common directory includes the directory separator
+                        WorkingDirectory = dirWork,
+                        Arguments = string.Join(@" ", argv.ToArray()),
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        RedirectStandardInput = true
+                    };
 
-                if (!status.IsError && !status.IsCanceled)
-                {
-                    foreach (var fs in listFileSavers)
-                        fs.Commit();
+                    IProgressStatus status;
+                    if (dictTranLists.Count == 1)
+                        status = new ProgressStatus(string.Format(Resources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
+                    else
+                    {
+                        status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
+                        status = status.ChangeSegments(0, dictTranLists.Count);
+                    }
+                    progressMonitor?.UpdateProgress(status);
+
+                    psiExporter.RunProcess(null, @"MESSAGE: ", progressMonitor, ref status);
+
+                    if (!status.IsError && !status.IsCanceled)
+                    {
+                        foreach (var fs in listFileSavers)
+                            fs.Commit();
+                    }
                 }
             }
             finally

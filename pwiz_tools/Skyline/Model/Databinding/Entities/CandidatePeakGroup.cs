@@ -33,10 +33,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private CandidatePeakGroupData _data;
         private PrecursorResult _precursorResult;
-        public CandidatePeakGroup(PrecursorResult precursorResult, CandidatePeakGroupData data) : base(precursorResult.DataSchema)
+        public CandidatePeakGroup(PrecursorResult precursorResult, CandidatePeakGroupData data)
         {
             _data = data;
             _precursorResult = precursorResult;
+        }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return _precursorResult.DataSchema;
         }
 
         [Format(Formats.RETENTION_TIME)]
