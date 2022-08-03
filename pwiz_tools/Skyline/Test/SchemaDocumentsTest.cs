@@ -73,10 +73,11 @@ namespace pwiz.SkylineTest
             var xsdCurrentResourceName = SchemaDocuments.GetSkylineSchemaResourceName(DocumentFormat.CURRENT.ToString()); // Special case, returns "Skyline_Current.xsd"
             var currentXsdContents = GetResourceText(xsdCurrentResourceName); 
             Assert.IsNotNull(currentXsdContents);
-            if (explicitCurrentXsdContents != null && !explicitCurrentXsdContents.Equals(currentXsdContents))
+            if (explicitCurrentXsdContents != null)
             {
-                AssertEx.Fail(string.Format("Expected resource files {0} and {1} to be identical - did you change the contents of Skyline_Current.xsd without incrementing the value of DocumentFormat.CURRENT?",
-                    explicitCurrentResourceName, xsdCurrentResourceName));
+                AssertEx.NoDiff(explicitCurrentXsdContents,currentXsdContents,
+                    string.Format("Expected resource files {0} and {1} to be identical - did you change the contents of Skyline_Current.xsd without incrementing the value of DocumentFormat.CURRENT?",
+                        explicitCurrentResourceName, xsdCurrentResourceName));
             }
 
             // List all the historical values of VERSION_* (located in DocumentFormat.cs)
