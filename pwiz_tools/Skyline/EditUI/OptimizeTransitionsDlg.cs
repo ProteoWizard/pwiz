@@ -79,7 +79,6 @@ namespace pwiz.Skyline.EditUI
             private Lazy<FiguresOfMerit> _originalFiguresOfMerit;
             private Lazy<FiguresOfMerit> _optimizedFiguresOfMerit;
             public Row(Model.Databinding.Entities.Peptide molecule, SrmDocument originalDocument, SrmDocument optimizedDocument) 
-                : base(molecule.DataSchema)
             {
                 Molecule = molecule;
                 _originalDocument = originalDocument;
@@ -103,6 +102,11 @@ namespace pwiz.Skyline.EditUI
                     CountQuantitative = countQuantitative;
                     CountNonQuantitative = countNonQuantitative;
                 }
+            }
+
+            protected override SkylineDataSchema GetDataSchema()
+            {
+                return Molecule.DataSchema;
             }
 
             [InvariantDisplayName("Peptide", InUiMode = UiModes.PROTEOMIC)]
