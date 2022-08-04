@@ -1184,7 +1184,7 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Test serialization of ion mobility data
         /// </summary>
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void SerializeIonMobilityTest()
         {
 

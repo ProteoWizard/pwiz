@@ -1,0 +1,42 @@
+﻿syntax = "proto3";
+option csharp_namespace = "pwiz.SkylineTest.ProtocolBuffers.GeneratedCode";
+option java_package = "org.labkey.targetedms.parser.proto";
+message LegacySkylineDocumentProto {
+	message LegacyTransitionPeak {
+		OptionalFloat massError = 3;
+		OptionalDouble ionMobility = 7;
+		OptionalDouble ionMobilityWindow = 8;
+	}
+	message LegacyTransition {
+		OptionalString formula = 1;
+		OptionalDouble averageMassH = 2; // See also: averageMass = 27;
+		OptionalDouble monoMassH = 3; // See also:  monoMass = 28;
+		OptionalString custom_ion_name = 6; // See also: custom_ion_id = 30;
+		OptionalString measured_ion_name = 7;
+		OptionalFloat isotopeDistProportion = 12; 
+		OptionalDouble collisionEnergy = 21;
+		OptionalDouble declusteringPotential = 22;
+		OptionalDouble averageMass = 27;
+		OptionalDouble monoMass = 28;
+		OptionalString adduct = 29;
+		OptionalString molecule_id = 30;
+		OptionalDouble explicitCollisionEnergy = 32;
+		OptionalDouble explicitIonMobilityHighEnergyOffset = 33;
+		OptionalDouble explicitSLens = 34;
+		OptionalDouble explicitConeVoltage = 35;
+		OptionalDouble explicitDeclusteringPotential = 36;
+	}
+
+	message OptionalFloat {
+		float value = 1;
+	}
+
+	message OptionalDouble {
+		double value = 1;
+	}
+
+	message OptionalString {
+		string value = 1;
+	}
+
+}
