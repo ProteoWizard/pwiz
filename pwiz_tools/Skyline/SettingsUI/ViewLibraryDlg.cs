@@ -136,6 +136,12 @@ namespace pwiz.Skyline.SettingsUI
             get { return msGraphExtension1.graph; }
         }
 
+        // Used exclusively for testing
+        public MsGraphExtension GraphExtensionControl
+        {
+            get { return msGraphExtension1; }
+        }
+
 
 
         /// <summary>
