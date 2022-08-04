@@ -2009,6 +2009,11 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        private bool HasSourceFilesTable(SQLiteConnection connection)
+        {
+            return SqliteOperations.TableExists(connection, @"SpectrumSourceFiles");
+        }
+
         public class BiblioSpecGridInfo
         {
             [CanBeNull] public string SpecIdInFile { get; set; }
@@ -2047,20 +2052,24 @@ namespace pwiz.Skyline.Model.Lib
         {
             var connection = isBest ? _sqliteConnection.Connection : _sqliteConnectionRedundant.Connection;
             var hasScores = HasScoreTypesTable(connection);
+            var hasFiles = HasSourceFilesTable(connection);
             using (SQLiteCommand select = new SQLiteCommand(connection))
             {
                 if (hasScores)
                 {
                     // Resolves issue with RefSpectra and ScoreTypes table both having a column named scoreType
-                    select.CommandText = @"SELECT s.*, u.SpecIDinFile, u.retentionTime, u.score, u.copies, q.* ";
+                    select.CommandText = @"SELECT u.SpecIDinFile, u.retentionTime, u.score, u.copies, q.*";
+                    select.CommandText += hasFiles ? @", s.* " : @" ";
                 }
                 else
                 {
                     select.CommandText = @"SELECT * ";
                 }
 
-                select.CommandText +=
-                    @"FROM [RefSpectra] as u INNER JOIN [SpectrumSourceFiles] as s ON u.[FileID] = s.[id] ";
+                select.CommandText += @"FROM [RefSpectra] as u ";
+
+                if (hasFiles)
+                    select.CommandText += @"INNER JOIN [SpectrumSourceFiles] as s ON u.[FileID] = s.[id] ";
 
                 if (hasScores)
                     select.CommandText += @"INNER JOIN [ScoreTypes] as q ON u.[scoreType] = q.[id] ";
@@ -2081,9 +2090,12 @@ namespace pwiz.Skyline.Model.Lib
                     if (reader.Read())
                     {
                         gridInfo.SpecIdInFile = reader.IsDBNull(iSpecIdInFile) ? null : reader.GetString(iSpecIdInFile);
-                        gridInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
-                        gridInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
                         gridInfo.Count = reader.GetInt32(iCopies);
+                        if (hasFiles)
+                        {
+                            gridInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
+                            gridInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
+                        }
                         if (hasScores)
                         {
                             gridInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
