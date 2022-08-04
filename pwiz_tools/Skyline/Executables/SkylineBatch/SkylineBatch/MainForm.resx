@@ -975,7 +975,7 @@
     <value>listViewConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>SkylineBatch.MyListView, SkylineBatch, Version=21.2.1.539, Culture=neutral, PublicKeyToken=null</value>
+    <value>SkylineBatch.MyListView, SkylineBatch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>
