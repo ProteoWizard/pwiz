@@ -58,6 +58,20 @@ namespace pwiz.SkylineTest
         public void CodeInspection()
         {
 
+            // Looking for uses of Form where we should really be using FormEx
+            const string formExExemptionComment = @"// Purposely using Form here instead of FormEx";
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonSkylineDirectories(new[] {// We only care about this in Skyline code, omitting certain files as well
+                    @"FormEx.cs", // Also pick up CommonFormEx.cs, which is good
+                    @"TestUtil"}), 
+                string.Empty, // No file content required for inspection
+                @"class .*\:.* Form(?!Ex)\s*(,|$)", // Forbidden pattern
+                true, // Pattern is a regular expression
+                @"use FormEx instead of Form - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '" + formExExemptionComment + @"'", // Explanation for prohibition, appears in report
+                formExExemptionComment); // There may legitimate uses of this, look for this comment and ignore the violation when found
+
             // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
@@ -695,11 +709,11 @@ namespace pwiz.SkylineTest
             public Level FailureType;  // Is failure an error, or just a warning?
             public int NumberOfToleratedIncidents; // Some inspections we won't fix yet, but we don't want to see any new ones either
 
-            public PatternDetails(string cue,string reason, string[] ignoredFileMasks, Level failureType, int numberOfToleratedIncidents) 
+            public PatternDetails(string cue,string reason, IEnumerable<string> ignoredFileMasks, Level failureType, int numberOfToleratedIncidents) 
             {
                 Cue = cue;
                 Reason = reason;
-                IgnoredFileMasks = ignoredFileMasks;
+                IgnoredFileMasks = ignoredFileMasks?.ToArray();
                 FailureType = failureType;
                 NumberOfToleratedIncidents = numberOfToleratedIncidents;
             }
@@ -718,10 +732,17 @@ namespace pwiz.SkylineTest
 
         private HashSet<string> allFileMasks = new HashSet<string>();
 
-        // Return a list of directories that we don't care about from a strictly Skyline point of view
-        private string[] NonSkylineDirectories()
+        // Return a list of directories that we don't care about from a strictly Skyline point of view.
+        // Caller can optionally provide a set of other strings which, if found in file path, cause the
+        // file to be ignored for the test in question
+        private IEnumerable<string> NonSkylineDirectories(IEnumerable<string> extras = null)
         {
-            return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
+            var pathHints = new List<string> {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
+            if (extras != null)
+            {
+                pathHints.AddRange(extras);
+            }
+            return pathHints;
         }
 
         // Prepare a list of files that we never need to deal with for L10N
@@ -781,7 +802,7 @@ namespace pwiz.SkylineTest
         void AddTextInspection(string fileMask,  // Which files?
             Inspection inspectionType, // Required, or forbidden?
             Level failureType, // Is a failure an error, or a warning
-            string[] ignoredDirectories, // Areas to disregard
+            IEnumerable<string> ignoredDirectories, // Areas to disregard
             string cue, // If non-empty, only perform the inspection if file contains this cue
             string pattern,  // What we're looking out for (may contain \n)
             bool isRegEx, // Is the pattern a regular expression?
