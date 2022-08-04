@@ -975,7 +975,7 @@
     <value>listViewConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>SkylineBatch.MyListView, SkylineBatch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>SkylineBatch.MyListView, SkylineBatch, Version=21.2.1.539, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>
@@ -1062,7 +1062,7 @@
     <value>2, 0, 2, 0</value>
   </data>
   <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>509, 16</value>
+    <value>508, 16</value>
   </data>
   <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -1230,7 +1230,19 @@
     <value>toolStripButton1</value>
   </data>
   <data name="btnOpenAnalysis.ToolTipText" xml:space="preserve">
-    <value>Open Folder</value>
+    <value>Open Analysis Folder</value>
+  </data>
+  <data name="btnOpenRemoteFolder.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnOpenRemoteFolder.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnOpenRemoteFolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 20</value>
+  </data>
+  <data name="btnOpenRemoteFolder.Text" xml:space="preserve">
+    <value>Open Remote Folder</value>
   </data>
   <data name="btnUndo.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1239,7 +1251,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnUndo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnUndo.Text" xml:space="preserve">
     <value>Undo</value>
@@ -1251,7 +1263,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnRedo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnRedo.Text" xml:space="preserve">
     <value>Redo</value>
@@ -1449,7 +1461,22 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabMain.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
+  </data>
+  <metadata name="remoteFolderList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>553, 17</value>
+  </metadata>
+  <data name="remoteFolderList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>181, 26</value>
+  </data>
+  <data name="remoteFolderList.Text" xml:space="preserve">
+    <value>Select Remote Folder</value>
+  </data>
+  <data name="&gt;&gt;remoteFolderList.Name" xml:space="preserve">
+    <value>remoteFolderList</value>
+  </data>
+  <data name="&gt;&gt;remoteFolderList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -1961,6 +1988,12 @@
     <value>btnOpenAnalysis</value>
   </data>
   <data name="&gt;&gt;btnOpenAnalysis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOpenRemoteFolder.Name" xml:space="preserve">
+    <value>btnOpenRemoteFolder</value>
+  </data>
+  <data name="&gt;&gt;btnOpenRemoteFolder.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnUndo.Name" xml:space="preserve">

@@ -19,7 +19,7 @@ namespace SharedBatch.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -475,6 +475,36 @@ namespace SharedBatch.Properties {
         public static string FilePathControl_FilePathControl_Please_correct_the__0__to_continue_ {
             get {
                 return ResourceManager.GetString("FilePathControl_FilePathControl_Please_correct_the__0__to_continue_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Access denied. Unable to create a file in the folder {0}. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder..
+        /// </summary>
+        public static string FileSaver_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_ {
+            get {
+                return ResourceManager.GetString("FileSaver_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___" +
+                        "0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_" +
+                        "copying_files_to_a_different_folder_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to create a temporary file in the folder {0} with the following error .
+        /// </summary>
+        public static string FileSaver_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_ {
+            get {
+                return ResourceManager.GetString("FileSaver_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_fol" +
+                        "der__0__with_the_following_error_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Win32 Error {0}.
+        /// </summary>
+        public static string FileSaver_GetTempFileName_Win32_Error__0__ {
+            get {
+                return ResourceManager.GetString("FileSaver_GetTempFileName_Win32_Error__0__", resourceCulture);
             }
         }
         
