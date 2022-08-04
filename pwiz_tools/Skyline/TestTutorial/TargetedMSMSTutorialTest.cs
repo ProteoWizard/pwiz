@@ -1142,21 +1142,22 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => dlg.Close());
         }
 
+        // Test for property grid currently in progress
         private void TestPropertyGrid()
         {
-            var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
-            WaitForConditionUI(() => dlg.IsUpdateComplete);
-            var graphExtension = dlg.GraphExtensionControl;
-            Assert.IsFalse(graphExtension.propertiesVisible);
-            RunUI(() =>
-            {
-                var propertiesButton = dlg.Controls.Find("propertiesButton", true)[0];
-                Assert.IsNotNull(propertiesButton);
-
-                
-            });
-            Assert.IsTrue(graphExtension.propertiesVisible);
-            RunUI(() => dlg.Close());
+            // var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
+            // WaitForConditionUI(() => dlg.IsUpdateComplete);
+            // var graphExtension = dlg.GraphExtensionControl;
+            // Assert.IsFalse(graphExtension.propertiesVisible);
+            // RunUI(() =>
+            // {
+            //     var propertiesButton = dlg.Controls.Find("propertiesButton", true)[0];
+            //     Assert.IsNotNull(propertiesButton);
+            //
+            //     
+            // });
+            // Assert.IsTrue(graphExtension.propertiesVisible);
+            // RunUI(() => dlg.Close());
         }
     }
 }
