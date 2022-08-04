@@ -187,7 +187,7 @@
     <value>RightToLeft</value>
   </data>
   <data name="panelButtonBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 166</value>
+    <value>5, 205</value>
   </data>
   <data name="panelButtonBar.Size" type="System.Drawing.Size, System.Drawing">
     <value>360, 31</value>
@@ -205,7 +205,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelButtonBar.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="comboSkylineVersion.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -214,7 +214,7 @@
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="comboSkylineVersion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 128</value>
+    <value>11, 178</value>
   </data>
   <data name="comboSkylineVersion.Size" type="System.Drawing.Size, System.Drawing">
     <value>350, 21</value>
@@ -239,7 +239,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboSkylineVersion.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -248,7 +248,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 112</value>
+    <value>11, 162</value>
   </data>
   <data name="label2.MaximumSize" type="System.Drawing.Size, System.Drawing">
     <value>380, 0</value>
@@ -273,7 +273,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="radioComplete.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -309,7 +309,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioComplete.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="radioMinimal.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -342,7 +342,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioMinimal.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -372,40 +372,73 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="button1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 89</value>
-  </data>
-  <data name="button1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>133, 23</value>
-  </data>
-  <data name="button1.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="button1.Text" xml:space="preserve">
-    <value>Include Replicate Files...</value>
+  <data name="Btn_SelectFiles.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
-  <data name="&gt;&gt;button1.Name" xml:space="preserve">
-    <value>button1</value>
+  <data name="Btn_SelectFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 112</value>
   </data>
-  <data name="&gt;&gt;button1.Type" xml:space="preserve">
+  <data name="Btn_SelectFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 23</value>
+  </data>
+  <data name="Btn_SelectFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="Btn_SelectFiles.Text" xml:space="preserve">
+    <value>Choose Files...</value>
+  </data>
+  <data name="&gt;&gt;Btn_SelectFiles.Name" xml:space="preserve">
+    <value>Btn_SelectFiles</value>
+  </data>
+  <data name="&gt;&gt;Btn_SelectFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;button1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;Btn_SelectFiles.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;button1.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="&gt;&gt;Btn_SelectFiles.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="checkBox1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 89</value>
+  </data>
+  <data name="checkBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 17</value>
+  </data>
+  <data name="checkBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="checkBox1.Text" xml:space="preserve">
+    <value>Include results files</value>
+  </data>
+  <data name="&gt;&gt;checkBox1.Name" xml:space="preserve">
+    <value>checkBox1</value>
+  </data>
+  <data name="&gt;&gt;checkBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBox1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBox1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>52</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>370, 202</value>
+    <value>370, 241</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>5, 5, 5, 5</value>

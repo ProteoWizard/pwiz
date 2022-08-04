@@ -193,8 +193,7 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     if (ShareType.Complete)
-                        ShareComplete(zip, this.ShareType); //Include result files added
-
+                        ShareComplete(zip, this.ShareType); // ShareType and thus additional file information passed in
 
                     else
                         ShareMinimal(zip);

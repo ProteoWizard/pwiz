@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.Alerts
 {
-    partial class ReplicateSelectViewDlg
+    partial class ShareResultsFilesDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -29,10 +29,11 @@
         private void InitializeComponent()
         {
             this.label1 = new System.Windows.Forms.Label();
-            this.listView = new System.Windows.Forms.ListView();
             this.Btn_Accept = new System.Windows.Forms.Button();
             this.Btn_Cancel = new System.Windows.Forms.Button();
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.checkedListBox = new System.Windows.Forms.CheckedListBox();
+            this.checkboxSelectAll = new System.Windows.Forms.CheckBox();
+            this.checkedStatus = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -40,41 +41,25 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 13);
+            this.label1.Size = new System.Drawing.Size(80, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Replicate Select:";
-            // 
-            // listView
-            // 
-            this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listView.CheckBoxes = true;
-            this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader3});
-            this.listView.HideSelection = false;
-            this.listView.Location = new System.Drawing.Point(12, 25);
-            this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(707, 402);
-            this.listView.TabIndex = 1;
-            this.listView.UseCompatibleStateImageBehavior = false;
-            this.listView.View = System.Windows.Forms.View.Details;
+            this.label1.Text = "Files to include:";
             // 
             // Btn_Accept
             // 
             this.Btn_Accept.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Btn_Accept.Location = new System.Drawing.Point(644, 433);
+            this.Btn_Accept.Location = new System.Drawing.Point(563, 433);
             this.Btn_Accept.Name = "Btn_Accept";
             this.Btn_Accept.Size = new System.Drawing.Size(75, 23);
             this.Btn_Accept.TabIndex = 2;
-            this.Btn_Accept.Text = "Accept";
+            this.Btn_Accept.Text = "Ok";
             this.Btn_Accept.UseVisualStyleBackColor = true;
             this.Btn_Accept.Click += new System.EventHandler(this.Btn_Accept_Click);
             // 
             // Btn_Cancel
             // 
             this.Btn_Cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.Btn_Cancel.Location = new System.Drawing.Point(563, 433);
+            this.Btn_Cancel.Location = new System.Drawing.Point(644, 433);
             this.Btn_Cancel.Name = "Btn_Cancel";
             this.Btn_Cancel.Size = new System.Drawing.Size(75, 23);
             this.Btn_Cancel.TabIndex = 3;
@@ -82,22 +67,52 @@
             this.Btn_Cancel.UseVisualStyleBackColor = true;
             this.Btn_Cancel.Click += new System.EventHandler(this.Btn_Cancel_Click);
             // 
-            // columnHeader3
+            // checkedListBox
             // 
-            this.columnHeader3.Text = "File Path";
-            this.columnHeader3.Width = 559;
+            this.checkedListBox.CheckOnClick = true;
+            this.checkedListBox.FormattingEnabled = true;
+            this.checkedListBox.Location = new System.Drawing.Point(15, 25);
+            this.checkedListBox.Name = "checkedListBox";
+            this.checkedListBox.Size = new System.Drawing.Size(704, 394);
+            this.checkedListBox.TabIndex = 4;
+            this.checkedListBox.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxResults_SelectIndexChanged);
             // 
-            // ReplicateSelectViewDlg
+            // checkboxSelectAll
+            // 
+            this.checkboxSelectAll.AutoSize = true;
+            this.checkboxSelectAll.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.checkboxSelectAll.Location = new System.Drawing.Point(15, 425);
+            this.checkboxSelectAll.Name = "checkboxSelectAll";
+            this.checkboxSelectAll.Size = new System.Drawing.Size(120, 17);
+            this.checkboxSelectAll.TabIndex = 15;
+            this.checkboxSelectAll.Text = "Select / deselect &all";
+            this.checkboxSelectAll.UseVisualStyleBackColor = true;
+            this.checkboxSelectAll.CheckedChanged += new System.EventHandler(this.checkboxSelectAll_CheckedChanged);
+            // 
+            // checkedStatus
+            // 
+            this.checkedStatus.AutoSize = true;
+            this.checkedStatus.Location = new System.Drawing.Point(141, 426);
+            this.checkedStatus.Name = "checkedStatus";
+            this.checkedStatus.Size = new System.Drawing.Size(0, 13);
+            this.checkedStatus.TabIndex = 16;
+            // 
+            // ShareResultsFilesDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(731, 468);
+            this.Controls.Add(this.checkedStatus);
+            this.Controls.Add(this.checkboxSelectAll);
+            this.Controls.Add(this.checkedListBox);
             this.Controls.Add(this.Btn_Cancel);
             this.Controls.Add(this.Btn_Accept);
-            this.Controls.Add(this.listView);
             this.Controls.Add(this.label1);
-            this.Name = "ReplicateSelectViewDlg";
-            this.Text = "Replicate File Select";
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "ShareResultsFilesDlg";
+            this.ShowInTaskbar = false;
+            this.Text = "Share Results Files";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -106,9 +121,10 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ListView listView;
         private System.Windows.Forms.Button Btn_Accept;
         private System.Windows.Forms.Button Btn_Cancel;
-        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.CheckedListBox checkedListBox;
+        private System.Windows.Forms.CheckBox checkboxSelectAll;
+        private System.Windows.Forms.Label checkedStatus;
     }
 }
