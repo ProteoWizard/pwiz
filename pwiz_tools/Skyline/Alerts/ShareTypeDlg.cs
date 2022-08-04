@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Alerts
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
-            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], _fileAttachments); //Added file attachment argument
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], _fileAttachments); // Added file attachment argument
             Close();
         }
 
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Alerts
         /// <param name="e"></param>
         private void Select_Rep_Files_Click(object sender, EventArgs e)
         {
-            using (ReplicateSelectViewDlg replicateSelectDlg = new ReplicateSelectViewDlg(_document))
+            using (ShareResultsFilesDlg replicateSelectDlg = new ShareResultsFilesDlg(_document))
             {
                 DialogResult result = replicateSelectDlg.ShowDialog();
                 if (result == DialogResult.OK)
@@ -139,6 +139,12 @@ namespace pwiz.Skyline.Alerts
                     _fileAttachments = replicateSelectDlg.ReplicateFilesToInclude;
                 }
             }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox checkBox = (CheckBox)sender;
+            Btn_SelectFiles.Enabled = checkBox.Checked;
         }
     }
 }
