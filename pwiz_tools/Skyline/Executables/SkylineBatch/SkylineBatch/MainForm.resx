@@ -1062,7 +1062,7 @@
     <value>2, 0, 2, 0</value>
   </data>
   <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>508, 16</value>
+    <value>509, 16</value>
   </data>
   <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -1251,7 +1251,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnUndo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="btnUndo.Text" xml:space="preserve">
     <value>Undo</value>
@@ -1263,7 +1263,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnRedo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>29, 20</value>
   </data>
   <data name="btnRedo.Text" xml:space="preserve">
     <value>Redo</value>
