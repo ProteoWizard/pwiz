@@ -2076,7 +2076,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 select.CommandText += @"WHERE u.[id] = ?";
 
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)id));
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, id));
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
