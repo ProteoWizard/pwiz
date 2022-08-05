@@ -147,13 +147,11 @@ namespace pwiz.Skyline.Model.Lib
                             specialIons.Add(
                                 new MatchedFragmentIon(IonType.custom, specialIons.Count,
                                     Adduct.FromCharge(specialIon.Charge, Adduct.ADDUCT_TYPE.charge_only),
-                                    specialIon.Name, null, specialIon.SettingsCustomIon.MonoisotopicMassMz)
-                                );
+                                    specialIon.Name, null, specialIon.SettingsCustomIon.MonoisotopicMassMz));
                     }
                     moleculeMasses = new MoleculeMasses(
                         SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence), PrecursorAdduct),
-                        new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), ionTypes)        .ChangeKnownFragments(specialIons)
-                        );
+                        new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), ionTypes).ChangeKnownFragments(specialIons));
                 }
                 else if (!isProteomic && !Sequence.IsProteomic)
                 {
@@ -719,7 +717,7 @@ namespace pwiz.Skyline.Model.Lib
                     continue;
                 }
 
-                //custom ions have been already matched above. No need to do anything.
+                // Custom ions have been already matched above. No need to do anything.
                 if (IonType.custom.Equals(type))
                     continue;
 

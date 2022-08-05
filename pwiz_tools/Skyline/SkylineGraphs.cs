@@ -918,7 +918,7 @@ namespace pwiz.Skyline
         private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
         {
             switch (type)
-        {
+            {
                 case IonType.a:
                     ShowAIons(show);
                     break;
@@ -943,7 +943,7 @@ namespace pwiz.Skyline
                 case IonType.zhh:
                     ShowZHHIons(show);
                     break;
-        }
+            }
         }
 
         private void IonTypeSelector_LossChanged(string[] losses)
@@ -968,7 +968,7 @@ namespace pwiz.Skyline
         
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
         {
-            if(ListMzScaleCopyables().Count() < 2)
+            if (ListMzScaleCopyables().Count() < 2)
                 return;
             Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
             if (!Settings.Default.SyncMZScale)
@@ -992,7 +992,7 @@ namespace pwiz.Skyline
             SynchMzScaleToolStripMenuItemClick();
         }
 
-        //Testing support
+        // Testing support
         public void SynchMzScale(IMzScalePlot source, bool setSynchMz = true)
         {
             synchMzScaleToolStripMenuItem.Checked = setSynchMz;
@@ -1004,7 +1004,7 @@ namespace pwiz.Skyline
             if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
             {
                 chargeSelector.Update(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
-        }
+            }
             else
             {
                 chargesContextMenuItem.DropDownItems.Clear();
