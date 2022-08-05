@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
         const double testRTWindow = 4.56;
 
 
-        public static readonly ExplicitTransitionGroupValues TESTVALUES_GROUP = ExplicitTransitionGroupValues.Create(1.234, 2.34, eIonMobilityUnits.drift_time_msec, 345.6); // Using this helps catch untested functionality as we add members
+        public static readonly PrecursorFilter TESTVALUES_GROUP = PrecursorFilter.Create(1.234, 2.34, eIonMobilityUnits.drift_time_msec, 345.6, null); // Using this helps catch untested functionality as we add members
         public static readonly ExplicitTransitionValues TESTVALUES_TRAN =  ExplicitTransitionValues.Create(1.23, -.345, 5.67, 6.78, 7.89);
 
         protected override void DoTest()
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
             Assert.AreEqual(testRT, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(testRTWindow, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
-            Assert.AreEqual(TESTVALUES_GROUP, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES_GROUP, docA.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter);
 
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
@@ -304,7 +304,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(peptideDocNode);
             Assert.IsTrue(peptideDocNode.EqualsId(docA.Molecules.ElementAt(0))); // No Id change
             Assert.IsTrue(doc.MoleculeTransitionGroups.ElementAt(0).EqualsId(docA.MoleculeTransitionGroups.ElementAt(0)));  // No change to Id node or its child Ids
-            Assert.AreEqual(TESTVALUES_GROUP, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES_GROUP, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter);
             Assert.IsNull(peptideDocNode.ExplicitRetentionTime);
             var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             double massPrecisionTolerance = Math.Pow(10, -SequenceMassCalc.MassPrecision);
@@ -333,6 +333,8 @@ namespace pwiz.SkylineTestFunctional
                     dlg.Message);
                 dlg.OkDialog(); // Dismiss the warning
             });
+            AssertEx.AreEqual(doc, SkylineWindow.Document); // Should be no change
+
             RunUI(() =>
             {
                 editMoleculeDlg.FormulaBox.Formula = "[M+H]";
@@ -352,6 +354,8 @@ namespace pwiz.SkylineTestFunctional
                      TransitionGroup.MAX_PRECURSOR_CHARGE), dlg.Message);
                 dlg.OkDialog(); // Dismiss the warning
             });
+            AssertEx.AreEqual(doc, SkylineWindow.Document); // Should be no change
+
             RunUI(() => editMoleculeDlg.Adduct = Adduct.FromChargeProtonated(-(TransitionGroup.MAX_PRECURSOR_CHARGE + 1)));
             RunDlg<MessageDlg>(editMoleculeDlg.OkDialog, dlg =>
             {
@@ -365,6 +369,7 @@ namespace pwiz.SkylineTestFunctional
                      TransitionGroup.MAX_PRECURSOR_CHARGE), dlg.Message);
                 dlg.OkDialog(); // Dismiss the warning
             });
+            AssertEx.AreEqual(doc, SkylineWindow.Document); // Should be no change
 
             // Restore
             RunUI(() =>
@@ -390,7 +395,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsFalse(newdoc.MoleculeTransitionGroups.ElementAt(0).EqualsId(peptideDocNode));  // Changing the adduct changes the Id node
             // Verify that CE overrides work
-            Assert.AreEqual(TESTVALUES_GROUP, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues);
+            Assert.AreEqual(TESTVALUES_GROUP, newdoc.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter);
             Assert.IsNull(newdoc.Molecules.ElementAt(0).ExplicitRetentionTime);  // Not set yet
 
             // Verify that tree selection doesn't change just because we changed an ID object
@@ -473,8 +478,8 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the explicitly set drift time overrides any calculations
             double driftTimeMax = 1000.0;
             var centerDriftTime = newdoc.Settings.GetIonMobilityFilter(
-                newdoc.Molecules.First(), newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), 
-                null, null, driftTimeMax);
+                newdoc.MoleculeTransitionGroups.First(), newdoc.MoleculeTransitions.First(), 
+                null,  driftTimeMax);
             Assert.AreEqual(TESTVALUES_GROUP.IonMobility.Value, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001);
             Assert.AreEqual(TESTVALUES_TRAN.IonMobilityHighEnergyOffset.Value, centerDriftTime.HighEnergyIonMobilityOffset ?? 0, .0001);
             Assert.AreEqual(0.156, centerDriftTime.IonMobilityExtractionWindowWidth??0, .0001);
@@ -813,8 +818,8 @@ namespace pwiz.SkylineTestFunctional
             });
             RunDlg<MessageDlg>(moleculeDlg.OkDialog, dlg =>
             {
-                // Trying to exit the dialog should cause a warning about adduct and label conflict
-                Assert.AreEqual(Resources.EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_, dlg.Message);
+                // Trying to exit the dialog should cause a warning about adduct + label + IM conflict
+                Assert.AreEqual(Resources.EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct__label_type__and_ion_mobility_already_exists_, dlg.Message);
                 dlg.OkDialog(); // Dismiss the warning
             });
             RunUI(() =>

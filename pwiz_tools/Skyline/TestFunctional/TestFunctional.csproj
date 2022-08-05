@@ -312,6 +312,7 @@
     <Compile Include="InsertTest.cs" />
     <Compile Include="InstallToolsTest.cs" />
     <Compile Include="IonMobilityTest.cs" />
+    <Compile Include="IonMobilityMultiCCSTest.cs" />
     <Compile Include="IrtTest.cs" />
     <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryBuildShareTest.cs" />

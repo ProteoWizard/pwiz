@@ -106,7 +106,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            LibraryIonMobilityInfo driftInfoExplicitDT= null;
+            LibraryPrecursorFiltersInfo driftInfoExplicitDT= null;
             Testit(true, ref driftInfoExplicitDT); // Read both CCS and DT
             if (_testCase == 1)
             {
@@ -118,7 +118,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private void Testit(
             bool useDriftTimes, // If false, don't use any drift information in chromatogram extraction
-            ref LibraryIonMobilityInfo driftInfoExplicitDT
+            ref LibraryPrecursorFiltersInfo driftInfoExplicitDT
             )
         {
             bool CCSonly = driftInfoExplicitDT != null;  // If true, force conversion from CCS to DT
@@ -234,13 +234,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             WaitForClosedForm(importPeptideSearchDlg);
             var doc1 = WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
+            var nConformers = doc1.MoleculeTransitionGroups.Count(tg => tg.TransitionGroup.IsConformer);
+            var nConformerTransitions = doc1.MoleculeTransitionGroups.Where(tg => tg.TransitionGroup.IsConformer)
+                .Select(tg => tg.Children.Count).Sum();
+
             if (_testCase == 1)
             {
-                AssertEx.IsDocumentState(doc1, null, 1, 34, 45, 135);
+                AssertEx.IsDocumentState(doc1, null, 1, 34, 45 + nConformers, 135 + nConformerTransitions);
             }
             else
             {
-                AssertEx.IsDocumentState(doc1, null, 1, 36, 43, 129);
+                AssertEx.IsDocumentState(doc1, null, 1, 36, 43 + nConformers, 129 + nConformerTransitions);
             }
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
@@ -273,17 +277,17 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var measuredDTs = document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
                 AssertEx.IsNotNull(driftInfoExplicitDT, "driftInfoExplicitDT != null");
                 // ReSharper disable once PossibleNullReferenceException
-                var explicitDTs = driftInfoExplicitDT.GetIonMobilityDict();
+                var explicitDTs = driftInfoExplicitDT.GetPrecursorFiltersDict();
 
                 string errMsgAll = string.Empty;
                 // A handful of peptides that really should have been trained on a clean sample
                 // CONSIDER: or are they multiple conformers? They have multiple hits with distinct IM in the pepXML
                 var expectedDiffs = LibKeyMap<double>.FromDictionary(new Dictionary<LibKey, double>
                 {
-                    {new PeptideLibraryKey("LC[+57.0]VLHEK", 2), 18.09  },
-                    {new PeptideLibraryKey("EC[+57.0]C[+57.0]DKPLLEK", 3), 7.0},
-                    {new PeptideLibraryKey("SHC[+57.0]IAEVEK", 3), 6.0},
-                    {new PeptideLibraryKey("DDPHAC[+57.0]YSTVFDK", 2), 24.0}
+                    {PeptideLibraryKey.CreateSimple("LC[+57.0]VLHEK", 2), 18.09  },
+                    {PeptideLibraryKey.CreateSimple("EC[+57.0]C[+57.0]DKPLLEK", 3), 7.0},
+                    {PeptideLibraryKey.CreateSimple("SHC[+57.0]IAEVEK", 3), 6.0},
+                    {PeptideLibraryKey.CreateSimple("DDPHAC[+57.0]YSTVFDK", 2), 24.0}
                 }).AsDictionary();
                 foreach (var pair in doc1.PeptidePrecursorPairs)
                 {
@@ -298,7 +302,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     {
                         errMsg += "Could not locate explicit IMS info for " + key +"\n";
                     }
-                    var given = explicitDTs[key][0];
+                    var given = explicitDTs[key][0].IonMobilityAndCCS;
                     var measured = measuredDTs.GetIonMobilityInfo(key).First();
                     var msg = CheckDeltaPct(given.CollisionalCrossSectionSqA ?? 0, measured.CollisionalCrossSectionSqA ?? 0, tolerCCS, "measured CCS", key.ToString());
                     if (!string.IsNullOrEmpty(msg))
@@ -318,31 +322,28 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 return;
             }
 
-            LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetPrecursorFilter(doc1.MoleculeLibKeys.ToArray(), out var libraryPrecursorFiltersInfo);
             if (driftInfoExplicitDT == null)
             {
-                driftInfoExplicitDT = libraryIonMobilityInfo;
+                driftInfoExplicitDT = libraryPrecursorFiltersInfo;
             }
             else
             {
                 var instrumentInfo = new DataFileInstrumentInfo(new MsDataFileImpl(GetTestPath(basename+".d")));
-                var dictExplicitDT = driftInfoExplicitDT.GetIonMobilityDict();
+                var dictExplicitDT = driftInfoExplicitDT.GetPrecursorFiltersDict();
                 foreach (var pep in doc1.Peptides)
                 {
                     foreach (var nodeGroup in pep.TransitionGroups)
                     {
-                        var calculatedDriftTime = doc1.Settings.GetIonMobilityFilter(
-                            pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0);
+                        var calculatedDriftTime = doc1.Settings.GetIonMobilityFilter(nodeGroup, null, instrumentInfo, 0);
                         var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
-                        IonMobilityAndCCS[] infoValueExplicitDT;
-                        if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
+                        if (!dictExplicitDT.TryGetValue(libKey, out var infoValueExplicitDT))
                         {
                             errmsg += "No driftinfo value found for " + libKey + "\n";
                         }
                         else
                         {
-                            var ionMobilityInfo = infoValueExplicitDT[0];
+                            var ionMobilityInfo = infoValueExplicitDT[0].IonMobilityAndCCS;
                             var delta = Math.Abs(ionMobilityInfo.IonMobility.Mobility.Value -calculatedDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value);
                             var acceptableDelta = (libKey.Sequence.StartsWith("DDPHAC") || libKey.Sequence.EndsWith("VLHEK")) ? 3: 1; // These were ambiguous matches
                             if (delta > acceptableDelta)
@@ -356,12 +357,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-
             float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
             var numPeaks = _testCase == 1 ?
-                new[] {  8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  9, 10, 7, 10, 10, 10, 10, 8, 10, 10, 10, 10, 10, 10,  9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 8, 10, 10, 10, 10, 10 } :
+                new[] {  8, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  9, 10, 7, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,  9, 9, 10, 10, 8, 10, 10, 10, 10, 10 } :
                 new[] { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 8,  9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
 
             int npIndex = 0;
@@ -374,7 +374,10 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 foreach (var chromGroup in chromGroupInfo)
                 {
                     if (numPeaks[npIndex] !=  chromGroup.NumPeaks)
-                        errmsg += String.Format("unexpected peak count {0} instead of {1} in chromatogram {2}\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex);
+                    {
+                        errmsg += String.Format("unexpected peak count {0} instead of {1} in chromatogram {2} ({3} mz {4} im {5} ccs {6})\r\n", chromGroup.NumPeaks, numPeaks[npIndex], npIndex,
+                            chromGroup.TextId, chromGroup.PrecursorMz, chromGroup.PrecursorIonMobility, chromGroup.PrecursorCollisionalCrossSection);
+                    }
                     npIndex++;
                     foreach (var tranInfo in chromGroup.TransitionPointSets)
                     {
@@ -382,7 +385,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     }
                 }
             }
-            AssertEx.IsTrue(errmsg.Length == 0, errmsg);
+            AssertEx.IsTrue(string.IsNullOrEmpty(errmsg), errmsg);
             AssertEx.AreEqual(_testCase == 1 ? 2265204 : 1326442, maxHeight, 1);
 
             // Does CCS show up in reports?

@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model
 
         public bool Contains(KeyValuePair<Target, TValue> item)
         {
-            return _libKeyMap.ItemsMatching(MakeKey(item.Key), false).Contains(item.Value);
+            return _libKeyMap.ItemsMatching(MakeKey(item.Key), LibKeyIndex.LibraryMatchType.target).Contains(item.Value);
         }
 
         public bool ContainsKey(Target key)
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model
 
         private IEnumerable<TValue> ItemsMatching(Target target)
         {
-            return _libKeyMap.ItemsMatching(MakeKey(target), false);
+            return _libKeyMap.ItemsMatching(MakeKey(target), LibKeyIndex.LibraryMatchType.target);
         }
         private static LibraryKey MakeKey(Target target)
         {

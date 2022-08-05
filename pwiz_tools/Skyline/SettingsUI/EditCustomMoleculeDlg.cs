@@ -39,7 +39,7 @@ namespace pwiz.Skyline.SettingsUI
         private Adduct _resultAdduct;
         private readonly FormulaBox _formulaBox;
         private readonly Identity _initialId;
-        private readonly IEnumerable<Identity> _existingIds;
+        private readonly IEnumerable<DocNode> _existingIds;
         private readonly int _minCharge;
         private readonly int _maxCharge;
         private readonly TransitionSettings _transitionSettings;
@@ -71,9 +71,9 @@ namespace pwiz.Skyline.SettingsUI
         /// Null values imply "don't ask user for this"
         /// </summary>
         public EditCustomMoleculeDlg(SkylineWindow parent, UsageMode usageMode, string title, Identity initialId,
-            IEnumerable<Identity> existingIds, int minCharge, int maxCharge,
+            IEnumerable<DocNode> existingIds, int minCharge, int maxCharge,
             SrmSettings settings, CustomMolecule molecule, Adduct defaultCharge,
-            ExplicitTransitionGroupValues explicitTransitionGroupAttributes,
+            PrecursorFilter explicitTransitionGroupAttributes,
             ExplicitTransitionValues explicitTransitionAttributes,
             ExplicitRetentionTimeInfo explicitRetentionTime,
             IsotopeLabelType defaultIsotopeLabelType)
@@ -95,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
             var enableAdductEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor ||
                                       usageMode == UsageMode.fragment;
             var needExplicitTransitionValues = usageMode == UsageMode.fragment;
-            var needExplicitTransitionGroupValues = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor;
+            var needExplicitPrecursorFilter = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor;
 
             InitializeComponent();
 
@@ -119,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI
                 textDeclusteringPotential.Visible = false;
             }
 
-            if (!needExplicitTransitionGroupValues)
+            if (!needExplicitPrecursorFilter)
             {
                 labelPrecursorCollisionEnergy.Visible = false;
                 textBoxPrecursorCollisionEnergy.Visible = false;
@@ -148,12 +148,12 @@ namespace pwiz.Skyline.SettingsUI
                 var newHeight = groupBoxOptionalValues.Height;
                 var movers = new List<Control>();
                 int offset = 0;
-                if (!needExplicitTransitionGroupValues && !needExplicitTransitionValues)
+                if (!needExplicitPrecursorFilter && !needExplicitTransitionValues)
                 {
                     // We blanked out everything but the retention time
                     newHeight = labelCollisionEnergy.Location.Y;
                 }
-                else if (!needExplicitTransitionGroupValues)
+                else if (!needExplicitPrecursorFilter)
                 {
                     // We need to shift transition-level items up to where retention time was
                     movers.AddRange(new Control[]{
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.SettingsUI
                 groupBoxOptionalValues.Height = newHeight;
             }
 
-            ResultExplicitTransitionGroupValues = explicitTransitionGroupAttributes ?? ExplicitTransitionGroupValues.EMPTY;
+            ResultExplicitPrecursorFilter = explicitTransitionGroupAttributes ?? PrecursorFilter.EMPTY;
             ResultExplicitTransitionValues = new ExplicitTransitionValues(explicitTransitionAttributes);
 
             string labelAverage = !defaultCharge.IsEmpty
@@ -361,24 +361,24 @@ namespace pwiz.Skyline.SettingsUI
             public class ExplicitValues
             {
                 public ExplicitValues(EditCustomMoleculeDlg dlg) : this(dlg.ResultRetentionTimeInfo,
-                    dlg.ResultExplicitTransitionGroupValues, dlg.ResultExplicitTransitionValues)
+                    dlg.ResultExplicitPrecursorFilter, dlg.ResultExplicitTransitionValues)
                 {
                 }
                 
 
                 public ExplicitValues(ExplicitRetentionTimeInfo resultRetentionTimeInfo,
-                    ExplicitTransitionGroupValues resultExplicitTransitionGroupValues,
+                    PrecursorFilter resultExplicitPrecursorFilter,
                     ExplicitTransitionValues resultExplicitTransitionValues)
                 {
                     ResultRetentionTimeInfo = resultRetentionTimeInfo;
-                    ResultExplicitTransitionGroupValues = resultExplicitTransitionGroupValues;
+                    ResultExplicitPrecursorFilter = resultExplicitPrecursorFilter;
                     ResultExplicitTransitionValues = resultExplicitTransitionValues;
                 }
 
                 [TrackChildren(ignoreName:true)]
                 public ExplicitRetentionTimeInfo ResultRetentionTimeInfo { get; private set; }
                 [TrackChildren(ignoreName: true)]
-                public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues { get; private set; }
+                public PrecursorFilter ResultExplicitPrecursorFilter { get; private set; }
                 [TrackChildren(ignoreName: true)]
                 public ExplicitTransitionValues ResultExplicitTransitionValues { get; private set; }
             }
@@ -394,30 +394,37 @@ namespace pwiz.Skyline.SettingsUI
             get { return _resultAdduct; }
         }
 
-        public void SetResult(CustomMolecule mol, Adduct adduct)
+        public IonMobilityAndCCS ResultExplicitIonMobility
+        {
+            get { return ResultExplicitPrecursorFilter.IonMobilityAndCCS; }
+        }
+
+        public void SetResultIon(CustomMolecule mol, Adduct adduct)
         {
             _resultCustomMolecule = mol;
             _resultAdduct = adduct;
             SetNameAndFormulaBoxText();
         }
 
-        public ExplicitTransitionGroupValues ResultExplicitTransitionGroupValues
+        public PrecursorFilter ResultExplicitPrecursorFilter
         {
             get
             {
-                var val = ExplicitTransitionGroupValues.Create(PrecursorCollisionEnergy, 
+                var val = PrecursorFilter.Create(PrecursorCollisionEnergy, 
                     IonMobility,
                     IonMobilityUnits,
-                    CollisionalCrossSectionSqA);
+                    CollisionalCrossSectionSqA,
+                    IonMobilityHighEnergyOffset);
                 return val;
             }
             set
             {
-                var resultExplicitTransitionGroupValues = value ?? ExplicitTransitionGroupValues.EMPTY;
-                PrecursorCollisionEnergy = resultExplicitTransitionGroupValues.CollisionEnergy;
-                IonMobility = resultExplicitTransitionGroupValues.IonMobility;
-                IonMobilityUnits = resultExplicitTransitionGroupValues.IonMobilityUnits;
-                CollisionalCrossSectionSqA = resultExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
+                var resultExplicitPrecursorFilter = value ?? PrecursorFilter.EMPTY;
+                PrecursorCollisionEnergy = resultExplicitPrecursorFilter.CollisionEnergy;
+                IonMobility = resultExplicitPrecursorFilter.IonMobility;
+                IonMobilityUnits = resultExplicitPrecursorFilter.IonMobilityUnits;
+                CollisionalCrossSectionSqA = resultExplicitPrecursorFilter.CollisionalCrossSectionSqA;
+                IonMobilityHighEnergyOffset = resultExplicitPrecursorFilter.IonMobilityHighEnergyOffset;
             }
         }
 
@@ -587,10 +594,10 @@ namespace pwiz.Skyline.SettingsUI
                 var doc = _parent?.Document;
                 var node =
                     doc?.MoleculeTransitionGroups.FirstOrDefault(n =>
-                        n.ExplicitValues.IonMobilityUnits != eIonMobilityUnits.none);
+                        n.ExplicitPrecursorFilter.IonMobilityUnits != eIonMobilityUnits.none);
                 if (node != null)
                 {
-                    IonMobilityUnits = node.ExplicitValues.IonMobilityUnits;
+                    IonMobilityUnits = node.ExplicitPrecursorFilter.IonMobilityUnits;
                     return;
                 }
 
@@ -731,8 +738,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (_usageMode == UsageMode.precursor)
             {
-                // Only the adduct should be changing
-                SetResult(_resultCustomMolecule, Adduct);
+                // Only the adduct should be changing (and with that, possibly the ion mobility value)
+                SetResultIon(_resultCustomMolecule, Adduct);
             }
             else if (!string.IsNullOrEmpty(_formulaBox.NeutralFormula))
             {
@@ -743,7 +750,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         name = _formulaBox.NeutralFormula; // Clip off any adduct description
                     }
-                    SetResult(new CustomMolecule(_formulaBox.NeutralFormula, name), Adduct);
+                    SetResultIon(new CustomMolecule(_formulaBox.NeutralFormula, name), Adduct);
                 }
                 catch (InvalidDataException x)
                 {
@@ -753,7 +760,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                SetResult(new CustomMolecule(monoMass, averageMass, textName.Text), Adduct);
+                SetResultIon(new CustomMolecule(monoMass, averageMass, textName.Text), Adduct);
             }
             // Did user change the list of heavy labels?
             if (_driverLabelType != null)
@@ -787,20 +794,26 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            // See if this combination of charge and label would conflict with any existing transition groups
-            if (_existingIds != null && _existingIds.Any(t =>
+            // See if this combination of charge and label and ion mobility would conflict with any existing transition groups
+            var conflict = _existingIds == null ? null :
+                _existingIds.FirstOrDefault(t =>
+                {
+                    var transitionGroup = t as TransitionGroupDocNode;
+                    var ionMobility = transitionGroup?.IonMobilityAndCCS;
+                    return transitionGroup != null && Equals(transitionGroup.LabelType, IsotopeLabelType) &&
+                           Equals(transitionGroup.PrecursorAdduct.AsFormula(),
+                               Adduct.AsFormula()) && // Compare AsFormula so proteomic and non-proteomic protonation are seen as same thing
+                           (Equals(ionMobility.CollisionalCrossSectionSqA, CollisionalCrossSectionSqA) ||
+                            (Equals(ionMobility.IonMobility.Mobility, IonMobility) && Equals(ionMobility.IonMobility.Units, IonMobilityUnits))) &&
+                           !ReferenceEquals(transitionGroup.TransitionGroup, _initialId);
+                }) as TransitionGroupDocNode;
+            if (conflict != null)
             {
-                var transitionGroup = t as TransitionGroup;
-                return transitionGroup != null && Equals(transitionGroup.LabelType, IsotopeLabelType) &&
-                       Equals(transitionGroup.PrecursorAdduct.AsFormula(),
-                           Adduct
-                               .AsFormula()) && // Compare AsFormula so proteomic and non-proteomic protonation are seen as same thing
-                       !ReferenceEquals(t, _initialId);
-            }))
-            {
+                var detail = conflict.IonMobilityAndCCS.IsEmpty
+                    ? Resources.EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_
+                    : Resources.EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct__label_type__and_ion_mobility_already_exists_;
                 helper.ShowTextBoxError(textName,
-                    Resources
-                        .EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_,
+                    detail,
                     textName.Text);
                 return;
             }
@@ -808,10 +821,10 @@ namespace pwiz.Skyline.SettingsUI
             // See if this would conflict with any existing transitions
             if (_existingIds != null && (_existingIds.Any(t =>
             {
-                var transition = t as Transition;
-                return transition != null && (Equals(transition.Adduct.AsFormula(), Adduct.AsFormula()) &&
-                                              Equals(transition.CustomIon, ResultCustomMolecule)) &&
-                       !ReferenceEquals(t, _initialId);
+                var transition = t as TransitionDocNode;
+                return transition != null && Equals(transition.Adduct.AsFormula(), Adduct.AsFormula()) &&
+                                             Equals(transition.CustomIon, ResultCustomMolecule) &&
+                       !ReferenceEquals(transition.Transition, _initialId);
             })))
             {
                 helper.ShowTextBoxError(textName,

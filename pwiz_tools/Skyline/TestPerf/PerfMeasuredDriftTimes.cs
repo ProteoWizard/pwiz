@@ -67,7 +67,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             List<ValidatingIonMobilityPrecursor> curatedDTs = null;
             var measuredDTs = new List<List<ValidatingIonMobilityPrecursor>>();
             var precursors = new LibKeyIndex(document.MoleculePrecursorPairs.Select(
-                p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct).LibraryKey));
+                p => p.NodePep.ModifiedTarget.GetLibKey(p.NodeGroup.PrecursorAdduct, p.NodeGroup.EffectivePrecursorFilter).LibraryKey));
             PauseForScreenShot(@"Legacy ion mobility values loaded, placed in .imsdb database file"); // For a quick demo when you need it
             for (var pass = 0; pass < 2; pass++)
             {
@@ -104,11 +104,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     var cdt = curatedDTs[n];
                     var key = cdt.Precursor;
-                    var indexM = measuredDTs[pass].FindIndex(m => m.Precursor.Equals(key));
+                    var indexM = measuredDTs[pass].FindIndex(m => m.Precursor.EqualsIgnoringPrecursorFilter(key));
                     var measured = measuredDTs[pass][indexM];
                     var measuredDT = measured.IonMobility;
                     var measuredHEO = measured.HighEnergyIonMobilityOffset;
-                    if (precursors.ItemsMatching(key, true).Any())
+                    if (precursors.ItemsMatching(key, LibKeyIndex.LibraryMatchType.ion).Any())
                     {
                         count++;
                         AssertEx.AreNotEqual(cdt.IonMobility, measuredDT, "measured drift time should differ somewhat for "+measured.Precursor);
@@ -144,7 +144,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var validatingIonMobilityPeptide0 = measuredDTs[0][n];
                 var validatingIonMobilityPeptide1 = measuredDTs[1][n];
                 var key = measuredDTs[0][n].Precursor;
-                if (precursors.ItemsMatching(key, true).Any())
+                if (precursors.ItemsMatching(key, LibKeyIndex.LibraryMatchType.ion).Any())
                 {
                     ccount++;
                     if (validatingIonMobilityPeptide0.HighEnergyIonMobilityOffset == validatingIonMobilityPeptide1.HighEnergyIonMobilityOffset)
@@ -171,7 +171,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     var im = item.IonMobility;
                     var heo = item.HighEnergyIonMobilityOffset;
-                    revised.Add(new ValidatingIonMobilityPrecursor(item.Precursor,
+                    revised.Add(new ValidatingIonMobilityPrecursor(item.Precursor.Target, item.Precursor.Adduct,
                         IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(im * 1.02, item.IonMobilityUnits),
                             item.CollisionalCrossSectionSqA * 1.02, heo *1.02)));
                 }

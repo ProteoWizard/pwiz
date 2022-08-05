@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
                             // with zero points in it, but this happens all the time with DDA MS2).
                             // Assert.IsNotNull(transitionChromInfo.PointsAcrossPeak);
 
-                            var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance,
+                            var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionGroupDocNode, transitionDocNode, tolerance,
                                 TransformChrom.raw, null);
                             Assert.IsNotNull(chromatogramInfo);
                             if (transitionDocNode.IsMs1)

@@ -36,8 +36,8 @@ namespace pwiz.Skyline.Model.IonMobility
     /// </summary>
     public class ValidatingIonMobilityPrecursor : DbPrecursorAndIonMobility
     {
-        public ValidatingIonMobilityPrecursor(LibKey libKey, IonMobilityAndCCS ionMobility) :
-            base(new DbPrecursorIon(libKey.Target, libKey.Adduct), 
+        public ValidatingIonMobilityPrecursor(Target target, Adduct precursorAdduct, IonMobilityAndCCS ionMobility) :
+            base(new DbPrecursorIon(target, precursorAdduct), 
                 ionMobility.CollisionalCrossSectionSqA, ionMobility.IonMobility.Mobility??0, ionMobility.IonMobility.Units, ionMobility.HighEnergyIonMobilityValueOffset)
         {
         }
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         public ValidatingIonMobilityPrecursor(DbPrecursorAndIonMobility value)
-            : this(value.DbPrecursorIon.GetLibKey(), value.GetIonMobilityAndCCS())
+            : this(value.DbPrecursorIon.GetTarget(), value.DbPrecursorIon.GetPrecursorAdduct(), value.GetIonMobilityAndCCS())
         {
         }
 
@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public LibKey Precursor
         {
-            get { return base.DbPrecursorIon.GetLibKey(); }
+            get { return base.GetLibKey(); }
         }
 
         public string Validate()
@@ -134,20 +134,21 @@ namespace pwiz.Skyline.Model.IonMobility
     public class PrecursorIonMobilities
     {
         // Multiple conformer ctor
-        public PrecursorIonMobilities(LibKey libKey, IEnumerable<IonMobilityAndCCS> ionMobilities)
+        public PrecursorIonMobilities(Target target, Adduct precursorAdduct, IEnumerable<IonMobilityAndCCS> ionMobilities)
         {
-            Precursor = libKey;
+            Target = target;
+            PrecursorAdduct = precursorAdduct;
             IonMobilities = ionMobilities.ToList();
         }
 
         // Single conformer ctor
-        public PrecursorIonMobilities(Target seq, 
+        public PrecursorIonMobilities(Target target, 
             Adduct precursorAdduct, 
             double collisionalCrossSection, 
             double ionMobility, 
             double highEnergyIonMobilityOffset, 
             eIonMobilityUnits units)
-            : this(new LibKey(seq, precursorAdduct), 
+            : this(target, precursorAdduct, 
                 IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, units, collisionalCrossSection, highEnergyIonMobilityOffset))
         {
         }
@@ -159,32 +160,33 @@ namespace pwiz.Skyline.Model.IonMobility
             double ionMobility,
             double highEnergyIonMobilityOffset,
             eIonMobilityUnits units)
-            : this(new LibKey(new Target(smallMoleculeLibraryAttributes), precursorAdduct),
+            : this(new Target(smallMoleculeLibraryAttributes), precursorAdduct,
                 IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, units, collisionalCrossSection, highEnergyIonMobilityOffset))
         {
         }
 
         // Single conformer ctor
-        public PrecursorIonMobilities(LibKey libKey, IonMobilityAndCCS im)
-            : this(libKey, new List<IonMobilityAndCCS>() { im })
+        public PrecursorIonMobilities(Target target, Adduct precursorAdduct, IonMobilityAndCCS im)
+            : this(target, precursorAdduct, new List<IonMobilityAndCCS>() { im })
         {
         }
 
         public PrecursorIonMobilities(PrecursorIonMobilities other)
-            : this(other.Precursor, other.IonMobilities)
+            : this(other.Target, other.PrecursorAdduct, other.IonMobilities)
         {
         }
 
-        public LibKey Precursor { get; private set; }
+        public Target Target { get; set; }
+        public Adduct PrecursorAdduct { get; private set; }
         public IList<IonMobilityAndCCS> IonMobilities { get; private set; } // Allow for multiple conformers
 
         public string Validate()
         {
             var messages = new List<string>();
             string result;
-            if ((result = ValidateSequence(Precursor.Target)) != null)
+            if ((result = ValidateSequence(Target)) != null)
                 messages.Add(result);
-            if ((result = ValidateAdduct(Precursor.Adduct)) != null)
+            if ((result = ValidateAdduct(PrecursorAdduct)) != null)
                 messages.Add(result);
             if (IonMobilities == null || IonMobilities.Count == 0)
                 messages.Add(Resources.ValidatingIonMobilityPeptide_Validate_No_ion_mobility_information_found);

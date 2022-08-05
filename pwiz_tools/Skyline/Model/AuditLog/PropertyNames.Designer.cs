@@ -1015,87 +1015,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Collisional Cross Section (sqA).
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_CollisionalCrossSectionSqA {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_CollisionalCrossSectionSqA", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Collision energy.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_CollisionEnergy {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_CollisionEnergy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Compensation voltage.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_CompensationVoltage {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_CompensationVoltage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cone voltage.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_ConeVoltage {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_ConeVoltage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Declustering potential.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_DeclusteringPotential {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_DeclusteringPotential", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion mobility.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_IonMobility {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_IonMobility", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to High energy ion mobility offset.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ion mobility units.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_IonMobilityUnits {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_IonMobilityUnits", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to S-Lens.
-        /// </summary>
-        public static string ExplicitTransitionGroupValues_SLens {
-            get {
-                return ResourceManager.GetString("ExplicitTransitionGroupValues_SLens", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Collision energy.
         /// </summary>
         public static string ExplicitTransitionValues_CollisionEnergy {
@@ -1920,6 +1839,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string IonMobilityValue_Mobility {
             get {
                 return ResourceManager.GetString("IonMobilityValue_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility units.
+        /// </summary>
+        public static string IonMobilityValue_Units {
+            get {
+                return ResourceManager.GetString("IonMobilityValue_Units", resourceCulture);
             }
         }
         
@@ -2964,6 +2892,87 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string PivotSpec_Values {
             get {
                 return ResourceManager.GetString("PivotSpec_Values", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collisional Cross Section (sqA).
+        /// </summary>
+        public static string PrecursorFilter_CollisionalCrossSectionSqA {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_CollisionalCrossSectionSqA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collision energy.
+        /// </summary>
+        public static string PrecursorFilter_CollisionEnergy {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_CollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation voltage.
+        /// </summary>
+        public static string PrecursorFilter_CompensationVoltage {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_CompensationVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cone voltage.
+        /// </summary>
+        public static string PrecursorFilter_ConeVoltage {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_ConeVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declustering potential.
+        /// </summary>
+        public static string PrecursorFilter_DeclusteringPotential {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_DeclusteringPotential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility.
+        /// </summary>
+        public static string PrecursorFilter_IonMobility {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_IonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High energy ion mobility offset.
+        /// </summary>
+        public static string PrecursorFilter_IonMobilityHighEnergyOffset {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_IonMobilityHighEnergyOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion mobility units.
+        /// </summary>
+        public static string PrecursorFilter_IonMobilityUnits {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_IonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to S-Lens.
+        /// </summary>
+        public static string PrecursorFilter_SLens {
+            get {
+                return ResourceManager.GetString("PrecursorFilter_SLens", resourceCulture);
             }
         }
         
@@ -4345,6 +4354,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit precursor filter.
+        /// </summary>
+        public static string TransitionGroupDocNode_ExplicitPrecursorFilter {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_ExplicitPrecursorFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit values.
         /// </summary>
         public static string TransitionGroupDocNode_ExplicitValues {
@@ -4359,6 +4377,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionGroupDocNode_LabelType {
             get {
                 return ResourceManager.GetString("TransitionGroupDocNode_LabelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library ion mobility.
+        /// </summary>
+        public static string TransitionGroupDocNode_LibraryIonMobility {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_LibraryIonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Library precursor filter.
+        /// </summary>
+        public static string TransitionGroupDocNode_LibraryPrecursorFilter {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_LibraryPrecursorFilter", resourceCulture);
             }
         }
         

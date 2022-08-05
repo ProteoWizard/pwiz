@@ -253,11 +253,11 @@ namespace pwiz.SkylineTest
             AssertEx.Contains(output, Resources.CommandLine_ImportTransitionList_Warning__The_document_is_missing_iRT_standards);
             // The data has fake ion mobility values set as 1+(mz/2), this should appear in document and in library
             var mobilities = new HashSet<double>();
-            foreach (var tg in docSuccess2.MoleculeTransitionGroups.Where(n => n.ExplicitValues.IonMobility.HasValue))
+            foreach (var tg in docSuccess2.MoleculeTransitionGroups.Where(n => n.ExplicitPrecursorFilter.IonMobility.HasValue))
             {
                 var imExpected = 1 + (0.5 * tg.PrecursorMz);
-                AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < 0.001);
-                mobilities.Add(tg.ExplicitValues.IonMobility.Value);
+                AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitPrecursorFilter.IonMobility.Value) < 0.001);
+                mobilities.Add(tg.ExplicitPrecursorFilter.IonMobility.Value);
             }
 
             var currentLibrary = docSuccess2.Settings.PeptideSettings.Libraries.Libraries[0];

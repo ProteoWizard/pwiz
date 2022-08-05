@@ -59,17 +59,18 @@ namespace pwiz.Skyline.Model
 
         private readonly Peptide _peptide;
 
-        public TransitionGroup(Peptide peptide, Adduct precursorAdduct, IsotopeLabelType labelType)
-            : this(peptide, precursorAdduct, labelType, false, null)
+        public TransitionGroup(Peptide peptide, Adduct precursorAdduct, IsotopeLabelType labelType, int conformerID = 0)
+            : this(peptide, precursorAdduct, labelType, false, null, conformerID)
         {
         }
 
-        public TransitionGroup(Peptide peptide, Adduct precursorAdduct, IsotopeLabelType labelType, bool unlimitedCharge, int? decoyMassShift)
+        public TransitionGroup(Peptide peptide, Adduct precursorAdduct, IsotopeLabelType labelType, bool unlimitedCharge, int? decoyMassShift, int conformerID = 0)
         {
             _peptide = peptide;
             PrecursorAdduct = precursorAdduct;
             LabelType = labelType;
             DecoyMassShift = decoyMassShift;
+            ConformerID = conformerID;
 
             Validate(unlimitedCharge ? 0 : precursorAdduct.AdductCharge);
         }
@@ -84,10 +85,11 @@ namespace pwiz.Skyline.Model
         public int PrecursorCharge { get { return PrecursorAdduct.AdductCharge; } }
         public Adduct PrecursorAdduct { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
+        public int ConformerID { get; private set; } // May have sibling ions distinguished by other separation dimensions (e.g. ion mobility)
         public int? DecoyMassShift { get; private set; }
         public bool IsCustomIon { get { return CustomMolecule != null; } }
-        public bool IsProteomic { get { return !Peptide.IsCustomMolecule; }
-    }
+        public bool IsProteomic { get { return !Peptide.IsCustomMolecule; } }
+        public bool IsConformer => ConformerID != 0;
         public string LabelTypeText
         {
             get { return (!LabelType.IsLight ? @" (" + LabelType + @")" : string.Empty); }
@@ -344,9 +346,9 @@ namespace pwiz.Skyline.Model
                 var calc = settings.GetFragmentCalc(labelType, mods);
                 if (calc == null)
                     continue;
-                var tranGroupOther = new TransitionGroup(Peptide, PrecursorAdduct, labelType, false, DecoyMassShift);
-                var nodeGroupOther = new TransitionGroupDocNode(tranGroupOther, Annotations.EMPTY, settings, mods,
-                    libInfo, ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], false);
+                var tranGroupOther = new TransitionGroup(Peptide, PrecursorAdduct, labelType, false, DecoyMassShift, ConformerID);
+                var nodeGroupOther = new TransitionGroupDocNode(tranGroupOther, Annotations.EMPTY, settings, mods,  
+                    libInfo, groupDocNode.ExplicitPrecursorFilter, groupDocNode.LibraryPrecursorFilter, null, new TransitionDocNode[0], false);
 
                 listOtherTypes.Add(new Tuple<TransitionGroupDocNode, IFragmentMassCalc>(nodeGroupOther, calc));
             }
@@ -885,6 +887,21 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        // Comparison ignoring ConformerID
+        public bool IsConformerOf(TransitionGroup other)
+        {
+            // You can't be a conformer of yourself
+            return !ReferenceEquals(other, this) && IsConformerOf(other.Peptide, other.PrecursorAdduct, other.LabelType, other.DecoyMassShift);
+        }
+        public bool IsConformerOf(Peptide peptide, Adduct precursorAdduct, IsotopeLabelType labelType, int? decoyMassShift)
+        {
+            return
+                Equals(labelType, LabelType) &&
+                Equals(decoyMassShift, DecoyMassShift) &&
+                Equals(precursorAdduct, PrecursorAdduct) &&
+                Equals(peptide, Peptide);
+        }
+
         #region object overrides
 
         public bool Equals(TransitionGroup obj)
@@ -892,9 +909,9 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             bool equal =  Equals(obj._peptide, _peptide) &&
-                Equals(obj.CustomMolecule, CustomMolecule) &&
-                obj.PrecursorAdduct == PrecursorAdduct &&
+                obj.PrecursorAdduct.Equals(PrecursorAdduct) &&
                 obj.LabelType.Equals(LabelType) &&
+                obj.ConformerID.Equals(ConformerID) &&
                 obj.DecoyMassShift.Equals(DecoyMassShift);
             return equal; // For debugging convenience
         }
@@ -915,17 +932,19 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ PrecursorAdduct.GetHashCode();
                 result = (result*397) ^ LabelType.GetHashCode();
                 result = (result*397) ^ (DecoyMassShift ?? 0);
+                result = (result*397) ^ ConformerID;
                 return result;
             }
         }
 
         public override string ToString()
         {
+            var conformerID = IsConformer ? string.Format(Resources.TransitionGroup_ToString_conformer___0_, ConformerID) : string.Empty;
             return LabelType.IsLight
-                       ? string.Format(@"Charge {0} {1}", PrecursorAdduct,   // For debugging
-                                       Transition.GetDecoyText(DecoyMassShift)) 
-                       : string.Format(@"Charge {0} ({1}) {2}", PrecursorAdduct, LabelType, // For debugging
-                                       Transition.GetDecoyText(DecoyMassShift));
+                ? string.Format(Resources.TransitionGroup_ToString_Charge__0___1___2_, PrecursorAdduct,
+                    Transition.GetDecoyText(DecoyMassShift), conformerID) 
+                : string.Format(Resources.TransitionGroup_ToString_Charge__0____1____2___3_, PrecursorAdduct, LabelType,
+                    Transition.GetDecoyText(DecoyMassShift), conformerID);
         }
 
         #endregion

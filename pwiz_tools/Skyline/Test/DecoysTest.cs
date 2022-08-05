@@ -28,7 +28,7 @@ namespace pwiz.SkylineTest
     /// Summary description for RefineTest
     /// </summary>
     [TestClass]
-    public class DecoysTest : AbstractUnitTest
+    public class DecoysTest : AbstractUnitTestEx
     {
         [TestMethod]
         public void GenerateDecoysTest()
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTest
         private static void ValidateDecoys(SrmDocument document, SrmDocument decoysDoc, bool modifiesSequences)
         {
             AssertEx.IsDocumentState(decoysDoc, 1, document.PeptideGroupCount + 1, document.PeptideCount*2,
-                document.PeptideTransitionGroupCount*2, document.PeptideTransitionCount*2);
+                document.MoleculeTransitionGroupCountIgnoringSpecialTestNodes*2, document.MoleculeTransitionCountIgnoringSpecialTestNodes*2);
 
             // Check for the existence of the Decoys peptide group and that everything under it is marked as a decoy. 
             var nodePeptideGroupDecoy = decoysDoc.PeptideGroups.Single(nodePeptideGroup => nodePeptideGroup.IsDecoy);

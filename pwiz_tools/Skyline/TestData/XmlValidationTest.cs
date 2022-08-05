@@ -24,10 +24,8 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Schema;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
@@ -105,7 +103,7 @@ namespace pwiz.SkylineTestData
                 // We don't expect any new peptides/precursors/transitions added due to the imported results.
                 var docCurrentResults = docContainer.ChangeMeasuredResults(new MeasuredResults(listChromatograms), 0, 0, 0);
 
-                WriteDocument(docCurrentResults, docCurrentPath);
+                AbstractUnitTestEx.WriteDocument(docCurrentResults, docCurrentPath);
 
                 docCurrentResults = ResultsUtil.DeserializeDocument(docCurrentPath);
                 Assert.IsNotNull(docCurrentResults);
@@ -195,7 +193,7 @@ namespace pwiz.SkylineTestData
             // Save the document.
             // IMPORTANT: update the default modifications first.
             doc08.Settings.UpdateDefaultModifications(true);
-            WriteDocument(doc08, docCurrentPath);
+            AbstractUnitTestEx.WriteDocument(doc08, docCurrentPath);
 
             Assert.IsTrue(File.Exists(docCurrentPath));
             var docCurrent = ResultsUtil.DeserializeDocument(docCurrentPath);
@@ -289,18 +287,6 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(massdiff, attribs.GetNamedItem(DocumentSerializer.ATTR.mass_diff).Value);
         }
 
-        private static void WriteDocument(SrmDocument doc, string docPath)
-        {
-            using (var writer = new XmlTextWriter(docPath, Encoding.UTF8) { Formatting = Formatting.Indented })
-            {
-                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                ser.Serialize(writer, doc);
-
-                writer.Flush();
-                writer.Close();
-            }
-        }
-
         // Schema validation warnings or errors.
         private void ValidationCallBack(object sender, ValidationEventArgs args)
         {
@@ -323,7 +309,7 @@ namespace pwiz.SkylineTestData
             // Save the document
             // IMPORTANT: update the default modifications first
             doc08.Settings.UpdateDefaultModifications(true);
-            WriteDocument(doc08, docCurrentPath);
+            AbstractUnitTestEx.WriteDocument(doc08, docCurrentPath);
 
             Assert.IsTrue(File.Exists(docCurrentPath));
             var docCurrent = ResultsUtil.DeserializeDocument(docCurrentPath);

@@ -935,6 +935,9 @@
   <data name="IonMobilityValue_Mobility" xml:space="preserve">
     <value>イオン移動度</value>
   </data>
+  <data name="IonMobilityValue_Units" xml:space="preserve">
+    <value>イオン移動度の単位</value>
+  </data>
   <data name="StaticMod_Label13C" xml:space="preserve">
     <value>13C</value>
   </data>
@@ -1058,43 +1061,43 @@
   <data name="ExplicitRetentionTimeInfo_RetentionTimeWindow" xml:space="preserve">
     <value>保持時間枠</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_CollisionalCrossSectionSqA" xml:space="preserve">
+  <data name="PrecursorFilter_CollisionalCrossSectionSqA" xml:space="preserve">
     <value>衝突断面積（sqA）</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
+  <data name="PrecursorFilter_CollisionEnergy" xml:space="preserve">
     <value>衝突エネルギー</value>
   </data>
   <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
     <value>衝突エネルギー</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
+  <data name="PrecursorFilter_CompensationVoltage" xml:space="preserve">
     <value>補償電圧</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
+  <data name="PrecursorFilter_ConeVoltage" xml:space="preserve">
     <value>コーン電圧</value>
   </data>
   <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
     <value>コーン電圧</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+  <data name="PrecursorFilter_DeclusteringPotential" xml:space="preserve">
     <value>デクラスタリングポテンシャル</value>
   </data>
   <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
     <value>デクラスタリングポテンシャル</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobility" xml:space="preserve">
     <value>イオン移動度</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_IonMobilityUnits" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobilityUnits" xml:space="preserve">
     <value>イオン移動度の単位</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>イオン移動度の高エネルギーオフセット</value>
   </data>
   <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>イオン移動度の高エネルギーオフセット</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+  <data name="PrecursorFilter_SLens" xml:space="preserve">
     <value>S-レンズ</value>
   </data>
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">

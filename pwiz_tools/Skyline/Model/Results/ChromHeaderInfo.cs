@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Model.Results
         private int _uncompressedSize;
         private float _startTime;
         private float _endTime;
-        private float _collisionalCrossSection;
+        private float _collisionCrossSectionOrIonMobility; // Check flag bits to know which it is - handles FAIMS, and older drift time but no CCS formats
         /////////////////////////////////////////////////////////////////////
 
         [Flags]
@@ -174,7 +174,8 @@ namespace pwiz.Skyline.Model.Results
             raw_chromatograms = 0x80,
             ion_mobility_type_bitmask = 0x700, // 3 bits for ion mobility type none, drift, inverse_mobility, spares
             dda_acquisition_method = 0x800,
-            extracted_qc_trace = 0x1000
+            extracted_qc_trace = 0x1000,
+            has_im_but_no_ccs = 0x2000 // When set, understand the collisional cross section value as an ion mobility (for FAIMS etc)
         }
 
         /// <summary>
@@ -187,9 +188,9 @@ namespace pwiz.Skyline.Model.Results
         public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
             int compressedSize, int uncompressedSize,
             int numPoints, FlagValues flags, int statusId, int statusRank, float? startTime, float? endTime,
-            double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
+            double? collisionalCrossSection, double? ionMobility, eIonMobilityUnits ionMobilityUnits)
             : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags, statusId,
-                statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+                statusRank, startTime, endTime, collisionalCrossSection, ionMobility, ionMobilityUnits)
         {
         }
 
@@ -204,11 +205,12 @@ namespace pwiz.Skyline.Model.Results
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
                                      double? collisionalCrossSection, 
+                                     double? ionMobility,
                                      eIonMobilityUnits ionMobilityUnits)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
                    compressedSize, uncompressedSize, location, flags, statusId, statusRank,
-                   startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+                   startTime, endTime, collisionalCrossSection, ionMobility, ionMobilityUnits)
         {
         }
 
@@ -221,7 +223,7 @@ namespace pwiz.Skyline.Model.Results
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
-                                     double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
+                                     double? collisionCrossSection, double? ionMobility, eIonMobilityUnits ionMobilityUnits)
             : this()
         {
             _precursor = precursor.Value;
@@ -233,7 +235,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 flags &= ~FlagValues.polarity_negative;
             }
-            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
+            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues)((int)ionMobilityUnits << 8));
+
+            _collisionCrossSectionOrIonMobility = (float)(collisionCrossSection ?? ionMobility ?? 0);
+            if (ionMobility.HasValue && !collisionCrossSection.HasValue)
+            {
+                flags |= FlagValues.has_im_but_no_ccs; // e.g. FAIMS, and some older drift time formats
+            }
+            else
+            {
+                flags &= ~FlagValues.has_im_but_no_ccs;
+            }
+
             _textIdIndex = textIdIndex;
             _textIdLen = CheckUShort(textIdLen);
             _fileIndex = CheckUShort(fileIndex);
@@ -252,7 +265,6 @@ namespace pwiz.Skyline.Model.Results
             _statusRank = CheckUShort(statusRank, true);
             _startTime = startTime ?? -1;
             _endTime = endTime ?? -1;
-            _collisionalCrossSection = (float)(collisionalCrossSection ?? 0);
             if (_startTime < 0)
             {
                 _startTime = -1;  // Unknown
@@ -281,7 +293,7 @@ namespace pwiz.Skyline.Model.Results
             -1,
             headerInfo.LocationPoints,
             0, -1, -1,
-            null, null, null, eIonMobilityUnits.none)
+            null, null, null, null, eIonMobilityUnits.none)
         {
         }
 
@@ -384,9 +396,19 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                if (_collisionalCrossSection <= 0)
+                if (_collisionCrossSectionOrIonMobility == 0 || (Flags & FlagValues.has_im_but_no_ccs) != 0)
                     return null;
-                return _collisionalCrossSection;
+                return _collisionCrossSectionOrIonMobility;
+            }
+        }
+
+        public float? IonMobility
+        {
+            get
+            {
+                if (_collisionCrossSectionOrIonMobility == 0 || (Flags & FlagValues.has_im_but_no_ccs) == 0)
+                    return null;
+                return _collisionCrossSectionOrIonMobility;
             }
         }
 
@@ -1867,6 +1889,7 @@ namespace pwiz.Skyline.Model.Results
         public Target Target { get; private set; }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
         public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter.CollisionalCrossSectionSqA; }  }
+        public double? IonMobility { get { return IonMobilityFilter.IonMobility.Mobility; } }
         public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnits; } }
         public IonMobilityFilter IonMobilityFilter { get; private set; }
         public SignedMz Product { get; private set; }
@@ -1936,6 +1959,11 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
 
+            // Watch for multiple conformers
+            c = IonMobilityFilter.CompareTo(key.IonMobilityFilter);
+            if (c != 0)
+                return c;
+
             // Order by scan-type source, product m/z, extraction width
             c = CompareSource(key);
             if (c != 0)
@@ -1947,8 +1975,6 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
             return ExtractionWidth.CompareTo(key.ExtractionWidth);
-
-            // CONSIDER(bspratt) - we're currently ignoring ion mobility for comparison
         }
 
         public int ComparePrecursors(ChromKey key)
@@ -2249,6 +2275,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
+        public double? PrecursorIonMobility { get { return _groupHeaderInfo.IonMobility; } } // N.B.if PrecursorCollisionalCrossSection has a value this will not. But for FAIMS, or some older drift time formats, there is no CCS so this value is used instead
         public ChromCachedFile CachedFile { get { return _allFiles[_groupHeaderInfo.FileIndex]; } }
         public MsDataFileUri FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
@@ -2356,7 +2383,20 @@ namespace pwiz.Skyline.Model.Results
             return new SignedMz(_allTransitions[index].Product, _groupHeaderInfo.NegativeCharge);
         }
 
-        private bool IsProductGlobalMatch(int index, TransitionDocNode nodeTran, float tolerance)
+        private double? GetTargetIonMobility(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+        {
+            if (nodeTran != null && nodeGroup.IonMobilityAndCCS.HasIonMobilityValue)
+            {
+                var highEnergyOffset = nodeTran.IsMs1
+                    ? 0
+                    : nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ??
+                      nodeGroup.IonMobilityAndCCS.HighEnergyIonMobilityValueOffset ?? 0;
+                return nodeGroup.IonMobilityAndCCS.IonMobility.Mobility.Value + highEnergyOffset;
+            }
+            return null;
+        }
+
+        private bool IsProductGlobalMatch(int index, TransitionDocNode nodeTran, float tolerance, double? targetIonMobility)
         {
             var source = _allTransitions[index].Source;
             bool isMs1Chromatogram = source == ChromSource.ms1 || source == ChromSource.sim;
@@ -2364,6 +2404,20 @@ namespace pwiz.Skyline.Model.Results
             if (isMs1Chromatogram && nodeTran != null && !nodeTran.IsMs1)
             {
                 return false;
+            }
+
+            if (targetIonMobility.HasValue)
+            {
+                var ionMobility = _allTransitions[index].IonMobilityValue;
+                if (ionMobility != 0)
+                {
+                    var imWindow = _allTransitions[index].IonMobilityExtractionWidth;
+                    var lowBound = ionMobility - imWindow / 2;
+                    if (lowBound > targetIonMobility || targetIonMobility > lowBound + imWindow)
+                    {
+                        return false;
+                    }
+                }
             }
             var globalMz = GetProductGlobal(index);
             var tranMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
@@ -2380,21 +2434,22 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
         }
 
-        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression)
+        public ChromatogramInfo GetTransitionInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression)
         {
-            return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated, regression);
+            return GetTransitionInfo(nodeGroup, nodeTran, tolerance, TransformChrom.interpolated, regression);
         }
 
-        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform, OptimizableRegression regression)
+        public virtual ChromatogramInfo GetTransitionInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, float tolerance, TransformChrom transform, OptimizableRegression regression)
         {
             var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
             int? iNearest = null;
             double deltaNearestMz = double.MaxValue;
+            var targetIonMobility = GetTargetIonMobility(nodeGroup, nodeTran); // TODO(bspratt) is this really just IM, or CE etc too?
             for (int i = startTran; i < endTran; i++)
             {
-                if (IsProductGlobalMatch(i, nodeTran, tolerance))
+                if (IsProductGlobalMatch(i, nodeTran, tolerance, targetIonMobility))
                 {
                     int iMiddle;
                     if (regression == null)
@@ -2425,12 +2480,12 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public OptStepChromatograms GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
+        public OptStepChromatograms GetAllTransitionInfo(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
         {
             if (regression == null)
             {
                 // ReSharper disable ExpressionIsAlwaysNull
-                var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
+                var info = GetTransitionInfo(nodeGroup, nodeTran, tolerance, transform, regression);
                 // ReSharper restore ExpressionIsAlwaysNull
                 if (info != null)
                 {
@@ -2442,10 +2497,11 @@ namespace pwiz.Skyline.Model.Results
             var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
+            var targetIonMobility = GetTargetIonMobility(nodeGroup, nodeTran); // Really just IM?
             var listChromInfo = new List<ChromatogramInfo>();
             for (int i = startTran; i < endTran; i++)
             {
-                if (IsProductGlobalMatch(i, nodeTran, tolerance))
+                if (IsProductGlobalMatch(i, nodeTran, tolerance, targetIonMobility))
                 {
                     int startOptTran, endOptTran;
                     GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);

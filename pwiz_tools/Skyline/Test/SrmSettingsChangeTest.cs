@@ -112,7 +112,7 @@ namespace pwiz.SkylineTest
             SrmDocument docFasta2 = docCnbr.ChangeSettings(settings);
             Assert.AreEqual(docFasta.RevisionIndex + 2, docFasta2.RevisionIndex);
             Assert.AreEqual(docFasta.PeptideCount, docFasta2.PeptideCount);
-            Assert.AreEqual(docFasta.PeptideTransitionCount, docFasta2.PeptideTransitionCount);
+            Assert.AreEqual(docFasta.MoleculeTransitionCountIgnoringMultipleConformers, docFasta2.MoleculeTransitionCountIgnoringMultipleConformers);
 
             // Allow missed cleavages, and verify changes
             docFasta2 = docFasta.ChangeSettings(settings.ChangePeptideSettings(

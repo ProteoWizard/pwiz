@@ -2006,8 +2006,8 @@ namespace pwiz.Skyline
                 var nodeGroup = nodeGroupTree.DocNode;
                 var groupPath = nodeGroupTree.Path;
                 // List of existing transitions to avoid duplication
-                var existingIons = nodeGroup.Transitions.Select(child => child.Transition)
-                                                        .Where(c => c.IsNonReporterCustomIon()).ToArray();
+                var existingIons = nodeGroup.Transitions
+                                                        .Where(c => c.Transition.IsNonReporterCustomIon()).ToArray();
                 using (var dlg = new EditCustomMoleculeDlg(this,
                     EditCustomMoleculeDlg.UsageMode.fragment,
                     Resources.SkylineWindow_AddMolecule_Add_Transition, null, existingIons,
@@ -2043,7 +2043,7 @@ namespace pwiz.Skyline
                 var pepPath = nodePepTree.Path;
                 var notFirst = nodePep.TransitionGroups.Any();
                 // Get a list of existing precursors - likely basis for adding a heavy version
-                var existingPrecursors = nodePep.TransitionGroups.Select(child => child.TransitionGroup).Where(c => c.IsCustomIon).ToArray();
+                var existingPrecursors = nodePep.TransitionGroups.Where(c => c.TransitionGroup.IsCustomIon).ToArray();
                 using (var dlg = new EditCustomMoleculeDlg(this,
                     EditCustomMoleculeDlg.UsageMode.precursor,
                     Resources.SkylineWindow_AddSmallMolecule_Add_Precursor,
@@ -2051,22 +2051,29 @@ namespace pwiz.Skyline
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings,
                     nodePep.Peptide.CustomMolecule,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.PrecursorAdduct : Adduct.SINGLY_PROTONATED,
-                    notFirst ? nodePep.TransitionGroups.First().ExplicitValues : ExplicitTransitionGroupValues.EMPTY,
+                    notFirst ? nodePep.TransitionGroups.First().ExplicitPrecursorFilter : PrecursorFilter.EMPTY,
                     null,
                     null,
                     notFirst ? nodePep.TransitionGroups.First().TransitionGroup.LabelType : IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        TransitionGroup tranGroup = null;
-                        TransitionGroupDocNode tranGroupDocNode = null;
-                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_, dlg.ResultCustomMolecule.DisplayName), doc =>
+                        // Assign ion mobility (or mobilities) as found in ion mobility library
+                        var precursorFilters = Document.Settings.GetLibraryPrecursorFilters(nodePep.Peptide.Target, dlg.Adduct);
+                        var conformer = 0;
+                        foreach (var details in precursorFilters)
                         {
-                            tranGroup = new TransitionGroup(nodePep.Peptide, dlg.Adduct, dlg.IsotopeLabelType);
-                            tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
-                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null, GetDefaultPrecursorTransitions(doc, tranGroup), true);
-                            return (SrmDocument)doc.Add(pepPath, tranGroupDocNode);
-                        }, docPair => AuditLogEntry.DiffDocNodes(MessageType.added_small_molecule_precursor, docPair, tranGroupDocNode.AuditLogText));
+//Interaction with other attributes like CE?
+                            TransitionGroupDocNode tranGroupDocNode = null;
+                            ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule_precursor__0_, dlg.ResultCustomMolecule.DisplayName), doc =>
+                            {
+                                var tranGroup = new TransitionGroup(nodePep.Peptide, dlg.Adduct, dlg.IsotopeLabelType, conformer++);
+                                tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
+                                    doc.Settings, null, null, 
+                                    dlg.ResultExplicitPrecursorFilter, details, null, GetDefaultPrecursorTransitions(doc, tranGroup), true);
+                                return (SrmDocument)doc.Add(pepPath, tranGroupDocNode);
+                            }, docPair => AuditLogEntry.DiffDocNodes(MessageType.added_small_molecule_precursor, docPair, tranGroupDocNode.AuditLogText));
+                        }
                     }
                 }
             }
@@ -2089,23 +2096,34 @@ namespace pwiz.Skyline
                     EditCustomMoleculeDlg.UsageMode.moleculeNew,
                     Resources.SkylineWindow_AddSmallMolecule_Add_Small_Molecule_and_Precursor, null, null,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, Document.Settings, null, Adduct.NonProteomicProtonatedFromCharge(1), 
-                    ExplicitTransitionGroupValues.EMPTY, ExplicitTransitionValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
+                    PrecursorFilter.EMPTY, ExplicitTransitionValues.EMPTY, ExplicitRetentionTimeInfo.EMPTY, IsotopeLabelType.light))
                 {
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        ModifyDocument(string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_, dlg.ResultCustomMolecule.DisplayName), doc =>
+                        var peptideMolecule = dlg.ResultCustomMolecule;
+                        var peptide = new Peptide(peptideMolecule);
+                        // Assign ion mobility (or mobilities) as found in ion mobility library
+                        var precursorFilters = Document.Settings.GetLibraryPrecursorFilters(peptide.Target, dlg.Adduct);
+                        var conformer = 0;
+                        foreach (var precursorFilter in precursorFilters)
                         {
-                            // If ion was described as having an adduct, leave that off for the parent "peptide" molecular formula
-                            var peptideMolecule = dlg.ResultCustomMolecule;
-                            var peptide = new Peptide(peptideMolecule);
-                            var tranGroup = new TransitionGroup(peptide, dlg.Adduct, dlg.IsotopeLabelType, true, null);
-                            var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
-                                doc.Settings, null, null, dlg.ResultExplicitTransitionGroupValues, null,
-                                GetDefaultPrecursorTransitions(doc, tranGroup), true);
-                            var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
-                                dlg.ResultRetentionTimeInfo, new[] { tranGroupDocNode }, true);
-                            return (SrmDocument)doc.Add(pepGroupPath, nodePepNew);
-                        }, docPair => AuditLogEntry.DiffDocNodes(MessageType.added_small_molecule, docPair, dlg.ResultCustomMolecule.DisplayName));
+                            ModifyDocument(
+                                string.Format(Resources.SkylineWindow_AddSmallMolecule_Add_small_molecule__0_,
+                                    dlg.ResultCustomMolecule.DisplayName), doc =>
+                                {
+                                    var tranGroup = new TransitionGroup(peptide, dlg.Adduct,
+                                        dlg.IsotopeLabelType, true, null, conformer++);
+                                    var tranGroupDocNode = new TransitionGroupDocNode(tranGroup, Annotations.EMPTY,
+                                        doc.Settings, null, null,
+                                        dlg.ResultExplicitPrecursorFilter, precursorFilter, null,
+                                        GetDefaultPrecursorTransitions(doc, tranGroup), true);
+                                    var nodePepNew = new PeptideDocNode(peptide, Document.Settings, null, null,
+                                        dlg.ResultRetentionTimeInfo, new[] {tranGroupDocNode}, true);
+                                    return (SrmDocument) doc.Add(pepGroupPath, nodePepNew);
+                                },
+                                docPair => AuditLogEntry.DiffDocNodes(MessageType.added_small_molecule, docPair,
+                                    dlg.ResultCustomMolecule.DisplayName));
+                        }
                     }
                 }
             }

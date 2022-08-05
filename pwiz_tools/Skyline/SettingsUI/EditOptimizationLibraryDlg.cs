@@ -628,6 +628,7 @@ namespace pwiz.Skyline.SettingsUI
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
                                 seqCharge.Charge,
+                                PrecursorFilter.EMPTY, // CONSIDER(bspratt) IMS, CE etc optimization
                                 fragCharge.FragmentIon,
                                 fragCharge.Adduct,
                                 double.Parse(values[2])));
@@ -642,7 +643,8 @@ namespace pwiz.Skyline.SettingsUI
                             libraryOptimizationsNew.Add(new DbOptimization(ViewDbType,
                                 seqCharge.ModifiedSequence,
                                 seqCharge.Charge,
-                                null, Adduct.EMPTY, double.Parse(values[1])));
+                                PrecursorFilter.EMPTY, // CONSIDER(bspratt) IMS, CE etc optimization
+                        null, Adduct.EMPTY, double.Parse(values[1])));
                         });
                 }
 
@@ -920,19 +922,20 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             var sequence = _document.Settings.GetSourceTarget(peptide);
                             var charge = nodeGroup.TransitionGroup.PrecursorAdduct;
+                            var precursorFilter = nodeGroup.EffectivePrecursorFilter;
                             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                             {
                                 OptimizationKey key = null;
                                 double? value = null;
                                 if (Equals(ViewType, ExportOptimize.CE))
                                 {
-                                    key = new OptimizationKey(ViewDbType, sequence, charge, nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture), nodeTran.Transition.Adduct);
+                                    key = new OptimizationKey(ViewDbType, sequence, charge, precursorFilter, nodeTran.GetFragmentIonName(CultureInfo.InvariantCulture), nodeTran.Transition.Adduct);
                                     value = OptimizationStep<CollisionEnergyRegression>.FindOptimizedValueFromResults(
                                             settings, peptide, nodeGroup, nodeTran, OptimizedMethodType.Transition, GetCollisionEnergy);
                                 }
                                 else if (Equals(ViewType, ExportOptimize.COV))
                                 {
-                                    key = new OptimizationKey(ViewDbType, sequence, charge, null, Adduct.EMPTY);
+                                    key = new OptimizationKey(ViewDbType, sequence, charge, precursorFilter, null, Adduct.EMPTY);
                                     value = OptimizationStep<CompensationVoltageRegressionFine>.FindOptimizedValueFromResults(_document.Settings,
                                         peptide, nodeGroup, null, OptimizedMethodType.Precursor, SrmDocument.GetCompensationVoltageFine) ?? 0;
                                 }

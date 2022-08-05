@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NHibernate;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -72,8 +73,7 @@ namespace pwiz.Skyline.Model.IonMobility
         private DateTime _modifiedTime;
 
         // N.B. We allow more than one ion mobility per ion - this is the "multiple conformers" case (ion may have multiple shapes, thus multiple CCS)
-        // LibKeyMap is a specialized dictionary class that can match modifications written at varying precisions
-        private LibKeyMap<List<IonMobilityAndCCS>> _dictLibrary;
+        private LibKeyIndex _dictLibrary;
 
         private IonMobilityDb(string path, ISessionFactory sessionFactory)
         {
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.IonMobility
             }
         }
 
-        public LibKeyMap<List<IonMobilityAndCCS>> DictLibrary
+        public LibKeyIndex DictLibrary
         {
             get { return _dictLibrary; }
             private set { _dictLibrary = value; }
@@ -109,11 +109,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
         {
-            if (DictLibrary.TryGetValue(key, out var im) && im.Count > 0)
-            {
-                return im;
-            }
-            return null;
+            var itemsMatching = DictLibrary.ItemsMatching(key, LibKeyIndex.LibraryMatchType.ion);
+            return itemsMatching.Select(item => item.LibraryKey.PrecursorFilter.IonMobilityAndCCS).ToList();
         }
 
         public IEnumerable<DbPrecursorAndIonMobility> GetIonMobilities()
@@ -122,6 +119,11 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 return session.CreateCriteria(typeof (DbPrecursorAndIonMobility)).List<DbPrecursorAndIonMobility>();
             }
+        }
+
+        public HashSet<eIonMobilityUnits> IonMobilityUnitsInUse
+        {
+            get { return DictLibrary == null ? new HashSet<eIonMobilityUnits>() : DictLibrary.IonMobilityUnitsInUse; }
         }
 
         #region Property change methods
@@ -147,7 +149,7 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 foreach (var im in pim.IonMobilities)
                 {
-                    list.Add(new DbPrecursorAndIonMobility(new DbPrecursorIon(pim.Precursor),
+                    list.Add(new DbPrecursorAndIonMobility(new DbPrecursorIon(pim.Target, pim.PrecursorAdduct),
                         im.CollisionalCrossSectionSqA, im.IonMobility.Mobility, im.IonMobility.Units, im.HighEnergyIonMobilityValueOffset));
                 }
             }
@@ -371,36 +373,26 @@ namespace pwiz.Skyline.Model.IonMobility
         /// </summary>
         private void LoadIonMobilities()
         {
-
-            var dictLibrary = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
-
             using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
             {
                 var ionMobilities = session.CreateCriteria(typeof(DbPrecursorAndIonMobility)).List<DbPrecursorAndIonMobility>();
-
-                foreach (var im in ionMobilities)
+                var libraryKeys = new List<LibraryKey>();
+                foreach (var item in ionMobilities)
                 {
-                    var dict = dictLibrary;
-                    try
+                    var mobility = PrecursorFilter.Create(null, item.GetIonMobilityAndCCS());
+                    var ion = item.DbPrecursorIon;
+                    var target = ion.DbMolecule.Target;
+                    if (target.IsProteomic)
                     {
-                        var key = im.DbPrecursorIon.GetLibKey();
-                        var ionMobilityAndCCS = im.GetIonMobilityAndCCS();
-                        if (!dict.TryGetValue(key, out var list))
-                        {
-                            dict.Add(key, new List<IonMobilityAndCCS>() {ionMobilityAndCCS});
-                        }
-                        else
-                        {
-                            list.Add(ionMobilityAndCCS);
-                        }
+                        libraryKeys.Add(LibraryKey.Create(target.Sequence, ion.GetPrecursorAdduct().AdductCharge, mobility));
                     }
-                    catch (ArgumentException)
+                    else
                     {
+                        libraryKeys.Add(new MoleculeLibraryKey(ion.DbMolecule.SmallMoleculeLibraryAttributes, ion.GetPrecursorAdduct(), mobility));
                     }
                 }
+                DictLibrary = new LibKeyIndex(libraryKeys);
             }
-
-            DictLibrary = LibKeyMap<List<IonMobilityAndCCS>>.FromDictionary(dictLibrary);
         }
 
         #endregion

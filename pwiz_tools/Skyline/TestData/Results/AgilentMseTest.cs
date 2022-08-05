@@ -79,6 +79,7 @@ namespace pwiz.SkylineTestData.Results
             {
                 return;
             }
+            TestMultiCCS = false; // This test already deals with ion mobility, adding that extra node with a random IM values doesn't make sense
 
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 

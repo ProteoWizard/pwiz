@@ -73,10 +73,9 @@ namespace pwiz.Skyline.Model
             if(!MoveNextSingleSequence())
                 return false;
             // Skip sequences that can be created from the current settings.
-            TransitionGroupDocNode nodeGroup;
             // Check first if the sequence has any modifications, because creating doc nodes is expensive
             while (!HasMods(_sequences.Current) ||
-                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out nodeGroup) != null)
+                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out var nodeGroup) != null)
             {
                 if (!MoveNextSingleSequence())
                     return false;
@@ -437,9 +436,8 @@ namespace pwiz.Skyline.Model
               : new Peptide(null, seqUnmod, null, null,
                             Settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
             // First, try to create the peptide using the current settings.
-            TransitionGroupDocNode nodeGroup;
             PeptideDocNode nodePep = 
-                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, out nodeGroup);
+                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, out var nodeGroup);
             if (nodePep != null)
                 return nodePep;
             // Create the peptideDocNode.
@@ -449,15 +447,16 @@ namespace pwiz.Skyline.Model
             return CreateDocNodeFromMatches(nodePep, EnumerateSequenceInfos(seq, false));
         }
 
-        protected override bool IsMatch(Target target, PeptideDocNode nodePep, out TransitionGroupDocNode nodeGroup)
+        protected override bool IsMatch(Target target, PeptideDocNode nodePep, out TransitionGroupDocNode[] nodeGroups)
         {
             string seqSimplified = SimplifyUnimodSequence(target.Sequence);
             var seqLight = FastaSequence.StripModifications(seqSimplified, FastaSequence.RGX_HEAVY);
             var seqHeavy = FastaSequence.StripModifications(seqSimplified, FastaSequence.RGX_LIGHT);
             var calcLight = Settings.TryGetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods);
+            nodeGroups = null;
             foreach (TransitionGroupDocNode nodeGroupChild in nodePep.Children)
             {
-                nodeGroup = nodeGroupChild;
+                var nodeGroup = nodeGroupChild;
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
                 {
                     // Light modifications must match.
@@ -465,16 +464,34 @@ namespace pwiz.Skyline.Model
                         return false;
                     // If the sequence only has light modifications, a match has been found.
                     if (Equals(seqLight, seqSimplified))
+                    {
+                        // Watch for multiple conformers
+                        nodeGroups = nodeGroupChild.IonMobilityAndCCS.IsEmpty ?
+                            new[] { nodeGroupChild } :
+                            nodePep.Children.Where(node => Equals(nodeGroupChild.TransitionGroup.LabelType, 
+                                                               ((TransitionGroupDocNode)node).TransitionGroup.LabelType) &&
+                                                           Equals(nodeGroupChild.TransitionGroup.PrecursorAdduct,
+                                                               ((TransitionGroupDocNode)node).TransitionGroup.PrecursorAdduct))
+                                .Select(n => (TransitionGroupDocNode)n).ToArray();
                         return true;
+                    }
                 }
                 else
                 {
                     var calc = Settings.TryGetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePep.ExplicitMods);
                     if (calc != null && EqualsModifications(seqHeavy, calc, calcLight))
+                    {
+                        // Watch for multiple conformers
+                        nodeGroups = nodeGroupChild.IonMobilityAndCCS.IsEmpty ?
+                            new[] { nodeGroupChild } :
+                            (TransitionGroupDocNode[])nodePep.Children.Where(node => Equals(nodeGroupChild.TransitionGroup.LabelType, 
+                                                                                         ((TransitionGroupDocNode)node).TransitionGroup.LabelType) &&
+                                                                                     Equals(nodeGroupChild.TransitionGroup.PrecursorAdduct,
+                                                                                         ((TransitionGroupDocNode)node).TransitionGroup.PrecursorAdduct)).ToArray();
                         return true;
+                    }
                 }
             }
-            nodeGroup = null;
             return false;
         }
 

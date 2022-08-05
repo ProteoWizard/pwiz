@@ -857,6 +857,7 @@ namespace pwiz.Skyline.Model.Lib
                     string sequence = match.Groups[1].Value; // Peptide sequence or molecule name
                     var charge = isPeptide ? int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture) : 0;
                     var adduct = Adduct.EMPTY;
+                    var conformerDetails = PrecursorFilter.EMPTY; // TODO(bspratt) No known examples of IMS in MSP at this time, but we could grab CE
                     string formula = null;
                     var otherKeys = new Dictionary<string, string>();
                     string inChiKey = null;
@@ -1240,7 +1241,7 @@ namespace pwiz.Skyline.Model.Lib
                         lenAnnotations = annotationsTSV.Length;
                         outStream.Write(annotationsTSV, 0, lenAnnotations);
                     }
-                    var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
+                    var key = isPeptide ? new LibKey(sequence, charge, conformerDetails) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct, conformerDetails);
                     var info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
                         (ushort) (copies ?? 1), (ushort) numNonZeroPeaks, lenCompressed, lenAnnotations, location);
                     if (!isPeptide)

@@ -317,7 +317,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 14, 75, 83, 498 },
                 FinalTargetCounts = new[] { 12, 75, 83, 498 },
-                ScoringModelCoefficients = "-0.5435|-2.3125|7.5279|6.0311|-0.1596|0.6412|0.8679|-0.3131",
+                ScoringModelCoefficients = "-0.3644|-1.7797|5.0204|5.2807|-0.2052|0.7933|0.5489|-0.1839",
                 MassErrorStats = new[]
                 {
                     new[] {3.9, 1.9},
@@ -386,7 +386,7 @@ namespace TestPerf
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
-                FinalTargetCounts = new[] { 2697, 27189, 28342, 170052 },
+                FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
                 ScoringModelCoefficients = "-0.3394|-0.8789|4.4756|3.5100|-0.1021|0.7491|0.4295|-0.1219",
                 MassErrorStats = new[]
                 {
@@ -862,7 +862,6 @@ namespace TestPerf
             OkDialog(arrangeGraphsDlg, arrangeGraphsDlg.OkDialog);
 
             RunUI(() => SkylineWindow.SaveDocument());
-
             const string proteinNameToSelect = "sp|P63284|CLPB_ECOLI";
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
             SelectNode(SrmDocument.Level.MoleculeGroups, 1);

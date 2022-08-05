@@ -149,6 +149,19 @@ namespace pwiz.Skyline.Model
             return children; // No default sort order
         }
 
+
+        #region Multiple conformers test support
+
+        public bool IsSpecialTestDocNode => Annotations?.Note != null && Note.Contains(Annotations.TestingMultiCCSAnnotationString);
+
+        public DocNode NoteAsSpecialTestNode()
+        {
+            return ChangeAnnotations(Annotations.NoteAsSpecialTestNode());
+        }
+
+        #endregion Multiple conformers test support
+
+
         /// <summary>
         /// Returns true, if the display string for this node contains a
         /// search string.
@@ -370,6 +383,11 @@ namespace pwiz.Skyline.Model
         /// <param name="autoManageChildren">Whether children should be added and removed when the settings change</param>
         protected DocNodeParent(Identity id, Annotations annotations, IList<DocNode> children, bool autoManageChildren) : base(id, annotations)
         {
+            #region Multiple conformers test support
+            // Newly generated children of test nodes should be marked as test nodes themselves
+            children = NoteTestNodeChildren(children);
+            #endregion Multiple conformers test support
+
             Children = children;
             // ReSharper disable once VirtualMemberCallInConstructor : Has always worked before
             Children = OnChangingChildren(this, -1);
@@ -698,8 +716,6 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Creates a clone of the current node with a list of new children added
         /// at the end of its child list.
-        /// Special case: if the last member of the child list is our special nonproteomic
-        /// test node, ensure that it remains the last member.
         /// </summary>
         /// <param name="childrenAdd">New children to add</param>
         /// <returns>A new parent node with the children at the end of its child list</returns>
@@ -1226,6 +1242,24 @@ namespace pwiz.Skyline.Model
             return nodeChanged;
         }
 
+        #region Multiple conformers test support
+        private IList<DocNode> NoteTestNodeChildren(IList<DocNode> children)
+        {
+            if (IsSpecialTestDocNode)
+            {
+                // Newly generated children of test nodes should be marked as test nodes themselves
+                children = children.Select(node =>
+                        node.IsSpecialTestDocNode
+                            ? node
+                            : node.NoteAsSpecialTestNode())
+                    .ToList();
+            }
+
+            return children;
+        }
+
+        #endregion Multiple conformers test support
+
         /// <summary>
         /// Core utility method for cloning the node with a new child list
         /// which all of the child list modifying methods call to complete
@@ -1237,6 +1271,11 @@ namespace pwiz.Skyline.Model
         /// <returns>A new parent node</returns>
         private DocNodeParent ChangeChildren(IList<DocNode> children, IList<int> counts, int indexReplaced = -1)
         {
+            #region Multiple conformers test support
+            // Newly generated children of test nodes should be marked as test nodes themselves
+            children = NoteTestNodeChildren(children);
+            #endregion Multiple conformers test support
+
             DocNodeParent clone = ChangeProp(ImClone(this), im => im.Children = children);
             clone._nodeCountStack = counts;
             if (!_ignoreChildrenChanging)
@@ -1273,6 +1312,11 @@ namespace pwiz.Skyline.Model
         protected void SetChildren(IList<DocNode> children)
         {
             Assume.IsTrue(Children == null); // Children must not have been
+
+            #region Multiple conformers test support
+            // Newly generated children of test nodes should be marked as test nodes themselves
+            children = NoteTestNodeChildren(children);
+            #endregion Multiple conformers test support
 
             Children = children;
             _nodeCountStack = GetCounts(children);

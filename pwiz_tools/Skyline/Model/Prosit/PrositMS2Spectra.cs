@@ -121,10 +121,9 @@ namespace pwiz.Skyline.Model.Prosit
                 var precursor = PeptidePrecursorNCE.NodeGroup;
                 SpectrumMzInfo info = new SpectrumMzInfo();
                 info.SpectrumPeaks = SpectrumPeaks;
-                info.IonMobility = IonMobilityAndCCS.EMPTY;
                 info.Key = new LibKey(
                     Settings.GetModifiedSequence(peptide.Target, PeptidePrecursorNCE.LabelType, peptide.ExplicitMods, SequenceModFormatType.lib_precision),
-                    precursor.PrecursorCharge);
+                    precursor.PrecursorCharge, precursor.EffectivePrecursorFilter);
                 info.Label = precursor.LabelType;
                 info.PrecursorMz = precursor.PrecursorMz;
                 info.RetentionTime = null;

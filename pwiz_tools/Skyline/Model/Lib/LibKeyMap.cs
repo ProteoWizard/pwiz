@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool TryGetValue(Target target, out TItem item)
         {
             var libraryKey = new LibKey(target, Adduct.EMPTY).LibraryKey;
-            foreach (var matchingItem in ItemsMatching(libraryKey, false))
+            foreach (var matchingItem in ItemsMatching(libraryKey, LibKeyIndex.LibraryMatchType.target))
             {
                 item = matchingItem;
                 return true;
@@ -82,6 +82,8 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public ImmutableList<TItem> Values => _allItems;
+
         public LibKeyIndex Index { get { return _index; } }
 
         public int IndexOf(LibraryKey libraryKey)
@@ -97,14 +99,14 @@ namespace pwiz.Skyline.Model.Lib
             return matches.Select(item => _allItems[item.OriginalIndex]);
         }
 
-        public IEnumerable<TItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso)
+        public IEnumerable<TItem> ItemsMatching(LibraryKey libraryKey, LibKeyIndex.LibraryMatchType matchType)
         {
-            return _index.ItemsMatching(libraryKey, matchAdductAlso).Select(GetItem);
+            return _index.ItemsMatching(libraryKey, matchType).Select(GetItem);
         }
 
-        public IEnumerable<KeyValuePair<LibKey, TItem>> KeyPairsMatching(LibraryKey libraryKey, bool matchAdductAlso)
+        public IEnumerable<KeyValuePair<LibKey, TItem>> KeyPairsMatching(LibraryKey libraryKey, LibKeyIndex.LibraryMatchType matchType)
         {
-            return _index.ItemsMatching(libraryKey, matchAdductAlso).Select(GetKeyPair);
+            return _index.ItemsMatching(libraryKey, matchType).Select(GetKeyPair);
         }
 
         public IDictionary<LibKey, TItem> AsDictionary()
@@ -125,7 +127,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public bool TryGetValue(LibKey key, out TItem value)
         {
-            foreach (TItem matchingValue in ItemsMatching(key.LibraryKey, true))
+            foreach (TItem matchingValue in ItemsMatching(key.LibraryKey,
+                         PrecursorFilter.IsNullOrEmpty(key.LibraryKey.PrecursorFilter) ?
+                             LibKeyIndex.LibraryMatchType.ion : // Match on moleclue and adduct
+                             LibKeyIndex.LibraryMatchType.details)) // // Match on moleclue and adduct and ion mobility
             {
                 value = matchingValue;
                 return true;

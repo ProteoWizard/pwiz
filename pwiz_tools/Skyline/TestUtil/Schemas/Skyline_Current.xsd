@@ -1213,17 +1213,31 @@
         <xs:attribute name="charge" type="xs:integer" use="required"/>
         <xs:attribute name="precursor_mz" type="xs:double" use="required"/>
         <xs:attribute name="collision_energy" type="xs:double"/>
-        <xs:attribute name="ccs" type="xs:double" use="optional"/>
+        
         <xs:attribute name="declustering_potential" type="xs:double"/>
         <!-- label can be "heavy", "light" or a user defined name -->
         <xs:attribute name="isotope_label" type="xs:string"/>
+        
         <!-- values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
         <xs:attribute name="explicit_collision_energy" type="xs:double"/> <!-- may itself be overridden at transition level -->
         <xs:attribute name="explicit_ion_mobility" type="xs:double"/>
         <xs:attribute name="explicit_ion_mobility_units" type="xs:string"/>
         <xs:attribute name="explicit_ccs_sqa" type="xs:double"/>
         <xs:attribute name="explicit_compensation_voltage" type="xs:double"/>
+        <xs:attribute name="explicit_ion_mobility_high_energy_offset" type="xs:double"/>
         <!-- end values that may be found in an imported transition list, or otherwise specified, and which override any library or calculated values -->
+        
+        <!-- values that may be found in libraries i.e .blib, .imsdb etc
+             Note that explicit_* values above override these values in chromatogram extraction
+             Also note that multiple conformers are supported, so there may be multiple TransitionGroups that 
+             differ only in these values. -->
+        <xs:attribute name="library_collision_energy" type="xs:double"/> <!-- may itself be overridden at transition level -->
+        <xs:attribute name="library_ion_mobility" type="xs:double"/>
+        <xs:attribute name="library_ion_mobility_units" type="xs:string"/>
+        <xs:attribute name="library_ccs_sqa" type="xs:double"/>
+        <xs:attribute name="library_ion_mobility_high_energy_offset" type="xs:double"/>
+        <!-- end library values -->
+        
         <xs:attribute name="precursor_concentration" type="xs:double"/>
       </xs:extension>
     </xs:complexContent>

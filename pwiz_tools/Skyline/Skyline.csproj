@@ -1404,7 +1404,7 @@
     </Compile>
     <Compile Include="Model\GroupComparison\NormalizationData.cs" />
     <Compile Include="Model\GroupComparison\NormalizationMethod.cs" />
-    <Compile Include="Model\ExplicitTransitionGroupValues.cs" />
+    <Compile Include="Model\PrecursorFilter.cs" />
     <Compile Include="Model\GroupComparison\PeptideQuantifier.cs" />
     <Compile Include="Model\GroupComparison\SummarizationMethod.cs" />
     <Compile Include="Model\ImportAssayLibrary.cs" />

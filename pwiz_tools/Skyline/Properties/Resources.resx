@@ -3134,6 +3134,12 @@ Are you sure you want to continue?</value>
   <data name="TransitionGroupTreeNode_RenderTip_Precursor_mz" xml:space="preserve">
     <value>Precursor m/z</value>
   </data>
+  <data name="TransitionGroupTreeNode_RenderTip_CCS" xml:space="preserve">
+    <value>CCS</value>
+  </data>
+  <data name="TransitionGroupTreeNode_RenderTip_IM" xml:space="preserve">
+    <value>IM</value>
+  </data>
   <data name="RegressionUnconversion_CalculatorScoreValueFormat" xml:space="preserve">
     <value>{0} Score ({1})</value>
   </data>
@@ -8441,6 +8447,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_" xml:space="preserve">
     <value>A precursor with that adduct and label type already exists.</value>
   </data>
+  <data name="EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct__label_type__and_ion_mobility_already_exists_" xml:space="preserve">
+    <value>A precursor with that adduct, label type, and ion mobility already exists.</value>
+  </data>
   <data name="SkylineWindow_FindIonMobilityLibrary_Find_Ion_Mobility_Library" xml:space="preserve">
     <value>Find Ion Mobility Library</value>
   </data>
@@ -11822,5 +11831,14 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
+  </data>
+  <data name="TransitionGroup_ToString_conformer___0_" xml:space="preserve">
+    <value>conformer #{0}</value>
+  </data>
+  <data name="TransitionGroup_ToString_Charge__0___1___2_" xml:space="preserve">
+    <value>Charge {0} {1} {2}</value>
+  </data>
+  <data name="TransitionGroup_ToString_Charge__0____1____2___3_" xml:space="preserve">
+    <value>Charge {0} ({1}) {2} {3}</value>
   </data>
 </root>

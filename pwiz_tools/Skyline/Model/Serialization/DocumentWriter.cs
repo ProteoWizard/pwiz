@@ -217,16 +217,39 @@ namespace pwiz.Skyline.Model.Serialization
 
 
         /// <summary>
-        /// Serializes any optionally explicitly specified CE, RT and DT information to attributes only
+        /// Serializes any library (or, optionally explicitly specified) CE, IMS etc information to attributes only
         /// </summary>
-        private void WriteExplicitTransitionGroupValuesAttributes(XmlWriter writer, ExplicitTransitionGroupValues importedAttributes)
+        private void WritePrecursorFilterAttributes(bool isLibraryValues, XmlWriter writer, PrecursorFilter importedAttributes)
         {
+            string GetAttributeName(string explicitAttribute, bool asLibraryAttribute)
+            {
+                return asLibraryAttribute ? explicitAttribute.Replace(@"explicit_", @"library_") : explicitAttribute;
+            }
             if (DocumentFormat < DocumentFormat.VERSION_4_22 || DocumentFormat >= DocumentFormat.VERSION_20_12) // Format supports per-precursor explicit CE?
-                writer.WriteAttributeNullable(ATTR.explicit_collision_energy, importedAttributes.CollisionEnergy);
-            writer.WriteAttributeNullable(ATTR.explicit_ion_mobility, importedAttributes.IonMobility);
+                writer.WriteAttributeNullable(GetAttributeName(ATTR.explicit_collision_energy, isLibraryValues), importedAttributes.CollisionEnergy);
+            writer.WriteAttributeNullable(GetAttributeName(ATTR.explicit_ion_mobility, isLibraryValues), importedAttributes.IonMobility);
             if (importedAttributes.IonMobility.HasValue)
-                writer.WriteAttribute(ATTR.explicit_ion_mobility_units, importedAttributes.IonMobilityUnits.ToString());
-            writer.WriteAttributeNullable(ATTR.explicit_ccs_sqa, importedAttributes.CollisionalCrossSectionSqA);
+                writer.WriteAttribute(GetAttributeName(ATTR.explicit_ion_mobility_units, isLibraryValues), importedAttributes.IonMobilityUnits.ToString());
+            writer.WriteAttributeNullable(GetAttributeName(ATTR.explicit_ccs_sqa, isLibraryValues), importedAttributes.CollisionalCrossSectionSqA);
+            writer.WriteAttributeNullable(GetAttributeName(ATTR.explicit_ion_mobility_high_energy_offset, isLibraryValues), importedAttributes.IonMobilityHighEnergyOffset);
+        }
+
+        /// <summary>
+        /// Serialize any attributes describing ion mobility for this transition
+        /// </summary>
+        private void WriteIonMobilityAttributes(XmlWriter writer, IonMobilityAndCCS ionMobilityAndCCS)
+        {
+            if (ionMobilityAndCCS == null || ionMobilityAndCCS.IsEmpty)
+            {
+                return;
+            }
+            writer.WriteAttributeNullable(ATTR.ccs, ionMobilityAndCCS.CollisionalCrossSectionSqA);
+            if (ionMobilityAndCCS.HasIonMobilityValue)
+            {
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility, ionMobilityAndCCS.IonMobility.Mobility);
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility_high_energy_offset, ionMobilityAndCCS.HighEnergyIonMobilityValueOffset);
+                writer.WriteAttribute(ATTR.ion_mobility_type, ionMobilityAndCCS.IonMobility.Units.ToString());
+            }
         }
 
         /// <summary>
@@ -349,7 +372,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 return target.Sequence;
             }
-            return new PeptideLibraryKey(target.Sequence, 0).FormatToOneDecimal().ModifiedSequence;
+            return PeptideLibraryKey.CreateSimple(target.Sequence, 0).FormatToOneDecimal().ModifiedSequence;
         }
 
         private void WriteLookupMods(XmlWriter writer, PeptideDocNode node)
@@ -561,7 +584,11 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.calc_neutral_mass, node.GetPrecursorIonPersistentNeutralMass());
             }
             writer.WriteAttribute(ATTR.precursor_mz, SequenceMassCalc.PersistentMZ(node.PrecursorMz));
-            WriteExplicitTransitionGroupValuesAttributes(writer, node.ExplicitValues);
+            if (DocumentFormat >= DocumentFormat.MULTIPLE_CONFORMERS) // Format puts ion mobility on par with adduct to support multiple conformers
+            {
+                WritePrecursorFilterAttributes(true, writer, node.LibraryPrecursorFilter);
+            }
+            WritePrecursorFilterAttributes(false, writer, node.ExplicitPrecursorFilter);
 
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttributeNullable(ATTR.decoy_mass_shift, group.DecoyMassShift);
@@ -638,6 +665,15 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
+        // Write IMS values with a bit more precision
+        private static void WriteIonMobilityAttributeNullable(XmlWriter writer, string attr, double? value)
+        {
+            if (value.HasValue)
+            {
+                writer.WriteAttribute(attr, Math.Round(value.Value, 5));
+            }
+        }
+
         private static void WriteTransitionGroupChromInfo(XmlWriter writer, TransitionGroupChromInfo chromInfo)
         {
             if (chromInfo.OptimizationStep != 0)
@@ -649,9 +685,9 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobilityInfo.CollisionalCrossSection);
             if (chromInfo.IonMobilityInfo.IonMobilityUnits != eIonMobilityUnits.none)
             {
-                writer.WriteAttributeNullable(ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility_ms1, chromInfo.IonMobilityInfo.IonMobilityMS1);
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility_fragment, chromInfo.IonMobilityInfo.IonMobilityFragment);
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility_window, chromInfo.IonMobilityInfo.IonMobilityWindow);
                 writer.WriteAttribute(ATTR.ion_mobility_type, chromInfo.IonMobilityInfo.IonMobilityUnits.ToString());
             }
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
@@ -881,8 +917,8 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
-                writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
-                writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
+                WriteIonMobilityAttributeNullable(writer, ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
                 writer.WriteAttribute(ATTR.background, chromInfo.BackgroundArea);
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);

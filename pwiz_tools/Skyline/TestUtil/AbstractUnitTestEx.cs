@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
@@ -128,6 +130,18 @@ namespace pwiz.SkylineTestUtil
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
+        }
+
+        public static void WriteDocument(SrmDocument doc, string docPath)
+        {
+            using (var writer = new XmlTextWriter(docPath, Encoding.UTF8) { Formatting = Formatting.Indented })
+            {
+                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                ser.Serialize(writer, doc);
+
+                writer.Flush();
+                writer.Close();
+            }
         }
     }
 }

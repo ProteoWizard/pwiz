@@ -386,7 +386,22 @@ namespace pwiz.Skyline.Model
         public int MoleculeGroupCount { get { return GetCount((int)Level.MoleculeGroups); } }
         public int MoleculeCount { get { return GetCount((int)Level.Molecules); } }
         public int MoleculeTransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
+
+        public int MoleculeTransitionGroupCountIgnoringMultipleConformers => 
+            Molecules.Sum(m => m.TransitionGroupsIgnoringMultipleConformers.Count());
+
+        #region Multiple conformers test support
+        public IEnumerable<TransitionGroupDocNode> MoleculeTransitionGroupsIgnoringSpecialTestNodes => MoleculeTransitionGroups.Where(tg => !tg.IsSpecialTestDocNode);
+        public int MoleculeTransitionGroupCountIgnoringSpecialTestNodes => MoleculeTransitionGroupsIgnoringSpecialTestNodes.Count();
+        public IEnumerable<TransitionDocNode> MoleculeTransitionsIgnoringSpecialTestNodes => MoleculeTransitions.Where(t => !t.IsSpecialTestDocNode);
+        public int MoleculeTransitionCountIgnoringSpecialTestNodes =>
+            Molecules.Sum(m => m.TransitionGroups.Where(tg => !tg.IsSpecialTestDocNode).Sum(tg => tg.TransitionCount));
+        #endregion Multiple conformers test support
+
         public int MoleculeTransitionCount { get { return GetCount((int)Level.Transitions); } }
+
+        public int MoleculeTransitionCountIgnoringMultipleConformers =>
+            Molecules.Sum(m => m.TransitionGroupsIgnoringMultipleConformers.Sum(tg => tg.Transitions.Count()));
 
         // Convenience functions for ignoring non-proteomic (CustomIon) nodes - that is, getting only peptides
         public int PeptideGroupCount { get { return PeptideGroups.Count(); } } 
@@ -485,6 +500,19 @@ namespace pwiz.Skyline.Model
             }
         }
 
+       
+        /// <summary>
+        /// Return all <see cref="TransitionGroupDocNode"/> of any kind except those that are multiple conformers,
+        /// i.e. same parent molecule and adduct as a sibling node, but different IM
+        /// </summary>
+        public IEnumerable<TransitionGroupDocNode> MoleculeTransitionGroupsIgnoringMultipleConformers
+        {
+            get
+            {
+                return Molecules.SelectMany(node => node.TransitionGroupsIgnoringMultipleConformers);
+            }
+        }
+
         /// <summary>
         /// Return all <see cref="TransitionGroupDocNode"/> whose members are peptide precursors
         /// </summary>
@@ -504,6 +532,31 @@ namespace pwiz.Skyline.Model
                     node => node.TransitionGroups.Select(nodeGroup => new PeptidePrecursorPair(node, nodeGroup)));
             }
         }
+
+        /// <summary>
+        /// Return number of <see cref="TransitionGroupDocNode"/> that with the magic extra multi-CCS test node indicator
+        /// </summary>
+        public int SpecialTestTransitionGroupsCount
+        {
+            get
+            {
+                return MoleculeTransitionGroups.Count(t => t.IsSpecialTestDocNode);
+            }
+        }
+
+
+        /// <summary>
+        /// Return number of <see cref="TransitionGroupDocNode"/> that with the magic extra multi-CCS test node indicator
+        /// </summary>
+        public int SpecialTestHeavyTransitionGroupsCount
+        {
+            get
+            {
+                return MoleculeTransitionGroups.Count(t => t.IsSpecialTestDocNode && !t.IsLight);
+            }
+        }
+
+
 
         public IEnumerable<PeptidePrecursorPair> PeptidePrecursorPairs
         {
@@ -535,6 +588,18 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Return a list of <see cref="TransitionDocNode"/> of any kind, except those with parent transition group
+        /// that represents a multiple conformer (i.e. a second or more use of an adduct with the same molecule, and different IM)
+        /// </summary>
+        public IEnumerable<TransitionDocNode> MoleculeTransitionsIgnoringMultipleConformers
+        {
+            get
+            {
+                return MoleculeTransitionGroupsIgnoringMultipleConformers.SelectMany(node => node.Children.Cast<TransitionDocNode>());
+            }
+        }
+
+        /// <summary>
         /// Return a list of <see cref="TransitionDocNode"/> that are in peptides
         /// </summary>
         public IEnumerable<TransitionDocNode> PeptideTransitions
@@ -544,6 +609,28 @@ namespace pwiz.Skyline.Model
                 return MoleculeTransitions.Where(t => !t.Transition.Group.IsCustomIon);
             }
         }
+
+        #region Multiple conformers test support
+
+        /// <summary>
+        /// Return number of <see cref="TransitionDocNode"/> that with the magic extra multi-CCS test node indicator
+        /// </summary>
+        public int SpecialTestTransitionsCount
+        {
+            get
+            {
+                return MoleculeTransitions.Count(t => t.IsSpecialTestDocNode);
+            }
+        }
+
+        public int SpecialTestHeavyTransitionsCount
+        {
+            get
+            {
+                return MoleculeTransitionGroups.Where(t => t.IsSpecialTestDocNode).Sum(t => t.TransitionCount);
+            }
+        }
+        #endregion Multiple conformers test support
 
         public HashSet<Target> GetRetentionTimeStandards()
         {
@@ -1597,7 +1684,102 @@ namespace pwiz.Skyline.Model
             return (node != null && node.Annotations.Note != null &&
                     node.Annotations.Note.Contains(RefinementSettings.TestingConvertedFromProteomic));
         }
-        
+
+        #region Multiple conformers test support
+
+        /// <summary>
+        /// For automated test of multiple conformers in tests that aren't originally designed to test that at all
+        /// Modifies the last-in-list transition group to include multiple conformers
+        /// </summary>
+        public SrmDocument AddMultipleConformerTestLibrary()
+        {
+            if (!Properties.Settings.Default.TestMultiCCS)
+            {
+                return this; // Special test nodes are not wanted right now
+            }
+
+            if (!IonMobilityLibrarySpec.IsNullOrEmpty(Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary))
+            {
+                return this; // Don't interfere with existing IM tests
+            }
+
+            if (!MoleculeTransitionGroups.Any())
+            {
+                return this;
+            }
+
+            if (MoleculeTransitionGroups.Any(tg => !tg.IsSpecialTestDocNode))
+            {
+                return this; // Already has magic nodes
+            }
+
+            // Find last TransitionGroup in document, and create an ion mobility library with multiple conformers for it
+            var lastPeptide = Molecules.Last();
+            var transitionGroups = lastPeptide.TransitionGroups.ToList();
+            var lastTransitionGroupDocNode = transitionGroups.Last();
+            var target = lastTransitionGroupDocNode.GetLibKey(Settings, lastPeptide).Target;
+            var adduct = lastTransitionGroupDocNode.PrecursorAdduct;
+            var ccsTestValue = 200;
+            var imTestValue = 20;
+            var heOffsetTestValue = -.02;
+            var imPrecursors = new List<ValidatingIonMobilityPrecursor>
+            {
+                new ValidatingIonMobilityPrecursor(target, adduct,
+                    ccsTestValue*.5, imTestValue*.5, heOffsetTestValue*.5, eIonMobilityUnits.drift_time_msec),
+                new ValidatingIonMobilityPrecursor(target, adduct,
+                    ccsTestValue, imTestValue, heOffsetTestValue, eIonMobilityUnits.drift_time_msec)
+            };
+
+            var docDir = string.IsNullOrEmpty(Properties.Settings.Default.LibraryDirectory)
+                ? Directory.GetCurrentDirectory()
+                : Properties.Settings.Default.LibraryDirectory;
+            var lib = IonMobilityLibrary.CreateFromList(@"test_"+DateTime.Now.Ticks, docDir, imPrecursors);
+            var newSettings = Settings.ChangeTransitionSettings(
+                Settings.TransitionSettings.ChangeIonMobilityFiltering(
+                    Settings.TransitionSettings.IonMobilityFiltering.ChangeLibrary(lib).
+                        ChangeFilterWindowWidthCalculator(new IonMobilityWindowWidthCalculator(40))));
+            var newDoc = ChangeSettings(newSettings); // This should result in the creation of a new multiple conformer precursor
+
+            // Now tag newly created node and its children as being magic test nodes by setting their Notes
+            lastPeptide = newDoc.Molecules.LastOrDefault(m => m.Children.Any());
+            if (lastPeptide == null)
+            {
+                return this; // No change
+            }
+
+            // Make sure that automanage didn't introduce any charges that weren't there before
+            var originalCharges = transitionGroups.Select(tg => tg.TransitionGroup.PrecursorAdduct).ToHashSet();
+            transitionGroups = lastPeptide.TransitionGroups.Where(tg => originalCharges.Contains(tg.TransitionGroup.PrecursorAdduct)).ToList();
+
+            var index = transitionGroups.Count - 1;
+            var newTransitionGroup = transitionGroups[index];
+            newTransitionGroup = (TransitionGroupDocNode)newTransitionGroup.NoteAsSpecialTestNode();
+            var transitions = newTransitionGroup.Children.Select(t => t.NoteAsSpecialTestNode()).ToList();
+            newTransitionGroup = (TransitionGroupDocNode)newTransitionGroup.ChangeChildren(transitions);
+            transitionGroups[index] = newTransitionGroup;
+            lastPeptide = (PeptideDocNode)lastPeptide.ChangeChildren(transitionGroups.Select(tg => tg as DocNode).ToList());
+            var pathPeptide = GetPathTo((int)Level.Molecules, Molecules.Count() - 1);
+            newDoc = (SrmDocument)ReplaceChild(pathPeptide.Parent, lastPeptide);
+            return newDoc;
+        }
+
+        private SrmDocument AddAllWithOptionalTestNodes(IEnumerable<DocNode> childrenAdd)
+        {
+            return ((SrmDocument)AddAll(childrenAdd)).AddMultipleConformerTestLibrary();
+        }
+
+        private SrmDocument AddAllWithOptionalTestNodes(IdentityPath path, IEnumerable<DocNode> childrenAdd)
+        {
+            return ((SrmDocument)AddAll(path, childrenAdd)).AddMultipleConformerTestLibrary();
+        }
+
+        private DocNodeParent InsertAllWithOptionalTestNodes(IdentityPath path, IEnumerable<DocNode> childrenAdd, bool after = false)
+        {
+            return ((SrmDocument)InsertAll(path, childrenAdd, after)).AddMultipleConformerTestLibrary();
+        }
+
+        #endregion Multiple conformers test support
+
         public SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew,
             bool peptideList, IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdd)
         {
@@ -1617,7 +1799,7 @@ namespace pwiz.Skyline.Model
 
             // Add to the end, if no insert node
             if (to == null || to.Depth < (int)Level.MoleculeGroups)
-                return (SrmDocument) AddAll(peptideGroupsAdd);
+                return AddAllWithOptionalTestNodes(peptideGroupsAdd);
             
             IdentityPath pathGroup = to.GetPathTo((int)Level.MoleculeGroups);
 
@@ -1804,7 +1986,7 @@ namespace pwiz.Skyline.Model
                 var lookupMods = nodePep.SourceExplicitMods;
                 IsotopeLabelType labelType;
                 double[] retentionTimes;
-                Settings.TryGetRetentionTimes(lookupSequence, nodeGroup.TransitionGroup.PrecursorAdduct, lookupMods,
+                Settings.TryGetRetentionTimes(lookupSequence, nodeGroup, lookupMods,
                                               filePath, out labelType, out retentionTimes);
                 if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
@@ -1865,7 +2047,7 @@ namespace pwiz.Skyline.Model
             {
                 throw new ArgumentOutOfRangeException(string.Format(
                     Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,
-                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty),
+                    TransitionGroupTreeNode.GetLabel(nodeGroup, nodePep, string.Empty),
                     nameSet));
             }
             // Get the chromatograms for only the file of interest
@@ -1873,7 +2055,7 @@ namespace pwiz.Skyline.Model
             if (indexInfo == -1)
             {
                 throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__,
-                                                                    TransitionGroupTreeNode.GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz, string.Empty), filePath));
+                                                                    TransitionGroupTreeNode.GetLabel(nodeGroup, nodePep, string.Empty), filePath));
             }
             var chromInfoGroup = arrayChromInfo[indexInfo];
             var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, fileId,
@@ -2062,6 +2244,33 @@ namespace pwiz.Skyline.Model
                 if (targets.Contains(Convert.ToString(value ?? string.Empty, CultureInfo.InvariantCulture)))
                     yield return chromSet;
             }
+        }
+
+        public SrmDocument UpdateOldFormatsForMultipleConformers(SrmSettings settings)
+        {
+            // For older files, see it we need to update transition group nodes with ion mobility information, which was formerly accessed from
+            // libraries at time of use but is now kept in transition group nodes for multiple conformers support.
+            settings = settings ?? Settings;
+            if (FormatVersion < DocumentFormat.MULTIPLE_CONFORMERS &&
+                settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WindowWidthMode !=
+                IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none)
+            {
+                // Older file with ion mobility, just toggle the ion mobility filter window width calculator to force update
+                // of the transition group nodes PrecursorFilters
+                var saved = settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator;
+                settings = settings.ChangeTransitionSettings(
+                    settings.TransitionSettings.ChangeIonMobilityFiltering(
+                        settings.TransitionSettings.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(
+                            IonMobilityWindowWidthCalculator.EMPTY)));
+                var document = ChangeSettings(settings);
+                settings = settings.ChangeTransitionSettings(
+                    settings.TransitionSettings.ChangeIonMobilityFiltering(
+                        settings.TransitionSettings.IonMobilityFiltering.ChangeFilterWindowWidthCalculator(saved)));
+                document = document.ChangeSettings(settings);
+                return document;
+            }
+
+            return this;
         }
 
         private object _referenceId = new object();
@@ -2301,7 +2510,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             // If no transition-level declaration then explicitly declared value at the precursor level is used.
-            return ce ?? nodeGroup.ExplicitValues.CollisionEnergy;
+            return ce ?? nodeGroup.ExplicitPrecursorFilter.CollisionEnergy;
         }
 
         public double? GetOptimizedCollisionEnergy(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
@@ -2313,6 +2522,7 @@ namespace pwiz.Skyline.Model
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
                     Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,
+                    nodeGroup.EffectivePrecursorFilter,
                     nodeTransition.FragmentIonName, nodeTransition.Transition.Adduct);
                 if (optimization != null)
                 {
@@ -2372,11 +2582,11 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var nodeTranGroup in nodePep.TransitionGroups.Where(nodeGroup => nodeGroup.Children.Any()))
                 {
-                    if (nodeTranGroup.ExplicitValues.CompensationVoltage.HasValue)
+                    if (nodeTranGroup.ExplicitPrecursorFilter.CompensationVoltage.HasValue)
                         break;
 
                     if (lib != null && !lib.IsNone && lib.GetOptimization(optType, Settings.GetSourceTarget(nodePep),
-                            nodeTranGroup.PrecursorAdduct) != null)
+                            nodeTranGroup.PrecursorAdduct, nodeTranGroup.EffectivePrecursorFilter) != null)
                         break;
 
                     double? cov;
@@ -2399,12 +2609,14 @@ namespace pwiz.Skyline.Model
                     if (!cov.HasValue)
                     {
                         // Check for CoV as an ion mobility parameter
-                        var libKey = nodeTranGroup.GetLibKey(Settings, nodePep);
-                        var imInfo = Settings.GetIonMobilities(new[] { libKey }, null);
-                        var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, nodeTranGroup.PrecursorMz, null);
-                        if (im.IonMobility.Units == eIonMobilityUnits.compensation_V)
+                        cov = nodeTranGroup.ExplicitPrecursorFilter.CompensationVoltage;
+                        if (!cov.HasValue)
                         {
-                            cov = im.IonMobility.Mobility;
+                            var im = nodeTranGroup.IonMobilityAndCCS;
+                            if (im.IonMobility.Units == eIonMobilityUnits.compensation_V)
+                            {
+                                cov = im.IonMobility.Mobility;
+                            }
                         }
                     }
 
@@ -2531,8 +2743,8 @@ namespace pwiz.Skyline.Model
 
         public double? GetOptimizedCompensationVoltage(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, CompensationVoltageParameters.Tuning tuneLevel)
         {
-            if (nodeGroup.ExplicitValues.CompensationVoltage.HasValue)
-                return nodeGroup.ExplicitValues.CompensationVoltage.Value;
+            if (nodeGroup.ExplicitPrecursorFilter.CompensationVoltage.HasValue)
+                return nodeGroup.ExplicitPrecursorFilter.CompensationVoltage.Value;
 
             var prediction = Settings.TransitionSettings.Prediction;
             var lib = prediction.OptimizedLibrary;
@@ -2540,7 +2752,7 @@ namespace pwiz.Skyline.Model
             if (lib != null && !lib.IsNone)
             {
                 var optimization = lib.GetOptimization(CompensationVoltageParameters.GetOptimizationType(tuneLevel),
-                    Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct);
+                    Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct, nodeGroup.EffectivePrecursorFilter);
                 if (optimization != null)
                     return optimization.Value;
             }
@@ -2657,6 +2869,10 @@ namespace pwiz.Skyline.Model
             {
                 return (base.GetHashCode()*397) ^ Settings.GetHashCode();
             }
+        }
+        public override string ToString() // For debugging convenience, not user-facing
+        {
+            return string.Format(@"SrmDocument {0},{1},{2},{3}", MoleculeGroupCount, MoleculeCount, MoleculeTransitionGroupCount, MoleculeTransitionCount);
         }
 
         #endregion

@@ -354,13 +354,13 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroup = testTransitionGroups[0];
                 var precursor = docTest.Molecules.First();
                 var product = transitionGroup.Transitions.First();
-                Assert.AreEqual(explicitCE, product.ExplicitValues.CollisionEnergy?? transitionGroup.ExplicitValues.CollisionEnergy);
-                Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
-                Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
-                Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
+                Assert.AreEqual(explicitCE, product.ExplicitValues.CollisionEnergy?? transitionGroup.ExplicitPrecursorFilter.CollisionEnergy);
+                Assert.AreEqual(expectedIM, transitionGroup.ExplicitPrecursorFilter.IonMobility);
+                Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitPrecursorFilter.IonMobilityUnits);
+                Assert.AreEqual(precursorCCS, transitionGroup.ExplicitPrecursorFilter.CollisionalCrossSectionSqA);
                 Assert.AreEqual(slens, product.ExplicitValues.SLens);
                 Assert.AreEqual(coneVoltage, product.ExplicitValues.ConeVoltage);
-                Assert.AreEqual(expectedCV, transitionGroup.ExplicitValues.CompensationVoltage);
+                Assert.AreEqual(expectedCV, transitionGroup.ExplicitPrecursorFilter.CompensationVoltage);
                 Assert.AreEqual(declusteringPotential, product.ExplicitValues.DeclusteringPotential);
                 Assert.AreEqual(note, product.Annotations.Note);
                 Assert.AreEqual(highEnergyDtOffset, product.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
@@ -810,7 +810,7 @@ namespace pwiz.SkylineTestFunctional
                 const double explicitPrecursorCE = 234.567;
                 var colPCE = FindDocumentGridColumn(documentGrid, "Precursor.PrecursorExplicitCollisionEnergy");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colPCE.Index].Value = explicitPrecursorCE);
-                WaitForCondition(() => SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => tg.ExplicitValues.CollisionEnergy.Equals(explicitPrecursorCE)));
+                WaitForCondition(() => SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => tg.ExplicitPrecursorFilter.CollisionEnergy.Equals(explicitPrecursorCE)));
                 // Expect the next line, which depicts a sibling transition, to share this precursor value
                 WaitForCondition(() => Equals(explicitPrecursorCE, documentGrid.DataGridView.Rows[1].Cells[colPCE.Index].Value));
 
@@ -824,13 +824,13 @@ namespace pwiz.SkylineTestFunctional
                 var colCV = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitCompensationVoltage");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCV.Index].Value = explicitCV);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CompensationVoltage.Equals(explicitCV)));
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitPrecursorFilter.CompensationVoltage.Equals(explicitCV)));
 
                 const double explicitDT = 23.465;
                 var colDT = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitIonMobility");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDT.Index].Value = explicitDT);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.IonMobility.Equals(explicitDT)));
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitPrecursorFilter.IonMobility.Equals(explicitDT)));
 
                 const double explicitDTOffset = -3.4657;
                 var colDTOffset = FindDocumentGridColumn(documentGrid, "ExplicitIonMobilityHighEnergyOffset");
@@ -842,7 +842,7 @@ namespace pwiz.SkylineTestFunctional
                 var colCCS = FindDocumentGridColumn(documentGrid, "Precursor.ExplicitCollisionalCrossSection");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCCS.Index].Value = explicitCCS);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
-                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitValues.CollisionalCrossSectionSqA.Equals(explicitCCS)));
+                  SkylineWindow.Document.MoleculeTransitionGroups.First().ExplicitPrecursorFilter.CollisionalCrossSectionSqA.Equals(explicitCCS)));
 
             var colInChiKey = FindDocumentGridColumn(documentGrid, "Precursor.Peptide.InChiKey");
             var reportedInChiKey = string.Empty;
@@ -1626,8 +1626,8 @@ namespace pwiz.SkylineTestFunctional
             Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
             Assume.AreEqual(2, transitions.Count(t => t.IsMs1));
-            Assume.AreEqual(123.0, precursors[0].ExplicitValues.CollisionalCrossSectionSqA);
-            Assume.AreEqual(126.0, precursors[1].ExplicitValues.CollisionalCrossSectionSqA);
+            Assume.AreEqual(123.0, precursors[0].ExplicitPrecursorFilter.CollisionalCrossSectionSqA);
+            Assume.AreEqual(126.0, precursors[1].ExplicitPrecursorFilter.CollisionalCrossSectionSqA);
             NewDocument();
         }
 
@@ -1716,9 +1716,9 @@ namespace pwiz.SkylineTestFunctional
             var precursors = pastedDoc.MoleculeTransitionGroups.ToArray();
             Assume.IsTrue(!precursors[0].PrecursorAdduct.HasIsotopeLabels);
             Assume.IsTrue(precursors[1].PrecursorAdduct.HasIsotopeLabels);
-            AssertEx.AreEqual(20, precursors[0].ExplicitValues.CollisionEnergy); // First-seen CE is taken as default for transition group
-            AssertEx.AreEqual(21, precursors[1].ExplicitValues.CollisionEnergy);
-            AssertEx.AreEqual(35, precursors[2].ExplicitValues.CollisionEnergy);
+            AssertEx.AreEqual(20, precursors[0].ExplicitPrecursorFilter.CollisionEnergy); // First-seen CE is taken as default for transition group
+            AssertEx.AreEqual(21, precursors[1].ExplicitPrecursorFilter.CollisionEnergy);
+            AssertEx.AreEqual(35, precursors[2].ExplicitPrecursorFilter.CollisionEnergy);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
 
             // Apain light
@@ -1797,7 +1797,7 @@ namespace pwiz.SkylineTestFunctional
                             // Sulfamethizole[M+H] all set to 1, should be stored at transition group level
                             // Sulfamethizole[M+Na] all set to 2, should be stored at transition group level
                             var expectedPrecursorExplicitCE = precursor.PrecursorAdduct.Equals(Adduct.M_PLUS_H) ? 1 : 2;
-                            AssertEx.AreEqual(expectedPrecursorExplicitCE, precursor.ExplicitValues.CollisionEnergy);
+                            AssertEx.AreEqual(expectedPrecursorExplicitCE, precursor.ExplicitPrecursorFilter.CollisionEnergy);
                             AssertEx.IsTrue(precursor.Transitions.All(t => !t.ExplicitValues.CollisionEnergy.HasValue));
                             break;
                         }
@@ -1806,7 +1806,7 @@ namespace pwiz.SkylineTestFunctional
                             // Sulfachloropyridazine[M+H] all set differently, all but first should be stored at transition level
                             // Sulfachloropyridazine[M+Na] no value set
                             var expectedPrecursorExplicitCE = precursor.PrecursorAdduct.Equals(Adduct.M_PLUS_H) ? 1 : (double?)null;
-                            AssertEx.AreEqual(expectedPrecursorExplicitCE, precursor.ExplicitValues.CollisionEnergy);
+                            AssertEx.AreEqual(expectedPrecursorExplicitCE, precursor.ExplicitPrecursorFilter.CollisionEnergy);
                             foreach (var transition in precursor.Transitions)
                             {
                                 if (expectedPrecursorExplicitCE == null)
@@ -1829,7 +1829,7 @@ namespace pwiz.SkylineTestFunctional
                         }
                         case "Sulfadimethoxine":
                         {
-                            AssertEx.IsFalse(precursor.ExplicitValues.CollisionEnergy.HasValue);
+                            AssertEx.IsFalse(precursor.ExplicitPrecursorFilter.CollisionEnergy.HasValue);
                             double? expectedCE = null;
                             foreach (var transition in precursor.Transitions)
                             {

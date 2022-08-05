@@ -29,7 +29,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -376,8 +375,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 {
                     continue;
                 }
-                var key = new PeptideLibraryKey(spectrum.DocumentPeptide,
-                    spectrum.DocumentPrecursorCharge.GetValueOrDefault());
+                var key = LibraryKey.Create(spectrum.DocumentPeptide,
+                    spectrum.DocumentPrecursorCharge.GetValueOrDefault()); // TODO(bspratt) any CE and IMS interactions with MIDAS?
                 if (LibKeyIndex.KeysMatch(libKey.LibraryKey, key))
                 {
                     yield return spectrum;
@@ -397,10 +396,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         public override bool ContainsAny(Target target)
         {
-            var key = new PeptideLibraryKey(target.Sequence, 0);
+            var key = PeptideLibraryKey.CreateSimple(target.Sequence, 0);
             return _spectra.SelectMany(fileSpectra => fileSpectra.Value)
                 .Any(spectrum => null != spectrum.DocumentPeptide && key.UnmodifiedSequence ==
-                                 new PeptideLibraryKey(spectrum.DocumentPeptide, 0).UnmodifiedSequence);
+                                 PeptideLibraryKey.CreateSimple(spectrum.DocumentPeptide, 0).UnmodifiedSequence);
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
@@ -483,27 +482,15 @@ namespace pwiz.Skyline.Model.Lib.Midas
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey targetIon, out LibraryPrecursorFiltersInfo precursorFilters)
         {
-            ionMobilities = null;
+            precursorFilters = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey[] targetIons, out LibraryPrecursorFiltersInfo precursorFilters)
         {
-            ionMobilities = null;
-            return false;
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
-        {
-            ionMobilities = null;
-            return false;
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
-        {
-            ionMobilities = null;
+            precursorFilters = null;
             return false;
         }
 
@@ -536,7 +523,9 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     yield break;
 
                 foreach (var spectrum in _spectra.Values.SelectMany(s => s).Where(s => s.HasPrecursorMatch))
-                    yield return new LibKey(spectrum.MatchedPrecursorMz.GetValueOrDefault(), spectrum.RetentionTime);
+                    yield return new LibKey(spectrum.MatchedPrecursorMz.GetValueOrDefault(),
+                        null, // CONSIDER(bspratt) MIDAS ion mobility and/or CE etc?
+                        spectrum.RetentionTime);
             }
         }
 

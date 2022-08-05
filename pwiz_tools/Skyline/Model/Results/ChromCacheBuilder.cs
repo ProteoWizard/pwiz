@@ -600,11 +600,20 @@ namespace pwiz.Skyline.Model.Results
                 NodePeptide = nodePeptide;
                 NodeGroup = nodeGroup;
                 PrecursorMz = precursorMz;
+                ConformerId = nodeGroup?.TransitionGroup.ConformerID ?? 0;
             }
 
             public PeptideDocNode NodePeptide { get; private set; }
             public TransitionGroupDocNode NodeGroup { get; private set; }
             public SignedMz PrecursorMz { get; private set; }
+            public int ConformerId { get; private set; }
+
+            public override string ToString() // For debugging convenience
+            {
+                return (NodePeptide?.ToString() ?? string.Empty + @"/") +
+                       (NodeGroup?.ToString() ?? string.Empty + @"/") +
+                       PrecursorMz;
+            }
         }
 
         private IEnumerable<PeptidePrecursorMz> Precursors

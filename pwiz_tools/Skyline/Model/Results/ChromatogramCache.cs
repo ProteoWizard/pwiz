@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Model.Results
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
-                foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
+                foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, LibKeyIndex.LibraryMatchType.target).SelectMany(list=>list))
                 {
                     var entry = ChromGroupHeaderInfos[chromatogramIndex];
                     if (!MatchMz(precursorMz, entry.Precursor, tolerance))
@@ -412,8 +412,8 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                var key1 = new PeptideLibraryKey(nodePep.ModifiedSequence, 0);
-                var key2 = new PeptideLibraryKey(Encoding.ASCII.GetString(_rawData.TextIdBytes, textIdIndex, textIdLen), 0);
+                var key1 = LibraryKey.Create(nodePep.ModifiedSequence, 0);
+                var key2 = LibraryKey.Create(Encoding.ASCII.GetString(_rawData.TextIdBytes, textIdIndex, textIdLen), 0);
                 return LibKeyIndex.KeysMatch(key1, key2);
             }
         }
@@ -1337,7 +1337,8 @@ namespace pwiz.Skyline.Model.Results
                             lastEntry.StatusRank,
                             lastEntry.StartTime,
                             lastEntry.EndTime,
-                            lastEntry.CollisionalCrossSection, 
+                            lastEntry.CollisionalCrossSection,
+                            lastEntry.IonMobility,
                             lastEntry.IonMobilityUnits));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
@@ -1530,7 +1531,7 @@ namespace pwiz.Skyline.Model.Results
                     else
                     {
                         libraryKey =
-                            new PeptideLibraryKey(Encoding.ASCII.GetString(_rawData.TextIdBytes, textIdIndex, textIdLength), 0);
+                            LibraryKey.Create(Encoding.ASCII.GetString(_rawData.TextIdBytes, textIdIndex, textIdLength), 0);
                     }
                     libraryKeys.Add(libraryKey);
                     chromGroupIndexList = new List<int>();

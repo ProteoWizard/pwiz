@@ -935,6 +935,9 @@
   <data name="IonMobilityValue_Mobility" xml:space="preserve">
     <value>Ion Mobility</value>
   </data>
+  <data name="IonMobilityValue_Units" xml:space="preserve">
+    <value>Ion mobility units</value>
+  </data>
   <data name="StaticMod_Label13C" xml:space="preserve">
     <value>13C</value>
   </data>
@@ -1058,43 +1061,64 @@
   <data name="ExplicitRetentionTimeInfo_RetentionTimeWindow" xml:space="preserve">
     <value>Retention time window</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_CollisionalCrossSectionSqA" xml:space="preserve">
+	<data name="PrecursorFilter_CollisionalCrossSectionSqA" xml:space="preserve">
     <value>Collisional Cross Section (sqA)</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
+  <data name="PrecursorFilter_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>Collisional Cross Section (sqA)</value>
+  </data>
+  <data name="PrecursorFilter_CollisionEnergy" xml:space="preserve">
     <value>Collision energy</value>
   </data>
   <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
     <value>Collision energy</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
+	<data name="PrecursorFilter_CollisionEnergy" xml:space="preserve">
+    <value>Collision energy</value>
+  </data>
+  <data name="PrecursorFilter_CompensationVoltage" xml:space="preserve">
     <value>Compensation voltage</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
+  <data name="PrecursorFilter_CompensationVoltage" xml:space="preserve">
+    <value>Compensation voltage</value>
+  </data>
+  <data name="PrecursorFilter_ConeVoltage" xml:space="preserve">
     <value>Cone voltage</value>
   </data>
   <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
     <value>Cone voltage</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+  <data name="PrecursorFilter_DeclusteringPotential" xml:space="preserve">
     <value>Declustering potential</value>
   </data>
   <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
     <value>Declustering potential</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobility" xml:space="preserve">
     <value>Ion mobility</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_IonMobilityUnits" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobilityUnits" xml:space="preserve">
     <value>Ion mobility units</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>High energy ion mobility offset</value>
   </data>
   <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
     <value>High energy ion mobility offset</value>
   </data>
-  <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+  <data name="PrecursorFilter_IonMobility" xml:space="preserve">
+    <value>Ion mobility</value>
+  </data>
+  <data name="PrecursorFilter_IonMobilityUnits" xml:space="preserve">
+    <value>Ion mobility units</value>
+  </data>
+  <data name="PrecursorFilter_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>High energy ion mobility offset</value>
+  </data>
+  <data name="PrecursorFilter_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>High energy ion mobility offset</value>
+  </data>
+  <data name="PrecursorFilter_SLens" xml:space="preserve">
     <value>S-Lens</value>
   </data>
   <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
@@ -1220,14 +1244,23 @@
   <data name="TransitionFilterAndLibrariesSettings_PeptidePrecursorCharges" xml:space="preserve">
     <value>Precursor charges</value>
   </data>
-  <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+	<data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
     <value>Explicit values</value>
+  </data>
+	<data name="TransitionGroupDocNode_ExplicitPrecursorFilter" xml:space="preserve">
+    <value>Explicit precursor filter</value>
+  </data>
+  <data name="TransitionGroupDocNode_LibraryPrecursorFilter" xml:space="preserve">
+	  <value>Library precursor filter</value>
   </data>
   <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
     <value>Explicit values</value>
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>Isotope label type</value>
+  </data>
+  <data name="TransitionGroupDocNode_LibraryIonMobility" xml:space="preserve">
+    <value>Library ion mobility</value>
   </data>
   <data name="TransitionGroupDocNode_PrecursorConcentration" xml:space="preserve">
     <value>Precursor concentration</value>

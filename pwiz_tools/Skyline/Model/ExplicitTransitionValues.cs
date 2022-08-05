@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Helper class of attributes we normally calculate or get from a library, but which may
         /// be specified in an imported transition list or by some other means.
-        /// This is a subset of attributes found in in ExplicitTransitionGroupValue
+        /// This is a subset of attributes found in in PrecursorFilter
         /// </summary>
 
         public static readonly ExplicitTransitionValues EMPTY = new ExplicitTransitionValues(null);

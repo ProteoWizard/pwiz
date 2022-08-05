@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -31,17 +30,17 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     /// <summary>
     /// OBSOLETE.
-    /// Retained for backward compatibility (de)serialization: this information used to be in Peptide Settings by historical accident
+    /// Retained for backward compatibility (de)serialization: this information used to be in Peptide Settings by historical accident.
+    /// No support for multiple conformers in this older format.
     /// </summary>
     [XmlRoot("predict_drift_time")]
     public class DriftTimePredictor : XmlNamedElement
     {
 
-        private LibKeyMap<IonMobilityAndCCS> _measuredMobilityIons;
         private IonMobilityWindowWidthCalculator _windowWidthCalculator;
 
         public DriftTimePredictor(string name,
-            IDictionary<LibKey, IonMobilityAndCCS> measuredMobilityIons,
+            LibKeyIndex measuredMobilityIons,
             IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType windowWidthMode,
             double resolvingPower,
             double widthAtIonMobilityZero, double widthAtIonMobilityMax,
@@ -56,30 +55,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsEmpty
         {
-            get { return (_measuredMobilityIons == null || !_measuredMobilityIons.Any()) && 
+            get { return (MeasuredMobilityIons == null || MeasuredMobilityIons.Any()) && 
                          (_windowWidthCalculator ==null || _windowWidthCalculator.IsEmpty); }
         }
 
-        public IDictionary<LibKey, IonMobilityAndCCS> MeasuredMobilityIons
-        {
-            get { return _measuredMobilityIons == null ? null : _measuredMobilityIons.AsDictionary(); }
-            private set { _measuredMobilityIons = LibKeyMap<IonMobilityAndCCS>.FromDictionary(value); }
-        }
+        public LibKeyIndex MeasuredMobilityIons { get; private set; }
 
         public TransitionIonMobilityFiltering CreateTransitionIonMobilityFiltering(string dbDir)
         {
             // Create .imsdb library from MeasuredMobilityIons, for backward compatibility
-            var oldDict = MeasuredMobilityIons;
-            var dict = oldDict == null
-                ? null
-                : oldDict.ToDictionary(kvp => kvp.Key,
-                    kvp => new List<IonMobilityAndCCS>() {kvp.Value});
-
-            if ((dict == null || dict.Count == 0) && IonMobilityWindowWidthCalculator.IsNullOrEmpty(_windowWidthCalculator))
+            if ((MeasuredMobilityIons == null || MeasuredMobilityIons.Count == 0) && IonMobilityWindowWidthCalculator.IsNullOrEmpty(_windowWidthCalculator))
             {
                 return TransitionIonMobilityFiltering.EMPTY;
             }
-            var val = new TransitionIonMobilityFiltering(Name, dbDir, dict,
+            var val = new TransitionIonMobilityFiltering(Name, dbDir, MeasuredMobilityIons,
                 true,
                 _windowWidthCalculator);
             return val.ChangeLibrary(val.IonMobilityLibrary.Initialize(null));
@@ -136,19 +125,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             // Read all measured ion mobilities
-            var dict = new Dictionary<LibKey, IonMobilityAndCCS>();
+            var imValues = new HashSet<LibraryKey>();
             while (reader.IsStartElement(EL.measured_dt)) // N.B. EL.measured_dt is a misnomer, this covers all IMS types
             {
                 var im = MeasuredIonMobility.Deserialize(reader);
-                var key = new LibKey(im.Target, im.Charge);
-                if (!dict.ContainsKey(key))
-                {
-                    dict.Add(key, im.IonMobilityInfo);
-                }
+                var key = new LibKey(im.Target, im.Charge, 
+                    PrecursorFilter.Create(null, im.IonMobilityInfo));
+                imValues.Add(key);
             }
 
-            if (dict.Any())
-                MeasuredMobilityIons = dict;
+            if (imValues.Any())
+            {
+                MeasuredMobilityIons = new LibKeyIndex(imValues);
+            }
 
             if (reader.Name.Equals(name)) // Make sure we haven't stepped off the end
             {
@@ -170,7 +159,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (var im in MeasuredMobilityIons)
                 {
                     writer.WriteStartElement(EL.measured_dt); // N.B. EL.measured_dt is a misnomer, this covers all IMS types
-                    var mdt = new MeasuredIonMobility(im.Key.Target, im.Key.Adduct, im.Value);
+                    var key = im.LibraryKey;
+                    var mdt = new MeasuredIonMobility(key.Target, key.Adduct, key.PrecursorFilter.IonMobilityAndCCS);
                     mdt.WriteXml(writer);
                     writer.WriteEndElement();
                 }
@@ -186,7 +176,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) &&
-                   ArrayUtil.EqualsDeep(obj.MeasuredMobilityIons, MeasuredMobilityIons) &&
+                   LibKeyIndex.AreEquivalent(obj.MeasuredMobilityIons, MeasuredMobilityIons) &&
                    Equals(obj._windowWidthCalculator, _windowWidthCalculator);
         }
 
@@ -202,7 +192,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(MeasuredMobilityIons);
+                result = (result * 397) ^ MeasuredMobilityIons.GetHashCode();
                 result = (result * 397) ^ _windowWidthCalculator.GetHashCode();
                 return result;
             }

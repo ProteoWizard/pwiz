@@ -973,17 +973,18 @@ namespace pwiz.Skyline.Model
                 return null; // No error
             }
 
-            public ExplicitTransitionGroupValues ExplicitTransitionGroupValues
+            public PrecursorFilter ExplicitPrecursorFilter
             {
                 get
-                {
+                { // TODO(bspratt) CE as well
                     TryGetIonMobility(out var explicitIonMobility, out var imUnits, out _); // Handles the several different flavors of ion mobility
 
-                    return ExplicitTransitionGroupValues.Create(
+                    return PrecursorFilter.Create(
                         ColumnDouble(Fields, Indices.ExplicitCollisionEnergyColumn, FormatProvider),
                         explicitIonMobility,
                         imUnits,
-                        ColumnDouble(Fields, Indices.ExplicitCollisionCrossSectionColumn, FormatProvider));
+                        ColumnDouble(Fields, Indices.ExplicitCollisionCrossSectionColumn, FormatProvider),
+                        ColumnDouble(Fields, Indices.ExplicitIonMobilityHighEnergyOffsetColumn, FormatProvider));
                 }
             }
             
@@ -1440,7 +1441,7 @@ namespace pwiz.Skyline.Model
                     proteinName = Fields[ProteinColumn];
                 string peptideSequence = RemoveSequenceNotes(Fields[PeptideColumn]);
                 string modifiedSequence = RemoveModifiedSequenceNotes(Fields[PeptideColumn]);
-                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionGroupValues, ExplicitTransitionValues, Note);
+                var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitPrecursorFilter, ExplicitTransitionValues, Note);
 
                 if (LabelTypeColumn != -1)
                 {
@@ -1990,7 +1991,7 @@ namespace pwiz.Skyline.Model
                     string peptideSequence = GetSequence(match);
                     string modifiedSequence = GetModifiedSequence(match);
 
-                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitTransitionGroupValues, ExplicitTransitionValues, Note)
+                    var info = new ExTransitionInfo(proteinName, peptideSequence, modifiedSequence, PrecursorMz, IsDecoy, ExplicitPrecursorFilter, ExplicitTransitionValues, Note)
                         {
                             DefaultLabelType = GetLabelType(match, Settings),
                             IsExplicitLabelType = true
@@ -2559,7 +2560,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class ExTransitionInfo
     {
-        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy, ExplicitTransitionGroupValues explicitTransitionGroupValues, ExplicitTransitionValues explicitTransitionValues, string note)
+        public ExTransitionInfo(string proteinName, string peptideSequence, string modifiedSequence, double precursorMz, bool isDecoy, PrecursorFilter explicitPrecursorFilter, ExplicitTransitionValues explicitTransitionValues, string note)
         {
             ProteinName = proteinName;
             PeptideTarget = new Target(peptideSequence);
@@ -2568,7 +2569,7 @@ namespace pwiz.Skyline.Model
             IsDecoy = isDecoy;
             DefaultLabelType = IsotopeLabelType.light;
             TransitionExps = new List<TransitionExp>();
-            ExplicitTransitionGroupValues = explicitTransitionGroupValues;
+            ExplicitPrecursorFilter = explicitPrecursorFilter;
             ExplicitTransitionValues = explicitTransitionValues;
             Note = note;
         }
@@ -2578,7 +2579,7 @@ namespace pwiz.Skyline.Model
         public string PeptideSequence { get { return PeptideTarget.Sequence; } }
         public string ModifiedSequence { get; set; }
         public double PrecursorMz { get; private set; }
-        public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
+        public PrecursorFilter ExplicitPrecursorFilter { get; private set; }
         public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
         public string Note { get; private set; }
 
@@ -2776,7 +2777,7 @@ namespace pwiz.Skyline.Model
         private List<ExplicitMods> _activeVariableMods;
         private List<PrecursorExp> _activePrecursorExps;
         private double _activePrecursorMz;
-        private ExplicitTransitionGroupValues _activeExplicitTransitionGroupValues;
+        private PrecursorFilter _activeExplicitPrecursorFilter;
         private readonly List<ExTransitionInfo> _activeTransitionInfos;
         private double? _irtValue;
         private readonly List<MeasuredRetentionTime> _irtPeptides;
@@ -2999,7 +3000,7 @@ namespace pwiz.Skyline.Model
                 _activePeptide = new Peptide(_activeFastaSeq, sequence, begin, end, _enzyme.CountCleavagePoints(sequence), info.TransitionExps[0].IsDecoy);
                 _activeModifiedSequence = info.ModifiedSequence;
                 _activePrecursorMz = info.PrecursorMz;
-                _activeExplicitTransitionGroupValues = info.ExplicitTransitionGroupValues;
+                _activeExplicitPrecursorFilter = info.ExplicitPrecursorFilter;
                 _activeVariableMods = new List<ExplicitMods>(info.PotentialVarMods.Distinct());
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
                 _activeExplicitRetentionTimeInfo = explicitRT;
@@ -3037,7 +3038,7 @@ namespace pwiz.Skyline.Model
             if (_activePrecursorMz == 0)
             {
                 _activePrecursorMz = info.PrecursorMz;
-                _activeExplicitTransitionGroupValues = info.ExplicitTransitionGroupValues;
+                _activeExplicitPrecursorFilter = info.ExplicitPrecursorFilter;
                 _activePrecursorExps = new List<PrecursorExp>(info.TransitionExps.Select(exp => exp.Precursor));
             }
             _activeTransitionInfos.Add(info);
@@ -3090,7 +3091,8 @@ namespace pwiz.Skyline.Model
                 finalLibrarySpectra.Add(new SpectrumMzInfo
                 {
                     SourceFile = _sourceFile ?? CLIPBOARD_FILENAME,
-                    Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorAdduct),
+                    Key = new LibKey(modifiedSequenceWithIsotopes, groupLibTriple.NodeGroup.TransitionGroup.PrecursorAdduct,
+                        groupLibTriple.NodeGroup.EffectivePrecursorFilter),
                     Label = groupLibTriple.SpectrumInfo.Label,
                     PrecursorMz = groupLibTriple.SpectrumInfo.PrecursorMz,
                     IonMobility = groupLibTriple.SpectrumInfo.IonMobility,
@@ -3207,13 +3209,16 @@ namespace pwiz.Skyline.Model
 
         private void CompleteTransitionGroup()
         {
+            var conformer = 0;
             var precursorExp = GetBestPrecursorExp();
-            var transitionGroup = new TransitionGroup(_activePeptide,
-                                                      precursorExp.PrecursorAdduct,
-                                                      precursorExp.LabelType,
-                                                      false,
-                                                      precursorExp.MassShift);
-            var transitions = _activeTransitionInfos.ConvertAll(info =>
+            foreach (var libraryPrecursorFilter in _settings.GetLibraryPrecursorFilters(_activePeptide.Target, precursorExp.PrecursorAdduct ))
+            { 
+                var transitionGroup = new TransitionGroup(_activePeptide,
+                    precursorExp.PrecursorAdduct,
+                    precursorExp.LabelType,
+                    false,
+                    precursorExp.MassShift, conformer++);
+                var transitions = _activeTransitionInfos.ConvertAll(info =>
                 {
                     var productExp = info.TransitionExps.Single(exp => Equals(precursorExp, exp.Precursor)).Product;
                     var ionType = productExp.IonType;
@@ -3227,25 +3232,29 @@ namespace pwiz.Skyline.Model
                     // m/z and library info calculated later
                     return new TransitionDocNode(tran, annotations, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, productExp.ExInfo.ExplicitTransitionValues, null);
                 });
-            // m/z calculated later
-            var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions), _activeExplicitTransitionGroupValues);
-            var currentLibrarySpectrum = !_activeLibraryIntensities.Any() ? null : 
-                new SpectrumMzInfo
-                {
-                    Key = new LibKey(_activePeptide.Sequence, precursorExp.PrecursorAdduct),
-                    PrecursorMz = _activePrecursorMz,
-                    IonMobility = IonMobilityAndCCS.GetIonMobilityAndCCS(_activeExplicitTransitionGroupValues.IonMobility, _activeExplicitTransitionGroupValues.IonMobilityUnits, 
-                        _activeExplicitTransitionGroupValues.CollisionalCrossSectionSqA, null),  // TODO(bspratt) high energy offset?
-                    Label = precursorExp.LabelType,
-                    SpectrumPeaks = new SpectrumPeaksInfo(_activeLibraryIntensities.ToArray()),
-                };
-            _groupLibTriples.Add(new TransitionGroupLibraryIrtTriple(currentLibrarySpectrum, newTransitionGroup, _irtValue, _activePrecursorMz));
-            _activePrecursorMz = 0;
-            _activeExplicitTransitionGroupValues = ExplicitTransitionGroupValues.EMPTY;
-            _activePrecursorExps.Clear();
-            _activeTransitionInfos.Clear();
-            _activeLibraryIntensities.Clear();
-            _irtValue = null;
+                // m/z calculated later
+                var newTransitionGroup = new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions), _activeExplicitPrecursorFilter, libraryPrecursorFilter);
+                var currentLibrarySpectrum = !_activeLibraryIntensities.Any()
+                    ? null
+                    : new SpectrumMzInfo
+                    {
+                        Key = new LibKey(_activePeptide.Sequence, precursorExp.PrecursorAdduct,
+                            newTransitionGroup.EffectivePrecursorFilter),
+                        PrecursorMz = _activePrecursorMz,
+                        IonMobility = newTransitionGroup.IonMobilityAndCCS,
+                        Label = precursorExp.LabelType,
+                        SpectrumPeaks = new SpectrumPeaksInfo(_activeLibraryIntensities.ToArray()),
+                    };
+                _groupLibTriples.Add(new TransitionGroupLibraryIrtTriple(currentLibrarySpectrum, newTransitionGroup,
+                    _irtValue, _activePrecursorMz));
+            }
+
+        _activePrecursorMz = 0;
+        _activeExplicitPrecursorFilter = PrecursorFilter.EMPTY;
+        _activePrecursorExps.Clear();
+        _activeTransitionInfos.Clear();
+        _activeLibraryIntensities.Clear();
+        _irtValue = null;
         }
 
         private PrecursorExp GetBestPrecursorExp()

@@ -65,6 +65,22 @@ namespace pwiz.Skyline.Model.IonMobility
             HighEnergyIonMobilityOffset = highEnergyOffset ?? 0;
         }
 
+        public virtual LibKey GetLibKey()
+        {
+            var target = DbPrecursorIon.GetTarget();
+            var adduct = DbPrecursorIon.GetPrecursorAdduct();
+            var precursorDetails = PrecursorFilter.Create( null, 
+                IonMobilityNullable, IonMobilityUnits, CollisionalCrossSectionNullable, HighEnergyIonMobilityOffset);
+            if (target.IsProteomic)
+            {
+                return new LibKey(target.Sequence, adduct.AdductCharge, precursorDetails);
+            }
+            return new LibKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct, precursorDetails);
+        }
+
+
+
+
         public virtual IonMobilityAndCCS GetIonMobilityAndCCS()
         {
             return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(IonMobilityNullable, 
@@ -233,7 +249,9 @@ namespace pwiz.Skyline.Model.IonMobility
             {
                 PeptideModifiedSequence = string.Empty;
                 var smallMoleculeLibraryAttributes = target.Molecule.GetSmallMoleculeLibraryAttributes();
-                MoleculeName = smallMoleculeLibraryAttributes.MoleculeName ?? string.Empty;
+                MoleculeName = string.IsNullOrEmpty(smallMoleculeLibraryAttributes.MoleculeName) ? 
+                    target.Molecule.InvariantName : 
+                    smallMoleculeLibraryAttributes.MoleculeName;
                 ChemicalFormula = smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty;
                 InChiKey = smallMoleculeLibraryAttributes.InChiKey ?? string.Empty;
                 OtherKeys = smallMoleculeLibraryAttributes.OtherKeys ?? string.Empty;
@@ -269,7 +287,6 @@ namespace pwiz.Skyline.Model.IonMobility
         public virtual string ChemicalFormula { get; set; } // Chemical formula, or encoded mono and average masses if no formula availalbe
         public virtual string InChiKey { get; set; }
         public virtual string OtherKeys { get; set; }
-
 
         public virtual bool EqualsIgnoreId(DbMolecule other)
         {

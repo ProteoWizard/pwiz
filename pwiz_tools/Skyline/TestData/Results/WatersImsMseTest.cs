@@ -110,11 +110,15 @@ namespace pwiz.SkylineTestData.Results
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
                 var doc = docContainer.Document;
+                AssertEx.AreEqual(1, doc.MoleculePrecursorPairs.Count());
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+                AssertEx.AreEqual(1, docResults.MoleculePrecursorPairs.Count());
                 AssertEx.IsTrue(docContainer.SetDocument(docResults, doc, true));
                 docContainer.AssertComplete();
                 document = docContainer.Document;
+                AssertEx.AreEqual(1, document.MoleculePrecursorPairs.Count());
             }
+            AssertEx.AreEqual(1, document.MoleculePrecursorPairs.Count());
             document = ConvertToSmallMolecules(document, ref docPath, new[] {mz5Path}, asSmallMolecules);
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
@@ -194,7 +198,6 @@ namespace pwiz.SkylineTestData.Results
                             docContainer.AssertComplete();
 
                             document2 = docContainer.Document;
-                            var im = document2.Settings.GetIonMobilities(document2.MoleculeLibKeys.ToArray(), new MsDataFilePath(mz5Path));
                             var pep = document2.Molecules.First();
                             var expectedWidth =
                                 driftWindowWidthCalcType == IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width
@@ -203,7 +206,7 @@ namespace pwiz.SkylineTestData.Results
                             foreach (TransitionGroupDocNode nodeGroup in pep.Children)
                             {
                                 var centerDriftTime = document2.Settings.GetIonMobilityFilter(
-                                    pep, nodeGroup, null, im, null, driftTimeMax);
+                                    nodeGroup, null, null, driftTimeMax);
                                 AssertEx.AreEqual(3.86124, centerDriftTime.IonMobilityAndCCS.IonMobility.Mobility.Value, .0001, testModeStr + " ccs");
                                 AssertEx.AreEqual(expectedWidth, centerDriftTime.IonMobilityExtractionWindowWidth.Value, .0001, testModeStr + " dtWidth");
                             }

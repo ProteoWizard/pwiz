@@ -128,8 +128,17 @@ namespace pwiz.Common.Chemistry
             return val;
         }
 
+        public class IonMobilityValueDefaults : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                return IsNullOrEmpty((IonMobilityValue)obj);
+            }
+        }
+
         [Track]
         public double? Mobility { get; private set; }
+        [Track]
         public eIonMobilityUnits Units { get; private set; }
         public bool HasValue { get { return Mobility.HasValue; } }
 

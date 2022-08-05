@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestData.Results
     /// Summary description for AsymDiaTest
     /// </summary>
     [TestClass]
-    public class AsymDiaTest : AbstractUnitTest
+    public class AsymDiaTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"TestData\Results\AsymDIA.zip";
 
@@ -65,6 +65,8 @@ namespace pwiz.SkylineTestData.Results
             {
                 return;
             }
+
+            TestMultiCCS = false; // Adding another heavy transition makes no sense in a ration test
 
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
 

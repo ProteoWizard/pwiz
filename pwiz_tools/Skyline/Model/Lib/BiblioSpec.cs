@@ -16,6 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+//
+// N.B. this code supports the original BiblioSpec format, which has long since been replaced by
+// the SQLite based .blib format (see BiblioSpecLite.cs).  It is retained solely for backward compatibility.
+// 
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,7 +33,6 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -511,7 +516,12 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool Contains(LibKey key)
         {
-            return _dictLibrary.ItemsMatching(key.LibraryKey, true).Any();
+            return _dictLibrary.ItemsMatching(key.LibraryKey, LibKeyIndex.LibraryMatchType.details).Any();
+        }
+
+        public override bool HasIonMobility
+        {
+            get { return _dictLibrary.LibKeys.Any(k => !k.IonMobility.IsEmpty); }
         }
 
         public override bool ContainsAny(Target target)
@@ -524,7 +534,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (_dictLibrary != null)
             {
-                foreach (var item in _dictLibrary.ItemsMatching(key.LibraryKey, true))
+                foreach (var item in _dictLibrary.ItemsMatching(key.LibraryKey, LibKeyIndex.LibraryMatchType.details))
                 {
                     libInfo = new BiblioSpecSpectrumHeaderInfo(Name, item.Copies, null, null, null);
                     return true;
@@ -538,7 +548,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (_dictLibrary != null)
             {
-                foreach (var item in _dictLibrary.ItemsMatching(key.LibraryKey, true))
+                foreach (var item in _dictLibrary.ItemsMatching(key.LibraryKey, LibKeyIndex.LibraryMatchType.details))
                 {
                     spectrum = new SpectrumPeaksInfo(ReadSpectrum(item));
                     return true;
@@ -552,7 +562,7 @@ namespace pwiz.Skyline.Model.Lib
         public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
         {
 
-            return new SpectrumPeaksInfo(ReadSpectrum(_dictLibrary.ItemsMatching(((LibKey)spectrumKey).LibraryKey, true)
+            return new SpectrumPeaksInfo(ReadSpectrum(_dictLibrary.ItemsMatching(((LibKey)spectrumKey).LibraryKey, LibKeyIndex.LibraryMatchType.details)
                 .First()));
 
         }
@@ -582,27 +592,14 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // No ion mobility data in BiblioSpec libs (those are ancient - try BiblioSpecLite instead)
-        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey targetIon, out LibraryPrecursorFiltersInfo precursorFilters)
         {
-            ionMobilities = null;
+            precursorFilters = null;
             return false;
         }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey[] targetIons, out LibraryPrecursorFiltersInfo precursorFilters)
         {
-            ionMobilities = null;
-            return false;
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
-        {
-            ionMobilities = null;
-            return false;
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
-        {
-            ionMobilities = null;
+            precursorFilters = null;
             return false;
         }
 

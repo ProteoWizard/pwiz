@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model
         {
             if (Peptide.IsCustomMolecule && children.Any())
             {
-                // Enforce order for small molecules, except those that are fictions of the test system
+                // Enforce order for small molecules
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
             }
             else
@@ -243,6 +243,11 @@ namespace pwiz.Skyline.Model
         private string CustomInvariantNameOrText(string text)
         {
             return Peptide.IsCustomMolecule ? Peptide.CustomMolecule.InvariantName : text;
+        }
+
+        public bool HasConformers
+        {
+            get { return TransitionGroups.Any(tg => tg.TransitionGroup.IsConformer); }
         }
 
         /// <summary>
@@ -694,7 +699,7 @@ namespace pwiz.Skyline.Model
                 var children = new List<TransitionGroupDocNode>();
                 foreach (var nodeGroup in TransitionGroups)
                 {
-                    children.Add(nodeGroup.UpdateSmallMoleculeTransitionGroup(newPeptide, null, settings));
+                    children.Add(nodeGroup.DeepCopyTransitionGroup(newPeptide, null, settings, nodeGroup.TransitionGroup.ConformerID));
                 }
                 return new PeptideDocNode(newPeptide, settings, ExplicitMods, SourceKey, explicitRetentionTime, children.ToArray(), AutoManageChildren);
             }
@@ -731,7 +736,9 @@ namespace pwiz.Skyline.Model
 // ReSharper restore InconsistentNaming
 
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
+        public int TransitionGroupCountIgnoringMultipleConformers => TransitionGroupsIgnoringMultipleConformers.Count();
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
+        public int TransitionCountIgnoringMultipleConformers => TransitionsIgnoringMultipleConformers.Count();
 
         [TrackChildren(ignoreName: true, defaultValues: typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionGroupDocNode> TransitionGroups
@@ -739,6 +746,63 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Children.Cast<TransitionGroupDocNode>();
+            }
+        }
+
+        /// <summary>
+        /// Returns an enumeration of nodes that share precursor adduct and mz (but presumably different ion mobility)
+        /// </summary>
+        public IEnumerable<TransitionGroupDocNode> EnumerateConformers(Adduct adduct, double mz)
+        {
+            foreach (var node in TransitionGroups)
+            {
+                if (Equals(adduct, node.PrecursorAdduct) && Equals(mz, node.PrecursorMz.RawValue))
+                {
+                    yield return node;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Use this for enumerating the document for things like SRM input or output formats that don't specify ion mobility values
+        /// and thus expect only once occurrence of a molecule+adduct combination
+        /// </summary>
+        public IEnumerable<TransitionGroupDocNode> TransitionGroupsIgnoringMultipleConformers
+        {
+            get
+            {
+                var signatures = new Dictionary<Tuple<Adduct, double>, TransitionGroupDocNode>();
+                foreach (var node in TransitionGroups)
+                {
+                    var signature = new Tuple<Adduct, double>(node.PrecursorAdduct, node.PrecursorMz);
+                    if (signatures.ContainsKey(signature))
+                    {
+                        // Two or more precursors with same adduct and mz, means this is a multiple conformer,
+                        // don't include it in the enumeration
+                        Assume.IsTrue(!signatures[signature].EffectivePrecursorFilter.IsEmpty &&
+                                      !node.EffectivePrecursorFilter.IsEmpty,
+                            @"Not expecting precursors with identical mz values without ion mobility or CE etc to distinguish them");
+                        Assume.AreNotEqual(signatures[signature].EffectivePrecursorFilter, node.EffectivePrecursorFilter,
+                            @"Not expecting precursors with identical mz values and identical ion mobility, CE, etc values");
+                        continue; 
+                    }
+                    signatures.Add(signature, node);
+                    yield return node;
+                }
+            }
+        }
+
+        public IEnumerable<TransitionDocNode> TransitionsIgnoringMultipleConformers
+        {
+            get
+            {
+                foreach (var tg in TransitionGroupsIgnoringMultipleConformers)
+                {
+                    foreach (var transition in tg.Transitions)
+                    {
+                        yield return transition;
+                    }
+                }
             }
         }
 
@@ -883,6 +947,9 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(explicitMods, ExplicitMods))
                 nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
             nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
+            var needsIonMobilityUpdate = diff.DiffIonMobilityLibraryValues;
+            var newSettingsHasIonMobilityFiltering = settingsNew.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues ||
+                                      !settingsNew.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone;
 
             if (diff.DiffPeptideProps)
             {
@@ -900,7 +967,8 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (diff.DiffTransitionGroups && settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren)
+            if (diff.DiffTransitionGroups && settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren 
+                && !diff.DiffConformersOnly) // If we're just adding/removing conformers, don't perform usual auto-manage
             {
                 IList<DocNode> childrenNew = new List<DocNode>();
 
@@ -937,6 +1005,8 @@ namespace pwiz.Skyline.Model
                             : null;
 
                         nodeGroups = ImmutableList.Singleton(new TransitionGroupDocNode(tranGroup, transitions));
+                        needsIonMobilityUpdate |= newSettingsHasIonMobilityFiltering;  // That empty CCS value may be incorrect
+
                         // If not recursing, then ChangeSettings will not be called on nodeGroup.  So, make
                         // sure its precursor m/z is set correctly.
                         if (!recurse)
@@ -1023,7 +1093,7 @@ namespace pwiz.Skyline.Model
                         // Skip this node, if it is heavy and the update caused it to have the
                         // same m/z value as the light value.
                         if (!nodeChanged.TransitionGroup.LabelType.IsLight &&
-                            !Peptide.IsCustomMolecule) // No mods on customs (TODO bspratt - not sure this holds true any longer)
+                            !Peptide.IsCustomMolecule) // No mods on customs
                         {
                             var precursorMassLight = settingsNew.GetPrecursorMass(
                                 IsotopeLabelType.light, Peptide.Target, explicitMods);
@@ -1040,10 +1110,200 @@ namespace pwiz.Skyline.Model
                 }                
             }
 
+            if (needsIonMobilityUpdate)
+            {
+                nodeResult = nodeResult.UpdateIonMobilityValues(settingsNew);
+            } 
+
             if (diff.DiffResults || ChangedResults(nodeResult))
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
             return nodeResult;
+        }
+
+        public PeptideDocNode UpdateIonMobilityValues(SrmSettings settingsNew)
+        {
+            // Some complexity here:
+            //   more than one transition group may exist with the same ion but different ion mobility ("multiple conformers")
+            //   multiple conformers may arise from multiple nodes with different explicit IM values, or from multiple entries in .imsdb file
+            //   the change here might be from no IM to multi-IM, or IM to multi-IM, or IM removal, etc
+            var nodeResult = this;
+
+            var hasIonMobilityFiltering = settingsNew.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues ||
+                !settingsNew.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone;
+
+            var currentChildren = nodeResult.TransitionGroups.ToArray(); // Transition groups per current settings
+
+            var blockedOnIMSDB = hasIonMobilityFiltering &&
+                                 !settingsNew.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsNone &&
+                                 !settingsNew.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.IsUsable;
+            var blockedOnBlib = hasIonMobilityFiltering &&
+                                settingsNew.TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues &&
+                                settingsNew.PeptideSettings.Libraries.HasLibraries &&
+                                !settingsNew.PeptideSettings.Libraries.IsLoaded;
+            if (!(blockedOnIMSDB || blockedOnBlib)) // Put this off if library load state isn't what we need, we'll catch it on library load event instead
+            {
+                // Ion mobility filtering, add or remove nodes for multiple conformers if needed
+                // Cases to consider:
+                //   Multi-conformer retreats to single conformer: conformer 0 gets the value and  conformer 1...n nodes go away
+                //   Single conformer goes multi: conformer 1...n nodes added
+                //   IM library value no longer can be found: conformer 0 has no IM, conformer 1...n nodes go away
+                //   IM library changes, one or more nodes get updated IM value, possibly some added or removed to accomodate number of IM values
+                //   No change
+
+                var currentChildrenDictLibKeyAndMZ =
+                    currentChildren.ToDictionary(n => n,
+                        n => new LibKeyLabelMZ(n.GetLibKey(settingsNew, nodeResult), n.LabelType, n.PrecursorMz.RawValue));
+                var currentChildrenByLibKeyMzPair =
+                    currentChildrenDictLibKeyAndMZ.ToLookup(kvp => kvp.Value, kvp => kvp.Key);
+                var targetIons = currentChildrenByLibKeyMzPair.Select(item => item.Key).Distinct().ToArray();
+                var filtersDict = settingsNew.GetLibraryPrecursorFilters(targetIons.Select(i => i.LibKey)).GetPrecursorFiltersDict();
+
+                // Work through the current nodes, preserving order.
+                var newChildren = new List<DocNode>();
+                var obsoleteChildren = new HashSet<TransitionGroupDocNode>();
+                foreach (var node in currentChildren)
+                {
+                    if (newChildren.Contains(node) || obsoleteChildren.Contains(node))
+                    {
+                        continue; // Already handled
+                    }
+
+                    var libKeyAndMz = currentChildrenDictLibKeyAndMZ[node];
+
+                    // If any node with this label and MZ has explicit values, ignore library values
+                    // TODO(bspratt) worry about mix and match of library CE, explicit IM etc?
+                    var siblings = currentChildrenByLibKeyMzPair[libKeyAndMz].ToList();
+                    if (siblings.Any(s => !PrecursorFilter.IsNullOrEmpty(s.ExplicitPrecursorFilter)))
+                    {
+                        foreach (var sib in siblings)
+                        {
+                            if (!PrecursorFilter.IsNullOrEmpty(sib.ExplicitPrecursorFilter))
+                            {
+                                newChildren.Add(sib);
+                            }
+                            else
+                            {
+                                obsoleteChildren.Add(sib);
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    if (filtersDict.TryGetValue(libKeyAndMz.LibKey, out var precursorFilters))
+                    {
+                        // Update ion mobility value(s)
+                        Array.Sort(precursorFilters);
+                        var newConformerID = GetUniqueConformerID(siblings);
+
+                        foreach (var filter in precursorFilters)
+                        {
+                            var existing = siblings.FirstOrDefault(sib => filter.Equals(sib.EffectivePrecursorFilter));
+                            if (existing != null)
+                            {
+                                newChildren.Add(existing);
+                                siblings.Remove(existing); // This has been handled
+                                obsoleteChildren.Add(existing); // Don't consider this node on next pass through currentChildren
+                            }
+                            else
+                            {
+                                // A new IM value, try to reuse an existing node with an IM value that's no longer valid
+                                existing = siblings.FirstOrDefault(sib => !precursorFilters.Contains(sib.EffectivePrecursorFilter));
+                                if (existing != null)
+                                {
+                                    newChildren.Add(existing.ChangeLibraryPrecursorFilter(filter));
+                                    siblings.Remove(existing); // This has been used
+                                    obsoleteChildren.Add(existing); // Don't consider this node on next pass through currentChildren
+                                }
+                                else
+                                {
+                                    // Create a new node
+                                    var newNode = node.DeepCopyTransitionGroup(
+                                        null, // Not changing parent molecule
+                                        null, // Not changing adduct etc
+                                        settingsNew, filter, newConformerID++);
+                                    newChildren.Add(newNode);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // No library ion mobility
+                        newChildren.Add(node.ChangeLibraryIonMobility(IonMobilityAndCCS.EMPTY));
+                    }
+
+                    // Any remaining siblings are no longer needed
+                    foreach (var sib in siblings)
+                    {
+                        obsoleteChildren.Add(sib);
+                    }
+                }
+
+                if (currentChildren.Length != newChildren.Count ||
+                    newChildren.Any(c => !currentChildren.Contains(c)))
+                {
+                    nodeResult = (PeptideDocNode) nodeResult.ChangeChildren(newChildren);
+                }
+            }
+
+            return nodeResult;
+        }
+
+        public static int GetUniqueConformerID(IEnumerable<TransitionGroupDocNode> siblings)
+        {
+            return siblings.Select(s => s.TransitionGroup.ConformerID).DefaultIfEmpty(-1).Max() + 1;
+        }
+
+        // Convenience class for comparing targets ignoring ion mobility values
+        private class LibKeyLabelMZ : IEquatable<LibKeyLabelMZ>
+        {
+
+            public LibKey LibKey { get; private set; }
+            public IsotopeLabelType IsotopeLabelType { get; private set; }
+            public double MZ { get; private set; }
+
+            public LibKeyLabelMZ(LibKey libKey, IsotopeLabelType isotopeLabelType, double mz)
+            {
+                LibKey = libKey.ChangePrecursorFilter(null);
+                IsotopeLabelType = isotopeLabelType;
+                MZ = mz;
+            }
+
+            public bool Equals(LibKeyLabelMZ other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return LibKey.Equals(other.LibKey) && 
+                       IsotopeLabelType.Equals(other.IsotopeLabelType) && 
+                       MZ.Equals(other.MZ);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((LibKeyLabelMZ) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = LibKey.GetHashCode();
+                    hashCode = (hashCode * 397) ^ IsotopeLabelType.GetHashCode();
+                    hashCode = (hashCode * 397) ^ MZ.GetHashCode();
+                    return hashCode;
+                }
+            }
+
+            public override string ToString() // For debug convenience, not user facing
+            {
+                return $@"{MZ}/{IsotopeLabelType}/{LibKey}";
+            }
+
         }
 
         public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter)

@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 
@@ -62,14 +63,46 @@ namespace pwiz.Skyline.Model.Lib
             return _subIndexes.SelectMany(index => index.ItemsEqualTo(libraryKey)).FirstOrDefault();
         }
 
-        public IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso)
+        public static bool AreEquivalent(LibKeyIndex a, LibKeyIndex b)
         {
-            return _subIndexes.SelectMany(index => index.ItemsMatching(libraryKey, matchAdductAlso));
+            if (ReferenceEquals(a, b))
+            {
+                return true;
+            }
+            if (a == null || b == null)
+            {
+                return false;
+            }
+            if (a.Count != b.Count)
+            {
+                return false;
+            }
+            return a.All(item => b.Find(item.LibraryKey) != null);
+        }
+
+        public IEnumerable<IndexItem> ItemsMatching(LibKey key, LibraryMatchType matchType)
+        {
+            return ItemsMatching(key.LibraryKey, matchType);
+        }
+
+        public IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, LibraryMatchType matchType)
+        {
+            return _subIndexes.SelectMany(index => index.ItemsMatching(libraryKey, matchType));
+        }
+
+        public IEnumerable<IndexItem> ItemsWithUnmodifiedSequence(LibKey key)
+        {
+            return ItemsWithUnmodifiedSequence(key.LibraryKey);
         }
 
         public IEnumerable<IndexItem> ItemsWithUnmodifiedSequence(LibraryKey libraryKey)
         {
             return _subIndexes.SelectMany(index => index.ItemsMatchingWithoutModifications(libraryKey));
+        }
+
+        public HashSet<eIonMobilityUnits> IonMobilityUnitsInUse
+        {
+            get {  return _subIndexes.SelectMany(index => index.Select(item => item.LibraryKey.PrecursorFilter.IonMobilityUnits)).ToHashSet(); }
         }
 
         public struct IndexItem
@@ -111,6 +144,11 @@ namespace pwiz.Skyline.Model.Lib
             }
             if (!Equals(key1.Adduct, key2.Adduct))
             {
+                return false;
+            }
+            if (!Equals(key1.PrecursorFilter, key2.PrecursorFilter))
+            {
+                // CONSIDER(bspratt) some tolerance here for numeric fuzz, or for "don't care"?
                 return false;
             }
             var peptideKey1 = key1 as PeptideLibraryKey;
@@ -241,7 +279,7 @@ namespace pwiz.Skyline.Model.Lib
                     newMods.Add(mod2);
                 }
             }
-            return new PeptideLibraryKey(MakeModifiedSequence(key1.UnmodifiedSequence, newMods), key1.Charge);
+            return PeptideLibraryKey.CreateSimple(MakeModifiedSequence(key1.UnmodifiedSequence, newMods), key1.Charge); // Any existing ion mobility, CE etc info will certainly be wrong for a new modification
         }
 
         private string MakeModifiedSequence(string unmodifiedSequence,
@@ -261,6 +299,13 @@ namespace pwiz.Skyline.Model.Lib
             return modifiedSequence.ToString();
         }
 
+        public enum LibraryMatchType
+        {
+            target,  // Just look at the target molecule
+            ion,     // Require match on target molecule and adduct
+            details  // Require match on target molecule and adduct and prefer match on ion mobility, CE etc
+        }
+
         private interface ISubIndex : IEnumerable<IndexItem>
         {
             int Count { get; }
@@ -272,10 +317,10 @@ namespace pwiz.Skyline.Model.Lib
             /// Returns the set of items whose LibraryKey matches, using the fuzzy logic specific to
             /// the type of library key.
             /// </summary>
-            IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso);
+            IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, LibraryMatchType matchType);
             /// <summary>
             /// For peptides, returns the set of items whose UnmodifiedSequence match, otherwise
-            /// returns the same as ItemsMatching(libraryKey, false).
+            /// returns the same as ItemsMatching(libraryKey, LibraryMatchType.target).
             /// </summary>
             IEnumerable<IndexItem> ItemsMatchingWithoutModifications(LibraryKey libraryKey);
         }
@@ -301,22 +346,43 @@ namespace pwiz.Skyline.Model.Lib
 
             protected virtual IEnumerable<IndexItem> ExactMatches(TKey key)
             {
-                return ItemsMatching(key, false).Where(indexItem => Equals(key, indexItem.LibraryKey));
-
+                return ItemsMatchingTarget(key).Where(indexItem => Equals(key, indexItem.LibraryKey));
             }
 
-            public IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, bool matchAdductAlso)
+            public IEnumerable<IndexItem> ItemsMatching(LibraryKey libraryKey, LibraryMatchType matchType)
             {
                 var key = libraryKey as TKey;
                 if (key == null)
                 {
                     return IndexItem.NONE;
                 }
-                var matches = ItemsMatching(key);
-                return matchAdductAlso ? matches.Where(item => Equals(item.LibraryKey.Adduct, libraryKey.Adduct)) : matches;
+                return ItemsMatching(key, matchType);
             }
 
-            protected abstract IEnumerable<IndexItem> ItemsMatching(TKey key);
+            protected abstract IEnumerable<IndexItem> ItemsMatchingTarget(TKey key);
+
+            protected IEnumerable<IndexItem> ItemsMatching(TKey key, LibraryMatchType matchType)
+            {
+                var itemsMatchingTarget = ItemsMatchingTarget(key);
+                if (matchType == LibraryMatchType.target)
+                {
+                    return itemsMatchingTarget; // No further work needed
+                }
+
+                var ions = itemsMatchingTarget.Where(item => Equals(key.Adduct, item.LibraryKey.Adduct));
+                if (matchType == LibraryMatchType.ion)
+                {
+                    return ions; // No further work needed
+                }
+
+                if (key.PrecursorFilter.IsEmpty)
+                {
+                    return ions; // No match to enforce
+                }
+
+                return ions.Where(item => Equals(key.PrecursorFilter, item.LibraryKey.PrecursorFilter)); // CONSIDER(bspratt) may need tolerances here for CE etc
+            }
+
             public IEnumerable<IndexItem> ItemsMatchingWithoutModifications(LibraryKey libraryKey)
             {
                 var key = libraryKey as TKey;
@@ -329,7 +395,7 @@ namespace pwiz.Skyline.Model.Lib
 
             protected virtual IEnumerable<IndexItem> ItemsMatchingWithoutModifications(TKey key)
             {
-                return ItemsMatching(key);
+                return ItemsMatchingTarget(key); // Return all matches ignoring ionization and ion mobility
             }
         }
 
@@ -364,7 +430,7 @@ namespace pwiz.Skyline.Model.Lib
                 return _entries.Values.SelectMany(list => list.Select(entry => entry.IndexItem)).GetEnumerator();
             }
 
-            protected override IEnumerable<IndexItem> ItemsMatching(PeptideLibraryKey libraryKey)
+            protected override IEnumerable<IndexItem> ItemsMatchingTarget(PeptideLibraryKey libraryKey)
             {
                 var matchingEntries = ModificationIndexMatches(libraryKey, out var modifications);
                 if (modifications != null && modifications.Count != 0)
@@ -525,7 +591,7 @@ namespace pwiz.Skyline.Model.Lib
                 return _entries.SelectMany(entry => entry).GetEnumerator();
             }
 
-            protected override IEnumerable<IndexItem> ItemsMatching(MoleculeLibraryKey libraryKey)
+            protected override IEnumerable<IndexItem> ItemsMatchingTarget(MoleculeLibraryKey libraryKey)
             {
                 return _entries[libraryKey.PreferredKey];
             }
@@ -547,7 +613,7 @@ namespace pwiz.Skyline.Model.Lib
                 return _entries.SelectMany(group => group).GetEnumerator();
             }
 
-            protected override IEnumerable<IndexItem> ItemsMatching(PrecursorLibraryKey libraryKey)
+            protected override IEnumerable<IndexItem> ItemsMatchingTarget(PrecursorLibraryKey libraryKey)
             {
                 return _entries[libraryKey.Mz];
             }
@@ -576,7 +642,7 @@ namespace pwiz.Skyline.Model.Lib
                 return _entries.Values.SelectMany(list => list.Select(item => item.IndexItem)).GetEnumerator();
             }
 
-            protected override IEnumerable<IndexItem> ItemsMatching(CrosslinkLibraryKey key)
+            protected override IEnumerable<IndexItem> ItemsMatchingTarget(CrosslinkLibraryKey key)
             {
                 var crosslinkItem = new CrosslinkItem(new IndexItem(key, -1));
                 foreach (var match in CrosslinkItemsMatchingWithoutModifications(crosslinkItem))

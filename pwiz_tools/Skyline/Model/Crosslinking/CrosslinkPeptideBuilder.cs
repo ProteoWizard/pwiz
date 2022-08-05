@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public TransitionGroupDocNode MakeTransitionGroupDocNode(TransitionGroup transitionGroup)
         {
-            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, Settings, ExplicitMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, Settings, ExplicitMods, null, null, PrecursorFilter.EMPTY, null, null, false);
             return transitionGroupDocNode;
         }
 

@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model.Results
                 var chromatogramGroupInfo = chromatogramGroupInfos[iTransitionGroup];
                 foreach (var transition in transitionGroupDocNode.Transitions)
                 {
-                    var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transition, MzMatchTolerance,
+                    var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionGroupDocNode, transition, MzMatchTolerance,
                         TransformChrom.raw, ChromatogramSet.OptimizationFunction);
                     if (chromatogramInfo == null)
                     {
@@ -360,7 +360,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var transition in transitionGroup.Transitions)
                 {
                     var chromatogramInfo =
-                        chromatogramGroupInfo.GetTransitionInfo(transition, MzMatchTolerance, TransformChrom.raw, null);
+                        chromatogramGroupInfo.GetTransitionInfo(transitionGroup, transition, MzMatchTolerance, TransformChrom.raw, null);
                     if (chromatogramInfo == null)
                     {
                         continue;

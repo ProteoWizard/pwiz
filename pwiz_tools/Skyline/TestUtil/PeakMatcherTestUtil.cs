@@ -22,7 +22,7 @@ namespace pwiz.SkylineTestUtil
             var doc = skylineWindow.Document;
 
             path = null;
-            var libKeyToMatch = new PeptideLibraryKey(modifiedSequence, 0);
+            var libKeyToMatch = LibraryKey.Create(modifiedSequence, 0);
             foreach (var nodePepGroup in doc.MoleculeGroups)
             {
                 foreach (var nodePep in nodePepGroup.Peptides.Where(nodePep => LibKeyIndex.KeysMatch(libKeyToMatch, nodePep.ModifiedTarget.GetLibKey(Adduct.EMPTY))))

@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model.Optimization
         public OptimizationType OptType { get; set; }
         public Target PeptideModSeq { get; set; }
         public Adduct PrecursorAdduct { get; set; }
+        public PrecursorFilter PrecursorFilter { get; set; } // CE, IonMobility etc
         public string FragmentIon { get; set; }
         public Adduct ProductAdduct { get; set; }
 
@@ -50,29 +51,31 @@ namespace pwiz.Skyline.Model.Optimization
             OptType = OptimizationType.unknown;
         }
 
-        public OptimizationKey(OptimizationType optType, Target peptideModSeq, Adduct precursorAdduct, string fragmentIon, Adduct productAdduct)
+        public OptimizationKey(OptimizationType optType, Target peptideModSeq, Adduct precursorAdduct, PrecursorFilter precursorFilter, string fragmentIon, Adduct productAdduct)
         {
             OptType = optType;
             PeptideModSeq = peptideModSeq;
             PrecursorAdduct = precursorAdduct;
+            PrecursorFilter = precursorFilter ?? PrecursorFilter.EMPTY;
             FragmentIon = fragmentIon;
             ProductAdduct = productAdduct;
         }
 
         public OptimizationKey(OptimizationKey other)
-            : this(other.OptType, other.PeptideModSeq, other.PrecursorAdduct, other.FragmentIon, other.ProductAdduct)
+            : this(other.OptType, other.PeptideModSeq, other.PrecursorAdduct, other.PrecursorFilter, other.FragmentIon, other.ProductAdduct)
         {
         }
 
         public override string ToString()  // For debugging
         {
+            var filter = PrecursorFilter.IsNullOrEmpty(PrecursorFilter) ? string.Empty : PrecursorFilter.DisplayString;
             if (PeptideModSeq.IsProteomic)
               return !string.IsNullOrEmpty(FragmentIon)
-                    ? string.Format(@"{0} (charge {1}); {2} (charge {3})", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)
-                    : string.Format(@"{0} (charge {1})", PeptideModSeq, PrecursorAdduct);
+                    ? string.Format(@"{0} (charge {1}); {2} (charge {3}){4}", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct, filter)
+                    : string.Format(@"{0} (charge {1}){2}", PeptideModSeq, PrecursorAdduct, filter);
             return !string.IsNullOrEmpty(FragmentIon)
-                ? string.Format(@"{0}{1}; {2}{3}", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct)
-                : string.Format(@"{0}{1}", PeptideModSeq, PrecursorAdduct);
+                ? string.Format(@"{0}{1}{4}; {2}{3}", PeptideModSeq, PrecursorAdduct, FragmentIon, ProductAdduct, filter)
+                : string.Format(@"{0}{1}{2}", PeptideModSeq, PrecursorAdduct, filter);
         }
 
         public int CompareTo(object obj)
@@ -201,7 +204,7 @@ namespace pwiz.Skyline.Model.Optimization
         public virtual Target Target { get { return Key.PeptideModSeq; } }
 
         public DbOptimization(OptimizationKey key, double value)
-            : this(key.OptType, key.PeptideModSeq, key.PrecursorAdduct, key.FragmentIon, key.ProductAdduct, value)
+            : this(key.OptType, key.PeptideModSeq, key.PrecursorAdduct, key.PrecursorFilter, key.FragmentIon, key.ProductAdduct, value)
         {
         }
 
@@ -211,9 +214,9 @@ namespace pwiz.Skyline.Model.Optimization
             Id = other.Id;
         }
 
-        public DbOptimization(OptimizationType type, Target seq, Adduct charge, string fragmentIon, Adduct productCharge, double value)
+        public DbOptimization(OptimizationType type, Target seq, Adduct charge, PrecursorFilter libraryPrecursorFilter, string fragmentIon, Adduct productCharge, double value)
         {
-            Key = new OptimizationKey(type, seq, charge, fragmentIon, productCharge);
+            Key = new OptimizationKey(type, seq, charge, libraryPrecursorFilter, fragmentIon, productCharge);
             Value = value;
         }
 

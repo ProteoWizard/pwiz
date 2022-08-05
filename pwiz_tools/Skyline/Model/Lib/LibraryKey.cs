@@ -23,9 +23,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Google.Protobuf;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
@@ -35,6 +37,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         public abstract Target Target { get; }
         public abstract Adduct Adduct { get; }
+        public abstract PrecursorFilter PrecursorFilter { get;} // Things like CCS, CE that distinguish otherwise alike ions in chromatogram extraction
 
         protected internal abstract LibraryKeyProto ToLibraryKeyProto();
 
@@ -47,6 +50,20 @@ namespace pwiz.Skyline.Model.Lib
             memoryStream.CopyTo(stream);
         }
 
+        public static PrecursorFilter GetPrecursorFilter(LibraryKeyProto proto)
+        {
+            if (proto.PrecursorFilter == null)
+            {
+                return PrecursorFilter.EMPTY;
+            }
+
+            var ionMobility = IonMobilityValue.GetIonMobilityValue(proto.PrecursorFilter.IonMobility, 
+                (eIonMobilityUnits)proto.PrecursorFilter.IonMobilityUnits);
+            return PrecursorFilter.Create(proto.PrecursorFilter.CollisionEnergy,  
+                IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, proto.PrecursorFilter.CollisionCrossSectionSqA, 
+                    proto.PrecursorFilter.HighEnergyIonMobilityValueOffset));
+        }
+
         public static LibraryKey Read(ValueCache valueCache, Stream stream)
         {
             int length = PrimitiveArrays.ReadOneValue<int>(stream);
@@ -57,7 +74,7 @@ namespace pwiz.Skyline.Model.Lib
             switch (proto.KeyType)
             {
                 case LibraryKeyProto.Types.KeyType.Peptide:
-                    return new PeptideLibraryKey(proto.ModifiedSequence, proto.Charge).ValueFromCache(valueCache);
+                    return PeptideLibraryKey.CreateSimple(proto.ModifiedSequence, proto.Charge, GetPrecursorFilter(proto)).ValueFromCache(valueCache);
                 case LibraryKeyProto.Types.KeyType.PrecursorMz:
                     return new PrecursorLibraryKey(proto);
                 case LibraryKeyProto.Types.KeyType.SmallMolecule:
@@ -99,19 +116,37 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <returns></returns>
         public abstract Peptide CreatePeptideIdentityObj();
+
+        /// <summary>
+        /// Create a peptide or crosslinked peptide library key
+        /// </summary>
+        public static LibraryKey Create(string sequence, int charge, PrecursorFilter precursorFilter = null)
+        {
+            return (LibraryKey)CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge, precursorFilter)
+                   ?? PeptideLibraryKey.CreateSimple(sequence, charge, precursorFilter);
+        }
     }
 
     public class PeptideLibraryKey : LibraryKey
     {
-        public PeptideLibraryKey(string modifiedSequence, int charge)
+        private PeptideLibraryKey(string modifiedSequence, int charge, PrecursorFilter libraryPrecursorFilter = null)
         {
             ModifiedSequence = modifiedSequence;
             UnmodifiedSequence = GetUnmodifiedSequence(modifiedSequence, null);
             Charge = charge;
+            _precursorFilter = libraryPrecursorFilter ?? PrecursorFilter.EMPTY;
         }
 
         private PeptideLibraryKey()
         {
+        }
+
+        /// <summary>
+        /// Create a peptide, possibly for use as a crosslinked peptide subsection
+        /// </summary>
+        public static PeptideLibraryKey CreateSimple(string sequence, int charge = 0, PrecursorFilter precursorFilter = null)
+        {
+            return new PeptideLibraryKey(sequence, charge, precursorFilter);
         }
 
         public string ModifiedSequence { get; private set; }
@@ -119,6 +154,12 @@ namespace pwiz.Skyline.Model.Lib
         public int Charge { get; private set; }
         public bool HasModifications { get { return ModifiedSequence != UnmodifiedSequence; } }
 
+        private PrecursorFilter _precursorFilter;
+
+        /// <summary>
+        /// These tend to have lots of repeated values, so save some memory by referring to single instantiations when possible -
+        /// either of entire object, or just the bulky sequence strings
+        /// </summary>
         public override LibraryKey ValueFromCache(ValueCache valueCache)
         {
             var libraryKey = this;
@@ -131,6 +172,7 @@ namespace pwiz.Skyline.Model.Lib
                 ModifiedSequence = valueCache.CacheValue(ModifiedSequence),
                 UnmodifiedSequence = valueCache.CacheValue(UnmodifiedSequence),
                 Charge = Charge,
+                _precursorFilter = _precursorFilter
             };
             return valueCache.CacheValue(libraryKey);
         }
@@ -155,7 +197,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 ModifiedSequence = UnmodifiedSequence,
                 UnmodifiedSequence = UnmodifiedSequence,
-                Charge = Charge
+                Charge = Charge,
+                _precursorFilter = PrecursorFilter.EMPTY // IonMobility, CE etc is unknowable with mods removed
             };
         }
 
@@ -163,6 +206,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return Adduct.FromChargeProtonated(Charge); }
         }
+        public override PrecursorFilter PrecursorFilter { get { return _precursorFilter; } }
 
         public IList<KeyValuePair<int, string>> GetModifications()
         {
@@ -232,14 +276,16 @@ namespace pwiz.Skyline.Model.Lib
             return new LibraryKeyProto
             {
                 ModifiedSequence = ModifiedSequence,
-                Charge = Charge
+                Charge = Charge,
+                PrecursorFilter = PrecursorFilter.GetLibraryProto(PrecursorFilter)
             };
         }
 
         protected bool Equals(PeptideLibraryKey other)
         {
             return string.Equals(ModifiedSequence, other.ModifiedSequence) && 
-                   Charge == other.Charge;
+                   Charge == other.Charge &&
+                   Equals(PrecursorFilter, other.PrecursorFilter);
         }
 
         public override bool Equals(object obj)
@@ -256,13 +302,15 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var hashCode = ModifiedSequence.GetHashCode();
                 hashCode = (hashCode * 397) ^ Charge;
+                hashCode = (hashCode * 397) ^ PrecursorFilter.GetHashCode();
                 return hashCode;
             }
         }
 
         public override string ToString()
         {
-            return ModifiedSequence + Transition.GetChargeIndicator(Adduct);
+            return ModifiedSequence + Transition.GetChargeIndicator(Adduct) +
+                   (PrecursorFilter.IsEmpty ? string.Empty : PrecursorFilter.ToString());
         }
 
         /// <summary>
@@ -294,7 +342,7 @@ namespace pwiz.Skyline.Model.Lib
                 newSequence.Append(Model.ModifiedSequence.Bracket(newMod));
             }
             newSequence.Append(UnmodifiedSequence.Substring(aaCount));
-            return new PeptideLibraryKey(newSequence.ToString(), Charge);
+            return new PeptideLibraryKey(newSequence.ToString(), Charge, PrecursorFilter);
         }
 
         public override Peptide CreatePeptideIdentityObj()
@@ -313,20 +361,23 @@ namespace pwiz.Skyline.Model.Lib
             valueCache.CacheValue(libraryKeyProto.MoleculeName),
             valueCache.CacheValue(libraryKeyProto.ChemicalFormula), 
             libraryKeyProto.InChiKey, libraryKeyProto.OtherKeys), 
-            Adduct.FromString(libraryKeyProto.Adduct,Adduct.ADDUCT_TYPE.non_proteomic, null))
+            Adduct.FromString(libraryKeyProto.Adduct,Adduct.ADDUCT_TYPE.non_proteomic, null),
+            GetPrecursorFilter(libraryKeyProto))
         {
         }
 
         public MoleculeLibraryKey(ValueCache valueCache, SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes,
-            Adduct adduct)
+            Adduct adduct, PrecursorFilter libraryPrecursorFilter = null)
         {
             SmallMoleculeLibraryAttributes = Normalize(valueCache, smallMoleculeLibraryAttributes);
             PreferredKey = SmallMoleculeLibraryAttributes.GetPreferredKey() ??
                            SmallMoleculeLibraryAttributes.MoleculeName ?? String.Empty;
             _adduct = adduct;
+            _libraryPrecursorFilter = libraryPrecursorFilter ?? PrecursorFilter.EMPTY;
         }
 
-        public MoleculeLibraryKey(SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes, Adduct adduct) : this(null, smallMoleculeLibraryAttributes, adduct)
+        public MoleculeLibraryKey(SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes, Adduct adduct, PrecursorFilter libraryPrecursorFilter = null) 
+            : this(null, smallMoleculeLibraryAttributes, adduct, libraryPrecursorFilter)
         {
         }
 
@@ -344,12 +395,16 @@ namespace pwiz.Skyline.Model.Lib
             get { return new Target(CustomMolecule.FromSmallMoleculeLibraryAttributes(SmallMoleculeLibraryAttributes)); }
         }
 
+        private PrecursorFilter _libraryPrecursorFilter { get; set; }
+        public override PrecursorFilter PrecursorFilter { get { return _libraryPrecursorFilter; } }
+
         protected internal override LibraryKeyProto ToLibraryKeyProto()
         {
             return new LibraryKeyProto()
             {
                 KeyType = LibraryKeyProto.Types.KeyType.SmallMolecule,
                 Adduct = Adduct.AdductFormula ?? string.Empty,
+                PrecursorFilter = PrecursorFilter.GetLibraryProto(PrecursorFilter),
                 MoleculeName = SmallMoleculeLibraryAttributes.MoleculeName ?? string.Empty,
                 ChemicalFormula = SmallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty,
                 InChiKey = SmallMoleculeLibraryAttributes.InChiKey ?? string.Empty,
@@ -374,13 +429,17 @@ namespace pwiz.Skyline.Model.Lib
         {
             unchecked
             {
-                return ((_adduct != null ? _adduct.GetHashCode() : 0) * 397) ^ (SmallMoleculeLibraryAttributes != null ? SmallMoleculeLibraryAttributes.GetHashCode() : 0);
+                var result = _adduct != null ? _adduct.GetHashCode() : 0;
+                result = (result * 397) ^ (SmallMoleculeLibraryAttributes != null ? SmallMoleculeLibraryAttributes.GetHashCode() : 0);
+                result = (result * 397) ^ (PrecursorFilter != null ? PrecursorFilter.GetHashCode() : 0);
+                return result;
             }
         }
 
         public override string ToString()
         {
-            return SmallMoleculeLibraryAttributes.ToString() + Adduct;
+            return SmallMoleculeLibraryAttributes.ToString() + Adduct +
+                   (PrecursorFilter.IsEmpty ? string.Empty : PrecursorFilter.ToString());
         }
 
         private static SmallMoleculeLibraryAttributes Normalize(
@@ -420,7 +479,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public override int GetEquivalencyHashCode()
         {
-            return (397 * PreferredKey.GetHashCode()) ^ Adduct.GetHashCode();
+            int result = Adduct.GetHashCode();
+            result = (result * 397) ^ PrecursorFilter.GetHashCode();
+            result = (result * 397) ^ PreferredKey.GetHashCode();
+            return result;
         }
 
         public override bool IsEquivalentTo(LibraryKey other)
@@ -430,7 +492,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return false;
             }
-            return Equals(PreferredKey, that.PreferredKey) && Equals(Adduct, that.Adduct);
+            return Equals(PreferredKey, that.PreferredKey) && Equals(Adduct, that.Adduct) 
+                                                           && Equals(PrecursorFilter, that.PrecursorFilter);
         }
 
         public override Peptide CreatePeptideIdentityObj()
@@ -448,10 +511,13 @@ namespace pwiz.Skyline.Model.Lib
             {
                 RetentionTime = libraryKeyProto.RetentionTime;
             }
+
+            _libraryPrecursorFilter = GetPrecursorFilter(libraryKeyProto);
         }
-        public PrecursorLibraryKey(double mz, double? retentionTime)
+        public PrecursorLibraryKey(double mz, PrecursorFilter libraryValues, double? retentionTime)
         {
             Mz = mz;
+            _libraryPrecursorFilter = libraryValues ?? PrecursorFilter.EMPTY;
             RetentionTime = retentionTime;
         }
 
@@ -467,14 +533,18 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return null; }
         }
+        private PrecursorFilter _libraryPrecursorFilter { get; set; }
+        public override PrecursorFilter PrecursorFilter { get { return _libraryPrecursorFilter; } }
 
         protected internal override LibraryKeyProto ToLibraryKeyProto()
         {
+            var im = PrecursorFilter;
             return new LibraryKeyProto()
             {
                 KeyType = LibraryKeyProto.Types.KeyType.PrecursorMz,
                 PrecursorMz = Mz,
                 RetentionTime = RetentionTime.GetValueOrDefault(),
+                PrecursorFilter = PrecursorFilter.GetLibraryProto(PrecursorFilter),
             };
         }
 
@@ -516,20 +586,22 @@ namespace pwiz.Skyline.Model.Lib
 
     public class CrosslinkLibraryKey : LibraryKey
     {
-        public CrosslinkLibraryKey(IEnumerable<PeptideLibraryKey> peptideLibraryKeys, IEnumerable<Crosslink> crosslinks, int charge)
+        public CrosslinkLibraryKey(IEnumerable<PeptideLibraryKey> peptideLibraryKeys, IEnumerable<Crosslink> crosslinks, int charge, PrecursorFilter precursorFilter = null)
         {
             PeptideLibraryKeys = ImmutableList.ValueOf(peptideLibraryKeys);
             Crosslinks = ImmutableList.ValueOf(crosslinks);
             Charge = charge;
+            _libraryPrecursorFilter = precursorFilter ?? PrecursorFilter.EMPTY;
         }
 
         public CrosslinkLibraryKey(LibraryKeyProto libraryKeyProto)
         {
             PeptideLibraryKeys = ImmutableList.ValueOf(libraryKeyProto.CrosslinkedSequences
-                .Select(sequence => new PeptideLibraryKey(sequence, 0)));
+                .Select(sequence => PeptideLibraryKey.CreateSimple(sequence)));
             Crosslinks = ImmutableList.ValueOf(libraryKeyProto.Crosslinkers.Select(crosslinkProto =>
                 new Crosslink(crosslinkProto.Name, crosslinkProto.Positions.Select(pos => pos.Position.ToArray()))));
             Charge = libraryKeyProto.Charge;
+            _libraryPrecursorFilter = GetPrecursorFilter(libraryKeyProto);
         }
 
         public override Target Target
@@ -551,12 +623,16 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return Adduct.FromChargeProtonated(Charge); }
         }
+        private PrecursorFilter _libraryPrecursorFilter { get; set; }
+        public override PrecursorFilter PrecursorFilter { get { return _libraryPrecursorFilter; } }
+
         protected internal override LibraryKeyProto ToLibraryKeyProto()
         {
             var libraryKeyProto = new LibraryKeyProto()
             {
                 KeyType = LibraryKeyProto.Types.KeyType.Crosslink,
-                Charge = Charge
+                Charge = Charge,
+                PrecursorFilter = PrecursorFilter.GetLibraryProto(PrecursorFilter)
             };
             foreach (var peptideLibraryKey in PeptideLibraryKeys)
             {
@@ -696,7 +772,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            return ModifiedSequence + Transition.GetChargeIndicator(Adduct);
+            return ModifiedSequence + Transition.GetChargeIndicator(Adduct) + 
+                   (PrecursorFilter.IsEmpty ? string.Empty : PrecursorFilter.ToString());
         }
 
         /// <summary>

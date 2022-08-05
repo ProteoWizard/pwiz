@@ -1198,7 +1198,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
-            var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw, chromatograms.OptimizationFunction);
+            var info = chromGroupInfo.GetTransitionInfo(null, null, 0, TransformChrom.raw, chromatograms.OptimizationFunction);
 
             TransitionChromInfo tranPeakInfo = null;
             RetentionTimeValues bestQuantitativePeakTimes = null;
@@ -1303,7 +1303,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTranSelected,
+                    var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeGroup, nodeTranSelected,
                         mzMatchTolerance, chromatograms.OptimizationFunction, TransformChrom.raw);
                     numSteps = listChromInfo.StepCount;
                     numTrans = numSteps * 2 + 1;
@@ -1320,7 +1320,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodeTran = displayTrans[i];
                     // Get chromatogram info for this transition
-                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
+                    arrayChromInfo[i] = chromGroupInfo.GetTransitionInfo(nodeGroup, nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
                 }
             }
 
@@ -1738,7 +1738,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Collect the chromatogram info for the transition children
             // of this transition group.
             var listChromInfoSets = nodeGroup.Transitions.Select(transition =>
-                chromGroupInfo.GetAllTransitionInfo(transition, mzMatchTolerance, chromatograms.OptimizationFunction,
+                chromGroupInfo.GetAllTransitionInfo(nodeGroup, transition, mzMatchTolerance, chromatograms.OptimizationFunction,
                     TransformChrom.raw)).ToList();
             int totalSteps = chromatograms.OptimizationFunction.StepCount;
 
@@ -1958,7 +1958,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         continue;
                     }
-                    var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
+                    var info = chromGroupInfo.GetTransitionInfo(nodeGroup, nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
                     if (info == null)
                         continue;
 
@@ -2094,7 +2094,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
                     foreach (var nodeTran in precursor.Transitions)
                     {
-                        var info = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
+                        var info = chromGroupInfo.GetTransitionInfo(precursor, nodeTran, mzMatchTolerance, TransformChrom.raw, chromatograms.OptimizationFunction);
                         if (info == null)
                             continue;
                         if (sumInfo == null)
@@ -2278,16 +2278,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 (fullScan || settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 var nodeGroupsArray = nodeGroups.ToArray();
-                var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
-                    foreach (var group in transitionGroups)
+                    foreach (var group in nodeGroupsArray)
                     {
                         IsotopeLabelType labelType;
                         double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorAdduct,
-                                                          lookupMods, FilePath, out labelType, out retentionTimes))
+                        if (settings.TryGetRetentionTimes(lookupSequence, group,
+                                lookupMods, FilePath, out labelType, out retentionTimes))
                         {
                             listTimes.AddRange(retentionTimes);
                         }
@@ -2318,7 +2317,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (nodePep != null && nodeTranGroup != null)
                         {
-                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorAdduct);
+                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorAdduct, nodeTranGroup.EffectivePrecursorFilter);
                             chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries
                                 .SelectMany(lib => lib.GetSpectraByPeptide(chromGraphPrimary.Chromatogram.FilePath, libKey))
                                 .Select(s => s.RetentionTime).ToArray();
@@ -3479,7 +3478,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // The same label type should always have the same color, with the
             // first charge state in the peptide matching the peptide label type
             // modification font colors.
-            if (!Equals(charge, nodeGroup.TransitionGroup.PrecursorAdduct))
+            // If the precursor is a conformer, shift the color to distinguish it from its siblings
+            if (!Equals(charge, nodeGroup.TransitionGroup.PrecursorAdduct) || nodeGroup.TransitionGroup.IsConformer)
             {
                 charge = nodeGroup.TransitionGroup.PrecursorAdduct;
                 iCharge++;

@@ -69,6 +69,33 @@ namespace pwiz.Skyline.Controls.SeqNode
         public PeptideDocNode PepNode => ((PeptideTreeNode)Parent)?.DocNode;
         public PeptideGroupDocNode PepGroupNode => ((PeptideGroupTreeNode)Parent?.Parent)?.DocNode;
 
+        public bool IsConformer
+        {
+            get
+            {
+                if (DocNode.TransitionGroup.IsConformer)
+                {
+                    return true;
+                }
+                for (var sibling = PrevNode; sibling != null; sibling = sibling.PrevNode)
+                {
+                    if (((TransitionGroupTreeNode)sibling).DocNode.TransitionGroup.IsConformer)
+                    {
+                        return true;
+                    }
+                }
+                for (var sibling = NextNode; sibling != null; sibling = sibling.NextNode)
+                {
+                    if (((TransitionGroupTreeNode)sibling).DocNode.TransitionGroup.IsConformer)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
         public override string Heading
         {
             get { return Resources.TransitionGroupTreeNode_Title; }
@@ -94,7 +121,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
 // ReSharper restore RedundantCheckBeforeAssignment
-            string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
+            string label = DisplayText(DocNode, PepNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
 
@@ -165,9 +192,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             return (int)SequenceTree.StateImageId.peak;
         }
         
-        public static string DisplayText(TransitionGroupDocNode nodeGroup, DisplaySettings settings)
+        public static string DisplayText(TransitionGroupDocNode nodeGroup, PeptideDocNode nodePep, DisplaySettings settings)
         {
-            return GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
+            return GetLabel(nodeGroup, nodePep,
                 GetResultsText(settings, nodeGroup));
         }
 
@@ -237,12 +264,23 @@ namespace pwiz.Skyline.Controls.SeqNode
                                             materialize, TransitionTreeNode.CreateInstance);
         }
 
-        public static string GetLabel(TransitionGroup tranGroup, double precursorMz,
+        public static string GetLabel(TransitionGroupDocNode node, PeptideDocNode parentNode,
             string resultsText)
         {
-            return string.Format(@"{0}{1}{2}{3}", GetMzLabel(tranGroup, precursorMz),
-                                 Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
-                                 tranGroup.LabelTypeText, resultsText);
+            var tranGroup = node.TransitionGroup;
+            // Only show precursor details if it disambiguates siblings
+            var showPrecursorFilter = parentNode == null || parentNode.Children.Any(child =>
+            {
+                var tg = ((TransitionGroupDocNode)child);
+                return !ReferenceEquals(tg, node) && Equals(tg.PrecursorAdduct, tranGroup.PrecursorAdduct);
+            });
+            var precursorFilter = showPrecursorFilter ? node.EffectivePrecursorFilter : PrecursorFilter.EMPTY;
+            var conformerText = !precursorFilter.IsEmpty ?
+                string.Format(@" {0}", precursorFilter.DisplayString) :
+                string.Empty;
+            return string.Format(@"{0}{1}{2}{3}{4}", GetMzLabel(tranGroup, node.PrecursorMz),
+                Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
+                tranGroup.LabelTypeText, conformerText, resultsText);
         }
 
         private static string GetMzLabel(TransitionGroup tranGroup, double precursorMz)
@@ -461,6 +499,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         FormatAdductTip(nodeGroup.TransitionGroup.PrecursorAdduct), rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                         string.Format(@"{0:F04}", nodeGroup.PrecursorMz), rt);
+                    AddTipIonMobilityDetails(nodeGroup, customTable, rt);
                     if (nodeGroup.CustomMolecule.Formula != null)
                     {
                         customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
@@ -524,6 +563,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
                                           string.Format(@"{0:F04}", nodeGroup.GetPrecursorIonMass()),
                                           rt);
+                AddTipIonMobilityDetails(nodeGroup, tableDetails, rt);
                 int? decoyMassShift = nodeGroup.TransitionGroup.DecoyMassShift;
                 if (decoyMassShift.HasValue)
                 {
@@ -618,6 +658,21 @@ namespace pwiz.Skyline.Controls.SeqNode
                 int width = (int) Math.Round(Math.Max(sizeDetails.Width, size.Width));
                 int height = (int) Math.Round(sizeDetails.Height + size.Height);
                 return new Size(width + 2, height + 2);
+            }
+        }
+
+        private static void AddTipIonMobilityDetails(TransitionGroupDocNode nodeGroup, TableDesc customTable, RenderTools rt)
+        {
+            if (nodeGroup.IonMobilityAndCCS.HasCollisionalCrossSection)
+            {
+                customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_CCS,
+                    string.Format(@"{0:F04}", nodeGroup.IonMobilityAndCCS.CollisionalCrossSectionSqA), rt);
+            }
+            else if (nodeGroup.IonMobilityAndCCS.HasIonMobilityValue)
+            {
+                customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_IM,
+                    string.Format(@"{0:F04}{1}", nodeGroup.IonMobilityAndCCS.IonMobility.Mobility,
+                        nodeGroup.IonMobilityAndCCS.IonMobility.UnitsString), rt);
             }
         }
 

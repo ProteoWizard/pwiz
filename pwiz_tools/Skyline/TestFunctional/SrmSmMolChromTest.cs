@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(1, chromatogramGroups.Length);
                         foreach (var transition in precursor.Transitions)
                         {
-                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(transition, tolerance, chromatogramSet.OptimizationFunction);
+                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(precursor, transition, tolerance, chromatogramSet.OptimizationFunction);
                             Assert.IsNotNull(chromatogram);
                         }
                     }

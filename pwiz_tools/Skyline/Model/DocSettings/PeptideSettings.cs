@@ -2111,48 +2111,36 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Retrieve library ion mobility info for this particular file, if any
+        /// Combine ion mobility, CE etc info from all libs and sub-libs into a single dict
         /// </summary>
-        private LibraryIonMobilityInfo GetLibraryDriftTimesForFilePath(LibKey[] targetIons, MsDataFileUri filePath)
+        private Dictionary<LibKey, List<PrecursorFilter>> GetAllSpectralLibraryPrecursorFilters(LibKey[] targetIons)
         {
-            foreach (var lib in _libraries)
-            {
-                // Only one of the available libraries may claim ownership of the file
-                // in question.
-                LibraryIonMobilityInfo ionMobilities;
-                if (lib != null && lib.TryGetIonMobilityInfos(targetIons, filePath, out ionMobilities))
-                {
-                    return ionMobilities; // Found a library for this file in particular
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Combine ion mobility info from all lib and sub-libs into a single dict
-        /// </summary>
-        private Dictionary<LibKey, List<IonMobilityAndCCS>> GetAllSpectralLibraryIonMobilities(LibKey[] targetIons)
-        {
-            var ionMobilitiesDict = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
+            var result = new Dictionary<LibKey, List<PrecursorFilter>>();
             foreach (var lib in _libraries.Where(l => l != null))
             {
-                // Get ion mobilities for all files in each library
-                if (lib.TryGetIonMobilityInfos(targetIons, out var ionMobilities) && ionMobilities != null)
+                // Get ion mobilities, CE etc for all files in each library
+                // In case of CCS agreement, ignore calculated mobility differences
+                if (lib.TryGetPrecursorFilter(targetIons, out var libraryPrecursorFiltersInfo) && libraryPrecursorFiltersInfo != null)
                 {
-                    var ionMobilityAndCcsDict = ionMobilities.GetIonMobilityDict();
-                    foreach (var dt in ionMobilityAndCcsDict)
+                    var precursorFiltersDict = libraryPrecursorFiltersInfo.GetPrecursorFiltersDict();
+                    foreach (var libKeyPrecursorFilters in precursorFiltersDict)
                     {
-                        List<IonMobilityAndCCS> listTimes;
-                        if (!ionMobilitiesDict.TryGetValue(dt.Key, out listTimes))
+                        if (!result.TryGetValue(libKeyPrecursorFilters.Key, out var precursorFilters))
                         {
-                            listTimes = new List<IonMobilityAndCCS>();
-                            ionMobilitiesDict.Add(dt.Key, listTimes);
+                            precursorFilters = new List<PrecursorFilter>();
+                            result.Add(libKeyPrecursorFilters.Key, precursorFilters);
                         }
-                        listTimes.AddRange(dt.Value);
+                        foreach (var precursorFilter in libKeyPrecursorFilters.Value)
+                        {
+                            if (!precursorFilters.Any(im => precursorFilter.EquivalentPreferringCCS(im)))
+                            {
+                                precursorFilters.Add(precursorFilter);
+                            }
+                        }
                     }
                 }
             }
-            return ionMobilitiesDict;
+            return result;
         }
 
         public bool HasAnyLibraryIonMobilities(IEnumerable<LibKey> targetIons)
@@ -2163,42 +2151,36 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static bool HasIonMobilities(Library lib, LibKey[] targetIons)
         {
-            for (var i = 0; lib.TryGetIonMobilityInfos(targetIons, i, out var ionMobilities); i++) // Returns false when i> internal list length
-            {
-                if (ionMobilities != null && ionMobilities.GetIonMobilityDict().Any())
-                    return true;
-            }
-            return false;
+            lib.TryGetPrecursorFilter(targetIons, out var precursorFilters);
+            return precursorFilters != null && precursorFilters.HasIonMobilities;
         }
 
         /// <summary>
-        /// Get all ion mobilities from libs associated with this filepath.  Then look at all the others
-        /// and get any values that don't appear in the initial set (how that list is used - averaged etc - is determined elsewhere).
-        /// TODO(bspratt): It would be more maintainable if this and other things we get from libraries (like RT)
-        /// shared some kind of common interface so there is guaranteed consistent behavior around how we pick from
-        /// other libraries when the ostensibly correct library doesn't have values we need
+        /// Get all ion mobilities, CE values etc from spectral libraries
         /// </summary>
-        public bool TryGetSpectralLibraryIonMobilities(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public bool TryGetSpectralLibraryPrecursorFilters(IEnumerable<LibKey> targetIonList, out LibraryPrecursorFiltersInfo precursorFilters)
         {
             Assume.IsTrue(IsLoaded);
             // Get ion mobilities from spectral library for this ms data file, if any
-            ionMobilities = GetLibraryDriftTimesForFilePath(targetIons, filePath);
-            var resultDict = ionMobilities == null ?
-                new Dictionary<LibKey, IonMobilityAndCCS[]>() :
-                new Dictionary<LibKey, IonMobilityAndCCS[]>(ionMobilities.GetIonMobilityDict());
+            var targetIons = targetIonList.ToArray();
+            var resultDict = new Dictionary<LibKey,PrecursorFilter[]>();
             // Note initial findings
             var foundDictKeys = new HashSet<LibKey>(resultDict.Keys); 
-            // Look at all available libraries and sublibraries, use them to backfill any potentially missing drift time info 
-            foreach (var im in GetAllSpectralLibraryIonMobilities(targetIons).Where(kvp => !foundDictKeys.Contains(kvp.Key)))
+            // Look at all available libraries and sublibraries, use them to backfill any potentially missing drift time, CE etc info 
+            foreach (var im in GetAllSpectralLibraryPrecursorFilters(targetIons).Where(kvp => !foundDictKeys.Contains(kvp.Key)))
             {
                 resultDict.Add(im.Key, im.Value.ToArray());
             }
             if (resultDict.Count > foundDictKeys.Count)
             {
                 // Other libraries contributed some drift info
-                ionMobilities = new LibraryIonMobilityInfo(filePath.GetFilePath(), false, resultDict);
+                precursorFilters = new LibraryPrecursorFiltersInfo(resultDict);
             }
-            return ionMobilities != null;
+            else
+            {
+                precursorFilters = null;
+            }
+            return precursorFilters != null;
         }
 
 

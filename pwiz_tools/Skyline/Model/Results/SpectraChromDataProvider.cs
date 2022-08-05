@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Results
             // This is the expensive part - check if there are any ion mobilities in the libraries that will need windows
             // TODO (bspratt): Use a quicker check for any ion mobility for a file - this especially slow with big DDA libraries used in DIA where the library may be composed of 40 files none of them this one
             // Though this is rarely used - the linear width option is really only used in Waters SONAR data
-            return _document.Settings.GetIonMobilities(_document.MoleculeLibKeys.ToArray(), new MsDataFilePath(dataFile.FilePath)) != null;
+            return _document.Settings.GetLibraryPrecursorFilters(_document.MoleculeLibKeys.ToArray()) != null;
         }
 
 

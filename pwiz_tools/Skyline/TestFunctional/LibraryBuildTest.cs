@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -75,6 +76,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Check using libkey with small molecules
             var adduct = Adduct.FromStringAssumeProtonated("M+3Na");
+            var ionMobility = IonMobilityAndCCS.GetIonMobilityAndCCS(
+                IonMobilityValue.GetIonMobilityValue(123.4, eIonMobilityUnits.drift_time_msec), 567.8, -0.9);
             var z = adduct.AdductCharge;
             const string caffeineFormula = "C8H10N4O2";
             const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
@@ -101,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
             LibKey key;
             for (var loop = 0; loop++ < 2;)
             {
-                key = new LibKey(smallMolAttributes, adduct);
+                key = new LibKey(smallMolAttributes, adduct, PrecursorFilter.Create(null, ionMobility));
                 Assert.IsFalse(key.IsPrecursorKey);
                 Assert.IsFalse(key.IsProteomicKey);
                 Assert.IsTrue(key.IsSmallMoleculeKey);
@@ -110,6 +113,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(z, key.Charge);
                 Assert.AreEqual(adduct, key.Adduct);
                 Assert.AreEqual(caffeineInChiKey, key.Target.ToString());
+                Assert.AreEqual(ionMobility, key.IonMobility);
                 var viewLibPepInfo = new ViewLibraryPepInfo(key);
                 Assert.AreEqual(key, viewLibPepInfo.Key);
                 var smallMolInfo = viewLibPepInfo.GetSmallMoleculeLibraryAttributes();
@@ -126,7 +130,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Check general libkey operation
             var seq = "YTQSNSVC[+57.0]YAK";
-            key = new LibKey(seq, Adduct.DOUBLY_PROTONATED);
+            key = new LibKey(seq, Adduct.DOUBLY_PROTONATED, PrecursorFilter.Create(null, ionMobility));
             Assert.IsFalse(key.IsPrecursorKey);
             Assert.IsTrue(key.IsProteomicKey);
             Assert.IsFalse(key.IsSmallMoleculeKey);
@@ -134,6 +138,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, key.Charge);
             Assert.AreEqual(1, key.ModificationCount);
             Assert.AreEqual(Adduct.DOUBLY_PROTONATED, key.Adduct);
+            Assert.AreEqual(ionMobility, key.IonMobility);
             Assert.AreEqual(seq, key.Target.ToString());
 
             // Test error conditions

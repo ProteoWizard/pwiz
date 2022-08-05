@@ -267,10 +267,23 @@ namespace pwiz.Skyline.Controls.Graphs
             string prefix = string.Empty;
             if (seq != null)
                 prefix = seq + @" - ";
-            
-            return string.Format(@"{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz,
-                                 Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
-                                 nodeGroup.TransitionGroup.LabelTypeText);            
+
+            var ionMobilityInfo = string.Empty;
+            if (nodeGroup.IonMobilityAndCCS.HasCollisionalCrossSection)
+            {
+                ionMobilityInfo =
+                    string.Format(@" {0}{1:F04}", Resources.TransitionGroupTreeNode_RenderTip_CCS, nodeGroup.IonMobilityAndCCS.CollisionalCrossSectionSqA);
+            }
+            else if (nodeGroup.IonMobilityAndCCS.HasIonMobilityValue)
+            {
+                ionMobilityInfo =
+                    string.Format(@" {0}{1:F04}{2}", Resources.TransitionGroupTreeNode_RenderTip_IM, nodeGroup.IonMobilityAndCCS.IonMobility.Mobility,
+                        nodeGroup.IonMobilityAndCCS.IonMobility.UnitsString);
+            }
+
+            return string.Format(@"{0}{1:F04}{2}{3}{4}", prefix, nodeGroup.PrecursorMz,
+                Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
+                nodeGroup.TransitionGroup.LabelTypeText, ionMobilityInfo);            
         }
 
         public static string GetTitle(PeptideDocNode nodePep)

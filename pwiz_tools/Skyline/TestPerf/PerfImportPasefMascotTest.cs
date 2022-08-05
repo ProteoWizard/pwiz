@@ -203,26 +203,25 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
             var errmsg = "";
             
-            LibraryIonMobilityInfo libraryIonMobilityInfo;
-            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetIonMobilityInfos(doc1.MoleculeLibKeys.ToArray(), 0, out libraryIonMobilityInfo);
-            var driftInfoExplicitDT = libraryIonMobilityInfo;
+            LibraryPrecursorFiltersInfo libraryPrecursorFiltersInfo;
+            doc1.Settings.PeptideSettings.Libraries.Libraries.First().TryGetPrecursorFilter(doc1.MoleculeLibKeys.ToArray(), out libraryPrecursorFiltersInfo);
+            var driftInfoExplicitDT = libraryPrecursorFiltersInfo;
             var instrumentInfo = new DataFileInstrumentInfo(new MsDataFileImpl(GetTestPath(nextFile)));
-            var dictExplicitDT = driftInfoExplicitDT.GetIonMobilityDict();
+            var dictExplicitDT = driftInfoExplicitDT.GetPrecursorFiltersDict();
             foreach (var pep in doc1.Peptides)
             {
                 foreach (var nodeGroup in pep.TransitionGroups)
                 {
                     var calculatedDriftTime = doc1.Settings.GetIonMobilityFilter(
-                        pep, nodeGroup, null, libraryIonMobilityInfo, instrumentInfo, 0).IonMobilityAndCCS;
+                        nodeGroup, null, instrumentInfo, 0).IonMobilityAndCCS;
                     var libKey = new LibKey(pep.ModifiedSequence, nodeGroup.PrecursorAdduct);
-                    IonMobilityAndCCS[] infoValueExplicitDT;
-                    if (!dictExplicitDT.TryGetValue(libKey, out infoValueExplicitDT))
+                    if (!dictExplicitDT.TryGetValue(libKey, out var infoValueExplicitDT))
                     {
                         errmsg += "No ionMobility value found for " + libKey + "\n";
                     }
                     else
                     {
-                        var ionMobilityInfo = infoValueExplicitDT[0];
+                        var ionMobilityInfo = infoValueExplicitDT[0].IonMobilityAndCCS;
                         var delta = Math.Abs(ionMobilityInfo.IonMobility.Mobility.Value -calculatedDriftTime.IonMobility.Mobility.Value);
                         var acceptableDelta = 1;
                         if (delta > acceptableDelta)

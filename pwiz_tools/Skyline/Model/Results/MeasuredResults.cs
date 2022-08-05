@@ -863,6 +863,7 @@ namespace pwiz.Skyline.Model.Results
             if (listChrom.Count > 1)
             {
                 var precursorMz = nodeGroup.PrecursorMz;
+                var precursorIonMobility = nodeGroup.IonMobilityAndCCS;
                 var listChromFinal = new List<ChromatogramGroupInfo>();
                 foreach (var chromInfo in listChrom)
                 {
@@ -872,10 +873,22 @@ namespace pwiz.Skyline.Model.Results
                     int fileIndex = listChromFinal.IndexOf(info => Equals(filePath, info.FilePath));
                     if (fileIndex == -1)
                         listChromFinal.Add(chromInfo);
-                    // Use the entry with the m/z closest to the target
+                    // Use the entry with the m/z closest to the target, and matching ion mobility if any
                     else if (Math.Abs(precursorMz - chromInfo.PrecursorMz) <
                              Math.Abs(precursorMz - listChromFinal[fileIndex].PrecursorMz))
                     {
+                        // N.B. chrom header stores either CCS (preferred) or IM, not both.
+                        if ((chromInfo.PrecursorCollisionalCrossSection.HasValue &&
+                             precursorIonMobility.HasCollisionalCrossSection &&
+                             Math.Abs(chromInfo.PrecursorCollisionalCrossSection.Value -
+                                      precursorIonMobility.CollisionalCrossSectionSqA.Value) > .00001) ||
+                            (chromInfo.PrecursorIonMobility.HasValue &&
+                             precursorIonMobility.HasIonMobilityValue &&
+                             Math.Abs(chromInfo.PrecursorIonMobility.Value -
+                                      precursorIonMobility.IonMobility.Mobility.Value) > .00001))
+                        {
+                            continue; // Not a match for ion mobility
+                        }
                         listChromFinal[fileIndex] = chromInfo;
                     }
                 }

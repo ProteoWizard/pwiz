@@ -130,7 +130,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     var parent = DataSchema.Document.FindNode(IdentityPath.Parent) as PeptideDocNode;
                     Adduct adduct;
-                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent, out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.TransitionGroup.LabelType);
+                    var molecule = RefinementSettings.ConvertToSmallMolecule(RefinementSettings.ConvertToSmallMoleculesMode.formulas, SrmDocument, parent,
+                        out adduct, DocNode.TransitionGroup.PrecursorAdduct.AdductCharge, DocNode.EffectivePrecursorFilter, DocNode.TransitionGroup.LabelType);
                     return molecule.InvariantName ?? string.Empty;
                 }
             }
@@ -251,12 +252,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.CollisionEnergy;
+                return DocNode.ExplicitPrecursorFilter.CollisionEnergy;
             }
             set
             {
                 ChangeDocNode(EditColumnDescription(nameof(PrecursorExplicitCollisionEnergy), value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCollisionEnergy(value)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitPrecursorFilter.ChangeCollisionEnergy(value)));
             }
         }
 
@@ -305,12 +306,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.CompensationVoltage;
+                return DocNode.ExplicitPrecursorFilter.CompensationVoltage;
             }
             set
             {
                 ChangeDocNode(EditColumnDescription(nameof(ExplicitCompensationVoltage), value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, eIonMobilityUnits.compensation_V)));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitPrecursorFilter.ChangeIonMobility(value, eIonMobilityUnits.compensation_V)));
             }
         }
 
@@ -319,12 +320,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitValues.IonMobility : null;
+                return DocNode.ExplicitPrecursorFilter.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? DocNode.ExplicitPrecursorFilter.IonMobility : null;
             }
             set
             {
                 ChangeDocNode(EditColumnDescription(nameof(ExplicitDriftTimeMsec), value),
-                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, eIonMobilityUnits.drift_time_msec)));
+                    docNode => docNode.ChangeExplicitValues(docNode.ExplicitPrecursorFilter.ChangeIonMobility(value, eIonMobilityUnits.drift_time_msec)));
             }
         }
 
@@ -333,7 +334,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? ExplicitIonMobilityHighEnergyOffset : null;
+                return DocNode.ExplicitPrecursorFilter.IonMobilityUnits == eIonMobilityUnits.drift_time_msec ? ExplicitIonMobilityHighEnergyOffset : null;
             }
         }
 
@@ -342,12 +343,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobility;
+                return DocNode.ExplicitPrecursorFilter.IonMobility;
             }
             set
             {
                 ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobility), value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(value, docNode.ExplicitValues.IonMobilityUnits)));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitPrecursorFilter.ChangeIonMobility(value, docNode.ExplicitPrecursorFilter.IonMobilityUnits)));
             }
         }
 
@@ -356,14 +357,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.IonMobilityUnits.ToString();
+                return DocNode.ExplicitPrecursorFilter.IonMobilityUnits.ToString();
             }
             set
             {
                 eIonMobilityUnits eValue;
                 if (SmallMoleculeTransitionListReader.IonMobilityUnitsSynonyms.TryGetValue(string.IsNullOrEmpty(value) ? string.Empty : value.Trim(), out eValue))
                     ChangeDocNode(EditColumnDescription(nameof(ExplicitIonMobilityUnits), eValue),
-                        docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeIonMobility(docNode.ExplicitValues.IonMobility, eValue)));
+                        docNode=>docNode.ChangeExplicitValues(docNode.ExplicitPrecursorFilter.ChangeIonMobility(docNode.ExplicitPrecursorFilter.IonMobility, eValue)));
             }
         }
 
@@ -384,12 +385,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return DocNode.ExplicitValues.CollisionalCrossSectionSqA;
+                return DocNode.ExplicitPrecursorFilter.CollisionalCrossSectionSqA;
             }
             set
             {
                 ChangeDocNode(EditColumnDescription(nameof(ExplicitCollisionalCrossSection), value),
-                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitValues.ChangeCollisionalCrossSection(value)));
+                    docNode=>docNode.ChangeExplicitValues(docNode.ExplicitPrecursorFilter.ChangeCollisionalCrossSection(value)));
             }
         }
 
@@ -409,10 +410,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                var libKey = DocNode.GetLibKey(SrmDocument.Settings, Peptide.DocNode);
-                var imInfo = SrmDocument.Settings.GetIonMobilities(new[] { libKey }, null);
-                var im = imInfo.GetLibraryMeasuredIonMobilityAndCCS(libKey, DocNode.PrecursorMz, null);
-                if (im == null || im.IsEmpty)
+                var im = DocNode.LibraryIonMobility;
+                if (IonMobilityAndCCS.IsNullOrEmpty(im))
                 {
                     return null;
                 }
@@ -510,7 +509,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override string ToString()
         {
             // Consider: maybe change TransitionGroupDocNode.ToString() to be this as well:
-            return TransitionGroupTreeNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, string.Empty);
+            return TransitionGroupTreeNode.GetLabel(DocNode, Peptide.DocNode, string.Empty);
         }
 
         [Obsolete]

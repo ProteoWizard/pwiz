@@ -79,6 +79,8 @@ namespace pwiz.SkylineTest
                         expectedPrecursorAdduct = Adduct.M_MINUS_H.ChangeIsotopeLabels(-.221687, 6);
                         break;
                     case 13:
+                    case 14: // This would be the special multiple conformer test node, ignore for these purposes
+                        iGroup = 13;
                         expectedPrecursorAdduct = Adduct.FromString("[M4H2-H]", Adduct.ADDUCT_TYPE.non_proteomic, null);
                         break;
                     default:

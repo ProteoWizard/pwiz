@@ -62,6 +62,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ChromatogramExportTest()
         {
+            TestMultiCCS = false; // Don't add the magic test node, it won't produce proper chromatograms
             var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             string chromExportDoc = testFilesDir.GetTestPath("ChromToExport.sky");
             string fileExpected1 = testFilesDir.GetTestPathLocale(EXPORT_1);

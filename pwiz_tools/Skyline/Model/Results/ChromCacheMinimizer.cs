@@ -717,7 +717,8 @@ namespace pwiz.Skyline.Model.Results
                                                       originalHeader.StatusId,
                                                       originalHeader.StatusRank,
                                                       originalHeader.StartTime, originalHeader.EndTime,
-                                                      originalHeader.CollisionalCrossSection, 
+                                                      originalHeader.CollisionalCrossSection,
+                                                      originalHeader.IonMobility,
                                                       originalHeader.IonMobilityUnits);
                 _chromGroupHeaderInfos.Add(header);
             }
@@ -764,9 +765,21 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        var oldKey = new PeptideLibraryKey(Encoding.UTF8.GetString(textIdBytes), 0);
-                        var newKey = oldKey.FormatToOneDecimal();
-                        newTextId = ImmutableList.ValueOf(Encoding.UTF8.GetBytes(newKey.ModifiedSequence));
+                        var seq = Encoding.UTF8.GetString(textIdBytes);
+                        var oldKey = LibraryKey.Create(seq, 0); // Handles potentially crosslinked peptides
+                        if (oldKey is PeptideLibraryKey key)
+                        {
+                            var newKey = key.FormatToOneDecimal();
+                            newTextId = ImmutableList.ValueOf(Encoding.UTF8.GetBytes(newKey.ModifiedSequence));
+                        }
+                        else if (oldKey is CrosslinkLibraryKey crosslink)
+                        {
+                            newTextId = ImmutableList.ValueOf(Encoding.UTF8.GetBytes(crosslink.ModifiedSequence));
+                        }
+                        else
+                        {
+                            newTextId = ImmutableList.ValueOf(Encoding.UTF8.GetBytes(seq));
+                        }
                     }
                 }
                 return newTextId;

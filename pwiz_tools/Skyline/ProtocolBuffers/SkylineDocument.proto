@@ -167,6 +167,21 @@ message LibraryKeyProto
 	message Positions {
 		repeated int32 position = 1;
 	}
+	// Multiple conformers support: things that distinguish otherwise identical ions in chromatogram extraction,bool e.g. CE, CCS
+	message PrecursorFilter { 
+		enum IonMobilityUnits {
+			none = 0;
+			drift_time_msec = 1;
+			inverse_K0_Vsec_per_cm2 = 2;
+			compensation_V = 3;
+		}
+		google.protobuf.DoubleValue ionMobility = 1;
+		IonMobilityUnits ionMobilityUnits = 2;
+		google.protobuf.DoubleValue highEnergyIonMobilityValueOffset = 3;
+		google.protobuf.DoubleValue collisionCrossSectionSqA = 4;
+		google.protobuf.DoubleValue collisionEnergy = 5;
+	}
+
 	KeyType keyType = 1;
 	string modifiedSequence = 2;
 	int32 charge = 3;
@@ -179,5 +194,6 @@ message LibraryKeyProto
 	double retentionTime = 10;
 	repeated string crosslinkedSequences = 11;
 	repeated Crosslinker crosslinkers = 12;
+	PrecursorFilter precursorFilter = 13;
 }
 

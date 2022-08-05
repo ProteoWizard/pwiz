@@ -789,7 +789,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colCV.Index].Value = explicitCV);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitionGroups.Any() &&
                                         SkylineWindow.Document.MoleculeTransitionGroups.First()
-                                            .ExplicitValues.CompensationVoltage.Equals(explicitCV)));
+                                            .ExplicitPrecursorFilter.CompensationVoltage.Equals(explicitCV)));
                 var colDP = FindDocumentGridColumn(documentGrid, "ExplicitDeclusteringPotential");
                 RunUI(() => documentGrid.DataGridView.Rows[0].Cells[colDP.Index].Value = explicitDP);
                 WaitForCondition(() => (SkylineWindow.Document.MoleculeTransitions.Any() &&
@@ -805,7 +805,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var target = GetTarget(sequence);
 
-            return new DbOptimization(type, target, adduct, null, Adduct.EMPTY, optValue);
+            return new DbOptimization(type, target, adduct, null, null, Adduct.EMPTY, optValue);
         }
 
         private void CompareFiles(string fileActual, string fileExpected)
@@ -1061,6 +1061,7 @@ namespace pwiz.SkylineTestFunctional
                                     optLib.GetOptimization(OptimizationType.collision_energy,
                                         document.Settings.GetSourceTarget(nodePep), nodeGroup.TransitionGroup.PrecursorAdduct,
                                         //nodeGroup.TransitionGroup.Peptide.Sequence, nodeGroup.TransitionGroup.PrecursorAdduct,
+                                        nodeGroup.EffectivePrecursorFilter,
                                         nodeTran.FragmentIonName, nodeTran.Transition.Adduct);
                                 if (optimization != null)
                                     Assert.AreEqual(optimization.Value, tranCE, 0.05);

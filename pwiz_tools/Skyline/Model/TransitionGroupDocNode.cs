@@ -50,14 +50,16 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <param name="id">The <see cref="TransitionGroup"/> identity for this node</param>
         /// <param name="children">A set of explicit children, or null if children should be auto-managed</param>
-        /// <param name="explicitTransitionGroupValues">Optional values like ion mobility etc</param>
-        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children, ExplicitTransitionGroupValues explicitTransitionGroupValues = null)
+        /// <param name="explicitPrecursorFilter">Optional values like explicit ion mobility, CE etc</param>
+        /// <param name="libraryPrecursorFilter">Library (imsdb or blib) ion mobility value, if known</param>
+        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children, PrecursorFilter explicitPrecursorFilter = null, PrecursorFilter libraryPrecursorFilter = null)
             : this(id,
                    Annotations.EMPTY,
                    null,
                    null,
                    null,
-                   explicitTransitionGroupValues ?? ExplicitTransitionGroupValues.EMPTY,
+                   explicitPrecursorFilter,
+                   libraryPrecursorFilter,
                    null,
                    children,
                    children == null)
@@ -69,7 +71,8 @@ namespace pwiz.Skyline.Model
                                       SrmSettings settings,
                                       ExplicitMods mods,
                                       SpectrumHeaderInfo libInfo,
-                                      ExplicitTransitionGroupValues explicitValues,
+                                      PrecursorFilter explicitPrecursorFilter,
+                                      PrecursorFilter libraryPrecursorFilter,
                                       Results<TransitionGroupChromInfo> results,
                                       TransitionDocNode[] children,
                                       bool autoManageChildren)
@@ -89,7 +92,8 @@ namespace pwiz.Skyline.Model
                 PrecursorMz = SignedMz.ZERO;
             }
             LibInfo = libInfo;
-            ExplicitValues = explicitValues ?? ExplicitTransitionGroupValues.EMPTY;
+            ExplicitPrecursorFilter = explicitPrecursorFilter;
+            LibraryPrecursorFilter = libraryPrecursorFilter;
             Results = results;
         }
 
@@ -106,8 +110,26 @@ namespace pwiz.Skyline.Model
             RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
             Results = group.Results;
-            ExplicitValues = group.ExplicitValues ?? ExplicitTransitionGroupValues.EMPTY;
+            ExplicitPrecursorFilter = group.ExplicitPrecursorFilter;
+            LibraryPrecursorFilter = group.LibraryPrecursorFilter;
             PrecursorConcentration = group.PrecursorConcentration;
+        }
+
+        private TransitionGroupDocNode(TransitionGroup group,
+            TransitionGroupDocNode groupDocNode,
+            PrecursorFilter libraryPrecursorFilter,
+            IList<DocNode> children)
+            : base(group, groupDocNode.Annotations, children, groupDocNode.AutoManageChildren)
+        {
+            PrecursorMz = groupDocNode.PrecursorMz;
+            PrecursorMzMassType = groupDocNode.PrecursorMzMassType;
+            IsotopeDist = groupDocNode.IsotopeDist;
+            RelativeRT = groupDocNode.RelativeRT;
+            LibInfo = groupDocNode.LibInfo;
+            Results = groupDocNode.Results;
+            ExplicitPrecursorFilter = groupDocNode.ExplicitPrecursorFilter;
+            LibraryPrecursorFilter = libraryPrecursorFilter;
+            PrecursorConcentration = groupDocNode.PrecursorConcentration;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
@@ -137,12 +159,28 @@ namespace pwiz.Skyline.Model
         /// Deep copy for use in small molecule user editing - we have to deep copy entire branches for changes to IDs
         /// </summary>
         /// <returns> Copy of transition group and its transitions, all with new IDs and backpointers</returns>
-        public TransitionGroupDocNode UpdateSmallMoleculeTransitionGroup(Peptide parentNew, TransitionGroup groupNew, SrmSettings settings)
+        public TransitionGroupDocNode DeepCopyTransitionGroup(Peptide parentNew, TransitionGroup groupNew,
+            SrmSettings settings, int conformerIdNew)
         {
-            Assume.IsTrue(IsCustomIon);
+            return DeepCopyTransitionGroup(parentNew, groupNew, settings, LibraryPrecursorFilter, conformerIdNew);
+        }
+
+        /// <summary>
+        /// Deep copy for use in ion mobility multiple conformer support,where we want a copy that's identical except for ion mobility values
+        /// </summary>
+        /// <returns> Copy of transition group and its transitions, all with new IDs and backpointers</returns>
+        public TransitionGroupDocNode DeepCopyTransitionGroup(Peptide parentNew, TransitionGroup groupNew, SrmSettings settings, PrecursorFilter libraryPrecursorFilterNew, int conformerIdNew)
+        {
             var children = new List<TransitionDocNode>();
-            groupNew = groupNew ?? new TransitionGroup(parentNew ?? TransitionGroup.Peptide, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, false, TransitionGroup.DecoyMassShift);
-            var nodeGroupTemp = new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, null, false); // Just need this for the revised isotope distribution
+            parentNew = parentNew ?? TransitionGroup.Peptide;
+            groupNew = groupNew ?? new TransitionGroup(parentNew, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, false, TransitionGroup.DecoyMassShift,
+                conformerIdNew);
+            var needsNewIsotopeDistribution = !groupNew.IsConformerOf(TransitionGroup); // If peptide  or adduct have changed
+            Assume.IsTrue(!needsNewIsotopeDistribution || parentNew.IsCustomMolecule); // Need modifications info to get isotopes for peptides
+            var nodeGroupNew = needsNewIsotopeDistribution ?
+                new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitPrecursorFilter, libraryPrecursorFilterNew, Results,
+                    null, false) : // Just need this for the revised isotope distribution
+                this;
             foreach (var nodeTran in Transitions)
             {
                 var transition = nodeTran.Transition;
@@ -153,25 +191,26 @@ namespace pwiz.Skyline.Model
                 var tranNew = new Transition(groupNew, transition.IonType, transition.CleavageOffset,
                     transition.MassIndex, adduct, transition.DecoyMassShift, molecule);
                 TypedMass moleculeMass;
-                if (transition.IonType == IonType.precursor && nodeGroupTemp.IsotopeDist != null)
+                if (transition.IonType == IonType.precursor && nodeGroupNew.IsotopeDist != null)
                 {
-                    var peakIndex = nodeGroupTemp.IsotopeDist.MassIndexToPeakIndex(transition.MassIndex);
-                    if (peakIndex < 0 || peakIndex >= nodeGroupTemp.IsotopeDist.CountPeaks)
+                    var peakIndex = nodeGroupNew.IsotopeDist.MassIndexToPeakIndex(transition.MassIndex);
+                    if (peakIndex < 0 || peakIndex >= nodeGroupNew.IsotopeDist.CountPeaks)
                     {
                         // Mass index is no longer valid: remove the transition
                         continue;
                     }
-                    moleculeMass = nodeGroupTemp.IsotopeDist.GetMassI(transition.MassIndex);
+                    moleculeMass = nodeGroupNew.IsotopeDist.GetMassI(transition.MassIndex);
                 }
                 else
                 {
                     moleculeMass = nodeTran.GetMoleculeMass();
                 }
-                var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
+                var nodeTranAnnotations = nodeTran.Annotations;
+                var nodeTranNew = new TransitionDocNode(tranNew, nodeTranAnnotations, nodeTran.Losses,
                     moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
                 children.Add(nodeTranNew);
             }
-            return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, children.ToArray(), AutoManageChildren);
+            return new TransitionGroupDocNode(groupNew, nodeGroupNew, libraryPrecursorFilterNew, children.ToArray());
         }
 
         public IEnumerable<TransitionDocNode> GetMsTransitions(bool fullScanMs)
@@ -200,11 +239,11 @@ namespace pwiz.Skyline.Model
             if (IsCustomIon)
             {
                 return new LibKey(nodePep.CustomMolecule.GetSmallMoleculeLibraryAttributes(),
-                    PrecursorAdduct);
+                    PrecursorAdduct, EffectivePrecursorFilter);
             }
 
             return new LibKey(settings.GetModifiedSequence(nodePep.Peptide.Target, LabelType, nodePep.ExplicitMods),
-                PrecursorAdduct.AdductCharge);
+                PrecursorAdduct.AdductCharge, EffectivePrecursorFilter);
         }
 
         /// <summary>
@@ -236,6 +275,10 @@ namespace pwiz.Skyline.Model
 
         public int PrecursorCharge { get { return TransitionGroup.PrecursorAdduct.AdductCharge; } }
 
+        public IonMobilityAndCCS IonMobilityAndCCS => EffectivePrecursorFilter.IonMobilityAndCCS; // TODO(bspratt) make sure we're not using this instead of PrecursorFilter when we should be
+
+        public IonMobilityAndCCS LibraryIonMobility => EffectivePrecursorFilter.IonMobilityAndCCS; // Ion mobility from .imsdb or .blib etc - may be superseded by ExplicitPrecursorFilter
+
         private class SmallMoleculeOnly : DefaultValues
         {
             public override bool IsDefault(object obj, object parentObject)
@@ -260,10 +303,49 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// For transition lists with explicit values for CE, ion mobility
+        /// For transition lists with explicit values for CE, ion mobility, etc
         /// </summary>
         [TrackChildren]
-        public ExplicitTransitionGroupValues ExplicitValues { get; private set; }
+        public PrecursorFilter ExplicitPrecursorFilter
+        {
+            get { return _explicitPrecursorFilter; }
+            private set
+            {
+                _explicitPrecursorFilter = value ?? PrecursorFilter.EMPTY;
+                EffectivePrecursorFilter = _explicitPrecursorFilter.Merge(_libraryPrecursorFilter); // Use library values where no explicit value given
+            }
+        }
+        private PrecursorFilter _explicitPrecursorFilter;
+        private PrecursorFilter _libraryPrecursorFilter;
+
+        /// <summary>
+        /// Values like CE, ion mobility that we may pull from libraries
+        /// N.B. normally accessed via the PrecursorFilter property, which
+        /// includes any overrides from ExplicitPrecursorFilter
+        /// </summary>
+        [TrackChildren]
+        public PrecursorFilter LibraryPrecursorFilter
+        {
+            get { return _libraryPrecursorFilter; }
+            private set
+            {
+                _libraryPrecursorFilter = value ?? PrecursorFilter.EMPTY;
+                EffectivePrecursorFilter = (_explicitPrecursorFilter ?? PrecursorFilter.EMPTY).Merge(_libraryPrecursorFilter); // Use library values where no explicit value given
+            }
+        }
+
+        // Combination of explicit and library-derived filter values, where explicit values take priority
+        public PrecursorFilter EffectivePrecursorFilter { get; private set; } // Use library values where no explicit value given
+
+
+
+        // CONSIDER:(bspratt)
+        //        [Track]
+        //        public string LibraryPrecursorFilterProvenance { get; private set; }  // Where did this library information come from?
+
+
+
+
         [Track(defaultValues: typeof(DefaultValuesNull))]
         public double? PrecursorConcentration { get; private set; }
 
@@ -891,7 +973,7 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode ChangePeptide(Peptide peptide)
         {
             var newId = new TransitionGroup(peptide, TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, true,
-                TransitionGroup.DecoyMassShift);
+                TransitionGroup.DecoyMassShift, TransitionGroup.ConformerID);
             return ChangeTransitionGroupId(newId, Transitions.Select(t => t.ChangeTransitionGroup(newId)));
         }
 
@@ -900,6 +982,12 @@ namespace pwiz.Skyline.Model
             var node = (TransitionGroupDocNode)ChangeId(newId);
             node = (TransitionGroupDocNode)node.ChangeChildren(newTransitions.Cast<DocNode>().ToList());
             return node;
+        }
+
+        public TransitionGroupDocNode ChangeLibraryIonMobility(IonMobilityAndCCS mobility)
+        {
+            return ChangeProp(ImClone(this), im => im.ChangeLibraryPrecursorFilter(
+                im.LibraryPrecursorFilter.ChangeIonMobilityAndCCS(mobility)));
         }
 
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
@@ -920,6 +1008,7 @@ namespace pwiz.Skyline.Model
             }
 
             bool autoSelectTransitions = diff.DiffTransitions &&
+                                         !diff.DiffConformersOnly && // If we're just adding/removing conformers, don't perform usual auto-manage
                                          settingsNew.TransitionSettings.Filter.AutoSelect && AutoManageChildren;
 
             if (!IsDecoy && (diff.DiffTransitionGroupProps || diff.DiffTransitions || diff.DiffTransitionProps))
@@ -1148,7 +1237,7 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(parent.Peptide, TransitionGroup.Peptide))
             {
                 result = (TransitionGroupDocNode) ChangeId(new TransitionGroup(parent.Peptide,
-                    TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType));
+                    TransitionGroup.PrecursorAdduct, TransitionGroup.LabelType, TransitionGroup.ConformerID));
             }
             // Match children resulting from ChangeSettings to current children
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
@@ -1463,7 +1552,7 @@ namespace pwiz.Skyline.Model
                     ChromFileInfoId fileId = fileIds[j];
                     PeakFeatureStatistics reintegratePeak = reintegratePeaks != null ? reintegratePeaks[j] : null;
 
-                    var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran,
+                    var listChromInfo = chromGroupInfo.GetAllTransitionInfo(this, nodeTran,
                         mzMatchTolerance, chromatograms.OptimizationFunction, TransformChrom.interpolated);
                     if (listChromInfo.IsEmpty)
                     {
@@ -1871,7 +1960,11 @@ namespace pwiz.Skyline.Model
 
         public override string GetDisplayText(DisplaySettings settings)
         {
-            return TransitionGroupTreeNode.DisplayText(this, settings);
+            return TransitionGroupTreeNode.DisplayText(this, null, settings);
+        }
+        public string GetDisplayText(DisplaySettings settings, PeptideDocNode parentNode)
+        {
+            return TransitionGroupTreeNode.DisplayText(this, parentNode, settings);
         }
 
         private sealed class TransitionGroupResultsCalculator
@@ -2703,9 +2796,14 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.LibInfo = prop);
         }
 
-        public TransitionGroupDocNode ChangeExplicitValues(ExplicitTransitionGroupValues prop)
+        public TransitionGroupDocNode ChangeExplicitValues(PrecursorFilter prop)
         {
-            return Equals(prop, ExplicitValues) ? this : ChangeProp(ImClone(this), im => im.ExplicitValues = prop);
+            return Equals(prop, ExplicitPrecursorFilter) ? this : ChangeProp(ImClone(this), im => im.ExplicitPrecursorFilter = prop);
+        }
+
+        public TransitionGroupDocNode ChangeLibraryPrecursorFilter(PrecursorFilter prop)
+        {
+            return Equals(prop, LibraryPrecursorFilter) ? this : ChangeProp(ImClone(this), im => im.LibraryPrecursorFilter = prop);
         }
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
@@ -2759,7 +2857,7 @@ namespace pwiz.Skyline.Model
             {
                 if (tranId != null && !ReferenceEquals(tranId, nodeTran.Id))
                     continue;
-                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance, regression);
+                var chromInfo = chromGroupInfo.GetTransitionInfo(this, nodeTran, (float)mzMatchTolerance, regression);
                 if (chromInfo == null)
                     continue;
                 int indexPeak = chromInfo.IndexOfPeak(retentionTime);
@@ -2779,7 +2877,7 @@ namespace pwiz.Skyline.Model
             double startMin = double.MaxValue, endMax = double.MinValue;
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance, regression);
+                var chromInfo = chromGroupInfo.GetTransitionInfo(this, nodeTran, (float)mzMatchTolerance, regression);
                 if (chromInfo == null)
                     continue;
                 ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
@@ -2792,7 +2890,7 @@ namespace pwiz.Skyline.Model
             var listChildrenNew = new List<DocNode>(Children.Count);
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
+                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(this, nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
                 // Shouldn't need to update a transition with no chrom info
                 if (optStepChromatograms.IsEmpty) 
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
@@ -2866,7 +2964,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
+                var listChromInfo = chromGroupInfo.GetAllTransitionInfo(this, nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
 
                 // Shouldn't need to update a transition with no chrom info
                 // Also if startTime is null, remove the peak
@@ -3077,7 +3175,8 @@ namespace pwiz.Skyline.Model
                         Equals(obj.LibInfo, LibInfo) &&
                         Equals(obj.Results, Results) &&
                         Equals(obj.CustomMolecule, CustomMolecule) &&
-                        Equals(obj.ExplicitValues, ExplicitValues) &&
+                        Equals(obj.ExplicitPrecursorFilter, ExplicitPrecursorFilter) &&
+                        Equals(obj.LibraryIonMobility, LibraryIonMobility) &&
                         Equals(obj.PrecursorConcentration, PrecursorConcentration);
             return equal;
         }
@@ -3096,9 +3195,10 @@ namespace pwiz.Skyline.Model
                 int result = base.GetHashCode();
                 result = (result*397) ^ PrecursorMz.GetHashCode();
                 result = (result*397) ^ (IsotopeDist != null ? IsotopeDist.GetHashCode() : 0);
+                result = (result*397) ^ (LibraryIonMobility != null ? LibraryIonMobility.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
-                result = (result*397) ^ ExplicitValues.GetHashCode();
+                result = (result*397) ^ ExplicitPrecursorFilter.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorConcentration.GetHashCode();
                 return result;
@@ -3107,7 +3207,7 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            return TextUtil.SpaceSeparate(TransitionGroup.Peptide.ToString(), TransitionGroup.ToString());
+            return TextUtil.SpaceSeparate(TransitionGroup.Peptide.ToString(), TransitionGroup.ToString(), IonMobilityAndCCS.ToString());
         }
 
         #endregion
@@ -3140,12 +3240,12 @@ namespace pwiz.Skyline.Model
                     if (TransitionGroup.Peptide.IsCustomMolecule)
                     {
                         var adduct = settings.GetModifiedAdduct(TransitionGroup.PrecursorAdduct, TransitionGroup.Peptide.CustomMolecule.UnlabeledFormula, labelType, mods);
-                        key = new LibKey(TransitionGroup.Peptide.CustomMolecule.GetSmallMoleculeLibraryAttributes(), adduct);
+                        key = new LibKey(TransitionGroup.Peptide.CustomMolecule.GetSmallMoleculeLibraryAttributes(), adduct, EffectivePrecursorFilter);
                     }
                     else
                     {
                         var sequenceMod = settings.GetModifiedSequence(TransitionGroup.Peptide.Target, labelType, mods);
-                        key = new LibKey(sequenceMod, TransitionGroup.PrecursorAdduct.AdductCharge);
+                        key = new LibKey(sequenceMod, TransitionGroup.PrecursorAdduct.AdductCharge, EffectivePrecursorFilter);
                     }
                     if (libraries.TryLoadSpectrum(key, out spectrumInfo))
                     {
@@ -3191,7 +3291,7 @@ namespace pwiz.Skyline.Model
 
         public override string AuditLogText
         {
-            get { return TransitionGroupTreeNode.GetLabel(TransitionGroup, PrecursorMz, string.Empty); }
+            get { return TransitionGroupTreeNode.GetLabel(this, null, string.Empty); }
         }
     }
 }

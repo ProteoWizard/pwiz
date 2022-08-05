@@ -25,7 +25,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -120,14 +119,13 @@ namespace pwiz.SkylineTestFunctional
                 skyDoc.ChangeSettings(
                     doc.Settings.ChangeTransitionSettings(
                         doc.Settings.TransitionSettings.ChangeIonMobilityFiltering(ionMobilityFilteringSettings)))));
-            doc = WaitForDocumentLoaded();
+            doc = WaitForDocumentChangeLoaded(doc);
 
             for (var pass = 0; pass < 2; pass++)
             {
-                var libKey = precursorDocNode.GetLibKey(doc.Settings, peptideDocNode);
-                var libraryIonMobilityInfo = doc.Settings.GetIonMobilities(new [] {libKey}, new MsDataFilePath("silac_1_to_4"));
-                var imsFilter = doc.Settings.GetIonMobilityFilter(peptideDocNode, precursorDocNode, transitionDocNode,
-                    libraryIonMobilityInfo, null, 0);
+                FindNodes(out peptideDocNode, out precursorDocNode, out transitionDocNode);
+                var imsFilter = doc.Settings.GetIonMobilityFilter(precursorDocNode, transitionDocNode,
+                     null, 0);
                 AssertEx.AreEqual(eIonMobilityUnits.drift_time_msec, imsFilter.IonMobilityUnits);
                 AssertEx.AreEqual(26.4669, imsFilter.IonMobility.Mobility, 0.001);
                 if (pass == 1)
@@ -142,7 +140,6 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.NewDocument(true);
                     SkylineWindow.OpenFile(testPath);
                     doc = WaitForDocumentLoaded();
-                    FindNodes(out peptideDocNode, out precursorDocNode, out transitionDocNode);
                 });
             }
         }

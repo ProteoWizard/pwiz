@@ -108,11 +108,12 @@ namespace pwiz.Skyline.Model.Optimization
                         {
                             var modSeq = document.Settings.GetSourceTarget(peptide); 
                             var charge = group.PrecursorAdduct;
+                            var precursorFilter = group.EffectivePrecursorFilter;
                             foreach (TransitionDocNode transition in group.Children)
                             {
                                 foreach (var optType in Enum.GetValues(typeof(OptimizationType)).Cast<OptimizationType>())
                                 {
-                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, transition.FragmentIonName, transition.Transition.Adduct);
+                                    var optimizationKey = new OptimizationKey(optType, modSeq, charge, precursorFilter, transition.FragmentIonName, transition.Transition.Adduct);
                                     foreach (var dbOptimization in dictOptimizations.EntriesMatching(optimizationKey))
                                     {
                                         if (persistedKeys.Add(dbOptimization.Key))
@@ -140,19 +141,19 @@ namespace pwiz.Skyline.Model.Optimization
             return _database.GetOptimizations();
         }
 
-        public DbOptimization GetOptimization(OptimizationType type, Target seq, Adduct charge, string fragment, Adduct productCharge)
+        public DbOptimization GetOptimization(OptimizationType type, Target seq, Adduct charge, PrecursorFilter libraryPrecursorFilter, string fragment, Adduct productCharge)
         {
             RequireUsable();
-            var key = new OptimizationKey(type, seq, charge, fragment, productCharge);
+            var key = new OptimizationKey(type, seq, charge, libraryPrecursorFilter, fragment, productCharge);
             double value;
-            return (_database.DictLibrary.TryGetValue(new OptimizationKey(type, seq, charge, fragment, productCharge), out value))
+            return (_database.DictLibrary.TryGetValue(new OptimizationKey(type, seq, charge, libraryPrecursorFilter, fragment, productCharge), out value))
                 ? new DbOptimization(key, value)
                 : null;
         }
 
-        public DbOptimization GetOptimization(OptimizationType type, Target seq, Adduct charge)
+        public DbOptimization GetOptimization(OptimizationType type, Target seq, Adduct charge, PrecursorFilter libraryPrecursorFilter)
         {
-            return GetOptimization(type, seq, charge, null, Adduct.EMPTY);
+            return GetOptimization(type, seq, charge, libraryPrecursorFilter, null, Adduct.EMPTY);
         }
 
         public bool HasType(OptimizationType type)

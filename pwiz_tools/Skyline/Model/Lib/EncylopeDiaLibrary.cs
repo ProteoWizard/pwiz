@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.Lib
             try
             {
                 loader.UpdateProgress(status);
-                var libKeySourceFileDatas = new Dictionary<PeptideLibraryKey, Dictionary<string, ScoredFileData>>();
+                var libKeySourceFileDatas = new Dictionary<LibraryKey, Dictionary<string, ScoredFileData>>();
 
                 var scores = new EncyclopeDiaScores();
                 scores.ReadScores(_pooledSqliteConnection.Connection);
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Lib
                                 throw new OperationCanceledException();
                             }
 
-                            var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
+                            var libKey = LibraryKey.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             // Tuple of filename, score, FileData
                             Dictionary<string, ScoredFileData> dataByFilename;
                             
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         while (reader.Read())
                         {
-                            var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
+                            var libKey = LibraryKey.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             quantPeptides.Add(libKey);
                             // Tuple of filename, score, FileData
                             Dictionary<string, ScoredFileData> dataByFilename;
@@ -730,7 +730,7 @@ namespace pwiz.Skyline.Model.Lib
             return encyclopeDiaLibrary;
         }
 
-        private static ElibSpectrumInfo MakeSpectrumInfo(PeptideLibraryKey libraryKey,
+        private static ElibSpectrumInfo MakeSpectrumInfo(LibraryKey libraryKey,
             IDictionary<string, ScoredFileData> fileDatas, IDictionary<string, int> sourceFileIds)
         {
             double bestScore = double.MaxValue;
@@ -756,7 +756,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public class ElibSpectrumInfo : ICachedSpectrumInfo
         {
-            public ElibSpectrumInfo(PeptideLibraryKey libKey, int bestFileId, IEnumerable<KeyValuePair<int, FileData>> fileDatas)
+            public ElibSpectrumInfo(LibraryKey libKey, int bestFileId, IEnumerable<KeyValuePair<int, FileData>> fileDatas)
             {
                 Key = new LibKey(libKey);
                 BestFileId = bestFileId;
@@ -823,7 +823,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     peakBounds.Add(new KeyValuePair<int, FileData>(fileId, new FileData(apexTime, new ExplicitPeakBounds(startTime, endTime, score))));
                 }
-                return new ElibSpectrumInfo(new PeptideLibraryKey(peptideModSeq, charge), bestFileId, peakBounds);
+                return new ElibSpectrumInfo(LibraryKey.Create(peptideModSeq, charge), bestFileId, peakBounds);
             }
         }
         public class FileData

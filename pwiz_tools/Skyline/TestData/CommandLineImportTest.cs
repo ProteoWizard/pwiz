@@ -74,8 +74,8 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("CAexample"));
             Assert.AreEqual(5, doc.PeptideGroupCount);
             Assert.AreEqual(26, doc.PeptideCount);
-            Assert.AreEqual(26, doc.PeptideTransitionGroupCount);
-            Assert.AreEqual(78, doc.PeptideTransitionCount);
+            Assert.AreEqual(26, doc.MoleculeTransitionGroupCountIgnoringSpecialTestNodes);
+            Assert.AreEqual(78, doc.MoleculeTransitionCountIgnoringSpecialTestNodes);
 
             // without mods
             var outPath2 = testFilesDir.GetTestPath("import-search2.sky");
@@ -95,8 +95,8 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("CAexample"));
             Assert.AreEqual(5, doc.PeptideGroupCount);
             Assert.AreEqual(23, doc.PeptideCount);
-            Assert.AreEqual(23, doc.PeptideTransitionGroupCount);
-            Assert.AreEqual(69, doc.PeptideTransitionCount);
+            Assert.AreEqual(23, doc.MoleculeTransitionGroupCountIgnoringSpecialTestNodes);
+            Assert.AreEqual(69, doc.MoleculeTransitionCountIgnoringSpecialTestNodes);
 
             // test setting cutoff and accepting mods when not importing a search
             output = RunCommand(

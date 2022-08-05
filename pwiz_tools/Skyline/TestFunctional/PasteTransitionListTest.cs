@@ -116,10 +116,10 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(therm, therm.OkDialog);
                 doc = WaitForDocumentChange(doc);
                 var transitionGroupDocNodes = doc.MoleculeTransitionGroups.ToArray();
-                AssertEx.AreEqual(0.5, transitionGroupDocNodes[0].ExplicitValues.IonMobility);
-                AssertEx.AreEqual(330, transitionGroupDocNodes[0].ExplicitValues.CollisionalCrossSectionSqA);
-                AssertEx.AreEqual(0.6, transitionGroupDocNodes[1].ExplicitValues.IonMobility);
-                AssertEx.AreEqual(330.3, transitionGroupDocNodes[1].ExplicitValues.CollisionalCrossSectionSqA);
+                AssertEx.AreEqual(0.5, transitionGroupDocNodes[0].ExplicitPrecursorFilter.IonMobility);
+                AssertEx.AreEqual(330, transitionGroupDocNodes[0].ExplicitPrecursorFilter.CollisionalCrossSectionSqA);
+                AssertEx.AreEqual(0.6, transitionGroupDocNodes[1].ExplicitPrecursorFilter.IonMobility);
+                AssertEx.AreEqual(330.3, transitionGroupDocNodes[1].ExplicitPrecursorFilter.CollisionalCrossSectionSqA);
                 var transitionDocNodes = doc.MoleculeTransitions.ToArray();
                 AssertEx.AreEqual(9, transitionDocNodes[0].ExplicitValues.DeclusteringPotential);
                 AssertEx.AreEqual(1.1, transitionDocNodes[1].ExplicitValues.SLens);

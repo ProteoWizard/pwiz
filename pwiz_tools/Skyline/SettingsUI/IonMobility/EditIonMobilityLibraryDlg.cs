@@ -119,19 +119,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 if (_originalMobilitiesFlat.Length != LibraryMobilitiesFlat.Count)
                     return true;
 
-                var ionMobilities = IonMobilityLibrary.FlatListToMultiConformerDictionary(LibraryMobilitiesFlat);
+                var ionMobilities = IonMobilityLibrary.FlatListToLibKeyIndex(LibraryMobilitiesFlat);
                 foreach (var item in _originalMobilitiesFlat)
                 {
-                    if (ionMobilities.TryGetValue(item.Precursor, out var value))
+                    if (!ionMobilities.ItemsMatching(item.Precursor, LibKeyIndex.LibraryMatchType.details).Any())
                     {
-                        if (!value.Any(v => Equals(v, item.GetIonMobilityAndCCS())))
-                        {
-                            return true; // Original mobility value for this ion is not present
-                        }
-                    }
-                    else
-                    {
-                        return true;
+                        return true; // Original mobility value for this ion is not present in current list
                     }
                 }
                 return false;
@@ -494,13 +487,15 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
 
         public static string ValidateUniquePrecursors(IEnumerable<ValidatingIonMobilityPrecursor> precursorIonMobilities, out List<ValidatingIonMobilityPrecursor> minimalSet)
         {
-            var dict = IonMobilityLibrary.FlatListToMultiConformerDictionary(precursorIonMobilities);
-            minimalSet = IonMobilityLibrary.MultiConformerDictionaryToFlatList(dict); // The conversion to dict removed any duplicates
+            var libKeyIndex = IonMobilityLibrary.FlatListToLibKeyIndex(precursorIonMobilities);
+            minimalSet = IonMobilityLibrary.MultiConformerDictionaryToFlatList(libKeyIndex); // The conversion to dict removed any duplicates
             var multiConformers = new HashSet<LibKey>();
-            foreach (var pair in dict)
+            foreach (var item in libKeyIndex)
             {
-                if (pair.Value.Count > 1)
-                    multiConformers.Add(pair.Key);
+                if (libKeyIndex.ItemsMatching(item.LibraryKey, LibKeyIndex.LibraryMatchType.ion).ToList().Count > 1)
+                {
+                    multiConformers.Add(new LibKey(item.LibraryKey.Target, item.LibraryKey.Adduct));
+                }
             }
 
             var multiConformersCount = multiConformers.Count;
@@ -613,7 +608,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                 foreach (var existing in previous)
                 {
                     // Determine whether the document uses a different representation of the same precursor
-                    var match = found.KeyPairsMatching(existing.Precursor, true).ToArray();
+                    var match = found.KeyPairsMatching(existing.Precursor, LibKeyIndex.LibraryMatchType.ion).ToArray();
                     if (match.Length == 0)
                     {
                         // Document did not contain the library precursor, retain it
@@ -643,7 +638,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
         {
 
             // List any measured ion mobility values
-            _gridViewLibraryDriver.SetTablePrecursors(ionMobilities.Select(item => new ValidatingIonMobilityPrecursor(item.Key, item.Value)));
+            _gridViewLibraryDriver.SetTablePrecursors(ionMobilities.Select(item => 
+                new ValidatingIonMobilityPrecursor(item.Key.Target, item.Key.Adduct, item.Value)));
 
             cbOffsetHighEnergySpectra.Checked = ionMobilities.Any(item => item.Value.HighEnergyIonMobilityValueOffset != 0);
 
@@ -762,7 +758,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                             int fileCount = library.FileCount ?? 0;
                             if (fileCount != 0)
                             {
-                                peptideCollisionalCrossSections = CollectIonMobilitiesAndCollisionalCrossSections(monitor, GetIonMobilityProviders(library), fileCount);
+                                peptideCollisionalCrossSections = CollectIonMobilitiesAndCollisionalCrossSections(monitor, library);
                                 if (peptideCollisionalCrossSections != null)
                                 {
                                     var found = peptideCollisionalCrossSections.ToArray();
@@ -782,7 +778,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                                         var updated = new List<ValidatingIonMobilityPrecursor>();
                                         foreach (var kvp in dict)
                                         {
-                                            updated.Add(new ValidatingIonMobilityPrecursor(kvp.Key, kvp.Value));
+                                            updated.Add(new ValidatingIonMobilityPrecursor(kvp.Key.Target, kvp.Key.Adduct, kvp.Value));
                                         }
                                         peptideCollisionalCrossSections = updated;
                                     }
@@ -828,120 +824,63 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return null;
         }
 
-
-
-        private static IEnumerable<IIonMobilityInfoProvider> GetIonMobilityProviders(Library library)
-        {
-            int? fileCount = library.FileCount;
-            if (!fileCount.HasValue)
-                yield break;
-
-            for (int i = 0; i < fileCount.Value; i++)
-            {
-                LibraryIonMobilityInfo ionMobilities;
-                if (library.TryGetIonMobilityInfos(null, i, out ionMobilities))
-                    yield return ionMobilities;
-            }
-        }
-
-        public static IEnumerable<ValidatingIonMobilityPrecursor> CollectIonMobilitiesAndCollisionalCrossSections(IProgressMonitor monitor,
-                                      IEnumerable<IIonMobilityInfoProvider> providers,
-                                      int countProviders)
+        public static IEnumerable<ValidatingIonMobilityPrecursor> CollectIonMobilitiesAndCollisionalCrossSections(IProgressMonitor monitor, Library library)
         {
             IProgressStatus status = new ProgressStatus(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information);
-            var peptideIonMobilities = new List<ValidatingIonMobilityPrecursor>();
-            int runCount = 0;
-            foreach (var ionMobilityInfoProvider in providers)
+            List<ValidatingIonMobilityPrecursor> peptideIonMobilities = null;
+            if ((monitor != null ) && monitor.IsCanceled)
+                return null;
+            if (monitor != null)
             {
-                if ((monitor != null ) && monitor.IsCanceled)
-                    return null;
-                runCount++;
-                if (ionMobilityInfoProvider != null)
-                {
-                    if (monitor != null)
-                    {
-                        var message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__, ionMobilityInfoProvider.Name);
-                        monitor.UpdateProgress(status = status.ChangeMessage(message));
-                    }
-                    foreach (var ionMobilityList in ionMobilityInfoProvider.GetIonMobilityDict())
-                    {
-                        if (ionMobilityInfoProvider.SupportsMultipleConformers)
-                        {
-                            foreach (var ionMobilityInfo in ionMobilityList.Value)
-                            {
-                                if (ionMobilityList.Key.IsSmallMoleculeKey)
-                                    peptideIonMobilities.Add(new ValidatingIonMobilityPrecursor(ionMobilityList.Key.SmallMoleculeLibraryAttributes,
-                                        ionMobilityList.Key.Adduct,
-                                        ionMobilityInfo.CollisionalCrossSectionSqA??0, 
-                                        ionMobilityInfo.IonMobility.Mobility??0,
-                                        ionMobilityInfo.HighEnergyIonMobilityValueOffset ?? 0, 
-                                        ionMobilityInfo.IonMobility.Units));
-                                else
-                                    peptideIonMobilities.Add(new ValidatingIonMobilityPrecursor(ionMobilityList.Key.Target,
-                                        ionMobilityList.Key.Adduct,
-                                        ionMobilityInfo.CollisionalCrossSectionSqA ?? 0,
-                                        ionMobilityInfo.IonMobility.Mobility ?? 0,
-                                        ionMobilityInfo.HighEnergyIonMobilityValueOffset ?? 0,
-                                        ionMobilityInfo.IonMobility.Units));
-                            }
-                        }
-                        else
-                        {
-                            // If there is more than one value, just average them
-                            double totalCCS = 0;
-                            double totalIonMobility = 0;
-                            double totalHighEnergyOffset = 0;
-                            var countCCS = 0;
-                            var countIM = 0;
-                            var units = eIonMobilityUnits.none;
-                            foreach (var ionMobilityInfo in ionMobilityList.Value)
-                            {
-                                if (ionMobilityInfo.IonMobility.Units != eIonMobilityUnits.none)
-                                {
-                                    // Just deal with first-seen units in the unlikely case of a mix
-                                    if (units == eIonMobilityUnits.none)
-                                        units = ionMobilityInfo.IonMobility.Units;
-                                    if (units == ionMobilityInfo.IonMobility.Units)
-                                    {
-                                        if (ionMobilityInfo.IonMobility.HasValue)
-                                        {
-                                            totalIonMobility += ionMobilityInfo.IonMobility.Mobility ?? 0;
-                                            totalHighEnergyOffset += ionMobilityInfo.HighEnergyIonMobilityValueOffset ?? 0;
-                                            countIM++;
-                                        }
-                                    }
-                                }
-                                if (ionMobilityInfo.HasCollisionalCrossSection)
-                                {
-                                    totalCCS += ionMobilityInfo.CollisionalCrossSectionSqA.Value;
-                                    countCCS++;
-                                }
-                            }
-                            if (countIM > 0 || countCCS > 0)
-                            {
-                                var collisionalCrossSection = countCCS > 0 ? totalCCS / countCCS : 0;
-                                var ionMobility = countIM > 0 ? totalIonMobility / countIM : 0;
-                                var highEnergyIonMobilityOffset = countIM > 0 ? totalHighEnergyOffset / countIM : 0;
-                                if (ionMobilityList.Key.IsSmallMoleculeKey)
-                                    peptideIonMobilities.Add(new ValidatingIonMobilityPrecursor(ionMobilityList.Key.SmallMoleculeLibraryAttributes, 
-                                        ionMobilityList.Key.Adduct, 
-                                        collisionalCrossSection, ionMobility, highEnergyIonMobilityOffset, units));
-                                else
-                                    peptideIonMobilities.Add(new ValidatingIonMobilityPrecursor(ionMobilityList.Key.Target, 
-                                        ionMobilityList.Key.Adduct, 
-                                        collisionalCrossSection, ionMobility, highEnergyIonMobilityOffset, units));
-                            }
-                        }
-                    }
-                }
-                if (monitor != null)
-                    monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));
+                var message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__, library.Name);
+                monitor.UpdateProgress(status = status.ChangeMessage(message));
+            }
+
+            var keys = library.Keys.ToArray();
+            if (library.TryGetPrecursorFilter(keys, out var ionMobilities))
+            {
+                status = CollectIonMobilitiesAndCollisionalCrossSections(monitor, ionMobilities, status, out peptideIonMobilities);
             }
 
             if (monitor != null)
                 monitor.UpdateProgress(status.Complete());
 
             return peptideIonMobilities;
+        }
+
+        public static IProgressStatus CollectIonMobilitiesAndCollisionalCrossSections(IProgressMonitor monitor,
+            LibraryPrecursorFiltersInfo precursorFilters, IProgressStatus status, out List<ValidatingIonMobilityPrecursor> peptideIonMobilities)
+        {
+            int runCount = 0;
+            peptideIonMobilities = new List<ValidatingIonMobilityPrecursor>();
+            var dict = precursorFilters.GetPrecursorFiltersDict();
+            foreach (var kvp in dict)
+            {
+                var key = kvp.Key;
+                foreach (var precursorFilter in kvp.Value)
+                {
+                    var ionMobility = precursorFilter.IonMobilityAndCCS;
+                    if (key.IsSmallMoleculeKey)
+                        peptideIonMobilities.Add(new ValidatingIonMobilityPrecursor(key.SmallMoleculeLibraryAttributes,
+                            key.Adduct,
+                            ionMobility.CollisionalCrossSectionSqA ?? 0,
+                            ionMobility.IonMobility.Mobility ?? 0,
+                            ionMobility.HighEnergyIonMobilityValueOffset ?? 0,
+                            ionMobility.IonMobility.Units));
+                    else
+                        peptideIonMobilities.Add(new ValidatingIonMobilityPrecursor(key.Target,
+                            key.Adduct,
+                            ionMobility.CollisionalCrossSectionSqA ?? 0,
+                            ionMobility.IonMobility.Mobility ?? 0,
+                            ionMobility.HighEnergyIonMobilityValueOffset ?? 0,
+                            ionMobility.IonMobility.Units));
+                }
+
+                if (monitor != null)
+                    monitor.UpdateProgress(status = status.ChangePercentComplete(runCount++ * 100 / (dict.Count + 1)));
+            }
+
+            return status;
         }
     }
 

@@ -1003,8 +1003,11 @@ namespace pwiz.Skyline.Model.Lib
         private TransitionGroupDocNode MakeTransitionGroupWithAllPossibleChildren(SrmSettings settings, IsotopeLabelType labelType)
         {
             var peptide = new Peptide(TargetInfoObj.LookupSequence);
-            var transitionGroup = new TransitionGroup(peptide, TargetInfoObj.TransitionGroupDocNode.PrecursorAdduct, labelType);
-            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings, TargetInfoObj.LookupMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var transitionGroup = new TransitionGroup(peptide, TargetInfoObj.TransitionGroupDocNode.PrecursorAdduct,
+                labelType);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings, TargetInfoObj.LookupMods,
+                null, TargetInfoObj.TransitionGroupDocNode.ExplicitPrecursorFilter,
+                TargetInfoObj.TransitionGroupDocNode.LibraryPrecursorFilter, null, null, false);
             var children = transitionGroupDocNode.GetTransitions(settings, TargetInfoObj.LookupMods,
                 transitionGroupDocNode.PrecursorMz, null, null, null, FragmentFilterObj.UseFilter).Cast<DocNode>().ToList();
             return (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(children);

@@ -29,7 +29,7 @@ namespace pwiz.SkylineTestData.Results
     /// Summary description for AgilentMixTest
     /// </summary>
     [TestClass]
-    public class AgilentMixTest : AbstractUnitTest
+    public class AgilentMixTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"TestData\Results\AgilentMix.zip";
 
@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
                 AssertResult.IsDocumentResultsState(docResults, replicateName,
-                    doc.PeptideCount, doc.PeptideTransitionGroupCount, 0, doc.PeptideTransitionCount, 0);
+                    doc.PeptideCount, doc.MoleculeTransitionGroupCountIgnoringSpecialTestNodes, 0, doc.MoleculeTransitionCountIgnoringSpecialTestNodes, 0);
             }
 
             testFilesDir.Dispose();

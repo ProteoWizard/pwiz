@@ -212,6 +212,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.CollisionalCrossSectionSqA : null; }
         }
 
+        public double? IonMobility
+        {
+            get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobility : null; }
+        }
+
         public eIonMobilityUnits IonMobilityUnits
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.IonMobilityUnits : eIonMobilityUnits.none; }
@@ -1475,6 +1480,7 @@ namespace pwiz.Skyline.Model.Results
                 MinRawTime,
                 MaxRawTime,
                 CollisionalCrossSectionSqA,
+                IonMobility,
                 IonMobilityUnits);
         }
 

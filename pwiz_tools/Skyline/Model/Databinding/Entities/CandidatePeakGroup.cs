@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
             {
-                var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance, optimizableRegression);
+                var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionGroupDocNode, transitionDocNode, tolerance, optimizableRegression);
                 if (chromatogramInfo != null)
                 {
                     ChromPeak peak;

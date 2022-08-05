@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var dt in _ms1IonMobilities)
                 {
                     // Choose the ion mobility which gave the largest signal
-                    // CONSIDER: average IM and CCS values that fall "near" the IM of largest signal? Or consider them multiple conformers?
+                    // CONSIDER(bspratt): average IM and CCS values that fall "near" the IM of largest signal? Or consider them multiple conformers?
                     var ms1IonMobility = dt.Value.OrderByDescending(p => p.Intensity).First().IonMobility;
                     // Check for MS2 data to use for high energy offset
                     List<IonMobilityIntensityPair> listDt;
@@ -345,7 +345,8 @@ namespace pwiz.Skyline.Model.Results
             if (_progressMonitor != null && !ReferenceEquals(nodeGroup, _currentDisplayedTransitionGroupDocNode))
             {
                 // Do this after scan load so first group after file switch doesn't seem laggy
-                _progressStatus = _progressStatus.ChangeMessage(TextUtil.LineSeparate(filePath.GetFileName(), nodeGroup.ToString())).
+                var nodeString = TextUtil.SpaceSeparate(nodeGroup.TransitionGroup.Peptide.ToString(), nodeGroup.TransitionGroup.ToString());
+                _progressStatus = _progressStatus.ChangeMessage(TextUtil.LineSeparate(filePath.GetFileName(), nodeString)).
                                      UpdatePercentCompleteProgress(_progressMonitor, _currentStep++, _totalSteps);
                 _currentDisplayedTransitionGroupDocNode = nodeGroup;
             }

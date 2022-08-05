@@ -1076,6 +1076,10 @@ namespace pwiz.SkylineTestUtil
                 if (_isPauseForScreenShots)
                 {
                     Program.PauseSeconds = -1;
+
+                    #region Multiple conformers test support
+                    Settings.Default.TestMultiCCS = false; // Extra test node will mess up the pretty pictures
+                    #endregion Multiple conformers test support
                 }
             }
         }

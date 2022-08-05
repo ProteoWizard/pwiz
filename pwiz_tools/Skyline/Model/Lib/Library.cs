@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -189,7 +190,16 @@ namespace pwiz.Skyline.Model.Lib
                     // If nothing changed, end without changing the document.
                     if (!changed && !newMidasLibSpec && !failedMidasFiles.Any())
                     {
-                        return false;
+                        // For older documents without multiple conformer support, we need to update the document's TransitionGroups if precursor filter is used, so don't quit yet
+                        var imFilter = docCurrent.Settings.TransitionSettings.IonMobilityFiltering;
+                        var needsUpdateIM = docCurrent.FormatVersion < DocumentFormat.MULTIPLE_CONFORMERS &&
+                                            imFilter.UseSpectralLibraryIonMobilityValues &&
+                                            imFilter.FilterWindowWidthCalculator.WindowWidthMode != IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none &&
+                                            list.Any(lib => lib.HasIonMobility);
+                        if (!needsUpdateIM)
+                        {
+                            return false;
+                        }
                     }
 
                     docNew = docCurrent;
@@ -657,18 +667,23 @@ namespace pwiz.Skyline.Model.Lib
 
         /// <summary>
         /// Attempts to get spectrum header information for a specific
-        /// (sequence, charge) pair.
+        /// (target, charge, precursor filter) tuple.
         /// </summary>
-        /// <param name="key">A sequence, charge pair</param>
+        /// <param name="key">A target, charge, precursor filter tuple</param>
         /// <param name="libInfo">The spectrum header information, if successful</param>
         /// <returns>True if the library contains the key</returns>
         public abstract bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo);
 
         /// <summary>
-        /// Attempts to get spectrum peak information for a specific
-        /// (sequence, charge) pair.
+        /// Returns true iff any library entries have precursor filter info.
         /// </summary>
-        /// <param name="key">A sequence, charge pair</param>
+        public virtual bool HasIonMobility { get { return false; } }
+
+        /// <summary>
+        /// Attempts to get spectrum peak information for a specific
+        /// (target, charge, precursor filter) tuple.
+        /// </summary>
+        /// <param name="key">A target, charge, precursor filter tuple</param>
         /// <param name="spectrum">The spectrum peak information, if successful</param>
         /// <returns>True if the spectrum was retrieved successfully</returns>
         public abstract bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum);
@@ -736,50 +751,29 @@ namespace pwiz.Skyline.Model.Lib
 
 
         /// <summary>
-        /// Attempts to get ion mobility information for a specific
-        /// (sequence, charge) pair and file.
+        /// Attempts to get ion mobility, CE etc information for a specific
+        /// (sequence, charge) pair  identified from all files.
         /// </summary>
         /// <param name="key">A sequence, charge pair</param>
-        /// <param name="filePath">A file for which the ion mobility information is requested</param>
-        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
-        /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities);
+        /// <param name="precursorFilters">A list of ion mobility, CE, etc info, if successful</param>
+        /// <returns>True if precursor filter information was retrieved successfully</returns>
+        public abstract bool TryGetPrecursorFilter(LibKey key, out LibraryPrecursorFiltersInfo precursorFilters);
 
         /// <summary>
-        /// Attempts to get ion mobility information for selected
-        /// (sequence, charge) pairs identified from a specific file.
-        /// </summary>
-        /// <param name="targetIons">A list of sequence, charge pairs</param>
-        /// <param name="filePath">A file for which the ion mobility information is requested</param>
-        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
-        /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities);
-
-        /// <summary>
-        /// Attempts to get ion mobility information for all of the
-        /// (sequence, charge) pairs identified from a specific file by index.
-        /// </summary>
-        /// <param name="targetIons">A list of sequence, charge pairs</param>
-        /// <param name="fileIndex">Index of a file for which the ion mobility information is requested</param>
-        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
-        /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities);
-
-        /// <summary>
-        /// Attempts to get ion mobility information for all of the
+        /// Attempts to get ion mobility, CE etc information for all of the
         /// (sequence, charge) pairs identified from all files.
         /// </summary>
         /// <param name="targetIons">A list of sequence, charge pairs</param>
-        /// <param name="ionMobilities">A list of ion mobility info, if successful</param>
-        /// <returns>True if ion mobility information was retrieved successfully</returns>
-        public abstract bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities);
+        /// <param name="precursorFilters">A list of ion mobility, CE, etc info, if successful</param>
+        /// <returns>True if precursor filter information was retrieved successfully</returns>
+        public abstract bool TryGetPrecursorFilter(LibKey[] targetIons, out LibraryPrecursorFiltersInfo precursorFilters);
 
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
         /// may include redundant spectra.  The spectrum points themselves are only loaded as it they
         /// requested to give this function acceptable performance.
         /// </summary>
-        /// <param name="key">The sequence, charge pair requested</param>
+        /// <param name="key">The sequence, charge, precursor filter tuple requested</param>
         /// <param name="labelType">An <see cref="IsotopeLabelType"/> for which to get spectra</param>
         /// <param name="redundancy">Level of redundancy requested in returned values</param>
         /// <returns>An enumeration of <see cref="SpectrumInfo"/></returns>
@@ -981,15 +975,31 @@ namespace pwiz.Skyline.Model.Lib
             return _libraryEntries.IndexOf(key.LibraryKey);
         }
 
+        public override bool HasIonMobility
+        {
+            get
+            {
+                return _libraryEntries.Index.Any(entry => !entry.LibraryKey.PrecursorFilter.IsEmpty);
+            }
+        }
+
         protected int FindEntry(LibKey key)
         {
             if (_libraryEntries == null)
             {
                 return -1;
             }
-            foreach (var entry in _libraryEntries.Index.ItemsMatching(key, true))
+            foreach (var entry in _libraryEntries.Index.ItemsMatching(key, LibKeyIndex.LibraryMatchType.details))
             {
                 return entry.OriginalIndex;
+            }
+            if (!PrecursorFilter.IsNullOrEmpty(key.PrecursorFilter))
+            {
+                // Possibly it failed to match on precursor filter - try again ignoring that
+                foreach (var entry in _libraryEntries.Index.ItemsMatching(key, LibKeyIndex.LibraryMatchType.ion))
+                {
+                    return entry.OriginalIndex;
+                }
             }
             return -1;
         }
@@ -1129,31 +1139,17 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey key, out LibraryPrecursorFiltersInfo precursorFilters)
         {
-            // By default, no ion mobility information is available
-            ionMobilities = null;
+            // By default, no precursor filter information is available
+            precursorFilters = null;
             return false;
         }
 
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey[] targetIons, out LibraryPrecursorFiltersInfo precursorFilters)
         {
-            // By default, no ion mobility information is available
-            ionMobilities = null;
-            return false;
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
-        {
-            // By default, no ion mobility information is available
-            ionMobilities = null;
-            return false;
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
-        {
-            // By default, no ion mobility information is available
-            ionMobilities = null;
+            // By default, no precursor filter information is available
+            precursorFilters = null;
             return false;
         }
 
@@ -1200,7 +1196,7 @@ namespace pwiz.Skyline.Model.Lib
 
         protected IEnumerable<TInfo> LibraryEntriesWithSequence(Target target)
         {
-            return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false);
+            return _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, LibKeyIndex.LibraryMatchType.target);
         }
 
         // ReSharper disable PossibleMultipleEnumeration
@@ -1361,104 +1357,37 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public sealed class LibraryIonMobilityInfo : IIonMobilityInfoProvider
+    public sealed class LibraryPrecursorFiltersInfo
     {
-        private readonly LibKeyMap<IonMobilityAndCCS[]> _dictLibKeyIonMobility;
+        private readonly LibKeyMap<PrecursorFilter[]> _dictLibKeyPrecursorFilters; // Map LibKey(without any PrecursorFilter) to available PrecursorFilters
 
-        public static LibraryIonMobilityInfo EMPTY = new LibraryIonMobilityInfo(String.Empty, false, new Dictionary<LibKey, IonMobilityAndCCS[]>());
+        public static LibraryPrecursorFiltersInfo EMPTY = new LibraryPrecursorFiltersInfo(new Dictionary<LibKey, PrecursorFilter[]>());
 
-        public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, IDictionary<LibKey, IonMobilityAndCCS[]> dict) 
-            : this(path, supportMultipleConformers, new LibKeyMap<IonMobilityAndCCS[]>(
+        public LibraryPrecursorFiltersInfo(IDictionary<LibKey, PrecursorFilter[]> dict) 
+            : this(new LibKeyMap<PrecursorFilter[]>(
                 ImmutableList.ValueOf(dict.Values), dict.Keys.Select(key=>key.LibraryKey)))
         {
         }
 
-        public LibraryIonMobilityInfo(string path, bool supportMultipleConformers, LibKeyMap<IonMobilityAndCCS[]> dictLibKeyIonMobility)
+        public LibraryPrecursorFiltersInfo(LibKeyMap<PrecursorFilter[]> dictLibKeyPrecursorFilters)
         {
-            Name = path ?? string.Empty;
-            SupportsMultipleConformers = supportMultipleConformers;
-            _dictLibKeyIonMobility = dictLibKeyIonMobility;
+            _dictLibKeyPrecursorFilters = dictLibKeyPrecursorFilters;
+        }
+        public bool IsEmpty { get { return _dictLibKeyPrecursorFilters == null || _dictLibKeyPrecursorFilters.Count == 0;} }
+
+        public bool HasIonMobilities
+        {
+            get
+            {
+                return !IsEmpty &&
+                       _dictLibKeyPrecursorFilters.Values.Any(v => v.Any(i => !i.IonMobilityAndCCS.IsEmpty));
+            }
         }
 
-        public string Name { get; private set; }
 
-        public bool SupportsMultipleConformers { get; private set; } // If false, average any redundancies (as with spectral libraries)
-
-        public bool IsEmpty { get { return _dictLibKeyIonMobility == null || _dictLibKeyIonMobility.Count == 0;} }
-
-        /// <summary>
-        /// Return the median measured CCS for spectra that were identified with a
-        /// specific modified peptide sequence and charge state.
-        /// </summary>
-        public double? GetLibraryMeasuredCollisionalCrossSection(LibKey chargedPeptide)
+        public IDictionary<LibKey, PrecursorFilter[]> GetPrecursorFiltersDict()
         {
-            IonMobilityAndCCS[] ionMobilities;
-            if ((!_dictLibKeyIonMobility.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
-                return null;
-            double? ccs = null;
-            var ccsValues = Array.FindAll(ionMobilities, im => im.HasCollisionalCrossSection);
-            if (ccsValues.Any())
-            {
-                ccs = new Statistics(ccsValues.Select(im => im.CollisionalCrossSectionSqA.Value)).Median();
-            }
-            return ccs;
-        }
-
-        /// <summary>
-        /// Return the median measured ion mobility for spectra that were identified with a
-        /// specific modified peptide sequence and charge state.  Prefer to use median CCS
-        /// when possible, and calculate IM from that. If only IM values are available, convert
-        /// to CCS if possible.
-        /// CONSIDER: when we support multiple conformers, is there maybe some difference magnitude at which we should not be averaging (based on resolving power maybe)?
-        /// </summary>
-        public IonMobilityAndCCS GetLibraryMeasuredIonMobilityAndCCS(LibKey chargedPeptide, double mz, IIonMobilityFunctionsProvider ionMobilityFunctionsProvider)
-        {
-            IonMobilityAndCCS[] ionMobilities;
-            if ((!_dictLibKeyIonMobility.TryGetValue(chargedPeptide, out ionMobilities)) || (ionMobilities == null))
-                return IonMobilityAndCCS.EMPTY;
-            IonMobilityValue ionMobility = IonMobilityValue.EMPTY;
-            double? ccs = null;
-            var ionMobilityInfos = ionMobilityFunctionsProvider != null ? Array.FindAll(ionMobilities, im => im.HasCollisionalCrossSection) : null;
-            if (ionMobilityInfos != null && ionMobilityInfos.Any() && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
-            {
-                // Use median CCS to calculate an ion mobility value
-                ccs = new Statistics(ionMobilityInfos.Select(im => im.CollisionalCrossSectionSqA.Value)).Median(); // Median is more tolerant of errors than Average
-                ionMobility = IonMobilityValue.GetIonMobilityValue(ionMobilityFunctionsProvider.IonMobilityFromCCS(ccs.Value, mz, chargedPeptide.Charge).Mobility,
-                    ionMobilityFunctionsProvider.IonMobilityUnits);
-            }
-            else
-            {
-                // Use median ion mobility, convert to CCS if available
-                ionMobilityInfos = Array.FindAll(ionMobilities, dt => dt.HasIonMobilityValue);
-                if (ionMobilityInfos.Any())
-                {
-                    var units = ionMobilityInfos.First().IonMobility.Units;
-                    var medianValue = new Statistics(ionMobilityInfos.Select(im => im.IonMobility.Mobility.Value)).Median(); // Median is more tolerant of errors than Average
-                    ionMobility = IonMobilityValue.GetIonMobilityValue(medianValue, units);
-                    if (ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
-                    {
-                        ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(ionMobility, mz, chargedPeptide.Charge);
-                    }
-                    else // No mobility -> conversion provided, just return median CCS
-                    {
-                        var ccsValues = ionMobilityInfos.Where(im => im.HasCollisionalCrossSection)
-                            .Select(im => im.CollisionalCrossSectionSqA.Value).ToArray();
-                        if (ccsValues.Any())
-                        {
-                            ccs = new Statistics(ccsValues).Median(); // Median is more tolerant of errors than Average
-                        }
-                    }
-                }
-            }
-            if (!ionMobility.HasValue)
-                return IonMobilityAndCCS.EMPTY;
-            var highEnergyDriftTimeOffsetMsec = new Statistics(ionMobilityInfos.Where(im => im.HighEnergyIonMobilityValueOffset.HasValue).Select(im => im.HighEnergyIonMobilityValueOffset.Value)).Median(); // Median is more tolerant of errors than Average
-            return IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobility, ccs, highEnergyDriftTimeOffsetMsec);
-        }
-
-        public IDictionary<LibKey, IonMobilityAndCCS[]> GetIonMobilityDict()
-        {
-            return _dictLibKeyIonMobility.AsDictionary();
+            return _dictLibKeyPrecursorFilters.AsDictionary();
         }
     }
 
@@ -2263,11 +2192,16 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class SpectrumMzInfo
     {
+        private IonMobilityAndCCS _ionMobility;
         public string SourceFile { get; set; }
         public LibKey Key { get; set; }
         public string Protein { get; set; } // Also used as Molecule List Name for small molecules
         public SmallMoleculeLibraryAttributes SmallMoleculeLibraryAttributes { get { return Key.SmallMoleculeLibraryAttributes; } }
-        public IonMobilityAndCCS IonMobility { get; set; }
+        public IonMobilityAndCCS IonMobility
+        {
+            get => IonMobilityAndCCS.IsNullOrEmpty(_ionMobility) ? Key.IonMobility : _ionMobility;
+            set => _ionMobility = value;
+        }
         public double PrecursorMz { get; set; }
         public double? RetentionTime { get; set; }
         public IsotopeLabelType Label { get; set; }
@@ -2279,7 +2213,7 @@ namespace pwiz.Skyline.Model.Lib
         public class IonMobilityAndRT
         {
             public string SourceFile { get; private set; }
-            public IonMobilityAndCCS IonMobility { get; private set; }
+            public IonMobilityAndCCS IonMobility { get; private set; }   // CONSIDER(bspratt) needed if IM is in libkey?
             public double? RetentionTime { get; private set; }
             public bool IsBest { get; private set; }
 
@@ -2726,66 +2660,61 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public struct LibKey
     {
-        public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY);
+        public static LibKey EMPTY = new LibKey(SmallMoleculeLibraryAttributes.EMPTY, Adduct.EMPTY, PrecursorFilter.EMPTY);
 
         public LibKey(LibraryKey libraryKey) : this()
         {
             LibraryKey = libraryKey;
         }
 
-        public LibKey(string sequence, int charge) : this()
+        public LibKey(string sequence, int charge, PrecursorFilter precursorFilter = null) : this()
         {
-            LibraryKey = (LibraryKey) CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge)
-                         ?? new PeptideLibraryKey(sequence, charge);
+            LibraryKey = LibraryKey.Create(sequence, charge, precursorFilter);
         }
 
-        public LibKey(SmallMoleculeLibraryAttributes attributes, Adduct adduct) : this()
+        public LibKey(SmallMoleculeLibraryAttributes attributes, Adduct adduct, PrecursorFilter precursorFilter = null) : this()
         {
-            LibraryKey = new MoleculeLibraryKey(attributes, adduct);
+            LibraryKey = new MoleculeLibraryKey(attributes, adduct, precursorFilter);
         }
 
-        public LibKey(string primaryKey, Adduct adduct) : this()
+        public LibKey(string primaryKey, Adduct adduct, PrecursorFilter precursorFilter = null) : this()
         {
             if (adduct.IsProteomic)
             {
-                LibraryKey = (LibraryKey)
-                             CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(primaryKey, adduct.AdductCharge)
-                             ?? new PeptideLibraryKey(primaryKey, adduct.AdductCharge);
+                LibraryKey = LibraryKey.Create(primaryKey, adduct.AdductCharge, precursorFilter);
             }
             else
             {
-                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, string.Empty), adduct);
+                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, string.Empty), adduct, precursorFilter);
             }
         }
 
         [Track]
         public LibraryKey LibraryKey { get; private set; }
 
-        public LibKey(double precursorMz,
+        public LibKey(double precursorMz, PrecursorFilter libraryPrecursorFilter = null, 
             double? retentionTime = null)
-            : this() // TODO(bspratt) probably should add ion mobility 
+            : this() 
         {
-            LibraryKey = new PrecursorLibraryKey(precursorMz, retentionTime);
+            LibraryKey = new PrecursorLibraryKey(precursorMz, libraryPrecursorFilter, retentionTime);
         }
 
-        public LibKey(Target target, Adduct adduct)
+        public LibKey(Target target, Adduct adduct, PrecursorFilter libraryPrecursorFilter = null)
             : this()
         {
             if (target.IsProteomic)
             {
-                LibraryKey = (LibraryKey)
-                             CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(target.Sequence, adduct.AdductCharge)
-                             ?? new PeptideLibraryKey(target.Sequence, adduct.AdductCharge);
+                LibraryKey = LibraryKey.Create(target.Sequence, adduct.AdductCharge, libraryPrecursorFilter); // Handles potentially crosslinked peptides
             }
             else
-                LibraryKey = new MoleculeLibraryKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
+                LibraryKey = new MoleculeLibraryKey(target.Molecule.GetSmallMoleculeLibraryAttributes(), adduct, libraryPrecursorFilter);
         }
 
-        public LibKey(Target target, int charge) : this(target.Sequence, charge)
+        public LibKey(Target target, int charge, PrecursorFilter libraryPrecursorFilter = null) : this(target.Sequence, charge, libraryPrecursorFilter)
         {
         }
 
-        public bool IsProteomicKey { get { return LibraryKey is PeptideLibraryKey; } }
+        public bool IsProteomicKey { get { return LibraryKey is PeptideLibraryKey || LibraryKey is CrosslinkLibraryKey; } }
         public bool IsSmallMoleculeKey { get { return LibraryKey is MoleculeLibraryKey; } }
         public bool IsPrecursorKey { get { return LibraryKey is PrecursorLibraryKey; } }
         public bool HasRetentionTime { get { return IsPrecursorKey && ((PrecursorLibraryKey)LibraryKey).RetentionTime.HasValue; } }
@@ -2818,11 +2747,27 @@ namespace pwiz.Skyline.Model.Lib
 
         public int Charge => LibraryKey.Adduct.AdductCharge;
 
+        public PrecursorFilter PrecursorFilter // Ion mobility, Collision Energy, etc
+        {
+            get
+            {
+                return LibraryKey.PrecursorFilter;
+            }
+        }
+
         public Adduct Adduct 
         {
             get
             {
                 return LibraryKey.Adduct;
+            }
+        }
+
+        public IonMobilityAndCCS IonMobility
+        {
+            get
+            {
+                return LibraryKey.PrecursorFilter.IonMobilityAndCCS;
             }
         }
 
@@ -2868,9 +2813,34 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public LibKey ChangePrecursorFilter(PrecursorFilter precursorFilter)
+        {
+            precursorFilter = precursorFilter ?? PrecursorFilter.EMPTY;
+            if (Equals(PrecursorFilter, precursorFilter))
+            {
+                return this;
+            }
+            return new LibKey(Target, Adduct, precursorFilter);
+        }
+
         public static implicit operator LibraryKey(LibKey libKey)
         {
             return libKey.LibraryKey;
+        }
+
+        public bool EqualsIgnoringPrecursorFilter(LibKey other)
+        {
+            if (Equals(other))
+            {
+                return true;
+            }
+
+            if (PrecursorFilter.IsEmpty && other.PrecursorFilter.IsEmpty)
+            {
+                return false; // No IM, CE etc to ignore, so target and/or adduct did not match
+            }
+
+            return Equals(Target, other.Target) && Equals(Adduct, other.Adduct);
         }
 
         #region object overrides

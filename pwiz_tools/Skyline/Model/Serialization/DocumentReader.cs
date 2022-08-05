@@ -926,10 +926,14 @@ namespace pwiz.Skyline.Model.Serialization
         /// <summary>
         /// Deserialize any explictly set CE, DT, etc information from precursor attributes
         /// </summary>
-        private static ExplicitTransitionGroupValues ReadExplicitTransitionGroupValuesAttributes(XmlReader reader, DocumentFormat formatVersion, out ExplicitTransitionValues pre422ExplicitValues)
+        private static PrecursorFilter ReadPrecursorFilterAttributes(bool isLibraryValues, XmlReader reader, DocumentFormat formatVersion, out ExplicitTransitionValues pre422ExplicitValues)
         {
-            double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(ATTR.explicit_compensation_voltage); // Found in older formats, obsolete as of 4.22. Now a combination of ion mobility and ion mobility units values.
-            double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(ATTR.explicit_drift_time_msec);
+            string GetAttributeName(string explicitAttribute, bool asLibraryAttribute)
+            {
+                return asLibraryAttribute ? explicitAttribute.Replace(@"explicit_",@"library_") : explicitAttribute;
+            }
+            double? importedCompensationVoltage = reader.GetNullableDoubleAttribute(GetAttributeName(ATTR.explicit_compensation_voltage, isLibraryValues)); // Found in older formats, obsolete as of 4.22. Now a combination of ion mobility and ion mobility units values.
+            double? importedDriftTimeMsec = reader.GetNullableDoubleAttribute(GetAttributeName(ATTR.explicit_drift_time_msec, isLibraryValues));
             var importedIonMobilityUnits = eIonMobilityUnits.none;
             if (importedDriftTimeMsec.HasValue)
             {
@@ -941,19 +945,20 @@ namespace pwiz.Skyline.Model.Serialization
             }
             else
             {
-                var attr = reader.GetAttribute(ATTR.explicit_ion_mobility_units);
+                var attr = reader.GetAttribute(GetAttributeName(ATTR.explicit_ion_mobility_units, isLibraryValues));
                 importedIonMobilityUnits = SmallMoleculeTransitionListReader.IonMobilityUnitsFromAttributeValue(attr);
             }
-            double? importedIonMobility = importedDriftTimeMsec ?? importedCompensationVoltage ?? reader.GetNullableDoubleAttribute(ATTR.explicit_ion_mobility);
-            double? importedCCS = reader.GetNullableDoubleAttribute(ATTR.explicit_ccs_sqa);
-            pre422ExplicitValues = formatVersion >= DocumentFormat.VERSION_4_22 ? null : ReadExplicitTransitionValuesAttributes(reader, formatVersion); // Formerly (pre-4.22) these per-transition values were serialized at peptide level
+            double? importedIonMobility = importedDriftTimeMsec ?? importedCompensationVoltage ?? reader.GetNullableDoubleAttribute(GetAttributeName(ATTR.explicit_ion_mobility, isLibraryValues));
+            double? importedCCS = reader.GetNullableDoubleAttribute(GetAttributeName(ATTR.explicit_ccs_sqa, isLibraryValues));
+            pre422ExplicitValues = (formatVersion >= DocumentFormat.VERSION_4_22 || isLibraryValues) ? null : ReadExplicitTransitionValuesAttributes(reader, formatVersion); // Formerly (pre-4.22) these per-transition values were serialized at peptide level
             // CollisionEnergy was made per-transition in 4.22, we added a per-precursor override in 20.12
-            double? importedCollisionEnergy = pre422ExplicitValues?.CollisionEnergy ?? reader.GetNullableDoubleAttribute(ATTR.explicit_collision_energy);
+            double? importedCollisionEnergy = pre422ExplicitValues?.CollisionEnergy ?? reader.GetNullableDoubleAttribute(GetAttributeName(ATTR.explicit_collision_energy, isLibraryValues));
+            double? highEnergyIonMobilityOffset = reader.GetNullableDoubleAttribute(GetAttributeName(ATTR.explicit_ion_mobility_high_energy_offset, isLibraryValues));
             if (pre422ExplicitValues != null)
             {
                 pre422ExplicitValues = pre422ExplicitValues.ChangeCollisionEnergy(null); // As of 20.12 we're back to tracking this at precursor level (with per-transition overrides)
             }
-            return ExplicitTransitionGroupValues.Create(importedCollisionEnergy, importedIonMobility, importedIonMobilityUnits, importedCCS);
+            return PrecursorFilter.Create(importedCollisionEnergy, importedIonMobility, importedIonMobilityUnits, importedCCS, highEnergyIonMobilityOffset);
         }
 
         /// <summary>
@@ -1319,18 +1324,19 @@ namespace pwiz.Skyline.Model.Serialization
         {
             var list = new List<TransitionGroupDocNode>();
             while (reader.IsStartElement(EL.precursor))
-                list.Add(ReadTransitionGroupXml(reader, peptide, mods));
+                list.Add(ReadTransitionGroupXml(reader, peptide, mods, list));
             return list.ToArray();
         }
 
-        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
+        private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods, List<TransitionGroupDocNode> siblings)
         {
             var precursorCharge = reader.GetIntAttribute(ATTR.charge);
             var precursorAdduct = Adduct.FromChargeProtonated(precursorCharge);  // Read integer charge
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
 
             int? decoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
-            var explicitTransitionGroupValues = ReadExplicitTransitionGroupValuesAttributes(reader, FormatVersion, out var pre422ExplicitValues);
+            var libraryPrecursorFilterValues = ReadPrecursorFilterAttributes(true, reader, FormatVersion, out var _);
+            var explicitPrecursorFilterValues = ReadPrecursorFilterAttributes(false, reader, FormatVersion, out var pre422ExplicitValues);
             if (peptide.IsCustomMolecule)
             {
                 var ionFormula = reader.GetAttribute(ATTR.ion_formula);
@@ -1357,7 +1363,10 @@ namespace pwiz.Skyline.Model.Serialization
                     Assume.IsTrue(Equals(ionString, moleculeWithAdduct), @"Expected precursor ion formula to match parent molecule with adduct applied");
                 }
             }
-            var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
+
+            var conformerID = siblings.Count(sib =>
+                sib.TransitionGroup.IsConformerOf(peptide, precursorAdduct, typedMods.LabelType, decoyMassShift));
+            var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift, conformerID);
             var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             double? precursorConcentration = reader.GetNullableDoubleAttribute(ATTR.precursor_concentration);
@@ -1372,7 +1381,8 @@ namespace pwiz.Skyline.Model.Serialization
                                                   Settings,
                                                   mods,
                                                   null,
-                                                  explicitTransitionGroupValues,
+                                                  explicitPrecursorFilterValues,
+                                                  libraryPrecursorFilterValues,
                                                   null,
                                                   children,
                                                   autoManageChildren);
@@ -1389,7 +1399,8 @@ namespace pwiz.Skyline.Model.Serialization
                                                   Settings,
                                                   mods,
                                                   libInfo,
-                                                  explicitTransitionGroupValues,
+                                                  explicitPrecursorFilterValues,
+                                                  libraryPrecursorFilterValues,
                                                   results,
                                                   children,
                                                   autoManageChildren);
@@ -1489,7 +1500,7 @@ namespace pwiz.Skyline.Model.Serialization
             foreach (TransitionGroup group in listGroups)
             {
                 list.Add(new TransitionGroupDocNode(group, Annotations.EMPTY,
-                    Settings, mods, null, ExplicitTransitionGroupValues.EMPTY, null, mapGroupToList[group].ToArray(), true));
+                    Settings, mods, null, null,  PrecursorFilter.EMPTY, null, mapGroupToList[group].ToArray(), true));
             }
             return list.ToArray();
         }

@@ -360,6 +360,10 @@ namespace pwiz.SkylineTestUtil
 
         public static void Serializable(SrmDocument doc)
         {
+            #region Multiple conformers test support
+            var saved = Settings.Default.TestMultiCCS;
+            Settings.Default.TestMultiCCS = false; // Don't add the magic test node on import
+            #endregion
             Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
@@ -376,6 +380,10 @@ namespace pwiz.SkylineTestUtil
             finally
             {
                 Settings.Default.CompactFormatOption = oldSetting;
+
+                #region Multiple conformers test support
+                Settings.Default.TestMultiCCS = saved;
+                #endregion
             }
         }
 
@@ -726,7 +734,17 @@ namespace pwiz.SkylineTestUtil
                     var s = sb.ToString();
                     using (TextReader reader = new StringReader(s))
                     {
+                        #region Multiple conformers test support
+                        var saved = Settings.Default.TestMultiCCS;
+                        Settings.Default.TestMultiCCS = false; // Don't add the magic test node on import
+                        #endregion
+
                         var copy = (SrmDocument)ser.Deserialize(reader);
+
+                        #region Multiple conformers test support
+                        Settings.Default.TestMultiCCS = saved;
+                        #endregion
+
                         return copy;
                     }
                 }
@@ -1013,7 +1031,7 @@ namespace pwiz.SkylineTestUtil
                 string actualXML = null;
                 RoundTrip(actual, ref actualXML); // Just for the XML output
                 NoDiff(expectedXML, actualXML, "AssertEx.DocsEqual failed.  Expressing as XML to aid in debugging:");  // This should throw
-                AreEqual(expected, actual);  // In case NoDiff doesn't throw (as when problem is actually in XML read or write)
+                Fail(SrmDocument.EqualsVerbose(expected, actual));  // In case NoDiff doesn't throw (as when problem is actually in XML read or write)
             }
         }
 
@@ -1094,15 +1112,25 @@ namespace pwiz.SkylineTestUtil
         {
             string errmsg = string.Empty;
             if (revision != null)
+            {
+                var diff = document.RevisionIndex - revision;
+                if (Settings.Default.TestMultiCCS && diff <= 2)
+                {
+                    revision +=  diff; // Presumably this got bumped up while adding our special test modes
+                }
                 errmsg += DocumentStateTestAreEqual("RevisionIndex", revision, document.RevisionIndex);
+            }
+
             if (groups.HasValue)
                 errmsg += DocumentStateTestAreEqual("MoleculeGroupCount", groups, document.MoleculeGroupCount);
             if (molecules.HasValue)
                 errmsg += DocumentStateTestAreEqual("MoleculeCount", molecules, document.MoleculeCount);
             if (tranGroups.HasValue)
-                errmsg += DocumentStateTestAreEqual("MoleculeTransitionGroupCount", tranGroups, document.MoleculeTransitionGroupCount);
+                errmsg += DocumentStateTestAreEqual("MoleculeTransitionGroupCount", tranGroups, 
+                    document.MoleculeTransitionGroupCountIgnoringSpecialTestNodes); // Test authors won't have anticipated special test nodes created for development work
             if (transitions.HasValue)
-                errmsg += DocumentStateTestAreEqual("MoleculeTransitionCount", transitions, document.MoleculeTransitionCount);
+                errmsg += DocumentStateTestAreEqual("MoleculeTransitionCount", transitions, 
+                    document.MoleculeTransitionCountIgnoringSpecialTestNodes); // Test authors won't have anticipated special test nodes created for development work
             return errmsg;
         }
 

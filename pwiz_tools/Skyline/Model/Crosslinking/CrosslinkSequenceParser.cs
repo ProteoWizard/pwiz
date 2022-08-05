@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 {
     public static class CrosslinkSequenceParser
     {
-        public static CrosslinkLibraryKey TryParseCrosslinkLibraryKey(string str, int charge)
+        public static CrosslinkLibraryKey TryParseCrosslinkLibraryKey(string str, int charge, PrecursorFilter libraryPrecursorFilter = null)
         {
             if (!LooksLikeCrosslinkSequence(str))
             {
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             try
             {
-                return ParseCrosslinkLibraryKey(str, charge);
+                return ParseCrosslinkLibraryKey(str, charge, libraryPrecursorFilter);
             }
             catch
             {
@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return str.IndexOf(@"-[", StringComparison.Ordinal) >= 0 || str.EndsWith(@"-", StringComparison.Ordinal);
         }
 
-        public static CrosslinkLibraryKey ParseCrosslinkLibraryKey(string str, int charge)
+        public static CrosslinkLibraryKey ParseCrosslinkLibraryKey(string str, int charge, PrecursorFilter precursorFilter = null)
         {
             List<PeptideLibraryKey> peptideSequences = new List<PeptideLibraryKey>();
             List<CrosslinkLibraryKey.Crosslink> crosslinks = new List<CrosslinkLibraryKey.Crosslink>();
@@ -82,12 +82,12 @@ namespace pwiz.Skyline.Model.Crosslinking
                     {
                         throw CommonException.Create(new ParseExceptionDetail(Resources.CrosslinkSequenceParser_ParseCrosslinkLibraryKey_Invalid_peptide_sequence, ich));
                     }
-                    peptideSequences.Add(new PeptideLibraryKey(sequence, 0));
+                    peptideSequences.Add(PeptideLibraryKey.CreateSimple(sequence));
                 }
 
                 ich += token.Length;
             }
-            return new CrosslinkLibraryKey(peptideSequences, crosslinks, charge);
+            return new CrosslinkLibraryKey(peptideSequences, crosslinks, charge, precursorFilter);
         }
 
 

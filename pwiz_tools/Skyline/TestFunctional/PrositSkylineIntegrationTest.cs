@@ -1586,7 +1586,7 @@ namespace pwiz.SkylineTestFunctional
                 var precursors = peptides[i].TransitionGroups.ToArray();
                 for (var j = 0; j < precursors.Length; ++j)
                 {
-                    var libKey = new LibKey(peptides[i].ModifiedSequence, precursors[j].PrecursorAdduct);
+                    var libKey = new LibKey(peptides[i].ModifiedSequence, precursors[j].PrecursorAdduct, precursors[j].EffectivePrecursorFilter);
                     var spectra = prositLib.GetSpectra(libKey, IsotopeLabelType.light, LibraryRedundancy.all).ToArray();
                     if (spectra.Length == 0)
                     {

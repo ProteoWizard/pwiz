@@ -9974,6 +9974,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A precursor with that adduct, label type, and ion mobility already exists..
+        /// </summary>
+        public static string EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct__label_type__and_ion_mobility_already_exists_ {
+            get {
+                return ResourceManager.GetString("EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct__label_type__and_ion_" +
+                        "mobility_already_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A precursor with that adduct and label type already exists..
         /// </summary>
         public static string EditCustomMoleculeDlg_OkDialog_A_precursor_with_that_adduct_and_label_type_already_exists_ {
@@ -33554,6 +33564,33 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charge {0} ({1}) {2} {3}.
+        /// </summary>
+        public static string TransitionGroup_ToString_Charge__0____1____2___3_ {
+            get {
+                return ResourceManager.GetString("TransitionGroup_ToString_Charge__0____1____2___3_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Charge {0} {1} {2}.
+        /// </summary>
+        public static string TransitionGroup_ToString_Charge__0___1___2_ {
+            get {
+                return ResourceManager.GetString("TransitionGroup_ToString_Charge__0___1___2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to conformer #{0}.
+        /// </summary>
+        public static string TransitionGroup_ToString_conformer___0_ {
+            get {
+                return ResourceManager.GetString("TransitionGroup_ToString_conformer___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor charge {0} must be between {1} and {2}..
         /// </summary>
         public static string TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__ {
@@ -33679,11 +33716,29 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CCS.
+        /// </summary>
+        public static string TransitionGroupTreeNode_RenderTip_CCS {
+            get {
+                return ResourceManager.GetString("TransitionGroupTreeNode_RenderTip_CCS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decoy Mass Shift.
         /// </summary>
         public static string TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift {
             get {
                 return ResourceManager.GetString("TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IM.
+        /// </summary>
+        public static string TransitionGroupTreeNode_RenderTip_IM {
+            get {
+                return ResourceManager.GetString("TransitionGroupTreeNode_RenderTip_IM", resourceCulture);
             }
         }
         

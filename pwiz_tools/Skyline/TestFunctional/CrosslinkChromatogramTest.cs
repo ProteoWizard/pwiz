@@ -101,9 +101,9 @@ namespace pwiz.SkylineTestFunctional
             int leftLength = aaMods.Count / 3;
             int middleLength = (2 * aaMods.Count) / 3 - leftLength;
 
-            var left = new PeptideLibraryKey(string.Concat(aaMods.Take(leftLength)), 0);
-            var middle = new PeptideLibraryKey(string.Concat(aaMods.Skip(leftLength).Take(middleLength)), 0);
-            var right = new PeptideLibraryKey(string.Concat(aaMods.Skip(leftLength + middleLength)), 0);
+            var left = PeptideLibraryKey.CreateSimple(string.Concat(aaMods.Take(leftLength)));
+            var middle = PeptideLibraryKey.CreateSimple(string.Concat(aaMods.Skip(leftLength).Take(middleLength)));
+            var right = PeptideLibraryKey.CreateSimple(string.Concat(aaMods.Skip(leftLength + middleLength)));
             var crosslinkLibraryKey = new CrosslinkLibraryKey(new []{middle, left, right}, new []
             {
                 new CrosslinkLibraryKey.Crosslink(crosslinkerName, new [] {new[]{1}, new []{leftLength}, Enumerable.Empty<int>()}), 

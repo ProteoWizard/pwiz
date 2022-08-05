@@ -511,7 +511,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     float mzMatchTolerance = (float)settings.TransitionSettings.Instrument.MzMatchTolerance;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
-                        var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
+                        var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeGroup, nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);
                         if (tranInfo == null)
                             continue;
                         listPeakData[totalCount++] = new SummaryTransitionPeakData(settings, nodeTran, chromatogramSet, tranInfo);

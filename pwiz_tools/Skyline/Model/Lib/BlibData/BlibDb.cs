@@ -528,13 +528,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     peptideModSeq = nodePep.SourceModifiedTarget;
                                 }
 
-                                LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct);
+                                LibKey libKey = peptideModSeq.GetLibKey(nodeGroup.PrecursorAdduct, nodeGroup.EffectivePrecursorFilter);
                                 var newLibKey = libKey;
 
                                 if (convertingToSmallMolecules)
                                 {
                                     if (smallMoleculeConversionMap.TryGetValue(
-                                        peptideModSeq.GetLibKey(group.PrecursorAdduct), out newLibKey))
+                                        peptideModSeq.GetLibKey(group.PrecursorAdduct, nodeGroup.EffectivePrecursorFilter), out newLibKey))
                                     {
                                         precursorAdduct = newLibKey.Adduct;
                                         smallMoleculeAttributes = newLibKey.SmallMoleculeLibraryAttributes;

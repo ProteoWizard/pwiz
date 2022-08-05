@@ -133,7 +133,7 @@ namespace pwiz.SkylineTest
             var docMulti = docFasta.ChangeSettings(settings);
 
             // CONSIDER: make explicit S-Lens, cone voltage, CE etc roundtrip?
-            // docMulti.MoleculeTransitionGroups.FirstOrDefault().ChangeExplicitValues(ExplicitTransitionGroupValues.TEST)
+            // docMulti.MoleculeTransitionGroups.FirstOrDefault().ChangeExplicitValues(PrecursorFilter.TEST)
 
 
             // Make sure transition lists export to various formats and roundtrip
@@ -238,7 +238,8 @@ namespace pwiz.SkylineTest
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     if (nodeGroupPrev != null)
-                        Assert.IsTrue(nodeGroup.PrecursorMz > nodeGroupPrev.PrecursorMz + 1);
+                        Assert.IsTrue(nodeGroup.PrecursorMz > nodeGroupPrev.PrecursorMz + 1 ||
+                                      nodeGroup.IsSpecialTestDocNode);
                     nodeGroupPrev = nodeGroup;
                 }
 

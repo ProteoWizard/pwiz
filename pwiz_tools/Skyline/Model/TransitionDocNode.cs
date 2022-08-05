@@ -82,6 +82,7 @@ namespace pwiz.Skyline.Model
 
         [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNull))]
         public CustomIon CustomIon { get { return Transition.CustomIon; } }
+        public Adduct Adduct { get { return Transition.Adduct; } }
 
         public ComplexFragmentIon ComplexFragmentIon { get; private set; }
 
@@ -577,6 +578,7 @@ namespace pwiz.Skyline.Model
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
                     settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,
+                    nodeGroup.EffectivePrecursorFilter,
                     FragmentIonName, Transition.Adduct);
                 if (optimization != null)
                 {

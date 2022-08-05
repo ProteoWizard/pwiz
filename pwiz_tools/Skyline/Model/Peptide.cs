@@ -147,7 +147,22 @@ namespace pwiz.Skyline.Model
                         continue;
                     }
                     if (!useFilter || settings.TransitionSettings.IsMeasurablePrecursor(group.PrecursorMz))
-                        yield return group.TransitionGroup;
+                    {
+                        if (!group.ExplicitPrecursorFilter.IsEmpty)
+                        {
+                            yield return group.TransitionGroup; // Always retain nodes with explicitly set IM, CE etc
+                        }
+                        else
+                        {
+                            // Retain if PrecursorFilter matches any library, or if no PrecursorFilter in use
+                            var libKey = new LibKey(group.Peptide.Target, group.PrecursorAdduct);
+                            var filters = settings.GetLibraryPrecursorFilters(libKey); // Returns at least PrecursorFilter.ARRAY_EMPTY
+                            if (filters.Any(im => Equals(im, group.EffectivePrecursorFilter)))
+                            {
+                                yield return group.TransitionGroup;
+                            }
+                        }
+                    }
                 }
             }
             else
@@ -191,7 +206,9 @@ namespace pwiz.Skyline.Model
                         if (i == 0 || precursorMass != precursorMassLight)
                         {
                             if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass, adduct)))
+                            {
                                 yield return new TransitionGroup(this, adduct, labelType);
+                            }
                         }
                     }
                 }
@@ -733,11 +750,11 @@ namespace pwiz.Skyline.Model
             Assume.IsNull(Molecule);
             return new Target(sequence);
         }
-        public LibKey GetLibKey(Adduct adduct)
+        public LibKey GetLibKey(Adduct adduct, PrecursorFilter precursorFilter = null)
         {
             if (IsProteomic)
-                return new LibKey(Sequence, adduct.AdductCharge);
-            return new LibKey(Molecule.GetSmallMoleculeLibraryAttributes(), adduct);
+                return new LibKey(Sequence, adduct.AdductCharge, precursorFilter);
+            return new LibKey(Molecule.GetSmallMoleculeLibraryAttributes(), adduct, precursorFilter);
         }
 
         public static int CompareOrdinal(Target left, Target right)

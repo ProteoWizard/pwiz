@@ -474,7 +474,7 @@ namespace pwiz.Skyline.Model.Lib
                 // These libraries should not have duplicates, but just in case.
                 // Apparently, GPM libraries do contain redundancies, as we found
                 // when a revision lost this test.
-                var key = new LibKey(modifiedSequence, charge);
+                var key = new LibKey(modifiedSequence, charge); // CONSIDER: actually duplicates? Or distinct CE etc?
                 if (setLibKeys.Add(key))
                 {
                     libraryEntries.Add(new XHunterSpectrumInfo(key, i2, expect, numPeaks, location));

@@ -399,9 +399,12 @@ namespace pwiz.Skyline.Util.Extensions
             var sb = new StringBuilder();
             foreach (string value in values)
             {
-                if (sb.Length > 0)
-                    sb.Append(SEPARATOR_SPACE);
-                sb.Append(value);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (sb.Length > 0)
+                        sb.Append(SEPARATOR_SPACE);
+                    sb.Append(value);
+                }
             }
             return sb.ToString();
         }

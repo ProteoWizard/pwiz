@@ -90,6 +90,12 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 SrmDocument result = (SrmDocument)xmlSerializer.Deserialize(reader);
+
+                #region Multiple conformer testing
+                // For automated test of multiple conformers in tests that aren't originally designed to test that at all
+                result = result.AddMultipleConformerTestLibrary();
+                #endregion Multiple conformer testing
+
                 return result;
             }
             catch (Exception x)
@@ -393,7 +399,7 @@ namespace pwiz.SkylineTestUtil
             int transitionsHeavyActual = 0;
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
-            foreach (var nodeGroup in document.MoleculeTransitionGroups.Where(nodeGroup => ( nodeGroup.Results != null && !nodeGroup.Results[index].IsEmpty)))
+            foreach (var nodeGroup in document.MoleculeTransitionGroupsIgnoringSpecialTestNodes.Where(nodeGroup => ( nodeGroup.Results != null && !nodeGroup.Results[index].IsEmpty)))
             {
                 foreach (var chromInfo in nodeGroup.Results[index])
                 {
@@ -479,6 +485,14 @@ namespace pwiz.SkylineTestUtil
             int missingPeaks = 0;
             foreach (var pair in document.MoleculePrecursorPairs)
             {
+                #region Multiple conformer testing
+                if (pair.NodeGroup.IsSpecialTestDocNode)
+                {
+                    Assert.IsFalse(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup, tolerance, out _));
+                    continue;
+                }
+                #endregion Multiple conformer testing
+
                 ChromatogramGroupInfo[] chromGroupInfo1;
                 Assert.IsTrue(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
                     tolerance, out chromGroupInfo1));

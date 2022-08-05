@@ -215,14 +215,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("AQUA4_Human_Existing_Calc-assay", currentLibraries.LibrarySpecs[0].Name);
                 var currentLibrary = currentLibraries.Libraries[0];
                 Assert.AreEqual(12, currentLibrary.SpectrumCount);
-                Assert.AreEqual(12, docCurrent.MoleculeTransitionGroups.Count(tg => tg.ExplicitValues.IonMobility.HasValue));
+                Assert.AreEqual(12, docCurrent.MoleculeTransitionGroups.Count(tg => tg.EffectivePrecursorFilter.IonMobility.HasValue));
                 // The data has fake ion mobility values set as 1+(mz/2), this should appear in document and in library
                 var mobilities = new HashSet<double>();
-                foreach (var tg in docCurrent.MoleculeTransitionGroups.Where(n => n.ExplicitValues.IonMobility.HasValue))
+                foreach (var tg in docCurrent.MoleculeTransitionGroups.Where(n => n.EffectivePrecursorFilter.IonMobility.HasValue))
                 {
                     var imExpected = 1 + (0.5 * tg.PrecursorMz);
-                    AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < 0.0001);
-                    mobilities.Add(tg.ExplicitValues.IonMobility.Value);
+                    AssertEx.IsTrue(Math.Abs(imExpected - tg.EffectivePrecursorFilter.IonMobility.Value) < 0.0001);
+                    mobilities.Add(tg.EffectivePrecursorFilter.IonMobility.Value);
                 }
                 foreach(var key in currentLibrary.Keys)
                 {

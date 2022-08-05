@@ -279,7 +279,7 @@ namespace pwiz.Skyline.Model
                             try
                             {
                                 var tranNode = GetMoleculeTransition(document, row, pep.Peptide,
-                                    tranGroup.TransitionGroup, tranGroup.ExplicitValues);
+                                    tranGroup.TransitionGroup, tranGroup.ExplicitPrecursorFilter);
                                 if (tranNode == null)
                                     return true;
                                 foreach (var tran in tranGroup.Transitions)
@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model
                     if (!tranGroupFound)
                     {
                         var node =
-                            GetMoleculeTransitionGroup(document, precursor, row, pep.Peptide);
+                            GetMoleculeTransitionGroup(document, precursor, row, pep, pep.Peptide);
                         if (node == null)
                             return true;
                         document = (SrmDocument) document.Add(pepPath, node);
@@ -369,15 +369,14 @@ namespace pwiz.Skyline.Model
                             Math.Abs(ionAverageMz - precursorAverageMz) <=
                             MzMatchTolerance && // (we don't just check mass since we don't have a tolerance value for that)
                             (adduct.AdductCharge < 0 == precursor.Adduct.AdductCharge < 0);
-                // Or no formula, and different isotope labels or matching label and mz
+                // Or no formula, and different isotope labels or matching label, mz, ionMobility
+                var precursorsWithThisLabelAndIonMobility = 
+                    pep.TransitionGroups.Where(t => Equals(t.TransitionGroup.LabelType,
+                        labelType) && Equals(t.ExplicitPrecursorFilter.IonMobilityAndCCS, precursor.ExplicitPrecursorFilter.IonMobilityAndCCS)).ToArray();
                 pepFound |= string.IsNullOrEmpty(pep.CustomMolecule.Formula) &&
                             string.IsNullOrEmpty(precursor.Formula) &&
-                            (!pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType,
-                                 labelType)) || // First label of this kind
-                             pep.TransitionGroups.Any(
-                                 t => Equals(t.TransitionGroup.LabelType,
-                                          labelType) && // Already seen this label, and
-                                      precursor.SignedMz.CompareTolerant(t.PrecursorMz, MzMatchTolerance)==0)); // Matches precursor mz of similar labels
+                            (!precursorsWithThisLabelAndIonMobility.Any() || // First label and ion mobility of this kind
+                             precursorsWithThisLabelAndIonMobility.Any(t => Math.Abs(precursor.Mz - t.PrecursorMz) <= MzMatchTolerance)); // Already seen this, and matches precursor mz of similar labels
             }
         }
 
@@ -763,7 +762,7 @@ namespace pwiz.Skyline.Model
             public TypedMass AverageMass { get; private set; }
             public IsotopeLabelType IsotopeLabelType { get; private set; }
             public ExplicitRetentionTimeInfo ExplicitRetentionTime { get; private set; }
-            public ExplicitTransitionGroupValues ExplicitTransitionGroupValues { get; private set; }
+            public PrecursorFilter ExplicitPrecursorFilter { get; private set; }
             public ExplicitTransitionValues ExplicitTransitionValues { get; private set; }
 
             public ParsedIonInfo(string name, string formula, Adduct adduct, 
@@ -772,7 +771,7 @@ namespace pwiz.Skyline.Model
                 TypedMass averageMass,
                 IsotopeLabelType isotopeLabelType,
                 ExplicitRetentionTimeInfo explicitRetentionTime,
-                ExplicitTransitionGroupValues explicitTransitionGroupValues,
+                PrecursorFilter explicitPrecursorFilter,
                 ExplicitTransitionValues explicitTransitionValues,
                 string note,
                 MoleculeAccessionNumbers accessionNumbers) : base(formula)
@@ -786,7 +785,7 @@ namespace pwiz.Skyline.Model
                 AverageMass = averageMass;
                 IsotopeLabelType = isotopeLabelType;
                 ExplicitRetentionTime = explicitRetentionTime;
-                ExplicitTransitionGroupValues = explicitTransitionGroupValues;
+                ExplicitPrecursorFilter = explicitPrecursorFilter;
                 ExplicitTransitionValues = explicitTransitionValues;
                 Note = note;
             }
@@ -1315,7 +1314,7 @@ namespace pwiz.Skyline.Model
                 });
                 return null;
             }
-            double? ccsPrecursor = precursorInfo == null ? null : precursorInfo.ExplicitTransitionGroupValues.CollisionalCrossSectionSqA;
+            double? ccsPrecursor = precursorInfo == null ? null : precursorInfo.ExplicitPrecursorFilter.CollisionalCrossSectionSqA;
             if (row.GetCellAsDouble(INDEX_PRECURSOR_CCS, out dtmp))
                 ccsPrecursor = dtmp;
             else if (GetCellTrimmed(row, INDEX_PRECURSOR_CCS) != null)
@@ -1401,7 +1400,7 @@ namespace pwiz.Skyline.Model
                     ? new ExplicitRetentionTimeInfo(retentionTime.Value, retentionTimeWindow)
                     : null;
                 var explicitTransitionValues = ExplicitTransitionValues.Create(collisionEnergy,ionMobilityHighEnergyOffset, slens, coneVoltage, declusteringPotential);
-                var explicitTransitionGroupValues = ExplicitTransitionGroupValues.Create(collisionEnergy, ionMobility.FirstOrDefault().Value, ionMobility.FirstOrDefault().Key, ccsPrecursor);
+                var explicitPrecursorFilter = PrecursorFilter.Create(collisionEnergy, ionMobility.FirstOrDefault().Value, ionMobility.FirstOrDefault().Key, ccsPrecursor, null);
                 var massOk = true;
                 var massTooLow = false;
                 string massErrMsg = null;
@@ -1469,7 +1468,7 @@ namespace pwiz.Skyline.Model
                                         row.UpdateCell((indexAdduct < 0) ? indexCharge : indexAdduct, adduct); // Show the deduced adduct
                                     }
                                     hasError = false;
-                                    return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID.AccessionNumbers);
+                                    return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitPrecursorFilter, explicitTransitionValues, note, moleculeID.AccessionNumbers);
                                 }
                                 else if (mzCalc.HasValue)
                                 {
@@ -1504,7 +1503,7 @@ namespace pwiz.Skyline.Model
                             if (massOk)
                             {
                                 hasError = false;
-                                return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID.AccessionNumbers);
+                                return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitPrecursorFilter, explicitTransitionValues, note, moleculeID.AccessionNumbers);
                             }
                         }
                     }
@@ -1532,7 +1531,7 @@ namespace pwiz.Skyline.Model
                     if (massOk)
                     {
                         hasError = false;
-                        return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, note, moleculeID.AccessionNumbers);
+                        return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMmass, isotopeLabelType, retentionTimeInfo, explicitPrecursorFilter, explicitTransitionValues, note, moleculeID.AccessionNumbers);
                     }
                 }
                 if (massTooLow)
@@ -1817,7 +1816,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 var pep = new Peptide(molecule);
-                var tranGroup = GetMoleculeTransitionGroup(document, parsedIonInfo, row, pep);
+                var tranGroup = GetMoleculeTransitionGroup(document, parsedIonInfo, row, null, pep);
                 if (tranGroup == null)
                     return null;
                 return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
@@ -1834,7 +1833,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, ParsedIonInfo moleculeInfo, Row row, Peptide pep)
+        private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, ParsedIonInfo moleculeInfo, Row row, PeptideDocNode pepNode, Peptide pep)
         {
             if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
             {
@@ -1875,15 +1874,20 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            var group = new TransitionGroup(pep, adduct, isotopeLabelType);
+
+            var conformerID = pepNode == null ? 0 :
+                PeptideDocNode.GetUniqueConformerID(pepNode.TransitionGroups.Where(t =>
+                    t.TransitionGroup.IsConformerOf(pep, adduct, isotopeLabelType, null))); // Create a new conformerID if there are siblings
+            var group = new TransitionGroup(pep, adduct, isotopeLabelType, conformerID);
             string errmsg;
             try
             {
-                var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitTransitionGroupValues);
+                var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitPrecursorFilter);
                 if (tran == null)
                     return null;
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
-                    null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, true);
+                    null, moleculeInfo.ExplicitPrecursorFilter, null, 
+                     null, new[] { tran }, true);
             }
             catch (InvalidDataException x)
             {
@@ -1914,7 +1918,7 @@ namespace pwiz.Skyline.Model
                      !Equals(precursor.MonoMass, fragment.MonoMass));
         }
 
-        private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, ExplicitTransitionGroupValues explicitTransitionGroupValues)
+        private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, PrecursorFilter explicitPrecursorFilter)
         {
             var precursorIon = ReadPrecursorOrProductColumns(document, row, null, out var hasError); // Re-read the precursor columns
             if (hasError)
@@ -1950,13 +1954,13 @@ namespace pwiz.Skyline.Model
             {
                 var note = document.Annotations.Note;
                 // ReSharper disable LocalizableElement
-                note = String.IsNullOrEmpty(note) ? ion.Note : (note + "\r\n" + ion.Note);
+                note = String.IsNullOrEmpty(note) ? ion.Note : (note + Annotations.NOTE_SEPARATOR + ion.Note);
                 // ReSharper restore LocalizableElement
                 annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
             }
 
             var ionExplicitTransitionValues = ion.ExplicitTransitionValues;
-            if (explicitTransitionGroupValues?.CollisionEnergy == ion.ExplicitTransitionValues?.CollisionEnergy)
+            if (explicitPrecursorFilter?.CollisionEnergy == ion.ExplicitTransitionValues?.CollisionEnergy)
             {
                 // No need for per-transition CE override if it matches precursor CE override
                 ionExplicitTransitionValues = ionExplicitTransitionValues.ChangeCollisionEnergy(null); 

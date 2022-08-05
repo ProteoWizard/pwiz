@@ -690,6 +690,15 @@ namespace pwiz.Skyline
         private SrmDocument ConnectIonMobilityLibrary(IWin32Window parent, SrmDocument document, string documentPath)
         {
             var settings = document.Settings.ConnectIonMobilityLibrary(imsdb => FindIonMobilityLibrary(parent, documentPath, imsdb));
+
+            // For older files, see it we need to update transition group nodes with ion mobility information, which was formerly accessed from
+            // libraries at time of use but is now kept in transition group nodes for multiple conformers support.
+            var updated = document.UpdateOldFormatsForMultipleConformers(settings);
+            if (!ReferenceEquals(document, updated))
+            {
+                return updated;
+            }
+
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -2833,7 +2842,7 @@ namespace pwiz.Skyline
         {
             var existingPeptides = new LibKeyIndex(document.Molecules.Select(pep=>new LibKey(pep.ModifiedTarget, Adduct.EMPTY).LibraryKey));
             return RCalcIrt.IrtPeptides(document)
-                .Where(target => !existingPeptides.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, false).Any());
+                .Where(target => !existingPeptides.ItemsMatching(new LibKey(target, Adduct.EMPTY).LibraryKey, LibKeyIndex.LibraryMatchType.target).Any());
         }
 
         public SrmDocument ImportResults(SrmDocument doc, List<KeyValuePair<string, MsDataFileUri[]>> namedResults, string optimize)

@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest
             var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var settings = SrmSettingsList.GetDefault();
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
-                ExplicitMods.EMPTY, null, null, null, new TransitionDocNode[0], false);
+                ExplicitMods.EMPTY, null, null, null, null, new TransitionDocNode[0], false);
             foreach (var ionType in new[] {IonType.a, IonType.b, IonType.c, IonType.x, IonType.y, IonType.z})
             {
                 for (int ordinal = 1; ordinal < pepseq.Length; ordinal++)

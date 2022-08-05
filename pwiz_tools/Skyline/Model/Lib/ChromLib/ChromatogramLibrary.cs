@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             return i;
         }
         
-        public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey key, out LibraryPrecursorFiltersInfo precursorFilters)
         {
             int i = FindEntry(key);
             if (i != -1)
@@ -305,108 +305,60 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 var ionMobility = _libraryEntries[i].IonMobility;
                 if (IonMobilityAndCCS.IsNullOrEmpty(ionMobility))
                 {
-                    ionMobilities = null;
+                    precursorFilters = null;
                     return false;
                 }
-                ionMobilities = new[] {ionMobility};
+                precursorFilters = new LibraryPrecursorFiltersInfo(new Dictionary<LibKey, PrecursorFilter[]>(){ {key, PrecursorFilter.ARRAY_EMPTY}});
                 return true;
             }
 
-            return base.TryGetIonMobilityInfos(key, filePath, out ionMobilities);
+            return base.TryGetPrecursorFilter(key, out precursorFilters);
         }
 
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, MsDataFileUri filePath, out LibraryIonMobilityInfo ionMobilities)
-        {
-            return TryGetIonMobilityInfos(targetIons, FindSource(filePath), out ionMobilities);
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, int fileIndex, out LibraryIonMobilityInfo ionMobilities)
-        {
-            if (fileIndex >= 0 && fileIndex < _librarySourceFiles.Length)
-            {
-                ILookup<LibKey, IonMobilityAndCCS> ionMobilitiesLookup;
-                var source = _librarySourceFiles[fileIndex];
-                if (targetIons != null)
-                {
-                    if (!targetIons.Any())
-                    {
-                        ionMobilities = null;
-                        return true; // return value false means "that's not a proper file index"'
-                    }
-
-                    ionMobilitiesLookup = targetIons.SelectMany(target => _libraryEntries.ItemsMatching(target, true)).
-                        Where(entry => entry.SampleFileId == fileIndex).ToLookup(
-                        entry => entry.Key,
-                        entry => entry.IonMobility);
-                }
-                else
-                {
-                    ionMobilitiesLookup = _libraryEntries.ToLookup(
-                        entry => entry.Key,
-                        entry => entry.IonMobility);
-                }
-                var ionMobilitiesDict = ionMobilitiesLookup.ToDictionary(
-                    grouping => grouping.Key,
-                    grouping => 
-                    {
-                        var array = grouping.Where(v => !IonMobilityAndCCS.IsNullOrEmpty(v)).ToArray();
-                        Array.Sort(array);
-                        return array;
-                    });
-
-                var nonEmptyIonMobilitiesDict = ionMobilitiesDict
-                    .Where(kvp => kvp.Value.Length > 0)
-                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                ionMobilities = nonEmptyIonMobilitiesDict.Any() ? new LibraryIonMobilityInfo(source.FilePath, false, nonEmptyIonMobilitiesDict) : null;
-                return true;  // return value false means "that's not a proper file index"'
-            }
-
-            return base.TryGetIonMobilityInfos(targetIons, fileIndex, out ionMobilities);
-        }
-
-        public override bool TryGetIonMobilityInfos(LibKey[] targetIons, out LibraryIonMobilityInfo ionMobilities)
+        public override bool TryGetPrecursorFilter(LibKey[] targetIons, out LibraryPrecursorFiltersInfo precursorFilters)
         {
             if (targetIons != null && targetIons.Length > 0)
             {
-                var ionMobilitiesDict = new Dictionary<LibKey, IonMobilityAndCCS[]>();
+                var precursorFiltersMap = new Dictionary<LibKey, PrecursorFilter[]>();
                 foreach (var target in targetIons)
                 {
-                    foreach (var matchedItem in _libraryEntries.ItemsMatching(target, true))
+                    foreach (var matchedItem in _libraryEntries.ItemsMatching(target, LibKeyIndex.LibraryMatchType.ion))
                     {
                         var matchedTarget = matchedItem.Key;
-                        var match = matchedItem.IonMobility;
-                        if (IonMobilityAndCCS.IsNullOrEmpty(match))
+                        if (IonMobilityAndCCS.IsNullOrEmpty(matchedItem.IonMobility))
                             continue;
-                        if (ionMobilitiesDict.TryGetValue(matchedTarget, out var mobilities))
+                        // CONSIDER(bspratt): add CE to chromatogram libs when we add it to BLIB
+                        var match = PrecursorFilter.Create(null, matchedItem.IonMobility);
+                        if (precursorFiltersMap.TryGetValue(matchedTarget, out var filters))
                         {
-                            var newMobilities = mobilities.ToList();
-                            newMobilities.Add(match);
-                            newMobilities.Sort();
-                            ionMobilitiesDict[matchedTarget] = newMobilities.ToArray();
+                            var newFilters = filters.ToList();
+                            newFilters.Add(match);
+                            newFilters.Sort();
+                            precursorFiltersMap[matchedTarget] = newFilters.ToArray();
                         }
                         else
                         {
-                            ionMobilitiesDict[matchedTarget] = new[] {match};
+                            precursorFiltersMap[matchedTarget] = new[] {match};
                         }
                     }
                 }
-                if (!ionMobilitiesDict.Values.Any(v => v.Any()))
+                if (!precursorFiltersMap.Values.Any(v => v.Any()))
                 {
-                    ionMobilities = null;
+                    precursorFilters = null;
                     return false;
                 }
-                ionMobilities = new LibraryIonMobilityInfo(FilePath, false, ionMobilitiesDict);
+                precursorFilters = new LibraryPrecursorFiltersInfo(precursorFiltersMap);
                 return true;
             }
 
-            return base.TryGetIonMobilityInfos(targetIons, out ionMobilities);
+            return base.TryGetPrecursorFilter(targetIons, out precursorFilters);
         }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {
             if (FindEntry(key) >= 0)
             {
-                var item = _libraryEntries.Index.ItemsMatching(key.LibraryKey, true).FirstOrDefault();
+                var item = _libraryEntries.Index.ItemsMatching(key.LibraryKey, LibKeyIndex.LibraryMatchType.details).FirstOrDefault();
                 _libraryEntries.TryGetValue(key, out var spectrumInfo);
                 var files = LibraryDetails.DataFiles.ToList();
                 var file = spectrumInfo.SampleFileId > 0 && spectrumInfo.SampleFileId <= files.Count ?
@@ -547,17 +499,19 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                         var sampleFileId = (int) row[5];
 
                         LibKey libKey;
+                        // Note ion mobility, if any.
+                        var precursorFilter = PrecursorFilter.Create(null, precursor13?.GetIonMobilityAndCCS());
                         string moleculeList = null;  // CONSIDER(bspratt) pass protein name through as we do molecule list name?
                         if (moleculeTarget == null)
                         {
                             var modifiedSequence = new Target(modifiedSequenceString);
                             var charge = (int) row[2]; 
                             var modSeqNormal = SequenceMassCalc.NormalizeModifiedSequence(modifiedSequence);
-                            libKey = new LibKey(modSeqNormal.Sequence, charge);
+                            libKey = new LibKey(modSeqNormal.Sequence, charge, precursorFilter);
                         }
                         else
                         {
-                            libKey = new LibKey(moleculeTarget, Adduct.FromStringAssumeChargeOnly(adductSting));
+                            libKey = new LibKey(moleculeTarget, Adduct.FromStringAssumeChargeOnly(adductSting), precursorFilter);
                             moleculeList = dictMoleculeLists[peptideId]?.Name;
                         }
                         double totalArea = Convert.ToDouble(row[3]);
@@ -568,12 +522,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                             indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
                         }
 
-                        // Note ion mobility, if any.
-                        IonMobilityAndCCS ionMobility = precursor13?.GetIonMobilityAndCCS();
-
                         IList<SpectrumPeaksInfo.MI> transitionAreas;
                         allTransitionAreas.TryGetValue(id, out transitionAreas);
-                        spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, sampleFileId, totalArea, indexedRetentionTimes, ionMobility, transitionAreas, moleculeList));
+                        // CONSIDER(bspratt): CE values in ChromatogramLibs?
+                        spectrumInfos.Add(new ChromLibSpectrumInfo(libKey, id, sampleFileId, totalArea, indexedRetentionTimes, transitionAreas, moleculeList));
                     }
                     SetLibraryEntries(spectrumInfos);
 
@@ -924,9 +876,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
 
         private class Serializer
         {
+            // Version 6 moves ion mobility info to LibKey
             // Version 5 adds small molecule and ion mobility information
-            private const int CURRENT_VERSION = 5;
-            private const int MIN_READABLE_VERSION = 5;
+            private const int CURRENT_VERSION = 6;
+            private const int MIN_READABLE_VERSION = 6;
 
             private readonly ChromatogramLibrary _library;
             private readonly Stream _stream;

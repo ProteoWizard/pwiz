@@ -633,11 +633,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public class Precursor
         {
-            public Precursor(TreeNodeMS selectedTreeNode, Peptide peptide, Target lookupTarget,
+            public Precursor(TreeNodeMS selectedTreeNode, PeptideDocNode peptide, Target lookupTarget,
                 ExplicitMods lookupMods, TransitionGroupDocNode precursor)
             {
                 SelectedNodeIsProtein = selectedTreeNode is PeptideGroupTreeNode;
-                Peptide = peptide;
+                ParentDocNode = peptide;
                 LookupTarget = lookupTarget;
                 LookupMods = lookupMods;
                 DocNode = precursor;
@@ -647,9 +647,10 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private bool SelectedNodeIsProtein { get; }
-            public Peptide Peptide { get; }
+            public Peptide Peptide => ParentDocNode?.Peptide;
             public Target LookupTarget { get; }
             public ExplicitMods LookupMods { get; }
+            public PeptideDocNode ParentDocNode { get; }
             public TransitionGroupDocNode DocNode { get; }
             public List<SpectrumDisplayInfo> Spectra { get; }
 
@@ -681,7 +682,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 get
                 {
-                    var s = TransitionGroupTreeNode.GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz.RawValue, null);
+                    var s = TransitionGroupTreeNode.GetLabel(DocNode, ParentDocNode, null);
                     return !SelectedNodeIsProtein ? s : $@"{DocNode.Peptide.Target}, {s}";
                 }
             }
@@ -1067,13 +1068,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (selection.NodePepGroup != null)
                 {
                     if (selection.NodeTranGroup != null)
-                        precursors.Add(new Precursor(selection.SelectedTreeNode, selection.NodePep.Peptide,
+                        precursors.Add(new Precursor(selection.SelectedTreeNode, selection.NodePep,
                             selection.NodePep.SourceUnmodifiedTarget, selection.NodePep.SourceExplicitMods, selection.NodeTranGroup));
                     else
                         precursors.AddRange((
                             from peptide in selection.NodePep != null ? new[] { selection.NodePep } : selection.NodePepGroup.Peptides
                             from precursor in peptide.TransitionGroups
-                            select new Precursor(selection.SelectedTreeNode, peptide.Peptide, peptide.SourceUnmodifiedTarget,
+                            select new Precursor(selection.SelectedTreeNode, peptide, peptide.SourceUnmodifiedTarget,
                                 peptide.SourceExplicitMods, precursor)).Take(limit));
                 }
 
@@ -1115,6 +1116,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
                             foreach (var spectrumInfo in _settings.GetRedundantSpectra(precursor.Peptide,
                                          precursor.LookupTarget, precursor.DocNode.PrecursorAdduct,
+                                         precursor.DocNode.EffectivePrecursorFilter,
                                          precursor.DocNode.LabelType, precursor.LookupMods))
                             {
                                 var matchingFile = _settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
@@ -1621,7 +1623,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
+                0, -1, -1, null, null,
+                chromGroup.CCS, ionMobilityFilter.IonMobility.Mobility, ionMobilityFilter.IonMobilityUnits);
             var groupInfo = new ChromatogramGroupInfo(header,
                 new[]
                 {

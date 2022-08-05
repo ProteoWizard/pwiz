@@ -88,7 +88,7 @@ namespace pwiz.SkylineTest
                 var transitionGroup = peptideDocNode.TransitionGroups.FirstOrDefault();
                 Assert.IsNotNull(transitionGroup);
                 var spectrum = library
-                    .GetSpectra(new LibKey(peptideDocNode.ModifiedTarget, transitionGroup.PrecursorAdduct),
+                    .GetSpectra(new LibKey(peptideDocNode.ModifiedTarget, transitionGroup.PrecursorAdduct, transitionGroup.EffectivePrecursorFilter),
                         transitionGroup.LabelType, LibraryRedundancy.all).FirstOrDefault();
                 Assert.IsNotNull(spectrum);
                 

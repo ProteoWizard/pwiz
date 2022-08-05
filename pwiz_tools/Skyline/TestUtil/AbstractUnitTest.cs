@@ -29,6 +29,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 
 // Once-per-application setup information to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
@@ -91,12 +92,44 @@ namespace pwiz.SkylineTestUtil
         /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
         /// list below (partial matches suffice, so name carefully!)
         /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT", "TOBIASR"}; 
+        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
             get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
         }
+
+        #region Multiple conformers test support
+        /// <summary>
+        /// Determines whether or not to add a special multiple CCS node to each document for test purposes. 
+        /// </summary>
+        private bool? _testMultiCCS;
+        public bool TestMultiCCS
+        {
+            get
+            {
+                if (_testMultiCCS.HasValue)
+                {
+                    if (Settings.Default.TestMultiCCS != _testMultiCCS.Value)
+                        _testMultiCCS = Settings.Default.TestMultiCCS;  // Probably changed by IsPauseForScreenShots, honor that
+                }
+                else
+                {
+                    var defaultValue = SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd));
+                    _testMultiCCS = GetBoolValue("TestMultiCCS", defaultValue);
+                    Settings.Default.TestMultiCCS = _testMultiCCS.Value; // Communicate this value to Skyline via Settings.Default
+                }
+                return _testMultiCCS.Value;
+            }
+            set
+            {
+                // Communicate this value to Skyline via Settings.Default
+                Settings.Default.TestMultiCCS = (_testMultiCCS = value).Value;
+            }
+        }
+
+        #endregion Multiple conformers test support
+
 
         /// <summary>
         /// Perf tests (long running, huge-data-downloading) should be declared
@@ -286,7 +319,47 @@ namespace pwiz.SkylineTestUtil
             }
             set { TestFilesDirs = new[] { value }; }
         }
-        public TestFilesDir[] TestFilesDirs { get; set; }
+
+        private TestFilesDir[] _testFileDirs;
+        public TestFilesDir[] TestFilesDirs
+        {
+            get { return _testFileDirs;}
+            set
+            {
+                _testFileDirs = value;
+                #region Multiple conformers test support
+                if (Settings.Default.TestMultiCCS)
+                {
+                    // We're likely going to be creating a .imsdb file, make sure there's a directory for that
+                    if (string.IsNullOrEmpty(Settings.Default.LibraryDirectory))
+                    {
+                        Settings.Default.LibraryDirectory = _testFileDirs[0]?.FullPath;
+                    }
+                }
+                #endregion Multiple conformers test support
+
+            }
+        }
+
+        
+
+        public static bool WaitForCondition(Func<bool> func, int millis = 10000, string timeoutMessage = null)
+        {
+            var SLEEP_INTERVAL = 10;
+            for (var i = 0; i < millis; i+=SLEEP_INTERVAL)
+            {
+                if (func())
+                {
+                    return true;
+                }
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            var msg = (timeoutMessage == null)
+                ? string.Empty
+                : " (" + timeoutMessage + ")";
+            AssertEx.Fail(@"Timeout {0} seconds exceeded in WaitForCondition. {1}", millis / 1000, msg);
+            return false;
+        }
 
         /// <summary>
         /// If there are any stale downloads, freshen them

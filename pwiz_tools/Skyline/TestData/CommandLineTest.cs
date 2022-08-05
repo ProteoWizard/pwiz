@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestData
 
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Thermo_test.csv"), output);
             AssertEx.FileExists(thermoPath);
-            Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(thermoPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCountIgnoringMultipleConformers, File.ReadAllLines(thermoPath).Length);
 
 
             /////////////////////////
@@ -483,7 +483,7 @@ namespace pwiz.SkylineTestData
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Agilent_test.csv"), output);
             AssertEx.FileExists(agilentPath);
-            Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(agilentPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCountIgnoringMultipleConformers + 1, File.ReadAllLines(agilentPath).Length);
 
             /////////////////////////
             // AB Sciex test
@@ -499,7 +499,7 @@ namespace pwiz.SkylineTestData
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "AB_Sciex_test.csv"), output);
             AssertEx.FileExists(sciexPath);
-            Assert.AreEqual(doc.MoleculeTransitionCount, File.ReadAllLines(sciexPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCountIgnoringMultipleConformers, File.ReadAllLines(sciexPath).Length);
 
             /////////////////////////
             // Waters test
@@ -515,7 +515,7 @@ namespace pwiz.SkylineTestData
             //check for success
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ExportInstrumentFile_List__0__exported_successfully_, "Waters_test.csv"), output);
             AssertEx.FileExists(watersPath);
-            Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(watersPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionCountIgnoringMultipleConformers + 1, File.ReadAllLines(watersPath).Length);
 
             // Run it again as a mixed polarity document
             MixedPolarityTest(doc, testFilesDir, docPath, watersPath, cmd, false, false);
@@ -564,11 +564,11 @@ namespace pwiz.SkylineTestData
         {
             var expected = 0;
             var nPositive = precursorsOnly
-                ? docMixed.MoleculeTransitionGroups.Count(t => t.TransitionGroup.PrecursorCharge > 0)
-                : docMixed.MoleculeTransitions.Count(t => t.Transition.Charge > 0);
+                ? docMixed.MoleculeTransitionGroupsIgnoringMultipleConformers.Count(t => t.TransitionGroup.PrecursorCharge > 0)
+                : docMixed.MoleculeTransitionsIgnoringMultipleConformers.Count(t => t.Transition.Charge > 0);
             var nNegative = precursorsOnly
-                ? docMixed.MoleculeTransitionGroups.Count(t => t.TransitionGroup.PrecursorCharge < 0)
-                : docMixed.MoleculeTransitions.Count(t => t.Transition.Charge < 0);
+                ? docMixed.MoleculeTransitionGroupsIgnoringMultipleConformers.Count(t => t.TransitionGroup.PrecursorCharge < 0)
+                : docMixed.MoleculeTransitionsIgnoringMultipleConformers.Count(t => t.Transition.Charge < 0);
             if (polarityFilter != ExportPolarity.positive)
             {
                 expected += nNegative;
@@ -823,7 +823,7 @@ namespace pwiz.SkylineTestData
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
             AssertEx.FileExists(agilentIsolationPath);
             doc = ResultsUtil.DeserializeDocument(docPath);
-            Assert.AreEqual(doc.PeptideTransitionGroupCount + 1, File.ReadAllLines(agilentIsolationPath).Length);
+            Assert.AreEqual(doc.MoleculeTransitionGroupCountIgnoringMultipleConformers + 1, File.ReadAllLines(agilentIsolationPath).Length);
 
             // Run it again as a mixed polarity document
             MixedPolarityTest(doc, testFilesDir, docPath, agilentIsolationPath, cmd, true, false);

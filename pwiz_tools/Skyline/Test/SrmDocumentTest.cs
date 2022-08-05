@@ -160,20 +160,20 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);
             Assert.IsTrue(doc.Molecules.ElementAt(0).Peptide.IsCustomMolecule);
             var nodeGroup = doc.MoleculeTransitionGroups.ElementAt(0);
-            Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionEnergy);
+            Assert.AreEqual(4.704984, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter.CollisionEnergy);
             Assert.AreEqual(null, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.CollisionEnergy); // Value is found at precursor level
             double expectedIonMobility = 2.34;
             double? expectedCV = imTypeIsDriftTime ? (double?) null : expectedIonMobility;
-            Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CompensationVoltage);
+            Assert.AreEqual(expectedCV, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter.CompensationVoltage);
             Assert.AreEqual(4.9, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.DeclusteringPotential);
             Assert.AreEqual(3.45, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTime);
             Assert.AreEqual(4.56, doc.Molecules.ElementAt(0).ExplicitRetentionTime.RetentionTimeWindow);
             Assert.AreEqual(98, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.SLens);
             Assert.AreEqual(99, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.ConeVoltage);
-            Assert.AreEqual(expectedIonMobility, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.IonMobility);
+            Assert.AreEqual(expectedIonMobility, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter.IonMobility);
             Assert.AreEqual(-0.12, doc.MoleculeTransitions.ElementAt(0).ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-12);
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
-                Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
+                Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitPrecursorFilter.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
             Assert.AreEqual(transition.MonoisotopicMassMz, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.MonoisotopicMassMz, mzToler);
             Assert.AreEqual(transition2.MonoisotopicMassMz, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon.MonoisotopicMassMz, mzToler);
@@ -565,8 +565,10 @@ namespace pwiz.SkylineTest
 
         private static void CheckImportSimilarity<T>(IEnumerable<T> originals, IEnumerable<T> imported, Action<T, T> check)
         {
-            var origArray = originals.ToArray();
-            var importArray = imported.ToArray();
+            // ReSharper disable PossibleNullReferenceException
+            var origArray = originals.Where(n => !(n as DocNode).IsSpecialTestDocNode).ToArray();
+            var importArray = imported.Where(n => !(n as DocNode).IsSpecialTestDocNode).ToArray();
+            // ReSharper restore PossibleNullReferenceException
             Assert.AreEqual(origArray.Length, importArray.Length);
             for (int i = 0; i < origArray.Length; i++)
                 check(origArray[i], importArray[i]);

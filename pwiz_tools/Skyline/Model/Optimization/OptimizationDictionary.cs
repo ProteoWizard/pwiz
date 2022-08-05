@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Optimization
         public override bool TryGetValue(OptimizationKey key, out double value)
         {
             var productKey = GetProductKey(key);
-            foreach (var dict in _libKeyMap.ItemsMatching(GetPrecursorKey(key), true))
+            foreach (var dict in _libKeyMap.ItemsMatching(GetPrecursorKey(key), LibKeyIndex.LibraryMatchType.ion))
             {
                 if (dict.TryGetValue(productKey, out value))
                 {
@@ -63,13 +63,13 @@ namespace pwiz.Skyline.Model.Optimization
         public IEnumerable<DbOptimization> EntriesMatching(OptimizationKey optimizationKey)
         {
             var productKey = GetProductKey(optimizationKey);
-            foreach (var indexItem in _libKeyMap.Index.ItemsMatching(GetPrecursorKey(optimizationKey), true))
+            foreach (var indexItem in _libKeyMap.Index.ItemsMatching(GetPrecursorKey(optimizationKey), LibKeyIndex.LibraryMatchType.ion))
             {
                 var dict = _libKeyMap[indexItem.OriginalIndex];
                 double value;
                 if (dict.TryGetValue(productKey, out value))
                 {
-                    var foundKey = new OptimizationKey(optimizationKey.OptType, indexItem.LibraryKey.Target, indexItem.LibraryKey.Adduct, optimizationKey.FragmentIon, optimizationKey.ProductAdduct);
+                    var foundKey = new OptimizationKey(optimizationKey.OptType, indexItem.LibraryKey.Target, indexItem.LibraryKey.Adduct, indexItem.LibraryKey.PrecursorFilter, optimizationKey.FragmentIon, optimizationKey.ProductAdduct);
                     yield return new DbOptimization(foundKey, value);
                 }
             }
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Optimization
 
         private static LibraryKey GetPrecursorKey(OptimizationKey optimizationKey)
         {
-            return new LibKey(optimizationKey.PeptideModSeq, optimizationKey.PrecursorAdduct).LibraryKey;
+            return new LibKey(optimizationKey.PeptideModSeq, optimizationKey.PrecursorAdduct, optimizationKey.PrecursorFilter).LibraryKey;
         }
 
         private static Tuple<OptimizationType, string, Adduct> GetProductKey(OptimizationKey optimizationKey)

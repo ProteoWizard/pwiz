@@ -68,6 +68,11 @@ namespace pwiz.Skyline.Model.IonMobility
             get { return Name == IonMobilityLibrary.NONE.Name; }
         }
 
+        public static bool IsNullOrEmpty(IonMobilityLibrarySpec lib)
+        {
+            return lib == null || lib.IsNone;
+        }
+
         public bool Equals(IonMobilityLibrarySpec other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -117,12 +122,6 @@ namespace pwiz.Skyline.Model.IonMobility
         public AuditLogPath FilePathAuditLog
         {
             get { return AuditLogPath.Create(FilePath); }
-        }
-
-        // [TrackChildren] Audit log granularity is at the file level
-        public LibKeyMap<List<IonMobilityAndCCS>> IonMobilityValues
-        {
-            get { return _database == null ? null : _database.DictLibrary; }
         }
 
         [TrackChildren]
@@ -180,26 +179,32 @@ namespace pwiz.Skyline.Model.IonMobility
                 var ionMobilityDbMinimal = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, true);
 
                 // Calculate the minimal set of peptides needed for this document
-                var dbPrecursors = _database.DictLibrary.LibKeys;
                 var persistIonMobilities = new List<PrecursorIonMobilities>();
+                var processed = new HashSet<LibKey>();
 
-                var dictPrecursors = dbPrecursors.ToDictionary(p => p.LibraryKey);
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
                     var test = 
                         new PrecursorIonMobilities(pair.NodePep.ModifiedTarget, pair.NodeGroup.PrecursorAdduct, 0, 0, 0, eIonMobilityUnits.none);
-                    var key = test.Precursor;
-                    if (dictPrecursors.TryGetValue(key, out var dbPrecursor))
+                    var dbPrecursor = new LibKey(test.Target, test.PrecursorAdduct, PrecursorFilter.EMPTY);
+                    if (processed.Contains(dbPrecursor))
+                    {
+                        continue;
+                    }
+                    processed.Add(dbPrecursor);
+
+                    var dbHits = _database.DictLibrary.ItemsMatching(dbPrecursor, LibKeyIndex.LibraryMatchType.ion).ToList();
+                    if (dbHits.Any())
                     {
                         if (smallMoleculeConversionMap != null)
                         {
                             // We are in the midst of converting a document to small molecules for test purposes
                             LibKey smallMolInfo;
-                            if (smallMoleculeConversionMap.TryGetValue(new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorCharge), out smallMolInfo))
+                            if (smallMoleculeConversionMap.TryGetValue(new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorCharge, PrecursorFilter.EMPTY), out smallMolInfo))
                             {
                                 var precursorAdduct = smallMolInfo.Adduct;
                                 var smallMoleculeAttributes = smallMolInfo.SmallMoleculeLibraryAttributes;
-                                dbPrecursor = new LibKey(smallMoleculeAttributes, precursorAdduct);
+                                dbPrecursor = new LibKey(smallMoleculeAttributes, precursorAdduct, PrecursorFilter.EMPTY);
                             }
                             else
                             {
@@ -208,9 +213,7 @@ namespace pwiz.Skyline.Model.IonMobility
                                 continue;
                             }
                         }
-                        persistIonMobilities.Add(new PrecursorIonMobilities(dbPrecursor, test.IonMobilities));
-                        // Only add once
-                        dictPrecursors.Remove(key);
+                        persistIonMobilities.Add(new PrecursorIonMobilities(dbPrecursor.Target, dbPrecursor.Adduct, test.IonMobilities));
                     }
                 }
 
@@ -221,53 +224,77 @@ namespace pwiz.Skyline.Model.IonMobility
             return persistPath;
         }
 
-        public static Dictionary<LibKey, List<IonMobilityAndCCS>> FlatListToMultiConformerDictionary(
-            IEnumerable<ValidatingIonMobilityPrecursor> mobilitiesFlat)
+        // For use in creating a hashset of non-redundant precursors+CCS values
+        // Considers two precursors equal if molecule and adduct agree, and
+        // CCS values agree (unless ion mobility units disagree, i.e. we have values for drift and for 1/K0)
+        private class IonAndCCSComparer : IEqualityComparer<LibraryKey>
         {
-            // Put the list into a dict for performance reasons
-            var ionMobilities = new Dictionary<LibKey, List<IonMobilityAndCCS>>();
-            foreach (var item in mobilitiesFlat)
+            public bool Equals(LibraryKey x, LibraryKey y)
             {
-                var libKey = item.Precursor;
-                var ionMobilityAndCcs = item.GetIonMobilityAndCCS();
-                if (!ionMobilities.TryGetValue(libKey, out var mobilities))
+                if (x == null || y == null)
                 {
-                    ionMobilities.Add(libKey, new List<IonMobilityAndCCS>() { ionMobilityAndCcs });
+                    return x == null && y == null;
+                }
+
+                if (Equals(x.Adduct, y.Adduct) && Equals(x.Target, y.Target))
+                {
+                    // Same ion
+                    if (x.PrecursorFilter.CollisionalCrossSectionSqA.HasValue || y.PrecursorFilter.CollisionalCrossSectionSqA.HasValue)
+                    {
+                        // Consider equal if CCS matches, and IM units match (so we don't admit IM conflicts)
+                        return Equals(x.PrecursorFilter.CollisionalCrossSectionSqA, y.PrecursorFilter.CollisionalCrossSectionSqA) && 
+                               Equals(x.PrecursorFilter.IonMobilityUnits, y.PrecursorFilter.IonMobilityUnits);
+                    }
+                    if (x.PrecursorFilter.IonMobility.HasValue || y.PrecursorFilter.IonMobility.HasValue)
+                    {
+                        return Equals(x.PrecursorFilter.IonMobility, y.PrecursorFilter.IonMobility);
+                    }
+                }
+
+                return false;
+            }
+
+            public int GetHashCode(LibraryKey obj)
+            {
+                var result =  obj.Target.GetHashCode();
+                result = (result * 397) ^ obj.Adduct.GetHashCode();
+                if (obj.PrecursorFilter.CollisionalCrossSectionSqA.HasValue)
+                {
+                    result = (result * 397) ^ obj.PrecursorFilter.CollisionalCrossSectionSqA.GetHashCode();
                 }
                 else
                 {
-                    // Multiple conformer, or just a redundant line? Discard if this CCS+units pair is already in list
-                    if (!mobilities.Any(m =>
-                        ((m.CollisionalCrossSectionSqA.HasValue || ionMobilityAndCcs.CollisionalCrossSectionSqA.HasValue) ?
-                            Equals(m.CollisionalCrossSectionSqA, ionMobilityAndCcs.CollisionalCrossSectionSqA) && Equals(m.Units, ionMobilityAndCcs.Units) :
-                            Equals(m.IonMobility, ionMobilityAndCcs.IonMobility))))
-                    {
-                        mobilities.Add(ionMobilityAndCcs);
-                    }
+                    result = (result * 397) ^ obj.PrecursorFilter.IonMobility.GetHashCode();
                 }
+                return result;
             }
-
-            return ionMobilities;
         }
 
-        public static List<ValidatingIonMobilityPrecursor> MultiConformerDictionaryToFlatList(
-            IDictionary<LibKey, List<IonMobilityAndCCS>> mobilitiesDict)
+        public static LibKeyIndex FlatListToLibKeyIndex(IEnumerable<ValidatingIonMobilityPrecursor> mobilitiesFlat)
+        {
+            // Put the list into a hash for performance reasons
+            var ionMobilities = new HashSet<LibraryKey>(new IonAndCCSComparer());
+            foreach (var item in mobilitiesFlat)
+            {
+                ionMobilities.Add(item.Precursor);
+            }
+            return new LibKeyIndex(ionMobilities.ToList());
+        }
+
+        public static List<ValidatingIonMobilityPrecursor> MultiConformerDictionaryToFlatList(LibKeyIndex mobilitiesDict)
         {
             var ionMobilities = new List<ValidatingIonMobilityPrecursor>();
             foreach (var item in mobilitiesDict)
             {
-                var libKey = item.Key;
-                foreach (var im in item.Value)
-                {
-                    ionMobilities.Add(new ValidatingIonMobilityPrecursor(libKey, im));
-                }
+                var libKey = item.LibraryKey;
+                ionMobilities.Add(new ValidatingIonMobilityPrecursor(libKey.Target, libKey.Adduct, libKey.PrecursorFilter.IonMobilityAndCCS));
             }
 
             return ionMobilities;
         }
 
 
-        public static IonMobilityLibrary CreateFromDictionary(string libraryName, string dbDir, IDictionary<LibKey, List<IonMobilityAndCCS>> dict)
+        public static IonMobilityLibrary CreateFromLibKeyIndex(string libraryName, string dbDir, LibKeyIndex dict)
         {
             var fname = Path.GetFullPath(dbDir.Contains(IonMobilityDb.EXT) ? dbDir : Path.Combine(dbDir, libraryName + IonMobilityDb.EXT));
             IonMobilityDb ionMobilityDb;
@@ -276,7 +303,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, false);
                 if (dict != null)
                 {
-                    var list = dict.Select(kvp => new PrecursorIonMobilities(kvp.Key, kvp.Value));
+                    var list = dict.Select(k => new PrecursorIonMobilities(k.LibraryKey.Target, k.LibraryKey.Adduct, k.LibraryKey.PrecursorFilter.IonMobilityAndCCS));
                     ionMobilityDb = ionMobilityDb.UpdateIonMobilities(list);
                 }
                 fs.Commit();
@@ -286,8 +313,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static IonMobilityLibrary CreateFromList(string libraryName, string dbDir, IList<ValidatingIonMobilityPrecursor> list)
         {
-            var dict = FlatListToMultiConformerDictionary(list);
-            return CreateFromDictionary(libraryName, dbDir, dict);
+            var dict = FlatListToLibKeyIndex(list);
+            return CreateFromLibKeyIndex(libraryName, dbDir, dict);
         }
 
         public IList<IonMobilityAndCCS> GetIonMobilityInfo(LibKey key)
@@ -297,7 +324,7 @@ namespace pwiz.Skyline.Model.IonMobility
             return null;
         }
 
-        public LibKeyMap<List<IonMobilityAndCCS>> GetIonMobilityLibKeyMap()
+        public LibKeyIndex GetIonMobilityLibKeyIndex()
         {
             if (_database != null)
                 return _database.DictLibrary;
@@ -330,8 +357,8 @@ namespace pwiz.Skyline.Model.IonMobility
             // Overwrite any existing measurements with newly derived ones
             var measured = CreateFromResults(document, documentFilePath, useHighEnergyOffset, progressMonitor);
             var ionMobilityDb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false).
-                UpdateIonMobilities(measured.Select(m => new PrecursorIonMobilities(
-                m.Key, m.Value)).ToList());
+                UpdateIonMobilities(measured.Select(m => 
+                    new PrecursorIonMobilities(m.Key.Target, m.Key.Adduct, m.Value)).ToList());
             return new IonMobilityLibrary(libraryName, dbPath, ionMobilityDb);
         }
 
@@ -390,17 +417,13 @@ namespace pwiz.Skyline.Model.IonMobility
             }
 
             // Write the contents of the currently-in-use .imsdb to old style in-document serialization
-            var libKeyMap = GetIonMobilityLibKeyMap();
+            var libKeyMap = GetIonMobilityLibKeyIndex();
             if (libKeyMap == null)
                 return;
-            var dict = libKeyMap.AsDictionary();
-            if (dict != null && dict.Any())
+            if (libKeyMap.Any())
             {
-                var oldDict =
-                    dict.ToDictionary(kvp => kvp.Key,
-                        kvp => kvp.Value.First()); // No multiple conformers in earlier formats
                 var dtp = new DriftTimePredictor(Name,
-                    oldDict, extraInfoForPre20_12.WindowWidthMode, extraInfoForPre20_12.ResolvingPower,
+                    libKeyMap, extraInfoForPre20_12.WindowWidthMode, extraInfoForPre20_12.ResolvingPower,
                     extraInfoForPre20_12.PeakWidthAtIonMobilityValueZero,
                     extraInfoForPre20_12.PeakWidthAtIonMobilityValueMax,
                     extraInfoForPre20_12.FixedWindowWidth);
@@ -423,21 +446,20 @@ namespace pwiz.Skyline.Model.IonMobility
             // N.B. not comparing Status members, which exist only for the benefit of audit logging
             if (!Equals(other.FilePath, FilePath))
                 return false;
-            if (!Equals(Count, other.Count))
+            if (!Equals(Count, other.Count) && Count >= 0 && other.Count >= 0)
+                return false; // Both in memory but different sizes
+            if (Count < 0 || other.Count < 0)
+                return true; // One or both not yet in memory
+            if (!LibKeyIndex.AreEquivalent(_database.DictLibrary, other._database.DictLibrary))
                 return false;
-            if (Count <= 0)
-                return true; // Both not yet in memory
-            foreach (var key in _database.DictLibrary.LibKeys)
+            foreach (var entry in _database.DictLibrary)
             {
-                if (!other._database.DictLibrary.TryGetValue(key, out var otherValues))
-                    return false;
-                _database.DictLibrary.TryGetValue(key, out var values);
-                if (values.Count != otherValues.Count)
-                    return false;
-                foreach (var ionMobilityAndCcs in values)
+                var libKey = entry.LibraryKey;
+                var mobilities = GetIonMobilityInfo(libKey);
+                var otherMobilities = other.GetIonMobilityInfo(libKey);
+                if (mobilities.Count != otherMobilities.Count || mobilities.Any(m => !otherMobilities.Contains(m)))
                 {
-                    if (!otherValues.Contains(ionMobilityAndCcs))
-                        return false;
+                    return false;
                 }
             }
             return true;

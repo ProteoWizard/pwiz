@@ -3317,5 +3317,16 @@ namespace pwiz.Skyline.Properties {
                 this["ExportCEPredictorName"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TestMultiCCS {
+            get {
+                return ((bool)(this["TestMultiCCS"]));
+            }
+            set {
+                this["TestMultiCCS"] = value;
+            }
+        }
     }
 }

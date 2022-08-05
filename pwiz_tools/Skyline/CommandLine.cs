@@ -1035,7 +1035,7 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectDocument(SrmDocument document, string path)
         {
-            document = ConnectLibrarySpecs(document, path);
+            document = ConnectLibrarySpecs(document, path, _out);
             if (document != null)
                 document = ConnectBackgroundProteome(document, path);
             if (document != null)
@@ -1047,7 +1047,7 @@ namespace pwiz.Skyline
             return document;
         }
 
-        private SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath)
+        public static SrmDocument ConnectLibrarySpecs(SrmDocument document, string documentPath, TextWriter messageOut)
         {
             string docLibFile = null;
             if (!string.IsNullOrEmpty(documentPath) && document.Settings.PeptideSettings.Libraries.HasDocumentLibrary)
@@ -1055,7 +1055,11 @@ namespace pwiz.Skyline
                 docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(documentPath);
                 if (!File.Exists(docLibFile))
                 {
-                    _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_, docLibFile);
+                    if (messageOut == null)
+                    {
+                        throw new FileNotFoundException(Resources.CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_, docLibFile);
+                    }
+                    messageOut.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Error__Could_not_find_the_spectral_library__0__for_this_document_, docLibFile);
                     return null;
                 }
             }
@@ -1082,7 +1086,8 @@ namespace pwiz.Skyline
                     if (File.Exists(pathLibrary))
                         return CreateLibrarySpec(library, librarySpec, pathLibrary, false);
                 }
-                _out.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, name);
+
+                messageOut?.WriteLine(Resources.CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_, name);
                 return CreateLibrarySpec(library, librarySpec, null, false);
             }, docLibFile);
 
@@ -1190,6 +1195,13 @@ namespace pwiz.Skyline
         private SrmDocument ConnectIonMobilityDatabase(SrmDocument document, string documentPath)
         {
             var settings = document.Settings.ConnectIonMobilityLibrary(imsdb => FindIonMobilityDatabase(documentPath, imsdb));
+            // For older files, see it we need to update transition group nodes with ion mobility information, which was formerly accessed from
+            // libraries at time of use but is now kept in transition group nodes for multiple conformers support.
+            var updated = document.UpdateOldFormatsForMultipleConformers(settings);
+            if (!ReferenceEquals(document, updated))
+            {
+                return updated;
+            }
             if (settings == null)
                 return null;
             if (ReferenceEquals(settings, document.Settings))
@@ -1208,7 +1220,15 @@ namespace pwiz.Skyline
 
             // First look for the file name in the document directory
             string filePath = PathEx.FindExistingRelativeFile(documentPath, ionMobilityLibSpec.FilePath);
-            if (filePath != null)
+            if (filePath == null)
+            {
+                // Does it perhaps actually still exist in the original location?
+                if (File.Exists(ionMobilityLibSpec.FilePath))
+                {
+                    return ionMobilityLibSpec;
+                }
+            }
+            else
             {
                 try
                 {
@@ -1217,7 +1237,7 @@ namespace pwiz.Skyline
 // ReSharper disable once EmptyGeneralCatchClause
                 catch
                 {
-                    //Todo: should this fail silenty or report an error
+                    //Todo: should this fail silently or report an error
                 }
             }
 

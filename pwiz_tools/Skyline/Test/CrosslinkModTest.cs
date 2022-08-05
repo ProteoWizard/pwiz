@@ -41,7 +41,7 @@ namespace pwiz.SkylineTest
             var peptide = new Peptide("PEPTIDE");
             var transitionGroup = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var srmSettings = SrmSettingsList.GetDefault();
-            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, null, null, null, PrecursorFilter.EMPTY, null, null, false);
             var moleculeOffset = transitionGroupDocNode.GetNeutralFormula(srmSettings, null);
             Assert.AreEqual("C34H53N7O15", moleculeOffset.Molecule.ToString());
         }
@@ -56,14 +56,14 @@ namespace pwiz.SkylineTest
                     .ChangeStaticModifications(new StaticMod[0])));
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var mainTransitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
-                null, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                null, null,null, null, null, null, false);
             var unlinkedFormula = mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, null);
             Assert.AreEqual("C37H61N13O11S2Se", unlinkedFormula.ToString());
 
             var linkedPeptide = new Peptide("ARSENIC");
 
             var linkedPeptideFormula = new TransitionGroupDocNode(new TransitionGroup(linkedPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), Annotations.EMPTY, srmSettings,
-                null, null, ExplicitTransitionGroupValues.EMPTY, null, null, false).GetNeutralFormula(srmSettings, null);
+                null, null,null, PrecursorFilter.EMPTY, null, null, false).GetNeutralFormula(srmSettings, null);
             Assert.AreEqual("C30H53N11O12S", linkedPeptideFormula.ToString());
             var crosslinkMod = new StaticMod("disulfide", null, null, "-H2");
             var crosslink = new Crosslink(crosslinkMod, new []{new CrosslinkSite(0, 3), new CrosslinkSite(1, 2)});
@@ -86,8 +86,8 @@ namespace pwiz.SkylineTest
             var linkedPeptide = new Peptide("D");
             var mainTransitionGroup = new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
             var mainTransitionGroupDocNode = new TransitionGroupDocNode(mainTransitionGroup, 
-                Annotations.EMPTY, srmSettings, null, null,
-                ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], false);
+                Annotations.EMPTY, srmSettings, null, null, null,
+                PrecursorFilter.EMPTY, null, new TransitionDocNode[0], false);
             var modsWithoutLinkedPeptide = new ExplicitMods(mainPeptide, new[]{new ExplicitMod(0, staticMod), }, new TypedExplicitModifications[0]);
             Assert.AreEqual("C3H7NO2", AminoAcidFormulas.Default.GetFormula("A").ToString());
             Assert.AreEqual("C3H7NO2", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, null).Molecule.ToString());
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTest
             var linkedPeptide = new Peptide("EF");
             var mainTransitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
             var mainTransitionGroupDocNode = new TransitionGroupDocNode(mainTransitionGroup,
-                Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, null,
+                Annotations.EMPTY, srmSettings, null, null, null, PrecursorFilter.EMPTY, null,
                 new TransitionDocNode[0], false);
             var modsWithLinkedPeptide = new ExplicitMods(mainPeptide, null, null)
                 .ChangeCrosslinkStructure(CrosslinkStructure.ToPeptide(linkedPeptide, null, staticMod, 0, 1));
@@ -167,7 +167,7 @@ namespace pwiz.SkylineTest
             var srmSettings = SrmSettingsList.GetDefault();
             var fullTransitionGroup = new TransitionGroupDocNode(
                 new TransitionGroup(new Peptide("ELVIS"), Adduct.SINGLY_PROTONATED, IsotopeLabelType.light), 
-                Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, 
+                Annotations.EMPTY, srmSettings, null, null, null, PrecursorFilter.EMPTY, 
                 null, null, false);
             var fullFormula = fullTransitionGroup.GetNeutralFormula(srmSettings, null);
             Assert.AreEqual("C25H45N5O9", fullFormula.Molecule.ToString());
@@ -179,8 +179,8 @@ namespace pwiz.SkylineTest
             var mainTransitionGroup = new TransitionGroupDocNode(
                 new TransitionGroup(mainPeptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light),
                 Annotations.EMPTY, srmSettings, 
-                explicitMods, null,
-                ExplicitTransitionGroupValues.EMPTY,
+                explicitMods, null,null,
+                PrecursorFilter.EMPTY,
                 null, null, false);
             var mainFullFormula = mainTransitionGroup.GetNeutralFormula(srmSettings, explicitMods);
             Assert.AreEqual(fullFormula, mainFullFormula);
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTest
             var crosslinkMod = new ExplicitMod(3, crosslinkerDef).ChangeLinkedPeptide(linkedPeptide);
             var explicitModsWithCrosslink = new ExplicitMods(mainPeptide, new[]{crosslinkMod}, new TypedExplicitModifications[0]);
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
-                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                explicitModsWithCrosslink, null, null, PrecursorFilter.EMPTY, null, null, false);
             var choices = transitionGroupDocNode.GetPrecursorChoices(srmSettings, explicitModsWithCrosslink, true)
                 .Cast<TransitionDocNode>().ToArray();
             var complexFragmentIons = choices.Select(transition => transition.ComplexFragmentIon.GetName()).ToArray();
@@ -231,7 +231,7 @@ namespace pwiz.SkylineTest
                 new ExplicitMods(mainPeptide, null, null).ChangeCrosslinkStructure(
                     CrosslinkStructure.ToPeptide(linkedPeptide, null, crosslinkerDef, 3, 2));
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
-                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
+                explicitModsWithCrosslink, null, null, PrecursorFilter.EMPTY, null, null, true);
             
             var peptideDocNode = new PeptideDocNode(mainPeptide, settings, explicitModsWithCrosslink, null, ExplicitRetentionTimeInfo.EMPTY, new []{transitionGroupDocNode}, false);
             peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL);
@@ -324,7 +324,7 @@ namespace pwiz.SkylineTest
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
             var explicitMods = new ExplicitMods(mainPeptide, null, null).ChangeCrosslinkStructure(CrosslinkStructure.ToPeptide(otherPeptide, null, crosslinkMod, 8, 6));
             
-            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, explicitMods, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, explicitMods, null,null, PrecursorFilter.EMPTY, null, null, false);
             Assert.AreEqual(1923.9111, transitionGroupDocNode.PrecursorMz, .001);
         }
 
@@ -351,7 +351,7 @@ namespace pwiz.SkylineTest
                             new[] {new CrosslinkSite(0, 2), new CrosslinkSite(0, 5),}),
                     }));
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings,
-                explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                explicitModsWithCrosslink, null, null, PrecursorFilter.EMPTY, null, null, false);
             var modifiedSequence = CrosslinkedSequence.GetCrosslinkedSequence(srmSettings,
                 new PeptideStructure(peptide, explicitModsWithCrosslink), IsotopeLabelType.light);
             Assert.AreEqual("PEPTIDE-[dss@3-6]", modifiedSequence.FullNames);
@@ -372,7 +372,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestLooplinkCrosslinkLibraryKey()
         {
-            var crosslinkLibraryKey = new CrosslinkLibraryKey(new []{new PeptideLibraryKey("AKIQDKEGIPPDQQR", 0)}, new[]{new CrosslinkLibraryKey.Crosslink("+138.0681", new[]{new []{2,6}})}, 3);
+            var crosslinkLibraryKey = new CrosslinkLibraryKey(new []{PeptideLibraryKey.CreateSimple("AKIQDKEGIPPDQQR", 0)}, new[]{new CrosslinkLibraryKey.Crosslink("+138.0681", new[]{new []{2,6}})}, 3);
             var srmSettings = SrmSettingsList.GetDefault();
             srmSettings = srmSettings.ChangePeptideSettings(
                 srmSettings.PeptideSettings.ChangeModifications(srmSettings.PeptideSettings.Modifications
