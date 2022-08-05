@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -283,7 +284,7 @@ namespace pwiz.SkylineTest
             docLowTol = docLowTol.ChangeSettings(settings.ChangeTransitionLibraries(l =>
                 l.ChangeIonMatchTolerance(0.1)));
             settings = docLowTol.Settings.ChangeTransitionLibraries(l =>
-                l.ChangeIonMatchTolerance(TransitionLibraries.MAX_MATCH_TOLERANCE));
+                l.ChangeIonMatchTolerance(TransitionLibraries.GetMaxMatchTolerance(MzTolerance.Units.mz)));
             SrmDocument docHighTol = docLoaded.ChangeSettings(settings);
 
             Assert.AreEqual(docLowTol.PeptideTransitionCount, docHighTol.PeptideTransitionCount);
@@ -303,7 +304,7 @@ namespace pwiz.SkylineTest
 
             SrmSettings setThrow = settings;
             AssertEx.ThrowsException<InvalidDataException>(() =>
-                setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchTolerance(TransitionLibraries.MAX_MATCH_TOLERANCE * 2)));
+                setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchTolerance(TransitionLibraries.GetMaxMatchTolerance(MzTolerance.Units.mz) * 2)));
             AssertEx.ThrowsException<InvalidDataException>(() =>
                 setThrow.ChangeTransitionLibraries(l => l.ChangeIonMatchTolerance(TransitionLibraries.MIN_MATCH_TOLERANCE / 2)));
 

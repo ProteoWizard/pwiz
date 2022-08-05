@@ -386,11 +386,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Helpers.AssignIfEquals(ref filter, settings.Filter);
 
             // Validate and store library settings
-            double ionMatchTolerance;
-            if (!helper.ValidateDecimalTextBox(txtTolerance, TransitionLibraries.MIN_MATCH_TOLERANCE, TransitionLibraries.MAX_MATCH_TOLERANCE, out ionMatchTolerance))
-                return null;
-
             MzTolerance.Units ionMatchToleranceUnit = (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex;
+
+            double ionMatchTolerance;
+            if (!helper.ValidateDecimalTextBox(txtTolerance, TransitionLibraries.MIN_MATCH_TOLERANCE, TransitionLibraries.GetMaxMatchTolerance(ionMatchToleranceUnit), out ionMatchTolerance))
+                return null;
 
             int minIonCount = settings.Libraries.MinIonCount;
             if (string.IsNullOrEmpty(txtMinIonCount.Text))

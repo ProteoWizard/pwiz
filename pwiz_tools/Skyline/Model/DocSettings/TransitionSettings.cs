@@ -1626,7 +1626,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_ION_COUNT = 1;
         public const int MAX_ION_COUNT = 50;
         public const double MIN_MATCH_TOLERANCE = 0.001;    // Reduced from 0.1 to 0.001 (1 ppm at 1000 m/z) for high accuracy MS/MS
-        public const double MAX_MATCH_TOLERANCE = 100.0;    // Increased from 1 to 100 for ppm tolerance units
+        private const double MAX_MATCH_TOLERANCE = 1.0;
+        private const double MAX_MATCH_TOLERANCE_PPM = 100.1;    // Increased from 1 to 100 for ppm tolerance units
 
         public TransitionLibraries(double ionMatchTolerance, MzTolerance.Units ionMatchToleranceUnit, int minIonCount, int ionCount, TransitionLibraryPick pick)
         {
@@ -1653,6 +1654,13 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public static double GetMaxMatchTolerance(MzTolerance.Units unit)
+        {
+                if (unit == MzTolerance.Units.mz)
+                    return MAX_MATCH_TOLERANCE;
+                else 
+                    return MAX_MATCH_TOLERANCE_PPM;
+        }
         [Track]
         public int MinIonCount { get; private set; }
 
@@ -1734,11 +1742,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void DoValidate()
         {
-            if (MIN_MATCH_TOLERANCE > IonMatchTolerance || IonMatchTolerance > MAX_MATCH_TOLERANCE)
+            if (MIN_MATCH_TOLERANCE > IonMatchTolerance || IonMatchTolerance > GetMaxMatchTolerance(IonMatchToleranceUnit))
             {
-                throw new InvalidDataException(string.Format(Resources.TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__,
-                                                             IonMatchTolerance, MIN_MATCH_TOLERANCE, MAX_MATCH_TOLERANCE));                
+                throw new InvalidDataException(string.Format(
+                    Resources
+                        .TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__,
+                    IonMatchTolerance, MIN_MATCH_TOLERANCE, GetMaxMatchTolerance(IonMatchToleranceUnit)));
             }
+
             if (0 > MinIonCount || MinIonCount > MAX_ION_COUNT)
             {
                 throw new InvalidDataException(string.Format(Resources.TransitionLibraries_DoValidate_Library_min_ion_count_value__0__must_be_between__1__and__2__,
@@ -1785,7 +1796,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write attributes
             writer.WriteAttribute(ATTR.ion_match_tolerance, IonMatchTolerance);
-            writer.WriteAttribute(ATTR.ion_match_tolerance_unit, IonMatchToleranceUnit);
+            if(IonMatchToleranceUnit != MzTolerance.Units.mz)
+                writer.WriteAttribute(ATTR.ion_match_tolerance_unit, IonMatchToleranceUnit);
             writer.WriteAttribute(ATTR.min_ion_count, MinIonCount);
             writer.WriteAttribute(ATTR.ion_count, IonCount);
             writer.WriteAttribute(ATTR.pick_from, Pick);

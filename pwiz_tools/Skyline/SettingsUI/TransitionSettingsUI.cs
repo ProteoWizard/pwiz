@@ -471,14 +471,15 @@ namespace pwiz.Skyline.SettingsUI
                     pick = TransitionLibraryPick.filter;
             }
 
+            MzTolerance.Units ionMatchToleranceUnit = (MzTolerance.Units)comboToleranceUnits.SelectedIndex;
+
             double ionMatchTolerance;
 
             double minTol = TransitionLibraries.MIN_MATCH_TOLERANCE;
-            double maxTol = TransitionLibraries.MAX_MATCH_TOLERANCE;
+            double maxTol = TransitionLibraries.GetMaxMatchTolerance(ionMatchToleranceUnit);
             if (!helper.ValidateDecimalTextBox(textTolerance,
                     minTol, maxTol, out ionMatchTolerance))
                 return;
-            MzTolerance.Units ionMatchToleranceUnit = (MzTolerance.Units)comboToleranceUnits.SelectedIndex;
 
             int minIonCount = Libraries.MinIonCount;
             int ionCount = Libraries.IonCount;
