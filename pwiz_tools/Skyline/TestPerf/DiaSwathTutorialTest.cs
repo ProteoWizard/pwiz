@@ -321,15 +321,15 @@ namespace TestPerf
                 MassErrorStats = new[]
                 {
                     new[] {3.9, 1.9},
-                    new[] {3.8, 2.3},
-                    new[] {3.8, 1.8},
+                    new[] {3.7, 2.1},
+                    new[] {3.9, 1.7},
                     new[] {3.6, 2.3},
-                    new[] {4.0, 1.7},
+                    new[] {4.1, 1.7},
                     new[] {4.4, 1.7},
-                    new[] {3.7, 1.8},
+                    new[] {3.7, 1.9},
                 },
-                DiffPeptideCounts = new[] { 42, 7, 8, 12 },
-                UnpolishedProteins = 9,
+                DiffPeptideCounts = new[] { 43, 8, 8, 12 },
+                UnpolishedProteins = 10,
             };
 
             TestPasefSmallData();
@@ -387,20 +387,20 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
                 FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
-                ScoringModelCoefficients = "-0.3394|-0.8789|4.4756|3.5100|-0.1021|0.7491|0.4295|-0.1219",
+                ScoringModelCoefficients = "0.0186|-0.8383|3.8911|2.6764|-0.1511|0.7245|0.2319|-0.1236",
                 MassErrorStats = new[]
                 {
-                    new[] {3.6, 2.7},
-                    new[] {3.6, 2.6},
-                    new[] {3.5, 2.7},
                     new[] {3.7, 2.6},
+                    new[] {3.6, 2.5},
+                    new[] {3.5, 2.7},
+                    new[] {3.7, 2.5},
                     new[] {3.6, 2.7},
                     new[] {3.9, 2.6},
                     new[] {3.6, 2.7},
                 },
-                DiffPeptideCounts = new[] { 12594, 8476, 2253, 1850 },
-                UnpolishedProteins = 2307,
-                PolishedProteins = 2307,
+                DiffPeptideCounts = new[] { 12514, 8451, 2234, 1814 },
+                UnpolishedProteins = 2264,
+                PolishedProteins = 2264,
             };
 
             if (!IsCoverShotMode)
