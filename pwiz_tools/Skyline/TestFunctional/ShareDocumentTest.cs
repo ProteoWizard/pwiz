@@ -38,7 +38,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Functional test for CE Optimization.
+    /// Functional test for document sharing.
     /// </summary>
     [TestClass]
     public class ShareDocumentTest : AbstractFunctionalTest
@@ -60,6 +60,8 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            ShareWithRawFilesTest();
+
             ShareLibraryWithPeakAnnotationsTest();
 
             ShareDocTest();
@@ -263,6 +265,31 @@ namespace pwiz.SkylineTestFunctional
         }
 
 
+        private void ShareWithRawFilesTest()
+        {
+
+            // Remember original files
+            const string docName = "LibraryShareTest.sky";
+            var origFileSet = new Dictionary<string, ZipEntry>();
+            var newFileSet = new Dictionary<string, ZipEntry>();
+            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[1]);
+            using (ZipFile zipFile = ZipFile.Read(zipPath))
+            {
+                foreach (ZipEntry zipEntry in zipFile)
+                    origFileSet.Add(zipEntry.FileName, zipEntry);
+            }
+
+            // Open the .sky file
+            string documentPath = TestFilesDirs[1].GetTestPath(docName);
+            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
+            // We don't have the actual raw data handy, but a couple of suitably named files will stand in just fine for our purposes
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("S_1.RAW")); // In document directory
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\S_5.RAW")); // In document's parent directory
+            string shareCompletePath = TestFilesDirs[1].GetTestPath("ShareCompleteWithRaw.zip");
+            Share(shareCompletePath, true, origFileSet, newFileSet, docName, false, true);
+        }
+
         private void ShareDocTest()
         {
             // Remember original files
@@ -362,10 +389,11 @@ namespace pwiz.SkylineTestFunctional
             IDictionary<string, ZipEntry> origFileSet,
             IDictionary<string, ZipEntry> newFileSet,
             string documentName,
-            bool expectAuditLog = true)
+            bool expectAuditLog = true,
+            bool includeRaw = false)
         {
             var shareType = new ShareType(completeSharing, null);
-            RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
+            RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));  // TODO(clark) extend this call to optionally use the new data picker dialog
 
             bool extract = !completeSharing;
             string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",
