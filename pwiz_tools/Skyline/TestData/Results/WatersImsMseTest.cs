@@ -169,13 +169,13 @@ namespace pwiz.SkylineTestData.Results
                     for (int complete = 0; complete <= 1; complete++)
                     {
                         
-                        var shareResultFiles = new ShareResultFilesDlg
+                        
                         
                         
                         var sharePath =
                             testFilesDir.GetTestPath(complete == 1 ? "share_complete.zip" : "share_minimized.zip");
                         var share = new SrmDocumentSharing(document, docPath, sharePath,
-                            new ShareType(complete == 1, SkylineVersion.CURRENT, new List<string>())); // Explicitly declaring version number forces a save before zip
+                            new ShareType(complete == 1, SkylineVersion.CURRENT)); // Explicitly declaring version number forces a save before zip
                         share.Share(new SilentProgressMonitor());
 
                         var files = share.ListEntries().ToArray();

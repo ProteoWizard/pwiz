@@ -193,10 +193,13 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     if (ShareType.Complete)
-                        ShareComplete(zip, this.ShareType); // ShareType and thus additional file information passed in
+
+                        ShareComplete(zip);
 
                     else
+
                         ShareMinimal(zip);
+
                 }
                 finally
                 {
@@ -212,7 +215,7 @@ namespace pwiz.Skyline.Model
                    DocumentFormat.VERSION_4_13;
         }
 
-        private void ShareComplete(ZipFileShare zip, ShareType share) //Added include result files
+        private void ShareComplete(ZipFileShare zip)
         {
             // If complete sharing, just zip up existing files
             var pepSettings = Document.Settings.PeptideSettings;
@@ -225,7 +228,7 @@ namespace pwiz.Skyline.Model
                 zip.AddFile(transitionSettings.Prediction.OptimizedLibrary.PersistencePath);
             if (Document.Settings.HasIonMobilityLibraryPersisted)
                 zip.AddFile(transitionSettings.IonMobilityFiltering.IonMobilityLibrary.FilePath);
-
+                
             var libFiles = new HashSet<string>();
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
@@ -241,11 +244,6 @@ namespace pwiz.Skyline.Model
                         IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
                     }
                 }
-            }
-
-            foreach (var path in share.IncludedResultFiles)
-            {
-                zip.AddFile(path);
             }
 
             ShareDataAndView(zip);
@@ -376,6 +374,15 @@ namespace pwiz.Skyline.Model
             if (null != ViewFilePath)
             {
                 zip.AddFile(ViewFilePath);
+            }
+
+            // If user selected any raw data files for inclusion, add those now
+            if (ShareType.AuxiliaryFiles != null)
+            {
+                foreach (var path in ShareType.AuxiliaryFiles)
+                {
+                    zip.AddFile(path);
+                }
             }
         }
 
@@ -610,14 +617,15 @@ namespace pwiz.Skyline.Model
 
     public class ShareType : Immutable
     {
-        public static readonly ShareType COMPLETE = new ShareType(true, null, new List<string>());
-        public static readonly ShareType MINIMAL = new ShareType(false, null, new List<string>());
+        public static readonly ShareType COMPLETE = new ShareType(true, null);
+        public static readonly ShareType MINIMAL = new ShareType(false, null);
         public static readonly ShareType DEFAULT = COMPLETE;
-        public ShareType(bool complete, SkylineVersion skylineVersion, List<string> includedResultFiles) // List of additional files to be zipped
+        public ShareType(bool complete, SkylineVersion skylineVersion, IEnumerable<string> auxiliaryFiles = null)
         {
             Complete = complete;
             SkylineVersion = skylineVersion;
-            IncludedResultFiles = includedResultFiles; // List of files to include
+            AuxiliaryFiles = auxiliaryFiles;
+
         }
         public bool Complete { get; private set; }
 
@@ -626,21 +634,12 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im=>im.Complete = complete);
         }
         public SkylineVersion SkylineVersion { get; private set; }
-        public List<string> IncludedResultFiles { get; private set; } // List of additional files (usually mass spec data files) to ba added and zipped)
+
+        public IEnumerable<string> AuxiliaryFiles { get; private set; } // Usually mass spec data files
 
         public ShareType ChangeSkylineVersion(SkylineVersion skylineVersion)
         {
             return ChangeProp(ImClone(this), im => im.SkylineVersion = skylineVersion);
-        }
-
-        /// <summary>
-        /// Added this change property command (similar to the two methods before) from immutable.cs
-        /// </summary>
-        /// <param name="includeResultFiles"></param>
-        /// <returns></returns>
-        public ShareType ChangeIncludeResultFiles(List<string> includeResultFiles)
-        { 
-            return ChangeProp(ImClone(this), im => im.IncludedResultFiles = includeResultFiles);
         }
 
         public bool MustSaveNewDocument

@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Alerts
     {
         private List<SkylineVersion> _skylineVersionOptions;
         private SrmDocument _document; // Global document from which replicate files and information can be extracted
-        private List<string> _fileAttachments; // List of extra files to add
+        private List<string> _auxiliaryFiles; // List of extra files to add, usually mass spec data files
         public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
         {
         }
@@ -71,7 +71,9 @@ namespace pwiz.Skyline.Alerts
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
-            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], _fileAttachments); // Added file attachment argument
+
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], _auxiliaryFiles);
+
             Close();
         }
 
@@ -135,8 +137,9 @@ namespace pwiz.Skyline.Alerts
                 DialogResult result = replicateSelectDlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    // Should there be files to send notify share
-                    _fileAttachments = replicateSelectDlg.ReplicateFilesToInclude;
+                    // Pass along any extra files the user may have selected
+                    _auxiliaryFiles = replicateSelectDlg.ReplicateFilesToInclude;
+
                 }
             }
         }
