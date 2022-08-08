@@ -117,7 +117,7 @@ for tuple in matchPaths:
 # match changed file paths to triggers
 triggers = {}
 if (current_branch == "master" or current_branch.startswith("skyline_")) and len(changed_files) == 0:
-    print("Empty change list on master branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
+    print(f"Empty change list on {current_branch} branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
     for target in targets['All']:
         if target not in triggers:
             isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
