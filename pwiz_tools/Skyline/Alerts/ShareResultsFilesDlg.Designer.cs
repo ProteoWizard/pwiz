@@ -34,6 +34,8 @@
             this.checkedListBox = new System.Windows.Forms.CheckedListBox();
             this.checkboxSelectAll = new System.Windows.Forms.CheckBox();
             this.checkedStatus = new System.Windows.Forms.Label();
+            this.missingListBox = new System.Windows.Forms.ListBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -69,16 +71,20 @@
             // 
             // checkedListBox
             // 
+            this.checkedListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.checkedListBox.CheckOnClick = true;
             this.checkedListBox.FormattingEnabled = true;
             this.checkedListBox.Location = new System.Drawing.Point(15, 25);
             this.checkedListBox.Name = "checkedListBox";
-            this.checkedListBox.Size = new System.Drawing.Size(704, 394);
+            this.checkedListBox.Size = new System.Drawing.Size(704, 199);
             this.checkedListBox.TabIndex = 4;
             this.checkedListBox.SelectedIndexChanged += new System.EventHandler(this.checkedListBoxResults_SelectIndexChanged);
             // 
             // checkboxSelectAll
             // 
+            this.checkboxSelectAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkboxSelectAll.AutoSize = true;
             this.checkboxSelectAll.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.checkboxSelectAll.Location = new System.Drawing.Point(15, 425);
@@ -91,17 +97,40 @@
             // 
             // checkedStatus
             // 
+            this.checkedStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkedStatus.AutoSize = true;
             this.checkedStatus.Location = new System.Drawing.Point(141, 426);
             this.checkedStatus.Name = "checkedStatus";
             this.checkedStatus.Size = new System.Drawing.Size(0, 13);
             this.checkedStatus.TabIndex = 16;
             // 
+            // missingListBox
+            // 
+            this.missingListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.missingListBox.FormattingEnabled = true;
+            this.missingListBox.Location = new System.Drawing.Point(15, 246);
+            this.missingListBox.Name = "missingListBox";
+            this.missingListBox.Size = new System.Drawing.Size(704, 173);
+            this.missingListBox.TabIndex = 17;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 230);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(66, 13);
+            this.label2.TabIndex = 18;
+            this.label2.Text = "Missing files:";
+            // 
             // ShareResultsFilesDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(731, 468);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.missingListBox);
             this.Controls.Add(this.checkedStatus);
             this.Controls.Add(this.checkboxSelectAll);
             this.Controls.Add(this.checkedListBox);
@@ -110,6 +139,7 @@
             this.Controls.Add(this.label1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(747, 507);
             this.Name = "ShareResultsFilesDlg";
             this.ShowInTaskbar = false;
             this.Text = "Share Results Files";
@@ -126,5 +156,7 @@
         private System.Windows.Forms.CheckedListBox checkedListBox;
         private System.Windows.Forms.CheckBox checkboxSelectAll;
         private System.Windows.Forms.Label checkedStatus;
+        private System.Windows.Forms.ListBox missingListBox;
+        private System.Windows.Forms.Label label2;
     }
 }

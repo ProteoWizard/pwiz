@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Alerts
                 DialogResult result = replicateSelectDlg.ShowDialog();
                 if (result == DialogResult.OK)
                 {
-                    //Should there be files to send notify share
+                    // Should there be files to send notify share
                     _fileAttachments = replicateSelectDlg.ReplicateFilesToInclude;
                 }
             }

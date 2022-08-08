@@ -613,11 +613,11 @@ namespace pwiz.Skyline.Model
         public static readonly ShareType COMPLETE = new ShareType(true, null, new List<string>());
         public static readonly ShareType MINIMAL = new ShareType(false, null, new List<string>());
         public static readonly ShareType DEFAULT = COMPLETE;
-        public ShareType(bool complete, SkylineVersion skylineVersion, List<string> includedResultFiles) // Added list of additional files to be zipped
+        public ShareType(bool complete, SkylineVersion skylineVersion, List<string> includedResultFiles) // List of additional files to be zipped
         {
             Complete = complete;
             SkylineVersion = skylineVersion;
-            IncludedResultFiles = includedResultFiles; // Add list of files
+            IncludedResultFiles = includedResultFiles; // List of files to include
         }
         public bool Complete { get; private set; }
 
