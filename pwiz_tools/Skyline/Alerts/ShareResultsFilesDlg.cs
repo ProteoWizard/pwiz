@@ -29,7 +29,11 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Alerts
 {
     /// <summary>
-    /// 
+    /// Added by Clark Brace (cbrace3)
+    /// Share results dialogue is intended to allow users to select raw files they wish to include when sharing
+    /// their current Skyline document.Information regarding which raw files are currently being used in Skyline
+    /// are collected and displayed allowing the user to zip send everything in one clean package.Files are displayed
+    /// in natural sort order and await upon the user's seslection.
     /// </summary>
     public partial class ShareResultsFilesDlg : Form
     {
@@ -52,6 +56,7 @@ namespace pwiz.Skyline.Alerts
         private void  PopulateListView()
         {
             var paths = new HashSet<string>(); // List of file paths
+            var missingPaths = new HashSet<string>(); // List of missing paths
             if (_document.Settings.MeasuredResults != null)
             {
                 foreach (var chromatogramSet in _document.Settings.MeasuredResults.Chromatograms)
@@ -63,6 +68,10 @@ namespace pwiz.Skyline.Alerts
                         {
                             paths.Add(path);
                         }
+                        else
+                        {
+                            missingPaths.Add(chromFileInfo.FilePath.GetFileName());
+                        }
                     }
                 }
                 var repFiles = paths.ToList(); // Convert to list. Prevents duplicates from being present
@@ -71,6 +80,11 @@ namespace pwiz.Skyline.Alerts
                 // Add to list view for selection
                 checkedListBox.Items.AddRange(paths.ToArray());
                 SelectOrDeselectAll(true); // All check box elements start selected
+
+                var missingRepFiles = missingPaths.ToList(); // Convert to list. Prevents duplicates from being present
+                missingRepFiles.Sort(NaturalComparer.Compare);
+
+                missingListBox.Items.AddRange(missingRepFiles.ToArray()); //Add all elements present to 
 
                 UpdateLabel();
             }

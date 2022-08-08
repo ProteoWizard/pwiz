@@ -168,6 +168,10 @@ namespace pwiz.SkylineTestData.Results
                     // Verify that the .imsdb or .blib file goes out in the share zipfile
                     for (int complete = 0; complete <= 1; complete++)
                     {
+                        
+                        var shareResultFiles = new ShareResultFilesDlg
+                        
+                        
                         var sharePath =
                             testFilesDir.GetTestPath(complete == 1 ? "share_complete.zip" : "share_minimized.zip");
                         var share = new SrmDocumentSharing(document, docPath, sharePath,
