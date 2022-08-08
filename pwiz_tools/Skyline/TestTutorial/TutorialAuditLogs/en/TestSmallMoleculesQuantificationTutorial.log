@@ -125,26 +125,26 @@ Extra Info: File names =
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
-Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+
-Summary   : Changed peak bounds of DrugX > Drug > 283.0400+
+Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
+Summary   : Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
 All Info  :
-Changed peak bounds of DrugX > Drug > 283.0400+
-Changed start time of all peaks of DrugX > Drug > 283.0400+ in "DoubleBlank2" from 2.48 to 2.94
-Changed end time of all peaks of DrugX > Drug > 283.0400+ in "DoubleBlank2" from 2.50 to 2.94
+Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
+Changed start time of all peaks of DrugX > Drug > 283.0400+ CE16.00 in "DoubleBlank2" from 2.48 to 2.94
+Changed end time of all peaks of DrugX > Drug > 283.0400+ CE16.00 in "DoubleBlank2" from 2.50 to 2.94
 
-Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+
-Summary   : Changed peak bounds of DrugX > Drug > 283.0400+
+Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
+Summary   : Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
 All Info  :
-Changed peak bounds of DrugX > Drug > 283.0400+
-Changed start time of all peaks of DrugX > Drug > 283.0400+ in "DoubleBlank3" from 2.74 to 2.94
-Changed end time of all peaks of DrugX > Drug > 283.0400+ in "DoubleBlank3" from 2.75 to 2.94
+Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
+Changed start time of all peaks of DrugX > Drug > 283.0400+ CE16.00 in "DoubleBlank3" from 2.74 to 2.94
+Changed end time of all peaks of DrugX > Drug > 283.0400+ CE16.00 in "DoubleBlank3" from 2.75 to 2.94
 
-Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+
-Summary   : Changed peak bounds of DrugX > Drug > 283.0400+
+Undo Redo : Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
+Summary   : Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
 All Info  :
-Changed peak bounds of DrugX > Drug > 283.0400+
-Changed start time of all peaks of DrugX > Drug > 283.0400+ in "DoubleBlank1" from 2.85 to 2.94
-Changed end time of all peaks of DrugX > Drug > 283.0400+ in "DoubleBlank1" from 2.86 to 2.94
+Changed peak bounds of DrugX > Drug > 283.0400+ CE16.00
+Changed start time of all peaks of DrugX > Drug > 283.0400+ CE16.00 in "DoubleBlank1" from 2.85 to 2.94
+Changed end time of all peaks of DrugX > Drug > 283.0400+ CE16.00 in "DoubleBlank1" from 2.86 to 2.94
 
 Undo Redo : Molecule Settings -- Quantification changed
 Summary   : Settings > Molecule Settings -- Quantification changed
