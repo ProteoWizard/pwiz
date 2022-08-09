@@ -2285,11 +2285,12 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            if (newDoc != null)
+
+            var standardPepGroup = newDoc?.PeptideGroups.FirstOrDefault(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
+            if (standardPepGroup != null)
             {
                 ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
                 {
-                    var standardPepGroup = newDoc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
                     var pepList = new List<DocNode>();
                     foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.ContainsKey(pep.ModifiedTarget)))
                     {
