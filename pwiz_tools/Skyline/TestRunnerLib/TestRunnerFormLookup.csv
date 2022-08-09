@@ -189,6 +189,7 @@ SelectIrtStandardDlg,TestLibraryBuild
 SequenceTreeForm,*
 ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
+ShareResultsFilesDlg,TestDocumentSharing
 SkylineWindow,*
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns

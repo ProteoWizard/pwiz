@@ -114,12 +114,12 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Add all checked boxes to list of files to be zipped
         /// </summary>
-        private void OkDialog()
+        public void OkDialog()
         {
             ReplicateFilesToInclude = new List<string>();
-            foreach (ListViewItem a in checkedListBox.CheckedItems)
+            foreach (var filePath in checkedListBox.CheckedItems)
             {
-                ReplicateFilesToInclude.Add(a.Text); //Get the file path of each checked item
+                ReplicateFilesToInclude.Add(filePath.ToString()); //Get the file path of each checked item
             }
 
             this.DialogResult = DialogResult.OK;
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Change the state of all elements in the checkedItemBox
         /// </summary>
-        /// <param name="select"></param>
+        /// <param name="select">true to select all, false to deselect all</param>
         public void SelectOrDeselectAll(bool select)
         {
             for (int i = 0; i < checkedListBox.Items.Count; i++)

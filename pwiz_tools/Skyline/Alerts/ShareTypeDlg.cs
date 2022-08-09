@@ -119,11 +119,19 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // Added for functional tests
+        #region Functional testing support
+
         public IList<string> GetAvailableVersionItems()
         {
             return comboSkylineVersion.Items.OfType<string>().ToList();
         }
+
+        public void ShowSelectReplicatesDialog()
+        {
+            Select_Rep_Files_Click(null, null);
+        }
+
+        #endregion
 
         /// <summary>
         /// Creates and collects user information on present raw files
