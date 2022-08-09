@@ -384,6 +384,42 @@ namespace pwiz.SkylineTest
             results.AddRange(bareForms.Select(bareForm => $@"Error: class {bareForm.FullName} illegally inherits directly from Form instead of FormEx. Using FormEx ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is intentional, add ""typeof({bareForm.Name})"" to the variable ""acceptableDirectUsesOfFormClass"" in method ""FindIllegalForms"" in CodeInspectionTest.cs"));
         }
 
+        // Looking for tests that don't derive from AbstractUnitTest
+        private static void FindIllegalTests(List<string> results)
+        {
+            var bareTests = new HashSet<Type>();
+
+            try
+            {
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    var types = assembly.GetTypes().Where(t => t.IsClass && !typeof(AbstractUnitTest).IsAssignableFrom(t) &&
+                                                               t.GetCustomAttribute<TestClassAttribute>() != null);
+                    foreach (var type in types)
+                    {
+                        bareTests.Add(type);
+                    }
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine("Error in FindIllegalTests");
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                Console.WriteLine(errMessage);
+                throw new Exception(errMessage.ToString(), ex);
+            }
+
+            results.AddRange(bareTests.Select(test => $@"Error: test class {test.FullName} does not inherit from AbstractUnitTest. Using AbstractUnitTest ensures proper interaction with Skyline's custom automated test system."));
+        }
+
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
             Type[] directParentTypes) // Types directly referenced in addition to their derived types
         {
@@ -497,6 +533,9 @@ namespace pwiz.SkylineTest
 
             // Looking for uses of Form where we should really be using FormEx
             FindIllegalForms(results);
+
+            // Looking for tests that don't derive from AbstractUnitTest
+            FindIllegalTests(results);
 
             // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
             InspectConsistentErrorMessages(results);
