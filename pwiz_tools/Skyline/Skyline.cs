@@ -2286,7 +2286,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            var standardPepGroup = newDoc?.PeptideGroups.FirstOrDefault(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
+            var standardPepGroup = firstAdded != null ? (PeptideGroupDocNode)newDoc?.FindNode(firstAdded) : null;
             if (standardPepGroup != null)
             {
                 ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
