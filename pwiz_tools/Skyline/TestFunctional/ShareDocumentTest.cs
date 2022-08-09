@@ -270,24 +270,56 @@ namespace pwiz.SkylineTestFunctional
 
             // Remember original files
             const string docName = "LibraryShareTest.sky";
-            var origFileSet = new Dictionary<string, ZipEntry>();
-            var newFileSet = new Dictionary<string, ZipEntry>();
             string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[1]);
-            using (ZipFile zipFile = ZipFile.Read(zipPath))
-            {
-                foreach (ZipEntry zipEntry in zipFile)
-                    origFileSet.Add(zipEntry.FileName, zipEntry);
-            }
 
             // Open the .sky file
             string documentPath = TestFilesDirs[1].GetTestPath(docName);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForDocumentLoaded();
             // We don't have the actual raw data handy, but a couple of suitably named files will stand in just fine for our purposes
-            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("S_1.RAW")); // In document directory
-            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\S_5.RAW")); // In document's parent directory
-            string shareCompletePath = TestFilesDirs[1].GetTestPath("ShareCompleteWithRaw.zip");
-            Share(shareCompletePath, true, origFileSet, newFileSet, docName, false, true);
+            var S1_RAW = "S_1.RAW";
+            var S5_RAW = "S_5.RAW";
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In document directory
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\"+ S5_RAW)); // In document's parent directory
+
+            void DoShareWithRawFiles(string elsewhere)
+            {
+                string shareCompletePath = TestFilesDirs[1].GetTestPath("ShareCompleteWithRaw.zip");
+                var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
+                var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
+                RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
+                if (elsewhere != null)
+                {
+                    // User has to navigate to the S1 file which isn't in current directory nor the parent
+                    // TODO(Clark) use your new code here
+                    // something like
+                    // RunUI(() =>
+                    // {
+                    //    var finderDlg = replicatePickDlg.OpenReplicateFinderDlg;
+                    //    finderDlg.SetDirectory(elsewhere);
+                    //    finderDlg.SelectAll();
+                    //    finderDlg.OkDialog();
+                    // }
+                }
+                OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
+                OkDialog(shareDlg, shareDlg.OkDialog);
+
+                // Verify that the (fake!) raw data made it into the .sky.zip
+                WaitForCondition(() => File.Exists(shareCompletePath));
+                using var zipFile = ZipFile.Read(shareCompletePath);
+if (elsewhere == null) // TODO(Clark) delete this line
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW), $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW), $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
+            }
+
+            DoShareWithRawFiles(null);
+
+            // Now exercise the missing file handling
+            var elsewhere = TestFilesDirs[1].GetTestPath("elsewhere");
+            Directory.CreateDirectory(elsewhere);
+            var elsewhereS1 = Path.Combine(elsewhere, S1_RAW);
+            File.Move(TestFilesDirs[1].GetTestPath(S1_RAW), elsewhereS1);
+            DoShareWithRawFiles(elsewhere);
         }
 
         private void ShareDocTest()
@@ -389,11 +421,10 @@ namespace pwiz.SkylineTestFunctional
             IDictionary<string, ZipEntry> origFileSet,
             IDictionary<string, ZipEntry> newFileSet,
             string documentName,
-            bool expectAuditLog = true,
-            bool includeRaw = false)
+            bool expectAuditLog = true)
         {
             var shareType = new ShareType(completeSharing, null);
-            RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));  // TODO(clark) extend this call to optionally use the new data picker dialog
+            RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
 
             bool extract = !completeSharing;
             string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",
