@@ -1320,8 +1320,21 @@ SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg,
 {
     istringstream parser(arg);
     string analyzerType;
+    IntegerSet msLevels(1, INT_MAX);
     parser >> analyzerType;
     bal::to_upper(analyzerType);
+
+    if (parser)
+    {
+        string msLevelSets;
+        getlinePortable(parser, msLevelSets);
+
+        if (!msLevelSets.empty())
+        {
+            msLevels = IntegerSet();
+            msLevels.parse(msLevelSets);
+        }
+    }
 
     set<CVID> cvIDs;
 
@@ -1339,7 +1352,7 @@ SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg,
         throw user_error("[SpectrumListFactory::filterCreator_AnalyzerType()] invalid filter argument.");
 
     return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr,
-                                                   SpectrumList_FilterPredicate_AnalyzerType(cvIDs), ilr));
+                                                   SpectrumList_FilterPredicate_AnalyzerType(cvIDs, msLevels), ilr));
 
 }
 UsageInfo usage_analyzerTypeOld = { "<analyzer>",
