@@ -88,15 +88,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public SpectrumProperties _currentProperties { get; private set; }
 
-        // If you want run old tests to see if they work with the property grid feature, change 
-        // 'return msGraphExtension1.propertiesVisible' to 'return true'
-        private bool _getAdditionalGridInfo
-        {
-            get
-            {
-                return true; //msGraphExtension1.propertiesVisible;
-            }
-        }
+        // // If you want run old tests to see if they work with the property grid feature, change 
+        // // 'return msGraphExtension1.propertiesVisible' to 'return true'
+        // private bool _getAdditionalGridInfo
+        // {
+        //     get
+        //     {
+        //         return msGraphExtension1.propertiesVisible;
+        //     }
+        // }
 
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
@@ -852,21 +852,21 @@ namespace pwiz.Skyline.SettingsUI
                             Score = spectrumInfoR.Score,
                             Charge = pepInfo.Charge
                         };
-                        newProperties.SpectrumCount = _currentProperties?.SpectrumCount;
-                        _currentProperties = newProperties;
                         var selectedBiblioSpecLib = _selectedLibrary as BiblioSpecLiteLibrary;
-                        if (selectedBiblioSpecLib != null && _getAdditionalGridInfo)
+                        if (selectedBiblioSpecLib != null /*&& _getAdditionalGridInfo*/)
                         {
                             BiblioSpecGridInfo biblioAdditionalInfo;
                             if (spectrumInfo.IsBest)
                             {
                                 biblioAdditionalInfo = selectedBiblioSpecLib.GetBestGridInfo(_peptides[index].Key);
-                                _currentProperties.SpectrumCount = biblioAdditionalInfo?.Count;
+                                newProperties.SpectrumCount = biblioAdditionalInfo.Count;
                             }
                             else
                             {
                                 biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
+                                newProperties.SpectrumCount = _currentProperties.SpectrumCount;
                             }
+                            _currentProperties = newProperties;
                             _currentProperties.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
                             _currentProperties.IdFileName = biblioAdditionalInfo.IDFileName;
                             _currentProperties.FileName = biblioAdditionalInfo.FileName;
@@ -1541,7 +1541,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             propertiesButton.Checked = !propertiesButton.Checked;
             msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
-            UpdateUI();
+            // UpdateUI();
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2968,7 +2968,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public class SpectrumProperties : GlobalizedObject
         {
-            [Category("Peptide Info")] public string? PrecursorMz { get; set; }
+            [Category("Peptide Info")] public string PrecursorMz { get; set; }
 
             [Category("File Info")] public string IdFileName { get; set; }
 
@@ -2977,9 +2977,9 @@ namespace pwiz.Skyline.SettingsUI
 
             [Category("Peptide Info")] public string SpecIdInFile { get; set; }
 
-            [Category("Peptide Info")] public string? RetentionTime { get; set; }
+            [Category("Peptide Info")] public string RetentionTime { get; set; }
 
-            [Category("Peptide Info")] public int Charge { get; set; }
+            [Category("Peptide Info")] public int? Charge { get; set; }
 
             [Category("Peptide Info")] public int? SpectrumCount { get; set; }
 

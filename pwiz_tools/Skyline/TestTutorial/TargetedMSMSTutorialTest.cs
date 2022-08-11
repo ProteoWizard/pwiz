@@ -1182,6 +1182,33 @@ namespace pwiz.SkylineTestTutorial
                 var spectrumCount = properties.Find("SpectrumCount", true).GetValue(propertyGrid.SelectedObject);
                 Assert.AreEqual(401, spectrumCount);
             });
+            Assert.IsTrue(graphExtension.propertiesVisible);
+            Assert.IsTrue(propertiesButton.Checked);
+            RunUI(() =>
+            {
+                dlg.FilterString = "b";
+                Assert.IsNotNull(propertyGrid);
+                var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+                Assert.AreEqual(0, properties.Count);
+                dlg.FilterString = "";
+            });
+            if (!isSmallMolecules)
+            {
+                RunUI(() =>
+                {
+                    Assert.IsNotNull(propertyGrid);
+                    var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+                    var specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
+                    Assert.AreEqual("488", specId);
+                    dlg.RedundantComboBox.SelectedIndex = 1;
+                    properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+                    specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
+                    Assert.AreEqual("19208", specId);
+                });
+            }
+            RunUI(() => propertiesButton.PerformClick());
+            Assert.IsFalse(graphExtension.propertiesVisible);
+            Assert.IsFalse(propertiesButton.Checked);
             RunUI(() => dlg.Close());
         }
     }
