@@ -1122,7 +1122,7 @@ namespace pwiz.SkylineTestTutorial
                     fileSet.Add(splitName[0]);
                     RTSet.Add(splitName[1]);
                 }
-
+            
                 // Checks the naming conventions are accurate, two different file names and 11 different retention times
                 Assert.AreEqual(2, fileSet.Count);
                 Assert.AreEqual(11, RTSet.Count);
@@ -1138,26 +1138,51 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
                 }
             }
-
+            
             RunUI(() => dlg.Close());
         }
 
         // Test for property grid currently in progress
         private void TestPropertyGrid()
         {
-            // var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
-            // WaitForConditionUI(() => dlg.IsUpdateComplete);
-            // var graphExtension = dlg.GraphExtensionControl;
-            // Assert.IsFalse(graphExtension.propertiesVisible);
-            // RunUI(() =>
-            // {
-            //     var propertiesButton = dlg.Controls.Find("propertiesButton", true)[0];
-            //     Assert.IsNotNull(propertiesButton);
-            //
-            //     
-            // });
-            // Assert.IsTrue(graphExtension.propertiesVisible);
-            // RunUI(() => dlg.Close());
+            var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            WaitForConditionUI(() => dlg.IsUpdateComplete);
+            var isSmallMolecules = dlg.PeptideDisplayCount < 11;
+            var graphExtension = dlg.GraphExtensionControl;
+            Assert.IsFalse(graphExtension.propertiesVisible);
+            ToolStripButton propertiesButton = null;
+            RunUI(() =>
+            {
+                var toolStrip = (ToolStrip)dlg.Controls.Find("toolStrip1", true)[0];
+                propertiesButton = (ToolStripButton)toolStrip.Items.Find("propertiesButton", true)[0];
+                Assert.IsNotNull(propertiesButton);
+                Assert.IsFalse(propertiesButton.Checked);
+                propertiesButton.PerformClick();
+            });
+            Assert.IsTrue(graphExtension.propertiesVisible);
+            Assert.IsTrue(propertiesButton.Checked);
+            PropertyGrid propertyGrid = null;
+            RunUI(() =>
+            {
+                var graphExtension = (MsGraphExtension)dlg.Controls.Find("msGraphExtension1", true)[0];
+                propertyGrid = graphExtension.propertiesGrid;
+                Assert.IsNotNull(propertyGrid);
+                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
+                var expectedAttributes = isSmallMolecules ? 8 : 10; 
+                Assert.IsTrue(((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties().Count == expectedAttributes);
+            });
+            RunUI(() =>
+            {
+                dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
+                Assert.IsNotNull(propertyGrid);
+                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
+                var expectedAttributes = isSmallMolecules ? 8 : 10;
+                var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+                Assert.AreEqual(expectedAttributes, properties.Count);
+                var spectrumCount = properties.Find("SpectrumCount", true).GetValue(propertyGrid.SelectedObject);
+                Assert.AreEqual(401, spectrumCount);
+            });
+            RunUI(() => dlg.Close());
         }
     }
 }

@@ -640,16 +640,16 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\MsGraphExtension.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -3940,7 +3940,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx">
       <SubType>Designer</SubType>
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>MsGraphExtensionResx.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">

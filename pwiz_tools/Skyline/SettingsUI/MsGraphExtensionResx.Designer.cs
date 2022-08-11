@@ -22,7 +22,7 @@ namespace pwiz.Skyline.SettingsUI {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class MsGraphExtensionResx {
+    public class MsGraphExtensionResx {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace pwiz.Skyline.SettingsUI {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.SettingsUI.MsGraphExtensionResx", typeof(MsGraphExtensionResx).Assembly);
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to CCS.
         /// </summary>
-        internal static string CCS {
+        public static string CCS {
             get {
                 return ResourceManager.GetString("CCS", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Charge.
         /// </summary>
-        internal static string Charge {
+        public static string Charge {
             get {
                 return ResourceManager.GetString("Charge", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert SpecIdInFile Description&gt;.
         /// </summary>
-        internal static string Desciption_SpecIdInFile {
+        public static string Desciption_SpecIdInFile {
             get {
                 return ResourceManager.GetString("Desciption_SpecIdInFile", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert CCS Description&gt;.
         /// </summary>
-        internal static string Description_CCS {
+        public static string Description_CCS {
             get {
                 return ResourceManager.GetString("Description_CCS", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert Charge Description&gt;.
         /// </summary>
-        internal static string Description_Charge {
+        public static string Description_Charge {
             get {
                 return ResourceManager.GetString("Description_Charge", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert FileName Description&gt;.
         /// </summary>
-        internal static string Description_FileName {
+        public static string Description_FileName {
             get {
                 return ResourceManager.GetString("Description_FileName", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert IdFileName Description&gt;.
         /// </summary>
-        internal static string Description_IdFileName {
+        public static string Description_IdFileName {
             get {
                 return ResourceManager.GetString("Description_IdFileName", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert Ion Mobility Description&gt;.
         /// </summary>
-        internal static string Description_Ion_Mobility {
+        public static string Description_Ion_Mobility {
             get {
                 return ResourceManager.GetString("Description_Ion Mobility", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert LibraryName Description&gt;.
         /// </summary>
-        internal static string Description_LibraryName {
+        public static string Description_LibraryName {
             get {
                 return ResourceManager.GetString("Description_LibraryName", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert PrecursorMz Description&gt;.
         /// </summary>
-        internal static string Description_PrecursorMz {
+        public static string Description_PrecursorMz {
             get {
                 return ResourceManager.GetString("Description_PrecursorMz", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert RetentionTime Description&gt;.
         /// </summary>
-        internal static string Description_RetentionTime {
+        public static string Description_RetentionTime {
             get {
                 return ResourceManager.GetString("Description_RetentionTime", resourceCulture);
             }
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert Score Description&gt;.
         /// </summary>
-        internal static string Description_Score {
+        public static string Description_Score {
             get {
                 return ResourceManager.GetString("Description_Score", resourceCulture);
             }
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert ScoreType Description&gt;.
         /// </summary>
-        internal static string Description_ScoreType {
+        public static string Description_ScoreType {
             get {
                 return ResourceManager.GetString("Description_ScoreType", resourceCulture);
             }
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to &lt;Insert Spectra Id in File Description&gt;.
         /// </summary>
-        internal static string Description_SpecIdInFile {
+        public static string Description_SpecIdInFile {
             get {
                 return ResourceManager.GetString("Description_SpecIdInFile", resourceCulture);
             }
@@ -189,7 +189,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Number of measured spectra for this peptide in the library.
         /// </summary>
-        internal static string Description_SpectrumCount {
+        public static string Description_SpectrumCount {
             get {
                 return ResourceManager.GetString("Description_SpectrumCount", resourceCulture);
             }
@@ -198,7 +198,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to File Info.
         /// </summary>
-        internal static string File_Info {
+        public static string File_Info {
             get {
                 return ResourceManager.GetString("File Info", resourceCulture);
             }
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to File Name.
         /// </summary>
-        internal static string FileName {
+        public static string FileName {
             get {
                 return ResourceManager.GetString("FileName", resourceCulture);
             }
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Id File Name.
         /// </summary>
-        internal static string IdFileName {
+        public static string IdFileName {
             get {
                 return ResourceManager.GetString("IdFileName", resourceCulture);
             }
@@ -225,7 +225,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Ion Mobility.
         /// </summary>
-        internal static string IonMobility {
+        public static string IonMobility {
             get {
                 return ResourceManager.GetString("IonMobility", resourceCulture);
             }
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Library Name.
         /// </summary>
-        internal static string LibraryName {
+        public static string LibraryName {
             get {
                 return ResourceManager.GetString("LibraryName", resourceCulture);
             }
@@ -243,7 +243,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Peptide Info.
         /// </summary>
-        internal static string Peptide_Info {
+        public static string Peptide_Info {
             get {
                 return ResourceManager.GetString("Peptide Info", resourceCulture);
             }
@@ -252,7 +252,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Precursor Mz.
         /// </summary>
-        internal static string PrecursorMz {
+        public static string PrecursorMz {
             get {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
             }
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Retention Time.
         /// </summary>
-        internal static string RetentionTime {
+        public static string RetentionTime {
             get {
                 return ResourceManager.GetString("RetentionTime", resourceCulture);
             }
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Score.
         /// </summary>
-        internal static string Score {
+        public static string Score {
             get {
                 return ResourceManager.GetString("Score", resourceCulture);
             }
@@ -279,7 +279,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Score Type.
         /// </summary>
-        internal static string ScoreType {
+        public static string ScoreType {
             get {
                 return ResourceManager.GetString("ScoreType", resourceCulture);
             }
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Small Molecule Info.
         /// </summary>
-        internal static string Small_Molecule_Info {
+        public static string Small_Molecule_Info {
             get {
                 return ResourceManager.GetString("Small Molecule Info", resourceCulture);
             }
@@ -297,7 +297,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Spectra Id in File.
         /// </summary>
-        internal static string SpecIdInFile {
+        public static string SpecIdInFile {
             get {
                 return ResourceManager.GetString("SpecIdInFile", resourceCulture);
             }
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Spectrum Count.
         /// </summary>
-        internal static string SpectrumCount {
+        public static string SpectrumCount {
             get {
                 return ResourceManager.GetString("SpectrumCount", resourceCulture);
             }

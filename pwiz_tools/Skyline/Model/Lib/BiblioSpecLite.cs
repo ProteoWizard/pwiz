@@ -2014,6 +2014,11 @@ namespace pwiz.Skyline.Model.Lib
             return SqliteOperations.TableExists(connection, @"SpectrumSourceFiles");
         }
 
+        private bool HasFileIdColumn(SQLiteConnection connection)
+        {
+            return SqliteOperations.ColumnExists(connection, @"RefSpectra", @"fileID");
+        }
+
         public class BiblioSpecGridInfo
         {
             [CanBeNull] public string SpecIdInFile { get; set; }
@@ -2052,7 +2057,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             var connection = isBest ? _sqliteConnection.Connection : _sqliteConnectionRedundant.Connection;
             var hasScores = HasScoreTypesTable(connection);
-            var hasFiles = HasSourceFilesTable(connection);
+            var hasFiles = HasSourceFilesTable(connection) && HasFileIdColumn(connection);
             using (SQLiteCommand select = new SQLiteCommand(connection))
             {
                 if (hasScores)

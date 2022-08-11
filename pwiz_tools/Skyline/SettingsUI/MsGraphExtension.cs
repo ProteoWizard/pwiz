@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Resources;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PropertyDescriptor basePropertyDescriptor;
         public bool ReadOnly = true;
         private static string _descriptionPrefix = @"Description_";
+        private ResourceManager _resourceManager = MsGraphExtensionResx.ResourceManager;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor) : base(basePropertyDescriptor)
         {
@@ -91,7 +93,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Get display name from CommandArgName
                 var displayNameKey = basePropertyDescriptor.Name;
-                return MsGraphExtensionResx.ResourceManager.GetString(displayNameKey);
+                return _resourceManager.GetString(displayNameKey);
             }
         }
         
@@ -99,8 +101,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return MsGraphExtensionResx.ResourceManager.GetString(_descriptionPrefix +
-                                                                      basePropertyDescriptor.Name) ?? String.Empty;
+                return _resourceManager.GetString(_descriptionPrefix + basePropertyDescriptor.Name) ?? String.Empty;
             }
         }
         
@@ -110,7 +111,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (basePropertyDescriptor.Category != null)
                 {
-                    return MsGraphExtensionResx.ResourceManager.GetString(basePropertyDescriptor.Category);
+                    return _resourceManager.GetString(basePropertyDescriptor.Category);
                 }
 
                 return null;
