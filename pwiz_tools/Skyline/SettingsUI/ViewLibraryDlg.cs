@@ -86,6 +86,9 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibSpectrumGraphItem GraphItem { get; private set; }
         public GraphSpectrumSettings GraphSettings { get; private set; }
 
+        private ComboOption[] _currentOptions;
+        private bool _comboBoxUpdated;
+        private Object _updateComboBoxLock = new object();
         public SpectrumProperties _currentProperties { get; private set; }
 
         // // If you want run old tests to see if they work with the property grid feature, change 
@@ -146,11 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return msGraphExtension1.graph; }
         }
 
-        // Used exclusively for testing
-        public MsGraphExtension GraphExtensionControl
-        {
-            get { return msGraphExtension1; }
-        }
+
 
 
 
@@ -1028,14 +1027,16 @@ namespace pwiz.Skyline.SettingsUI
                 ComboOption bestOption = null;
                 comboRedundantSpectra.Items.Clear();
                 Array.Sort(options);
-                comboRedundantSpectra.Items.AddRange(options);
+                _currentOptions = options;
+                _comboBoxUpdated = false;
                 foreach (var opt in options)
                 {
                     if (opt.SpectrumInfoLibrary.IsBest)
                     {
                         // Sets the selected dropdown item to what is graphed without updating the UI.
                         comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
-                        comboRedundantSpectra.SelectedItem = opt;
+                        comboRedundantSpectra.Items.Add(opt);
+                        comboRedundantSpectra.SelectedIndex = 0;
                         comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
                         bestOption = opt;
                     }
@@ -1541,7 +1542,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             propertiesButton.Checked = !propertiesButton.Checked;
             msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
-            // UpdateUI();
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2438,6 +2438,16 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboRedundantSpectra; }
         }
 
+        public MsGraphExtension GraphExtensionControl
+        {
+            get { return msGraphExtension1; }
+        }
+
+        public bool IsComboBoxUpdated
+        {
+            get { return _comboBoxUpdated; }
+        }
+
         #endregion
 
         /// <summary>
@@ -2964,6 +2974,26 @@ namespace pwiz.Skyline.SettingsUI
         private void redundantSpectrum_changed(object sender, EventArgs e)
         {
             UpdateUI();
+        }
+
+        public void insertComboItems(object sender, EventArgs e)
+        {
+            lock (_updateComboBoxLock)
+            {
+                if (!_comboBoxUpdated)
+                {
+                    comboRedundantSpectra.BeginUpdate();
+                    foreach (ComboOption opt in _currentOptions)
+                    {
+                        if (!opt.SpectrumInfoLibrary.IsBest)
+                        {
+                            comboRedundantSpectra.Items.Add(opt);
+                        }
+                    }
+                    comboRedundantSpectra.EndUpdate();
+                    _comboBoxUpdated = true;
+                }
+            }
         }
 
         public class SpectrumProperties : GlobalizedObject
