@@ -2978,8 +2978,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void insertComboItems(object sender, EventArgs e)
         {
-            lock (_updateComboBoxLock)
-            {
+            // lock (_updateComboBoxLock)
+            // {
                 if (!_comboBoxUpdated)
                 {
                     comboRedundantSpectra.BeginUpdate();
@@ -2993,7 +2993,7 @@ namespace pwiz.Skyline.SettingsUI
                     comboRedundantSpectra.EndUpdate();
                     _comboBoxUpdated = true;
                 }
-            }
+            // }
         }
 
         public class SpectrumProperties : GlobalizedObject
