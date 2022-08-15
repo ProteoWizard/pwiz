@@ -22,6 +22,8 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
+using TestRunnerLib;
 
 namespace SkylineTester
 {
@@ -99,6 +101,25 @@ namespace SkylineTester
             args.Append(String.Join(",", cultures));
             if (GetTestList().Length > 0)
                 args.Append(" perftests=on"); // In case any perf tests were explicitly selected - no harm if they weren't
+
+            if (MainWindow.RunParallel.Checked)
+            {
+                args.AppendFormat(" parallelmode=server workercount={0}", MainWindow.RunParallelWorkerCount.Value);
+                var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+                if (!dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME))
+                {
+                    MainWindow.CommandShell.Log($"'{RunTests.DOCKER_IMAGE_NAME}' is missing; building it now.");
+                    if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
+                    {
+                        MainWindow.CommandShell.Log("Prompting for AlwaysUpCLT password. " +
+                                                    "Get it from https://skyline.ms/wiki/home/development/page.view?name=Running%20tests%20in%20parallel%20with%20Docker");
+                        MainWindow.CommandShell.UpdateLog();
+                        var passwordDictionary = new Dictionary<string, string[]> { { "Password", new [] { "" } } };
+                        KeyValueGridDlg.Show(MainWindow, "Enter password for AlwaysUpCLT", passwordDictionary, v => v[0], (s, v) => v[0] = s);
+                        args.AppendFormat(" alwaysupcltpassword=\"{0}\"", passwordDictionary["Password"][0]);
+                    }
+                }
+            }
 
             args.Append(GetTestList());
 
