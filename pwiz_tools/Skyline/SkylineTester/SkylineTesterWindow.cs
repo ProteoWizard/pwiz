@@ -196,6 +196,8 @@ namespace SkylineTester
             InitLanguages(tutorialsLanguage);
             EnableButtonSelectFailedTests(false); // No tests run yet
 
+            runSerial.Checked = true; // default to serial; saved settings will override
+
             if (args.Length > 0)
                 _openFile = args[0];
             else if (!string.IsNullOrEmpty(Settings.Default.SavedSettings))
@@ -1044,6 +1046,9 @@ namespace SkylineTester
                 skipCheckedTests,
                 showTutorialsOnly,
                 runMode,
+                runParallel,
+                runSerial,
+                parallelWorkerCount,
 
                 // Build
                 buildTrunk,
@@ -1472,6 +1477,8 @@ namespace SkylineTester
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
+        public RadioButton      RunParallel                 { get { return runParallel; } }
+        public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
