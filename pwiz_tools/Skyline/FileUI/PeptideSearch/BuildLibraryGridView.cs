@@ -520,6 +520,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
 
             var file = (File)Rows[e.RowIndex].DataBoundItem;
+            var repaint = false;
 
             if (e.ColumnIndex == _colThreshold.Index)
             {
@@ -532,9 +533,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 foreach (var fileOther in Files.Where(f => Equals(scoreType, f.ScoreType)))
                 {
                     fileOther.ScoreThreshold = file.ScoreThreshold;
-                    InvalidateCell(FindRow(fileOther).Cells[_colThreshold.Index]);
+                    repaint = true;
                 }
             }
+
+            if (repaint)
+                Invalidate();
         }
 
         public class File
