@@ -657,4 +657,10 @@
   <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
     <value>Removed (peptides must be unique to a single protein group)</value>
   </data>
+  <data name="Units_mz" xml:space="preserve">
+    <value>mz</value>
+  </data>
+  <data name="Units_ppm" xml:space="preserve">
+    <value>ppm</value>
+  </data>
 </root>

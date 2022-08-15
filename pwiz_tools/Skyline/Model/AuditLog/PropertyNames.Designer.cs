@@ -4129,6 +4129,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unit for matching predicted and library m/z tolerance.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_IonMatchToleranceUnit {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchToleranceUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product ion selection start.
         /// </summary>
         public static string TransitionFilterAndLibrariesSettings_IonRangeFrom {
@@ -4530,6 +4539,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionLibraries_IonMatchTolerance {
             get {
                 return ResourceManager.GetString("TransitionLibraries_IonMatchTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit for matching predicted and library m/z tolerance.
+        /// </summary>
+        public static string TransitionLibraries_IonMatchToleranceUnit {
+            get {
+                return ResourceManager.GetString("TransitionLibraries_IonMatchToleranceUnit", resourceCulture);
             }
         }
         

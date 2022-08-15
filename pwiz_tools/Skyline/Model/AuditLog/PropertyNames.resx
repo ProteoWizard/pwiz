@@ -743,6 +743,13 @@
   <data name="TransitionLibraries_Pick" xml:space="preserve">
     <value>Pick</value>
   </data>
+  <data name="TransitionLibraries_IonMatchToleranceUnit" xml:space="preserve">
+    <value>Unit for matching predicted and library m/z tolerance</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonMatchToleranceUnit" xml:space="preserve">
+    <value>Unit for matching predicted and library m/z tolerance</value>
+  </data>
+  
   <data name="TransitionSettings_Filter" xml:space="preserve">
     <value>Filter</value>
   </data>
