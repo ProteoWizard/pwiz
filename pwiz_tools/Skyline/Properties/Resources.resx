@@ -1357,7 +1357,7 @@
     <value>Scheduled</value>
   </data>
   <data name="add_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	<value>..\Resources\add-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Resources\add-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="FragmentLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\FragmentLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -11667,7 +11667,7 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Associate Proteins</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
-	<value>Waiting for SCIEX OS to start</value>
+	  <value>Waiting for SCIEX OS to start</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
 	  <value>Working...</value>
@@ -11813,9 +11813,6 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
     <value>Shared Peptides</value>
-  </data>
-  <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	<value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
     <value>Duplicated peptides</value>
