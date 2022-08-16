@@ -215,11 +215,13 @@ SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_Activa
     base_ = new b::SpectrumList_FilterPredicate_ActivationType(nativeSet, hasNoneOf);
 }
 
-SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem)
+SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem, System::String^ msLevelSet)
 {
+    IntegerSet parsedMsLevelSet;
+    parsedMsLevelSet.parse(ToStdString(msLevelSet));
     std::set<pwiz::cv::CVID> nativeSet;
     for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID) d);
-    base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet);
+    base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet, parsedMsLevelSet);
 }
 
 SpectrumList_FilterPredicate_Polarity::SpectrumList_FilterPredicate_Polarity(CVID polarity)

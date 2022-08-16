@@ -864,7 +864,7 @@ namespace TestRunnerLib
                 {
                     if (!DerivesFromAbstractUnitTest(type))
 // ReSharper disable LocalizableElement
-                        Console.WriteLine("ERROR: " + type.Name + " does not derive from AbstractUnitTest!"); // N.B. this check is also implemented in CodeInspectionTest.cs
+                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
 // ReSharper restore LocalizableElement
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
