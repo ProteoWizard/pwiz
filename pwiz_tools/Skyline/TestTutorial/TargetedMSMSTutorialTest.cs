@@ -522,7 +522,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported", 20);
             TestRedundantComboBox();
-            TestPropertyGrid();
+            TestPropertySheet();
 
             ValidatePeakRanks(1, 176, true);
 
@@ -1146,8 +1146,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => dlg.Close());
         }
 
-        // Test for property grid currently in progress
-        private void TestPropertyGrid()
+        // Test for property sheet
+        private void TestPropertySheet()
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             WaitForConditionUI(() => dlg.IsUpdateComplete);
@@ -1169,18 +1169,18 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var graphExtension = (MsGraphExtension)dlg.Controls.Find("msGraphExtension1", true)[0];
-                propertyGrid = graphExtension.propertiesGrid;
+                propertyGrid = graphExtension.PropertiesSheet;
                 Assert.IsNotNull(propertyGrid);
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                var expectedAttributes = isSmallMolecules ? 8 : 10; 
-                Assert.IsTrue(((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties().Count == expectedAttributes);
+                var expectedAttributes = isSmallMolecules ? 7 : 10; 
+                Assert.AreEqual(expectedAttributes, ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties().Count);
             });
             RunUI(() =>
             {
                 dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
                 Assert.IsNotNull(propertyGrid);
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                var expectedAttributes = isSmallMolecules ? 8 : 10;
+                var expectedAttributes = isSmallMolecules ? 7 : 10;
                 var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
                 Assert.AreEqual(expectedAttributes, properties.Count);
                 var spectrumCount = properties.Find("SpectrumCount", true).GetValue(propertyGrid.SelectedObject);

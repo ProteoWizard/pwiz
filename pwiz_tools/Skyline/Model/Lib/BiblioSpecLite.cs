@@ -2019,7 +2019,7 @@ namespace pwiz.Skyline.Model.Lib
             return SqliteOperations.ColumnExists(connection, @"RefSpectra", @"fileID");
         }
 
-        public class BiblioSpecGridInfo
+        public class BiblioSpecSheetInfo
         {
             [CanBeNull] public string SpecIdInFile { get; set; }
             [CanBeNull] public string IDFileName { get; set; }
@@ -2033,27 +2033,27 @@ namespace pwiz.Skyline.Model.Lib
             [CanBeNull] public string ScoreType { get; set; }
         }
 
-        public BiblioSpecGridInfo GetRedundantGridInfo(int redundantId)
+        public BiblioSpecSheetInfo GetRedundantSheetInfo(int redundantId)
         {
-            return GetGridInfo(redundantId, false);
+            return GetSheetInfo(redundantId, false);
         }
 
-        public BiblioSpecGridInfo GetBestGridInfo(LibKey key)
+        public BiblioSpecSheetInfo GetBestSheetInfo(LibKey key)
         {
             int i = FindEntry(key);
             if (i == -1)
                 return null;
             var info = _libraryEntries[i];
-            return GetGridInfo(info.Id, true);
+            return GetSheetInfo(info.Id, true);
         }
         
         /// <summary>
-        /// Gets data on a spectrum to populate the Property Grid in ViewLibraryDlg
+        /// Gets data on a spectrum to populate the Property Sheet in ViewLibraryDlg
         /// </summary>
         /// <param name="id"></param>
         /// <param name="isBest"></param>
         /// <returns></returns>
-        public BiblioSpecGridInfo GetGridInfo(long id, bool isBest)
+        public BiblioSpecSheetInfo GetSheetInfo(long id, bool isBest)
         {
             var connection = isBest ? _sqliteConnection.Connection : _sqliteConnectionRedundant.Connection;
             var hasScores = HasScoreTypesTable(connection);
@@ -2091,24 +2091,24 @@ namespace pwiz.Skyline.Model.Lib
                     var iScore = reader.GetOrdinal(RefSpectra.score);
                     var iScoreType = reader.GetOrdinal(ScoreTypes.scoreType);
                     var iProbabilityType = reader.GetOrdinal(ScoreTypes.probabilityType);
-                    var gridInfo = new BiblioSpecGridInfo();
+                    var sheetInfo = new BiblioSpecSheetInfo();
                     if (reader.Read())
                     {
-                        gridInfo.SpecIdInFile = reader.IsDBNull(iSpecIdInFile) ? null : reader.GetString(iSpecIdInFile);
-                        gridInfo.Count = reader.GetInt32(iCopies);
+                        sheetInfo.SpecIdInFile = reader.IsDBNull(iSpecIdInFile) ? null : reader.GetString(iSpecIdInFile);
+                        sheetInfo.Count = reader.GetInt32(iCopies);
                         if (hasFiles)
                         {
-                            gridInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
-                            gridInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
+                            sheetInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
+                            sheetInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
                         }
                         if (hasScores)
                         {
-                            gridInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
+                            sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
                             var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
                             var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
-                            gridInfo.ScoreType = new BiblioSpecScoreType(scoreType, probabilityType).ToString();
+                            sheetInfo.ScoreType = new BiblioSpecScoreType(scoreType, probabilityType).ToString();
                         }
-                        return gridInfo;
+                        return sheetInfo;
                     }
                     // Should never reach here, as there should always be an sql entry matching the query
                     return null;

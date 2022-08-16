@@ -88,19 +88,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private ComboOption[] _currentOptions;
         private bool _comboBoxUpdated;
-        private Object _updateComboBoxLock = new object();
         public SpectrumProperties _currentProperties { get; private set; }
-
-        // // If you want run old tests to see if they work with the property grid feature, change 
-        // // 'return msGraphExtension1.propertiesVisible' to 'return true'
-        // private bool _getAdditionalGridInfo
-        // {
-        //     get
-        //     {
-        //         return msGraphExtension1.propertiesVisible;
-        //     }
-        // }
-
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
@@ -852,17 +840,17 @@ namespace pwiz.Skyline.SettingsUI
                             Charge = pepInfo.Charge
                         };
                         var selectedBiblioSpecLib = _selectedLibrary as BiblioSpecLiteLibrary;
-                        if (selectedBiblioSpecLib != null /*&& _getAdditionalGridInfo*/)
+                        if (selectedBiblioSpecLib != null)
                         {
-                            BiblioSpecGridInfo biblioAdditionalInfo;
+                            BiblioSpecSheetInfo biblioAdditionalInfo;
                             if (spectrumInfo.IsBest)
                             {
-                                biblioAdditionalInfo = selectedBiblioSpecLib.GetBestGridInfo(_peptides[index].Key);
+                                biblioAdditionalInfo = selectedBiblioSpecLib.GetBestSheetInfo(_peptides[index].Key);
                                 newProperties.SpectrumCount = biblioAdditionalInfo.Count;
                             }
                             else
                             {
-                                biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
+                                biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantSheetInfo(((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
                                 newProperties.SpectrumCount = _currentProperties.SpectrumCount;
                             }
                             _currentProperties = newProperties;

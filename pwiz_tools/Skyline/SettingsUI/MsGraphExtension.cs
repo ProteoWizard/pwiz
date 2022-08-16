@@ -13,7 +13,7 @@ namespace pwiz.Skyline.SettingsUI
         public bool propertiesVisible;
         public MSGraphControl graph { get; }
 
-        public PropertyGrid propertiesGrid;
+        public PropertyGrid PropertiesSheet;
 
 
         public MsGraphExtension()
@@ -22,12 +22,12 @@ namespace pwiz.Skyline.SettingsUI
             propertiesVisible = false;
             splitContainer1.Panel2Collapsed = true;
             graph = graphControl;
-            propertiesGrid = gridSpectrumInfo;
+            PropertiesSheet = spectrumInfoSheet;
         }
 
         public void SetPropertiesObject(GlobalizedObject spectrumProperties)
         {
-            gridSpectrumInfo.SelectedObject = spectrumProperties;
+            spectrumInfoSheet.SelectedObject = spectrumProperties;
         }
 
         public void SetPropertiesVisibility(bool visible)
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void Refresh()
         {
-            gridSpectrumInfo.Refresh();
+            spectrumInfoSheet.Refresh();
         }
 
     }
