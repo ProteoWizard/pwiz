@@ -861,8 +861,8 @@ namespace pwiz.Skyline.Model.Proteome
                     children.Add(peptideDocNode.ChangeFastaSequence(protein));
                 }
 
-                var proteinOrGroupMetadata = protein is FastaSequenceGroup
-                    ? new ProteinGroupMetadata((protein as FastaSequenceGroup).FastaSequenceList.Select(s => new ProteinMetadata(s.Name, s.Description)).ToList())
+                var proteinOrGroupMetadata = protein.FastaSequenceList.Count > 1
+                    ? new ProteinGroupMetadata(protein.FastaSequenceList.Select(s => new ProteinMetadata(s.Name, s.Description)).ToList())
                     : new ProteinMetadata(protein.Name, protein.Description);
                 var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray());
                 newPeptideGroups.Add(peptideGroupDocNode);
