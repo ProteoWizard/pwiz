@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Properties;
 
@@ -132,19 +133,19 @@ namespace pwiz.Common.Controls
             var contextMenuStrip = new ContextMenuStrip();
             contextMenuStrip.ShowImageMargin =
                 contextMenuStrip.ShowCheckMargin = false; // We only want to see the text, no image area needed
-            for (var i = 0; i < Items.Count; i++)
-            {
-                contextMenuStrip.Items.Add(Items[i].ToString());
-                if (i == SelectedIndex)
-                {
-                    contextMenuStrip.Items[i].Select(); // Set the initial selection
-                }
-            }
-
+            contextMenuStrip.Items.AddRange(Items.Select(CreateMenuItem).ToArray());
             contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked; // Update the button selection when use clicks on menu
             contextMenuStrip.KeyDown += contextMenuStrip_KeyDown; // Handle keys in the manner of a standard combobox
             contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
             base.BackColor = _backColorActive;
+        }
+
+        protected virtual ToolStripMenuItem CreateMenuItem(object value)
+        {
+            return new ToolStripMenuItem(value.ToString())
+            {
+                Padding = Padding.Empty
+            };
         }
 
         // Update the button selection when use clicks on menu
@@ -161,6 +162,7 @@ namespace pwiz.Common.Controls
         {
             switch (e.KeyData)
             {
+                case Keys.F4:
                 case Keys.Space:
                 {
                     // Close the menu
@@ -176,7 +178,7 @@ namespace pwiz.Common.Controls
         // Mimic the keyboard handling of standard ComboBox
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == (Keys.Alt | Keys.Down) || keyData == (Keys.Alt | Keys.Up))
+            if (keyData == (Keys.Alt | Keys.Down) || keyData == (Keys.Alt | Keys.Up) || keyData == Keys.F4)
             {
                 ShowDropdown();
                 return true;
