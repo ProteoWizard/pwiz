@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -40,7 +41,7 @@ namespace pwiz.Common.Controls
         private Color _backColorActive;
         private Font _normalFont;
         private Font _specialFont;
-
+        private ContextMenuStrip _contextMenuStrip;
 
         public LiteDropDownList()
         {
@@ -50,7 +51,7 @@ namespace pwiz.Common.Controls
             SelectedIndex = -1;
             Padding = Padding.Empty;
             Margin = new Padding(-1, 0, -1, 0); // Let these butt up to each other, and overlap on left/right edges
-            AutoEllipsis = true; // e.g. If test is too wide, show "Explicit Coll..." rather than breaking at space and showing "Explicit"
+            AutoEllipsis = true; // e.g. If text is too wide, show "Explicit Coll..." rather than breaking at space and showing "Explicit"
             base.BackColor = _backColorInactive = SystemColors.ControlLight;
             FlatStyle = FlatStyle.Flat;
             FlatAppearance.MouseOverBackColor = _backColorActive = SystemColors.GradientInactiveCaption; // Very light system color
@@ -74,6 +75,14 @@ namespace pwiz.Common.Controls
             Leave += RestoreBackgroundColor;
             _normalFont = new Font(base.Font, FontStyle.Regular);
             _specialFont = new Font(base.Font, FontStyle.Italic);
+            _contextMenuStrip = new ContextMenuStrip
+            {
+                ShowImageMargin = false,
+                ShowCheckMargin = false
+            };
+            _contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked; // Update the button selection when use clicks on menu
+            _contextMenuStrip.KeyDown += contextMenuStrip_KeyDown; // Handle keys in the manner of a standard combobox
+
         }
 
 
@@ -82,6 +91,8 @@ namespace pwiz.Common.Controls
 
         public event EventHandler SelectedIndexChanged;
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedIndex
         {
             get => _selectedIndex;
@@ -99,12 +110,16 @@ namespace pwiz.Common.Controls
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object SelectedItem
         {
             get => SelectedIndex >= 0 ? Items[SelectedIndex] : null;
             set => SelectedIndex = Items.IndexOf(value);
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get => base.Text;
@@ -127,24 +142,53 @@ namespace pwiz.Common.Controls
             ShowDropdown();
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool DroppedDown
+        {
+            get
+            {
+                return _contextMenuStrip.Visible;
+            }
+            set
+            {
+                if (DroppedDown == value)
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    ShowDropdown();
+                }
+                else
+                {
+                    HideDropdown();
+                }
+            }
+        }
+
         private void ShowDropdown()
         {
             // Show the dropdown menu
-            var contextMenuStrip = new ContextMenuStrip();
-            contextMenuStrip.ShowImageMargin =
-                contextMenuStrip.ShowCheckMargin = false; // We only want to see the text, no image area needed
-            contextMenuStrip.Items.AddRange(Items.Select(CreateMenuItem).ToArray());
-            contextMenuStrip.ItemClicked += contextMenuStrip_ItemClicked; // Update the button selection when use clicks on menu
-            contextMenuStrip.KeyDown += contextMenuStrip_KeyDown; // Handle keys in the manner of a standard combobox
-            contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
+            _contextMenuStrip.Items.Clear();
+            _contextMenuStrip.Items.AddRange(Items.Select(CreateMenuItem).ToArray());
+            _contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
             base.BackColor = _backColorActive;
+        }
+
+        private void HideDropdown()
+        {
+            _contextMenuStrip.Close();
+            // TODO(nicksh): Should this also set "base.BackColor" to "_backColorInactive"?
         }
 
         protected virtual ToolStripMenuItem CreateMenuItem(object value)
         {
             return new ToolStripMenuItem(value.ToString())
             {
-                Padding = Padding.Empty
+                Padding = Padding.Empty,
+                Font = SpecialItems.Contains(value) ? _specialFont : _normalFont
             };
         }
 
@@ -166,10 +210,10 @@ namespace pwiz.Common.Controls
                 case Keys.Space:
                 {
                     // Close the menu
-                    ((ContextMenuStrip)sender).Close();
+                    HideDropdown();
+                    base.BackColor = _backColorInactive;
                     e.Handled = true;
                     e.SuppressKeyPress = true;
-                    base.BackColor = _backColorInactive;
                     break;
                 }
             }
@@ -232,11 +276,34 @@ namespace pwiz.Common.Controls
             {
                 _normalFont?.Dispose();
                 _specialFont?.Dispose();
+                _contextMenuStrip.Dispose();
             }
 
             base.Dispose(disposing);
         }
 
-    }
+        #region Properties overridden with different attributes controlling how they behave in the Visual Studio form designer
+        [DefaultValue(true)]
+        public new bool AutoEllipsis
+        {
+            get { return base.AutoEllipsis; }
+            set { base.AutoEllipsis = value; }
+        }
 
+        [DefaultValue(false)]
+        public new bool UseVisualStyleBackColor
+        {
+            get { return base.UseVisualStyleBackColor; }
+            set { base.UseVisualStyleBackColor = value; }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new Color BackColor
+        {
+            get { return base.BackColor; }
+            set { base.BackColor = value; }
+        }
+        #endregion
+    }
 }
