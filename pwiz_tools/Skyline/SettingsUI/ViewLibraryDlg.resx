@@ -687,28 +687,31 @@
   <data name="&gt;&gt;splitMain.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="msGraphExtension1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="msGraphExtension1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="msGraphExtension1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>5, 5, 5, 5</value>
+  </data>
+  <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
     <value>497, 407</value>
   </data>
-  <data name="msGraphExtension1.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="&gt;&gt;msGraphExtension1.Name" xml:space="preserve">
-    <value>msGraphExtension1</value>
+  <data name="&gt;&gt;graphControl.Name" xml:space="preserve">
+    <value>graphControl</value>
   </data>
-  <data name="&gt;&gt;msGraphExtension1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.537, Culture=neutral, PublicKeyToken=null</value>
+  <data name="&gt;&gt;graphControl.Type" xml:space="preserve">
+    <value>pwiz.MSGraph.MSGraphControl, MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9</value>
   </data>
-  <data name="&gt;&gt;msGraphExtension1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;graphControl.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name="&gt;&gt;msGraphExtension1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -802,18 +805,6 @@
     <value>Charge 2 ions</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
-  </data>
-  <data name="propertiesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="propertiesButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
-  </data>
-  <data name="propertiesButton.ToolTipText" xml:space="preserve">
-    <value>Spectrum Properties</value>
-  </data>
-  <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
     <value>21, 6</value>
   </data>
   <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
@@ -919,7 +910,7 @@
     <value>3, 7</value>
   </data>
   <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>26, 13</value>
+    <value>43, 13</value>
   </data>
   <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -943,10 +934,10 @@
     <value>Fill</value>
   </data>
   <data name="comboRedundantSpectra.Location" type="System.Drawing.Point, System.Drawing">
-    <value>35, 3</value>
+    <value>52, 3</value>
   </data>
   <data name="comboRedundantSpectra.Size" type="System.Drawing.Size, System.Drawing">
-    <value>412, 21</value>
+    <value>395, 21</value>
   </data>
   <data name="comboRedundantSpectra.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1402,7 +1393,7 @@
     <value>True</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>25</value>
+    <value>38</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -1420,7 +1411,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.537, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
@@ -1486,18 +1477,6 @@
     <value>toolStripSeparator2</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;propertiesButton.Name" xml:space="preserve">
-    <value>propertiesButton</value>
-  </data>
-  <data name="&gt;&gt;propertiesButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
-    <value>toolStripSeparator3</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;copyMetafileButton.Name" xml:space="preserve">
@@ -1696,6 +1675,6 @@
     <value>ViewLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.537, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

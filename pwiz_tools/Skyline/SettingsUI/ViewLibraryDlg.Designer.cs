@@ -52,7 +52,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.MsGraphExtension();
+            this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnAIons = new System.Windows.Forms.ToolStripButton();
             this.btnBIons = new System.Windows.Forms.ToolStripButton();
@@ -65,8 +65,6 @@ namespace pwiz.Skyline.SettingsUI
             this.charge1Button = new System.Windows.Forms.ToolStripButton();
             this.charge2Button = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.propertiesButton = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.copyMetafileButton = new System.Windows.Forms.ToolStripButton();
             this.btnCopy = new System.Windows.Forms.ToolStripButton();
             this.btnSave = new System.Windows.Forms.ToolStripButton();
@@ -290,15 +288,29 @@ namespace pwiz.Skyline.SettingsUI
             // GraphPanel
             // 
             this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.GraphPanel.Controls.Add(this.msGraphExtension1);
+            this.GraphPanel.Controls.Add(this.graphControl);
             this.GraphPanel.Controls.Add(this.toolStrip1);
             resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
             // 
-            // msGraphExtension1
+            // graphControl
             // 
-            resources.ApplyResources(this.msGraphExtension1, "msGraphExtension1");
-            this.msGraphExtension1.Name = "msGraphExtension1";
+            resources.ApplyResources(this.graphControl, "graphControl");
+            this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphControl.IsEnableVPan = false;
+            this.graphControl.IsEnableVZoom = false;
+            this.graphControl.IsShowCopyMessage = false;
+            this.graphControl.IsZoomOnMouseCenter = true;
+            this.graphControl.Name = "graphControl";
+            this.graphControl.ScrollGrace = 0D;
+            this.graphControl.ScrollMaxX = 0D;
+            this.graphControl.ScrollMaxY = 0D;
+            this.graphControl.ScrollMaxY2 = 0D;
+            this.graphControl.ScrollMinX = 0D;
+            this.graphControl.ScrollMinY = 0D;
+            this.graphControl.ScrollMinY2 = 0D;
+            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
             // 
             // toolStrip1
             // 
@@ -316,8 +328,6 @@ namespace pwiz.Skyline.SettingsUI
             this.charge1Button,
             this.charge2Button,
             this.toolStripSeparator2,
-            this.propertiesButton,
-            this.toolStripSeparator3,
             this.copyMetafileButton,
             this.btnCopy,
             this.btnSave,
@@ -396,19 +406,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
-            // 
-            // propertiesButton
-            // 
-            this.propertiesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.propertiesButton.Image = global::pwiz.Skyline.Properties.Resources.Properties_Button;
-            resources.ApplyResources(this.propertiesButton, "propertiesButton");
-            this.propertiesButton.Name = "propertiesButton";
-            this.propertiesButton.Click += new System.EventHandler(this.propertiesMenuItem_Click);
-            // 
-            // toolStripSeparator3
-            // 
-            this.toolStripSeparator3.Name = "toolStripSeparator3";
-            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
             // copyMetafileButton
             // 
@@ -518,7 +515,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // contextMenuSpectrum
             // 
-            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(32, 32);
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aionsContextMenuItem,
             this.bionsContextMenuItem,
@@ -794,6 +790,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Panel GraphPanel;
+        private pwiz.MSGraph.MSGraphControl graphControl;
         private System.Windows.Forms.ContextMenuStrip contextMenuSpectrum;
         private System.Windows.Forms.ToolStripMenuItem aionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bionsContextMenuItem;
@@ -834,9 +831,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label filterLabel;
         private System.Windows.Forms.Label byLabel;
         private System.Windows.Forms.ComboBox comboFilterCategory;
-        private MsGraphExtension msGraphExtension1;
-        private System.Windows.Forms.ToolStripButton propertiesButton;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Label labelFilename;
         private System.Windows.Forms.ComboBox comboRedundantSpectra;

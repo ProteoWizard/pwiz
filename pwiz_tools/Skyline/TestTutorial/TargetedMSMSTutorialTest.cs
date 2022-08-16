@@ -91,22 +91,22 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            ForceMzml = true; // 2-3x faster than raw files for this test.
+            ForceMzml = true;   // 2-3x faster than raw files for this test.
 
             AsSmallMoleculesTestMode = smallMoleculesTestMode;
 
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none)
+            if (smallMoleculesTestMode !=  RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = "AsSmMol_" + smallMoleculesTestMode;
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-20_1.pdf";
 
             TestFilesZipPaths = new[]
-            {
-                UseRawFiles
-                    ? @"http://skyline.ms/tutorials/TargetedMSMS_2.zip"
-                    : @"http://skyline.ms/tutorials/TargetedMSMSMzml_2.zip",
-                @"TestTutorial\TargetedMSMSViews.zip"
-            };
+                {
+                    UseRawFiles
+                        ? @"http://skyline.ms/tutorials/TargetedMSMS_2.zip"
+                        : @"http://skyline.ms/tutorials/TargetedMSMSMzml_2.zip",
+                    @"TestTutorial\TargetedMSMSViews.zip"
+                };
             RunFunctionalTest();
         }
 
@@ -123,8 +123,7 @@ namespace pwiz.SkylineTestTutorial
                 TofTest();
         }
 
-        private void LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode asSmallMoleculesTestMode,
-            string documentFile)
+        private void LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode asSmallMoleculesTestMode, string documentFile)
         {
             WaitForCondition(() => File.Exists(documentFile));
             RunUI(() => SkylineWindow.OpenFile(documentFile));
@@ -136,8 +135,7 @@ namespace pwiz.SkylineTestTutorial
             var document = WaitForDocumentLoaded();
             if (AsSmallMolecules)
             {
-                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE
-                    .mixed)); // Necessary for import wizard to import peptide stuff before we convert
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // Necessary for import wizard to import peptide stuff before we convert
                 CheckConsistentLibraryInfo();
                 ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
                 document = SkylineWindow.Document;
@@ -146,13 +144,12 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(document.PeptideTransitionCount, 0);
                 Assert.AreEqual(document.MoleculeTransitionCount, expectedTransitionCount);
             }
-
             AssertEx.IsDocumentState(document, null, 3, expectedMoleculeCount, expectedTransitionGroupCount,
                 expectedTransitionCount);
             CheckConsistentLibraryInfo();
 
             // p. 3 Select first peptide
-            RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int)SrmDocument.Level.Molecules, 0));
+            RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             RunUI(() => SkylineWindow.Size = new Size(820, 554));
             RestoreViewOnScreen(3);
             PauseForScreenShot("Main window", 3);
@@ -188,8 +185,7 @@ namespace pwiz.SkylineTestTutorial
                     // p.6
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
                     Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
-                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes
-                        .Contains("p")); // Should be added automatically
+                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
                 PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9);
 
@@ -199,10 +195,10 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(FullScanPrecursorIsotopes.Count, tranSettingsFullScan.FullScan.PrecursorIsotopes);
                 Assert.AreEqual(FullScanMassAnalyzerType.qit, tranSettingsFullScan.FullScan.PrecursorMassAnalyzer);
                 Assert.AreEqual(FullScanAcquisitionMethod.PRM, tranSettingsFullScan.FullScan.AcquisitionMethod);
-                Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.y, IonType.b, IonType.precursor },
+                Assert.IsTrue(ArrayUtil.ContainsAll(new[] {IonType.y, IonType.b, IonType.precursor},
                     tranSettingsFullScan.Filter.PeptideIonTypes));
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
-                    tranSettingsFullScan.Filter.SmallMoleculeIonTypes));
+                        tranSettingsFullScan.Filter.SmallMoleculeIonTypes));
             }
 
             RunUI(() => SkylineWindow.ExpandPrecursors());
@@ -230,12 +226,10 @@ namespace pwiz.SkylineTestTutorial
                             PauseForScreenShot<PopupPickList>("Transitions popup pick-list", 10);
                             pausedForScreenShot = true;
                         }
-
                         OkDialog(picklist, picklist.OnOk);
                     }
                 }
             }
-
             WaitForDocumentLoaded();
             // All transition groups should now have a precursor transition
             foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
@@ -286,7 +280,6 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(viewEditor.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
                     viewEditor.ChooseColumnsTab.AddSelectedColumn();
                 }
-
                 Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
             });
             PauseForScreenShot<ViewEditor>("Edit Report form", 13);
@@ -307,7 +300,6 @@ namespace pwiz.SkylineTestTutorial
                             double.Parse(previewReportDlg.DataGridView.Rows[i].Cells[precursorIndex].Value.ToString()),
                             0.000001);
                     }
-
                     var precursorMzCol = previewReportDlg.DataGridView.Columns[precursorIndex];
                     Assert.IsNotNull(precursorMzCol);
                     previewReportDlg.DataGridView.Sort(precursorMzCol, ListSortDirection.Ascending);
@@ -345,11 +337,9 @@ namespace pwiz.SkylineTestTutorial
                 // (workflow being demonstrated is peptide based) CONSIDER small mol workflow eventually
                 LowResTestPartOne(RefinementSettings.ConvertToSmallMoleculesMode.none, documentFile);
             }
-
             if (AsSmallMolecules)
             {
-                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE
-                    .mixed)); // So peptide import wizard still works
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
             }
 
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
@@ -357,11 +347,9 @@ namespace pwiz.SkylineTestTutorial
             //p. 15 Import Full-Scan Data
             // Launch import peptide search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
-            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType =
-                ImportPeptideSearchDlg.Workflow.prm);
+            RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>(
-                "Import Peptide Search Build Spectral Library blank page", 15);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page", 15);
 
             const int prefixLen = 35;
             const string lowResDir = "Low Res";
@@ -369,16 +357,12 @@ namespace pwiz.SkylineTestTutorial
             const string lowRes20Base = "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1";
             string lowRes20File = GetTestPath(Path.Combine(lowResDir, lowRes20Base + ExtThermoRaw));
             string lowRes20FileRaw = Path.ChangeExtension(lowRes20File, ExtThermoRaw);
-            string lowRes20Search = GetTestPath(Path.Combine(lowResDir,
-                Path.Combine(searchDir, lowRes20Base + BiblioSpecLiteBuilder.EXT_PERCOLATOR)));
-            string shortLowRes20FileName =
-                (Path.GetFileNameWithoutExtension(lowRes20File) ?? "").Substring(prefixLen, 6);
+            string lowRes20Search = GetTestPath(Path.Combine(lowResDir, Path.Combine(searchDir, lowRes20Base + BiblioSpecLiteBuilder.EXT_PERCOLATOR)));
+            string shortLowRes20FileName = (Path.GetFileNameWithoutExtension(lowRes20File) ?? "").Substring(prefixLen, 6);
             const string lowRes80Base = "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1";
             string lowRes80File = GetTestPath(Path.Combine(lowResDir, lowRes80Base + ExtThermoRaw));
-            string lowRes80Search = GetTestPath(Path.Combine(lowResDir,
-                Path.Combine(searchDir, lowRes80Base + BiblioSpecLiteBuilder.EXT_PERCOLATOR)));
-            string shortLowRes80FileName =
-                (Path.GetFileNameWithoutExtension(lowRes80File) ?? "").Substring(prefixLen, 6);
+            string lowRes80Search = GetTestPath(Path.Combine(lowResDir, Path.Combine(searchDir, lowRes80Base + BiblioSpecLiteBuilder.EXT_PERCOLATOR)));
+            string shortLowRes80FileName = (Path.GetFileNameWithoutExtension(lowRes80File) ?? "").Substring(prefixLen, 6);
 
             string[] searchFiles = { lowRes20Search, lowRes80Search };
             var doc = SkylineWindow.Document;
@@ -394,12 +378,10 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>(
-                "Import Peptide Search Build Spectral Library with files page", 16);
-
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
+            
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());
-            doc = WaitForDocumentChangeLoaded(doc,
-                WAIT_TIME * 2); // double wait time, becuase of intermittent failures on nightly runs
+            doc = WaitForDocumentChangeLoaded(doc, WAIT_TIME*2);    // double wait time, becuase of intermittent failures on nightly runs
             if (AsSmallMolecules)
             {
                 // Convert the document and just-created libraries to small molecules
@@ -409,7 +391,6 @@ namespace pwiz.SkylineTestTutorial
                 doc = SkylineWindow.Document;
                 documentFile = SkylineWindow.DocumentFilePath;
             }
-
             // Verify document library was built
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentFile);
             string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
@@ -417,27 +398,22 @@ namespace pwiz.SkylineTestTutorial
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>(
-                "Import Peptide Search Extract Chromatograms page", 17);
+            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search Extract Chromatograms page", 17);
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
             // document file, so all the files should be found, and we should
             // just be able to move to the next page.
-            TryWaitForConditionUI(() =>
-                importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            TryWaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
             var correctPage = false;
             ImportPeptideSearchDlg.Pages currentPage = 0;
-            RunUI(() => correctPage = ImportPeptideSearchDlg.Pages.chromatograms_page ==
-                                      (currentPage = importPeptideSearchDlg.CurrentPage));
+            RunUI(() => correctPage = ImportPeptideSearchDlg.Pages.chromatograms_page == (currentPage = importPeptideSearchDlg.CurrentPage));
             if (!correctPage)
             {
-                WaitForConditionUI(
-                    1, // Immediate timeout - just want the richer error message that WaitForConditionUI provides
+                WaitForConditionUI(1, // Immediate timeout - just want the richer error message that WaitForConditionUI provides
                     () => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page,
                     () => string.Format("Expected to be on chromatograms_page, on {0} instead", currentPage));
             }
-
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() =>
             {
@@ -448,13 +424,11 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
             // Skip Match Modifications page.
-            WaitForConditionUI(() =>
-                importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+            WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
             RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             // PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search Transition Settings page", 19);
-            TryWaitForOpenForm(
-                typeof(ImportPeptideSearchDlg.TransitionSettingsPage)); // So SkylineTester - Forms page still stops
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.TransitionSettingsPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Transition Settings" page of the wizard.
             // We've already set up these settings, so just click next.
@@ -462,24 +436,21 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                              ImportPeptideSearchDlg.Pages.transition_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonMz = 50;
                 importPeptideSearchDlg.TransitionSettingsControl.MaxIonMz = 1500;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             // PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search Full-Scan Settings page", 19);
-            TryWaitForOpenForm(
-                typeof(ImportPeptideSearchDlg.Ms2FullScanPage)); // So SkylineTester - Forms page still stops
+            TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.Ms2FullScanPage));  // So SkylineTester - Forms page still stops
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
             // We've already set up these settings, so just click next.
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
             {
-                Assert.IsTrue(
-                    importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             doc = WaitForDocumentChange(doc);
@@ -498,10 +469,8 @@ namespace pwiz.SkylineTestTutorial
             var expected20TransitionCount = AsSmallMolecules || UseRawFiles ? 87 : 88; // Expect this many with results
             var expected80TransitionCount = AsSmallMolecules ? 88 : UseRawFiles ? 86 : 87;
 
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount,
-                expectedTransitionGroupCount, 0, expected20TransitionCount, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount,
-                expectedTransitionGroupCount, 0, expected80TransitionCount, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes80FileName, expectedMoleculeCount, expectedTransitionGroupCount, 0, expected80TransitionCount, 0);
 
             RunUI(() =>
             {
@@ -522,7 +491,6 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported", 20);
             TestRedundantComboBox();
-            TestPropertyGrid();
 
             ValidatePeakRanks(1, 176, true);
 
@@ -532,11 +500,9 @@ namespace pwiz.SkylineTestTutorial
                 foreach (var nodeGroup in SkylineWindow.Document.MoleculeTransitionGroups)
                 {
                     double dotp = nodeGroup.Results[0][0].LibraryDotProduct ?? 0;
-                    Assert.IsTrue(Math.Round(dotp, 2) >= minDotp,
-                        string.Format("Library dot-product {0} found below {1}", dotp, minDotp));
+                    Assert.IsTrue(Math.Round(dotp, 2) >= minDotp, string.Format("Library dot-product {0} found below {1}", dotp, minDotp));
                 }
             }
-
             RunUI(() => SkylineWindow.AutoZoomBestPeak());
             // Ensure Graphs look like p21. (checked)
             WaitForGraphs();
@@ -564,7 +530,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowProductTransitions();
             });
             WaitForCondition(() => !SkylineWindow.GraphPeakArea.IsHidden);
-            if (!AsSmallMoleculeMasses) // Library was generated from pepXML
+            if (!AsSmallMoleculeMasses)  // Library was generated from pepXML
                 WaitForDotProducts();
             RunUI(() =>
             {
@@ -579,17 +545,17 @@ namespace pwiz.SkylineTestTutorial
 
             // Check graph p23. (checked)
             RunUI(() =>
-            {
-                SkylineWindow.ShowAllTransitions();
-                if (!IsCoverShotMode)
-                    SkylineWindow.ShowSplitChromatogramGraph(true);
-            });
+                {
+                    SkylineWindow.ShowAllTransitions();
+                    if (!IsCoverShotMode)
+                        SkylineWindow.ShowSplitChromatogramGraph(true);                    
+                });
 
             // p. 24 screenshot of full 5-point dilution curve
 
             // Select precursor
             if (!AsSmallMoleculeMasses)
-                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [35, 42]"); // May be localized " (missed 1)"
+                FindNode(AsSmallMolecules ? "DRVYIHPF" : "R.DRVYIHPF.- [35, 42]");  // May be localized " (missed 1)"
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1045");
             WaitForGraphs();
@@ -599,8 +565,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForGraphs();
                 // Select the precursor to cause graphs to re-layout
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
-                PauseForScreenShot<GraphSummary.AreaGraphView>(
-                    "Peak Areas Replicate Comparison graph metafile with split graphs", 25);
+                PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile with split graphs", 25);
             }
 
             if (IsCoverShotMode)
@@ -634,26 +599,22 @@ namespace pwiz.SkylineTestTutorial
 
             // PeakAreaGraph Normalize to total p.27.
             RunUI(() =>
-            {
-                SkylineWindow.ShowPeakAreaReplicateComparison();
-                SkylineWindow.ShowProductTransitions();
-                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
-            });
+                {
+                    SkylineWindow.ShowPeakAreaReplicateComparison();
+                    SkylineWindow.ShowProductTransitions();
+                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
+                });
 
             // Ensure graph looks like p27.
             if (!AsSmallMoleculeMasses)
             {
                 FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [81, 91]");
-                FindNode(AsSmallMolecules
-                    ? "KNLQS"
-                    : "R.IKNLQSLDPSH.- [81, 91]"); // Find again - takes you to Phosphorylated version
+                FindNode(AsSmallMolecules ? "KNLQS" : "R.IKNLQSLDPSH.- [81, 91]"); // Find again - takes you to Phosphorylated version
             }
             else
                 FindNode(Resources.CustomMolecule_DisplayName_Molecule + " [1330");
-
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("figure 1a - Area Replicate graph metafile for IKNLQSLDPSH",
-                27);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("figure 1a - Area Replicate graph metafile for IKNLQSLDPSH", 27);
             RunUI(() =>
             {
                 Assert.AreEqual(AsSmallMoleculeMasses ? 2 : 3, SkylineWindow.GraphPeakArea.Categories.Count());
@@ -691,7 +652,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 ConvertDocumentToSmallMolecules(AsSmallMoleculesTestMode);
             }
-
             var docCalibrate1 = WaitForDocumentLoaded();
             const int pepCount1 = 5, preCount1 = 5, tranCount1 = 30;
             AssertEx.IsDocumentState(docCalibrate1, null, 1, pepCount1, preCount1, tranCount1);
@@ -705,8 +665,7 @@ namespace pwiz.SkylineTestTutorial
             var docFullScanError = WaitForDocumentChangeLoaded(docCalibrate1);
 //            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
-            string expectedErrorFormat = Resources
-                .NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
+            string expectedErrorFormat = Resources.NoFullScanFilteringException_NoFullScanFilteringException_The_file__0__does_not_contain_SRM_MRM_chromatograms__To_extract_chromatograms_from_its_spectra__go_to_Settings___Transition_Settings___Full_Scan_and_choose_options_appropriate_to_the_acquisition_method_used_;
             if (!TryWaitForConditionUI(2000, () => importProgress.Files.Any(f => !string.IsNullOrEmpty(f.Error))))
             {
                 RunUI(() =>
@@ -726,7 +685,6 @@ namespace pwiz.SkylineTestTutorial
                         AssertEx.AreComparableStrings(expectedErrorFormat, importProgress2.Error, 1);
                         Assert.Fail("Error message appeared in new instance of progress UI");
                     }
-
                     Assert.IsFalse(importProgress.IsDisposed, "Import progress destroyed");
                     Assert.IsTrue(importProgress.IsHandleCreated, "Import progress not created");
                     Assert.IsTrue(importProgress.Visible, "Import progress hidden");
@@ -740,17 +698,14 @@ namespace pwiz.SkylineTestTutorial
                             AssertEx.AreComparableStrings(expectedErrorFormat, importProgressFile.Error);
 
                         if (importProgress.SelectedControl == null)
-                            message = string.Format("No selected control. Selected index = {0}",
-                                importProgress.Selected);
+                            message = string.Format("No selected control. Selected index = {0}", importProgress.Selected);
                         else if (!string.IsNullOrEmpty(importProgress.SelectedControl.Error))
-                            message = "Selected control error: " + importProgress.SelectedControl.Error +
-                                      " not in text control";
+                            message = "Selected control error: " + importProgress.SelectedControl.Error + " not in text control";
                     }
 
                     Assert.Fail(TextUtil.LineSeparate(message, "(" + importProgress.DetailedMessage + ")"));
                 });
             }
-
             RunUI(() =>
             {
                 foreach (var importProgressFile in importProgress.Files)
@@ -767,9 +722,7 @@ namespace pwiz.SkylineTestTutorial
             var document = SkylineWindow.Document;
 
             // Fill out Transition Settings Menu
-            int tranCount2 = (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
-                ? (tranCount1 + preCount1 * 3)
-                : (tranCount1 + preCount1); // No iostopes for mass-only document
+            int tranCount2 =  (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? (tranCount1 + preCount1*3) : (tranCount1 + preCount1); // No iostopes for mass-only document
             using (new CheckDocumentState(1, pepCount1, preCount1, tranCount2))
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -792,8 +745,7 @@ namespace pwiz.SkylineTestTutorial
 
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Filter;
                     Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
-                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes
-                        .Contains("p")); // Should be added automatically
+                    Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
                 // No longer doing anything we need a screen-shot for
                 // PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 30);
@@ -809,9 +761,9 @@ namespace pwiz.SkylineTestTutorial
             Assert.AreEqual(FullScanAcquisitionMethod.PRM, tranSettingsHighRes.FullScan.AcquisitionMethod);
             Assert.AreEqual(20, tranSettingsHighRes.FullScan.ProductRes);
             Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.y, IonType.b, IonType.precursor },
-                tranSettingsHighRes.Filter.PeptideIonTypes));
+                                               tranSettingsHighRes.Filter.PeptideIonTypes));
             Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
-                tranSettingsHighRes.Filter.SmallMoleculeIonTypes));
+                                               tranSettingsHighRes.Filter.SmallMoleculeIonTypes));
             RunUI(() => SkylineWindow.ExpandPrecursors());
 
             // Assert each peptide contains 3 precursors transitions (unless this is a masses-only small molecule doc).
@@ -820,15 +772,12 @@ namespace pwiz.SkylineTestTutorial
                 for (int i = 0; i < nodeGroup.Children.Count; i++)
                 {
                     var nodeTran = (TransitionDocNode)nodeGroup.Children[i];
-                    if (i < ((AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
-                            ? 1
-                            : 3))
+                    if (i < ((AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 1 : 3))
                         Assert.AreEqual(IonType.precursor, nodeTran.Transition.IonType);
                     else
                         Assert.AreNotEqual(IonType.precursor, nodeTran.Transition.IonType);
                 }
             }
-
             RestoreViewOnScreen(30);
             PauseForScreenShot("Targets View tree clipped from main window", 30);
 
@@ -843,8 +792,7 @@ namespace pwiz.SkylineTestTutorial
                     GetTestPath(@"TOF\5-BSA-100fmol" + ExtAgilentRaw),
                     GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)
                 };
-                importResultsDlg2.NamedPathSets =
-                    importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
+                importResultsDlg2.NamedPathSets = importResultsDlg2.GetDataSourcePathsFileReplicates(filePaths.Select(MsDataFileUri.Parse));
                 importResultsDlg2.OkDialog();
             });
             WaitForDocumentChangeLoaded(docHighRes, 15 * 60 * 1000); // 15 minutes
@@ -869,8 +817,8 @@ namespace pwiz.SkylineTestTutorial
                 // Resize and center window on screen
                 SkylineWindow.Size = windowSize;
                 var screenRect = Screen.FromControl(SkylineWindow).WorkingArea;
-                SkylineWindow.Location = new Point(screenRect.X + screenRect.Width / 2 - windowSize.Width / 2,
-                    screenRect.Y + screenRect.Height / 2 - windowSize.Height / 2);
+                SkylineWindow.Location = new Point(screenRect.X + screenRect.Width/2 - windowSize.Width/2,
+                    screenRect.Y + screenRect.Height/2 - windowSize.Height/2);
             });
             RestoreViewOnScreen(31);
             PauseForScreenShot("Main window", 31);
@@ -879,8 +827,7 @@ namespace pwiz.SkylineTestTutorial
             //     ValidatePeakRanks(18, 270, false);
 
             WaitForGraphs();
-            TryWaitForConditionUI(() =>
-                SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden) == 6);
+            TryWaitForConditionUI(() => SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden) == 6);
             RunUI(() =>
             {
                 Assert.IsFalse(SkylineWindow.IsGraphSpectrumVisible);
@@ -890,13 +837,10 @@ namespace pwiz.SkylineTestTutorial
                     string hiddenGraphs = string.Empty;
                     var listHidden = SkylineWindow.GraphChromatograms.Where(graphChrom => graphChrom.IsHidden).ToList();
                     if (listHidden.Count != 0)
-                        hiddenGraphs = TextUtil.LineSeparate(string.Empty, "Hidden:",
-                            TextUtil.LineSeparate(listHidden.Select(g => g.TabText)));
-                    Assert.Fail(TextUtil.LineSeparate(
-                        string.Format("Expecting 6 visible graphs but found {0}", listGraphs.Count),
+                        hiddenGraphs = TextUtil.LineSeparate(string.Empty, "Hidden:", TextUtil.LineSeparate(listHidden.Select(g => g.TabText)));
+                    Assert.Fail(TextUtil.LineSeparate(string.Format("Expecting 6 visible graphs but found {0}", listGraphs.Count),
                         TextUtil.LineSeparate(listGraphs.Select(g => g.TabText)), hiddenGraphs));
                 }
-
                 var chromGraphs = SkylineWindow.GraphChromatograms.ToArray();
                 Assert.AreEqual(6, chromGraphs.Length);
             });
@@ -926,16 +870,14 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ShowPeptideLogScale(true);
-            });
+            });            
 
             // p. 34
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Replicate Comparison graph metafile", 34);
             WaitForDotProducts();
             RunUI(() =>
             {
-                Assert.AreEqual(
-                    (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 7 : 6,
-                    SkylineWindow.GraphPeakArea.Categories.Count());
+                Assert.AreEqual((AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 7 : 6, SkylineWindow.GraphPeakArea.Categories.Count());
                 Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
             });
             VerifyDotProducts(0.87, 0.67, 0.91, 0.90, 0.90, 0.90);
@@ -963,9 +905,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.AreEqual(7, SkylineWindow.GraphPeakArea.Categories.Count());
-                Assert.AreEqual(
-                    (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 3 : 1,
-                    SkylineWindow.GraphPeakArea.CurveCount);
+                Assert.AreEqual((AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) ? 3 : 1, SkylineWindow.GraphPeakArea.CurveCount);
             });
             VerifyDotProducts(0.99, 0.52, 0.98, 1.00, 1.00, 1.00);
             RunUI(() =>
@@ -991,11 +931,9 @@ namespace pwiz.SkylineTestTutorial
             const string PEAK_RANK_BY_LEVEL_PATH = RESULTS_PART + "PeakRankByLevel";
 
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-            EnableDocumentGridColumns(documentGrid, Resources.ReportSpecList_GetDefaults_Transition_Results,
-                expectedRows,
+            EnableDocumentGridColumns(documentGrid, Resources.ReportSpecList_GetDefaults_Transition_Results, expectedRows,
                 addColumns ? new[] { TRANSITIONS_ROOT + PEAK_RANK_BY_LEVEL_PATH } : null);
-            WaitForConditionUI(
-                () => documentGrid.IsComplete && documentGrid.FindColumn(PEAK_RANK_BY_LEVEL_PATH) != null);
+            WaitForConditionUI(() => documentGrid.IsComplete && documentGrid.FindColumn(PEAK_RANK_BY_LEVEL_PATH) != null);
             RunUI(() =>
             {
                 var colIon = documentGrid.FindColumn(FRAGMENT_ION_PATH);
@@ -1004,7 +942,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsNotNull(colRank);
                 var colRankByLevel = documentGrid.FindColumn(PEAK_RANK_BY_LEVEL_PATH);
                 Assert.IsNotNull(colRankByLevel);
-                string precursorText = IonType.precursor.ToString(); // Invariant name
+                string precursorText = IonType.precursor.ToString();    // Invariant name
 
                 foreach (DataGridViewRow row in documentGrid.DataGridView.Rows)
                 {
@@ -1045,17 +983,13 @@ namespace pwiz.SkylineTestTutorial
         private void WaitForDotProducts()
         {
             WaitForGraphs();
-            if (AsSmallMoleculesTestMode !=
-                RefinementSettings.ConvertToSmallMoleculesMode
-                    .masses_only) // No libraries for small molecules without IDs
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) // No libraries for small molecules without IDs
                 WaitForConditionUI(() => AreaGraphDotProducts.Any(p => p != 0));
         }
 
         private void VerifyDotProducts(params double[] dotpExpects)
         {
-            if (AsSmallMoleculesTestMode !=
-                RefinementSettings.ConvertToSmallMoleculesMode
-                    .masses_only) // No libraries for small molecules without IDs
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) // No libraries for small molecules without IDs
             {
                 RunUI(() =>
                 {
@@ -1126,7 +1060,6 @@ namespace pwiz.SkylineTestTutorial
                     fileSet.Add(splitName[0]);
                     RTSet.Add(splitName[1]);
                 }
-            
                 // Checks the naming conventions are accurate, two different file names and 11 different retention times
                 Assert.AreEqual(2, fileSet.Count);
                 Assert.AreEqual(11, RTSet.Count);
@@ -1142,79 +1075,6 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
                 }
             }
-            
-            RunUI(() => dlg.Close());
-        }
-
-        // Test for property grid currently in progress
-        private void TestPropertyGrid()
-        {
-            var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            WaitForConditionUI(() => dlg.IsUpdateComplete);
-            var isSmallMolecules = dlg.PeptideDisplayCount < 11;
-            var graphExtension = dlg.GraphExtensionControl;
-            Assert.IsFalse(graphExtension.propertiesVisible);
-            ToolStripButton propertiesButton = null;
-            RunUI(() =>
-            {
-                var toolStrip = (ToolStrip)dlg.Controls.Find("toolStrip1", true)[0];
-                propertiesButton = (ToolStripButton)toolStrip.Items.Find("propertiesButton", true)[0];
-                Assert.IsNotNull(propertiesButton);
-                Assert.IsFalse(propertiesButton.Checked);
-                propertiesButton.PerformClick();
-            });
-            Assert.IsTrue(graphExtension.propertiesVisible);
-            Assert.IsTrue(propertiesButton.Checked);
-            PropertyGrid propertyGrid = null;
-            RunUI(() =>
-            {
-                var graphExtension = (MsGraphExtension)dlg.Controls.Find("msGraphExtension1", true)[0];
-                propertyGrid = graphExtension.propertiesGrid;
-                Assert.IsNotNull(propertyGrid);
-                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                var expectedAttributes = isSmallMolecules ? 8 : 10; 
-                Assert.IsTrue(((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties().Count == expectedAttributes);
-            });
-            RunUI(() =>
-            {
-                dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
-                Assert.IsNotNull(propertyGrid);
-                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                var expectedAttributes = isSmallMolecules ? 8 : 10;
-                var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                Assert.AreEqual(expectedAttributes, properties.Count);
-                var spectrumCount = properties.Find("SpectrumCount", true).GetValue(propertyGrid.SelectedObject);
-                Assert.AreEqual(401, spectrumCount);
-            });
-            Assert.IsTrue(graphExtension.propertiesVisible);
-            Assert.IsTrue(propertiesButton.Checked);
-            RunUI(() =>
-            {
-                dlg.FilterString = "b";
-                Assert.IsNotNull(propertyGrid);
-                var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                Assert.AreEqual(0, properties.Count);
-                dlg.FilterString = "";
-            });
-            if (!isSmallMolecules)
-            {
-                RunUI(() =>
-                {
-                    Assert.IsNotNull(propertyGrid);
-                    var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                    var specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
-                    Assert.AreEqual("488", specId);
-                    RunUI(() => dlg.insertComboItems(null, null));
-                    WaitForConditionUI(() => dlg.IsComboBoxUpdated);
-                    dlg.RedundantComboBox.SelectedIndex = 1;
-                    properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                    specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
-                    Assert.AreEqual("19208", specId);
-                });
-            }
-            RunUI(() => propertiesButton.PerformClick());
-            Assert.IsFalse(graphExtension.propertiesVisible);
-            Assert.IsFalse(propertiesButton.Checked);
             RunUI(() => dlg.Close());
         }
     }

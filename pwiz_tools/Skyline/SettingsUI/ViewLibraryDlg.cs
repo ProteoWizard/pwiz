@@ -54,7 +54,7 @@ using Array = System.Array;
 using Label = System.Windows.Forms.Label;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
-using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
+
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -88,18 +88,6 @@ namespace pwiz.Skyline.SettingsUI
 
         private ComboOption[] _currentOptions;
         private bool _comboBoxUpdated;
-        private Object _updateComboBoxLock = new object();
-        public SpectrumProperties _currentProperties { get; private set; }
-
-        // // If you want run old tests to see if they work with the property grid feature, change 
-        // // 'return msGraphExtension1.propertiesVisible' to 'return true'
-        // private bool _getAdditionalGridInfo
-        // {
-        //     get
-        //     {
-        //         return msGraphExtension1.propertiesVisible;
-        //     }
-        // }
 
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
@@ -144,12 +132,6 @@ namespace pwiz.Skyline.SettingsUI
         public bool HasPeptides { get; private set;  }
 
         public int PeptideDisplayCount { get { return listPeptide.Items.Count; } }
-        public MSGraphControl _graphControl
-        {
-            get { return msGraphExtension1.graph; }
-        }
-
-
 
 
 
@@ -163,7 +145,7 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
-            _graphHelper = GraphHelper.Attach(_graphControl);
+            _graphHelper = GraphHelper.Attach(graphControl);
             _libraryManager = libMgr;
             _selectedLibName = libName;
             if (string.IsNullOrEmpty(_selectedLibName) && Settings.Default.SpectralLibraryList.Count > 0)
@@ -715,7 +697,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             // Clear existing data from the graph pane
-            var graphPane = (MSGraphPane)_graphControl.MasterPane[0];
+            var graphPane = (MSGraphPane)graphControl.MasterPane[0];
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
 
@@ -842,36 +824,6 @@ namespace pwiz.Skyline.SettingsUI
                                                                           rankCharges,
                                                                           rankTypes,
                                                                           (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
-                        var newProperties = new SpectrumProperties()
-                        {
-                            RetentionTime = string.Format(@"{0:F2}", spectrumInfo.RetentionTime),
-                            FileName = spectrumInfo.FileName,
-                            LibraryName = spectrumInfo.Name,
-                            PrecursorMz = string.Format(@"{0:F2}", CalcMz(pepInfo, _matcher)),
-                            Score = spectrumInfoR.Score,
-                            Charge = pepInfo.Charge
-                        };
-                        var selectedBiblioSpecLib = _selectedLibrary as BiblioSpecLiteLibrary;
-                        if (selectedBiblioSpecLib != null /*&& _getAdditionalGridInfo*/)
-                        {
-                            BiblioSpecGridInfo biblioAdditionalInfo;
-                            if (spectrumInfo.IsBest)
-                            {
-                                biblioAdditionalInfo = selectedBiblioSpecLib.GetBestGridInfo(_peptides[index].Key);
-                                newProperties.SpectrumCount = biblioAdditionalInfo.Count;
-                            }
-                            else
-                            {
-                                biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantGridInfo(((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
-                                newProperties.SpectrumCount = _currentProperties.SpectrumCount;
-                            }
-                            _currentProperties = newProperties;
-                            _currentProperties.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
-                            _currentProperties.IdFileName = biblioAdditionalInfo.IDFileName;
-                            _currentProperties.FileName = biblioAdditionalInfo.FileName;
-                            _currentProperties.Score = biblioAdditionalInfo.Score;
-                            _currentProperties.ScoreType = biblioAdditionalInfo.ScoreType;
-                        }
                         LibraryChromGroup libraryChromGroup = null;
                         if (spectrumInfo != null)
                         {
@@ -893,7 +845,7 @@ namespace pwiz.Skyline.SettingsUI
                             LineWidth = Settings.Default.SpectrumLineWidth
                         };
 
-                        _graphControl.IsEnableVPan = _graphControl.IsEnableVZoom =
+                        graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
                         _sourceFile = spectrumInfo?.FileName;
                         // Update file and retention time indicators
@@ -921,17 +873,12 @@ namespace pwiz.Skyline.SettingsUI
                                 var imText = string.Empty;
                                 var ccs = libraryChromGroup?.CCS ?? dt.CollisionalCrossSectionSqA;
                                 if (ccs.HasValue)
-                                {
                                     ccsText = Resources.ViewLibraryDlg_UpdateUI_CCS__ + string.Format(@"{0:F2}", ccs.Value);
-                                    _currentProperties.CCS = string.Format(@"{0:F2}", ccs.Value);
-                                }
                                 if (dt.HasIonMobilityValue)
                                     imText = Resources.ViewLibraryDlg_UpdateUI_IM__ + string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                                 if ((dt.HighEnergyIonMobilityValueOffset??0) != 0) // Show the high energy value (as in Waters MSe) if different
                                     imText += String.Format(@"({0:F2})", dt.HighEnergyIonMobilityValueOffset);
                                 labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
-                                
-                                _currentProperties.IonMobility = string.Format(@"{0:F2} {1}", dt.IonMobility.Mobility, dt.IonMobility.UnitsString);
                             }
                         }
                         if (!_showChromatograms || !_hasChromatograms)
@@ -992,7 +939,6 @@ namespace pwiz.Skyline.SettingsUI
             if (!available)
             {
                 SetGraphItem(new UnavailableMSGraphItem());
-                _currentProperties = new SpectrumProperties();
             }
 
             // Be sure to only change visibility of this combo box when necessary or it will lose
@@ -1008,7 +954,6 @@ namespace pwiz.Skyline.SettingsUI
             btnFragmentIons.Checked = btnFragmentIons.Enabled && Settings.Default.ShowFragmentIons;
             charge1Button.Checked = charge1Button.Enabled && Settings.Default.ShowCharge1;
             charge2Button.Checked = charge2Button.Enabled && Settings.Default.ShowCharge2;
-            msGraphExtension1.SetPropertiesObject(_currentProperties);
         }
 
         /// <summary>
@@ -1050,9 +995,9 @@ namespace pwiz.Skyline.SettingsUI
         private void SetGraphItem(IMSGraphItemInfo item)
         {
             var curveItem = _graphHelper.SetErrorGraphItem(item);
-            _graphControl.GraphPane.Title.Text = item.Title;
+            graphControl.GraphPane.Title.Text = item.Title;
             curveItem.Label.IsVisible = false;
-            _graphControl.Refresh();
+            graphControl.Refresh();
         }
 
         /// <summary>
@@ -1186,13 +1131,13 @@ namespace pwiz.Skyline.SettingsUI
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
-            ZedGraphClipboard.AddToContextMenu(_graphControl, menuStrip);
+            ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);
         }
 
         public void LockYAxis(bool lockY)
         {
-            _graphControl.IsEnableVPan = _graphControl.IsEnableVZoom = !lockY;
-            _graphControl.Refresh();
+            graphControl.IsEnableVPan = graphControl.IsEnableVZoom = !lockY;
+            graphControl.Refresh();
         }
 
         #endregion
@@ -1538,12 +1483,6 @@ namespace pwiz.Skyline.SettingsUI
             GraphSettings.ShowCharge4 = !GraphSettings.ShowCharge4;
         }
 
-        private void propertiesMenuItem_Click(object sender, EventArgs e)
-        {
-            propertiesButton.Checked = !propertiesButton.Checked;
-            msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
-        }
-
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var set = GraphSettings;
@@ -1615,22 +1554,22 @@ namespace pwiz.Skyline.SettingsUI
 
         private void copyMetafileButton_Click(object sender, EventArgs e)
         {
-            CopyEmfToolStripMenuItem.CopyEmf(_graphControl);
+            CopyEmfToolStripMenuItem.CopyEmf(graphControl);
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            _graphControl.Copy(false);
+            graphControl.Copy(false);
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            _graphControl.SaveAs();
+            graphControl.SaveAs();
         }
 
         private void btnPrint_Click(object sender, EventArgs e)
         {
-            _graphControl.DoPrint();
+            graphControl.DoPrint();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -2438,11 +2377,6 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboRedundantSpectra; }
         }
 
-        public MsGraphExtension GraphExtensionControl
-        {
-            get { return msGraphExtension1; }
-        }
-
         public bool IsComboBoxUpdated
         {
             get { return _comboBoxUpdated; }
@@ -2978,48 +2912,20 @@ namespace pwiz.Skyline.SettingsUI
 
         public void insertComboItems(object sender, EventArgs e)
         {
-            // lock (_updateComboBoxLock)
-            // {
-                if (!_comboBoxUpdated)
+            if (!_comboBoxUpdated)
+            {
+                comboRedundantSpectra.BeginUpdate();
+                foreach (ComboOption opt in _currentOptions)
                 {
-                    comboRedundantSpectra.BeginUpdate();
-                    foreach (ComboOption opt in _currentOptions)
+                    if (!opt.SpectrumInfoLibrary.IsBest)
                     {
-                        if (!opt.SpectrumInfoLibrary.IsBest)
-                        {
-                            comboRedundantSpectra.Items.Add(opt);
-                        }
+                        comboRedundantSpectra.Items.Add(opt);
                     }
-                    comboRedundantSpectra.EndUpdate();
-                    _comboBoxUpdated = true;
                 }
-            // }
+                comboRedundantSpectra.EndUpdate();
+                _comboBoxUpdated = true;
+            }
         }
 
-        public class SpectrumProperties : GlobalizedObject
-        {
-            [Category("Peptide Info")] public string PrecursorMz { get; set; }
-
-            [Category("File Info")] public string IdFileName { get; set; }
-
-            [Category("File Info")] public string FileName { get; set; }
-            [Category("File Info")] public string LibraryName { get; set; }
-
-            [Category("Peptide Info")] public string SpecIdInFile { get; set; }
-
-            [Category("Peptide Info")] public string RetentionTime { get; set; }
-
-            [Category("Peptide Info")] public int? Charge { get; set; }
-
-            [Category("Peptide Info")] public int? SpectrumCount { get; set; }
-
-            [Category("Small Molecule Info")] public string IonMobility { get; set; }
-
-            [Category("Small Molecule Info")] public string CCS { get; set; }
-
-            [Category("Score")] public double? Score { get; set; }
-
-            [Category("Score")] public string ScoreType { get; set; }
-        }
     }
 }

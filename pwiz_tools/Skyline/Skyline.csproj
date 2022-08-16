@@ -640,17 +640,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\MsGraphExtension.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
-      <DependentUpon>MsGraphExtension.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -3561,7 +3550,6 @@
     </Content>
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
-    <Content Include="Resources\Properties.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -3937,14 +3925,6 @@
     <EmbeddedResource Include="SettingsUI\MetadataRuleSetEditor.zh-CHS.resx">
       <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
-      <DependentUpon>MsGraphExtension.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx">
-      <SubType>Designer</SubType>
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>MsGraphExtensionResx.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
