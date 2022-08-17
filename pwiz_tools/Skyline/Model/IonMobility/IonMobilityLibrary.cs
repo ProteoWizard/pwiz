@@ -186,11 +186,11 @@ namespace pwiz.Skyline.Model.IonMobility
                 var dictPrecursors = dbPrecursors.ToDictionary(p => p.LibraryKey);
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {
-                    var test = 
-                        new PrecursorIonMobilities(pair.NodePep.ModifiedTarget, pair.NodeGroup.PrecursorAdduct, 0, 0, 0, eIonMobilityUnits.none);
-                    var key = test.Precursor;
+                    var key = pair.NodeGroup.GetLibKey(document.Settings, pair.NodePep);
                     if (dictPrecursors.TryGetValue(key, out var dbPrecursor))
                     {
+                        var im = _database.GetIonMobilityInfo(key);
+
                         if (smallMoleculeConversionMap != null)
                         {
                             // We are in the midst of converting a document to small molecules for test purposes
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Model.IonMobility
                                 continue;
                             }
                         }
-                        persistIonMobilities.Add(new PrecursorIonMobilities(dbPrecursor, test.IonMobilities));
+                        persistIonMobilities.Add(new PrecursorIonMobilities(dbPrecursor, im));
                         // Only add once
                         dictPrecursors.Remove(key);
                     }

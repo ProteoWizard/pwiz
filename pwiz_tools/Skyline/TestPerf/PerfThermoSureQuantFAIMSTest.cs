@@ -17,8 +17,13 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -49,10 +54,25 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // Open the prepoulated .sky file (has no chromatograms)
             OpenDocument(GetTestPath(@"ThermoSureQuantFAIMSTest.sky"));
 
-            // Now import chromatograms, check that FAIMS filtering is working
-            ImportResultsFile(GetTestPath(TestFilesPersistent[0]));
+            // While developing this test I discovered that Share Minimized was leaving an empty .imsdb file
+            // when it should have had 2 entries
+            var zipPath = GetTestPath(@"ThermoSureQuantFAIMSTestMinimized.sky.zip");
+            RunDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
+            RunUI(() => SkylineWindow.ShareDocument(zipPath, ShareType.MINIMAL));
+            File.Delete(GetTestPath(@"FAIMS_SureQuant.imsdb")); // Make sure we don't use original
+            LoadNewDocument(true); // Reset
+            OpenDocument(zipPath); // Load minimized doc
+            // Inspect the minimized ion mobility library
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => { transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.IonMobility; });
+            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsUI.IonMobilityControl.EditIonMobilityLibrary);
+            AssertEx.IsTrue(editIonMobilityLibraryDlg.LibraryMobilitiesFlatCount == 2);
+            OkDialog(editIonMobilityLibraryDlg, editIonMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
+            // Now import chromatograms, check that FAIMS filtering is working
             // Second transition will include points from wrong CV if we aren't treating MS2 CV data properly
+            ImportResultsFile(GetTestPath(TestFilesPersistent[0]));
             var results = SkylineWindow.Document.MoleculeTransitions.ToArray()[1].Results;
             var transitionChromInfo = results[0].AsList()[0];
             var doc = SkylineWindow.Document;
