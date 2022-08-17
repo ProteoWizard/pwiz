@@ -178,7 +178,7 @@
             this.findResultsFilesButton.TabIndex = 20;
             this.findResultsFilesButton.Text = "&Find in Folder...";
             this.findResultsFilesButton.UseVisualStyleBackColor = true;
-            this.findResultsFilesButton.Click += new System.EventHandler(this.findResultsFilesButton_Click);
+            this.findResultsFilesButton.Click += new System.EventHandler(this.findResultsFolder_Click);
             // 
             // ShareResultsFilesDlg
             // 
