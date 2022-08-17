@@ -32,6 +32,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -867,7 +868,7 @@ namespace pwiz.Skyline.Model.Tools
             var container = new MemoryDocumentContainer();
             container.SetDocument(doc, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var viewContext = new DocumentGridViewContext(dataSchema);
+            var viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), dataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle));
             if (null == viewInfo)
             {

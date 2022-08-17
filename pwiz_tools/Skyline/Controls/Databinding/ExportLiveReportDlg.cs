@@ -24,6 +24,7 @@ using System.IO;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
@@ -78,7 +79,7 @@ namespace pwiz.Skyline.Controls.Databinding
             base.OnHandleCreated(e);
             if (null != _documentUiContainer)
             {
-                _viewContext = new DocumentGridViewContext(new SkylineDataSchema(_documentUiContainer,
+                _viewContext = new DocumentGridViewContext(new GraphicalUserInterface(this), new SkylineDataSchema(_documentUiContainer,
                         DataSchemaLocalizer.INVARIANT));
                 _viewContext.ViewsChanged += OnViewsChanged;
                 imageList1.Images.Clear();
@@ -183,7 +184,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer());
             }
-            return new DocumentGridViewContext(dataSchema) {EnablePreview = true};
+            return new DocumentGridViewContext(new GraphicalUserInterface(this), dataSchema) {EnablePreview = true};
         }
 
         public bool InvariantLanguage

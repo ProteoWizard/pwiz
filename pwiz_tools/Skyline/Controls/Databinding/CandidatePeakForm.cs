@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Colors;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -59,7 +60,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(CandidatePeakGroup));
             var rowSourceInfo = new RowSourceInfo(BindingListRowSource.Create(_bindingList),
                 new ViewInfo(rootColumn, GetDefaultViewSpec()));
-            var viewContext = new SkylineViewContext(_dataSchema, new []{rowSourceInfo});
+            var viewContext = new SkylineViewContext(new GraphicalUserInterface(this), _dataSchema, new []{rowSourceInfo});
             BindingListSource.SetViewContext(viewContext);
             Text = TabText = Resources.CandidatePeakForm_CandidatePeakForm_Candidate_Peaks;
             DataboundGridControl.DataGridView.CellFormatting += DataGridView_OnCellFormatting;

@@ -19,6 +19,7 @@
 
 using System.ComponentModel;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.Controls.Lists
         public ListGridForm(IDocumentContainer documentContainer, string listName)
         {
             var skylineDataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            ListViewContext = ListViewContext.CreateListViewContext(skylineDataSchema, listName);
+            ListViewContext = ListViewContext.CreateListViewContext(new GraphicalUserInterface(this), skylineDataSchema, listName);
             BindingListSource.QueryLock = ListViewContext.SkylineDataSchema.QueryLock;
             BindingListSource.ListChanged += BindingListSourceOnListChanged;
             ListViewContext.BoundDataGridView = DataGridView;

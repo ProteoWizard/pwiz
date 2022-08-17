@@ -92,7 +92,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 message = string.Format(Resources.ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_, selectedViewNames.Count);
             }
-            if (prompt && ViewContext.ShowMessageBox(this, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+            if (prompt && ViewContext.UserInterface.DisplayMessageWithButtons(this, message, MessageBoxButtons.OKCancel, DialogResult.OK) == DialogResult.Cancel)
             {
                 return;
             }

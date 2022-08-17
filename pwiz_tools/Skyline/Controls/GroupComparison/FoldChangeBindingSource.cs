@@ -25,6 +25,7 @@ using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _skylineDataSchema = new SkylineDataSchema(GroupComparisonModel.DocumentContainer,
                     SkylineDataSchema.GetLocalizedSchemaLocalizer());
                 var rowSourceInfos = CreateRowSourceInfos(new FoldChangeRow[0], new FoldChangeDetailRow[0]);
-                ViewContext = new GroupComparisonViewContext(_skylineDataSchema, rowSourceInfos);
+                ViewContext = new GroupComparisonViewContext(new GraphicalUserInterface(null), _skylineDataSchema, rowSourceInfos);
                 _container = new Container();
                 _bindingListSource = new BindingListSource(_container);
                 _bindingListSource.SetViewContext(ViewContext, rowSourceInfos[0].Views[0]);

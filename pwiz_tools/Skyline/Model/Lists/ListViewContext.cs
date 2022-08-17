@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Model.Lists
     public class ListViewContext : SkylineViewContext, INewRowHandler
     {
         public const string LIST_ROWSOURCE_PREFIX = "pwiz.Skyline.Model.Lists.list_";
-        public static ListViewContext CreateListViewContext(SkylineDataSchema dataSchema, string listName)
+        public static ListViewContext CreateListViewContext(IUserInterface userInterface, SkylineDataSchema dataSchema, string listName)
         {
             var listItemType = ListItemTypes.INSTANCE.GetListItemType(listName);
             var rootColumn = ColumnDescriptor.RootColumn(dataSchema, listItemType);
@@ -45,11 +46,11 @@ namespace pwiz.Skyline.Model.Lists
             // ReSharper restore PossibleNullReferenceException
             var rowSourceInfo = new RowSourceInfo(listItemType, rowSource, new[] { GetDefaultViewInfo(rootColumn) },
                 LIST_ROWSOURCE_PREFIX + listName, listName);
-            return new ListViewContext(dataSchema, listName, rowSourceInfo);
+            return new ListViewContext(userInterface, dataSchema, listName, rowSourceInfo);
         }
 
-        private ListViewContext(SkylineDataSchema schema, string listName, RowSourceInfo rowSource) 
-            : base(schema, new[]{rowSource})
+        private ListViewContext(IUserInterface userInterface, SkylineDataSchema schema, string listName, RowSourceInfo rowSource) 
+            : base(userInterface, schema, new[]{rowSource})
         {
             ListName = listName;
             ListItemType = ListItemTypes.INSTANCE.GetListItemType(listName);

@@ -28,6 +28,7 @@ using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
@@ -49,7 +50,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             Assert.IsTrue(memoryDocumentContainer.SetDocument(testDocument, memoryDocumentContainer.Document));
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, DataSchemaLocalizer.INVARIANT);
             var view = ReportSharing.DeserializeReportList(OpenTestFile("MSstats_report.skyr")).First().ViewSpecLayout;
-            var viewContext = new DocumentGridViewContext(skylineDataSchema);
+            var viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), skylineDataSchema);
             StringWriter stringWriter = new StringWriter();
             IProgressStatus progressStatus = new ProgressStatus();
             viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref progressStatus,

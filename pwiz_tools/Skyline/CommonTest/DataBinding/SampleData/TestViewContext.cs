@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 
 namespace CommonTest.DataBinding.SampleData
 {
@@ -12,7 +11,7 @@ namespace CommonTest.DataBinding.SampleData
     {
         private Dictionary<ViewGroupId, ViewSpecList> _viewSpecLists = new Dictionary<ViewGroupId, ViewSpecList>();
 
-        public TestViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSourceInfos) : base(dataSchema, rowSourceInfos)
+        public TestViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSourceInfos) : base(TextUserInterface.GetDefault(), dataSchema, rowSourceInfos)
         {
             
         }
@@ -24,17 +23,6 @@ namespace CommonTest.DataBinding.SampleData
         public override void SetExportDirectory(string value)
         {
             
-        }
-
-        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
-        {
-            // ReSharper disable once LocalizableElement
-            return MessageBox.Show(owner, message, "Test View Context", messageBoxButtons);
-        }
-
-        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
-        {
-            throw new NotSupportedException();
         }
 
         public override ViewGroup DefaultViewGroup

@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Databinding.RowActions;
@@ -32,8 +33,8 @@ namespace pwiz.Skyline.Model.Databinding
 {
     public class DocumentGridViewContext : SkylineViewContext
     {
-        public DocumentGridViewContext(SkylineDataSchema dataSchema)
-            : base(dataSchema, GetDocumentGridRowSources(dataSchema))
+        public DocumentGridViewContext(IUserInterface userInterface, SkylineDataSchema dataSchema)
+            : base(userInterface, dataSchema, GetDocumentGridRowSources(dataSchema))
         {
         }
 
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.Model.Databinding
         /// <summary>
         /// Creates a DocumentGridViewContext that can be used for exporting reports, importing report definitions, etc.
         /// </summary>
-        public static DocumentGridViewContext CreateDocumentGridViewContext(SrmDocument document, DataSchemaLocalizer dataSchemaLocalizer)
+        public static DocumentGridViewContext CreateDocumentGridViewContext(IUserInterface userInterface, SrmDocument document, DataSchemaLocalizer dataSchemaLocalizer)
         {
             if (document == null)
             {
@@ -138,7 +139,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             var memoryDocumentContainer = new MemoryDocumentContainer();
             memoryDocumentContainer.SetDocument(document, memoryDocumentContainer.Document);
-            return new DocumentGridViewContext(new SkylineDataSchema(memoryDocumentContainer, dataSchemaLocalizer));
+            return new DocumentGridViewContext(userInterface, new SkylineDataSchema(memoryDocumentContainer, dataSchemaLocalizer));
         }
 
         protected override ViewSpec GetBlankView()

@@ -209,6 +209,7 @@
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\GraphicalUserInterface.cs" />
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
       <SubType>Form</SubType>

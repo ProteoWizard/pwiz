@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -321,7 +322,7 @@ namespace pwiz.SkylineTestData
             MemoryDocumentContainer memoryDocumentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(memoryDocumentContainer.SetDocument(doc, memoryDocumentContainer.Document));
             SkylineDataSchema skylineDataSchema = new SkylineDataSchema(memoryDocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
+            DocumentGridViewContext viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), skylineDataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
             IProgressStatus status = new ProgressStatus("Exporting report");

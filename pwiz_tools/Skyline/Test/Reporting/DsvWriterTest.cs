@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -41,7 +42,7 @@ namespace pwiz.SkylineTest.Reporting
         {
             SkylineDataSchema skylineDataSchema =
                 new SkylineDataSchema(CreateMemoryDocumentContainer(LoadTestDocument()), DataSchemaLocalizer.INVARIANT);
-            SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
+            SkylineViewContext viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), skylineDataSchema);
 
             string testFile = Path.Combine(TestContext.TestDir, "TestInvariantExport.csv");
             var dsvWriter = viewContext.GetCsvWriter();
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTest.Reporting
             CultureInfo cultureInfo = CultureInfo.CurrentUICulture;
             SkylineDataSchema skylineDataSchema =
                 new SkylineDataSchema(CreateMemoryDocumentContainer(LoadTestDocument()), SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            SkylineViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
+            SkylineViewContext viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), skylineDataSchema);
 
             string testFile = Path.Combine(TestContext.TestDir, "TestExportWithCurrentLanguage.csv");
             var dsvWriter = viewContext.GetCsvWriter();

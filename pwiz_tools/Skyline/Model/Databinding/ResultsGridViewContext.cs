@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Databinding
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.Model.Databinding
     /// </summary>
     public class ResultsGridViewContext : SkylineViewContext
     {
-        public ResultsGridViewContext(SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources) : base(dataSchema, rowSources)
+        public ResultsGridViewContext(IUserInterface userInterface, SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources) : base(userInterface, dataSchema, rowSources)
         {
         }
 

@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -271,7 +272,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 Debug.Assert(null != builtInViewName);
                 var builtInView = new ViewInfo(parentColumn, builtInViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN);
                 var rowSourceInfo = new RowSourceInfo(rowSource, builtInView);
-                var viewContext = new ResultsGridViewContext(_dataSchema,
+                var viewContext = new ResultsGridViewContext(new GraphicalUserInterface(this), _dataSchema,
                     new[] {rowSourceInfo});
                 ViewInfo activeView = null;
                 string activeViewName;

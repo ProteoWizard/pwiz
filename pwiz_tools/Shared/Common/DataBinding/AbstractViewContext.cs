@@ -35,6 +35,7 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 
 namespace pwiz.Common.DataBinding
 {
@@ -47,26 +48,40 @@ namespace pwiz.Common.DataBinding
         public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
 
-        protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
+        protected AbstractViewContext(IUserInterface userInterface, DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
+            UserInterface = userInterface;
             DataSchema = dataSchema;
             RowSources = rowSources;
         }
 
+        public IUserInterface UserInterface { get; }
+
         public abstract string GetExportDirectory();
         public abstract void SetExportDirectory(string value);
-        public abstract DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons);
+
+        public DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, DialogResult defaultResult)
+        {
+            return UserInterface.DisplayMessageWithButtons(owner, message, messageBoxButtons, defaultResult);
+        }
+        public void ShowMessageBox(Control owner, string message)
+        {
+            UserInterface.DisplayMessage(owner, message);
+        }
         protected virtual string GetDefaultExportFilename(ViewInfo viewInfo)
         {
             string currentViewName = viewInfo.Name;
             return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? string.Empty : currentViewName);
         }
-        public abstract bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job);
 
-        public virtual bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        public bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
         {
-            job(CancellationToken.None, new SilentProgressMonitor());
-            return true;
+            return UserInterface.RunLongOperation(owner, job, true);
+        }
+
+        public bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        {
+            return UserInterface.RunLongOperation(owner, job, false);
         }
         public DataSchema DataSchema { get; private set; }
         public IEnumerable<ViewSpec> BuiltInViews
@@ -242,8 +257,7 @@ namespace pwiz.Common.DataBinding
             }
             catch (Exception exception)
             {
-                ShowMessageBox(owner, Resources.AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ + exception.Message,
-                    MessageBoxButtons.OK);
+                UserInterface.DisplayMessageWithException(owner, Resources.AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ + exception.Message, exception);
             }
         }
 
@@ -300,9 +314,9 @@ namespace pwiz.Common.DataBinding
             }
             catch (Exception exception)
             {
-                ShowMessageBox(owner, 
+                UserInterface.DisplayMessageWithException(owner, 
                     Resources.AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ + exception.Message, 
-                    MessageBoxButtons.OK);
+                    exception);
             }
         }
 
@@ -384,7 +398,7 @@ namespace pwiz.Common.DataBinding
                     messageLines.Add(Resources.AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_);
                     message = string.Join(Environment.NewLine, messageLines);
                 }
-                var result = ShowMessageBox(control, message, MessageBoxButtons.YesNoCancel);
+                var result = UserInterface.DisplayMessageWithButtons(control, message, MessageBoxButtons.YesNoCancel, DialogResult.Yes);
                 switch (result)
                 {
                     case DialogResult.Cancel:
@@ -566,14 +580,14 @@ namespace pwiz.Common.DataBinding
                 }
                 if (dataGridView != null && dataGridView.IsCurrentCellInEditMode)
                 {
-                    if (ShowMessageBox(dataGridView, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (UserInterface.DisplayMessageWithButtons(dataGridView, message, MessageBoxButtons.OKCancel, DialogResult.OK) == DialogResult.Cancel)
                     {
                         dataGridView.CancelEdit();
                     }
                 }
                 else
                 {
-                    ShowMessageBox(sender as Control, message, MessageBoxButtons.OK);
+                    UserInterface.DisplayMessage(sender as Control, message);
                 }
             }
         }

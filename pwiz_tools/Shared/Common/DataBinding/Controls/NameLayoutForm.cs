@@ -45,12 +45,12 @@ namespace pwiz.Common.DataBinding.Controls
         {
             if (string.IsNullOrEmpty(LayoutName))
             {
-                ViewContext.ShowMessageBox(this, Resources.NameLayoutForm_OkDialog_Name_cannot_be_empty, MessageBoxButtons.OK);
+                ViewContext.ShowMessageBox(this, Resources.NameLayoutForm_OkDialog_Name_cannot_be_empty);
                 return;
             }
             if (_existingNames.Contains(LayoutName))
             {
-                if (DialogResult.Yes !=ViewContext.ShowMessageBox(this, string.Format(Resources.NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_replace_it_, LayoutName), MessageBoxButtons.YesNo))
+                if (DialogResult.Yes !=ViewContext.UserInterface.DisplayMessageWithButtons(this, string.Format(Resources.NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_replace_it_, LayoutName), MessageBoxButtons.YesNo, DialogResult.Yes))
                 {
                     return;
                 }

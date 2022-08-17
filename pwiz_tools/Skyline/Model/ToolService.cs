@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -95,7 +96,7 @@ namespace pwiz.Skyline.Model
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var viewContext = new DocumentGridViewContext(dataSchema);
+            var viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), dataSchema);
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();

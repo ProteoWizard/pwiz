@@ -285,7 +285,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             if (errorMessage != null)
             {
-                ViewContext.ShowMessageBox(this, errorMessage, MessageBoxButtons.OK);
+                ViewContext.ShowMessageBox(this, errorMessage);
                 formClosingEventArgs.Cancel = true;
             }
             if (formClosingEventArgs.Cancel)

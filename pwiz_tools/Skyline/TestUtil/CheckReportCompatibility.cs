@@ -24,6 +24,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -95,7 +96,7 @@ namespace pwiz.SkylineTestUtil
             Assert.IsTrue(documentContainer.SetDocument(doc, documentContainer.Document));
             var skylineDataSchema = new SkylineDataSchema(documentContainer, new DataSchemaLocalizer(cultureInfo, cultureInfo));
             var viewSpec = ReportSharing.ConvertAll(new[] {new ReportOrViewSpec(reportSpec)}, doc).First();
-            var viewContext = new DocumentGridViewContext(skylineDataSchema);
+            var viewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), skylineDataSchema);
             using (var writer = new StreamWriter(fileName))
             {
                 IProgressStatus status = new ProgressStatus();

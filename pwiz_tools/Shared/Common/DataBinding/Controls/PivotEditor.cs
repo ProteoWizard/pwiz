@@ -325,7 +325,7 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     string message = string.Format(Resources.PivotingForm_ShowPivotingForm_The_Pivot_Editor_cannot_be_shown_because_there_are_more_than__0__columns_,
                         MAX_COLUMN_COUNT);
-                    viewContext.ShowMessageBox(owner, message, MessageBoxButtons.OK);
+                    viewContext.ShowMessageBox(owner, message);
                     return;
                 }
                 groupingTotalForm.AllProperties = allProperties;

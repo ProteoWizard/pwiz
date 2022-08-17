@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
             var rowSource = new AuditLogRowSource(dataSchema);
             var rowSourceInfo = new RowSourceInfo(typeof(AuditLogRow), rowSource, viewInfos);
-            var viewContext = new SkylineViewContext(dataSchema, new[] { rowSourceInfo });
+            var viewContext = new SkylineViewContext(new GraphicalUserInterface(skylineWindow), dataSchema, new[] { rowSourceInfo });
 
             return new AuditLogForm(viewContext, viewInfos[2].Name);
         }

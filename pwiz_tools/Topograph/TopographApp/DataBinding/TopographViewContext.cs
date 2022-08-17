@@ -22,15 +22,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
-using pwiz.Topograph.ui.Forms;
 using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.Util;
 using pwiz.Topograph.ui.Util;
 
 namespace pwiz.Topograph.ui.DataBinding
@@ -38,7 +34,8 @@ namespace pwiz.Topograph.ui.DataBinding
     public class TopographViewContext : AbstractViewContext
     {
         public TopographViewContext(Workspace workspace, Type rowType, IEnumerable rows, params ViewSpec[] builtInViews) 
-            : base(new TopographDataSchema(workspace), new[]
+            : base(new TopographUserInterface(null),
+                new TopographDataSchema(workspace), new[]
             {
                 new RowSourceInfo(rowType, new StaticRowSource(rows), builtInViews.Select(
                     viewSpec=>new ViewInfo(new TopographDataSchema(workspace), rowType, viewSpec)))
@@ -115,12 +112,12 @@ namespace pwiz.Topograph.ui.DataBinding
             }
             catch (Exception x)
             {
-                ShowMessageBox(control, string.Format("Failure loading {0}:\n{1}", fileName, x.InnerException), MessageBoxButtons.OK);
+                ShowMessageBox(control, string.Format("Failure loading {0}:\n{1}", fileName, x.InnerException));
                 return;
             }
             if (views.Length == 0)
             {
-                ShowMessageBox(control, "No views were found in that file.", MessageBoxButtons.OK);
+                ShowMessageBox(control, "No views were found in that file.");
                 return;
             }
             CopyViewsToGroup(control, viewGroup, new ViewSpecList(views));
@@ -173,37 +170,6 @@ namespace pwiz.Topograph.ui.DataBinding
         }
 
 
-
-        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
-        {
-            using (var longWaitDialog = new LongWaitDialog(owner.TopLevelControl, Program.AppName))
-            {
-                var longOperationBroker =
-                    new LongOperationBroker(
-                        broker =>
-                        job.Invoke(CancellationToken.None, ProgressMonitorImpl.NewProgressMonitorImpl(new ProgressStatus("Working"),
-                                                                              iProgress =>
-                                                                                  {
-                                                                                      try
-                                                                                      {
-                                                                                          broker.
-                                                                                              UpdateStatusMessage(
-                                                                                                  iProgress + "% complete");
-                                                                                          return true;
-                                                                                      }
-                                                                                      catch (JobCancelledException)
-                                                                                      {
-                                                                                          return false;
-                                                                                      }
-                                                                                  })), longWaitDialog);
-                longOperationBroker.LaunchJob();
-                return !longOperationBroker.WasCancelled;
-            }
-        }
-        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
-        {
-            return MessageBox.Show(owner.TopLevelControl, message, Program.AppName, messageBoxButtons);
-        }
 
         public override bool DeleteEnabled
         {

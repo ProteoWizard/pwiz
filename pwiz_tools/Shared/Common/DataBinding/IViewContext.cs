@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.UserInterfaces;
 
 namespace pwiz.Common.DataBinding
 {
@@ -32,6 +33,7 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public interface IViewContext
     {
+        IUserInterface UserInterface { get; }
         IEnumerable<ViewGroup> ViewGroups { get; }
         ViewSpecList GetViewSpecList(ViewGroupId groupId);
         bool TryRenameView(ViewGroupId group, string oldName, string newName);
@@ -59,7 +61,7 @@ namespace pwiz.Common.DataBinding
         void ImportViews(Control owner, ViewGroup group);
         void ImportViewsFromFile(Control owner, ViewGroup group, string fileName);
         void CopyViewsToGroup(Control owner, ViewGroup group, ViewSpecList viewSpecList);
-        DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons);
+        void ShowMessageBox(Control owner, string messsage);
         Icon ApplicationIcon { get; }
         DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor);
         void OnDataError(object sender, DataGridViewDataErrorEventArgs dataGridViewDataErrorEventArgs);

@@ -31,6 +31,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
@@ -46,13 +47,13 @@ namespace pwiz.Skyline.Model.Databinding
     public class SkylineViewContext : AbstractViewContext
     {
         private ViewChangeListener _viewChangeListener;
-        public SkylineViewContext(SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources) : base(dataSchema, rowSources)
+        public SkylineViewContext(IUserInterface userInterface, SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources) : base(userInterface, dataSchema, rowSources)
         {
             ApplicationIcon = Resources.Skyline;
         }
 
-        public SkylineViewContext(ColumnDescriptor parentColumn, IRowSource rowSource)
-            : base(
+        public SkylineViewContext(IUserInterface userInterface, ColumnDescriptor parentColumn, IRowSource rowSource)
+            : base(userInterface,
                 parentColumn.DataSchema,
                 new[] {new RowSourceInfo(rowSource, GetDefaultViewInfo(parentColumn))})
         {
@@ -208,33 +209,6 @@ namespace pwiz.Skyline.Model.Databinding
         public override void SetExportDirectory(string value)
         {
             Settings.Default.ExportDirectory = value;
-        }
-
-        public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
-        {
-            return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
-        }
-
-        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
-        {
-            using (var longWaitDlg = new LongWaitDlg())
-            {
-                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, progressMonitor => job(longWaitDlg.CancellationToken, progressMonitor));
-                return status.IsComplete;
-            }
-        }
-
-        public override bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
-        {
-            var longOperationRunner = new LongOperationRunner();
-            bool finished = false;
-            longOperationRunner.Run(longWaitBroker =>
-            {
-                var progressWaitBroker = new ProgressWaitBroker(progressMonitor=>job(longWaitBroker.CancellationToken, progressMonitor));
-                progressWaitBroker.PerformWork(longWaitBroker);
-                finished = !longWaitBroker.IsCanceled;
-            });
-            return finished;
         }
 
         public bool Export(Control owner, ViewInfo viewInfo)
@@ -675,8 +649,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
             if (!views.ViewSpecs.Any())
             {
-                ShowMessageBox(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_,
-                    MessageBoxButtons.OK);
+                UserInterface.DisplayMessage(owner, Resources.SkylineViewContext_ImportViews_No_views_were_found_in_that_file_);
                 return;
             }
             CopyViewsToGroup(owner, group, views);

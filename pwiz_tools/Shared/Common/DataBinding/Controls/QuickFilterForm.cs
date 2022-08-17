@@ -185,7 +185,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             if (null != ViewContext)
             {
-                ViewContext.ShowMessageBox(this, e.Message, MessageBoxButtons.OK);
+                ViewContext.ShowMessageBox(this, e.Message);
             }
             else
             {

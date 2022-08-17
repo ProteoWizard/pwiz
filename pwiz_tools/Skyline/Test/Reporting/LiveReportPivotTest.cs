@@ -22,6 +22,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -81,7 +82,7 @@ namespace pwiz.SkylineTest.Reporting
             var documentContainer = new MemoryDocumentContainer();
             Assert.IsTrue(documentContainer.SetDocument(document, null));
             var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
-            bindingListSource.SetViewContext(new DocumentGridViewContext(dataSchema), new ViewInfo(dataSchema, typeof(Precursor), view.ViewSpec));
+            bindingListSource.SetViewContext(new DocumentGridViewContext(TextUserInterface.GetDefault(), dataSchema), new ViewInfo(dataSchema, typeof(Precursor), view.ViewSpec));
             var expectedColumnNames = new[] {
                     "PeptideSequence",
                     "Chromatograms Replicate",

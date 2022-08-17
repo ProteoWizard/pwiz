@@ -48,7 +48,7 @@ namespace pwiz.Skyline.SettingsUI
                 checkedListBoxLists, listDataList);
             _listsListBoxDriver.LoadList(dataSettings.Lists);
             var dataSchema = new SkylineDataSchema(documentContainer, DataSchemaLocalizer.INVARIANT);
-            chooseViewsControl.ViewContext = new SkylineViewContext(dataSchema, new RowSourceInfo[0]);
+            chooseViewsControl.ViewContext = new SkylineViewContext(new GraphicalUserInterface(this), dataSchema, new RowSourceInfo[0]);
             chooseViewsControl.ShowCheckboxes = true;
             chooseViewsControl.CheckedViews = dataSettings.ViewSpecList.ViewSpecs.Select(
                 viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.SettingsUI
         public void EditReportList()
         {
             var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var viewContext = new DocumentGridViewContext(dataSchema) {EnablePreview = true};
+            var viewContext = new DocumentGridViewContext(new GraphicalUserInterface(this), dataSchema) {EnablePreview = true};
             using (var manageViewsForm = new ManageViewsForm(viewContext))
             {
                 manageViewsForm.ShowDialog(this);
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.SettingsUI
         public void NewReport()
         {
             var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var viewContext = new DocumentGridViewContext(dataSchema) { EnablePreview = true };
+            var viewContext = new DocumentGridViewContext(new GraphicalUserInterface(this), dataSchema) { EnablePreview = true };
             var newView = viewContext.NewView(this, PersistedViews.MainGroup);
             if (newView != null)
             {

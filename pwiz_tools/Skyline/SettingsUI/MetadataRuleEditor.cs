@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.SettingsUI
             _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ResultFile));
             var viewContext =
-                new SkylineViewContext(rootColumn, new StaticRowSource(new ExtractedMetadataResultRow[0]));
+                new SkylineViewContext(new GraphicalUserInterface(this), rootColumn, new StaticRowSource(new ExtractedMetadataResultRow[0]));
             _metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
             bindingListSource1.SetViewContext(viewContext);
             var sources = _metadataExtractor.GetSourceColumns().ToArray();

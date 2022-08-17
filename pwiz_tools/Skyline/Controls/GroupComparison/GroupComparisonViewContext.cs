@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -36,8 +37,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 {
     public class GroupComparisonViewContext : SkylineViewContext
     {
-        public GroupComparisonViewContext(SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSourceInfos)
-            : base(dataSchema, rowSourceInfos)
+        public GroupComparisonViewContext(IUserInterface userInterface, SkylineDataSchema dataSchema, IEnumerable<RowSourceInfo> rowSourceInfos)
+            : base(userInterface, dataSchema, rowSourceInfos)
         {
         }
 

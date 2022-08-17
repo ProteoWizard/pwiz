@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -55,7 +56,7 @@ namespace pwiz.Skyline.SettingsUI
             _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ExtractedMetadataResultRow));
             var viewInfo = new ViewInfo(rootColumn, GetDefaultViewSpec());
-            var skylineViewContext= new MetadataResultViewContext(rootColumn, new StaticRowSource(new MetadataStepResult[0]));
+            var skylineViewContext= new MetadataResultViewContext(new GraphicalUserInterface(this), rootColumn, new StaticRowSource(new MetadataStepResult[0]));
             bindingListSourceResults.SetViewContext(skylineViewContext, viewInfo);
             _metadataExtractor = new MetadataExtractor(_dataSchema, typeof(ResultFile));
             _ruleRowList = new List<RuleRow>();
@@ -451,7 +452,7 @@ namespace pwiz.Skyline.SettingsUI
             private static readonly PropertyPath propertyPathNewValue = propertyPathValues
                 .Property(nameof(KeyValuePair<string, object>.Value))
                 .Property(nameof(ExtractedMetadataResultColumn.ExtractedValue));
-            public MetadataResultViewContext(ColumnDescriptor parentColumn, IRowSource rowSource) : base(parentColumn,
+            public MetadataResultViewContext(IUserInterface userInterface, ColumnDescriptor parentColumn, IRowSource rowSource) : base(userInterface, parentColumn,
                 rowSource)
             {
             }

@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.UserInterfaces;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -2689,7 +2690,7 @@ namespace pwiz.Skyline
 
         private bool ExportLiveReport(string reportName, string reportFile, char reportColSeparator, bool reportInvariant)
         {
-            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(_doc, reportInvariant
+            var viewContext = DocumentGridViewContext.CreateDocumentGridViewContext(new TextUserInterface(_out), _doc, reportInvariant
                 ? DataSchemaLocalizer.INVARIANT
                 : SkylineDataSchema.GetLocalizedSchemaLocalizer());
             // Make sure invariant report format uses a true comma if a tab separator was not specified.

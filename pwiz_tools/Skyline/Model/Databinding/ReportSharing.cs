@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.UserInterfaces;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
@@ -70,7 +71,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public static IDictionary<ViewName, ReportOrViewSpec> GetExistingReports()
         {
-            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(GetDefaultDocument(), DataSchemaLocalizer.INVARIANT));
+            var documentGridViewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), GetSkylineDataSchema(GetDefaultDocument(), DataSchemaLocalizer.INVARIANT));
             var items = documentGridViewContext.ViewGroups
                 .SelectMany(group => documentGridViewContext.GetViewSpecList(group.Id).ViewSpecLayouts
                     .Select(viewSpec => new KeyValuePair<ViewName, ReportOrViewSpec>(
@@ -81,7 +82,7 @@ namespace pwiz.Skyline.Model.Databinding
         public static void SaveReport(ViewGroup viewGroup, ReportOrViewSpec reportOrViewSpec)
         {
             var srmDocument = GetDefaultDocument();
-            var documentGridViewContext = new DocumentGridViewContext(GetSkylineDataSchema(srmDocument, DataSchemaLocalizer.INVARIANT));
+            var documentGridViewContext = new DocumentGridViewContext(TextUserInterface.GetDefault(), GetSkylineDataSchema(srmDocument, DataSchemaLocalizer.INVARIANT));
             documentGridViewContext.AddOrReplaceViews(viewGroup.Id, ConvertAll(new[] {reportOrViewSpec}, srmDocument));
         }
 
