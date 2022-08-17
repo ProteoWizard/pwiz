@@ -46,7 +46,9 @@ namespace pwiz.Skyline.FileUI
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
 
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts)
+        private readonly List<string> _specificFileFilter; // Specific files which are filtered out
+
+        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, List<string> specificFileFilter = null)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;
@@ -108,6 +110,8 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.SelectedIndex = 1;
             lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
+
+            this._specificFileFilter = specificFileFilter;
         }
 
         public new DialogResult ShowDialog(IWin32Window owner)
@@ -241,8 +245,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private SourceInfo getSourceInfo( DirectoryInfo dirInfo )
+        private SourceInfo getSourceInfo(DirectoryInfo dirInfo)
         {
+            // Filter for only raw files that are missing. To prevent user confusion
+            if (_specificFileFilter != null && dirInfo.Name.Contains(".raw") && !_specificFileFilter.Contains(dirInfo.Name))
+            {
+                return null;
+            }
+
             string type = DataSourceUtil.GetSourceType(dirInfo);
             SourceInfo sourceInfo = new SourceInfo(new MsDataFilePath(dirInfo.FullName))
             {
@@ -253,8 +263,8 @@ namespace pwiz.Skyline.FileUI
             };
 
             if(listView.View != View.Details ||
-                    (sourceTypeComboBox.SelectedIndex > 0 &&
-                     sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
+               (sourceTypeComboBox.SelectedIndex > 0 &&
+                sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                 return sourceInfo;
 
             if(sourceInfo.isFolder)
@@ -985,7 +995,7 @@ namespace pwiz.Skyline.FileUI
             e.ItemWidth = x + indent + 16 + (int) e.Graphics.MeasureString( node.Text, lookInComboBox.Font ).Width;
         }
 
-        private void lookInComboBox_SelectionChangeCommitted( object sender, EventArgs e )
+        public void lookInComboBox_SelectionChangeCommitted( object sender, EventArgs e )
         {
             if( lookInComboBox.SelectedIndex < 0 )
                 lookInComboBox.SelectedIndex = 0;

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -286,20 +287,22 @@ namespace pwiz.SkylineTestFunctional
             {
                 string shareCompletePath = TestFilesDirs[1].GetTestPath("ShareCompleteWithRaw.zip");
                 var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
+                RunUI(() => shareDlg.CB_IncludeFiles.Checked = true); // Check box must be checked in order for files to be zipped
                 var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
                 RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
                 if (elsewhere != null)
                 {
-                    // User has to navigate to the S1 file which isn't in current directory nor the parent
-                    // TODO(Clark) use your new code here
-                    // something like
-                    // RunUI(() =>
-                    // {
-                    //    var finderDlg = replicatePickDlg.OpenReplicateFinderDlg;
-                    //    finderDlg.SetDirectory(elsewhere);
-                    //    finderDlg.SelectAll();
-                    //    finderDlg.OkDialog();
-                    // }
+                    // Open share results file
+                    var finderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
+                    RunUI(() =>
+                    {
+                        finderDlg.SelectFile(elsewhere); // Select sub folder
+                        finderDlg.Open(); // Open folder
+                        finderDlg.SelectFile(S1_RAW); // Select file
+                        finderDlg.Open(); // Open file
+                    });
+
+                    OkDialog(finderDlg, finderDlg.Open); // Accept selected files and close dialog
                 }
                 OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
                 OkDialog(shareDlg, shareDlg.OkDialog);
@@ -307,7 +310,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify that the (fake!) raw data made it into the .sky.zip
                 WaitForCondition(() => File.Exists(shareCompletePath));
                 using var zipFile = ZipFile.Read(shareCompletePath);
-if (elsewhere == null) // TODO(Clark) delete this line
+
                 Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW), $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
                 Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW), $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
             }
@@ -425,6 +428,7 @@ if (elsewhere == null) // TODO(Clark) delete this line
         {
             var shareType = new ShareType(completeSharing, null);
             RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
+
 
             bool extract = !completeSharing;
             string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",

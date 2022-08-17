@@ -33,11 +33,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.resultsSplitContainer = new System.Windows.Forms.SplitContainer();
             this.label2 = new System.Windows.Forms.Label();
             this.listResultsFilesFound = new System.Windows.Forms.ListBox();
+            this.cbExcludeSourceFiles = new System.Windows.Forms.CheckBox();
             this.browseToResultsFileButton = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.findResultsFilesButton = new System.Windows.Forms.Button();
             this.listResultsFilesMissing = new System.Windows.Forms.ListBox();
-            this.cbExcludeSourceFiles = new System.Windows.Forms.CheckBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.label1 = new System.Windows.Forms.Label();
             this.comboSimultaneousFiles = new System.Windows.Forms.ComboBox();
@@ -77,6 +77,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             this.listResultsFilesFound.FormattingEnabled = true;
             this.listResultsFilesFound.Name = "listResultsFilesFound";
             // 
+            // cbExcludeSourceFiles
+            // 
+            resources.ApplyResources(this.cbExcludeSourceFiles, "cbExcludeSourceFiles");
+            this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
+            this.toolTip1.SetToolTip(this.cbExcludeSourceFiles, resources.GetString("cbExcludeSourceFiles.ToolTip"));
+            this.cbExcludeSourceFiles.UseVisualStyleBackColor = true;
+            this.cbExcludeSourceFiles.CheckedChanged += new System.EventHandler(this.cbExcludeSourceFiles_CheckedChanged);
+            // 
             // browseToResultsFileButton
             // 
             resources.ApplyResources(this.browseToResultsFileButton, "browseToResultsFileButton");
@@ -101,14 +109,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             resources.ApplyResources(this.listResultsFilesMissing, "listResultsFilesMissing");
             this.listResultsFilesMissing.FormattingEnabled = true;
             this.listResultsFilesMissing.Name = "listResultsFilesMissing";
-            // 
-            // cbExcludeSourceFiles
-            // 
-            resources.ApplyResources(this.cbExcludeSourceFiles, "cbExcludeSourceFiles");
-            this.cbExcludeSourceFiles.Name = "cbExcludeSourceFiles";
-            this.toolTip1.SetToolTip(this.cbExcludeSourceFiles, resources.GetString("cbExcludeSourceFiles.ToolTip"));
-            this.cbExcludeSourceFiles.UseVisualStyleBackColor = true;
-            this.cbExcludeSourceFiles.CheckedChanged += new System.EventHandler(this.cbExcludeSourceFiles_CheckedChanged);
             // 
             // label1
             // 
