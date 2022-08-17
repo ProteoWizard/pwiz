@@ -179,37 +179,42 @@ namespace pwiz.Skyline.Model.IonMobility
                 var ionMobilityDbMinimal = IonMobilityDb.CreateIonMobilityDb(fs.SafeName, libraryName, true);
 
                 // Calculate the minimal set of peptides needed for this document
-                var dbPrecursors = _database.DictLibrary.LibKeys;
                 var persistIonMobilities = new List<PrecursorIonMobilities>();
-
-                var dictPrecursors = dbPrecursors.ToDictionary(p => p.LibraryKey);
-                foreach (var pair in document.MoleculePrecursorPairs)
+                var minimizedLibraryKeys = new HashSet<LibraryKey>();
+                foreach (var moleculePrecursorPair in document.MoleculePrecursorPairs)
                 {
-                    var key = pair.NodeGroup.GetLibKey(document.Settings, pair.NodePep);
-                    if (dictPrecursors.TryGetValue(key, out var dbPrecursor))
+                    var precursorLibKey = moleculePrecursorPair.NodeGroup.GetLibKey(document.Settings, moleculePrecursorPair.NodePep);
+                    foreach (var keyValuePair in _database.DictLibrary.KeyPairsMatching(precursorLibKey, true))
                     {
-                        var im = _database.GetIonMobilityInfo(key);
+                        if (!minimizedLibraryKeys.Add(keyValuePair.Key))
+                        {
+                            continue;
+                        }
+
+                        LibKey libKey = new LibKey(keyValuePair.Key);
+                        var im = keyValuePair.Value;
 
                         if (smallMoleculeConversionMap != null)
                         {
                             // We are in the midst of converting a document to small molecules for test purposes
                             LibKey smallMolInfo;
-                            if (smallMoleculeConversionMap.TryGetValue(new LibKey(pair.NodePep.ModifiedSequence, pair.NodeGroup.PrecursorCharge), out smallMolInfo))
+                            if (smallMoleculeConversionMap.TryGetValue(
+                                    new LibKey(moleculePrecursorPair.NodePep.ModifiedSequence, moleculePrecursorPair.NodeGroup.PrecursorCharge),
+                                    out smallMolInfo))
                             {
                                 var precursorAdduct = smallMolInfo.Adduct;
                                 var smallMoleculeAttributes = smallMolInfo.SmallMoleculeLibraryAttributes;
-                                dbPrecursor = new LibKey(smallMoleculeAttributes, precursorAdduct);
+                                libKey = new LibKey(smallMoleculeAttributes, precursorAdduct);
                             }
                             else
                             {
                                 // Not being converted
-                                Assume.IsTrue(pair.NodeGroup.Peptide.IsDecoy);
+                                Assume.IsTrue(moleculePrecursorPair.NodeGroup.Peptide.IsDecoy);
                                 continue;
                             }
                         }
-                        persistIonMobilities.Add(new PrecursorIonMobilities(dbPrecursor, im));
-                        // Only add once
-                        dictPrecursors.Remove(key);
+
+                        persistIonMobilities.Add(new PrecursorIonMobilities(libKey, im));
                     }
                 }
 
