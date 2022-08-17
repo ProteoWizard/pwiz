@@ -7,7 +7,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public class GraphicalUserInterface : AbstractGui
+    public class GraphicalUserInterface : AbstractGraphicalUserInterface
     {
         public GraphicalUserInterface(Control parentControl) : base(parentControl)
         {
