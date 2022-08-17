@@ -85,7 +85,8 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
 
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
+            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
+                SkipSmallMoleculeTestVersions())
             {
                 return;
             }
@@ -340,6 +341,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
             }
+
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
 
             //p. 15 Import Full-Scan Data
@@ -1037,12 +1039,16 @@ namespace pwiz.SkylineTestTutorial
                     dlg.SelectedIndex = 4;
                 });
                 Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+                Assert.AreEqual(1, dlg.RedundantComboBox.Items.Count);
+                // This simulates the user clicking on or showing the drop down for the combobox, which populates the combobox
+                RunUI(() => dlg.insertComboItems(null, null));
                 // Checks that for this peptide, there are 11 different spectra available in the dropdown
+                WaitForConditionUI(() => dlg.IsComboBoxUpdated);
                 Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
-                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 0);
+                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
                 // Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
                 Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
-                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
+                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 2);
                 Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
                 var fileSet = new HashSet<String>();
                 var RTSet = new HashSet<String>();

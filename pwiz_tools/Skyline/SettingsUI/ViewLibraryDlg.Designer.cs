@@ -463,9 +463,10 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.comboRedundantSpectra, "comboRedundantSpectra");
             this.comboRedundantSpectra.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRedundantSpectra.DropDownWidth = 200;
-            this.comboRedundantSpectra.FormattingEnabled = true;
             this.comboRedundantSpectra.Name = "comboRedundantSpectra";
             this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.redundantSpectrum_changed);
+            this.comboRedundantSpectra.Click += new System.EventHandler(this.insertComboItems);
+            this.comboRedundantSpectra.Enter += new System.EventHandler(this.insertComboItems);
             // 
             // cbAssociateProteins
             // 

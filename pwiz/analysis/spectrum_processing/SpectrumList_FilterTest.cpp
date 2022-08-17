@@ -49,10 +49,10 @@ void printSpectrumList(const SpectrumList& sl, ostream& os)
         SpectrumPtr spectrum = sl.spectrum(i, false);
         os << spectrum->index << " " 
            << spectrum->id << " "
-           << "ms" << spectrum->cvParam(MS_ms_level).value << " "
-           << "scanEvent:" << spectrum->scanList.scans[0].cvParam(MS_preset_scan_configuration).value << " "
+           << "ms" << spectrum->cvParamValueOrDefault(MS_ms_level, 0) << " "
+           << "scanEvent:" << spectrum->scanList.scans[0].cvParamValueOrDefault(MS_preset_scan_configuration, 0) << " "
            << "scanTime:" << spectrum->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() << " "
-           << "scanFilter:" << spectrum->scanList.scans[0].cvParam(MS_filter_string).value << " "
+           << "scanFilter:" << spectrum->scanList.scans[0].cvParamValueOrDefault<string>(MS_filter_string, "") << " "
            << endl;
     }
 }
@@ -80,6 +80,9 @@ SpectrumListPtr createSpectrumList()
         if (i == 10)
         {
             spectrum->set(MS_emission_spectrum);
+            spectrum->scanList.scans.push_back(Scan());
+            spectrum->scanList.scans[0].set(MS_preset_scan_configuration, i % 4);
+            spectrum->scanList.scans[0].set(MS_scan_start_time, 420 + i, UO_second);
             sl->spectra.push_back(spectrum);
             continue;
         }
@@ -419,7 +422,7 @@ void testScanEventSet(SpectrumListPtr sl)
         *os_ << endl;
     }
 
-    unit_assert(filter.size() == 7);
+    unit_assert(filter.size() == 8);
     unit_assert(filter.spectrumIdentity(0).id == "scan=100");
     unit_assert(filter.spectrumIdentity(1).id == "scan=102");
     unit_assert(filter.spectrumIdentity(2).id == "scan=103");
@@ -603,37 +606,95 @@ void testMassAnalyzerFilter(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testMassAnalyzerFilter:\n";
 
-    set<CVID> cvIDs;
-    // msconvert mass analyzer filter FTMS option
-    cvIDs.insert(MS_orbitrap);
-    cvIDs.insert(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer);
-    SpectrumList_Filter filter(sl, 
-                        SpectrumList_FilterPredicate_AnalyzerType(cvIDs));
-
-    if (os_) 
+    // all ms levels, orbi/FT
     {
-        printSpectrumList(filter, *os_);
-        *os_ << endl;
+        SpectrumList_Filter filter(sl,
+            SpectrumList_FilterPredicate_AnalyzerType({ MS_orbitrap, MS_FT_ICR }, IntegerSet(1, 100)));
+
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(8, filter.size());
+        unit_assert_operator_equal("scan=100", filter.spectrumIdentity(0).id);
     }
 
-    unit_assert(filter.size() == 7);
-    unit_assert(filter.spectrumIdentity(0).id == "scan=100");
-
-    cvIDs.clear();
-    // msconvert mass analyzer filter ITMS option
-    cvIDs.insert(MS_ion_trap);
-
-    SpectrumList_Filter filter1(sl, 
-                        SpectrumList_FilterPredicate_AnalyzerType(cvIDs));
-
-    if (os_) 
+    // all MS2s and just MS1 orbi/FT (so no spectra filtered out)
     {
-        printSpectrumList(filter1, *os_);
-        *os_ << endl;
+        SpectrumList_Filter filter(sl,
+            SpectrumList_FilterPredicate_AnalyzerType({ MS_orbitrap, MS_FT_ICR }, IntegerSet(1)));
+
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(sl->size(), filter.size());
+        unit_assert_operator_equal("scan=100", filter.spectrumIdentity(0).id);
     }
 
-    unit_assert(filter1.size() == 3);
-    unit_assert(filter1.spectrumIdentity(0).id == "scan=102");
+    // all MS1s and just MS2 orbi/FT
+    {
+        SpectrumList_Filter filter(sl,
+            SpectrumList_FilterPredicate_AnalyzerType({ MS_orbitrap, MS_FT_ICR }, IntegerSet(2)));
+
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(8, filter.size());
+        unit_assert_operator_equal("scan=100", filter.spectrumIdentity(0).id);
+    }
+
+    // just ion trap
+    {
+        SpectrumList_Filter filter(sl,
+            SpectrumList_FilterPredicate_AnalyzerType({ MS_ion_trap }, IntegerSet(1, 100)));
+
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(4, filter.size());
+        unit_assert_operator_equal("scan=102", filter.spectrumIdentity(0).id);
+    }
+
+    // all MS1s and just MS2 ion trap
+    {
+        SpectrumList_Filter filter(sl,
+            SpectrumList_FilterPredicate_AnalyzerType({ MS_ion_trap }, IntegerSet(2)));
+
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(8, filter.size());
+        unit_assert_operator_equal("scan=100", filter.spectrumIdentity(0).id);
+    }
+
+    // just MS1 ion trap (only MS1s filtered out)
+    {
+        // msconvert mass analyzer filter ITMS option
+        SpectrumList_Filter filter(sl,
+            SpectrumList_FilterPredicate_AnalyzerType({ MS_ion_trap }, IntegerSet(1)));
+
+        if (os_)
+        {
+            printSpectrumList(filter, *os_);
+            *os_ << endl;
+        }
+
+        unit_assert_operator_equal(7, filter.size());
+    }
 }
 
 void testMZPresentFilter(SpectrumListPtr sl)
