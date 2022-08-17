@@ -2106,7 +2106,7 @@ namespace pwiz.Skyline.Model.Lib
                             sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
                             var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
                             var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
-                            sheetInfo.ScoreType = new BiblioSpecScoreType(scoreType, probabilityType).ToString();
+                            sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
                         }
                         return sheetInfo;
                     }

@@ -56,6 +56,7 @@ using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
 using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
+
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
@@ -88,7 +89,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private ComboOption[] _currentOptions;
         private bool _comboBoxUpdated;
+
+
         public SpectrumProperties _currentProperties { get; private set; }
+
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
