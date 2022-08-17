@@ -34,9 +34,10 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class ShareTypeDlg : FormEx
     {
-        private List<SkylineVersion> _skylineVersionOptions;
-        private SrmDocument _document; // Global document from which replicate files and information can be extracted
-        private List<string> _auxiliaryFiles; // List of extra files to add, usually mass spec data files
+        private readonly List<SkylineVersion> _skylineVersionOptions;
+        private readonly SrmDocument _document; // Global document from which replicate files and information can be extracted
+        private ShareResultsFilesDlg.AuxiliaryFiles _auxiliaryFiles; // All Auxiliary files
+
         public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
         {
         }
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.Alerts
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
-            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], _auxiliaryFiles);
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], GetCheckedAuxiliaryFiles()); // Pass in all the checked auxiliary files
             Close();
         }
 
@@ -138,21 +139,48 @@ namespace pwiz.Skyline.Alerts
         /// <param name="e"></param>
         private void Select_Rep_Files_Click(object sender, EventArgs e)
         {
-            using (ShareResultsFilesDlg replicateSelectDlg = new ShareResultsFilesDlg(_document))
+            using var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles);
+            var result = replicateSelectDlg.ShowDialog();
+            if (result == DialogResult.OK)
             {
-                DialogResult result = replicateSelectDlg.ShowDialog();
-                if (result == DialogResult.OK)
-                {
-                    // Pass along any extra files the user may have selected
-                    _auxiliaryFiles = replicateSelectDlg.ReplicateFilesToInclude;
-                }
+                // Pass along any extra files the user may have selected
+                _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Pass auxiliary file information back
+                lbl_fileStatus.Text = replicateSelectDlg.UpdateLabel();
             }
         }
 
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        private void CB_IncludeFiles_CheckedChanged(object sender, EventArgs e)
         {
-            CheckBox checkBox = (CheckBox)sender;
-            Btn_SelectFiles.Enabled = checkBox.Checked;
+            Btn_SelectFiles.Enabled = CB_IncludeFiles.Checked;
+            lbl_fileStatus.Visible = CB_IncludeFiles.Checked;
+
+            using var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles);
+            lbl_fileStatus.Text = replicateSelectDlg.UpdateLabel(); // Update label
+            replicateSelectDlg.OkDialog(); // Update file selection
+            _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Update files
+        }
+
+
+        /// <summary>
+        /// Get all selected files
+        /// </summary>
+        /// <returns></returns>
+        private List<string> GetCheckedAuxiliaryFiles()
+        { 
+            var auxiliaryFiles = new List<string>(); 
+
+            // Collect files to be selected
+            if (CB_IncludeFiles.Checked)
+            {
+                foreach (var checkedAuxFiles in _auxiliaryFiles._checkBoxFiles)
+                {
+                    if (checkedAuxFiles.CheckedState)
+                    {
+                        auxiliaryFiles.Add(checkedAuxFiles.Filename);
+                    }
+                }
+            }
+            return auxiliaryFiles;
         }
     }
 }

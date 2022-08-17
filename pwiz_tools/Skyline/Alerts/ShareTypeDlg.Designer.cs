@@ -40,8 +40,11 @@
             this.label3 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.Btn_SelectFiles = new System.Windows.Forms.Button();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.CB_IncludeFiles = new System.Windows.Forms.CheckBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lbl_fileStatus = new System.Windows.Forms.Label();
             this.panelButtonBar.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -107,12 +110,24 @@
             this.Btn_SelectFiles.UseVisualStyleBackColor = true;
             this.Btn_SelectFiles.Click += new System.EventHandler(this.Select_Rep_Files_Click);
             // 
-            // checkBox1
+            // CB_IncludeFiles
             // 
-            resources.ApplyResources(this.checkBox1, "checkBox1");
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            resources.ApplyResources(this.CB_IncludeFiles, "CB_IncludeFiles");
+            this.CB_IncludeFiles.Name = "CB_IncludeFiles";
+            this.CB_IncludeFiles.UseVisualStyleBackColor = true;
+            this.CB_IncludeFiles.CheckedChanged += new System.EventHandler(this.CB_IncludeFiles_CheckedChanged);
+            // 
+            // tableLayoutPanel1
+            // 
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
+            this.tableLayoutPanel1.Controls.Add(this.Btn_SelectFiles, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.CB_IncludeFiles, 0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            // 
+            // lbl_fileStatus
+            // 
+            resources.ApplyResources(this.lbl_fileStatus, "lbl_fileStatus");
+            this.lbl_fileStatus.Name = "lbl_fileStatus";
             // 
             // ShareTypeDlg
             // 
@@ -121,10 +136,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.lbl_fileStatus);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.radioMinimal);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.Btn_SelectFiles);
             this.Controls.Add(this.radioComplete);
             this.Controls.Add(this.comboSkylineVersion);
             this.Controls.Add(this.label3);
@@ -135,6 +150,8 @@
             this.Name = "ShareTypeDlg";
             this.ShowInTaskbar = false;
             this.panelButtonBar.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -152,6 +169,8 @@
         private System.Windows.Forms.ComboBox comboSkylineVersion;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button Btn_SelectFiles;
-        private System.Windows.Forms.CheckBox checkBox1;
+        public System.Windows.Forms.CheckBox CB_IncludeFiles; // Public for testing purposes
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label lbl_fileStatus;
     }
 }
