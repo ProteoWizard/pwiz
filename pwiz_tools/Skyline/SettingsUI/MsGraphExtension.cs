@@ -1,10 +1,8 @@
 ﻿using pwiz.MSGraph;
 using System;
 using System.ComponentModel;
-using System.Reflection;
 using System.Resources;
 using System.Windows.Forms;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -46,11 +44,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             propertiesVisible = false;
             splitContainer1.Panel2Collapsed = !propertiesVisible;
-        }
-
-        public void Refresh()
-        {
-            spectrumInfoSheet.Refresh();
         }
 
     }

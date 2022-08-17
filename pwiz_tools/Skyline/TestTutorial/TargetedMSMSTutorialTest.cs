@@ -1168,7 +1168,6 @@ namespace pwiz.SkylineTestTutorial
             PropertyGrid propertyGrid = null;
             RunUI(() =>
             {
-                var graphExtension = (MsGraphExtension)dlg.Controls.Find("msGraphExtension1", true)[0];
                 propertyGrid = graphExtension.PropertiesSheet;
                 Assert.IsNotNull(propertyGrid);
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
