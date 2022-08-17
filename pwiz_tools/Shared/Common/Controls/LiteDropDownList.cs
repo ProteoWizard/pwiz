@@ -52,7 +52,7 @@ namespace pwiz.Common.Controls
             Padding = Padding.Empty;
             Margin = new Padding(-1, 0, -1, 0); // Let these butt up to each other, and overlap on left/right edges
             AutoEllipsis = true; // e.g. If text is too wide, show "Explicit Coll..." rather than breaking at space and showing "Explicit"
-            base.BackColor = _backColorInactive = SystemColors.ControlLight;
+            BackColor = _backColorInactive = SystemColors.ControlLight;
             FlatStyle = FlatStyle.Flat;
             FlatAppearance.MouseOverBackColor = _backColorActive = SystemColors.GradientInactiveCaption; // Very light system color
             FlatAppearance.BorderColor = SystemColors.ControlDark;
@@ -134,7 +134,7 @@ namespace pwiz.Common.Controls
         private void RestoreBackgroundColor(object sender, EventArgs e)
         {
             // Tidy up background color if focus moves to a sibling etc, but losing focus to our listbox is a different story
-            base.BackColor = _backColorInactive;
+            BackColor = _backColorInactive;
         }
 
         protected override void OnClick(EventArgs e)
@@ -174,13 +174,13 @@ namespace pwiz.Common.Controls
             _contextMenuStrip.Items.Clear();
             _contextMenuStrip.Items.AddRange(Items.Select(CreateMenuItem).ToArray());
             _contextMenuStrip.Show(this, new Point(0, this.Height)); // Show menu just below our button
-            base.BackColor = _backColorActive;
+            BackColor = _backColorActive;
         }
 
         private void HideDropdown()
         {
             _contextMenuStrip.Close();
-            // TODO(nicksh): Should this also set "base.BackColor" to "_backColorInactive"?
+            BackColor = _backColorInactive;
         }
 
         protected virtual ToolStripMenuItem CreateMenuItem(object value)
@@ -198,7 +198,7 @@ namespace pwiz.Common.Controls
             // Note the user selection, menu will close itself
             var item = e.ClickedItem;
             Text = item.Text;
-            base.BackColor = _backColorInactive;
+            BackColor = _backColorInactive;
         }
 
         // Handle keys in the manner of a standard combobox
@@ -211,7 +211,6 @@ namespace pwiz.Common.Controls
                 {
                     // Close the menu
                     HideDropdown();
-                    base.BackColor = _backColorInactive;
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                     break;
