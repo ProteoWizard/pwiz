@@ -160,13 +160,13 @@ namespace pwiz.Skyline.Alerts
         /// <param name="e"></param>
         private void CB_IncludeFiles_CheckedChanged(object sender, EventArgs e)
         {
-            Btn_SelectFiles.Enabled = CB_IncludeFiles.Checked;
-            lbl_fileStatus.Visible = CB_IncludeFiles.Checked;
-
             using var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles);
             lbl_fileStatus.Text = replicateSelectDlg.UpdateLabel(); // Update label
             replicateSelectDlg.OkDialog(); // Update file selection
             _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Update files
+
+            Btn_SelectFiles.Enabled = CB_IncludeFiles.Checked;
+            lbl_fileStatus.Visible = CB_IncludeFiles.Checked;
         }
 
 
