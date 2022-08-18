@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Alerts
             else
             {
                 // Message informing the user of the fact there are no longer any missing files and thus no need to search for more
-                MessageBox.Show("All relavent files are present");
+                MessageBox.Show($"All relevant files are present");
             }
             checkedStatus.Text = UpdateLabel(); // Update the label after potential changes
         }
@@ -403,13 +403,15 @@ namespace pwiz.Skyline.Alerts
                 set.Add(folder);
             }
 
+            set.Remove(null);
+
             // Check if the folder contained any missing items
             foreach (var rawFiles in set)
             {
-                if (missingListBox.Items.Contains(Path.GetDirectoryName(rawFiles)) || missingListBox.Items.Contains(Path.GetFileName(rawFiles)))
+                if (missingListBox.Items.Contains(Path.GetDirectoryName(rawFiles) != null) || missingListBox.Items.Contains(Path.GetFileName(rawFiles)))
                 {
                     checkedListBox.Items.Add(rawFiles, true);
-                    missingListBox.Items.Remove(Path.GetDirectoryName(rawFiles));
+                    missingListBox.Items.Remove(Path.GetDirectoryName(rawFiles) != null);
                     missingListBox.Items.Remove(Path.GetFileName(rawFiles));
                 }
             }
