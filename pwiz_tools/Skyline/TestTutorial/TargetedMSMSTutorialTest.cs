@@ -1086,7 +1086,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => dlg.IsUpdateComplete);
             var isSmallMolecules = dlg.PeptideDisplayCount < 11;
             var graphExtension = dlg.GraphExtensionControl;
-            Assert.IsFalse(graphExtension.propertiesVisible);
+            Assert.IsFalse(graphExtension.PropertiesVisible);
             ToolStripButton propertiesButton = null;
             RunUI(() =>
             {
@@ -1096,7 +1096,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsFalse(propertiesButton.Checked);
                 propertiesButton.PerformClick();
             });
-            Assert.IsTrue(graphExtension.propertiesVisible);
+            Assert.IsTrue(graphExtension.PropertiesVisible);
             Assert.IsTrue(propertiesButton.Checked);
             PropertyGrid propertyGrid = null;
             RunUI(() =>
@@ -1118,7 +1118,7 @@ namespace pwiz.SkylineTestTutorial
                 var spectrumCount = properties.Find("SpectrumCount", true).GetValue(propertyGrid.SelectedObject);
                 Assert.AreEqual(401, spectrumCount);
             });
-            Assert.IsTrue(graphExtension.propertiesVisible);
+            Assert.IsTrue(graphExtension.PropertiesVisible);
             Assert.IsTrue(propertiesButton.Checked);
             RunUI(() =>
             {
@@ -1145,7 +1145,7 @@ namespace pwiz.SkylineTestTutorial
                 });
             }
             RunUI(() => propertiesButton.PerformClick());
-            Assert.IsFalse(graphExtension.propertiesVisible);
+            Assert.IsFalse(graphExtension.PropertiesVisible);
             Assert.IsFalse(propertiesButton.Checked);
             RunUI(() => dlg.Close());
         }

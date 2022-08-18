@@ -136,9 +136,10 @@ namespace pwiz.Skyline.SettingsUI
         public bool HasPeptides { get; private set;  }
 
         public int PeptideDisplayCount { get { return listPeptide.Items.Count; } }
-        public MSGraphControl _graphControl
+
+        private MSGraphControl GraphControl
         {
-            get { return msGraphExtension1.graph; }
+            get { return msGraphExtension1.Graph; }
         }
 
 
@@ -155,7 +156,11 @@ namespace pwiz.Skyline.SettingsUI
         public ViewLibraryDlg(LibraryManager libMgr, String libName, IDocumentUIContainer documentContainer)
         {
             InitializeComponent();
-            _graphHelper = GraphHelper.Attach(_graphControl);
+
+            _graphHelper = GraphHelper.Attach(GraphControl);
+            GraphExtensionControl.Splitter.MouseDown += splitMain_MouseDown;
+            GraphExtensionControl.Splitter.MouseUp += splitMain_MouseUp;
+
             _libraryManager = libMgr;
             _selectedLibName = libName;
             if (string.IsNullOrEmpty(_selectedLibName) && Settings.Default.SpectralLibraryList.Count > 0)
@@ -707,7 +712,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             // Clear existing data from the graph pane
-            var graphPane = (MSGraphPane)_graphControl.MasterPane[0];
+            var graphPane = (MSGraphPane)GraphControl.MasterPane[0];
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
 
@@ -890,7 +895,7 @@ namespace pwiz.Skyline.SettingsUI
                             LineWidth = Settings.Default.SpectrumLineWidth
                         };
 
-                        _graphControl.IsEnableVPan = _graphControl.IsEnableVZoom =
+                        GraphControl.IsEnableVPan = GraphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
                         _sourceFile = spectrumInfo?.FileName;
                         // Update file and retention time indicators
@@ -1047,9 +1052,9 @@ namespace pwiz.Skyline.SettingsUI
         private void SetGraphItem(IMSGraphItemInfo item)
         {
             var curveItem = _graphHelper.SetErrorGraphItem(item);
-            _graphControl.GraphPane.Title.Text = item.Title;
+            GraphControl.GraphPane.Title.Text = item.Title;
             curveItem.Label.IsVisible = false;
-            _graphControl.Refresh();
+            GraphControl.Refresh();
         }
 
         /// <summary>
@@ -1183,13 +1188,13 @@ namespace pwiz.Skyline.SettingsUI
                 if (tag == @"set_default" || tag == @"show_val")
                     menuStrip.Items.Remove(item);
             }
-            ZedGraphClipboard.AddToContextMenu(_graphControl, menuStrip);
+            ZedGraphClipboard.AddToContextMenu(GraphControl, menuStrip);
         }
 
         public void LockYAxis(bool lockY)
         {
-            _graphControl.IsEnableVPan = _graphControl.IsEnableVZoom = !lockY;
-            _graphControl.Refresh();
+            GraphControl.IsEnableVPan = GraphControl.IsEnableVZoom = !lockY;
+            GraphControl.Refresh();
         }
 
         #endregion
@@ -1612,22 +1617,22 @@ namespace pwiz.Skyline.SettingsUI
 
         private void copyMetafileButton_Click(object sender, EventArgs e)
         {
-            CopyEmfToolStripMenuItem.CopyEmf(_graphControl);
+            CopyEmfToolStripMenuItem.CopyEmf(GraphControl);
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
-            _graphControl.Copy(false);
+            GraphControl.Copy(false);
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            _graphControl.SaveAs();
+            GraphControl.SaveAs();
         }
 
         private void btnPrint_Click(object sender, EventArgs e)
         {
-            _graphControl.DoPrint();
+            GraphControl.DoPrint();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -2143,26 +2148,6 @@ namespace pwiz.Skyline.SettingsUI
                 _focused.Focus();
                 _focused = null;
             }
-        }
-
-        private static Control GetFocused(Control.ControlCollection controls)
-        {
-            foreach (Control c in controls)
-            {
-                if (c.Focused)
-                {
-                    // Return the focused control
-                    return c;
-                }
-                if (c.ContainsFocus)
-                {
-                    // If the focus is contained inside a control's children
-                    // return the child
-                    return GetFocused(c.Controls);
-                }
-            }
-            // No control on the form has focus
-            return null;
         }
 
         #endregion

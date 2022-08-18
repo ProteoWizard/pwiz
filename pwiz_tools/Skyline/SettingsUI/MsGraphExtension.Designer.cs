@@ -55,6 +55,7 @@
             this.splitContainer1.SplitterDistance = 467;
             this.splitContainer1.SplitterWidth = 5;
             this.splitContainer1.TabIndex = 5;
+            this.splitContainer1.TabStop = false;
             // 
             // graphControl
             // 

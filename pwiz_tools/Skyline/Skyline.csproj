@@ -646,7 +646,9 @@
     <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs" />
+    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
+      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />

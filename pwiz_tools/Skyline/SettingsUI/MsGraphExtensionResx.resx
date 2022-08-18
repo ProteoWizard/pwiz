@@ -123,41 +123,38 @@
   <data name="Charge" xml:space="preserve">
     <value>Charge</value>
   </data>
-  <data name="Desciption_SpecIdInFile" xml:space="preserve">
-    <value>&lt;Insert SpecIdInFile Description&gt;</value>
-  </data>
   <data name="Description_CCS" xml:space="preserve">
-    <value>&lt;Insert CCS Description&gt;</value>
+    <value>Collisional cross section (CCS) of the ion isolated to acquire the spectrum</value>
   </data>
   <data name="Description_Charge" xml:space="preserve">
-    <value>&lt;Insert Charge Description&gt;</value>
+    <value>Precursor charge of the selected ion</value>
   </data>
   <data name="Description_FileName" xml:space="preserve">
-    <value>&lt;Insert FileName Description&gt;</value>
+    <value>File name and potentially full path to the file that was the source of the spectrum</value>
   </data>
   <data name="Description_IdFileName" xml:space="preserve">
-    <value>&lt;Insert IdFileName Description&gt;</value>
+    <value>File name and potentially full path to the file that matched the targeted ion to the spectrum</value>
   </data>
   <data name="Description_Ion Mobility" xml:space="preserve">
-    <value>&lt;Insert Ion Mobility Description&gt;</value>
+    <value>Raw ion mobility value of the ion isolated to acquire the spectrum (e.g. msec, Vs/cm^2, V)</value>
   </data>
   <data name="Description_LibraryName" xml:space="preserve">
-    <value>&lt;Insert LibraryName Description&gt;</value>
+    <value>Name of the library containing this spectrum match</value>
   </data>
   <data name="Description_PrecursorMz" xml:space="preserve">
-    <value>&lt;Insert PrecursorMz Description&gt;</value>
+    <value>Precursor m/z used to select the ion</value>
   </data>
   <data name="Description_RetentionTime" xml:space="preserve">
-    <value>&lt;Insert RetentionTime Description&gt;</value>
+    <value>Retention time of the spectrum acquisition</value>
   </data>
   <data name="Description_Score" xml:space="preserve">
-    <value>&lt;Insert Score Description&gt;</value>
+    <value>Probability score used to chose the best matching spectrum</value>
   </data>
   <data name="Description_ScoreType" xml:space="preserve">
-    <value>&lt;Insert ScoreType Description&gt;</value>
+    <value>Score type of the probability score used to choose the best matching spectrum (e.g. q value, posterior error probability)</value>
   </data>
   <data name="Description_SpecIdInFile" xml:space="preserve">
-    <value>&lt;Insert Spectra Id in File Description&gt;</value>
+    <value>Spectrum ID of the spectrum in the spectrum source file</value>
   </data>
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
@@ -181,7 +178,7 @@
     <value>Peptide Info</value>
   </data>
   <data name="PrecursorMz" xml:space="preserve">
-    <value>Precursor Mz</value>
+    <value>Precursor m/z</value>
   </data>
   <data name="RetentionTime" xml:space="preserve">
     <value>Retention Time</value>
@@ -196,7 +193,7 @@
     <value>Small Molecule Info</value>
   </data>
   <data name="SpecIdInFile" xml:space="preserve">
-    <value>Spectra Id in File</value>
+    <value>Spectrum Id in File</value>
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>Spectrum Count</value>

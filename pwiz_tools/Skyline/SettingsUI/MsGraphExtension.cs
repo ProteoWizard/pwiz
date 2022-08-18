@@ -8,19 +8,19 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class MsGraphExtension : UserControl
     {
-        public bool propertiesVisible;
-        public MSGraphControl graph { get; }
+        public bool PropertiesVisible => !splitContainer1.Panel2Collapsed;
 
-        public PropertyGrid PropertiesSheet;
+        public MSGraphControl Graph => graphControl;
 
+        public PropertyGrid PropertiesSheet => spectrumInfoSheet;
+
+        public SplitContainer Splitter => splitContainer1;
 
         public MsGraphExtension()
         {
             InitializeComponent();
-            propertiesVisible = false;
-            splitContainer1.Panel2Collapsed = true;
-            graph = graphControl;
-            PropertiesSheet = spectrumInfoSheet;
+
+            SetPropertiesVisibility(false);
         }
 
         public void SetPropertiesObject(GlobalizedObject spectrumProperties)
@@ -30,22 +30,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetPropertiesVisibility(bool visible)
         {
-            propertiesVisible = visible;
-            splitContainer1.Panel2Collapsed = !propertiesVisible;
+            splitContainer1.Panel2Collapsed = !visible;
         }
 
         public void ShowProperties()
         {
-            propertiesVisible = true;
-            splitContainer1.Panel2Collapsed = !propertiesVisible;
+            SetPropertiesVisibility(true);
         }
 
         public void HideProperties()
         {
-            propertiesVisible = false;
-            splitContainer1.Panel2Collapsed = !propertiesVisible;
+            SetPropertiesVisibility(false);
         }
-
     }
 
 
