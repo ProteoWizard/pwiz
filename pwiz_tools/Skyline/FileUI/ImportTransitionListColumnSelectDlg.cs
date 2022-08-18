@@ -1024,6 +1024,7 @@ namespace pwiz.Skyline.FileUI
         public class DocumentChecked
         {
             public SrmDocument Document;
+            public Dictionary<string, FastaSequence> ProteinAssociations;
             public IdentityPath SelectPath;
             public List<MeasuredRetentionTime> IrtPeptides;
             public List<SpectrumMzInfo> LibrarySpectra;
@@ -1204,10 +1205,13 @@ namespace pwiz.Skyline.FileUI
                         CheckMoleculeColumns();
                     }
 
+                    insertionParams.ProteinAssociations = checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0
+                        ? _dictNameSeq
+                        : new Dictionary<string, FastaSequence>();
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
                         out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders, 
-                        checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0 ? _dictNameSeq : new Dictionary<string, FastaSequence>());
+                        insertionParams.ProteinAssociations);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }
