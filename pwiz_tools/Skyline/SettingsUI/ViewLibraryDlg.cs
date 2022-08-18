@@ -834,6 +834,7 @@ namespace pwiz.Skyline.SettingsUI
                                                                           rankCharges,
                                                                           rankTypes,
                                                                           (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
+                        // Generates the object that will go into the property sheet
                         var newProperties = new SpectrumProperties()
                         {
                             RetentionTime = string.Format(@"{0:F2}", spectrumInfo.RetentionTime),
@@ -855,6 +856,7 @@ namespace pwiz.Skyline.SettingsUI
                             else
                             {
                                 biblioAdditionalInfo = selectedBiblioSpecLib.GetRedundantSheetInfo(((SpectrumLiteKey) spectrumInfo.SpectrumKey).RedundantId);
+                                // Redundant spectra always return a count of 1, so hold on to the count from the best spectrum
                                 newProperties.SpectrumCount = _currentProperties.SpectrumCount;
                             }
                             _currentProperties = newProperties;
