@@ -65,6 +65,8 @@ namespace SkylineTester
 
             if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Demo"))
                 args.Append(" demo=on");
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Screenshots"))
+                args.Append(" pause=-1"); // Magic number that tells TestRunner to pause and show UI for a manual screenshot
             if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Covershot"))
                 args.Append(" pause=-2"); // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
 
