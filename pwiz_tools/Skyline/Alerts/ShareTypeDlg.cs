@@ -149,6 +149,15 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        /// <summary>
+        /// Upon checking the box the current file information is saved and file status is displayed
+        /// The check box also allows the user access to more specific file selection and the ability
+        /// to locate missing files and add them to the zip. Should the check box be unchecked the
+        /// file selection info will be removed and the user will no longer be able to select files
+        /// unless they re-check the box.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CB_IncludeFiles_CheckedChanged(object sender, EventArgs e)
         {
             Btn_SelectFiles.Enabled = CB_IncludeFiles.Checked;

@@ -268,7 +268,6 @@ namespace pwiz.SkylineTestFunctional
 
         private void ShareWithRawFilesTest()
         {
-
             // Remember original files
             const string docName = "LibraryShareTest.sky";
             string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[1]);
@@ -280,14 +279,12 @@ namespace pwiz.SkylineTestFunctional
             // We don't have the actual raw data handy, but a couple of suitably named files will stand in just fine for our purposes
             var S1_RAW = "S_1.RAW";
             var S5_RAW = "S_5.RAW";
-            var S3_RAW = "S_3.RAW";
-            var S6_RAW = "S_6.RAW";
-            var S9_RAW = "S_9.RAW";
 
-            File.Copy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In document directory
-            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\"+ S5_RAW)); // In document's parent directory
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In documents directory
 
-            void DoShareWithRawFiles(string elsewhere)
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
+
+            void DoShareWithRawFiles(string elsewhere, bool testFolder = false)
             {
                 string shareCompletePath = TestFilesDirs[1].GetTestPath("ShareCompleteWithRaw.zip");
                 var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
@@ -296,27 +293,34 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
                 if (elsewhere != null)
                 {
-                    // Open share results file
-                    var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
-                    RunUI(() =>
-                    {
-                        fileFinderDlg.SelectFile(elsewhere); // Select sub folder
-                        fileFinderDlg.Open(); // Open folder
-                        fileFinderDlg.SelectFile(S1_RAW); // Select file
-                        fileFinderDlg.Open(); // Open file
-                    });
-                    OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
-
-                    var folderFinderDlg = ShowDialog<FolderBrowserDialog>(() => replicatePickDlg.LocateMissingFilesFromFolder());
-                    RunUI(() =>
-                    {
-                        folderFinderDlg.SelectedPath;
-                    });
                     
-                   
+                    if (!testFolder)
+                    {
+                        // Test file selector
+                        var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
+                        RunUI(() =>
+                        {
+                            fileFinderDlg.SelectFile(elsewhere); // Select sub folder
+                            fileFinderDlg.Open(); // Open folder
+                            fileFinderDlg.SelectFile(S1_RAW); // Select file
+                            fileFinderDlg.Open(); // Open file
+                        });
+                        OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
 
+                        replicatePickDlg.SearchDirectoryForMissingFiles(elsewhere);
 
+                    }
+                    else
+                    {
+                        // Test folder selector
+                        RunUI(() =>
+                        {
+                            replicatePickDlg.SearchDirectoryForMissingFiles(elsewhere); // Exercise folder select
+                        });
+                    }
                 }
+                
+                // Close and confirm results
                 OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
                 OkDialog(shareDlg, shareDlg.OkDialog);
 
@@ -324,12 +328,9 @@ namespace pwiz.SkylineTestFunctional
                 WaitForCondition(() => File.Exists(shareCompletePath));
                 using var zipFile = ZipFile.Read(shareCompletePath);
 
+                // Conform files have been correctly found
                 Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW), $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW), $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(S3_RAW), $@"expected to find (fake!) raw data file {S3_RAW} in zip file");
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(S6_RAW), $@"expected to find (fake!) raw data file {S6_RAW} in zip file");
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(S9_RAW), $@"expected to find (fake!) raw data file {S9_RAW} in zip file");
-                
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW), $@"expected to find (fake!) raw data file {S5_RAW} in zip file");   
             }
 
             DoShareWithRawFiles(null);
@@ -338,14 +339,15 @@ namespace pwiz.SkylineTestFunctional
             var elsewhere = TestFilesDirs[1].GetTestPath("elsewhere");
             Directory.CreateDirectory(elsewhere);
             var elsewhereS1 = Path.Combine(elsewhere, S1_RAW);
-            var elsewhereS3 = Path.Combine(elsewhere, S3_RAW);
-            var elsewhereS6 = Path.Combine(elsewhere, S6_RAW);
-            var elsewhereS9 = Path.Combine(elsewhere, S9_RAW);
-            File.Move(TestFilesDirs[1].GetTestPath(S1_RAW), elsewhereS1); 
-            File.Move(TestFilesDirs[1].GetTestPath(S3_RAW), elsewhereS3);   // Exercise folder select
-            File.Move(TestFilesDirs[1].GetTestPath(S6_RAW), elsewhereS6);
-            File.Move(TestFilesDirs[1].GetTestPath(S9_RAW), elsewhereS9);
+            File.Move(TestFilesDirs[1].GetTestPath(S1_RAW), elsewhereS1); // Exercise folder select
+  
             DoShareWithRawFiles(elsewhere);
+
+            // Move the location of S5_RAW in order to test the folder selector
+            elsewhereS1 = Path.Combine(elsewhere,(S5_RAW));
+            File.Move(TestFilesDirs[1].GetTestPath("..\\" + S5_RAW), elsewhereS1);
+
+            DoShareWithRawFiles(elsewhere, true);
         }
 
         private void ShareDocTest()
