@@ -109,6 +109,9 @@ namespace pwiz.SkylineTestTutorial
 
         private void DoMrmerTest()
         {
+            if (!IsPauseForScreenShots)
+                AllowInternetAccess = false;    // Keep the background proteome from getting updated from the web
+
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
@@ -147,8 +150,10 @@ namespace pwiz.SkylineTestTutorial
             var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             var docBeforeTrans = WaitForDocumentChangeLoaded(docBeforePeptideSettings);
+            WaitForBackgroundProteomeLoaderCompleted();
 
             // Inserting a Transition List With Associated Proteins, p. 6
+            // using (new DocChangeLogger("ShowInsertTransitionListDlg"))
             using (new CheckDocumentState(24, 44, 88, 296))
             {
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
@@ -163,7 +168,8 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(colDlg, colDlg.OkDialog);
             }
 
-            Assert.IsTrue(SkylineWindow.Document.Children.All(c => c.Id is FastaSequence));
+            Assert.IsTrue(SkylineWindow.Document.Children.All(c => c.Id is FastaSequence),
+                string.Format("Found {0} proteins without FASTA information", SkylineWindow.Document.Children.Count(c => !(c.Id is FastaSequence))));
 
             RunUI(() =>
             {
