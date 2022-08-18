@@ -823,17 +823,7 @@ namespace pwiz.Skyline.SettingsUI
                                 .GetSpectra(_peptides[index].Key, null, LibraryRedundancy.best).FirstOrDefault();
                         }
 
-                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
-                                                                          transitionGroupDocNode.TransitionGroup.LabelType,
-                                                                          transitionGroupDocNode,
-                                                                          settings,
-                                                                          transitionGroupDocNode.Peptide.Target,
-                                                                          mods,
-                                                                          adducts,
-                                                                          types,
-                                                                          rankCharges,
-                                                                          rankTypes,
-                                                                          (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score);
+
                         // Generates the object that will go into the property sheet
                         var newProperties = new SpectrumProperties()
                         {
@@ -841,7 +831,7 @@ namespace pwiz.Skyline.SettingsUI
                             FileName = spectrumInfo.FileName,
                             LibraryName = spectrumInfo.Name,
                             PrecursorMz = string.Format(@"{0:F2}", CalcMz(pepInfo, _matcher)),
-                            Score = spectrumInfoR.Score,
+                            Score = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
                             Charge = pepInfo.Charge
                         };
                         var selectedBiblioSpecLib = _selectedLibrary as BiblioSpecLiteLibrary;
@@ -866,6 +856,7 @@ namespace pwiz.Skyline.SettingsUI
                             _currentProperties.Score = biblioAdditionalInfo.Score;
                             _currentProperties.ScoreType = biblioAdditionalInfo.ScoreType;
                         }
+
                         LibraryChromGroup libraryChromGroup = null;
                         if (spectrumInfo != null)
                         {
@@ -873,6 +864,18 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         _hasChromatograms = libraryChromGroup != null;
                         _hasScores = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo) != null;
+
+                        var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo.SpectrumPeaksInfo,
+                            transitionGroupDocNode.TransitionGroup.LabelType,
+                            transitionGroupDocNode,
+                            settings,
+                            transitionGroupDocNode.Peptide.Target,
+                            mods,
+                            adducts,
+                            types,
+                            rankCharges,
+                            rankTypes,
+                            _currentProperties.Score);
 
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroupDocNode.TransitionGroup, _selectedLibrary, pepInfo.Key)
                         {
