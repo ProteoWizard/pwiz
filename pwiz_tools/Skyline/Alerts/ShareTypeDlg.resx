@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>282, 3</value>
+    <value>281, 3</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -169,10 +169,10 @@
     <value>RightToLeft</value>
   </data>
   <data name="panelButtonBar.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 200</value>
+    <value>5, 186</value>
   </data>
   <data name="panelButtonBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>360, 31</value>
+    <value>359, 31</value>
   </data>
   <data name="panelButtonBar.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -196,7 +196,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing">
-    <value>201, 3</value>
+    <value>200, 3</value>
   </data>
   <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -229,10 +229,10 @@
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="comboSkylineVersion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 171</value>
+    <value>11, 160</value>
   </data>
   <data name="comboSkylineVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 21</value>
+    <value>349, 21</value>
   </data>
   <data name="comboSkylineVersion.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -260,7 +260,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 155</value>
+    <value>11, 144</value>
   </data>
   <data name="label2.MaximumSize" type="System.Drawing.Size, System.Drawing">
     <value>380, 0</value>
@@ -389,6 +389,9 @@ Note that not all data is preserved when saving as a previous version.</value>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
+  <data name="Btn_SelectFiles.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
   <data name="Btn_SelectFiles.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -396,7 +399,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>124, 3</value>
   </data>
   <data name="Btn_SelectFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 21</value>
+    <value>95, 21</value>
   </data>
   <data name="Btn_SelectFiles.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -419,17 +422,23 @@ Note that not all data is preserved when saving as a previous version.</value>
   <data name="CB_IncludeFiles.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="CB_IncludeFiles.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
   <data name="CB_IncludeFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
   <data name="CB_IncludeFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 17</value>
+    <value>115, 21</value>
   </data>
   <data name="CB_IncludeFiles.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="CB_IncludeFiles.Text" xml:space="preserve">
     <value>Include results files</value>
+  </data>
+  <data name="CB_IncludeFiles.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>BottomLeft</value>
   </data>
   <data name="&gt;&gt;CB_IncludeFiles.Name" xml:space="preserve">
     <value>CB_IncludeFiles</value>
@@ -453,7 +462,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>234, 27</value>
+    <value>222, 27</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -471,13 +480,16 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="Btn_SelectFiles" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="CB_IncludeFiles" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,52.13675,Percent,47.86325,Absolute,20" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="Btn_SelectFiles" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="CB_IncludeFiles" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,54.50451,Percent,45.49549,Absolute,20" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="lbl_fileStatus.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="lbl_fileStatus.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="lbl_fileStatus.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 119</value>
+    <value>19, 119</value>
   </data>
   <data name="lbl_fileStatus.Size" type="System.Drawing.Size, System.Drawing">
     <value>0, 13</value>
@@ -507,7 +519,10 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>370, 236</value>
+    <value>369, 222</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>5, 5, 5, 5</value>

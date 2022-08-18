@@ -230,34 +230,29 @@ namespace pwiz.Skyline.Alerts
         ///
         public string UpdateLabel()
         {
-            string str; 
+            string fileIncludingLabel; 
             int total = checkedListBox.Items.Count + missingListBox.Items.Count; // Number of total files
             int checkCount = checkedListBox.CheckedIndices.Count; // Number of elements currently checked in the checked list box
             int missingCount = missingListBox.Items.Count;
             if (checkCount == total) // All files are selected
             {
-                str = "All " + total + " files will be included.";
+                fileIncludingLabel = $"All {total} files will be included.";
             }
             else if (checkedListBox.CheckedItems.Count == 0) // No items are selected
             {
-                str = "None of the " + total + " files will be included.";
+                fileIncludingLabel = $"None of the {total} files will be included.";
             }
             else
             {
-                str =  checkCount + " out of " + total + " will be included."; // Some number of elements are selected
+                fileIncludingLabel = $"{checkCount} out of {total} files will be included."; // Some number of elements are selected
             }
             
             if (missingCount != 0)
             {
-                str += " Missing " + missingCount + " file";
+                fileIncludingLabel += $" Missing {missingCount} file(s).";
 
-                if (missingCount != 1)
-                {
-                    str += "s";
-                }
-                str += ".";
             }
-            return str;
+            return fileIncludingLabel;
         }
 
         /// <summary>
@@ -364,6 +359,20 @@ namespace pwiz.Skyline.Alerts
         {
             // Ask the user for the directory to search
             using var searchFolderDialog = new FolderBrowserDialog();
+            searchFolderDialog.ShowNewFolderButton = false;
+
+            var docPath = Program.MainWindow.DocumentFilePath;
+
+            // Set initial directory to default if not applicable
+            var initialDir = Path.GetDirectoryName(docPath) ?? Settings.Default.SrmResultsDirectory;
+            if (string.IsNullOrEmpty(initialDir))
+                initialDir = null;
+
+            // Set the initial directory to the current working directory if present
+            searchFolderDialog.SelectedPath = initialDir;
+
+            searchFolderDialog.Description = $"Please select the folder containing the missing files"; // Description
+
             if (searchFolderDialog.ShowDialog() == DialogResult.OK)
             {
                 SearchDirectoryForMissingFiles(searchFolderDialog.SelectedPath);

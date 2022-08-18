@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestFunctional
 
             void DoShareWithRawFiles(string elsewhere, bool testFolder = false)
             {
-                string shareCompletePath = TestFilesDirs[1].GetTestPath("ShareCompleteWithRaw.zip");
+                string shareCompletePath = TestFilesDirs[1].GetTestPath(Path.GetFileName(elsewhere) + testFolder.ToString() + ".zip");
                 var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
                 RunUI(() => shareDlg.CB_IncludeFiles.Checked = true); // Check box must be checked in order for files to be zipped
                 var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
