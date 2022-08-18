@@ -85,6 +85,10 @@ namespace pwiz.Skyline.SettingsUI
         private readonly Bitmap _moleculeImg;
         public ViewLibSpectrumGraphItem GraphItem { get; private set; }
         public GraphSpectrumSettings GraphSettings { get; private set; }
+
+        private ComboOption[] _currentOptions;
+        private bool _comboBoxUpdated;
+
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
@@ -790,14 +794,15 @@ namespace pwiz.Skyline.SettingsUI
                         adducts.AddRange(showAdducts.Where(a => charges.Contains(Math.Abs(a.AdductCharge)) && !adducts.Contains(a))); // And the unranked charges as well
 
                         // Get all redundant spectrum for the selected peptide, add them to comboRedundantSpectra
-                        var redundantSpectra = _selectedLibrary.GetSpectra(_peptides[index].Key, null, LibraryRedundancy.all);
-                        var newDropDownOptions = new List<ComboOption>(redundantSpectra.Select(s => new ComboOption(s)));
+                        var redundantSpectra = _selectedLibrary
+                            .GetSpectra(_peptides[index].Key, null, LibraryRedundancy.all);
+                        var newDropDownOptions = redundantSpectra.Select(s => new ComboOption(s)).ToArray();
                         SpectrumInfoLibrary spectrumInfo;
-                        if (newDropDownOptions.Count > 0)
+                        if (newDropDownOptions.Length > 0)
                         {
                             // Get the spectrum to be graphed from the combo box and fill the combo box
                             // if the selected peptide has changed
-                            showComboRedundantSpectra = newDropDownOptions.Count > 1;
+                            showComboRedundantSpectra = newDropDownOptions.Length > 1;
                             spectrumInfo = SetupRedundantSpectraCombo(newDropDownOptions);
                         }
                         else
@@ -954,9 +959,9 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Sets up the redundant dropdown menu and selects the spectrum to display on the graph
         /// </summary>
-        private SpectrumInfoLibrary SetupRedundantSpectraCombo(List<ComboOption> options)
+        private SpectrumInfoLibrary SetupRedundantSpectraCombo(ComboOption[] options)
         {
-            if (options.Count == 1)
+            if (options.Length == 1)
                 return options.First().SpectrumInfoLibrary;
             if (comboRedundantSpectra.SelectedItem != null && options.Contains(comboRedundantSpectra.SelectedItem))
             {
@@ -965,17 +970,18 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 ComboOption bestOption = null;
-
                 comboRedundantSpectra.Items.Clear();
-                options.Sort();
+                Array.Sort(options);
+                _currentOptions = options;
+                _comboBoxUpdated = false;
                 foreach (var opt in options)
                 {
-                    comboRedundantSpectra.Items.Add(opt);
                     if (opt.SpectrumInfoLibrary.IsBest)
                     {
                         // Sets the selected dropdown item to what is graphed without updating the UI.
                         comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
-                        comboRedundantSpectra.SelectedItem = opt;
+                        comboRedundantSpectra.Items.Add(opt);
+                        comboRedundantSpectra.SelectedIndex = 0;
                         comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
                         bestOption = opt;
                     }
@@ -2371,6 +2377,11 @@ namespace pwiz.Skyline.SettingsUI
             get { return comboRedundantSpectra; }
         }
 
+        public bool IsComboBoxUpdated
+        {
+            get { return _comboBoxUpdated; }
+        }
+
         #endregion
 
         /// <summary>
@@ -2898,5 +2909,23 @@ namespace pwiz.Skyline.SettingsUI
         {
             UpdateUI();
         }
+
+        public void insertComboItems(object sender, EventArgs e)
+        {
+            if (!_comboBoxUpdated)
+            {
+                comboRedundantSpectra.BeginUpdate();
+                foreach (ComboOption opt in _currentOptions)
+                {
+                    if (!opt.SpectrumInfoLibrary.IsBest)
+                    {
+                        comboRedundantSpectra.Items.Add(opt);
+                    }
+                }
+                comboRedundantSpectra.EndUpdate();
+                _comboBoxUpdated = true;
+            }
+        }
+
     }
 }
