@@ -32,10 +32,14 @@ namespace pwiz.Skyline.Alerts
 {
     /// <summary>
     /// Added by Clark Brace (cbrace3)
-    /// Share results dialogue is intended to allow users to select raw files they wish to include when sharing
-    /// their current Skyline document.Information regarding which raw files are currently being used in Skyline
-    /// are collected and displayed allowing the user to zip send everything in one clean package.Files are displayed
-    /// in natural sort order and await upon the user's selection. TODO improve the summary here
+    /// Share results dialog is intended to allow users to select raw files they wish to include when sharing
+    /// their current Skyline document. Information regarding which raw files are currently being used in Skyline
+    /// are collected and displayed allowing the user to zip send everything in one clean package. Files are
+    /// displayed in natural sort order and await upon the user's selection. Should files be missing/not accessible
+    /// by the document the user can either select individual files utilizing the OpenDataSourceDialog or select
+    /// the folder where missing files are known to be using the FolderBrowserDialog. Missing files that are found
+    /// are added to the selection of files the user can choose from in their selection. By default missing files
+    /// are checked when discovered and added.
     /// </summary>
     public partial class ShareResultsFilesDlg : Form
     {
@@ -342,6 +346,68 @@ namespace pwiz.Skyline.Alerts
             LocateMissingFiles();
         }
 
+
+        /// <summary>
+        /// Select and add all missing files from folder
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public void findResultsFolder_Click(object sender, EventArgs e)
+        {
+            LocateMissingFilesFromFolder();
+        }
+
+        /// <summary>
+        /// Allow the user to select a folder to search for missing files from
+        /// </summary>
+        public void LocateMissingFilesFromFolder()
+        {
+            // Ask the user for the directory to search
+            using var searchFolderDialog = new FolderBrowserDialog();
+            if (searchFolderDialog.ShowDialog() == DialogResult.OK)
+            {
+                SearchDirectoryForMissingFiles(searchFolderDialog.SelectedPath);
+            }
+        }
+
+        /// <summary>
+        /// Preforms search for missing items within directory given directory path. Split
+        /// for testing purposes and incompatibility with form types.
+        /// </summary>
+        /// <param name="folderPath"></param>
+        public void SearchDirectoryForMissingFiles(string folderPath)
+        {
+            // Get all file/directory information from given folder path
+            var files = Directory.GetFiles(folderPath);
+            var folders = Directory.GetDirectories(folderPath);
+            var set = new HashSet<string>();
+
+            // Add all file paths in folder to hash set
+            foreach (var file in files)
+            {
+                set.Add(file);
+            }
+
+            // Add all folder paths in folder to hash set
+            foreach (var folder in folders)
+            {
+                set.Add(folder);
+            }
+
+            // Check if the folder contained any missing items
+            foreach (var rawFiles in set)
+            {
+                if (missingListBox.Items.Contains(Path.GetDirectoryName(rawFiles)) || missingListBox.Items.Contains(Path.GetFileName(rawFiles)))
+                {
+                    checkedListBox.Items.Add(rawFiles, true);
+                    missingListBox.Items.Remove(Path.GetDirectoryName(rawFiles));
+                    missingListBox.Items.Remove(Path.GetFileName(rawFiles));
+                }
+            }
+            checkedStatus.Text = UpdateLabel();
+        }
+
+
         /// <summary>
         /// All list box information used to store the state of the from
         /// </summary>
@@ -369,50 +435,6 @@ namespace pwiz.Skyline.Alerts
             {
                 Filename = filename;
                 CheckedState = checkedState;
-            }
-        }
-
-        /// <summary>
-        /// Select and add all missing files from folder
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void findResultsFolder_Click(object sender, EventArgs e)
-        {
-            LocateMissingFilesFromFolder();
-        }
-
-
-        public void LocateMissingFilesFromFolder()
-        {
-            // Ask the user for the directory to search
-            using var searchFolderDialog = new FolderBrowserDialog();
-            if (searchFolderDialog.ShowDialog() == DialogResult.OK)
-            {
-                var folderPath = searchFolderDialog.SelectedPath;
-                var files = Directory.GetFiles(folderPath);
-                var folders = Directory.GetDirectories(folderPath);
-                var set = new HashSet<string>();
-
-                foreach (var file in files)
-                {
-                    set.Add(file);
-                }
-                foreach (var folder in folders)
-                {
-                    set.Add(folder);
-                }
-
-                foreach (var rawFiles in set)
-                {
-                    if (missingListBox.Items.Contains(Path.GetDirectoryName(rawFiles)) || missingListBox.Items.Contains(Path.GetFileName(rawFiles)))
-                    {
-                        checkedListBox.Items.Add(rawFiles, true);
-                        missingListBox.Items.Remove(Path.GetDirectoryName(rawFiles));
-                        missingListBox.Items.Remove(Path.GetFileName(rawFiles));
-                    }
-                }
-
             }
         }
     }
