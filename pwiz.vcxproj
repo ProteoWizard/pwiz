@@ -18,7 +18,7 @@
     <ProjectGuid>{69BD51D3-2BBA-4462-A5A4-FC8EF88A52FD}</ProjectGuid>
     <RootNamespace>pwiz</RootNamespace>
     <Keyword>MakeFileProj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <TargetFrameworkVersion>4.7.2</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -30,7 +30,7 @@
     <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" Label="Configuration">
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>true</CLRSupport>
@@ -88,9 +88,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="libraries\boost_aux\libs\nowide\src\iostream.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactory.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactoryTest.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListWrapperTest.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_Filter.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_FilterTest.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefiner.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefinerTest.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_SavitzkyGolaySmoother.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\SavitzkyGolaySmootherTest.cpp" />
+    <ClCompile Include="pwiz\analysis\common\CwtPeakDetector.cpp" />
+    <ClCompile Include="pwiz\analysis\common\CwtPeakDetectorTest.cpp" />
     <ClCompile Include="pwiz\analysis\common\ExtraZeroSamplesFilter.cpp" />
     <ClCompile Include="pwiz\analysis\common\ExtraZeroSamplesFilterTest.cpp" />
     <ClCompile Include="pwiz\analysis\common\LocalMaximumPeakDetector.cpp" />
@@ -327,6 +335,12 @@
     <ClCompile Include="pwiz\data\msdata\MSDataTest.cpp" />
     <ClCompile Include="pwiz\data\msdata\MSnReaderTest.cpp" />
     <ClCompile Include="pwiz\data\msdata\MSNumpress.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Configuration_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Connection_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Datastructures_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\ReferenceRead_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\ReferenceWrite_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Translator_mz5.cpp" />
     <ClCompile Include="pwiz\data\msdata\RAMPAdapter.cpp" />
     <ClCompile Include="pwiz\data\msdata\RAMPAdapterTest.cpp" />
     <ClCompile Include="pwiz\data\msdata\Reader.cpp" />
@@ -348,6 +362,7 @@
     <ClCompile Include="pwiz\data\msdata\SpectrumInfoTest.cpp" />
     <ClCompile Include="pwiz\data\msdata\SpectrumIterator.cpp" />
     <ClCompile Include="pwiz\data\msdata\SpectrumIteratorTest.cpp" />
+    <ClCompile Include="pwiz\data\msdata\SpectrumListBase.cpp" />
     <ClCompile Include="pwiz\data\msdata\SpectrumListBaseTest.cpp" />
     <ClCompile Include="pwiz\data\msdata\SpectrumListCache.cpp" />
     <ClCompile Include="pwiz\data\msdata\SpectrumListCacheTest.cpp" />
@@ -440,9 +455,11 @@
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo_Detail.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Thermo\SpectrumList_Thermo.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UIMF\ChromatogramList_UIMF.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.cpp" />
@@ -465,6 +482,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">PWIZ_READER_THERMO;PWIZ_READER_AGILENT;PWIZ_READER_BRUKER;PWIZ_READER_WATERS;PWIZ_READER_ABI;PWIZ_READER_ABI_T2D;WIN32;USE_RAW_PTR;PWIZ_BINDINGS_CLI_COMBINED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="pwiz\utility\bindings\CLI\analysis\SpectrumList_IonMobility_Test.cpp" />
     <ClCompile Include="pwiz\utility\bindings\CLI\analysis\SpectrumList_PeakFilter.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'">true</CompileAsManaged>
@@ -775,6 +793,7 @@
     <ClCompile Include="pwiz\utility\misc\SHA1Calculator.cpp" />
     <ClCompile Include="pwiz\utility\misc\SHA1CalculatorTest.cpp" />
     <ClCompile Include="pwiz\utility\misc\SHA1_ostream_test.cpp" />
+    <ClCompile Include="pwiz\utility\misc\String.cpp" />
     <ClCompile Include="pwiz\utility\misc\TabReader.cpp" />
     <ClCompile Include="pwiz\utility\misc\TabReaderTest.cpp" />
     <ClCompile Include="pwiz\utility\misc\VendorReaderTestHarness.cpp" />
@@ -849,6 +868,7 @@
     <ClCompile Include="pwiz_tools\BiblioSpec\tests\CompareTextFiles.cpp" />
     <ClCompile Include="pwiz_tools\BiblioSpec\tests\ExecuteBlib.cpp" />
     <ClCompile Include="pwiz_tools\commandline\chainsaw.cpp" />
+    <ClCompile Include="pwiz_tools\commandline\idcat.cpp" />
     <ClCompile Include="pwiz_tools\commandline\idconvert.cpp" />
     <ClCompile Include="pwiz_tools\commandline\msaccess.cpp" />
     <ClCompile Include="pwiz_tools\commandline\msconvert.cpp" />
@@ -886,6 +906,10 @@
     <ClInclude Include="libraries\boost_aux\boost\nowide\stackstring.hpp" />
     <ClInclude Include="libraries\boost_aux\boost\nowide\system.hpp" />
     <ClInclude Include="libraries\boost_aux\boost\nowide\windows.hpp" />
+    <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactory.hpp" />
+    <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramList_Filter.hpp" />
+    <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefiner.hpp" />
+    <ClInclude Include="pwiz\analysis\common\CwtPeakDetector.hpp" />
     <ClInclude Include="pwiz\analysis\demux\CubicHermiteSpline.hpp" />
     <ClInclude Include="pwiz\analysis\demux\DemuxDataProcessingStrings.hpp" />
     <ClInclude Include="pwiz\analysis\demux\DemuxDebugReader.hpp" />
@@ -914,8 +938,10 @@
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\proteome_processing\ProteinList_Filter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MS2Deisotoper.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_3D.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_ChargeFromIsotope.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_Demux.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_LockmassRefiner.hpp" />
@@ -925,6 +951,12 @@
     <ClInclude Include="pwiz\data\msdata\ChromatogramList_mz5.hpp" />
     <ClInclude Include="pwiz\data\msdata\Index_mzML.hpp" />
     <ClInclude Include="pwiz\data\msdata\MSNumpress.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Configuration_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Connection_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Datastructures_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\ReferenceRead_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\ReferenceWrite_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Translator_mz5.hpp" />
     <ClInclude Include="pwiz\data\msdata\Serializer_MSn.hpp" />
     <ClInclude Include="pwiz\data\msdata\Serializer_mz5.hpp" />
     <ClInclude Include="pwiz\data\msdata\SpectrumList_MSn.hpp" />
@@ -944,8 +976,10 @@
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\ChromatogramList_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\Reader_Shimadzu.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\Shimadzu\SpectrumList_Shimadzu.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UIMF\ChromatogramList_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\Reader_UIMF.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UIMF\SpectrumList_UIMF.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\Reader_UNIFI_Detail.hpp" />
     <ClInclude Include="pwiz\data\vendor_readers\UNIFI\SpectrumList_UNIFI.hpp" />
@@ -955,6 +989,7 @@
     <ClInclude Include="pwiz\data\vendor_readers\Waters\SpectrumList_Waters.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\analysis\spectrum_processing.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\chemistry\chemistry.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\BinaryData.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\cv.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\IterationListener.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\common\map.hpp" />
@@ -997,6 +1032,7 @@
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\Reader.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\TraData.hpp" />
     <ClInclude Include="pwiz\utility\bindings\CLI\tradata\TraDataFile.hpp" />
+    <ClInclude Include="pwiz\utility\chemistry\MzMobilityWindow.hpp" />
     <ClInclude Include="pwiz\utility\misc\BinaryData.hpp" />
     <ClInclude Include="pwiz\utility\misc\sort_together.hpp" />
     <ClInclude Include="pwiz\utility\misc\std.hpp" />
@@ -1330,6 +1366,7 @@
   <ItemGroup>
     <None Include="Jamroot.jam" />
     <None Include="libraries\boost-build\src\tools\msvc.jam" />
+    <None Include="pwiz\data\common\cv.inl" />
     <None Include="scripts\wix\pwiz-setup.py" />
     <None Include="scripts\wix\pwiz-setup.wxs.template" />
     <None Include="scripts\wix\vendor-dlls.wxs-fragment" />
