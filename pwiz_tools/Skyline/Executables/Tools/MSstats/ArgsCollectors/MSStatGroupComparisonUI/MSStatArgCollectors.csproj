@@ -89,6 +89,9 @@
     <EmbeddedResource Include="CommonOptionsControl.resx">
       <DependentUpon>CommonOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="CommonOptionsControl.zh-CHS.resx">
+      <DependentUpon>CommonOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GroupComparisonUI.ja.resx">
       <DependentUpon>GroupComparisonUI.cs</DependentUpon>
     </EmbeddedResource>
