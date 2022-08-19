@@ -880,7 +880,7 @@ namespace pwiz.Skyline.SettingsUI
                             types,
                             rankCharges,
                             rankTypes,
-                            _currentProperties.Score);
+                            _currentProperties?.Score);
 
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, transitionGroupDocNode.TransitionGroup, _selectedLibrary, pepInfo.Key)
                         {
