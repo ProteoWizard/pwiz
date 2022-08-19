@@ -2235,6 +2235,9 @@
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.zh-CHS.resx">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
       <DependentUpon>ChooseFormatDlg.cs</DependentUpon>
     </EmbeddedResource>
