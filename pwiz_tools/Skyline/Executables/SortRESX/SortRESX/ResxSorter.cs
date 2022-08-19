@@ -14,7 +14,7 @@ namespace SortRESX
                 new XElement(resx.Root.Name,
                     from comment in resx.Root.Nodes() where comment.NodeType == XmlNodeType.Comment select comment,
                     from schema in resx.Root.Elements() where schema.Name.LocalName == "schema" select schema,
-                    from resheader in resx.Root.Elements("resheader") orderby (string)resheader.Attribute("name") select resheader,
+                    from resheader in resx.Root.Elements("resheader") select resheader,
                     from assembly in resx.Root.Elements("assembly") orderby (string)assembly.Attribute("name") select assembly,
                     from metadata in resx.Root.Elements("metadata") orderby (string)metadata.Attribute("name") select metadata,
                     from data in resx.Root.Elements("data") where !FilterOutDataElement(data) orderby (string)data.Attribute("name") select data
