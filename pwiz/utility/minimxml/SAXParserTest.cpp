@@ -536,8 +536,12 @@ void testRootElement()
 
     unit_assert_operator_equal(RootElement, xml_root_element("<?xml?><RootElement>"));
     unit_assert_operator_equal(RootElement, xml_root_element("<?xml?><RootElement name='value'"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<?xml?>\r\n<RootElement>"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<?xml?>\r\n<RootElement name='value'"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<RootElement>"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<RootElement name='value'"));
 
-    unit_assert_throws(xml_root_element("not-xml"), runtime_error);
+    unit_assert_throws(xml_root_element("not-xml"), xml_root_error);
 }
 
 
