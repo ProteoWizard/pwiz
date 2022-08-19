@@ -4120,7 +4120,7 @@ namespace pwiz.Skyline.Model
 //            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
 
-            var compound = GetCompound(nodePep, nodeTranGroup);
+            var compound = FormatMods(GetCompound(nodePep, nodeTranGroup));
             compound += '.';
             compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
 
@@ -4195,6 +4195,16 @@ namespace pwiz.Skyline.Model
                 writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
             writer.WriteLine();
+        }
+
+        /// <summary>
+        /// Hack to replace modification brackets with parentheses.
+        /// MassLynx or VerifyESkylineLibrary.dll has some problem with multiple sets of brackets that causes
+        /// an incomplete method to be generated. Transitions get limited to only 5.
+        /// </summary>
+        public static string FormatMods(string modSeq)
+        {
+            return modSeq.Replace('[', '(').Replace(']', ')');
         }
     }
 
@@ -4363,7 +4373,8 @@ namespace pwiz.Skyline.Model
             writer.Write(199);
             writer.Write(FieldSeparator);
             // compound name
-            writer.WriteDsvField(TextUtil.SpaceSeparate(nodePepGroup.Name, nodePep.ModifiedSequenceDisplay), FieldSeparator);
+            var compoundName = TextUtil.SpaceSeparate(nodePepGroup.Name, WatersMassListExporter.FormatMods(nodePep.ModifiedSequenceDisplay));
+            writer.WriteDsvField(compoundName, FieldSeparator);
         }
 
         protected void GetCEValues(double mz, out double trapStart, out double trapEnd, out double? transferStart, out double? transferEnd)
