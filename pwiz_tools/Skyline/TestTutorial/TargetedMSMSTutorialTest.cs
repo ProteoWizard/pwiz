@@ -1150,6 +1150,23 @@ namespace pwiz.SkylineTestTutorial
                     specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
                     Assert.AreEqual("19208", specId);
                 });
+                RunUI(() =>
+                {
+                    // Tests that the score displayed on the graph matches the score displayed in the property sheet
+                    Assert.IsNotNull(propertyGrid);
+                    dlg.SelectedIndex = 4;
+                    var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+                    var score = properties.Find("Score", true).GetValue(propertyGrid.SelectedObject);
+                    Assert.AreEqual("0.001", score);
+                    Assert.AreEqual(0.001, dlg.GraphItem.SpectrumInfo.Score);
+                    RunUI(() => dlg.insertComboItems(null, null));
+                    WaitForConditionUI(() => dlg.IsComboBoxUpdated);
+                    dlg.RedundantComboBox.SelectedIndex = 1;
+                    properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+                    score = properties.Find("Score", true).GetValue(propertyGrid.SelectedObject);
+                    Assert.AreEqual("0.004", score);
+                    Assert.AreEqual(0.004, dlg.GraphItem.SpectrumInfo.Score);
+                });
             }
             RunUI(() => propertiesButton.PerformClick());
             Assert.IsFalse(graphExtension.PropertiesVisible);

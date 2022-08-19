@@ -69,7 +69,6 @@ namespace pwiz.Skyline.SettingsUI
     {
         // Used to parse the modification string in a given sequence
         private const string COLON_SEP = ": ";
-        public const String RETENTION_TIME = "0.##";
 
         protected internal const int PADDING = 3;
         private const TextFormatFlags FORMAT_PLAIN = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
