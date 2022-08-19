@@ -633,4 +633,28 @@
   <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
   </data>
+  <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
+    <value>已分配给肽段最多的蛋白质</value>
+  </data>
+  <data name="SharedPeptides_AssignedToFirstProtein" xml:space="preserve">
+    <value>已分配给第一个蛋白质</value>
+  </data>
+  <data name="SharedPeptides_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>蛋白质之间重复</value>
+  </data>
+  <data name="SharedPeptides_Removed" xml:space="preserve">
+    <value>已删除（肽段必须为单一蛋白质独有）</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToBestProtein" xml:space="preserve">
+    <value>已分配给肽段最多的蛋白质组</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToFirstProtein" xml:space="preserve">
+    <value>已分配给第一个蛋白质组</value>
+  </data>
+  <data name="SharedPeptidesGroup_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>蛋白质组之间重复</value>
+  </data>
+  <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
+    <value>已删除（肽段必须为单一蛋白质组独有）</value>
+  </data>
 </root>

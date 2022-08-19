@@ -944,6 +944,12 @@
   <data name="SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate" xml:space="preserve">
     <value>重复测定</value>
   </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Replicate" xml:space="preserve">
+    <value>重复测定：</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Tooltip_Dotp" xml:space="preserve">
+    <value>{0}：</value>
+  </data>
   <data name="ExportMethodDlg_ExportMethodDlg_Export_Isolation_List" xml:space="preserve">
     <value>导出分离列表</value>
   </data>
@@ -1440,6 +1446,9 @@
   </data>
   <data name="ReportSpecList_GetDefaults_Peak_Boundaries" xml:space="preserve">
     <value>峰边界</value>
+  </data>
+  <data name="ReportSpecList_GetDefaults_Molecule_Peak_Boundaries" xml:space="preserve">
+    <value>分子峰边界</value>
   </data>
   <data name="MQuestStandardWeightedCoElutionCalc_Name_Standard_co_elution__weighted_" xml:space="preserve">
     <value>标准共洗脱（权重）</value>
@@ -3806,7 +3815,7 @@
     <value>{0} 必须大于 0。</value>
   </data>
   <data name="EditPeakScoringModelDlg_EditPeakScoringModelDlg_Composite_Score__Normalized_" xml:space="preserve">
-    <value>复合物得分（归一化）</value>
+    <value>复合物得分（标准化）</value>
   </data>
   <data name="Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted" xml:space="preserve">
     <value>库标题中的数据缺损。文件可能已损坏。</value>
@@ -5550,7 +5559,7 @@
   <data name="ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__" xml:space="preserve">
     <value>{0}当前不支持 DIA 采集列表的导出。</value>
   </data>
-  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified">
+  <data name="MassListRowReader_NextRow_No_peptide_sequence_column_specified" xml:space="preserve">
     <value>未指定肽段修饰序列的列</value>
   </data>
   <data name="MassListRowReader_NextRow_Invalid_peptide_sequence__0__found" xml:space="preserve">
@@ -9610,7 +9619,7 @@
   <data name="SmallMoleculeLibraryAttributes_KeyValuePairs_OtherIDs" xml:space="preserve">
     <value>其他 ID</value>
   </data>
-  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column">
+  <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column" xml:space="preserve">
     <value>忽略列</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy" xml:space="preserve">
@@ -11440,6 +11449,12 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_Precursor_Charge" xml:space="preserve">
     <value>母离子加合物和/或母离子电荷</value>
   </data>
+  <data name="CommandLine_ImportPeakBoundaries_Error__Failed_importing_peak_boundaries_" xml:space="preserve">
+    <value>错误：导入峰边界失败。</value>
+  </data>
+  <data name="CommandLine_ImportPeakBoundaries_Importing_peak_boundaries_from__0_" xml:space="preserve">
+    <value>正在从 {0} 导入峰边界 </value>
+  </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Reassigning_the_Protein_Name_column_will_prevent_the_peptides_from_being_associated_with_proteins_from_the_background_proteome." xml:space="preserve">
     <value>重新分配蛋白质名称列将防止肽段与背景蛋白质组中的蛋白质相关联。</value>
   </data>
@@ -11458,20 +11473,20 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="GroupByItem_ToString_Replicates" xml:space="preserve">
     <value>重复测定</value>
   </data>
-  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP">
-    <value xml:space="preserve">非数据依赖采集： MS2 谱图用于其质荷比值在分离窗口内的所有母离子的色谱图</value>
+  <data name="FullScanAcquisitionMethod_DIA_TOOLTIP" xml:space="preserve">
+    <value>非数据依赖采集： MS2 谱图用于其质荷比值在分离窗口内的所有母离子的色谱图</value>
   </data>
-  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP">
-    <value xml:space="preserve">平行反应监测： MS2 谱图用于其质荷比在所选离子的 "方法匹配耐受性" 值内的母离子</value>
+  <data name="FullScanAcquisitionMethod_PRM_TOOLTIP" xml:space="preserve">
+    <value>平行反应监测： MS2 谱图用于其质荷比在所选离子的 "方法匹配耐受性" 值内的母离子</value>
   </data>
-  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP">
-    <value xml:space="preserve">数据依赖采集： 提取 MS2 色谱图但不用于定量</value>
+  <data name="FullScanAcquisitionMethod_DDA_TOOLTIP" xml:space="preserve">
+    <value>数据依赖采集： 提取 MS2 色谱图但不用于定量</value>
   </data>
-  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP">
-    <value xml:space="preserve">类似于 "PRM"，但使用适用于 Thermo SureQuant 方法的 "触发采集" 和 "方法匹配耐受性" 设置</value>
+  <data name="FullScanAcquisitionMethod_SureQuant_TOOLTIP" xml:space="preserve">
+    <value>类似于 "PRM"，但使用适用于 Thermo SureQuant 方法的 "触发采集" 和 "方法匹配耐受性" 设置</value>
   </data>
-  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP">
-    <value xml:space="preserve">MS2 谱图用于其质荷比最接近所选离子的一个母离子的色谱图</value>
+  <data name="FullScanAcquisitionMethod_Targeted_TOOLTIP" xml:space="preserve">
+    <value>MS2 谱图用于其质荷比最接近所选离子的一个母离子的色谱图</value>
   </data>
   <data name="EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_" xml:space="preserve">
     <value>将同步积分更改为 {0}</value>
@@ -11519,6 +11534,12 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="AutoTrainManager_LoadBackground_None_of_the_targets_in_the_document_have_any_chromatograms_" xml:space="preserve">
     <value>文档中的目标都没有任何色谱图。</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff" xml:space="preserve">
+    <value>重复测定超过{2} 截止值：{0}，低于截止值：{1}</value>
+  </data>
+  <data name="AreaReplicateGraphPane_Dotp_Cutoff_Line_Label" xml:space="preserve">
+    <value>{0} 截止 - {1:F2}</value>
   </data>
   <data name="AlignItem_ToString_Retention_time_calculator___0__" xml:space="preserve">
     <value>保留时间计算器 ({0})</value>
@@ -11588,5 +11609,213 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="SimpleFileDownloaderDlg_Show_Downloading_required_files___" xml:space="preserve">
     <value>正在下载所需的文件...</value>
+  </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Ion_mobility_units_not_specified" xml:space="preserve">
+    <value>未指定离子迁移单位</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations" xml:space="preserve">
+    <value>多个离子迁移声明</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_Import_Assay_Library__Identify_Columns" xml:space="preserve">
+    <value>导入分析库：识别列</value>
+  </data>
+  <data name="CandidatePeakForm_CandidatePeakForm_Candidate_Peaks" xml:space="preserve">
+    <value>候选峰</value>
+  </data>
+  <data name="AreaChartPropertyDlg_ValidateDotpDecimal__0__must_contain_a_decimal_value" xml:space="preserve">
+    <value>{0} 必须包含十进制值。</value>
+  </data>
+  <data name="AreaChartPropertyDlg_ValidateDotpRange__0__must_be_betwen_0_and_1" xml:space="preserve">
+    <value>{0} 截止值必须大于或等于 0 且小于或等于 1。</value>
+  </data>
+  <data name="AssociateProteinsDlg_FindProteinMatchesWithFasta_Finding_peptides_in_FASTA_file" xml:space="preserve">
+    <value>正在查找 FASTA 文件中的肽段</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
+    <value>母离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值或留空，Skyline 将为您进行计算。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
+    <value>子离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值或留空，Skyline 将为您进行计算。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
+    <value>母离子公式和质荷比值在任何电荷状态下都不一致。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
+    <value>子离子公式和质荷比值在任何电荷状态下都不一致。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
+    <value>母离子需要以下任意两项的值：公式、质荷比或电荷。</value>
+  </data>
+  <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_" xml:space="preserve">
+    <value>子离子需要以下任意两项的值：公式、质荷比或电荷。</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Quantification" xml:space="preserve">
+    <value>分子定量</value>
+  </data>
+  <data name="PersistedViews_GetDefaults_Molecule_Ratio_Results" xml:space="preserve">
+    <value>分子比率结果</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ResolveMatchedProteins_Associate_Proteins" xml:space="preserve">
+    <value>关联蛋白质</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
+	  <value>正在等待启动 SCIEX OS</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
+	  <value>工作中…</value>
+  </data>
+  <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
+	  <value>找不到安装的有效 SCIEX OS。</value>
+  </data>
+  <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="BuildLibraryGridView__colScoreType_Score_Type" xml:space="preserve">
+    <value>得分类型</value>
+  </data>
+  <data name="BuildLibraryGridView__colThreshold_Score_Threshold" xml:space="preserve">
+    <value>得分阈值</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_types_not_loaded_" xml:space="preserve">
+    <value>得分类型未加载。</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_only_include_identifications_with_perfect_scores_" xml:space="preserve">
+    <value>{1} 的得分阈值 {0} 只包括得分理想的鉴定。</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_" xml:space="preserve">
+    <value>{1} 的得分阈值 {1} 包括所有鉴定。</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_" xml:space="preserve">
+    <value>{1} 的得分阈值 {0} 异常宽松。</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds__0__scores_indicate_the_probability_that_an_identification_is__1__" xml:space="preserve">
+    <value>{0} 得分表示鉴定为 {1} 的概率。</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_correct" xml:space="preserve">
+    <value>正确</value>
+  </data>
+  <data name="BuildLibraryGridView_GetThresholds_incorrect" xml:space="preserve">
+    <value>不正确</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
+    <value>获取该文件的得分类型时出错。</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
+    <value>得分阈值最小值（得分指示鉴定正确的概率）。</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
+    <value>得分阈值最大值（得分指示鉴定不正确的概率）。</value>
+  </data>
+  <data name="BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
+    <value>得分阈值 '{0}' 无效（必须是介于 {1} 和 {2} 之间的十进制值）。</value>
+  </data>
+  <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
+    <value>您确定想要继续？</value>
+  </data>
+  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
+    <value>Skyline 21.2</value>
+  </data>
+  <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
+    <value>正在打开数据库</value>
+  </data>
+  <data name="IonTypeSelector_NTermLabel" xml:space="preserve">
+    <value>N-末端：</value>
+  </data>
+  <data name="IonTypeSelector_CTermLabel" xml:space="preserve">
+    <value>C-末端：</value>
+  </data>
+  <data name="IonTypeSelector_LossesLabel" xml:space="preserve">
+    <value>丢失：</value>
+  </data>
+  <data name="IonTypeSelector_LossesTooltip" xml:space="preserve">
+    <value>公式：{0}</value>
+  </data>
+  <data name="IonTypeSelector_SelectAllLossesTooltip" xml:space="preserve">
+    <value>选择所有丢失</value>
+  </data>
+  <data name="IonTypeSelector_DeselectAllLossesTooltip" xml:space="preserve">
+    <value>取消选择所有丢失</value>
+  </data>
+  <data name="Loss_FormulaUnknown" xml:space="preserve">
+    <value>（未知）</value>
+  </data>
+  <data name="CandidatePeakGroup_Chosen_Remove_Peak" xml:space="preserve">
+    <value>删除峰</value>
+  </data>
+  <data name="CandidatePeakGroup_Chosen_Choose_peak" xml:space="preserve">
+    <value>选择峰</value>
+  </data>
+  <data name="CandidatePeakGroup_ToString___0___1__" xml:space="preserve">
+    <value>[{0}-{1}]</value>
+    <comment>Example: [19.3-21.7]</comment>
+  </data>
+  <data name="OpenFileDialog_FASTA_files" xml:space="preserve">
+    <value>FASTA 文件</value>
+  </data>
+  <data name="AssociateProteinsDlg_UpdateParsimonyResults_Applying_parsimony_options" xml:space="preserve">
+    <value>正在应用简约选项</value>
+  </data>
+  <data name="ProteinAssociation_CreateDocTree_Creating_protein_targets_and_assigning_their_peptides" xml:space="preserve">
+    <value>正在创建蛋白质目标并分配其肽段</value>
+  </data>
+  <data name="ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree" xml:space="preserve">
+    <value>正在构建肽段前缀树</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Calculating_protein_groups" xml:space="preserve">
+    <value>正在计算蛋白质组</value>
+  </data>
+  <data name="ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins" xml:space="preserve">
+    <value>{0}  蛋白质组</value>
+  </data>
+  <data name="ProteinAssociation_Finding_minimal_protein_list" xml:space="preserve">
+    <value>正在查找最小蛋白质列表</value>
+  </data>
+  <data name="ProteinAssociation_Calculating_protein_clusters" xml:space="preserve">
+    <value>正在计算蛋白质簇</value>
+  </data>
+  <data name="ProteinAssociation_Removing_subset_proteins" xml:space="preserve">
+    <value>正在删除子集蛋白质</value>
+  </data>
+  <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
+    <value>查找能解释所有肽段的最小蛋白质组列表(&amp;M)</value>
+  </data>
+  <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
+    <value>删除子集蛋白质组(&amp;R)</value>
+  </data>
+  <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
+    <value>每个蛋白质组的最小肽段数(&amp;N)</value>
+  </data>
+  <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
+    <value>点积：{0:0.0000}</value>
+  </data>
+  <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
+    <value>第 {0} 行出错：在 {2} 位置出现无效的非 ASCII 字符 '{1}' ；是否确定这是 FASTA 文件？</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
+    <value>将所有文档肽段组织到关联的蛋白质或蛋白质组中。</value>
+  </data>
+  <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
+    <value>现有蛋白质关联将被丢弃。</value>
+  </data>
+  <data name="EditIrtCalcDlg_OkDialog_Saving_to_database" xml:space="preserve">
+    <value>正在保存到数据库</value>
+  </data>
+  <data name="IrtDb_UpdatePeptides_Updating_peptides" xml:space="preserve">
+    <value>正在更新肽段</value>
+  </data>
+  <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
+    <value>共享的肽段</value>
+  </data>
+  <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
+    <value>重复肽段</value>
+  </data>
+  <data name="GraphFullScan_CreateGraph_CE_" xml:space="preserve">
+    <value>CE：</value>
+  </data>
+  <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
+    <value>{1} 的 {0} 值无效：必须大于或等于 {2}。</value>
   </data>
 </root>
