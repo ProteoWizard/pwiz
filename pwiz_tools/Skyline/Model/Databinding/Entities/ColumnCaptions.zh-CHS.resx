@@ -219,8 +219,14 @@
   <data name="CalibrationCurve">
     <value>校准曲线</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>候选峰组</value>
+  </data>
   <data name="CAS">
     <value>CAS（化学文摘社）</value>
+  </data>
+  <data name="Chosen">
+    <value>已选择</value>
   </data>
   <data name="Chromatogram">
     <value>色谱图</value>
@@ -396,6 +402,9 @@
   <data name="ExplicitSLens">
     <value>明示SLens</value>
   </data>
+  <data name="Features">
+    <value>特征</value>
+  </data>
   <data name="FiguresOfMerit">
     <value>品质因数</value>
   </data>
@@ -458,6 +467,9 @@
   </data>
   <data name="InChI">
     <value>InChI（国际化合物标识）</value>
+  </data>
+  <data name="InstrumentSerialNumber">
+    <value>仪器序列号</value>
   </data>
   <data name="Intensities">
     <value>强度</value>
@@ -636,6 +648,9 @@
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>中位数检测 Q 值</value>
   </data>
+  <data name="MedianPeakArea">
+    <value>中位数峰面积</value>
+  </data>
   <data name="Mean">
     <value>平均</value>
   </data>
@@ -692,6 +707,9 @@
   </data>
   <data name="MissedCleavages">
     <value>遗漏的酶解位点数</value>
+  </data>
+  <data name="ModelScore">
+    <value>模型得分</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>修改的面积比例</value>
@@ -783,6 +801,9 @@
   <data name="NextAa">
     <value>下一个 Aa</value>
   </data>
+  <data name="NormalizationDivisor">
+    <value>归一化除数</value>
+  </data>
   <data name="NormalizationMethod">
     <value>校准方法</value>
   </data>
@@ -804,11 +825,23 @@
   <data name="OptStep">
     <value>最优步骤</value>
   </data>
+  <data name="PeakGroupEndTime">
+    <value>峰组结束时间</value>
+  </data>
+  <data name="PeakGroupStartTime">
+    <value>峰组开始时间</value>
+  </data>
+  <data name="PeakQValue">
+    <value>峰 Q 值</value>
+  </data>
   <data name="PeakRank">
     <value>峰排名</value>
   </data>
   <data name="PeakRankByLevel">
     <value>按级别进行峰排名</value>
+  </data>
+  <data name="PeakScores">
+    <value>峰得分</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -1149,11 +1182,17 @@
   <data name="SampleDilutionFactor">
     <value>样品稀释因子</value>
   </data>
+  <data name="SampleId">
+    <value>样品 ID</value>
+  </data>
   <data name="SampleName">
     <value>样品名称</value>
   </data>
   <data name="SampleType">
     <value>样品类型</value>
+  </data>
+  <data name="Score">
+    <value>得分</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline 版本</value>
@@ -1323,10 +1362,19 @@
   <data name="UTCTime">
     <value>UTC 时间</value>
   </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>样品 ID</value>
+  <data name="Weight">
+    <value>权重</value>
   </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>仪器序列号</value>
+  <data name="WeightedFeature">
+    <value>加权特征</value>
+  </data>
+  <data name="WeightedFeatures">
+    <value>加权特征</value>
+  </data>
+  <data name="WeightedScore">
+    <value>加权得分</value>
+  </data>
+  <data name="PeakGroupRetentionTime" xml:space="preserve">
+    <value>峰组保留时间</value>
   </data>
 </root>

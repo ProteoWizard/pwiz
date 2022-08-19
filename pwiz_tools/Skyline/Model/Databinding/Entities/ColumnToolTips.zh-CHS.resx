@@ -137,6 +137,15 @@
   <data name="AttributeGroupId">
     <value>影响属性面积比例计算中肽段或分子的分组。</value>
   </data>
+  <data name="AuditLogDetailRowId">
+    <value>详细消息的 Id</value>
+  </data>
+  <data name="AuditLogRow">
+    <value>审计日志信息行</value>
+  </data>
+  <data name="AuditLogRowId">
+    <value>条目的 Id</value>
+  </data>
   <data name="AutoSelectMolecules">
     <value>如果为“true”，则 Skyline 将根据当前设置在分子列表中自动添加或删除分子。</value>
   </data>
@@ -198,6 +207,15 @@
   <data name="CalibrationCurve">
     <value>校正曲线，其使用样品类型为“标准”并标明“分析物浓度”的重复测定计算。</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>属于同一肽段或分子的一组母离子的离子对色谱图中具有相同起始和结束时间的一组峰。</value>
+  </data>
+  <data name="CAS" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="Chosen">
+    <value>如果候选峰的峰边界与峰组中所有离子对的积分边界相同，则为 true。</value>
+  </data>
   <data name="Chromatogram">
     <value>离子对和重复测定的色谱图。</value>
   </data>
@@ -225,6 +243,9 @@
   </data>
   <data name="CollisionCrossSection">
     <value>母离子的碰撞横截面</value>
+  </data>
+  <data name="CollisionalCrossSection">
+    <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
   </data>
   <data name="Coeluting">
     <value>如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</value>
@@ -298,11 +319,26 @@
     <value>应用于母离子的质荷比变化，以产生
 诱饵质荷比</value>
   </data>
+  <data name="DetailReason">
+    <value>用户给予的进行更改的详细原因</value>
+  </data>
+  <data name="Details">
+    <value>详细更改消息和原因的列表</value>
+  </data>
   <data name="DetectionQValue">
     <value>在应用 mProphet 模型后分配给每个选定目标峰的错误发现率 (FDR) 得分。</value>
   </data>
   <data name="DetectionZScore">
     <value>在应用 mProphet 模型后，分配给每个选定峰（目标和诱饵）的归一化 mProphet 得分，表示为平均诱饵评分的标准偏差 (SD) 数。</value>
+  </data>
+  <data name="DriftTimeFragment">
+    <value>碎片离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
+  </data>
+  <data name="DriftTimeMS1">
+    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比碎片离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
+  </data>
+  <data name="DriftTimeWindow">
+    <value>在色谱图提取中使用的离子迁移漂移时间窗口（以毫秒为单位）。（仅用于向后相容：离子迁移窗口和离子迁移单位是首选术语。）</value>
   </data>
   <data name="EndPos">
     <value>肽段的最后一个 (C-末端) 氨基酸在其包含的蛋白质序列中的位置 (从零开始)，
@@ -327,6 +363,9 @@
   </data>
   <data name="ExplicitCollisionEnergy">
     <value>用于目标的 SRM 方法或离子对列表确切所需的碰撞能量，覆盖所有模型或优化库值或根据母离子而定的明确值。</value>
+  </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>待转换为离子迁移且用于从离子迁移质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>用于目标的 SRM 方法或离子对清单确切所需的补偿电压（离子迁移率过滤器），覆盖所有模型或优化库值。</value>
@@ -364,6 +403,9 @@
   </data>
   <data name="ExplicitSLens">
     <value>用于目标的 SRM 方法或离子对清单确切所需的 SLens 值（仅限 Thermo 仪器）。</value>
+  </data>
+  <data name="Features">
+    <value>峰组属性的集合，可对其分配数字得分以评估峰质量。</value>
   </data>
   <data name="FiguresOfMerit">
     <value>肽段或分子的检出极限和定量极限。可以在肽段设置的定量选项卡选择计算这些数量的方法。</value>
@@ -419,9 +461,21 @@
   <data name="Group">
     <value>与对照组进行比较的重复测定的重复测定注释的值。</value>
   </data>
+  <data name="HMDB" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
   <data name="Identified">
     <value>如果在峰积分边界之间的某一点存在结果文件
 的串联质谱 (MS/MS) 肽鉴定，则成立。</value>
+  </data>
+  <data name="InChI" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="InChiKey" xml:space="preserve">
+    <value>标准化分子标识符</value>
+  </data>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>导入结果文档中读取的仪器序列号</value>
   </data>
   <data name="Intensities">
     <value>色谱图强度的逗号分隔列表。</value>
@@ -453,11 +507,23 @@
   <data name="IonFormula">
     <value>在质谱仪中待测量的全充（且可能是同位素标记）离子的原子化学式。</value>
   </data>
+  <data name="IonMobilityFragment">
+    <value>在子离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为子离子可能由于能量碰撞更多而移动得更快，</value>
+  </data>
   <data name="IonMobilityHighEnergyOffset">
     <value>离子迁移库中母离子的高能偏置</value>
   </data>
+  <data name="IonMobilityMS1">
+    <value>在母离子色谱图提取中使用的离子迁移过滤器窗口的中心。</value>
+  </data>
+  <data name="IonMobilityUnits">
+    <value>在色谱图提取中使用的离子迁移的单位。</value>
+  </data>
   <data name="IonMobilityValue">
     <value>母离子的离子迁移</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>在色谱图提取中使用的离子迁移过滤器窗口的宽度。</value>
   </data>
   <data name="IonName">
     <value>母离子的名称。</value>
@@ -488,6 +554,9 @@
   <data name="IsotopeLabelType">
     <value>与母离子（轻标/重标）相关的标签类型名称，
 表明应用了哪些同位素修饰</value>
+  </data>
+  <data name="KEGG" xml:space="preserve">
+    <value>标准化分子标识符</value>
   </data>
   <data name="Key">
     <value>关键</value>
@@ -609,6 +678,12 @@
   <data name="Median">
     <value>中位数</value>
   </data>
+  <data name="MedianPeakArea">
+    <value>特定结果文件中离子对结果的离子对峰面积中位数。
+当归一化方法为“均衡中位数”时，将使用该中位数峰面积。
+如果有内标标签类型，则仅使用母离子标签类型为内标的离子对峰面积来计算中位数峰面积。
+如果没有内标峰面积，则根据所有离子对峰面积计算中位数离子对峰面积。</value>
+  </data>
   <data name="Mean">
     <value>平均值</value>
   </data>
@@ -669,6 +744,9 @@
   </data>
   <data name="MissedCleavages">
     <value>肽段序列中缺失酶剪切位点的数量</value>
+  </data>
+  <data name="ModelScore">
+    <value>根据当前选择的峰评分模型加权的特征值之和。</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>此肽段结果的归一化面积，除以在此蛋白质和具有相同未修饰序列的重复测定中的所有肽段结果的总和。</value>
@@ -767,6 +845,10 @@
   <data name="NextAa">
     <value>下一个氨基酸</value>
   </data>
+  <data name="NormalizationDivisor">
+    <value>使用默认归一化方法时观察值除以的数字。
+默认归一化方法在肽段或分子设置对话框的“定量”选项卡上指定。</value>
+  </data>
   <data name="NormalizationMethod">
     <value>覆盖与该特定分子一起使用的归一化方法，进行绝对定量和组间比较。</value>
   </data>
@@ -793,12 +875,27 @@
 预设参数值或者当重复测定中未
 进行优化时的值为 0。</value>
   </data>
+  <data name="PeakGroupEndTime">
+    <value>峰组中各个峰的最大结束时间。</value>
+  </data>
+  <data name="PeakGroupRetentionTime">
+    <value>峰组中具备所有离子对最大高度的峰的保留时间</value>
+  </data>
+  <data name="PeakGroupStartTime">
+    <value>峰组中各个峰的最小开始时间。</value>
+  </data>
+  <data name="PeakQValue">
+    <value>如果具有此得分的峰为 Skyline 选择的峰，则为估计的 q 值（错误发现率）。</value>
+  </data>
   <data name="PeakRank">
     <value>基于该离子对在相同母离子的所有其他离子对中的面积
 进行的排名。</value>
   </data>
   <data name="PeakRankByLevel">
     <value>在特定重复测定中按质谱级别排名的峰面积（即 MS1 和串联质谱分开排名）</value>
+  </data>
+  <data name="PeakScores">
+    <value>峰组的特征及其得分。</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -1094,6 +1191,9 @@
   <data name="RawTimes">
     <value>原始（未内插）的色谱图中的保留时间。</value>
   </data>
+  <data name="Reason">
+    <value>用户给予的进行更改的原因</value>
+  </data>
   <data name="Replicate">
     <value>重复测定</value>
   </data>
@@ -1180,6 +1280,9 @@
     <value>当数据导入自多样品 WIFF 文件时的
 样品名称，或其他文件类型的文件名。</value>
   </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>参阅样品的免费文本标识符（可以在多个文件之间共享）。从导入结果文档内“样品 ID”属性中读取</value>
+  </data>
   <data name="SampleType">
     <value>样品类型。 以下一种：
       未知（正在测量的样品）
@@ -1189,8 +1292,17 @@
       空白
       双空白</value>
   </data>
+  <data name="Score">
+    <value>特定特征的数值。</value>
+  </data>
+  <data name="SkylineVersion">
+    <value>进行更改的 Skyline 版本</value>
+  </data>
   <data name="Slope">
     <value>拟合曲线或线中线性项的系数。</value>
+  </data>
+  <data name="SMILES" xml:space="preserve">
+    <value>标准化分子标识符</value>
   </data>
   <data name="SpectrumIds">
     <value>用于色谱图的谱图标识符。</value>
@@ -1251,8 +1363,14 @@
   <data name="TicArea">
     <value>总离子电流在整个运行中的积分。</value>
   </data>
+  <data name="Time">
+    <value>进行此更改的时间，以您目前的当地时区来表示</value>
+  </data>
   <data name="Times">
     <value>色谱图的保留时间。</value>
+  </data>
+  <data name="TimeStamp">
+    <value>进行此更改的时间，以进行更改的本地时间和 UTC 时间偏置来表示</value>
   </data>
   <data name="TotalArea">
     <value>特定母离子的所有单个离子对的面积值
@@ -1337,8 +1455,14 @@
   <data name="TValue">
     <value>线性拟合的估计值（有标准误差）。</value>
   </data>
+  <data name="UndoRedoMessage">
+    <value>更改的描述</value>
+  </data>
   <data name="UnimodIds">
     <value>以其 unimod id 指代修饰的修饰序列，例如"C(unimod:4)"。如果修饰没有 unimod id，则使用其全名代替。</value>
+  </data>
+  <data name="User">
+    <value>进行更改的用户</value>
   </data>
   <data name="UserSetPeak">
     <value>若峰的预设选择或其边界是手动更改的，则成立</value>
@@ -1346,97 +1470,25 @@
   <data name="UserSetTotal">
     <value>若峰的预设选择或其边界是手动更改的，则成立。</value>
   </data>
-  <data name="CollisionalCrossSection">
-    <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
-  </data>
-  <data name="DriftTimeFragment">
-    <value>碎片离子的离子迁移漂移时间（以毫秒为单位），通常因能量碰撞更多而移动更快。（仅用于向后相容：离子迁移片段和离子迁移单位是首选术语。）</value>
-  </data>
-  <data name="DriftTimeMS1">
-    <value>母离子的离子迁移漂移时间（以毫秒为单位），通常因能量较少而比碎片离子移动稍慢。（仅用于向后相容：离子迁移MS1 和离子迁移单位是首选术语。）</value>
-  </data>
-  <data name="DriftTimeWindow">
-    <value>在色谱图提取中使用的离子迁移漂移时间窗口（以毫秒为单位）。（仅用于向后相容：离子迁移窗口和离子迁移单位是首选术语。）</value>
-  </data>
-  <data name="ExplicitCollisionalCrossSection">
-    <value>待转换为离子迁移且用于从离子迁移质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</value>
-  </data>
-  <data name="IonMobilityFragment">
-    <value>在子离子色谱图提取中使用的离子迁移过滤器窗口的中心。这可能不同于母离子的值，因为子离子可能由于能量碰撞更多而移动得更快，</value>
-  </data>
-  <data name="IonMobilityMS1">
-    <value>在母离子色谱图提取中使用的离子迁移过滤器窗口的中心。</value>
-  </data>
-  <data name="IonMobilityWindow">
-    <value>在色谱图提取中使用的离子迁移过滤器窗口的宽度。</value>
-  </data>
-  <data name="IonMobilityUnits">
-    <value>在色谱图提取中使用的离子迁移的单位。</value>
-  </data>
-  <data name="CAS" xml:space="preserve">
-    <value>标准化分子标识符</value>
-  </data>
-  <data name="HMDB" xml:space="preserve">
-    <value>标准化分子标识符</value>
-  </data>
-  <data name="InChI" xml:space="preserve">
-    <value>标准化分子标识符</value>
-  </data>
-  <data name="InChiKey" xml:space="preserve">
-    <value>标准化分子标识符</value>
-  </data>
-  <data name="KEGG" xml:space="preserve">
-    <value>标准化分子标识符</value>
-  </data>
-  <data name="SMILES" xml:space="preserve">
-    <value>标准化分子标识符</value>
-  </data>
-  <data name="Time">
-    <value>进行此更改的时间，以您目前的当地时区来表示</value>
-  </data>
   <data name="UTCTime">
     <value>进行此更改的时间，以世界时间 (GMT) 来表示</value>
   </data>
-  <data name="TimeStamp">
-    <value>进行此更改的时间，以进行更改的本地时间和 UTC 时间偏置来表示</value>
+  <data name="Weight">
+    <value>峰值评分模型为该特征分配的数字权重。</value>
   </data>
-  <data name="UndoRedoMessage">
-    <value>更改的描述</value>
+  <data name="WeightedFeature">
+    <value>特征得分与其权重的组合。</value>
+  </data>
+  <data name="WeightedFeatures">
+    <value>由峰得分模型分配权重的特征的集合。</value>
+  </data>
+  <data name="WeightedScore">
+    <value>特征得分与特征权重的乘积</value>
   </data>
   <data name="SummaryMessage">
     <value>更改的描述</value>
   </data>
   <data name="AllInfoMessage">
     <value>更改的详细描述</value>
-  </data>
-  <data name="User">
-    <value>进行更改的用户</value>
-  </data>
-  <data name="Reason">
-    <value>用户给予的进行更改的原因</value>
-  </data>
-  <data name="DetailReason">
-    <value>用户给予的进行更改的详细原因</value>
-  </data>
-  <data name="SkylineVersion">
-    <value>进行更改的 Skyline 版本</value>
-  </data>
-  <data name="Details">
-    <value>详细更改消息和原因的列表</value>
-  </data>
-  <data name="AuditLogRow">
-    <value>审计日志信息行</value>
-  </data>
-  <data name="AuditLogRowId">
-    <value>条目的 Id</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>详细消息的 Id</value>
-  </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>参阅样品的免费文本标识符（可以在多个文件之间共享）。从导入结果文档内“样品 ID”属性中读取</value>
-  </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>导入结果文档中读取的仪器序列号</value>
   </data>
 </root>
