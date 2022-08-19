@@ -1026,10 +1026,10 @@ namespace pwiz.Skyline.SettingsUI
                     if (opt.SpectrumInfoLibrary.IsBest)
                     {
                         // Sets the selected dropdown item to what is graphed without updating the UI.
-                        comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_changed;
+                        comboRedundantSpectra.SelectedIndexChanged -= redundantSpectrum_Changed;
                         comboRedundantSpectra.Items.Add(opt);
                         comboRedundantSpectra.SelectedIndex = 0;
-                        comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_changed;
+                        comboRedundantSpectra.SelectedIndexChanged += redundantSpectrum_Changed;
                         bestOption = opt;
                     }
                 }
@@ -2970,12 +2970,17 @@ namespace pwiz.Skyline.SettingsUI
             UpdateUI();
         }
 
-        private void redundantSpectrum_changed(object sender, EventArgs e)
+        private void redundantSpectrum_Changed(object sender, EventArgs e)
         {
             UpdateUI();
         }
 
-        public void insertComboItems(object sender, EventArgs e)
+        private void redundantSpectrum_InsertComboItems(object sender, EventArgs e)
+        {
+            UpdateRedundantComboItems();
+        }
+
+        public void UpdateRedundantComboItems()
         {
             if (!_comboBoxUpdated)
             {
@@ -2987,6 +2992,7 @@ namespace pwiz.Skyline.SettingsUI
                         comboRedundantSpectra.Items.Add(opt);
                     }
                 }
+
                 comboRedundantSpectra.EndUpdate();
                 _comboBoxUpdated = true;
             }

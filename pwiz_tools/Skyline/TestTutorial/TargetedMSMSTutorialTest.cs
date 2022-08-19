@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -1042,7 +1043,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
                 Assert.AreEqual(1, dlg.RedundantComboBox.Items.Count);
                 // This simulates the user clicking on or showing the drop down for the combobox, which populates the combobox
-                RunUI(() => dlg.insertComboItems(null, null));
+                RunUI(dlg.UpdateRedundantComboItems);
                 // Checks that for this peptide, there are 11 different spectra available in the dropdown
                 WaitForConditionUI(() => dlg.IsComboBoxUpdated);
                 Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
@@ -1099,29 +1100,26 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsFalse(propertiesButton.Checked);
                 propertiesButton.PerformClick();
             });
-            Assert.IsTrue(graphExtension.PropertiesVisible);
-            Assert.IsTrue(propertiesButton.Checked);
-            PropertyGrid propertyGrid = null;
-            // Checks the number of properties displayed is the excpected number
+            WaitForConditionUI(() => graphExtension.PropertiesVisible);
+            RunUI(() => Assert.IsTrue(propertiesButton.Checked));
+
+            var propertyGrid = graphExtension.PropertiesSheet;
+            Assert.IsNotNull(propertyGrid);
+
+            // Checks the number of properties displayed is the expected number
+            int expectedPropCount = isSmallMolecules ? 7 : 10;
             RunUI(() =>
             {
-                propertyGrid = graphExtension.PropertiesSheet;
-                Assert.IsNotNull(propertyGrid);
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                var expectedAttributes = isSmallMolecules ? 7 : 10; 
-                Assert.AreEqual(expectedAttributes, ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties().Count);
+                ValidatePropertyCount(expectedPropCount, propertyGrid);
             });
             // Checks that the property sheet updates upon switching peptides
             RunUI(() =>
             {
                 dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
-                Assert.IsNotNull(propertyGrid);
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                var expectedAttributes = isSmallMolecules ? 7 : 10;
-                var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                Assert.AreEqual(expectedAttributes, properties.Count);
-                var spectrumCount = properties.Find("SpectrumCount", true).GetValue(propertyGrid.SelectedObject);
-                Assert.AreEqual(401, spectrumCount);
+                ValidatePropertyCount(expectedPropCount, propertyGrid);
+                ValidateSpectrumCount(401, propertyGrid);
             });
             Assert.IsTrue(graphExtension.PropertiesVisible);
             Assert.IsTrue(propertiesButton.Checked);
@@ -1129,9 +1127,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 dlg.FilterString = "b";
-                Assert.IsNotNull(propertyGrid);
-                var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                Assert.AreEqual(0, properties.Count);
+                Assert.AreEqual(0, GetProperties(propertyGrid).Count);
                 dlg.FilterString = "";
             });
             if (!isSmallMolecules)
@@ -1139,39 +1135,56 @@ namespace pwiz.SkylineTestTutorial
                 // Checks the property sheet updates when switching in the redundant combobox to viewing a redundant peptide
                 RunUI(() =>
                 {
-                    Assert.IsNotNull(propertyGrid);
-                    var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                    var specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
-                    Assert.AreEqual("488", specId);
-                    RunUI(() => dlg.insertComboItems(null, null));
+                    ValidateSpecId("488", propertyGrid);
+                    RunUI(dlg.UpdateRedundantComboItems);
                     WaitForConditionUI(() => dlg.IsComboBoxUpdated);
                     dlg.RedundantComboBox.SelectedIndex = 1;
-                    properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                    specId = properties.Find("SpecIdInFile", true).GetValue(propertyGrid.SelectedObject);
-                    Assert.AreEqual("19208", specId);
+                    ValidateSpecId("19208", propertyGrid);
                 });
                 RunUI(() =>
                 {
                     // Tests that the score displayed on the graph matches the score displayed in the property sheet
-                    Assert.IsNotNull(propertyGrid);
                     dlg.SelectedIndex = 4;
-                    var properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                    var score = properties.Find("Score", true).GetValue(propertyGrid.SelectedObject);
-                    Assert.AreEqual("0.001", score);
-                    Assert.AreEqual(0.001, dlg.GraphItem.SpectrumInfo.Score);
-                    RunUI(() => dlg.insertComboItems(null, null));
+                    ValidateScoresMatch(0.001, propertyGrid, dlg);
+                    RunUI(dlg.UpdateRedundantComboItems);
                     WaitForConditionUI(() => dlg.IsComboBoxUpdated);
                     dlg.RedundantComboBox.SelectedIndex = 1;
-                    properties = ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
-                    score = properties.Find("Score", true).GetValue(propertyGrid.SelectedObject);
-                    Assert.AreEqual("0.004", score);
-                    Assert.AreEqual(0.004, dlg.GraphItem.SpectrumInfo.Score);
+                    ValidateScoresMatch(0.004, propertyGrid, dlg);
                 });
             }
             RunUI(() => propertiesButton.PerformClick());
             Assert.IsFalse(graphExtension.PropertiesVisible);
             Assert.IsFalse(propertiesButton.Checked);
             RunUI(() => dlg.Close());
+        }
+
+        private static PropertyDescriptorCollection GetProperties(PropertyGrid propertyGrid)
+        {
+            return ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+        }
+
+        private static void ValidatePropertyCount(int expectedPropCount, PropertyGrid pg)
+        {
+            Assert.AreEqual(expectedPropCount, GetProperties(pg).Count);
+        }
+
+        private static void ValidateSpectrumCount(int expectedSpectrumCount, PropertyGrid pg)
+        {
+            var spectrumCount = GetProperties(pg).Find("SpectrumCount", true).GetValue(pg.SelectedObject);
+            Assert.AreEqual(expectedSpectrumCount, spectrumCount);
+        }
+
+        private static void ValidateSpecId(string expectedId, PropertyGrid pg)
+        {
+            var specId = GetProperties(pg).Find("SpecIdInFile", true).GetValue(pg.SelectedObject);
+            Assert.AreEqual(expectedId, specId);
+        }
+
+        private static void ValidateScoresMatch(double expectedScore, PropertyGrid pg, ViewLibraryDlg dlg)
+        {
+            var score = GetProperties(pg).Find("Score", true).GetValue(pg.SelectedObject);
+            Assert.AreEqual(expectedScore.ToString(CultureInfo.CurrentCulture), score?.ToString());
+            Assert.AreEqual(expectedScore, dlg.GraphItem.SpectrumInfo.Score);
         }
     }
 }
