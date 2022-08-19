@@ -2050,8 +2050,8 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Gets data on a spectrum to populate the Property Sheet in ViewLibraryDlg
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="isBest"></param>
+        /// <param name="id">The RefSpectraID of the spectrum</param>
+        /// <param name="isBest">Whether to search the redundant or non-redundant library</param>
         /// <returns></returns>
         public BiblioSpecSheetInfo GetSheetInfo(long id, bool isBest)
         {

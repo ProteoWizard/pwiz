@@ -1079,7 +1079,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => dlg.Close());
         }
 
-        // Test for property sheet
+        /// <summary>
+        /// Tests the property sheet on the ViewLibraryDlg property sheet to confirm it shows up and displays accurate information
+        /// </summary>
         private void TestPropertySheet()
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
@@ -1088,6 +1090,7 @@ namespace pwiz.SkylineTestTutorial
             var graphExtension = dlg.GraphExtensionControl;
             Assert.IsFalse(graphExtension.PropertiesVisible);
             ToolStripButton propertiesButton = null;
+            // Check the pressing the properties button on the toolstrip displays the property sheet
             RunUI(() =>
             {
                 var toolStrip = (ToolStrip)dlg.Controls.Find("toolStrip1", true)[0];
@@ -1099,6 +1102,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(graphExtension.PropertiesVisible);
             Assert.IsTrue(propertiesButton.Checked);
             PropertyGrid propertyGrid = null;
+            // Checks the number of properties displayed is the excpected number
             RunUI(() =>
             {
                 propertyGrid = graphExtension.PropertiesSheet;
@@ -1107,6 +1111,7 @@ namespace pwiz.SkylineTestTutorial
                 var expectedAttributes = isSmallMolecules ? 7 : 10; 
                 Assert.AreEqual(expectedAttributes, ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties().Count);
             });
+            // Checks that the property sheet updates upon switching peptides
             RunUI(() =>
             {
                 dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
@@ -1120,6 +1125,7 @@ namespace pwiz.SkylineTestTutorial
             });
             Assert.IsTrue(graphExtension.PropertiesVisible);
             Assert.IsTrue(propertiesButton.Checked);
+            // Checks that the property sheet displays nothing when no peptide is selected
             RunUI(() =>
             {
                 dlg.FilterString = "b";
@@ -1130,6 +1136,7 @@ namespace pwiz.SkylineTestTutorial
             });
             if (!isSmallMolecules)
             {
+                // Checks the property sheet updates when switching in the redundant combobox to viewing a redundant peptide
                 RunUI(() =>
                 {
                     Assert.IsNotNull(propertyGrid);

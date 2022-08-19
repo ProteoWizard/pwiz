@@ -518,7 +518,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // contextMenuSpectrum
             // 
-            this.contextMenuSpectrum.ImageScalingSize = new System.Drawing.Size(32, 32);
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aionsContextMenuItem,
             this.bionsContextMenuItem,
