@@ -476,6 +476,7 @@ namespace pwiz.Skyline.Model.Results
         private bool IsExtremeMs2Value(double im)
         {
             return _ms1IonMobilityBest.HasValue &&
+                   _ms1IonMobilityBest.Units != eIonMobilityUnits.compensation_V && // Makes no sense in FAIMS
                    (im < _ms1IonMobilityBest.Mobility - _maxHighEnergyDriftOffsetMsec ||
                     im > _ms1IonMobilityBest.Mobility + _maxHighEnergyDriftOffsetMsec);
         }
