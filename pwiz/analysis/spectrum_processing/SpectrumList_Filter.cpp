@@ -214,7 +214,11 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet::SpectrumList_FilterPre
 
 PWIZ_API_DECL tribool SpectrumList_FilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
-    int scanNumber = id::valueAs<int>(spectrumIdentity.id, "scan");
+    int scanNumber = 0;
+    if (bal::starts_with(spectrumIdentity.id, "scan="))
+        scanNumber = id::valueAs<int>(spectrumIdentity.id, "scan");
+    else if (bal::starts_with(spectrumIdentity.id, "index=")) 
+        scanNumber = id::valueAs<int>(spectrumIdentity.id, "index");
     if (scanNumberSet_.hasUpperBound(scanNumber)) eos_ = true;
     bool result = scanNumberSet_.contains(scanNumber);
     return result;
