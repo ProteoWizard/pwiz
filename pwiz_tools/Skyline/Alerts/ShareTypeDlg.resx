@@ -150,6 +150,24 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="btnShare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnShare.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing">
+    <value>200, 3</value>
+  </data>
+  <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnShare.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnShare.Text" xml:space="preserve">
+    <value>&amp;Share</value>
+  </data>
   <data name="&gt;&gt;btnShare.Name" xml:space="preserve">
     <value>btnShare</value>
   </data>
@@ -189,39 +207,6 @@
   <data name="&gt;&gt;panelButtonBar.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="btnShare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnShare.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing">
-    <value>200, 3</value>
-  </data>
-  <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnShare.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnShare.Text" xml:space="preserve">
-    <value>&amp;Share</value>
-  </data>
-  <data name="&gt;&gt;btnShare.Name" xml:space="preserve">
-    <value>btnShare</value>
-  </data>
-  <data name="&gt;&gt;btnShare.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnShare.Parent" xml:space="preserve">
-    <value>panelButtonBar</value>
-  </data>
-  <data name="&gt;&gt;btnShare.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="comboSkylineVersion.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -237,6 +222,9 @@
   <data name="comboSkylineVersion.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="comboSkylineVersion.ToolTip" xml:space="preserve">
     <value>This document can be saved in a format which is compatible with previous versions of Skyline.
 Note that not all data is preserved when saving as a previous version.</value>
@@ -386,9 +374,6 @@ Note that not all data is preserved when saving as a previous version.</value>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="Btn_SelectFiles.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -396,10 +381,10 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>False</value>
   </data>
   <data name="Btn_SelectFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>124, 3</value>
+    <value>125, 3</value>
   </data>
   <data name="Btn_SelectFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 21</value>
+    <value>94, 21</value>
   </data>
   <data name="Btn_SelectFiles.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -419,17 +404,17 @@ Note that not all data is preserved when saving as a previous version.</value>
   <data name="&gt;&gt;Btn_SelectFiles.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="CB_IncludeFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
   <data name="CB_IncludeFiles.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </data>
-  <data name="CB_IncludeFiles.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
   </data>
   <data name="CB_IncludeFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
   <data name="CB_IncludeFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 21</value>
+    <value>116, 21</value>
   </data>
   <data name="CB_IncludeFiles.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -456,7 +441,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>2</value>
   </data>
   <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 89</value>
+    <value>17, 87</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
     <value>1</value>
@@ -480,7 +465,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="Btn_SelectFiles" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="CB_IncludeFiles" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,54.50451,Percent,45.49549,Absolute,20" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="Btn_SelectFiles" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="CB_IncludeFiles" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,54.95496,Percent,45.04504,Absolute,20" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <data name="lbl_fileStatus.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -489,7 +474,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>NoControl</value>
   </data>
   <data name="lbl_fileStatus.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 119</value>
+    <value>20, 118</value>
   </data>
   <data name="lbl_fileStatus.Size" type="System.Drawing.Size, System.Drawing">
     <value>0, 13</value>
@@ -520,9 +505,6 @@ Note that not all data is preserved when saving as a previous version.</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>369, 222</value>
-  </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>5, 5, 5, 5</value>
