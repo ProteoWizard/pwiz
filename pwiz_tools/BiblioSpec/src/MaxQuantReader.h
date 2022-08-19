@@ -179,6 +179,7 @@ public:
     ~MaxQuantReader();
     
     bool parseFile();
+    vector<PSM_SCORE_TYPE> getScoreTypes();
     // these inherited from SpecFileReader
     virtual void openFile(const char*, bool);
     virtual void setIdType(SPEC_ID_TYPE);
@@ -197,6 +198,7 @@ private:
     string paramsPath_;
     double scoreThreshold_;
     int lineNum_;
+    int lineCount_;
     map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
@@ -212,6 +214,7 @@ private:
     void initFixedModifications();
     bool openFile();
     void parseHeader(std::string& line);
+    void getFilenamesAndLineCount();
     void collectPsms();
     void storeLine(MaxQuantLine& entry);
     void addDoublesToVector(vector<double>& v, const string& valueList);

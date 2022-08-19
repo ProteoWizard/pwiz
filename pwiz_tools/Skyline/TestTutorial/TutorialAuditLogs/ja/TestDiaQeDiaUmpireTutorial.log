@@ -9,24 +9,32 @@ Summary   : スペクトルライブラリ「DIA-QE-tutorial」が追加され�
 All Info  :
 スペクトルライブラリ「DIA-QE-tutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："collinsb_X1803_171-A-diaumpire.mzid.gz"が含まれています
-スペクトルライブラリを構築>ファイルを検索："collinsb_X1803_172-B-diaumpire.mzid.gz"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "collinsb_X1803_171-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "collinsb_X1803_172-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドは"Biognosys-11 (iRT-C18)"です
 スペクトルライブラリを構築>曖昧な一致を含めるは真です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
 スペクトルライブラリを構築>ワークフローは"DIA"です
-スペクトルライブラリを構築>Input File Typeは"DIA raw (deconvolute, search, and build library)"です
+スペクトルライブラリを構築>入力ファイルタイプは"DIA生データ (ライブラリのデコンボリューション、検索、構築)"です
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "collinsb_X1803_171-A-diaumpire.mzid.gz",
-    "collinsb_X1803_172-B-diaumpire.mzid.gz"
+    {
+        File = "collinsb_X1803_171-A-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    },
+    {
+        File = "collinsb_X1803_172-B-diaumpire.mzid.gz",
+        Score type = "q-value",
+        Score threshold = "0.05"
+    }
 ],
 iRT標準ペプチド = "Biognosys-11 (iRT-C18)",
 曖昧な一致を含める = 真,
 ドキュメント内のペプチドをフィルタリング = 偽,
 ワークフロー = "DIA",
-Input File Type = "DIA raw (deconvolute, search, and build library)"
+入力ファイルタイプ = "DIA生データ (ライブラリのデコンボリューション、検索、構築)"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました
@@ -40,17 +48,27 @@ All Info  :
 ペプチド検索のインポート>修飾を追加>修飾が追加されました："Carbamidomethyl (C) = C[57] （固定）"が含まれています
 ペプチド検索のインポート>修飾を追加>修飾が追加されました："Oxidation (M) = M[16] （変数）"が含まれています
 ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"です
-ペプチド検索のインポート>FASTAをインポート>FASTA file for importing targetsは"target_protein_sequences.fasta"です
+ペプチド検索のインポート>FASTAをインポート>ターゲットをインポートするFASTAファイルは"target_protein_sequences.fasta"です
 ペプチド検索のインポート>FASTAをインポート>デコイ生成法は"シークエンスのシャッフル"です
 ペプチド検索のインポート>FASTAをインポート>ターゲット毎のデコイは"1"です
 ペプチド検索のインポート>FASTAをインポート>mProphetのモデルを自動的にトレーニングするは真です
-ペプチド検索のインポート>DDA search settings>Precursor toleranceは10ppmです
-ペプチド検索のインポート>DDA search settings>Fragment toleranceは20ppmです
-ペプチド検索のインポート>DDA search settings>Max variable mods per peptideは"3"です
-ペプチド検索のインポート>DDA search settings>Fragment ion typesは"b, y"です
-ペプチド検索のインポート>DDA converter settings>DDA conversion protocolは"DIA-Umpire"です
-ペプチド検索のインポート>DDA converter settings>Instrument presetは"Q Exactive"です
-ペプチド検索のインポート>DDA converter settings>DDA conversion non-default settings：EstimateBG = Trueが含まれています
+ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
+ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Duplicated between proteins"です
+ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"9"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"81"です
+ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"24709"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"9"です
+ペプチド検索のインポート>Associate Proteins>Peptide targetsは"82"です
+ペプチド検索のインポート>DDA検索設定>プリカーサー許容範囲は10ppmです
+ペプチド検索のインポート>DDA検索設定>フラグメント許容範囲は20ppmです
+ペプチド検索のインポート>DDA検索設定>ペプチド当たりの最大可変修飾数は"3"です
+ペプチド検索のインポート>DDA検索設定>フラグメントイオンタイプは"b, y"です
+ペプチド検索のインポート>DDAコンバーター設定>DDA変換プロトコルは"DIA-Umpire"です
+ペプチド検索のインポート>DDAコンバーター設定>装置のプリセットは"Q Exactive"です
+ペプチド検索のインポート>DDAコンバーター設定>DDA変換非デフォルト設定：EstimateBG = Trueが含まれています
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -73,23 +91,36 @@ Extra Info: クロマトグラムを抽出 =
 FASTAをインポート = 
 {
     FASTAファイル = "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta",
-    FASTA file for importing targets = "target_protein_sequences.fasta",
+    ターゲットをインポートするFASTAファイル = "target_protein_sequences.fasta",
     デコイ生成法 = "シークエンスのシャッフル",
     ターゲット毎のデコイ = "1",
     mProphetのモデルを自動的にトレーニングする = 真
 },
-DDA search settings = 
+Associate Proteins = 
 {
-    Precursor tolerance = 10ppm,
-    Fragment tolerance = 20ppm,
-    Max variable mods per peptide = "3",
-    Fragment ion types = "b, y"
+    Group proteins = 偽,
+    Find minimal protein list = 偽,
+    Remove subset proteins = 偽,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "9",
+    Peptides mapped = "81",
+    Proteins unmapped = "24709",
+    Protein targets = "9",
+    Peptide targets = "82"
 },
-DDA converter settings = 
+DDA検索設定 = 
 {
-    DDA conversion protocol = "DIA-Umpire",
-    Instrument preset = "Q Exactive",
-    DDA conversion non-default settings = 
+    プリカーサー許容範囲 = 10ppm,
+    フラグメント許容範囲 = 20ppm,
+    ペプチド当たりの最大可変修飾数 = "3",
+    フラグメントイオンタイプ = "b, y"
+},
+DDAコンバーター設定 = 
+{
+    DDA変換プロトコル = "DIA-Umpire",
+    装置のプリセット = "Q Exactive",
+    DDA変換非デフォルト設定 = 
     [
         EstimateBG = True
     ]

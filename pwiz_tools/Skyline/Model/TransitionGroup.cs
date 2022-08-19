@@ -366,7 +366,7 @@ namespace pwiz.Skyline.Model
                         start = startFinder.FindStartFragment(massesFilter, type, adduct,
                             precursorMz, precursorMzWindow, out startMz);
                         end = endFinder.FindEndFragment(type, start, len);
-                        if (Transition.IsCTerminal(type))
+                        if (type.IsCTerminal())
                             Helpers.Swap(ref start, ref end);
                     }
 
@@ -789,6 +789,8 @@ namespace pwiz.Skyline.Model
                     case IonType.x:
                     case IonType.y:
                     case IonType.z:
+                    case IonType.zh:
+                    case IonType.zhh:
                         if (loss.IndexAA <= cleavageOffset)
                             continue;
                         break;
@@ -820,6 +822,8 @@ namespace pwiz.Skyline.Model
                     case IonType.x:
                     case IonType.y:
                     case IonType.z:
+                    case IonType.zh:
+                    case IonType.zhh:
                         if (loss.IndexAA <= cleavageOffset)
                             continue;
                         break;

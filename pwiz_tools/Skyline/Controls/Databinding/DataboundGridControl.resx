@@ -298,7 +298,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=20.2.1.358, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
     <value>splitContainerHorizontal.Panel2</value>

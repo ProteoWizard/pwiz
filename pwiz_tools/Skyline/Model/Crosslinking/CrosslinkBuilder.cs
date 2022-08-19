@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 if (Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                 {
                     ms1transitions = ms1transitions.SelectMany(tran =>
-                        ExpandPrecursorIsotopes(tran, isotopeDist, useFilter)).ToList();
+                        RemoveUnmeasurable(precursorMz, ExpandPrecursorIsotopes(tran, isotopeDist, useFilter))).ToList();
                 }
             }
             else
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             foreach (var complexFragmentIon in complexFragmentIons)
             {
-                if (complexFragmentIon.IsEmpty)
+                if (!complexFragmentIon.IsConnected(PeptideStructure))
                 {
                     continue;
                 }

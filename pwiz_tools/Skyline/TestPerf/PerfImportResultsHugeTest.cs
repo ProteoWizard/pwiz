@@ -37,7 +37,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private const string DATA_FILE = @"D:\Data\HAINS_SWATH_MS\Adult_2_SW_01.wiff";
 
         [TestMethod]
-        [Timeout(int.MaxValue)]  // These can take a long time
         public void ImportResultsHugeTest()
         {
             // RunFunctionalTest();

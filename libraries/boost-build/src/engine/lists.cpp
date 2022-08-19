@@ -16,30 +16,30 @@
 
 static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
 
-static unsigned get_bucket( unsigned size )
+static int32_t get_bucket( int32_t size )
 {
-    unsigned bucket = 0;
-    while ( size > ( 1u << bucket ) ) ++bucket;
+    int32_t bucket = 0;
+    while ( size > ( int32_t(1) << bucket ) ) ++bucket;
     return bucket;
 }
 
-static LIST * list_alloc( unsigned const size )
+static LIST * list_alloc( int32_t size )
 {
-    unsigned const bucket = get_bucket( size );
+    int32_t bucket = get_bucket( size );
     if ( freelist[ bucket ] )
     {
         LIST * result = freelist[ bucket ];
         freelist[ bucket ] = result->impl.next;
         return result;
     }
-    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( 1u << bucket ) *
+    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( size_t( 1 ) << bucket ) *
         sizeof( OBJECT * ) );
 }
 
 static void list_dealloc( LIST * l )
 {
-    unsigned size = list_length( l );
-    unsigned bucket;
+    int32_t size = list_length( l );
+    int32_t bucket;
     LIST * node = l;
 
     if ( size == 0 ) return;
@@ -64,13 +64,13 @@ LIST * list_append( LIST * l, LIST * nl )
         return nl;
     if ( !list_empty( nl ) )
     {
-        int const l_size = list_length( l );
-        int const nl_size = list_length( nl );
-        int const size = l_size + nl_size;
-        unsigned const bucket = get_bucket( size );
+        int32_t l_size = list_length( l );
+        int32_t nl_size = list_length( nl );
+        int32_t size = l_size + nl_size;
+        int32_t bucket = get_bucket( size );
 
         /* Do we need to reallocate? */
-        if ( l_size <= ( 1u << ( bucket - 1 ) ) )
+        if ( l_size <= ( int32_t(1) << ( bucket - 1 ) ) )
         {
             LIST * result = list_alloc( size );
             memcpy( list_begin( result ), list_begin( l ), l_size * sizeof(
@@ -111,8 +111,7 @@ LIST * list_new( OBJECT * value )
 
 LIST * list_push_back( LIST * head, OBJECT * value )
 {
-    unsigned int size = list_length( head );
-    unsigned int i;
+    int32_t size = list_length( head );
 
     if ( DEBUG_LISTS )
         out_printf( "list > %s <\n", object_str( value ) );
@@ -143,8 +142,8 @@ LIST * list_push_back( LIST * head, OBJECT * value )
 
 LIST * list_copy( LIST * l )
 {
-    int size = list_length( l );
-    int i;
+    int32_t size = list_length( l );
+    int32_t i;
     LIST * result;
 
     if ( size == 0 ) return L0;
@@ -163,7 +162,7 @@ LIST * list_copy_range( LIST * l, LISTITER first, LISTITER last )
         return L0;
     else
     {
-        int size = last - first;
+        int32_t size = int32_t( last - first );
         LIST * result = list_alloc( size );
         LISTITER dest = list_begin( result );
         result->impl.size = size;
@@ -178,17 +177,17 @@ LIST * list_copy_range( LIST * l, LISTITER first, LISTITER last )
  * list_sublist() - copy a subset of a list of strings.
  */
 
-LIST * list_sublist( LIST * l, int start, int count )
+LIST * list_sublist( LIST * l, int32_t start, int32_t count )
 {
-    int end = start + count;
-    int size = list_length( l );
+    int32_t end = start + count;
+    int32_t size = list_length( l );
     if ( start >= size ) return L0;
     if ( end > size ) end = size;
     return list_copy_range( l, list_begin( l ) + start, list_begin( l ) + end );
 }
 
 
-static int str_ptr_compare( void const * va, void const * vb )
+static int32_t str_ptr_compare( void const * va, void const * vb )
 {
     OBJECT * a = *( (OBJECT * *)va );
     OBJECT * b = *( (OBJECT * *)vb );
@@ -198,8 +197,7 @@ static int str_ptr_compare( void const * va, void const * vb )
 
 LIST * list_sort( LIST * l )
 {
-    int len;
-    int ii;
+    int32_t len;
     LIST * result;
 
     if ( !l )
@@ -237,7 +235,7 @@ void list_free( LIST * head )
 
 LIST * list_pop_front( LIST * l )
 {
-    unsigned size = list_length( l );
+    int32_t size = list_length( l );
     assert( size );
     --size;
     object_free( list_front( l ) );
@@ -265,11 +263,11 @@ LIST * list_pop_front( LIST * l )
 
 LIST * list_reverse( LIST * l )
 {
-    int size = list_length( l );
+    int32_t size = list_length( l );
     if ( size == 0 ) return L0;
     {
         LIST * const result = list_alloc( size );
-        int i;
+        int32_t i;
         result->impl.size = size;
         for ( i = 0; i < size; ++i )
             list_begin( result )[ i ] = object_copy( list_begin( l )[ size - i -
@@ -278,9 +276,9 @@ LIST * list_reverse( LIST * l )
     }
 }
 
-int list_cmp( LIST * t, LIST * s )
+int32_t list_cmp( LIST * t, LIST * s )
 {
-    int status = 0;
+    int32_t status = 0;
     LISTITER t_it = list_begin( t );
     LISTITER const t_end = list_end( t );
     LISTITER s_it = list_begin( s );
@@ -300,7 +298,7 @@ int list_cmp( LIST * t, LIST * s )
     return status;
 }
 
-int list_is_sublist( LIST * sub, LIST * l )
+int32_t list_is_sublist( LIST * sub, LIST * l )
 {
     LISTITER iter = list_begin( sub );
     LISTITER const end = list_end( sub );
@@ -331,13 +329,13 @@ void list_print( LIST * l )
  * list_length() - return the number of items in the list
  */
 
-int list_length( LIST * l )
+int32_t list_length( LIST * l )
 {
     return l ? l->impl.size : 0;
 }
 
 
-int list_in( LIST * l, OBJECT * value )
+int32_t list_in( LIST * l, OBJECT * value )
 {
     LISTITER iter = list_begin( l );
     LISTITER end = list_end( l );
@@ -367,8 +365,7 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
-    int i;
-    for ( i = 0; i < sizeof( freelist ) / sizeof( freelist[ 0 ] ); ++i )
+    for ( int32_t i = 0; i < int32_t(sizeof( freelist ) / sizeof( freelist[ 0 ] )); ++i )
     {
         LIST * l = freelist[ i ];
         while ( l )
@@ -398,7 +395,13 @@ void lol_init( LOL * lol )
 void lol_add( LOL * lol, LIST * l )
 {
     if ( lol->count < LOL_MAX )
+    {
         lol->list[ lol->count++ ] = l;
+        return;
+    }
+
+    err_printf( "lol_add failed due to reached limit of %d elements\n", LOL_MAX );
+    exit( EXITBAD );
 }
 
 
@@ -408,7 +411,7 @@ void lol_add( LOL * lol, LIST * l )
 
 void lol_free( LOL * lol )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < lol->count; ++i )
         list_free( lol->list[ i ] );
     lol->count = 0;
@@ -419,7 +422,7 @@ void lol_free( LOL * lol )
  * lol_get() - return one of the LISTs in the LOL.
  */
 
-LIST * lol_get( LOL * lol, int i )
+LIST * lol_get( LOL * lol, int32_t i )
 {
     return i < lol->count ? lol->list[ i ] : L0;
 }
@@ -431,7 +434,7 @@ LIST * lol_get( LOL * lol, int i )
 
 void lol_print( LOL * lol )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < lol->count; ++i )
     {
         if ( i )

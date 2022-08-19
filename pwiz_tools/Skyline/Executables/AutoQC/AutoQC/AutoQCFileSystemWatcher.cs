@@ -252,7 +252,7 @@ namespace AutoQC
         private void OnFileWatcherError(ErrorEventArgs e)
         {
             var folder = _fileWatcher != null ? _fileWatcher.Path : "UNKNOWN";
-            _logger.LogException(e.GetException(), string.Format(Resources.AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__, folder));
+            _logger.LogError(string.Format(Resources.AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__, folder), e.GetException().ToString());
             _fileWatcherError = e;
         }
 
@@ -283,8 +283,8 @@ namespace AutoQC
 
                 if (fileStatus.Equals(FileStatus.ExceedMaximumAcquiTime))
                 {
-                    throw new FileStatusException("Data acquistion has exceeded the expected acquistion time." +
-                                        "The instument probably encountered an error.");
+                    throw new FileStatusException("Data acquisition has exceeded the expected acquisition time." +
+                                        "The instrument probably encountered an error.");
                 }
 
                 if (counter % 10 == 0)

@@ -17,6 +17,11 @@
  * limitations under the License.
  */
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,18 +29,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 // Once-per-application setup information to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 
 namespace pwiz.SkylineTestUtil
 {
-   
+
     /// <summary>
     /// This is the base class for every unit test in Skyline.  It enables logging
     /// and also provides quick information about the running time of the test.
@@ -48,6 +48,8 @@ namespace pwiz.SkylineTestUtil
 
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
         public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
+
+        public const string MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST = " (test is too slow running under ReSharper analysis, skippiing.) ";
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
@@ -115,9 +117,32 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.Properties.Contains("DeploymentDirectory"); }
         }
 
+        public bool IsRunningInTestRunner()
+        {
+            return TestContext is TestRunnerLib.TestRunnerContext;
+        }
+
+        /// <summary>
+        /// Returns true if the test is not running in TestRunner. Also outputs a message to the console
+        /// indicating that the test is being skipped. It is the caller's responsibility to actually
+        /// skip the test if this method returns true.
+        /// </summary>
+        protected bool SkipWiff2TestInTestExplorer(string testName)
+        {
+            if (IsRunningInTestRunner())
+            {
+                return false;
+            }
+            Console.Out.WriteLine("Skipping {0} because Wiff2 DLLs do not load in the correct order when test is executed by Test Explorer.", testName);
+            Console.Out.WriteLine("This test only runs to completion when executed by TestRunner or SkylineTester.");
+            return true;
+        }
+
+        public static string PanoramaDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files";
+
         public static string GetPerfTestDataURL(string filename)
         {
-            return @"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/" + filename;
+            return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
 
         protected bool GetBoolValue(string property, bool defaultValue)
@@ -202,26 +227,40 @@ namespace pwiz.SkylineTestUtil
 
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
-            if (downloadFromS3)
-                zipPath = zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname);
-
-            WebClient webClient = new WebClient();
-            using (var fs = new FileSaver(zipFilePath))
+            string message = string.Empty;
+            for (var retry = true; ; retry = false)
             {
+                var zipURL = downloadFromS3
+                    ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
+                        .Replace(PanoramaDomainAndPath, s3hostname)
+                    : zipPath;
+
                 try
                 {
-                    webClient.DownloadFile(zipPath.Split('\\')[0],
-                        fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
+                    WebClient webClient = new WebClient();
+                    using (var fs = new FileSaver(zipFilePath))
+                    {
+                        var timer = new Stopwatch();
+                        Console.Write(@"# Downloading test data file {0}...", zipURL);
+                        timer.Start();
+                        webClient.DownloadFile(zipURL.Split('\\')[0],
+                            fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
+                        Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
+                        fs.Commit();
+                    }
+                    return zipURL;
                 }
                 catch (Exception x)
                 {
-                    Assert.Fail("Could not download {0}: {1}", zipPath, x.Message);
+                    message += string.Format("Could not download {0}: {1} ", zipURL, x.Message);
+                    if (!retry)
+                    {
+                        AssertEx.Fail(message);
+                    }
+                    Console.Write(message);
+                    downloadFromS3 = !downloadFromS3; // Maybe it just never got copied to S3 or vice versa
                 }
-
-                fs.Commit();
             }
-
-            return zipPath;
         }
 
         private static string GetTargetZipFilePath(string zipPath, out string zipFilePath)
@@ -313,6 +352,7 @@ namespace pwiz.SkylineTestUtil
         {
 
             Program.UnitTest = true;
+            Program.TestName = TestContext.TestName;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -360,6 +400,11 @@ namespace pwiz.SkylineTestUtil
 //            log.Info(
 //                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
 //                STOPWATCH.ElapsedMilliseconds / 1000.0));
+
+            // Prevent any weird interactions between tests on reused processes
+            Program.UnitTest = Program.FunctionalTest = false;
+            Program.TestName = null;
+
         }
 
         protected virtual void Initialize() {}
@@ -368,6 +413,34 @@ namespace pwiz.SkylineTestUtil
         protected bool IsProfiling
         {
             get { return DotTraceProfile.IsProfiling; }
+        }
+
+        /// <summary>
+        /// Used by tests that just take much too long under code coverage analysis
+        /// </summary>
+        /// <returns>true iff ReSharper code analysis is detected</returns>
+        public static bool SkipForResharperAnalysis()
+        {
+            if (Helpers.RunningResharperAnalysis)
+            {
+                Console.Write(MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST); // Log this via console for TestRunner
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Used by tests that convert proteomic data sets to small molecule for extra coverage - which we don't always want
+        /// </summary>
+        /// <returns>true iff we don't want the small molecule versions of tests</returns>
+        public bool SkipSmallMoleculeTestVersions()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION); // Log this via console for TestRunner
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -31,7 +31,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
-    public abstract class SkylineDocNode : SkylineObject, ILinkValue
+    public abstract class SkylineDocNode : RootSkylineObject, ILinkValue
     {
         protected SkylineDocNode(SkylineDataSchema dataSchema, IdentityPath identityPath) : base(dataSchema)
         {
@@ -95,10 +95,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 for (int fileIndex = 0; fileIndex < files.Count; fileIndex++)
                 {
                     var chromInfo = files[fileIndex];
-                    if (null == chromInfo)
-                    {
-                        continue;
-                    }
                     var key = fileIndex == 0 ? replicates.Keys[replicateIndex] : new ResultKey(replicate, fileIndex);
                     int optStep = ResultFile.GetOptStep(chromInfo);
                     ResultFile resultFile = null;

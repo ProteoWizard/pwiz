@@ -25,6 +25,9 @@
 #ifndef _DIAUMPIRE_PEAKCLUSTER_
 #define _DIAUMPIRE_PEAKCLUSTER_
 
+#pragma warning( push )
+#pragma warning( disable : 4457 ) // boost/geometry/index/rtree.hpp: declaration of 'median' hides function parameter
+
 #include <vector>
 #include <limits>
 #include <iostream>
@@ -89,6 +92,7 @@ class PeakCluster
     mutable float conflictCorr = -1;
     mutable float mass = 0;
     const ChiSquareGOF& chiSquaredGof;
+    const pwiz::msdata::MSData& msd;
 
     public:
 
@@ -121,7 +125,7 @@ class PeakCluster
     float MS1ScoreProbability;
     string SpectrumKey;
 
-    PeakCluster(int IsotopicNum, int Charge, const ChiSquareGOF& chiSquaredGof) : chiSquaredGof(chiSquaredGof)
+    PeakCluster(int IsotopicNum, int Charge, const ChiSquareGOF& chiSquaredGof, const pwiz::msdata::MSData& msd) : chiSquaredGof(chiSquaredGof), msd(msd)
     {
         IsoPeaksCurves.resize(IsotopicNum);
         Corrs.resize(IsotopicNum - 1);
@@ -386,10 +390,12 @@ class PeakCurveClusteringCorrKDtree
     const PeakCurveSearchTree& peakCurveSearchTree;
     const IsotopePatternMap& isotopePatternMap;
     const ChiSquareGOF& chiSquaredGof;
+    const pwiz::msdata::MSData& msd;
     int MaxNoOfClusters;
     int MinNoOfClusters;
     int StartCharge;
     int EndCharge;
+    boost::mutex& mx;
 
     public:
 
@@ -397,9 +403,9 @@ class PeakCurveClusteringCorrKDtree
 
 
     PeakCurveClusteringCorrKDtree(vector<PeakCurvePtr> const& peakCurves, size_t targetCurveIndex, const PeakCurveSearchTree& peakCurveSearchTree, InstrumentParameter& parameter,
-                                  const IsotopePatternMap& isotopePatternMap, const ChiSquareGOF& chiSquaredGof,
-                                  int StartCharge, int EndCharge, int MaxNoClusters, int MinNoClusters)
-        : peakCurves(peakCurves), targetCurveIndex(targetCurveIndex), parameter(parameter), peakCurveSearchTree(peakCurveSearchTree), isotopePatternMap(isotopePatternMap), chiSquaredGof(chiSquaredGof)
+                                  const IsotopePatternMap& isotopePatternMap, const ChiSquareGOF& chiSquaredGof, const pwiz::msdata::MSData& msd,
+                                  int StartCharge, int EndCharge, int MaxNoClusters, int MinNoClusters, boost::mutex& mx)
+        : peakCurves(peakCurves), targetCurveIndex(targetCurveIndex), parameter(parameter), peakCurveSearchTree(peakCurveSearchTree), isotopePatternMap(isotopePatternMap), chiSquaredGof(chiSquaredGof), msd(msd), mx(mx)
     {
         this->MaxNoOfClusters = MaxNoClusters;
         this->MinNoOfClusters = MinNoClusters;
@@ -427,7 +433,7 @@ class PeakCurveClusteringCorrKDtree
 #ifdef DIAUMPIRE_DEBUG
         if (peakA->MsLevel == 2)
         {
-            std::ofstream peakSearchTreeLog("DiaUmpireCpp-peakSearchTreeLog.txt", std::ios::app);
+            std::ofstream peakSearchTreeLog(("DiaUmpireCpp-peakSearchTreeLog-" + msd.run.id + ".txt").c_str(), std::ios::app);
             peakSearchTreeLog << (boost::format("%d %.4f-%.4f %.4f-%.4f") % peakA->Index % lowrt % highrt % lowmz % highmz).str();
             boost::format peakFormat(" %.4f");
             for (auto& itr : PeakCurveListMZ)
@@ -445,13 +451,16 @@ class PeakCurveClusteringCorrKDtree
             if (mass<parameter.MinPrecursorMass || mass>parameter.MaxPrecursorMass || (parameter.MassDefectFilter && !MD.InMassDefectRange(mass, parameter.MassDefectOffset))) {
                 continue;
             }
-            PeakClusterPtr peakClusterPtr(new PeakCluster(MaxNoOfClusters, charge, chiSquaredGof));
+            PeakClusterPtr peakClusterPtr(new PeakCluster(MaxNoOfClusters, charge, chiSquaredGof, msd));
             PeakCluster& peakCluster = *peakClusterPtr;
             peakCluster.IsoPeaksCurves[0] = peakA;
             peakCluster.MonoIsotopePeak = peakA;
             vector<XYData> Ranges(MaxNoOfClusters - 1);
             for (int i = 0; i < MaxNoOfClusters - 1; i++)
             {
+                if (isotopePatternMap[i].empty())
+                    throw runtime_error("empty isotopePatternMap");
+
                 auto findItr = isotopePatternMap[i].upper_bound(peakCluster.NeutralMass());
                 if (findItr == isotopePatternMap[i].end()) {
                     findItr = --isotopePatternMap[i].end();
@@ -567,7 +576,10 @@ class PeakCurveClusteringCorrKDtree
             {
                 peakCluster.CalcPeakArea_V2();
                 peakCluster.UpdateIsoMapProb(isotopePatternMap);
-                peakCluster.AssignConfilictCorr();
+                {
+                    boost::lock_guard<boost::mutex> g(mx);
+                    peakCluster.AssignConfilictCorr();
+                }
                 peakCluster.LeftInt = peakA->GetSmoothedList().Data.at(0).getY();
                 peakCluster.RightInt = peakA->GetSmoothedList().Data.at(peakA->GetSmoothedList().PointCount() - 1).getY();
                 if (parameter.TargetIDOnly || peakCluster.IsoMapProb > parameter.IsoPattern)
@@ -579,6 +591,7 @@ class PeakCurveClusteringCorrKDtree
                         {
                             PeakCurvePtr& peak = peakCluster.IsoPeaksCurves[i];
                             if (peak && peakCluster.Corrs[i - 1] > parameter.RemoveGroupedPeaksCorr && peakCluster.OverlapRT[i - 1] > parameter.RemoveGroupedPeaksRTOverlap) {
+                                boost::lock_guard<boost::mutex> g(mx);
                                 peak->ChargeGrouped.insert(charge);
                             }
                         }
@@ -608,7 +621,7 @@ class CorrCalcCluster2Curve
 
 
     CorrCalcCluster2Curve(PeakClusterPtr MS1PeakCluster, multimap<float, PeakCurvePtr> const& PeakCurveSortedListApexRT, const InstrumentParameter& parameter)
-        : MS1PeakCluster(MS1PeakCluster), PeakCurveSortedListApexRT(PeakCurveSortedListApexRT), parameter(parameter)
+        : PeakCurveSortedListApexRT(PeakCurveSortedListApexRT), parameter(parameter), MS1PeakCluster(MS1PeakCluster)
     {
     }
 
@@ -718,8 +731,8 @@ class PseudoMSMSProcessing
     QualityLevel qualityLevel;
 
 
-    PseudoMSMSProcessing(PeakClusterPtr const& ms1cluster, InstrumentParameter const& parameter, QualityLevel qualityLevel)
-        : parameter(parameter), fragments(ms1cluster->GroupedFragmentPeaks), PrecursorclusterPtr(ms1cluster), Precursorcluster(*PrecursorclusterPtr), qualityLevel(qualityLevel)
+    PseudoMSMSProcessing(PeakClusterPtr const& ms1cluster, const vector<PrecursorFragmentPairEdge>& groupedFragmentPeaks, InstrumentParameter const& parameter, QualityLevel qualityLevel)
+        : parameter(parameter), fragments(groupedFragmentPeaks), PrecursorclusterPtr(ms1cluster), Precursorcluster(*PrecursorclusterPtr), qualityLevel(qualityLevel)
     {
     }
 
@@ -729,7 +742,7 @@ class PseudoMSMSProcessing
         vector<bool> fragmentmarked(fragments.size(), true);
         PrecursorFragmentPairEdge* currentmaxfragment = &fragments.at(0);
         int currentmaxindex = 0;
-        for (int i = 1; i < fragments.size(); i++)
+        for (size_t i = 1; i < fragments.size(); i++)
         {
             if (InstrumentParameter::CalcPPM(fragments.at(i).FragmentMz, currentmaxfragment->FragmentMz) > parameter.MS2PPM) {
                 fragmentmarked[currentmaxindex] = false;
@@ -743,7 +756,7 @@ class PseudoMSMSProcessing
         }
 
         fragmentmarked[currentmaxindex] = false;
-        for (int i = 0; i < fragments.size(); i++)
+        for (size_t i = 0; i < fragments.size(); i++)
         {
             if (fragmentmarked[i])
                 continue;
@@ -759,7 +772,7 @@ class PseudoMSMSProcessing
                 for (int pkidx = 1; pkidx < 5; pkidx++)
                 {
                     float targetmz = startfrag.FragmentMz + (float)pkidx / charge;
-                    for (int j = i + 1; j < fragments.size(); j++)
+                    for (size_t j = i + 1; j < fragments.size(); j++)
                     {
                         if (fragmentmarked[j])
                             continue;
@@ -815,7 +828,7 @@ class PseudoMSMSProcessing
     {
         float totalmass = (float)(Precursorcluster.TargetMz() * Precursorcluster.Charge - Precursorcluster.Charge * pwiz::chemistry::Proton);
         vector<bool> fragmentmarked(fragments.size(), false);
-        for (int i = 0; i < fragments.size(); i++)
+        for (size_t i = 0; i < fragments.size(); i++)
         {
             PrecursorFragmentPairEdge const& fragmentClusterUnit = fragments.at(i);
             if (fragmentmarked[i])
@@ -828,7 +841,7 @@ class PseudoMSMSProcessing
 
             if (complefrag1 >= fragmentClusterUnit.FragmentMz)
             {
-                for (int j = i + 1; j < fragments.size(); j++)
+                for (size_t j = i + 1; j < fragments.size(); j++)
                 {
                     if (fragmentmarked[j])
                         continue;
@@ -871,7 +884,7 @@ class PseudoMSMSProcessing
     void IdentifyComplementaryIon(float totalmass)
     {
         vector<bool> fragmentmarked(fragments.size(), false);
-        for (int i = 0; i < fragments.size(); i++)
+        for (size_t i = 0; i < fragments.size(); i++)
         {
             PrecursorFragmentPairEdge const& fragmentClusterUnit = fragments.at(i);
             if (fragmentmarked[i])
@@ -884,7 +897,7 @@ class PseudoMSMSProcessing
 
             if (complefrag1 >= fragmentClusterUnit.FragmentMz)
             {
-                for (int j = i + 1; j < fragments.size(); j++)
+                for (int j = i + 1; j < (int) fragments.size(); j++)
                 {
                     if (fragmentmarked[j])
                         continue;
@@ -942,5 +955,7 @@ class PseudoMSMSProcessing
 
 
 } // namespace DiaUmpire
+
+#pragma warning( pop )
 
 #endif // _DIAUMPIRE_PEAKCLUSTER_

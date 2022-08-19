@@ -854,12 +854,13 @@ namespace pwiz.Skyline.Util
 
         public static void SafeDelete(string path, bool ignoreExceptions = false)
         {
+            var hint = $@"File.Delete({path})";
             if (ignoreExceptions)
             {
                 try
                 {
                     if (path != null && File.Exists(path))
-                        Helpers.TryTwice(() => File.Delete(path));
+                        Helpers.TryTwice(() => File.Delete(path), hint);
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch (Exception)
@@ -872,7 +873,7 @@ namespace pwiz.Skyline.Util
 
             try
             {
-                Helpers.TryTwice(() => File.Delete(path));
+                Helpers.TryTwice(() => File.Delete(path), hint);
             }
             catch (ArgumentException e)
             {
@@ -953,7 +954,10 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete({path})");
+                }
             }
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }
@@ -1004,24 +1008,65 @@ namespace pwiz.Skyline.Util
                 }
             }
         }
+
+        /// <summary>
+        /// Checks to see if the path looks like it is a temporary folder that Windows extracts zip contents to
+        /// when a user opens a file inside of the zip.
+        /// Sets zipFileName to the name of the .zip file.
+        /// </summary>
+        public static bool IsTempZipFolder(string path, out string zipFileName)
+        {
+            zipFileName = null;
+            int indexAppData = path.IndexOf(@"appdata\local\temp", StringComparison.OrdinalIgnoreCase);
+            if (indexAppData < 0)
+            {
+                return false;
+            }
+
+            int indexZipExtension = path.IndexOf(@".zip\", indexAppData, StringComparison.OrdinalIgnoreCase);
+            if (indexZipExtension < 0)
+            {
+                return false;
+            }
+
+            zipFileName = Path.GetFileName(path.Substring(0, indexZipExtension + 4));
+
+            // Windows usually prepends "Temp1_" to the name of the folder, so strip that off if present
+            if (zipFileName.StartsWith(@"Temp1_"))
+            {
+                zipFileName = zipFileName.Substring(6);
+            }
+            return true;
+        }
     }
 
     public static class StreamEx
     {
-        public static void TransferBytes(this Stream inStream, Stream outStream, long lenRead)
+        public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer)
         {
-            inStream.TransferBytes(outStream, lenRead, new byte[0x40000]); // 256K
+            int bufferSize = (int)Math.Min(bytesToTransfer, 0x40000); // 256K;
+            inStream.TransferBytes(outStream, bytesToTransfer, new byte[bufferSize]);
         }
 
-        public static void TransferBytes(this Stream inStream, Stream outStream, long lenRead, byte[] buffer)
+        public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer, byte[] buffer)
         {
+            long bytesTransferred = 0;
+            long bytesRemaining = bytesToTransfer;
             int len;
-            while (lenRead > 0 && (len = inStream.Read(buffer, 0, (int)Math.Min(lenRead, buffer.Length))) != 0)
+            while (bytesToTransfer > 0 && (len = inStream.Read(buffer, 0, (int)Math.Min(bytesRemaining, buffer.Length))) != 0)
             {
                 outStream.Write(buffer, 0, len);
-                lenRead -= len;
+                bytesRemaining -= len;
+                bytesTransferred += len;
             }
-        }    
+
+            if (bytesTransferred != bytesToTransfer)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Tried to transfer {0} bytes, but actual byte count transferred was {1}", bytesToTransfer,
+                    bytesTransferred));
+            }
+        }
     }
 
     /// <summary>
@@ -1138,10 +1183,10 @@ namespace pwiz.Skyline.Util
         /// <param name="fileName">File path to the final destination</param>
         /// <param name="createStream">If true, create a Stream for the temporary file</param>
         /// <throws>IOException</throws>
-		public FileSaver(string fileName, bool createStream = false)
+        public FileSaver(string fileName, bool createStream = false)
             : this(fileName, FileStreamManager.Default, createStream)
-		{
-		}
+        {
+        }
 
         /// <summary>
         /// Construct an instance of <see cref="FileSaver"/> to manage saving to a temporary
@@ -1157,14 +1202,14 @@ namespace pwiz.Skyline.Util
 
             RealName = fileName;
 
-		    string dirName = Path.GetDirectoryName(fileName);
-		    string tempName = _streamManager.GetTempFileName(dirName, TEMP_PREFIX);
+            string dirName = Path.GetDirectoryName(fileName);
+            string tempName = _streamManager.GetTempFileName(dirName, TEMP_PREFIX);
             // If the directory name is returned, then starting path was bogus.
             if (!Equals(dirName, tempName))
                 SafeName = tempName;
             if (createStream)
                 CreateStream();
-		}
+        }
 
         public void CreateStream()
         {
@@ -1242,10 +1287,10 @@ namespace pwiz.Skyline.Util
         public bool Commit(IPooledStream streamDest)
         {
             // This is where the file that got written is renamed to the desired file.
-	        // Dispose() will do any necessary temporary file clean-up.
+            // Dispose() will do any necessary temporary file clean-up.
 
-	        if (string.IsNullOrEmpty(SafeName))
-		        return false;
+            if (string.IsNullOrEmpty(SafeName))
+                return false;
 
             if (_stream != null)
             {
@@ -1261,7 +1306,7 @@ namespace pwiz.Skyline.Util
 //                _streamManager.Commit(baseMatchFile, Path.ChangeExtension(RealName, baseMatchFile.Substring(SafeName.LastIndexOf('.'))), null);
 //            }
 
-        	Dispose();
+            Dispose();
 
             return true;
         }

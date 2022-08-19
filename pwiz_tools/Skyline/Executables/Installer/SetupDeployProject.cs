@@ -58,11 +58,9 @@ namespace SetupDeployProject
                 string installerOutputDirectory = Path.Combine(skylinePath, "bin", platform);
 
                 string filelistPath = Path.Combine(templateDirectory, "FileList64-template.txt");
-                string testSettingsPath = Path.Combine(skylinePath, $"TestSettings_{platform}-template.testsettings");
 
                 var wxsVendorDlls = new StringBuilder();
                 var filelistDlls = new List<string>();
-                var testSettingDlls = new StringBuilder();
                 foreach (var line in File.ReadAllText(pwizBuildPath + "/without-cxt/" + platform + "/INSTALLER_VENDOR_FILES.txt").Trim().Split('\n'))
                 {
                     string filename = line.Trim();
@@ -71,9 +69,10 @@ namespace SetupDeployProject
                     {
                         wxsVendorDlls.AppendLine($"<Component><File Source=\"{filepath}\" KeyPath=\"yes\"/></Component>");
                         filelistDlls.Add(filename);//$"{filename} (included automatically from ProteoWizard; DO NOT ADD TO TEMPLATE!)");
-                        testSettingDlls.AppendLine($"<DeploymentItem filename=\"{filename}\" />");
                     }
                     // if file doesn't exist, assume it's not needed or is already taken care of by non-dynamic elements
+                    else
+                        Console.Error.WriteLine($"File '{filepath}' specified by INSTALLER_VENDOR_FILES does not exist. Does it need to be added to Skyline.csproj?");
                 }
 
                 var wxsTemplate = new StringBuilder(File.ReadAllText(templatePath));
@@ -98,10 +97,6 @@ namespace SetupDeployProject
                     }
                     File.WriteAllText(filelistPath.Replace("-template", ""), filelistTemplate.ToString());
                 }
-
-                var testSettingsTemplate = new StringBuilder(File.ReadAllText(testSettingsPath));
-                testSettingsTemplate.Replace("__VENDOR_DLLS__", testSettingDlls.ToString());
-                File.WriteAllText(testSettingsPath.Replace("-template", ""), testSettingsTemplate.ToString());
 
                 /*var httpSources = Regex.Matches(wxsTemplate.ToString(), "Name=\"(.*)\" Source=\"(http://.*?)\"");
                 WebClient webClient = null;

@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -149,7 +150,6 @@ namespace pwiz.Skyline.Model.Serialization
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const UserSet userSet = UserSet.FALSE;
-            int countRatios = Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
             var transitionGroupIonMobilityInfo = TransitionGroupIonMobilityInfo.GetTransitionGroupIonMobilityInfo(ccs,
                 ionMobilityMS1, ionMobilityFragment, ionMobilityWindow, ionMobilityUnits);
             return new TransitionGroupChromInfo(fileInfo.FileId,
@@ -163,7 +163,6 @@ namespace pwiz.Skyline.Model.Serialization
                 area, null, null, // Ms1 and Fragment values calculated later
                 backgroundArea, null, null, // Ms1 and Fragment values calculated later
                 height,
-                TransitionGroupChromInfo.GetEmptyRatios(countRatios),
                 massError,
                 truncated,
                 identified,
@@ -497,7 +496,6 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadStartElement();
                     annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
-                int countRatios = _documentReader.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count;
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
@@ -515,7 +513,6 @@ namespace pwiz.Skyline.Model.Serialization
                     identified,
                     rank,
                     rankByLevel,
-                    TransitionChromInfo.GetEmptyRatios(countRatios),
                     annotations,
                     userSet,
                     forcedIntegration);
@@ -646,10 +643,12 @@ namespace pwiz.Skyline.Model.Serialization
         private PeptideGroupDocNode[] ReadPeptideGroupListXml(XmlReader reader)
         {
             var list = new List<PeptideGroupDocNode>();
-            while (reader.IsStartElement(EL.protein) || reader.IsStartElement(EL.peptide_list))
+            while (reader.IsStartElement(EL.protein) || reader.IsStartElement(EL.peptide_list) || reader.IsStartElement(EL.protein_group))
             {
                 if (reader.IsStartElement(EL.protein))
                     list.Add(ReadProteinXml(reader));
+                else if (reader.IsStartElement(EL.protein_group))
+                    list.Add(ReadProteinGroupXml(reader));
                 else
                     list.Add(ReadPeptideGroupXml(reader));
             }
@@ -677,8 +676,9 @@ namespace pwiz.Skyline.Model.Serialization
         /// either a FASTA sequence or a peptide list.
         /// </summary>
         /// <param name="reader">The reader positioned at a protein tag</param>
+        /// <param name="readPeptideList">Set to false to skip reading peptides for the protein (e.g. when the protein is inside a protein_group)</param>
         /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
-        private PeptideGroupDocNode ReadProteinXml(XmlReader reader)
+        private PeptideGroupDocNode ReadProteinXml(XmlReader reader, bool readPeptideList = true)
         {
             string name = reader.GetAttribute(ATTR.name);
             string description = reader.GetAttribute(ATTR.description);
@@ -732,6 +732,55 @@ namespace pwiz.Skyline.Model.Serialization
                 group = new FastaSequence(name, description, alternatives, sequence);
 
             PeptideDocNode[] children = null;
+            if (readPeptideList)
+            {
+                if (!reader.IsStartElement(EL.selected_peptides))
+                    children = ReadPeptideListXml(reader, group);
+                else if (reader.IsEmptyElement)
+                    reader.Read();
+                else
+                {
+                    reader.ReadStartElement(EL.selected_peptides);
+                    children = ReadPeptideListXml(reader, group);
+                    reader.ReadEndElement();
+                }
+            }
+
+            reader.ReadEndElement();
+
+            return new PeptideGroupDocNode(group, annotations, labelProteinMetadata,
+                children ?? new PeptideDocNode[0], autoManageChildren);
+        }
+
+        /// <summary>
+        /// Deserializes a single <see cref="PeptideGroupDocNode"/> from a
+        /// <see cref="XmlReader"/> positioned at a &lt;protein_group&gt; tag.
+        /// </summary>
+        /// <param name="reader">The reader positioned at a protein_group tag</param>
+        /// <returns>A new <see cref="PeptideGroupDocNode"/></returns>
+        private PeptideGroupDocNode ReadProteinGroupXml(XmlReader reader)
+        {
+            string name = reader.GetAttribute(ATTR.name);
+            string labelName = reader.GetAttribute(ATTR.label_name);
+            string labelDescription = reader.GetAttribute(ATTR.label_description);
+            bool peptideList = reader.GetBoolAttribute(ATTR.peptide_list);
+            bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+
+            reader.ReadStartElement();
+
+            var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.protein);
+
+            var proteinMetadataList = new List<ProteinMetadata>();
+            var proteins = ReadProteinGroupProteinsXml(reader, proteinMetadataList);
+            var proteinGroupMetadata = new ProteinGroupMetadata(proteinMetadataList);
+
+            PeptideGroup group;
+            if (peptideList)
+                group = new PeptideGroup();
+            else
+                group = new FastaSequenceGroup(name, proteins);
+
+            PeptideDocNode[] children = null;
             if (!reader.IsStartElement(EL.selected_peptides))
                 children = ReadPeptideListXml(reader, group);
             else if (reader.IsEmptyElement)
@@ -745,8 +794,20 @@ namespace pwiz.Skyline.Model.Serialization
 
             reader.ReadEndElement();
 
-            return new PeptideGroupDocNode(group, annotations, labelProteinMetadata,
+            return new PeptideGroupDocNode(group, annotations, proteinGroupMetadata,
                 children ?? new PeptideDocNode[0], autoManageChildren);
+        }
+
+        private IList<FastaSequence> ReadProteinGroupProteinsXml(XmlReader reader, List<ProteinMetadata> proteinMetadata)
+        {
+            var list = new List<FastaSequence>();
+            while (reader.IsStartElement(EL.protein))
+            {
+                var proteinDocNode = ReadProteinXml(reader, false);
+                proteinMetadata.Add(proteinDocNode.ProteinMetadata);
+                list.Add(proteinDocNode.PeptideGroup as FastaSequence);
+            }
+            return list;
         }
 
         /// <summary>

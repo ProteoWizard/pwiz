@@ -1047,7 +1047,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
     BOOST_FOREACH(CVID cleavageAgent, cleavageAgents)
     {
         if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, "",
-                                          sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                          bool(sip.enzymes.independent), nTerminusIsSpecific, cTerminusIsSpecific,
                                           bestSpecificity, bestResult))
             break;
     }
@@ -1055,7 +1055,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
     BOOST_FOREACH(const string& regex, cleavageAgentRegexes)
     {
         if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, regex,
-                                          sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                          bool(sip.enzymes.independent), nTerminusIsSpecific, cTerminusIsSpecific,
                                           bestSpecificity, bestResult))
             break;
     }
@@ -1109,7 +1109,7 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
         BOOST_FOREACH(CVID cleavageAgent, cleavageAgents)
         {
             if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, "",
-                                              sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                              bool(sip.enzymes.independent), nTerminusIsSpecific, cTerminusIsSpecific,
                                               bestSpecificity, bestResult))
                 break;
         }
@@ -1117,7 +1117,7 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
         BOOST_FOREACH(const string& regex, cleavageAgentRegexes)
         {
             if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, regex,
-                                              sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                              bool(sip.enzymes.independent), nTerminusIsSpecific, cTerminusIsSpecific,
                                               bestSpecificity, bestResult))
                 break;
         }

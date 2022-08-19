@@ -37,7 +37,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
@@ -56,6 +59,16 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="BcfgFileTest.cs" />
+    <Compile Include="RemoteFileSourceFunctionalTest.cs" />
+    <Compile Include="DataDownloadFunctionalTest.cs" />
+    <Compile Include="FunctionalTestUtil.cs" />
+    <Compile Include="AbstractSkylineBatchFunctionalTest.cs" />
+    <Compile Include="DependencyFunctionalTest.cs" />
+    <Compile Include="OpenFileFunctionalTest.cs" />
+    <Compile Include="ImportFunctionalTest.cs" />
+    <Compile Include="ConfigFormFunctionalTest.cs" />
+    <Compile Include="MainFormFunctionalTest.cs" />
     <Compile Include="TemplateFileDependencyTest.cs" />
     <Compile Include="SkylineSettingsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -67,6 +80,10 @@
     <Compile Include="ConfigManagerThreadingTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj">
+      <Project>{4955f974-381e-4902-8bad-bac7174cfc9f}</Project>
+      <Name>SharedBatchTest</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
       <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
       <Name>SharedBatch</Name>

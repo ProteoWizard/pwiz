@@ -256,13 +256,14 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType : public Spectru
 class PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_AnalyzerType(const std::set<pwiz::cv::CVID> filterItem);
+    SpectrumList_FilterPredicate_AnalyzerType(const std::set<pwiz::cv::CVID> filterItem, const util::IntegerSet& msLevelSet);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
     virtual std::string describe() const { return "set of analyzer types"; }
 
     private:
     std::set<pwiz::cv::CVID> cvFilterItems;
+    util::IntegerSet msLevelSet;
 };
 
 

@@ -101,15 +101,21 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t ind
         {
             if (detailLevel < DetailLevel_FullMetadata)
                 return result;
-
-            auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
-            if (getBinaryData)
+            try
             {
-                result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
-                ticPtr->getXArray(result->getTimeArray()->data);
-                ticPtr->getYArray(result->getIntensityArray()->data);
+                auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
+                if (getBinaryData)
+                {
+                    result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_detector_counts);
+                    ticPtr->getXArray(result->getTimeArray()->data);
+                    ticPtr->getYArray(result->getIntensityArray()->data);
+                }
+                result->defaultArrayLength = ticPtr->getTotalDataPoints();
             }
-            result->defaultArrayLength = ticPtr->getTotalDataPoints();
+            catch (runtime_error&)
+            {
+               // It appears that some LabSolutions versions don't provide TIC, if that's not the issue then presumably the  MS_SRM_chromatogram entries will also fail so let this pass quietly
+            }
         }
         break;
 
@@ -150,13 +156,21 @@ PWIZ_API_DECL void ChromatogramList_Shimadzu::createIndex() const
 {
     const set<SRMTransition>& transitions = rawfile_->getTransitions();
 
-    // support file-level TIC for all file types
-    index_.push_back(IndexEntry());
-    IndexEntry& ci = index_.back();
-    ci.index = index_.size() - 1;
-    ci.chromatogramType = MS_TIC_chromatogram;
-    ci.id = "TIC";
-    idMap_[ci.id] = ci.index;
+    try
+    {
+        auto ticPtr = rawfile_->getTIC(config_.globalChromatogramsAreMs1Only);
+        // support file-level TIC for all file types
+        index_.push_back(IndexEntry());
+        IndexEntry& ci = index_.back();
+        ci.index = index_.size() - 1;
+        ci.chromatogramType = MS_TIC_chromatogram;
+        ci.id = "TIC";
+        idMap_[ci.id] = ci.index;
+    }
+    catch (runtime_error&)
+    {
+        // It appears that some LabSolutions versions don't provide TIC, if that's not the issue then presumably the MS_SRM_chromatogram entries will also fail so let this pass quietly
+    }
 
     for (const SRMTransition& transition : transitions)
     {
@@ -201,6 +215,7 @@ size_t ChromatogramList_Shimadzu::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Shimadzu::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Shimadzu::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Shimadzu::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

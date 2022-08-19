@@ -1,9 +1,0 @@
-<Project> 
-<PropertyGroup>
- <!-- Suppress MSBuild errors: --> 
- <!-- MSB3178: Assembly xxx is incorrectly specified as a file. --> 
- <!-- MSB3187: Referenced assembly xxx targets a different processor than the application. --> 
- <!-- MSB3270: There was a mismatch between the processor architecture of the project being built "MSIL" and the processor architecture of the reference xxx, "AMD64". This mismatch may cause runtime failures. Please consider changing the targeted processor architecture of your project through the Configuration Manager so as to align the processor architectures between your project and references, or take a dependency on references with a processor architecture that matches the targeted processor architecture of your project. --> 
- <MSBuildWarningsAsMessages>MSB3187;MSB3270;MSB3178</MSBuildWarningsAsMessages> 
- </PropertyGroup> 
- </Project>

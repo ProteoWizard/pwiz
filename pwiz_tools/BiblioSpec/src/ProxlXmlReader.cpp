@@ -41,6 +41,10 @@ ProxlXmlReader::ProxlXmlReader(BlibBuilder& maker, const char* filename, const P
     extensions_.push_back(".cms2");
     extensions_.push_back(".bms2");
     extensions_.push_back(".pms2");
+    extensions_.push_back(".mgf");
+
+    analysisType_ = UNKNOWN_ANALYSIS;
+    isScoreLookup_ = false;
 }
 
 ProxlXmlReader::~ProxlXmlReader() {
@@ -48,6 +52,27 @@ ProxlXmlReader::~ProxlXmlReader() {
 
 bool ProxlXmlReader::parseFile() {
     return parse();
+}
+
+vector<PSM_SCORE_TYPE> ProxlXmlReader::getScoreTypes() {
+    isScoreLookup_ = true;
+    try {
+        parseFile();
+    }
+    catch (SAXHandler::EndEarlyException) {
+    }
+    return vector<PSM_SCORE_TYPE>(1, analysisToScoreType(analysisType_));
+}
+
+PSM_SCORE_TYPE ProxlXmlReader::analysisToScoreType(ANALYSIS analysisType) {
+    switch (analysisType) {
+        case BYONIC_ANALYSIS:
+            return BYONIC_PEP;
+        case PERCOLATOR_ANALYSIS:
+            return PERCOLATOR_QVALUE;
+        default:
+            return UNKNOWN_SCORE_TYPE;
+    }
 }
 
 void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
@@ -64,6 +89,13 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             state_.push_back(REPORTED_PEPTIDES_STATE);
         } else if (isIElement("static_modifications", name)) {
             state_.push_back(STATIC_MODIFICATIONS_STATE);
+        } else if (isIElement("search_program", name)) {
+            searchPrograms_.emplace_back(getRequiredAttrValue("name", attr));
+            string program = bal::to_lower_copy(searchPrograms_.back());
+            if (program == "percolator")
+                analysisType_ = PERCOLATOR_ANALYSIS;
+            else if (program == "byonic")
+                analysisType_ = BYONIC_ANALYSIS;
         }
         break;
     case REPORTED_PEPTIDES_STATE:
@@ -83,6 +115,12 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         }
         break;
     case REPORTED_PEPTIDE_STATE:
+        if (analysisType_ == UNKNOWN_ANALYSIS)
+            throw runtime_error("only Byonic or Percolator ProxlXML files are supported; "
+                                "cannot handle search program: " + bal::join(searchPrograms_, ", "));
+        if (isScoreLookup_)
+            throw SAXHandler::EndEarlyException();
+
         if (isIElement("peptides", name)) {
             state_.push_back(PEPTIDES_STATE);
         } else if (isIElement("psms", name)) {
@@ -141,11 +179,15 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         break;
     case FILTERABLE_PSM_ANNOTATIONS_STATE:
         if (isIElement("filterable_psm_annotation", name)) {
-            string program(getRequiredAttrValue("search_program", attr));
-            string score(getRequiredAttrValue("annotation_name", attr));
-            if (program == "percolator" && score == "q-value") {
+            string program = bal::to_lower_copy(string(getRequiredAttrValue("search_program", attr)));
+            string score = bal::to_lower_copy(string(getRequiredAttrValue("annotation_name", attr)));
+            if (analysisType_ == PERCOLATOR_ANALYSIS && score == "q-value" ||
+                analysisType_ == BYONIC_ANALYSIS && score == "peptide abslogprob2d") {
                 curProxlPsm_->score = getDoubleRequiredAttrValue("value", attr);
             }
+
+            if (analysisType_ == BYONIC_ANALYSIS)
+                curProxlPsm_->score = pow(10, -1 * curProxlPsm_->score);
         }
         break;
     case STATIC_MODIFICATIONS_STATE:

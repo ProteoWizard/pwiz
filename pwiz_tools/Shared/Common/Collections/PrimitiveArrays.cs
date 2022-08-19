@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Text;
 
 namespace pwiz.Common.Collections
 {
@@ -53,6 +54,29 @@ namespace pwiz.Common.Collections
             stream.Read(byteArray, 0, byteArray.Length);
             Buffer.BlockCopy(byteArray, 0, result, 0, byteArray.Length);
             return result;
+        }
+
+        public static string ReadString(Stream stream)
+        {
+            int stringLength = ReadOneValue<int>(stream);
+            if (stringLength > 0)
+            {
+                byte[] bytes = new byte[stringLength];
+                stream.Read(bytes, 0, bytes.Length);
+                return Encoding.UTF8.GetString(bytes);
+            }
+            return null;
+        }
+
+        public static void WriteString(Stream stream, string str)
+        {
+            var strLength = str?.Length ?? 0;
+            WriteOneValue(stream, strLength);
+            if (strLength > 0)
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                Write(stream, Encoding.UTF8.GetBytes(str));
+            }
         }
 
         public static T ReadOneValue<T>(Stream stream)

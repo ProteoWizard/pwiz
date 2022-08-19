@@ -109,6 +109,7 @@ namespace pwiz.Skyline.ToolsUI
                 return OverwriteOrInParallel(_parent, toolCollectionName, toolCollectionVersion, reportList, foundVersion, newCollectionName);
             }
 
+            // ReSharper disable once MemberHidesStaticFromOuterClass
             public string InstallProgram(ProgramPathContainer programPathContainer,
                                          ICollection<ToolPackage> packages,
                                          string pathToInstallScript)

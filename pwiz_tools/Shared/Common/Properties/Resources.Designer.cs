@@ -19,7 +19,7 @@ namespace pwiz.Common.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -665,6 +665,16 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap DropImageNoBackground {
+            get {
+                object obj = ResourceManager.GetObject("DropImageNoBackground", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Filter {
             get {
                 object obj = ResourceManager.GetObject("Filter", resourceCulture);
@@ -1176,24 +1186,6 @@ namespace pwiz.Common.Properties {
         internal static string QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____ {
             get {
                 return ResourceManager.GetString("QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} of {1}.
-        /// </summary>
-        internal static string RecordNavBar_UpdateNow__0__of__1_ {
-            get {
-                return ResourceManager.GetString("RecordNavBar_UpdateNow__0__of__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to (Filtered from {0}).
-        /// </summary>
-        internal static string RecordNavBar_UpdateNow__Filtered_from__0__ {
-            get {
-                return ResourceManager.GetString("RecordNavBar_UpdateNow__Filtered_from__0__", resourceCulture);
             }
         }
         

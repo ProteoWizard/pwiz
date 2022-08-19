@@ -277,7 +277,8 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
                 msExperiment->getTIC(times, intensities);
 
                 for (int i = 0, end = (int) times.size(); i < end; ++i)
-                    if (!wiff2 || intensities[i] > 0)
+                    if ((!wiff2 || intensities[i] > 0) &&
+                        (experimentType != ABI::Product || wifffile_->getSpectrum(msExperiment, i+1)->getHasPrecursorInfo()))
                         experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i + 1)));
             }
             else

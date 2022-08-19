@@ -46,6 +46,7 @@ namespace TestRunnerLib
         public readonly MethodInfo TestCleanup;
         public readonly bool IsPerfTest;
         public readonly int? MinidumpLeakThreshold;
+        public readonly bool DoNotRunInParallel;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -55,6 +56,9 @@ namespace TestRunnerLib
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
+
+            var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
+            DoNotRunInParallel = noParallelTestAttr != null;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -92,6 +96,7 @@ namespace TestRunnerLib
         public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
+        public bool IsParallelClient { get; private set; }
 
         public bool ReportSystemHeaps
         {
@@ -108,6 +113,7 @@ namespace TestRunnerLib
             bool buildMode,
             bool offscreen,
             bool internet,
+            bool originalURLs,
             bool showStatus,
             bool perftests,
             bool runsmallmoleculeversions,
@@ -121,7 +127,8 @@ namespace TestRunnerLib
             int timeoutMultiplier = 1,
             string results = null,
             StreamWriter log = null,
-            bool verbose = false)
+            bool verbose = false,
+            bool isParallelClient = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -136,6 +143,7 @@ namespace TestRunnerLib
             Skyline.Set("FunctionalTest", true);
             Skyline.Set("SkylineOffscreen", !demoMode && offscreen);
             Skyline.Set("DemoMode", demoMode);
+            Skyline.Set("UseOriginalURLs", originalURLs);
             Skyline.Set("NoVendorReaders", !useVendorReaders);
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
@@ -153,6 +161,7 @@ namespace TestRunnerLib
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
             Verbose = verbose;
+            IsParallelClient = isParallelClient;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -799,8 +808,17 @@ namespace TestRunnerLib
 
         public void TeamCityStartTest(TestInfo test)
         {
-            if (TeamCityTestDecoration)
-                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            if (!TeamCityTestDecoration)
+                return;
+
+            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            Console.WriteLine(msg);
+            Console.Out.Flush();
+            if (IsParallelClient)
+            {
+                _log.WriteLine(msg);
+                _log.Flush();
+            }
         }
 
         public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
@@ -818,16 +836,26 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                Console.WriteLine(failMsg);
+                if (IsParallelClient)
+                    _log.WriteLine(failMsg);
                 // ReSharper restore LocalizableElement
             }
 
-            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            Console.WriteLine(msg);
+            Console.Out.Flush();
+            if (IsParallelClient)
+            {
+                _log.WriteLine(msg);
+                _log.Flush();
+            }
         }
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
         {
-            var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
+            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
             var types = assembly.GetTypes();
 
             foreach (var type in types)
@@ -835,9 +863,9 @@ namespace TestRunnerLib
                 if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
                     if (!DerivesFromAbstractUnitTest(type))
-// ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
-// ReSharper restore LocalizableElement
+                    {
+                        Console.WriteLine($@"ERROR: {type.Name} does not derive from AbstractUnitTest!"); 
+                    }
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
                     var methods = type.GetMethods();

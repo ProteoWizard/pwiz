@@ -24,11 +24,13 @@ using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -42,6 +44,7 @@ using pwiz.Skyline.Util.Extensions;
 
 // Once-per-assembly initialization to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
+[assembly: InternalsVisibleTo("Test")]
 
 namespace pwiz.Skyline
 {
@@ -69,10 +72,12 @@ namespace pwiz.Skyline
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static string TestName { get; set; }                 // Set during unit and functional tests
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
         public static bool DemoMode { get; set; }                   // Set to true in demo mode (main window is full screen and pauses at screenshots)
         public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
+        public static bool UseOriginalURLs { get; set; }            // Set true to use original URLs for downloading tools instead of our S3 copies
         public static bool IsPassZero { get { return NoVendorReaders; } }   // Currently the only time NoVendorReaders gets set is pass0
         public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
         public static bool ShowFormNames { get; set; }              // Set true to show each Form name in title.
@@ -107,7 +112,7 @@ namespace pwiz.Skyline
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
-                string installUrl = Install.Url;
+                string installUrl = Install.Url32;
                 string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(Resources.Program_Main_Install_32_bit__0__, Name);
                 AlertLinkDlg.Show(null,
                     string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
@@ -342,6 +347,7 @@ namespace pwiz.Skyline
                     try
                     {
                         SendAnalyticsHit();
+                        SendGa4AnalyticsHit();
                     }
                     catch (Exception ex)
                     {
@@ -366,6 +372,7 @@ namespace pwiz.Skyline
 
             var data = Encoding.UTF8.GetBytes(postData);
             var request = (HttpWebRequest) WebRequest.Create("http://www.google-analytics.com/collect");
+            request.UserAgent = Install.GetUserAgentString();
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.ContentLength = data.Length;
@@ -380,6 +387,53 @@ namespace pwiz.Skyline
             {
                 new StreamReader(responseStream).ReadToEnd();
             }
+            // ReSharper restore LocalizableElement
+        }
+
+        internal static string SendGa4AnalyticsHit(bool useDebugUrl = false)
+        {
+            // ReSharper disable LocalizableElement
+            const string measurementId = "G-CQG6T54XQR";
+            const string apiSecret = "8_Ci004BQSKdL1bEazPK3A"; // does this need to be kept secret somehow?
+            string debugModifier = useDebugUrl ? "debug/" : "";
+            string analyticsUrl = $"https://www.google-analytics.com/{debugModifier}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
+
+            var postData = new Dictionary<string, object>();
+            postData["client_id"] = useDebugUrl ? "test" : Settings.Default.InstallationId;
+            var events = new List<Dictionary<string, object>>();
+            postData["events"] = events;
+            events.Add(new Dictionary<string, object>
+            {
+                { "name", "Instance" },
+                {
+                    "params", new Dictionary<string, string>
+                    {
+                        { "version", Install.Version + "-" + (Install.Is64Bit ? "64bit" : "32bit") },
+                        { "install_type", Install.Type.ToString() }
+                    }
+                }
+            });
+            var postDataString = JsonConvert.SerializeObject(postData);
+
+            var data = Encoding.UTF8.GetBytes(postDataString);
+            var request = (HttpWebRequest) WebRequest.Create(analyticsUrl);
+            request.UserAgent = Install.GetUserAgentString();
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.ContentLength = data.Length;
+            using (Stream stream = request.GetRequestStream())
+            {
+                stream.Write(data, 0, data.Length);
+            }
+
+            var response = (HttpWebResponse) request.GetResponse();
+            var responseStream = response.GetResponseStream();
+            if (null != responseStream)
+            {
+                return new StreamReader(responseStream).ReadToEnd();
+            }
+
+            return string.Empty;
             // ReSharper restore LocalizableElement
         }
 
@@ -625,6 +679,17 @@ namespace pwiz.Skyline
             }
         }
 
+        public static Image SkylineImage
+        {
+            get
+            {
+                // Dynamically assign the image based on the release type
+                return Install.Type == Install.InstallType.daily
+                    ? Resources.SkylineImg
+                    : Resources.Skyline_Release;
+            }
+        }
+
         /// <summary>
         /// A text writer that writes to the debug console
         /// </summary>
@@ -670,11 +735,11 @@ namespace pwiz.Skyline
             return arg.Length > COMMAND_PREFIX.Length ? arg.Substring(COMMAND_PREFIX.Length) : string.Empty;
         }
 
-        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut)
+        public static int RunCommand(string[] inputArgs, CommandStatusWriter consoleOut, bool test = false)
         {
             using (CommandLine cmd = new CommandLine(consoleOut))
             {
-                return cmd.Run(inputArgs);
+                return cmd.Run(inputArgs,false, /* withoutUsage */ test); // test set to true when we are running a test
             }
         }
 

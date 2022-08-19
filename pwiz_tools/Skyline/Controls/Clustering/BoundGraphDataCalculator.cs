@@ -30,7 +30,8 @@ namespace pwiz.Skyline.Controls.Clustering
     /// </summary>
     public abstract class BoundGraphDataCalculator<TInput, TResults> : GraphDataCalculator<TInput, TResults> where TInput : DataSchemaInput
     {
-        protected BoundGraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl) : base(parentCancellationToken, zedGraphControl)
+        protected BoundGraphDataCalculator(CancellationToken parentCancellationToken, ZedGraphControl zedGraphControl) :
+            base(parentCancellationToken, zedGraphControl, zedGraphControl.GraphPane)
         {
         }
 

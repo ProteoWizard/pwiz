@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Util
     {
         public const string SKYLINE_FORMAT = "Skyline Format";
 
-	    private static bool _useSystemClipboard = true;
+        private static bool _useSystemClipboard = true;
         private static DataObject _dataObject;
 
         // Set this true to check that the internal clipboard returns the
@@ -43,31 +43,32 @@ namespace pwiz.Skyline.Util
             _useSystemClipboard = !useInternal;
         }
 
-        public static void SetDataObject(object data)
+        /// <summary>
+        /// Returns a list of the available formats on the clipboard now.
+        /// </summary>
+        public static string[] GetClipboardFormats()
         {
-            if (_useSystemClipboard)
+            var dataObject = _useSystemClipboard ? Clipboard.GetDataObject() : _dataObject;
+            if (dataObject == null)
             {
-                Clipboard.SetDataObject(data);
+                return new string[0];
             }
-            else lock (_dataObject)
+
+            lock (dataObject)
             {
-                _dataObject = (DataObject)data;
-                if (CHECK_VALUES)
-                {
-                    Clipboard.SetDataObject(data);
-                }
+                return dataObject.GetFormats();
             }
         }
 
-        public static void SetDataObject(object data, bool copy)
+        public static void SetDataObject(DataObject data, bool copy)
         {
             if (_useSystemClipboard)
             {
                 Clipboard.SetDataObject(data, copy);
             }
-            else lock (_dataObject)
+            else
             {
-                _dataObject = (DataObject)data;
+                _dataObject = data;
                 if (CHECK_VALUES)
                 {
                     Clipboard.SetDataObject(data, copy);
@@ -81,9 +82,10 @@ namespace pwiz.Skyline.Util
             {
                 return Clipboard.GetData(format);
             }
-            else lock (_dataObject)
+            var dataObject = _dataObject;
+            lock (dataObject)
             {
-                object data = _dataObject.GetData(format);
+                object data = dataObject.GetData(format);
                 if (CHECK_VALUES)
                 {
                     object expected = Clipboard.GetData(format);
@@ -125,12 +127,16 @@ namespace pwiz.Skyline.Util
             {
                 Clipboard.SetText(text);
             }
-            else lock (_dataObject)
+            else
             {
-                _dataObject.SetText(text, TextDataFormat.Text);
-                if (CHECK_VALUES)
+                var dataObject = _dataObject;
+                lock (dataObject)
                 {
-                    Clipboard.SetText(text);
+                    dataObject.SetText(text, TextDataFormat.Text);
+                    if (CHECK_VALUES)
+                    {
+                        Clipboard.SetText(text);
+                    }
                 }
             }
         }
@@ -141,16 +147,22 @@ namespace pwiz.Skyline.Util
             {
                 Clipboard.SetText(text, format);
             }
-            else lock (_dataObject)
+            else
             {
-                if (format != TextDataFormat.Text)
+                var dataObject = _dataObject;
+                lock (dataObject)
                 {
-                    throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
-                }
-                _dataObject.SetData(text, DataFormats.Text);
-                if (CHECK_VALUES)
-                {
-                    Clipboard.SetText(text, format);
+                    if (format != TextDataFormat.Text)
+                    {
+                        throw new ApplicationException(Resources
+                            .ClipboardEx_GetData_ClipboardEx_implementation_problem);
+                    }
+
+                    dataObject.SetData(text, DataFormats.Text);
+                    if (CHECK_VALUES)
+                    {
+                        Clipboard.SetText(text, format);
+                    }
                 }
             }
         }
@@ -161,9 +173,11 @@ namespace pwiz.Skyline.Util
             {
                 return Clipboard.GetText();
             }
-            else lock (_dataObject)
+
+            var dataObject = _dataObject;
+            lock (dataObject) 
             {
-                string text = (string)_dataObject.GetData(DataFormats.Text);
+                string text = (string)dataObject.GetData(DataFormats.Text);
                 if (CHECK_VALUES && text != Clipboard.GetText())
                 {
                     throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
@@ -178,12 +192,14 @@ namespace pwiz.Skyline.Util
             {
                 return Clipboard.GetText(format);
             }
-            else lock (_dataObject)
+
+            var dataObject = _dataObject;
+            lock (dataObject)
             {
                 string text = string.Empty;
                 if (format == TextDataFormat.Text)
                 {
-                    text = (string)_dataObject.GetData(DataFormats.Text);
+                    text = (string)dataObject.GetData(DataFormats.Text);
                 }
                 if (CHECK_VALUES && text != Clipboard.GetText(format))
                 {

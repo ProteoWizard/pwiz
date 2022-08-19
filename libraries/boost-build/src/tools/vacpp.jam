@@ -1,8 +1,8 @@
 # Copyright Vladimir Prus 2004.
 # Copyright Toon Knapen 2004.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #| tag::doc[]
 
@@ -28,7 +28,7 @@ with the the `vacpp` module.
 |# # end::doc[]
 
 #
-# Boost.Build V2 toolset for the IBM XL C++ compiler
+# B2 V2 toolset for the IBM XL C++ compiler
 #
 
 import toolset : flags ;
@@ -45,12 +45,12 @@ generators.override vacpp.searched-lib-generator : searched-lib-generator ;
 # Configure the vacpp toolset
 rule init ( version ? : command * : options * )
 {
-    local condition = [ 
+    local condition = [
         common.check-init-parameters vacpp : version $(version) ] ;
-              
+
     command = [ common.get-invocation-command vacpp : xlC
         : $(command) : "/usr/vacpp/bin/xlC" ] ;
-        
+
     common.handle-options vacpp : $(condition) : $(command) : $(options) ;
 }
 
@@ -154,7 +154,7 @@ actions vacpp.link bind NEEDLIBS
 
 actions vacpp.link.dll bind NEEDLIBS
 {
-    xlC_r -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS) 
+    xlC_r -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions vacpp.compile.c

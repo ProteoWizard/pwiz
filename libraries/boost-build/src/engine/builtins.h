@@ -21,7 +21,6 @@ void init_regex();
 void init_property_set();
 void init_sequence();
 void init_order();
-void init_svnrev();
 
 void property_set_done();
 

@@ -58,15 +58,15 @@ Extra Info: File names =
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
 
-Undo Redo : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
-Summary   : Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+Undo Redo : Applied peak NP_036629 > K.GILAADESVGSMAK.R [29, 42] > 674.8425++ to all
+Summary   : Applied peak NP_036629 > K.GILAADESVGSMAK.R [29, 42] > 674.8425++ to all
 All Info  :
-Applied peak NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++ to all
+Applied peak NP_036629 > K.GILAADESVGSMAK.R [29, 42] > 674.8425++ to all
 
-Undo Redo : Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
-Summary   : Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+Undo Redo : Applied peak NP_112646 > K.LNDGSQITFEK.C [244, 254] > 626.3144++ to all
+Summary   : Applied peak NP_112646 > K.LNDGSQITFEK.C [244, 254] > 626.3144++ to all
 All Info  :
-Applied peak NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++ to all
+Applied peak NP_112646 > K.LNDGSQITFEK.C [244, 254] > 626.3144++ to all
 
 Undo Redo : Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
 Summary   : Applied peak NP_036620 > DLTGFPQGADQR > 652.8151++ to subsequent
@@ -78,103 +78,103 @@ Summary   : Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
 All Info  :
 Applied peak NP_445770 > GATYAFSGSHYWR > 751.8442++ to subsequent
 
-Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
-Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
+Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
 All Info  :
-Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
 
-Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
-Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
+Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
 All Info  :
-Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
 
-Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
-Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Undo Redo : Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
+Summary   : Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
 All Info  :
-Applied peak NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++ to all
+Applied peak NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++ to all
+
+Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [29, 42]
+Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [29, 42]
+All Info  :
+Deleted target NP_036629 > K.GILAADESVGSMAK.R [29, 42]
+
+Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++
+Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++
+All Info  :
+Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++
+Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ in "D_103_REP3" from 30.50 to 30.11
+Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ in "D_103_REP3" from 31.10 to 30.43
+
+Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++
+Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++
+All Info  :
+Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++
+Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ in "D_108_REP2" from 33.47 to 30.11
+Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ in "D_108_REP2" from 33.87 to 30.50
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "D_103_REP3"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "D_103_REP3"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "D_103_REP3"
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "D_108_REP2"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "D_108_REP2"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "D_108_REP2"
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "H_159_REP2"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "H_159_REP2"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "H_159_REP2"
+
+Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "H_162_REP3"
+Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "H_162_REP3"
+All Info  :
+Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in replicate "H_162_REP3"
+
+Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+All Info  :
+Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in "H_148_REP2" from 33.48 to 31.93
+Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in "H_148_REP2" from 34.29 to 32.20
+
+Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+All Info  :
+Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in "H_159_REP3" from 33.63 to 31.93
+Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in "H_159_REP3" from 34.59 to 32.21
+
+Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+All Info  :
+Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++
+Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in "H_162_REP2" from 33.72 to 31.90
+Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ in "H_162_REP2" from 34.79 to 32.21
+
+Undo Redo : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [47, 57]
+Summary   : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [47, 57]
+All Info  :
+Deleted target NP_001012027 > R.DIPVNPMCIYR.S [47, 57]
+
+Undo Redo : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++
+Summary   : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++
+All Info  :
+Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++
+Changed start time of all peaks of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ in "D_108_REP2" from 27.79 to 26.86
+Changed end time of all peaks of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ in "D_108_REP2" from 28.72 to 27.40
+
+Undo Redo : Deleted target NP_036870 > K.FGLYSDQMR.E [182, 190]
+Summary   : Deleted target NP_036870 > K.FGLYSDQMR.E [182, 190]
+All Info  :
+Deleted target NP_036870 > K.FGLYSDQMR.E [182, 190]
 
 Undo Redo : Transition Settings -- Integration > Integrate All changed to True
 Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
 All Info  :
 Transition Settings -- Integration > Integrate All changed to True
 Settings > Transition Settings -- Integration > Integrate All changed from False to True
-
-Undo Redo : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-Summary   : Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-All Info  :
-Deleted target NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-
-Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-All Info  :
-Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP3" from 30.50 to 30.11
-Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_103_REP3" from 31.10 to 30.43
-
-Undo Redo : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Summary   : Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-All Info  :
-Changed peak bounds of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++
-Changed start time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_108_REP2" from 33.47 to 30.11
-Changed end time of all peaks of NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ in "D_108_REP2" from 33.87 to 30.50
-
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
-All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_103_REP3"
-
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
-All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "D_108_REP2"
-
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
-All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_159_REP2"
-
-Undo Redo : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
-Summary   : Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
-All Info  :
-Removed all peaks from NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in replicate "H_162_REP3"
-
-Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-All Info  :
-Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_148_REP2" from 33.48 to 31.93
-Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_148_REP2" from 34.29 to 32.20
-
-Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-All Info  :
-Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_159_REP3" from 33.63 to 31.93
-Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_159_REP3" from 34.59 to 32.21
-
-Undo Redo : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Summary   : Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-All Info  :
-Changed peak bounds of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++
-Changed start time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_162_REP2" from 33.72 to 31.90
-Changed end time of all peaks of NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ in "H_162_REP2" from 34.79 to 32.21
-
-Undo Redo : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-Summary   : Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-All Info  :
-Deleted target NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-
-Undo Redo : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
-Summary   : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
-All Info  :
-Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++
-Changed start time of all peaks of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ in "D_108_REP2" from 27.79 to 26.86
-Changed end time of all peaks of NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ in "D_108_REP2" from 28.72 to 27.40
-
-Undo Redo : Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
-Summary   : Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
-All Info  :
-Deleted target NP_036870 > K.FGLYSDQMR.E [181, 189]
 
 Undo Redo : Deleted target NP_001033064 > GMYESLPVVAVK
 Summary   : Deleted target NP_001033064 > GMYESLPVVAVK
@@ -718,24 +718,24 @@ Targets : NP_036629 was removed
 Targets : NP_037030 was removed
 Targets : NP_602308 was removed
 Targets : NP_001012027 was removed
-Targets > NP_036870 : K.DFATVYVDAVK.D [35, 45] was removed
+Targets > NP_036870 : K.DFATVYVDAVK.D [36, 46] was removed
 Targets : NP_037244 was removed
 Targets : NP_001010968 was removed
-Targets > NP_444180 : K.SLLNSLEEAK.K [67, 76] was removed
+Targets > NP_444180 : K.SLLNSLEEAK.K [68, 77] was removed
 Targets : NP_872279 was removed
-Targets > NP_001121161 : R.HTNNGMICLTSLLR.I [279, 292] was removed
-Targets > NP_001121161 : K.YDCVAMNHHGVIR.H [305, 317] was removed
-Targets > NP_058716 : K.SFSCEVEILEGDK.V [169, 181] was removed
-Targets > NP_036745 : K.ENSSNILDNLLSR.M [802, 814] was removed
+Targets > NP_001121161 : R.HTNNGMICLTSLLR.I [280, 293] was removed
+Targets > NP_001121161 : K.YDCVAMNHHGVIR.H [306, 318] was removed
+Targets > NP_058716 : K.SFSCEVEILEGDK.V [170, 182] was removed
+Targets > NP_036745 : K.ENSSNILDNLLSR.M [803, 815] was removed
 Targets : NP_446290 was removed
 Targets : NP_037001 was removed
-Targets > NP_150641 : R.LTHGDFTWTTK.K [90, 100] was removed
+Targets > NP_150641 : R.LTHGDFTWTTK.K [91, 101] was removed
 Targets : NP_001101333 was removed
-Targets > NP_062212 : K.YGLDLGSLLVR.L [1066, 1076] was removed
+Targets > NP_062212 : K.YGLDLGSLLVR.L [1067, 1077] was removed
 Targets : NP_036774 was removed
-Targets > NP_001011908 : R.FAEDHFAHEATK.T [116, 127] was removed
-Targets > NP_001011908 : R.DVNEAIQWMEEK.E [269, 280] was removed
-Targets > NP_001011908 : K.HQLLEAEMLAR.E [1647, 1657] was removed
+Targets > NP_001011908 : R.FAEDHFAHEATK.T [117, 128] was removed
+Targets > NP_001011908 : R.DVNEAIQWMEEK.E [270, 281] was removed
+Targets > NP_001011908 : K.HQLLEAEMLAR.E [1648, 1658] was removed
 Targets : NP_758823 was removed
 Targets > NP_036620 : DLTGFPQGADQR was removed
 Targets : NP_036869 was removed

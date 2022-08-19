@@ -465,7 +465,7 @@ void testDone()
     parse(is, handler); // parses <AnotherRootElement> and aborts
     
     string buffer;
-    getline(is, buffer, '<');
+    getlinePortable(is, buffer, '<');
     
     if (os_) *os_ << "buffer: " << buffer << "\n\n";
     unit_assert_operator_equal("The quick brown fox jumps over the lazy dog.", buffer);
@@ -536,8 +536,12 @@ void testRootElement()
 
     unit_assert_operator_equal(RootElement, xml_root_element("<?xml?><RootElement>"));
     unit_assert_operator_equal(RootElement, xml_root_element("<?xml?><RootElement name='value'"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<?xml?>\r\n<RootElement>"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<?xml?>\r\n<RootElement name='value'"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<RootElement>"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<RootElement name='value'"));
 
-    unit_assert_throws(xml_root_element("not-xml"), runtime_error);
+    unit_assert_throws(xml_root_element("not-xml"), xml_root_error);
 }
 
 

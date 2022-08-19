@@ -190,12 +190,23 @@ int executeBlib(const vector<string>& argv)
         fullCommand = command + options + inputs + libName + outputs;
     cerr << "Running " << fullCommand << endl;
 
-    int returnValue = bnw::system(fullCommand.c_str());
+    string testOutputFile = bfs::path(argv[0]).string() + "_output.txt";
+    int returnValue = bnw::system((fullCommand + " > \"" + testOutputFile + "\" 2>&1").c_str());
+
+    ostringstream testOutput;
+    testOutput << ifstream(testOutputFile).rdbuf();
+    cerr << "Output from command:" << endl << testOutput.str() << endl;
 
     if (expectedErrorMsg != "")
     {
         cerr << "Blib command returned " << returnValue << endl;
-        return returnValue == 0; // Expecting a failure
+
+        bal::trim_if(expectedErrorMsg, bal::is_any_of("\""));
+        bal::replace_all(expectedErrorMsg, "_", " ");
+        if (testOutput.str().find(expectedErrorMsg) == string::npos)
+            throw runtime_error("Blib command did not show expected error string \"" + expectedErrorMsg + "\"");
+
+        return returnValue == 0 ? 1 : 0; // Expecting a failure
     }
     else if (returnValue != 0)
         throw runtime_error("Blib command returned " + lexical_cast<string>(returnValue));

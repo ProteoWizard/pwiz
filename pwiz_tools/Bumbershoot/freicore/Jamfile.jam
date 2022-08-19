@@ -44,6 +44,7 @@ lib freicore
      <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
      <warnings>all
      <toolset>gcc:<cxxflags>-Wno-pedantic
+     <define>BOOST_MATH_DISABLE_STD_FPCLASSIFY
  : # default-build
      <link>static
      <variant>release
@@ -54,6 +55,7 @@ lib freicore
      <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
      <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
      <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+     <define>BOOST_MATH_DISABLE_STD_FPCLASSIFY
      <include>.
  ;
 

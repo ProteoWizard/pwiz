@@ -34,7 +34,7 @@ namespace SkylineTester
 
         public override bool Run()
         {
-            if (MainWindow.RunFullQualityPass.Checked)
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Quality"))
             {
                 MainWindow.QualityPassDefinite.Checked = true;
                 MainWindow.QualityPassCount.Value = 1;
@@ -63,8 +63,12 @@ namespace SkylineTester
                 args.Append(loop);
             }
 
-            if (MainWindow.RunDemoMode.Checked)
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Demo"))
                 args.Append(" demo=on");
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Screenshots"))
+                args.Append(" pause=-1"); // Magic number that tells TestRunner to pause and show UI for a manual screenshot
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Covershot"))
+                args.Append(" pause=-2"); // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
 
             if (MainWindow.TestsRunSmallMoleculeVersions.Checked)
                 args.Append(" runsmallmoleculeversions=on");

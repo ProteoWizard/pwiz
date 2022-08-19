@@ -1,7 +1,7 @@
 #  Copyright Noel Belcourt 2007.
 #  Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import property ;
 import generators ;
@@ -20,31 +20,31 @@ generators.override mipspro.searched-lib-generator : searched-lib-generator ;
 #  Documentation and toolchain description located
 #  http://www.sgi.com/products/software/irix/tools/
 
-rule init ( version ? : command * : options * ) 
+rule init ( version ? : command * : options * )
 {
-  local condition = [ 
+  local condition = [
     common.check-init-parameters mipspro : version $(version) ] ;
 
   command = [ common.get-invocation-command mipspro : CC : $(command) ] ;
 
   common.handle-options mipspro : $(condition) : $(command) : $(options) ;
-    
+
   command_c = $(command_c[1--2]) $(command[-1]:B=cc) ;
 
   toolset.flags mipspro CONFIG_C_COMMAND $(condition) : $(command_c) ;
 
   # fortran support
-  local command = [ 
+  local command = [
     common.get-invocation-command mipspro : f77 : $(command) : $(install_dir) ] ;
 
   command_f = $(command_f[1--2]) $(command[-1]:B=f77) ;
   toolset.flags mipspro CONFIG_F_COMMAND $(condition) : $(command_f) ;
 
   # set link flags
-  flags mipspro.link FINDLIBS-ST : [ 
+  flags mipspro.link FINDLIBS-ST : [
     feature.get-values <find-static-library> : $(options) ] : unchecked ;
 
-  flags mipspro.link FINDLIBS-SA : [ 
+  flags mipspro.link FINDLIBS-SA : [
     feature.get-values <find-shared-library> : $(options) ] : unchecked ;
 }
 
@@ -64,11 +64,14 @@ flags mipspro.compile OPTIONS $(cpu-arch-32) : -n32 ;
 flags mipspro.compile OPTIONS $(cpu-arch-64) : -64 ;
 
 # Declare flags and actions for compilation
-flags mipspro.compile OPTIONS <debug-symbols>on : -g ; 
+flags mipspro.compile OPTIONS <debug-symbols>on : -g ;
 # flags mipspro.compile OPTIONS <profiling>on : -xprofile=tcov ;
 flags mipspro.compile OPTIONS <warnings>off : -w ;
 flags mipspro.compile OPTIONS <warnings>on : -ansiW -diag_suppress 1429 ; # suppress long long is nonstandard warning
 flags mipspro.compile OPTIONS <warnings>all : -fullwarn ;
+flags mipspro.compile OPTIONS <warnings>extra : -fullwarn ;
+flags mipspro.compile OPTIONS <warnings>pedantic : -fullwarn -ansiW -diag_suppress 1429 ; # suppress long long is nonstandard warning
+flags mipspro.compile OPTIONS <warnings-as-errors>on : -w2 ;
 flags mipspro.compile OPTIONS <optimization>speed : -Ofast ;
 flags mipspro.compile OPTIONS <optimization>space : -O2 ;
 flags mipspro.compile OPTIONS <cflags> : "-LANG:std" ;

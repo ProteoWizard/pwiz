@@ -8,8 +8,8 @@
  * Copyright 2001-2004 David Abrahams.
  * Copyright 2005 Rene Rivera.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -34,7 +34,7 @@
 
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #ifdef __BORLANDC__
@@ -62,13 +62,13 @@ int file_collect_dir_content_( file_info_t * const d )
     string pathspec[ 1 ];
     string pathname[ 1 ];
     LIST * files = L0;
-    int d_length;
+    int32_t d_length;
 
     assert( d );
     assert( d->is_dir );
     assert( list_empty( d->files ) );
 
-    d_length = strlen( object_str( d->name ) );
+    d_length = int32_t(strlen( object_str( d->name ) ));
 
     memset( (char *)&f, '\0', sizeof( f ) );
     f.f_dir.ptr = object_str( d->name );
@@ -98,7 +98,7 @@ int file_collect_dir_content_( file_info_t * const d )
         /* FIXME: Avoid duplicate FindXXX Windows API calls here and in the code
          * determining a normalized path.
          */
-        WIN32_FIND_DATA finfo;
+        WIN32_FIND_DATAA finfo;
         HANDLE const findHandle = FindFirstFileA( pathspec->value, &finfo );
         if ( findHandle == INVALID_HANDLE_VALUE )
         {
@@ -112,7 +112,7 @@ int file_collect_dir_content_( file_info_t * const d )
             OBJECT * pathname_obj;
 
             f.f_base.ptr = finfo.cFileName;
-            f.f_base.len = strlen( finfo.cFileName );
+            f.f_base.len = int32_t(strlen( finfo.cFileName ));
 
             string_truncate( pathname, 0 );
             path_build( &f, pathname );
@@ -142,7 +142,7 @@ int file_collect_dir_content_( file_info_t * const d )
                 }
             }
         }
-        while ( FindNextFile( findHandle, &finfo ) );
+        while ( FindNextFileA( findHandle, &finfo ) );
 
         FindClose( findHandle );
     }
@@ -276,7 +276,7 @@ void file_query_( file_info_t * const info )
 
     if ( ( dir = strrchr( pathstr, '\\' ) ) )
     {
-        parent = object_new_range( pathstr, dir - pathstr );
+        parent = object_new_range( pathstr, int32_t(dir - pathstr) );
     }
     else
     {
@@ -372,7 +372,6 @@ void file_archscan( char const * arch, scanback func, void * closure )
         for ( ; iter != end ; iter = filelist_next( iter ) )
         {
             file_info_t * member_file = filelist_item( iter );
-            LIST * symbols = member_file->files;
 
             /* Construct member path: 'archive-path(member-name)'
              */
@@ -481,13 +480,13 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
         /* strip leading directory names, an NT specialty */
         {
             char * c;
-            if ( c = strrchr( name, '/' ) )
+            if ( (c = strrchr( name, '/' )) != nullptr )
                 name = c + 1;
-            if ( c = strrchr( name, '\\' ) )
+            if ( (c = strrchr( name, '\\' )) != nullptr )
                 name = c + 1;
         }
 
-        sprintf( buf, "%.*s", endname - name, name );
+        sprintf( buf, "%.*s", int(endname - name), name );
 
         if ( strcmp( buf, "") != 0 )
         {

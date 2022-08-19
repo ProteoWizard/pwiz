@@ -247,37 +247,28 @@
     <value>5</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
-    <value>AB Sciex
-WIFFファイルリーダーライブラリ
-Copyright © 2010 by AB Sciex LLC.
-著作権所有。
-http://www.absciex.com/
-
-Agilent Technologies
+    <value>Agilent Technologies
 Mass Hunterデータアクセスコンポーネント
-http://www.agilent.com
+Copyright © 2017 by Agilent Technologies
+https://www.agilent.com
 
 BiblioSpec
 スペクトルライブラリ構築
-http://proteome.gs.washington.edu/software/bibliospec
+https://skyline.ms/build-blib.url
 
 Bruker
 CompassXtractデータリーダーライブラリ
-Copyright © 2011 by Bruker Daltonik GmbH.
+Copyright © 2020 by Bruker Daltonik GmbH.
 著作権所有。
-http://www.bruker.com/
-
-Crawdad
-ピーク検出
-http://proteome.gs.washington.edu/software/crawdad
+https://www.bruker.com/
 
 DigitalRune Software
 ウィンドウズのドッキング
-http://www.digitalrune.com
+https://github.com/DigitalRune
 
 DotNetZipライブラリ
 ZIP圧縮および展開
-http://www.codeplex.com/DotNetZip
+https://www.nuget.org/packages/DotNetZip/
 
 James Newton-King
 Json.NET
@@ -285,54 +276,60 @@ http://james.newtonking.com
 
 JetBrains Software
 開発ツール： ReSharper、dotTrace、dotCover
-http://www.jetbrains.com/index.html
+https://www.jetbrains.com/
 
 Matrix Science
 Mascotパーサー
-http://www.matrixscience.com
+https://www.matrixscience.com
 
 NHibernate
 オブジェクト関係写像
-http://www.nhibernate.org
+https://nhibernate.info/
 
 ProteoWizard
 質量分析データのインポート
 https://github.com/ProteoWizard
 
+SCIEX
+WIFFファイルリーダーライブラリ
+Copyright © 2020 by AB Sciex LLC.
+著作権所有。
+https://sciex.com/
+
 島津製作所
 島津製作所のファイルコンバータソフトウェア
-Copyright © 2014 by Shimadzu Coporation
+Copyright © 2020 by Shimadzu Coporation
 著作権所有。
-http://www.shimadzu.com
+https://www.shimadzu.com
 
 SQLite
 単一ファイルおよびメモリ内RDBMS
-http://www.sqlite.org
+https://www.sqlite.org
 
 SQLite.NET
 SQLiteのADO.NETプロバイダ
-http://sqlite.phxsoftware.com
+https://system.data.sqlite.org/
 
 Thermo Fisher Scientific
 MSFileReaderファイル読み出しツール
-Copyright © 2009 by Thermo Fisher Scientific, Inc.
+Copyright © 2019 by Thermo Fisher Scientific, Inc.
 著作権所有。
-http://www.thermo.com
+https://www.thermofisher.com/
 
 Waters Technologies Corporation
 メソッドエクスポートライブラリ
 ウォーターズローデータアクセスコンポーネント
-Copyright © 2010 by Waters Corporation.
+Copyright © 2021 by Waters Corporation.
 著作権所有。
-http://www.waters.com
+https://www.waters.com/
 
 ZedGraph
 チャートのプロット
-http://zedgraph.org
+https://sourceforge.net/projects/zedgraph/
 
 Zlib
 データ圧縮
-http://www.zlib.net</value>
+https://www.zlib.net</value>
   </data>
   <data name="&gt;&gt;textBox1.Name" xml:space="preserve">
     <value>textBox1</value>
@@ -467,7 +464,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2020 University of Washington, 無断複写・転載を禁じます。
+    <value>Copyright © 2008-2021 University of Washington, 無断複写・転載を禁じます。
 
 MacCoss Lab, Department of Genome Sciences, UW
 

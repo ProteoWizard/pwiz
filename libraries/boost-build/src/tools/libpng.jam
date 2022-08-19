@@ -2,8 +2,8 @@
 # Copyright (c) 2013 Steven Watanabe
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Supports the libpng library
 #
@@ -16,7 +16,7 @@ import ac ;
 import errors ;
 import feature ;
 import "class" : new ;
-import targets ; 
+import targets ;
 import path ;
 import modules ;
 import indirect ;
@@ -24,7 +24,11 @@ import property ;
 import property-set ;
 
 header = png.h ;
-names = png ;
+
+# On Windows, binary distributions of libpng and package managers
+# name the library differently (e.g. vcpkg installs libpng16.lib).
+# Listing popular names increases chances of successful look-up.
+names = libpng libpng16 png png16 ;
 
 sources =   png.c pngerror.c pngget.c pngmem.c pngpread.c pngread.c pngrio.c pngrtran.c pngrutil.c
             pngset.c pngtrans.c pngwio.c pngwrite.c pngwtran.c pngwutil.c ;

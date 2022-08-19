@@ -81,6 +81,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void DrawBar(int progress)
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _left)) == null)
                 GraphPane.GraphObjList.Add(_left);
             if (GraphPane.GraphObjList.FirstOrDefault((obj) => ReferenceEquals(obj, _right)) == null)

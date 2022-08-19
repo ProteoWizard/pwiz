@@ -39,6 +39,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -654,7 +655,9 @@ namespace pwiz.SkylineTestData
                                  "--exp-file=" + agilentOut,
                                  "--exp-dwell-time=20",
                                  "--exp-strategy=buckets",
-                                 "--exp-max-trans=75"};
+                                 "--exp-max-trans=75",
+                                 "--import-warn-on-failure"
+                };
                 output = RunCommand(cmd);
 
                 //check for success
@@ -680,10 +683,7 @@ namespace pwiz.SkylineTestData
 
             if (!success)
             {
-// ReSharper disable LocalizableElement
-                Console.WriteLine("Failed to write Agilent method: {0}", output);   // Not L10N
-// ReSharper restore LocalizableElement
-                Assert.IsTrue(success);
+                Assert.Fail("Failed to write Agilent method: {0}", output);
             }
 
             // Test order by m/z
@@ -691,7 +691,9 @@ namespace pwiz.SkylineTestData
             var cmd2 = new[] {"--in=" + docPath2,
                 "--exp-translist-instrument=Thermo",
                 "--exp-order-by-mz",
-                "--exp-file=" + mzOrderOut};
+                "--exp-file=" + mzOrderOut,
+                "--import-warn-on-failure"
+            };
             output = RunCommand(cmd2);
 
             //check for success
@@ -849,16 +851,16 @@ namespace pwiz.SkylineTestData
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
-
             //Error: file does not exist
-            string output = RunCommand("--in=" + bogusPath);
+            var output = RunCommand("--in=" + bogusPath);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
-            //Error: no raw file
+            //Error: raw file does not exist
+            var pathNotExists = rawPath + "x";
             output = RunCommand("--in=" + docPath,
-                                "--import-file=" + rawPath + "x",
+                                "--import-file=" + pathNotExists,
                                 "--import-replicate-name=Single");
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,rawPath+"x")));
+            Assert.IsTrue(output.Contains(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, pathNotExists)));
 
             //Error: no reportfile
             output = RunCommand("--in=" + docPath,
@@ -1206,7 +1208,7 @@ namespace pwiz.SkylineTestData
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
+                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, rawPath));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -1217,7 +1219,7 @@ namespace pwiz.SkylineTestData
                                  "--import-warn-on-failure",
                                  "--save");
 
-                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
+                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
@@ -1599,22 +1601,28 @@ namespace pwiz.SkylineTestData
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-filename-pattern"), msg);
 
+            // Regex 1 - given raw file does not match the pattern
+            // Call RunCommand instead of just testing the ApplyFileAndSampleNameRegex method so that we test 
+            // that the error reporting and returned exit status are in sync.
+            var pattern = "QC.*";
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-filename-pattern=" + pattern,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
+                    rawPath.GetFileName(), pattern, rawPath), msg);
+            CheckRunCommandOutputContains(
+                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___, pattern), msg);
+
+
+
             var log = new StringBuilder();
             var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
 
             IList<KeyValuePair<string, MsDataFileUri[]>> dataSourceList = DataSourceUtil.GetDataSources(testFilesDir.FullPath).ToArray();
             IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
-
-            // Regex 1 - nothing should match
-            var pattern = "QC.*";
-            commandLine.ApplyFileAndSampleNameRegex(new Regex(pattern), null, ref listNamedPaths);
-            Assert.AreEqual(0, listNamedPaths.Count);
-            CheckRunCommandOutputContains(
-                string.Format(
-                    Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    rawPath.GetFileName(), pattern, rawPath), log.ToString());
-            CheckRunCommandOutputContains(
-                   string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), log.ToString());
 
             // Regex 2
             log.Clear();
@@ -1670,7 +1678,7 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_,
                     rawPath), log.ToString());
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
         }
 
         [TestMethod]
@@ -1699,6 +1707,20 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-samplename-pattern"), msg);
+
+            // Test: No match found for given sample name regex.  This will also test that the error reporting and 
+            // returned exit status are in sync.
+            var pattern = "QC.*";
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-samplename-pattern=" + pattern,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources
+                        .CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___,
+                    pattern), msg);
+
 
             var log = new StringBuilder();
             var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
@@ -1988,8 +2010,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(
                 msg.Contains(string.Format(
-                    Resources
-                        .CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
+                    Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
                     replicateName)), msg);
 
             // ------------------------------------------------------------------------------------
@@ -2007,6 +2028,8 @@ namespace pwiz.SkylineTestData
                     Resources
                         .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
                     replicateName, mzml1.FilePath)), msg);
+            Assert.IsTrue(
+                msg.Contains(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_), msg);
 
 
             if (useRaw)
@@ -2967,6 +2990,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2979,6 +3003,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2991,6 +3016,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         Resources
                             .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3000,7 +3026,8 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.PanoramaHelper_ValidateServer_, "GetServerState threw an exception")));
+                        string.Format(Resources.PanoramaHelper_ValidateServer_Exception_, "GetServerState threw an exception")));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
             
@@ -3015,6 +3042,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
                             folder, client.ServerUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3028,6 +3056,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
                             "user", folder)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3039,8 +3068,67 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
+            TestOutputHasErrorLine(buffer.ToString());
 
+        }
 
+        [TestMethod]
+        public void SkylineRunnerErrorDetectionTest()
+        {
+            TestSkylineRunnerErrorDetection(null);
+            TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+        }
+
+        private void TestSkylineRunnerErrorDetection(CultureInfo ci)
+        {
+            TestDetectError(false, false, ci); // no timestamp or memstamp
+            TestDetectError(true, false, ci);  // only timestamp
+            TestDetectError(false, true, ci);  // only memstamp
+            TestDetectError(true, true, ci);   // both timestamp and memstamp
+        }
+
+        /// <summary>
+        /// Tests that "IsErrorLine" works when the commandline is invoked in a particular culture.
+        /// Note that this code uses LocalizationHelper.CallWithCulture instead of the "--culture" commandline
+        /// argument because the latter does not set the culture back to its original value.
+        /// </summary>
+        private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
+        {
+            Func<string> testFunc = () =>
+            {
+                // --timestamp, --memstamp and arguments have to be before the --in argument
+                var command =
+                    $"{(timestamp ? "--timestamp" : "")} " +
+                    $"{(memstamp ? "--memstamp" : "")} " +
+                    "--in";
+                var argsArray = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                return RunCommand(argsArray);
+            };
+            string output = cultureInfo == null
+                ? testFunc()
+                : LocalizationHelper.CallWithCulture(cultureInfo, testFunc);
+            var errorLine = TestOutputHasErrorLine(output);
+
+            // The error should be about the missing value for the --in argument
+            var resourceErrString = cultureInfo == null
+                ? Resources.ValueMissingException_ValueMissingException_ // Resource string for the culture that the test is running under
+                : Resources.ResourceManager.GetString(@"ValueMissingException_ValueMissingException_", cultureInfo);
+
+            Assert.IsNotNull(resourceErrString, "Expected to find a resources string for culture '{0}'.",
+                (cultureInfo ?? CultureInfo.CurrentUICulture).Name);
+            Assert.IsTrue(errorLine.Contains(string.Format(resourceErrString, "--in")));
+        }
+
+        private string TestOutputHasErrorLine(string output)
+        {
+            var outputLines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            // The IsErrorLine method from ErrorChecker.cs in the SkylineRunner project should detect an error
+            var errorLine = outputLines.FirstOrDefault(ErrorChecker.IsErrorLine);
+            Assert.IsFalse(string.IsNullOrEmpty(errorLine),
+                string.Format("Expected to find an error line in output: {0}", output));
+            return errorLine;
         }
 
         private static string GetTitleHelper()

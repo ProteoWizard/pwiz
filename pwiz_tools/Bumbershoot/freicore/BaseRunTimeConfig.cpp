@@ -62,7 +62,7 @@ namespace freicore
             istringstream cfgStream(cfgStr);
 
             string line;
-            while (getline(cfgStream, line))
+            while (getlinePortable(cfgStream, line))
             {
                 ++lineNum;
                 bal::trim(line); // trim whitespace

@@ -41,9 +41,9 @@ static int intr;
  */
 
 void argv_from_shell( char const * * argv, LIST * shell, char const * command,
-    int const slot )
+    int32_t const slot )
 {
-    static char jobno[ 4 ];
+    static char jobno[ 12 ];
 
     int i;
     int gotpercent = 0;
@@ -74,12 +74,12 @@ void argv_from_shell( char const * * argv, LIST * shell, char const * command,
 /* Returns whether the given command string contains lines longer than the given
  * maximum.
  */
-int check_cmd_for_too_long_lines( char const * command, int const max,
-    int * const error_length, int * const error_max_length )
+int check_cmd_for_too_long_lines( char const * command, int32_t max,
+    int32_t * const error_length, int32_t * const error_max_length )
 {
     while ( *command )
     {
-        size_t const l = strcspn( command, "\n" );
+        int32_t const l = int32_t(strcspn( command, "\n" ));
         if ( l > max )
         {
             *error_length = l;

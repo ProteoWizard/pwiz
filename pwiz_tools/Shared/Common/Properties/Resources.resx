@@ -274,14 +274,6 @@
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
     <value>Are you sure you want to delete these {0} reports?</value>
   </data>
-  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
-    <value>(Filtered from {0})</value>
-  </data>
-  <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
-    <value>{0} of {1}</value>
-    <comment>Example : 1 of 10
-</comment>
-  </data>
   <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
     <value>Has Any Value</value>
   </data>
@@ -549,5 +541,8 @@
   </data>
   <data name="ZScore_ZScore_Z_Score" xml:space="preserve">
     <value>Z-Score</value>
+  </data>
+  <data name="DropImageNoBackground" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DropImageNoBackground.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

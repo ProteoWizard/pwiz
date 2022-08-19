@@ -1,14 +1,15 @@
 # Copyright (c) 2010 Vladimir Prus.
 # Copyright (c) 2013 Steven Watanabe
+# Copyright (c) 2021 Rene Ferdinand Rivera Morell
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import property-set ;
 import path ;
 import modules ;
-import "class" ; 
+import "class" ;
 import errors ;
 import configure ;
 import feature ;
@@ -144,15 +145,15 @@ class ac-library : basic-target
     rule __init__ ( name : project : requirements * : include-path ? : library-path ? : library-name ? )
     {
         basic-target.__init__ $(name) : $(project) : : $(requirements) ;
-        
-        reconfigure $(include-path) : $(library-path) : $(library-name) ; 
+
+        reconfigure $(include-path) : $(library-path) : $(library-name) ;
     }
-    
+
     rule set-header ( header )
     {
-        self.header = $(header) ; 
+        self.header = $(header) ;
     }
-        
+
     rule set-default-names ( names + )
     {
         self.default-names = $(names) ;
@@ -188,7 +189,7 @@ class ac-library : basic-target
             errors.user-error [ name ] "is already configured" ;
         }
     }
-    
+
     rule construct ( name : sources * : property-set )
     {
         if $(self.target)
@@ -227,6 +228,7 @@ class ac-library : basic-target
 
             local relevant = [ property.select [ configure.get-relevant-features ] <link> :
                 [ $(property-set).raw ] ] ;
+            local min = [ property.as-path [ SORT [ feature.minimize $(relevant) ] ] ] ;
 
             local key = ac-library-$(name)-$(relevant:J=-) ;
             local lookup = [ config-cache.get $(key) ] ;
@@ -235,7 +237,7 @@ class ac-library : basic-target
             {
                 if $(lookup) = missing
                 {
-                    configure.log-library-search-result $(name) : "no  (cached)" ;
+                    configure.log-library-search-result $(name) : "no  (cached)" $(min) ;
                     return [ property-set.empty ] ;
                 }
                 else
@@ -247,7 +249,7 @@ class ac-library : basic-target
                     }
                     local library = [ ac.construct-library $(lookup[2]) :
                         [ $(property-set).refine [ property-set.create $(lookup[3]) ] ] : $(library-path) ] ;
-                    configure.log-library-search-result $(name) : "yes (cached)" ;
+                    configure.log-library-search-result $(name) : "yes (cached)" $(min) ;
                     return [ $(library[1]).add-raw <include>$(includes) ] $(library[2-]) ;
                 }
             }
@@ -264,17 +266,17 @@ class ac-library : basic-target
                     }
                     library = [ ac.construct-library $(library[1]) :
                         [ $(property-set).refine [ property-set.create $(library[2]) ] ]  : $(library-path) ] ;
-                    configure.log-library-search-result $(name) : "yes" ;
+                    configure.log-library-search-result $(name) : "yes" $(min) ;
                     return [ $(library[1]).add-raw <include>$(includes) ] $(library[2-]) ;
                 }
                 else
                 {
                     config-cache.set $(key) : missing ;
-                    configure.log-library-search-result $(name) : "no" ;
+                    configure.log-library-search-result $(name) : "no" $(min) ;
                     return [ property-set.empty ] ;
                 }
             }
-        }       
+        }
     }
 }
 

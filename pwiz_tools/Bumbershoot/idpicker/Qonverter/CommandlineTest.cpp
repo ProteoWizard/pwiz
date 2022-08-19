@@ -602,10 +602,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(expectedProteinHeader, line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
         
@@ -617,10 +617,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-empty-TMT2plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(expectedProteinHeader, line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
 
@@ -637,10 +637,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             //unit_assert_operator_equal(expectedProteinHeader + "\tTMT", line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t') + 24, std::count(line.begin(), line.end(), '\t'));
         }
     }
@@ -679,10 +679,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-no-quantitation-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(expectedProteinHeader, line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
 
@@ -694,10 +694,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-empty-TMT2plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             //unit_assert_operator_equal(expectedProteinHeader + "\tTMT", line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
 
@@ -714,10 +714,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-quantified-iTRAQ8plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             //unit_assert_operator_equal(expectedProteinHeader + "\tTMT", line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedProteinHeader.begin(), expectedProteinHeader.end(), '\t') + 24, std::count(line.begin(), line.end(), '\t'));
         }
     }
@@ -744,10 +744,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(expectedPeptideHeader, line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedPeptideHeader.begin(), expectedPeptideHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
 
@@ -778,10 +778,10 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile((testDataPath / ("merged-empty-iTRAQ8plex-" + groupColumn + ".tsv")).string().c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(expectedModificationHeader, line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedModificationHeader.begin(), expectedModificationHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
 
@@ -853,12 +853,12 @@ void testIdpQuery(const string& idpQonvertPath, const string& idpAssemblePath, c
         {
             ifstream outputFile(quantifiedOutputFilepath.c_str());
             string line;
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             // /201203 Empty,201203-TMT2,201203-TMT3,Empty,201203-TMT5,Reference,201203-TMT7,201203-TMT8,201203-TMT9,201203-TMT10
             // /201208 201208-TMT1,201208-TMT2,201208-TMT3,Empty,201208-TMT5,Reference,201208-TMT7,201208-TMT8,201208-TMT9,Empty
             unit_assert_operator_equal(expectedIsobaricSampleMappingHeader, line);
             // TODO: figure out how to test the output of the second line
-            getline(outputFile, line);
+            getlinePortable(outputFile, line);
             unit_assert_operator_equal(std::count(expectedIsobaricSampleMappingHeader.begin(), expectedIsobaricSampleMappingHeader.end(), '\t'), std::count(line.begin(), line.end(), '\t'));
         }
     }

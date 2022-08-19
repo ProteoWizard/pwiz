@@ -1,23 +1,41 @@
 # Copyright 2017 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
-
-# TODO: Documentation.
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import feature ;
 
+#| tag::doc[]
+
+[[bbv2.builtin.features.warnings]]`warnings`::
+*Allowed values:* `on`, `all`, `extra`, `pedantic`, `off`.
++
+Controls the warning level of compilers.
++
+`on`::: enable default/"reasonable" warning level.
+`all`::: enable most warnings.
+`extra`::: enable extra, possibly conflicting, warnings.
+`pedantic`::: enable likely inconsequential, and conflicting, warnings.
+`off`::: disable all warnings.
++
+Default value is `all`.
+
+|# # end::doc[]
+
 feature.feature warnings
-    :
-    on          # Enable default/"reasonable" warning level for the tool.
-    all         # Enable all possible warnings issued by the tool.
-    extra       # Enable extra, possibly conflicting, warnings issued by the tool.
-    pedantic    # Enable likely inconsequential, and conflicting, warnings.
-    off         # Disable all warnings issued by the tool.
+    : on all extra pedantic off
     : incidental propagated ;
 
+#| tag::doc[]
+
+[[bbv2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
+*Allowed values:* `off`, `on`.
++
+Makes it possible to treat warnings as errors and abort compilation on a
+warning.
+
+|# # end::doc[]
+
 feature.feature warnings-as-errors
-    :
-    off        # Do not fail the compilation if there are warnings.
-    on         # Fail the compilation if there are warnings.
+    : off on
     : incidental propagated ;

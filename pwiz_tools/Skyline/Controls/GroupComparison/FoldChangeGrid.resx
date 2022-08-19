@@ -164,7 +164,7 @@
     <value>databoundGridControl</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.GroupComparison.FoldChangeForm, Skyline-daily, Version=20.2.1.377, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.GroupComparison.FoldChangeForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="toolStrip.Text" xml:space="preserve">
     <value>toolStrip</value>
@@ -189,7 +189,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.2.1.377, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="toolButtonShowGraph.Text" xml:space="preserve">
     <value>Bar Graph</value>
@@ -214,7 +214,7 @@
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;databoundGridControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline-daily, Version=20.2.1.377, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolButtonShowGraph.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

@@ -32,13 +32,13 @@ namespace pwiz.Skyline.Model.Results
         public RatioValue(double ratio)
         {
             Ratio = (float) ratio;
-            StdDev = float.NaN;
             DotProduct = 1;
+            HasDotProduct = false;
         }
 
         public float Ratio { get; private set; }
-        public float StdDev { get; private set; }
         public float DotProduct { get; private set; }
+        public bool HasDotProduct { get; private set; }
 
         public static RatioValue Calculate(IList<double> numerators, IList<double> denominators)
         {
@@ -56,7 +56,6 @@ namespace pwiz.Skyline.Model.Results
             }
             var statsNumerators = new Statistics(numerators);
             var statsDenominators = new Statistics(denominators);
-            var ratios = new Statistics(numerators.Select((value, index) => value/denominators[index]));
             
             // The mean ratio is the average of "ratios" weighted by "statsDenominators".
             // It's also equal to the sum of the numerators divided by the sum of the denominators.
@@ -69,8 +68,8 @@ namespace pwiz.Skyline.Model.Results
             return new RatioValue
             {
                 Ratio = meanRatioFloat,
-                StdDev = (float) ratios.StdDev(statsDenominators),
-                DotProduct = (float) statsNumerators.Angle(statsDenominators),
+                DotProduct = (float) statsNumerators.NormalizedContrastAngleSqrt(statsDenominators),
+                HasDotProduct = true
             };
         }
 
@@ -81,9 +80,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            // ReSharper disable LocalizableElement
-            return Ratio + (double.IsNaN(StdDev) ? "" : (" rdotp " + DotProduct));
-            // ReSharper restore LocalizableElement
+            return Ratio + (HasDotProduct ? @" rdotp " + DotProduct : "");
         }
 
         public int CompareTo(object obj)
@@ -108,7 +105,7 @@ namespace pwiz.Skyline.Model.Results
         #region Equality Members
         protected bool Equals(RatioValue other)
         {
-            return Ratio.Equals(other.Ratio) && StdDev.Equals(other.StdDev) && DotProduct.Equals(other.DotProduct);
+            return Ratio.Equals(other.Ratio) && HasDotProduct.Equals(other.HasDotProduct) && DotProduct.Equals(other.DotProduct);
         }
 
         public override bool Equals(object obj)
@@ -124,7 +121,7 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = Ratio.GetHashCode();
-                hashCode = (hashCode * 397) ^ StdDev.GetHashCode();
+                hashCode = (hashCode * 397) ^ HasDotProduct.GetHashCode();
                 hashCode = (hashCode * 397) ^ DotProduct.GetHashCode();
                 return hashCode;
             }

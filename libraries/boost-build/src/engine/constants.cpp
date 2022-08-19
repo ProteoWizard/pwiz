@@ -1,5 +1,6 @@
 /*
  * Copyright 2011 Steven Watanabe
+ * Copyright 2020 René Ferdinand Rivera Morell
  *
  * This file is part of Jam - see jam.c for Copyright information.
  */
@@ -74,6 +75,8 @@ void constants_init( void )
     constant_MAIN_PYTHON              = object_new( "MAIN_PYTHON" );
     constant_BUILTIN_GLOB_ARCHIVE_BACK= object_new( "BUILTIN_GLOB_ARCHIVE_BACK" );
     constant_FILE_ARCHIVESCAN         = object_new( "FILE_ARCHIVESCAN" );
+
+    constant_RESPONSE_FILE_SUB = object_new( "RESPONSE_FILE_SUB" );
 }
 
 void constants_done( void )
@@ -133,6 +136,8 @@ void constants_done( void )
     object_free( constant_MAIN_PYTHON );
     object_free( constant_FILE_ARCHIVESCAN );
     object_free( constant_BUILTIN_GLOB_ARCHIVE_BACK );
+
+    object_free( constant_RESPONSE_FILE_SUB );
 }
 
 OBJECT * constant_empty;
@@ -190,3 +195,5 @@ OBJECT * constant_extra_pythonpath;
 OBJECT * constant_MAIN_PYTHON;
 OBJECT * constant_FILE_ARCHIVESCAN;
 OBJECT * constant_BUILTIN_GLOB_ARCHIVE_BACK;
+
+OBJECT * constant_RESPONSE_FILE_SUB;

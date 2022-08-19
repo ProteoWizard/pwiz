@@ -115,9 +115,9 @@ namespace SharedBatch
             string skylinePath;
             if (hasSkylineExe)
             {
-                skylinePath = Path.Combine(TextUtil.GetDirectory(skylineSettings.CmdPath), SkylineExe);
+                skylinePath = Path.Combine(FileUtil.GetDirectory(skylineSettings.CmdPath), SkylineExe);
                 if (!File.Exists(skylinePath))
-                    skylinePath = Path.Combine(TextUtil.GetDirectory(skylineSettings.CmdPath), SkylineDailyExe);
+                    skylinePath = Path.Combine(FileUtil.GetDirectory(skylineSettings.CmdPath), SkylineDailyExe);
             }
             else if (skylineSettings.Type == SkylineType.Skyline)
             {

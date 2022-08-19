@@ -40,7 +40,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private bool IsRecordMode { get { return false; } }
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPrmPasefImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
@@ -79,7 +78,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 if (results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out var chromGroupInfo))
+                    tolerance, out var chromGroupInfo))
                 {
                     foreach (var chromGroup in chromGroupInfo)
                     {

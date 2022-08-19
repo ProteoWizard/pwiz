@@ -307,9 +307,8 @@ namespace pwiz.SkylineTest
 
         public void DoDocumentExportImportTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -456,7 +455,8 @@ namespace pwiz.SkylineTest
                 try
                 {
                     var inputs = new MassListInputs(actualList, CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-                    docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
+                    var importer = docImport.PreImportMassList(inputs, null, false);
+                    docImport = docImport.ImportMassList(inputs, importer, IdentityPath.ROOT, out pathAdded);
                 }
                 catch
                 {
@@ -1398,6 +1398,13 @@ namespace pwiz.SkylineTest
             // blank and empty peptide list
             "<srm_settings><selected_proteins>\n" +
             "  <peptide_list/>\n" +
+            "</selected_proteins></srm_settings>",
+            // Protein group name and 2 proteins
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein_group name=\"test1/test2\">\n" +
+            "    <protein name=\"test1\" description=\"desc1\" accession=\"test1\" preferred_name=\"test1\" websearch_status=\"X#test1\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
+            "    <protein name=\"test2\" description=\"desc2\" accession=\"test2\" preferred_name=\"test2\" websearch_status=\"X#test2\"><sequence>ABCDEFG HIJKLMNP QRSTUV</sequence></protein>\n" +
+            "  </protein_group>\n" +
             "</selected_proteins></srm_settings>",
         };
 

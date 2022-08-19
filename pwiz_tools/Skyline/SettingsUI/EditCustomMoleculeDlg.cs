@@ -94,7 +94,6 @@ namespace pwiz.Skyline.SettingsUI
                                        usageMode == UsageMode.fragment;
             var enableAdductEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor ||
                                       usageMode == UsageMode.fragment;
-            var suggestOnlyAdductsWithMass = usageMode != UsageMode.fragment;
             var needExplicitTransitionValues = usageMode == UsageMode.fragment;
             var needExplicitTransitionGroupValues = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor;
 
@@ -245,8 +244,7 @@ namespace pwiz.Skyline.SettingsUI
                     labelAverage,
                     labelMono,
                     defaultCharge,
-                    editMode,
-                    suggestOnlyAdductsWithMass)
+                    editMode)
                 {
                     NeutralFormula = defaultFormula,
                     AverageMass = averageMass,

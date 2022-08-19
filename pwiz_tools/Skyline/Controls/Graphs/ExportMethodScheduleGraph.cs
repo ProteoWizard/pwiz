@@ -24,6 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -72,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
             masterPane.PaneList.Clear();
             masterPane.Border.IsVisible = false;
 
-            _pane = new RTScheduleGraphPane(null, true);
+            _pane = new RTScheduleGraphPane(null, graphControl, true);
             _pane.BrukerMetrics = brukerMetrics;
 
             // Save existing settings
@@ -164,6 +165,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControl.Visible = false;
                 dataGridView.Visible = true;
             }
+        }
+
+        public ZedGraphControl GraphControl
+        {
+            get { return graphControl; }
         }
     }
 }

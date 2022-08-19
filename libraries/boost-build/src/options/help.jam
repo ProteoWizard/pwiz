@@ -1,8 +1,8 @@
-# Copyright 2003 Dave Abrahams 
-# Copyright 2003, 2006 Rene Rivera 
-# Copyright 2003, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2003, 2006 Rene Rivera
+# Copyright 2003, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This module is the plug-in handler for the --help and --help-.*
 # command-line options
@@ -48,7 +48,7 @@ rule process (
     {
         case --help-internal :
         local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-        path-to-modules ?= . ;
+        path-to-modules += . ;
         local possible-modules = [ GLOB $(path-to-modules) : *\\.jam ] ;
         local not-modules = [ GLOB $(path-to-modules) : *$(.not-modules)\\.jam ] ;
         local modules-to-list =
@@ -93,7 +93,7 @@ rule process (
         local option-files = [ GLOB $(plugin-dir:D=$(BOOST_BUILD_PATH)) : *.jam ] ;
         if $(option-files)
         {
-            for local file in $(option-files) 
+            for local file in $(option-files)
             {
                 do-scan $(file) : print-help-options ;
             }
@@ -127,7 +127,7 @@ rule process (
         {
             version.print ;
             ECHO ;
-            # First print documentation from the current Jamfile, if any.            
+            # First print documentation from the current Jamfile, if any.
             # FIXME: Generally, this duplication of project.jam logic is bad.
             local names = [ modules.peek project : JAMROOT ]
               [ modules.peek project : JAMFILE ] ;
@@ -136,12 +136,12 @@ rule process (
             {
                 project-file = [ path.glob-in-parents . : $(names) ] ;
             }
-            
+
             for local p in $(project-file)
             {
                 do-scan $(p) : print-help-project $(p) ;
             }
-            
+
             # Next any user-config help.
             local user-path = [ os.home-directories ] [ os.environ BOOST_BUILD_PATH ] ;
             local user-config = [ GLOB $(user-path) : user-config.jam ] ;
@@ -149,7 +149,7 @@ rule process (
             {
                 do-scan $(user-config[1]) : print-help-config user $(user-config[1]) ;
             }
-            
+
             # Next any site-config help.
             local site-config = [ GLOB $(user-path) : site-config.jam ] ;
             if $(site-config)
@@ -177,7 +177,7 @@ local rule split-symbol (
     )
 {
     local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-    path-to-modules ?= . ;
+    path-to-modules += . ;
     local module-name = $(symbol) ;
     local symbol-name = ;
     local result = ;

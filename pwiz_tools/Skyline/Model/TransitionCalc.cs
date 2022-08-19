@@ -315,6 +315,8 @@ namespace pwiz.Skyline.Model
                         case IonType.b:
                             return 0;
                         case IonType.z:
+                        case IonType.zh:
+                        case IonType.zhh:
                         case IonType.c:
                             return 1;
                         case IonType.x:

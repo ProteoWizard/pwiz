@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>Z:\labkey\static\software\SkylineBatch-test\</PublishUrl>
+    <PublishUrl>Z:\html\software\SkylineBatch-daily\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,13 +23,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-test/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/SkylineBatch-daily/</InstallUrl>
+    <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline Batch</ProductName>
-    <PublisherName>University of Washington</PublisherName>
+    <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>447</ApplicationRevision>
-    <ApplicationVersion>20.2.0.447</ApplicationVersion>
+    <ApplicationRevision>312</ApplicationRevision>
+    <ApplicationVersion>21.1.1.312</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -72,7 +73,7 @@
     <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>SkylineBatch_release.ico</ApplicationIcon>
+    <ApplicationIcon>SkylineBatch.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -86,7 +87,22 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
+    <None Include="Resources\downtriangle.png" />
+    <None Include="Resources\download.png" />
+    <None Include="Resources\downloadSelected.png" />
+    <Content Include="..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe">
+      <Link>LaunchBatch.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\Panorama.png" />
+    <None Include="Resources\PanoramaSelected.png" />
+    <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -96,9 +112,26 @@
     <None Include="Resources\OpenFolder.bmp" />
     <None Include="Resources\SkylineData.ico" />
     <None Include="Resources\SkylineDoc.ico" />
-    <Content Include="SkylineBatch_release.ico">
+    <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="DownloadingFileControl.resx">
+      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditRemoteFileSourcesForm.resx">
+      <DependentUpon>EditRemoteFileSourcesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteFileControl.resx">
+      <DependentUpon>RemoteFileControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RemoteFileForm.resx">
+      <DependentUpon>RemoteFileForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataServerForm.resx">
+      <DependentUpon>DataServerForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommandArgNames.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CommandArgNames.Designer.cs</LastGenOutput>
@@ -122,6 +155,9 @@
       <DependentUpon>CommandArgUsage.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="ConnectionErrorForm.resx">
+      <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="InvalidConfigSetupForm.resx">
       <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -129,25 +165,67 @@
       <DependentUpon>LogForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Resources\Comment.bmp" />
-    <Content Include="Resources\add.bmp" />
+    <None Include="Resources\add.bmp" />
     <None Include="Resources\Delete.bmp" />
-    <Content Include="Resources\downarrow.bmp" />
-    <Content Include="Resources\uparrow.bmp" />
+    <None Include="Resources\downarrow.bmp" />
+    <None Include="Resources\uparrow.bmp" />
+    <EmbeddedResource Include="RemoteSourceForm.resx">
+      <DependentUpon>RemoteSourceForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ReportsAddForm.resx">
       <DependentUpon>ReportsAddForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Content Include="FileAcquisitionTime.skyr">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="App.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DownloadingFileControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DownloadingFileControl.Designer.cs">
+      <DependentUpon>DownloadingFileControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditRemoteFileSourcesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditRemoteFileSourcesForm.Designer.cs">
+      <DependentUpon>EditRemoteFileSourcesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RemoteFileControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RemoteFileControl.Designer.cs">
+      <DependentUpon>RemoteFileControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RemoteFileForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RemoteFileForm.Designer.cs">
+      <DependentUpon>RemoteFileForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataServerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataServerForm.Designer.cs">
+      <DependentUpon>DataServerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ConnectionErrorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConnectionErrorForm.Designer.cs">
+      <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataServerInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="RDirectorySelector.cs" />
     <Compile Include="CommandArgNames.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -164,6 +242,21 @@
     <Compile Include="RefineInputLocalization.cs" />
     <Compile Include="RefineInputObject.cs" />
     <Compile Include="RefineSettings.cs" />
+    <Compile Include="PanoramaServerConnector.cs" />
+    <Compile Include="RemoteSourceForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RemoteSourceForm.Designer.cs">
+      <DependentUpon>RemoteSourceForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RScriptForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RScriptForm.Designer.cs">
+      <DependentUpon>RScriptForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ServerConnector.cs" />
+    <Compile Include="ServerFilesManager.cs" />
     <Compile Include="SkylineBatchConfigManager.cs" />
     <Compile Include="FileSettings.cs" />
     <Compile Include="InvalidConfigSetupForm.cs">
@@ -177,11 +270,6 @@
     </Compile>
     <Compile Include="RVersionControl.Designer.cs">
       <DependentUpon>RVersionControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ReportSettings.cs" />
     <Compile Include="ReportsAddForm.cs">
@@ -220,11 +308,18 @@
     <Compile Include="LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SkylineTemplate.cs" />
+    <Compile Include="Server.cs" />
+    <Compile Include="XMLTags.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FluentFTP">
+      <HintPath>..\..\..\..\Shared\Lib\FluentFTP.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\..\..\..\Shared\Lib\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
@@ -243,6 +338,7 @@
     <Reference Include="System.Management" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -250,6 +346,9 @@
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RScriptForm.resx">
+      <DependentUpon>RScriptForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="RVersionControl.resx">
       <DependentUpon>RVersionControl.cs</DependentUpon>
@@ -263,7 +362,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
@@ -301,10 +400,15 @@
       <Name>SharedBatch</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

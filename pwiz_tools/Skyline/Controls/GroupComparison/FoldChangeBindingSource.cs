@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -383,6 +384,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
             Replicate IReplicateValue.GetReplicate()
             {
                 return Replicate;
+            }
+
+            public override string ToString()
+            {
+                var parts = new List<string> {Replicate.ToString()};
+                if (Abundance.HasValue)
+                {
+                    parts.Add(Abundance.Value.ToString(Formats.CalibrationCurve));
+                }
+
+                return TextUtil.SpaceSeparate(parts);
             }
         }
     }

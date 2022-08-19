@@ -391,9 +391,8 @@ namespace pwiz.Skyline.Model
                     var peptideSchedule = new PeptideSchedule(nodePep, maxInstrumentTrans);
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.TransitionGroups.Where(PassesPolarityFilter))
                     {
-                        double timeWindow;
                         double retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
-                            SchedulingAlgorithm, singleWindow, out timeWindow) ?? 0;
+                            SchedulingAlgorithm, singleWindow, out var timeWindow) ?? 0;
                         var nodeTranGroupPrimary = PrimaryTransitionCount > 0
                                                    ? nodePep.GetPrimaryResultsGroup(nodeTranGroup)
                                                    : null;
@@ -574,13 +573,20 @@ namespace pwiz.Skyline.Model
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
             var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
+
+            // When exporting CoV optimization methods, only write top ranked transitions.
+            var onlyTopRankedTransitions =
+                PrimaryTransitionCount > 0 &&
+                ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
+                Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
+
             foreach (TransitionDocNode nodeTran in reorderedTransitions.Where(PassesPolarityFilter))
             {
                 if (OptimizeType == null)
                 {
                     fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran, 0, SortByMz);
                 }
-                else if (!SkipTransition(nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary, nodeTran))
+                else if (!onlyTopRankedTransitions || nodeGroup.TransitionCount == 1 || GetRank(nodeGroup, nodeGroupPrimary, nodeTran) <= PrimaryTransitionCount)
                 {
                     // -step through step
                     bool transitionWritten = false;
@@ -601,13 +607,6 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
-
-        protected virtual bool SkipTransition(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary, TransitionDocNode nodeTran)
-        {
-            return false;
-        }
-
 
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
         {
@@ -937,7 +936,7 @@ namespace pwiz.Skyline.Model
 
             private TransitionGroupDocNode _nodeGroupLast;
 
-            private readonly Dictionary<Identity, List<StoredTransition>> _storedTransitions;
+            private readonly SortedDictionary<double, List<StoredTransition>> _storedTransitions;
 
             public FileIterator(string fileName, bool single, bool isPrecursorLimited, Action<TextWriter> writeHeaders)
             {
@@ -945,7 +944,7 @@ namespace pwiz.Skyline.Model
                 _single = single;
                 _isPrecursorLimited = isPrecursorLimited;
                 _writeHeaders = writeHeaders;
-                _storedTransitions = new Dictionary<Identity, List<StoredTransition>>();
+                _storedTransitions = new SortedDictionary<double, List<StoredTransition>>();
                 if (fileName == null)
                 {
                     BaseName = MEMORY_KEY_ROOT;
@@ -998,7 +997,7 @@ namespace pwiz.Skyline.Model
 
             public void Commit()
             {
-                foreach (var storedList in _storedTransitions.Select(pair => pair.Value).OrderBy(stored => stored.First().TransitionGroup.PrecursorMz))
+                foreach (var storedList in _storedTransitions.Values)
                 {
                     var storedEnumerable = storedList.First().Exporter.IsolationList
                         ? storedList.AsEnumerable()
@@ -1106,11 +1105,11 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     // Store the transition to be sorted and written upon commit
-                    if (!_storedTransitions.ContainsKey(group.Id))
+                    if (!_storedTransitions.ContainsKey(group.PrecursorMz))
                     {
-                        _storedTransitions[group.Id] = new List<StoredTransition>();
+                        _storedTransitions[group.PrecursorMz] = new List<StoredTransition>();
                     }
-                    _storedTransitions[group.Id].Add(new StoredTransition(exporter, seq, peptide, group, groupPrimary, transition, step));
+                    _storedTransitions[group.PrecursorMz].Add(new StoredTransition(exporter, seq, peptide, group, groupPrimary, transition, step));
                 }
 
                 // If not full-scan, count transtions

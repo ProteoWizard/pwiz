@@ -3,24 +3,32 @@ Summary   : スペクトルライブラリ「Ms1FilterTutorial」が追加され
 All Info  :
 スペクトルライブラリ「Ms1FilterTutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索："100803_0001_MCF7_TiB_L.group.xml"が含まれています
-スペクトルライブラリを構築>ファイルを検索："100803_0005b_MCF7_TiTip3.group.xml"が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "100803_0001_MCF7_TiB_L.group.xml", Score type = "ProteinPilot confidence", Score threshold = "0.95" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ File = "100803_0005b_MCF7_TiTip3.group.xml", Score type = "ProteinPilot confidence", Score threshold = "0.95" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドはなしです
 スペクトルライブラリを構築>曖昧な一致を含めるは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
 スペクトルライブラリを構築>ワークフローは"MS1フィルタを用いたDDA"です
-スペクトルライブラリを構築>Input File Typeは"Search results (build library directly)"です
+スペクトルライブラリを構築>入力ファイルタイプは"検索結果 (ライブラリを直接構築)"です
 Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
-    "100803_0001_MCF7_TiB_L.group.xml",
-    "100803_0005b_MCF7_TiTip3.group.xml"
+    {
+        File = "100803_0001_MCF7_TiB_L.group.xml",
+        Score type = "ProteinPilot confidence",
+        Score threshold = "0.95"
+    },
+    {
+        File = "100803_0005b_MCF7_TiTip3.group.xml",
+        Score type = "ProteinPilot confidence",
+        Score threshold = "0.95"
+    }
 ],
 iRT標準ペプチド = なし,
 曖昧な一致を含める = 偽,
 ドキュメント内のペプチドをフィルタリング = 偽,
 ワークフロー = "MS1フィルタを用いたDDA",
-Input File Type = "Search results (build library directly)"
+入力ファイルタイプ = "検索結果 (ライブラリを直接構築)"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました
@@ -40,6 +48,15 @@ All Info  :
 ペプチド検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"デフォルト"です
 ペプチド検索のインポート>FASTAをインポート>最大未切断数は"2"です
 ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"12_proteins.062011.fasta"です
+ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
+ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
+ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Duplicated between proteins"です
+ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"1"です
+ペプチド検索のインポート>Associate Proteins>Proteins mappedは"11"です
+ペプチド検索のインポート>Associate Proteins>Peptides mappedは"50"です
+ペプチド検索のインポート>Associate Proteins>Protein targetsは"11"です
+ペプチド検索のインポート>Associate Proteins>Peptide targetsは"50"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -71,92 +88,104 @@ FASTAをインポート =
 {
     最大未切断数 = "2",
     FASTAファイル = "12_proteins.062011.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = 偽,
+    Find minimal protein list = 偽,
+    Remove subset proteins = 偽,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "11",
+    Peptides mapped = "50",
+    Protein targets = "11",
+    Peptide targets = "50"
 }
 
-Undo Redo : sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++のピーク境界が変更されました
-Summary   : sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++のピーク境界が変更されました
+Undo Redo : sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [569, 582]>777.3677++のピーク境界が変更されました
+Summary   : sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [569, 582]>777.3677++のピーク境界が変更されました
 All Info  :
-sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++のピーク境界が変更されました
-「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++の全ピークの開始時間が38.88から38.79に変更されました
-「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [568, 581]>777.3677++の全ピークの終了時間が39.21から39.39に変更されました
+sp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [569, 582]>777.3677++のピーク境界が変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [569, 582]>777.3677++の全ピークの開始時間が38.88から38.79に変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>R.ISMSEVDLNVAAPK.V [569, 582]>777.3677++の全ピークの終了時間が39.21から39.39に変更されました
 
-Undo Redo : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のピーク境界が変更されました
-Summary   : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のピーク境界が変更されました
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のピーク境界が変更されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のピーク境界が変更されました
 All Info  :
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のピーク境界が変更されました
-「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++の全ピークの開始時間が36.79から36.50に変更されました
-「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++の全ピークの終了時間が37.36から38.00に変更されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のピーク境界が変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++の全ピークの開始時間が36.79から36.50に変更されました
+「1_MCF7_TiB_L」にあるsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++の全ピークの終了時間が37.36から38.00に変更されました
 
-Undo Redo : 40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
-Summary   : 40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Undo Redo : 40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+40.5で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : 40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
-Summary   : 40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Undo Redo : 40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+40.8で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
-Summary   : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
 All Info  :
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー - 732.3099+++ (iランク2)が選択されました
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+1] - 732.6442+++ (iランク1)が選択されました
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+2] - 732.9785+++ (iランク3)が選択されました
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+3] - 733.3127+++ (iランク4)が選択されました
-sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+4] - 733.6468+++ (iランク5)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++に対する5のプロダクトイオンが選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のプロダクトイオンプリカーサー - 732.3099+++ (iランク2)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+1] - 732.6442+++ (iランク1)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+2] - 732.9785+++ (iランク3)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+3] - 733.3127+++ (iランク4)が選択されました
+sp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++のプロダクトイオンプリカーサー [M+4] - 733.6468+++ (iランク5)が選択されました
 
-Undo Redo : 37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
-Summary   : 37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Undo Redo : 37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+37.0で「1_MCF7_TiB_L」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : 37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
-Summary   : 37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Undo Redo : 37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+Summary   : 37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 All Info  :
-37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5744, 5764] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
+37.4で「5b_MCF7_TiTip3」にあるピークsp|Q09666|AHNK_HUMAN>K.SSKASLGSLEGEAEAEASSPK.G [5745, 5765] （ミス1）>732.3099+++>プリカーサー - 732.3099+++ (iランク2)が選択されました 
 
-Undo Redo : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
-Summary   : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
 All Info  :
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー - 693.2957+++ (iランク1)が選択されました
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+1] - 693.6300+++ (iランク2)が選択されました
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+2] - 693.9643+++ (iランク3)が選択されました
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+3] - 694.2985+++ (iランク4)が選択されました
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+4] - 694.6326+++ (iランク5)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++に対する5のプロダクトイオンが選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のプロダクトイオンプリカーサー - 693.2957+++ (iランク1)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+1] - 693.6300+++ (iランク2)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+2] - 693.9643+++ (iランク3)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+3] - 694.2985+++ (iランク4)が選択されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のプロダクトイオンプリカーサー [M+4] - 694.6326+++ (iランク5)が選択されました
 
-Undo Redo : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のピーク境界が変更されました
-Summary   : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のピーク境界が変更されました
+Undo Redo : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のピーク境界が変更されました
+Summary   : sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のピーク境界が変更されました
 All Info  :
-sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++のピーク境界が変更されました
-「5b_MCF7_TiTip3」にあるsp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++の全ピークの開始時間が37.34から37.34に変更されました
-「5b_MCF7_TiTip3」にあるsp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5747, 5766] （ミス1）>693.2957+++の全ピークの終了時間が39.33から38.07に変更されました
+sp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++のピーク境界が変更されました
+「5b_MCF7_TiTip3」にあるsp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++の全ピークの開始時間が37.34から37.34に変更されました
+「5b_MCF7_TiTip3」にあるsp|Q09666|AHNK_HUMAN>K.ASLGSLEGEAEAEASSPKGK.F [5748, 5767] （ミス1）>693.2957+++の全ピークの終了時間が39.33から38.07に変更されました
 
-Undo Redo : sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
-Summary   : sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
+Undo Redo : sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
+Summary   : sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
 All Info  :
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー - 838.3391+++ (iランク2)が選択されました
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+1] - 838.6734+++ (iランク1)が選択されました
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+2] - 839.0077+++ (iランク3)が選択されました
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+3] - 839.3419+++ (iランク4)が選択されました
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+4] - 839.6761+++ (iランク5)が選択されました
-sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [370, 390] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+5] - 840.0103+++ (iランク6)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++に対する6のプロダクトイオンが選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++のプロダクトイオンプリカーサー - 838.3391+++ (iランク2)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+1] - 838.6734+++ (iランク1)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+2] - 839.0077+++ (iランク3)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+3] - 839.3419+++ (iランク4)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+4] - 839.6761+++ (iランク5)が選択されました
+sp|Q9NYF8|BCLF1_HUMAN>R.AEGEWEDQEALDYFSDKESGK.Q [371, 391] （ミス1）>838.3391+++のプロダクトイオンプリカーサー [M+5] - 840.0103+++ (iランク6)が選択されました
 
-Undo Redo : sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
-Summary   : sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
+Undo Redo : sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
+Summary   : sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
 All Info  :
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー - 1065.9279++++ (iランク5)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+1] - 1066.1786++++ (iランク2)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+2] - 1066.4293++++ (iランク1)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+3] - 1066.6800++++ (iランク3)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+4] - 1066.9306++++ (iランク4)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+5] - 1067.1813++++ (iランク6)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+6] - 1067.4320++++ (iランク7)が選択されました
-sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [78, 116] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+7] - 1067.6826++++ (iランク8)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++に対する8のプロダクトイオンが選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー - 1065.9279++++ (iランク5)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+1] - 1066.1786++++ (iランク2)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+2] - 1066.4293++++ (iランク1)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+3] - 1066.6800++++ (iランク3)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+4] - 1066.9306++++ (iランク4)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+5] - 1067.1813++++ (iランク6)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+6] - 1067.4320++++ (iランク7)が選択されました
+sp|P24534|EF1B_HUMAN>K.YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR.L [79, 117] （ミス2）>1065.9279++++のプロダクトイオンプリカーサー [M+7] - 1067.6826++++ (iランク8)が選択されました
 
 Undo Redo : ペプチド設定－予測>時間枠が"10"に変更されました
 Summary   : 設定>ペプチド設定－予測>時間枠が"10"に変更されました

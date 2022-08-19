@@ -156,7 +156,7 @@ namespace pwiz.SkylineTest
 
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.
@@ -276,5 +276,15 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqualDeep(arrayBase, array4);
         }
 
+        [TestMethod]
+        public void TestIsTempZipFolder()
+        {
+            string zipFileName;
+            Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
+            Assert.AreEqual("TargetedMSMS_2.zip", zipFileName);
+            Assert.IsFalse(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
+            Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\ZipFile.zip\BSA_Protea_label_free_meth3.sky", out zipFileName));
+            Assert.AreEqual("ZipFile.zip", zipFileName);
+        }
     }
 }

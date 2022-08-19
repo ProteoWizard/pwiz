@@ -43,13 +43,10 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestGroupedStudiesTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
-ForceMzml = (DateTime.Now.DayOfYear % 2) == 0;   // TODO(bspratt) remove this once we're convinced that WIFF isn't the source of leaks and hangs
-
 
             TestFilesZipPaths = new[]
                 {
@@ -128,7 +125,7 @@ ForceMzml = (DateTime.Now.DayOfYear % 2) == 0;   // TODO(bspratt) remove this on
                 RunUI(() =>
                 {
                         editIrtCalcDlg.CalcName = irtCalcName;
-                        editIrtCalcDlg.CreateDatabase(GetOcRawTestPath("iRT-OC-Study.irtdb")); // Not L10N
+                        editIrtCalcDlg.CreateDatabase(GetTestPath("iRT-OC-Study.irtdb")); // Not L10N
                         SetTransitionClipboardText(new[] {15, 17}, c =>
                             {
                                 if (string.Equals(c[8], "protein_name"))
@@ -203,17 +200,20 @@ ForceMzml = (DateTime.Now.DayOfYear % 2) == 0;   // TODO(bspratt) remove this on
                 OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
             }
 
-            RunUI(() => SkylineWindow.SaveDocument(GetOcRawTestPath("OC-study.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath("OC-study.sky")));
 
             // Importing Data
             ImportResultsFiles(GetOcRawTestPath(), ExtAbWiff,
                 IsFullData ? "R201217" : "R201217_plasma_revision_A", true);
             WaitForCondition(5*60*1000, () =>
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForDocumentLoaded();
+
             ImportResultsFiles(GetOcRawTestPath(), ExtAbWiff,
                 IsFullData ? "R201203" : "R201203_plasma_revision_F", true);
             WaitForCondition(2*60*1000, () =>
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForDocumentLoaded();
 
             PauseForScreenShot();
         }

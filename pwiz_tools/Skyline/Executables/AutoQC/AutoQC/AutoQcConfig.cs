@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -12,14 +14,14 @@ namespace AutoQC
     [XmlRoot("autoqc_config")]
     public class AutoQcConfig : IConfig
     {
-
+        public const string AUTOQC_CONFIG = "autoqc_config";
+        
         public AutoQcConfig(string name, bool isEnabled, DateTime created, DateTime modified,
             MainSettings mainSettings, PanoramaSettings panoramaSettings, SkylineSettings skylineSettings)
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException(string.Format(Resources.AutoQcConfig_AutoQcConfig___0___is_not_a_valid_name_for_the_configuration_, name) + Environment.NewLine +
-                                            Resources.AutoQcConfig_AutoQcConfig_Please_enter_a_name_);
+                throw new ArgumentException(Resources.AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name_for_the_configuration_);
             }
             Name = name;
             IsEnabled = isEnabled;
@@ -32,7 +34,7 @@ namespace AutoQC
 
         public readonly string Name;
 
-        public bool IsEnabled;
+        public readonly bool IsEnabled;
 
         public readonly DateTime Created;
 
@@ -54,14 +56,21 @@ namespace AutoQC
             return false;
         }
 
+        public IConfig ForcePathReplace(string oldRoot, string newRoot)
+        {
+            // method used in SkylineBatch to create valid configurations with no files on disk (all downloaded later)
+            throw new NotImplementedException();
+        }
+
         public IConfig ReplaceSkylineVersion(SkylineSettings newSettings)
         {
             return new AutoQcConfig(Name, IsEnabled, Created, Modified, MainSettings, PanoramaSettings, newSettings);
         }
 
-        public ListViewItem AsListViewItem(IConfigRunner runner)
+        public ListViewItem AsListViewItem(IConfigRunner runner, Graphics graphics)
         {
             var lvi = new ListViewItem(Name);
+            lvi.Checked = IsEnabled;
             lvi.UseItemStyleForSubItems = false; // So that we can change the color for sub-items.
             lvi.SubItems.Add(User);
             lvi.SubItems.Add(Created.ToShortDateString());
@@ -80,6 +89,17 @@ namespace AutoQC
 
         public bool UsesCustomSkylinePath => SkylineSettings.Type == SkylineType.Custom;
 
+        public string GetConfigDir()
+        {
+            var skylineFileDir = Path.GetDirectoryName(MainSettings.SkylineFilePath);
+            return Path.Combine(skylineFileDir ?? string.Empty, FileUtil.GetSafeNameForDir(Name));
+        }
+
+        public string getConfigFilePath(string file)
+        {
+            return Path.Combine(GetConfigDir(), file);
+        }
+
         private enum Attr
         {
             name,
@@ -96,7 +116,24 @@ namespace AutoQC
 
         #region XML
 
-        public static AutoQcConfig ReadXml(XmlReader reader)
+        public static AutoQcConfig ReadXml(XmlReader reader, decimal version)
+        {
+            switch (version)
+            {
+                case 21.1M:
+                    return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, SkylineSettings.ReadXml);
+                case 20.2M:
+                    return ReadXml(reader, MainSettings.ReadXml, PanoramaSettings.ReadXml, SkylineSettings.ReadXmlVersion_20_2);
+                default:
+                    throw new ArgumentException(string.Format(
+                        Resources.AutoQcConfig_ReadXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_,
+                        version));
+            }
+        }
+
+        private static AutoQcConfig ReadXml(XmlReader reader, Func<XmlReader, MainSettings> mainSettingsReader,
+            Func<XmlReader, PanoramaSettings> panoramaSettingsReader,
+            Func<XmlReader, SkylineSettings> skylineSettingsReader)
         {
             var name = reader.GetAttribute(Attr.name);
             
@@ -107,55 +144,68 @@ namespace AutoQC
             DateTime.TryParse(reader.GetAttribute(Attr.modified), out dateTime);
             var modified = dateTime;
 
-            do
-            {
-                reader.Read();
-            } while (reader.NodeType != XmlNodeType.Element);
 
             MainSettings mainSettings = null;
             PanoramaSettings panoramaSettings = null;
             SkylineSettings skylineSettings = null;
             string exceptionMessage = null;
-            try
-            {
-                mainSettings = MainSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
-                } while (reader.NodeType != XmlNodeType.Element);
-                panoramaSettings = PanoramaSettings.ReadXml(reader);
-                do
-                {
-                    reader.Read();
 
-                    if (reader.Name.Equals("autoqc_config")) // handles old configurations without skyline settings
-                    {
-                        skylineSettings = new SkylineSettings(SkylineType.Skyline);
-                        break;
-                    }
-                } while (reader.NodeType != XmlNodeType.Element);
-                skylineSettings = skylineSettings ?? SkylineSettings.ReadXml(reader);
-            }
-            catch (ArgumentException e)
+            while(reader.Read())
             {
-                exceptionMessage = string.Format("\"{0}\" ({1})", name, e.Message);
+                if (reader.IsEndElement(AUTOQC_CONFIG))
+                {
+                   break; // We are done reading the config
+                }
+
+                try
+                {
+                    if (reader.IsElement(MainSettings.XML_EL))
+                    {
+                        mainSettings = mainSettingsReader(reader);
+                    }
+                    else if (reader.IsElement(PanoramaSettings.XML_EL))
+                    {
+                        panoramaSettings = panoramaSettingsReader(reader);
+                    }
+                    else if (reader.IsElement(SkylineSettings.XML_EL))
+                    {
+                        skylineSettings = skylineSettingsReader(reader);
+                    }
+                }
+                catch (ArgumentException e)
+                {
+                    exceptionMessage = string.Format("\"{0}\" ({1})", name, e.Message);
+                }
             }
+            
+            // Old configurations did not have Skyline settings. Create default SkylineSettings.
+            skylineSettings = skylineSettings ?? new SkylineSettings(SkylineType.Skyline, null);
 
             // finish reading config before exception is thrown so following configs aren't messed up
-            while (!(reader.Name == "autoqc_config" && reader.NodeType == XmlNodeType.EndElement))
-            {
-                reader.Read();
-            } 
-
             if (exceptionMessage != null)
                 throw new ArgumentException(exceptionMessage);
 
             return new AutoQcConfig(name, isEnabled, created, modified, mainSettings, panoramaSettings, skylineSettings);
         }
 
+        // Method to read SkylineSettings from v.21.1.0.158 of AutoQC Loader. Not putting this in SkylineSettings.cs since that code
+        // is shared with SkylineBatch.
+        private static SkylineSettings ReadSkylineSettings_v21_1_0_158(XmlReader reader)
+        {
+            var type = (SkylineType)Enum.Parse(typeof(SkylineType), reader.GetAttribute(Old_Attr.Type), false);
+            var cmdPath = Path.GetDirectoryName(reader.GetAttribute(Old_Attr.CmdPath));
+            return new SkylineSettings(type, null, cmdPath);
+        }
+        // Attributes that were used in version 21.1.0.158 of AutoQC Loader
+        private enum Old_Attr
+        {
+            Type,
+            CmdPath
+        }
+
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("autoqc_config");
+            writer.WriteStartElement(AUTOQC_CONFIG);
             writer.WriteAttribute(Attr.name, Name);
             writer.WriteAttribute(Attr.is_enabled, IsEnabled);
             writer.WriteAttributeIfString(Attr.created, Created.ToShortDateString() + " " + Created.ToShortTimeString());
@@ -170,52 +220,17 @@ namespace AutoQC
 
         public void Validate()
         {
+            Validate(false);
+        }
+
+        public void Validate(bool doServerCheck)
+        {
             if (string.IsNullOrEmpty(Name))
-                throw new ArgumentException("Please enter a name for the configuration.");
+                throw new ArgumentException(Resources.AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_);
 
             MainSettings.ValidateSettings();
             SkylineSettings.Validate();
-            PanoramaSettings.ValidateSettings();
-        }
-
-        public virtual ProcessInfo RunBefore(ImportContext importContext)
-        {
-            string archiveArgs = null;
-            if (!importContext.ImportExisting)
-            {
-                // If we are NOT importing existing results, create an archive (if required) of the 
-                // Skyline document BEFORE importing a results file.
-                archiveArgs = MainSettings.GetArchiveArgs(MainSettings.GetLastArchivalDate(), DateTime.Today);
-            }
-            if (string.IsNullOrEmpty(archiveArgs))
-            {
-                return null;
-            }
-            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
-        }
-
-        public virtual ProcessInfo RunAfter(ImportContext importContext)
-        {
-            string archiveArgs = null;
-            var currentDate = DateTime.Today;
-            if (importContext.ImportExisting && importContext.ImportingLast())
-            {
-                // If we are importing existing files in the folder, create an archive (if required) of the 
-                // Skyline document AFTER importing the last results file.
-                var oldestFileDate = importContext.GetOldestImportedFileDate(MainSettings.LastAcquiredFileDate);
-                var today = DateTime.Today;
-                if (oldestFileDate.Year < today.Year || oldestFileDate.Month < today.Month)
-                {
-                    archiveArgs = MainSettings.GetArchiveArgs(currentDate.AddMonths(-1), currentDate);
-                }
-            }
-            if (string.IsNullOrEmpty(archiveArgs))
-            {
-                return null;
-            }
-            var args = string.Format("--in=\"{0}\" {1}", MainSettings.SkylineFilePath, archiveArgs);
-            return new ProcessInfo(SkylineSettings.CmdPath, args, args);
+            PanoramaSettings.ValidateSettings(doServerCheck);
         }
 
         public override string ToString()

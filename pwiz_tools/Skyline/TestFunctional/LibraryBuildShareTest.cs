@@ -52,6 +52,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new[] { TestFilesDir.GetTestPath("modless.pride.xml") });
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             Assert.IsTrue(WaitForCondition(() =>
                 peptideSettingsUi.AvailableLibraries.Contains(libraryName)));

@@ -4,8 +4,8 @@
 # Copyright 2013, 2017-2018 Cray, Inc.
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # README.md
 #
@@ -94,9 +94,6 @@ rule init ( : : options * : requirements * )
     # Archive builder.
     local command-ar = [ validate-command $(toolset) ar ] ;
 
-    # Archive indexer.
-    local command-ranlib = [ validate-command $(toolset) ranlib ] ;
-
     # The 'command' variables always have one element, but they may contain
     # spaces (e.g. if 'command' is an absolute path and some path components
     # have spaces).
@@ -140,7 +137,7 @@ rule init ( : : options * : requirements * )
         build = [ MATCH "(.......)................................." : $(build) ] ;
     }
 
-    # IMPORTANT: 'set-cray-feature-defaults' causes the Boost.Build tests to
+    # IMPORTANT: 'set-cray-feature-defaults' causes the B2 tests to
     # fail. I tried using an 'init' argument called 'ignore-cray-defaults' and
     # setting up 'test-config.jam' to pass 'ignore-cray-defaults' during
     # testing, but I couldn't get the test to read my 'test-config.jam' file
@@ -153,7 +150,7 @@ rule init ( : : options * : requirements * )
 
         # 'check-init-parameters' ensures that each time a toolset is initialized,
         # it is initialized with a unique configuration. The return value is a
-        # Boost.Build property condition which uniquely identifies this
+        # B2 property condition which uniquely identifies this
         # configured instance of this toolset. Typically, toolsets use the
         # returned condition as the conditional in a 'toolset.flags' call to set
         # flags specific to this configuration of this toolset.
@@ -171,7 +168,7 @@ rule init ( : : options * : requirements * )
         handle-options
             $(toolset)
           : $(identifying-condition)
-          : $(command-c) $(command-cxx) $(command-fortran) $(command-ar) $(command-ranlib)
+          : $(command-c) $(command-cxx) $(command-fortran) $(command-ar)
           : $(options) ;
 
         # Add compiler version to 'VERSION' variable on all targets. 'VERSION' is
@@ -207,7 +204,7 @@ rule check-prgenv-module ( toolset )
                              : toolset initialization failed
                              : please load the PrgEnv-$(default-compiler) module next time ;
         # Do not abort, as suggested by:
-        # http://www.boost.org/build/doc/html/bbv2/extending/toolset_modules.html.
+        # https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.extending.toolset_modules.
     }
 }
 
@@ -244,8 +241,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
     # Variable names with a '.' prefix are intended to be globals.
     #
-    # Refer to:
-    # https://github.com/boostorg/build/blob/develop/CONTRIBUTING.rst
+    # Refer to: CONTRIBUTING.adoc
 
     # The Jam language uses dynamic scoping. Setting '.debug-configuration' in
     # this module influences the behavior of methods called from this module.
@@ -281,7 +277,7 @@ feature.extend toolset : cray ;
 feature.set-default toolset : cray ;
 
 # CCE is different from other compilers in that it optimizes, inlines, and
-# vectorizes by default. Boost.Build assumes that 'off' is the default for
+# vectorizes by default. B2 assumes that 'off' is the default for
 # all compilers. However, for CCE, 'off' and 'default' have different
 # meanings. For CCE, 'off' requires an additional command line argument to
 # turn the feature off. 'default' will not include an additional command
@@ -473,8 +469,7 @@ actions link.dll bind LIBRARIES
 
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-    "$(.RANLIB)" "$(<)"
+    "$(.AR)" $(AROPTIONS) rsc "$(<)" "$(>)"
 }
 
 ###
@@ -644,10 +639,6 @@ rule gcc-link-procedure ( targets * : sources * : properties * )
     # Copied from 'gcc.jam'.
 
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only gcc links, it might be a
-    # good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     gcc.quote-rpath $(targets) ;
 }
 
@@ -657,7 +648,6 @@ rule gcc-link-dll-procedure ( targets * : sources * : properties * )
     # Copied from 'gcc.jam'.
 
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     gcc.quote-rpath $(targets) ;
 }
 
@@ -707,7 +697,7 @@ rule set-cxxstd-procedure ( targets * : sources * : properties * )
     local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
     local cray-cxxstd = ;
 
-    local unsupported-values = 2a ; # I don't know what '2a' means.
+    local unsupported-values = 2a 20 ; # I don't know what '2a' means.
     if $(cxxstd) && $(cxxstd) in $(unsupported-values)
     {
 
@@ -904,8 +894,8 @@ generators.register [ new cray-linking-generator
                         : SHARED_LIB
                         : <toolset>cray ] ;
 
-# Tell Boost.Build to prefer 'cray' generators over other valid
-# generators. This is used to resolve a tie when Boost.Build finds that
+# Tell B2 to prefer 'cray' generators over other valid
+# generators. This is used to resolve a tie when B2 finds that
 # there is more than one viable generator for a particular build request.
 
 generators.override cray.prebuilt : builtin.prebuilt ;
@@ -941,7 +931,7 @@ local rule options-helper ( rule-or-module variable-name condition * : feature o
 rule handle-options (
     toolset
   : toolset-condition *
-  : command-c command-cxx command-fortran command-ar command-ranlib
+  : command-c command-cxx command-fortran command-ar
   : options *
 )
 {
@@ -961,7 +951,6 @@ rule handle-options (
     toolset.flags $(toolset) CONFIG_COMMAND_CXX $(toolset-condition) : $(command-cxx) : unchecked ;
     toolset.flags $(toolset) CONFIG_COMMAND_FORTRAN $(toolset-condition) : $(command-fortran) : unchecked ;
     toolset.flags $(toolset).archive .AR $(toolset-condition) : $(command-ar) : unchecked ;
-    toolset.flags $(toolset).archive .RANLIB $(toolset-condition) : $(command-ranlib) : unchecked ;
 
     # The following flags are applied to all targets built by this
     # configuration of this toolset. This particular configuration of this

@@ -1262,8 +1262,9 @@ to use in calculating all precursor masses</value>
     <value>5</value>
   </data>
   <data name="textPeptideIonTypes.ToolTip" xml:space="preserve">
-    <value>A list of comma separated product ion types (a, b, c, x, y, z, p for precursor) to use
-for calculating potential product ions</value>
+    <value>A list of comma separated product ion types (a, b, c, x, y, z, z., z', p for precursor) to use
+for calculating potential product ions. z. and z' stand for z+1 radical ion and z+2 ion. Those are usually found in ExD experiments.
+Alternatively, z* and z" can be used.</value>
   </data>
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>
@@ -2850,16 +2851,16 @@ whenever peptides are matched to library spectrum.</value>
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
+  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
+    <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
@@ -3377,31 +3378,31 @@ with predicted transition m/z values.
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblMethodMatchTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblMethodMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 108</value>
   </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblMethodMatchTolerance.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 13</value>
   </data>
-  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblMethodMatchTolerance.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="label16.Text" xml:space="preserve">
+  <data name="lblMethodMatchTolerance.Text" xml:space="preserve">
     <value>Method match &amp;tolerance m/z:</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
+  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
+    <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="label10.AutoSize" type="System.Boolean, mscorlib">
@@ -3537,7 +3538,7 @@ with predicted transition m/z values.
     <value>ionMobilityFilteringControl</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -3582,7 +3583,7 @@ with predicted transition m/z values.
     <value>ionMobilityFilteringControl</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -3639,7 +3640,7 @@ with predicted transition m/z values.
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -3651,6 +3652,6 @@ with predicted transition m/z values.
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=20.1.1.84, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

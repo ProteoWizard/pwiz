@@ -22,7 +22,7 @@ using sun : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If the command is not specified, Boost.Build will search for a binary
+If the command is not specified, B2 will search for a binary
 named `CC` in `/opt/SUNWspro/bin` and in PATH.
 
 When using this compiler on complex C++ code, such as the
@@ -73,40 +73,13 @@ generators.override sun.prebuilt : builtin.lib-generator ;
 generators.override sun.prebuilt : builtin.prebuilt ;
 generators.override sun.searched-lib-generator : searched-lib-generator ;
 
-#
-# There are no less than 5 standard library options:
-# 1) The default, which uses an old version of the Rogue Wave std lib,
-#    also available via -std=sun03.
-# 2) C++03 mode + STLport, selected via the -library option.
-# 3) C++03 mode plus the Apache std lib, selected via the -library option.
-# 4) C++03 or C++11 in g++ compatibility mode, and GNU libstdc++3, selected via -std=c++03/11.
-#
-# Note that the -std, -library and -compat compiler switches appear to be largely mutually
-# incompatible, and that going forward the -std switch seems to be the preferred one.
-#
-# See http://docs.oracle.com/cd/E37069_01/html/E37075/bkamw.html#OSSCPgnaof
-#
-feature.extend stdlib : sun-stlport ;
-feature.compose <stdlib>sun-stlport
-    : <cxxflags>-library=stlport4 <cxxflags>-compat=5 <cxxflags>-features=zla
-      <linkflags>-library=stlport4 <linkflags>-compat=5
-    ;
-feature.extend stdlib : apache ;
-feature.compose <stdlib>apache
-    : <cxxflags>-library=stdcxx4 <cxxflags>-compat=5 <cxxflags>-features=zla
-      <linkflags>-library=stdcxx4 <cxxflags>-compat=5
-    ;
-feature.extend stdlib : gnu ;
-feature.compose <stdlib>gnu
-    : <cxxflags>-std=c++03 <linkflags>-std=c++03
-    ;
 
-rule init ( version ? : command * : options * ) 
+rule init ( version ? : command * : options * )
 {
-    local condition = [ 
+    local condition = [
       common.check-init-parameters sun : version $(version) ] ;
-    
-    command = [ common.get-invocation-command sun : CC 
+
+    command = [ common.get-invocation-command sun : CC
         : $(command) : "/opt/SUNWspro/bin" ] ;
 
     # Even if the real compiler is not found, put CC to
@@ -114,7 +87,7 @@ rule init ( version ? : command * : options * )
     command ?= CC ;
 
     common.handle-options sun : $(condition) : $(command) : $(options) ;
-    
+
     command_c = $(command[1--2]) $(command[-1]:B=cc) ;
 
     toolset.flags sun CONFIG_C_COMMAND $(condition) : $(command_c) ;
@@ -133,6 +106,8 @@ flags sun.compile OPTIONS <threading>multi : -mt ;
 flags sun.compile OPTIONS <warnings>off : -erroff ;
 flags sun.compile OPTIONS <warnings>on : -erroff=%none ;
 flags sun.compile OPTIONS <warnings>all  : -erroff=%none ;
+flags sun.compile OPTIONS <warnings>extra : -erroff=%none ;
+flags sun.compile OPTIONS <warnings>pedantic : -erroff=%none ;
 flags sun.compile OPTIONS <warnings-as-errors>on : -errwarn ;
 
 flags sun.compile OPTIONS <local-visibility>hidden : -xldscope=hidden ;
@@ -140,6 +115,33 @@ flags sun.compile OPTIONS <local-visibility>protected : -xldscope=symbolic ;
 flags sun.compile OPTIONS <local-visibility>global : -xldscope=global ;
 
 flags sun.compile.c++ OPTIONS <inlining>off : +d ;
+
+# There are no less than 5 standard library options:
+# 1) The default, which uses an old version of the Rogue Wave std lib,
+#    also available via -std=sun03.
+# 2) C++03 mode + STLport, selected via the -library option.
+# 3) C++03 mode plus the Apache std lib, selected via the -library option.
+# 4) C++03 or C++11 in g++ compatibility mode, and GNU libstdc++3, selected via -std=c++03/11.
+#
+# Note that the -std, -library and -compat compiler switches appear to be largely mutually
+# incompatible, and that going forward the -std switch seems to be the preferred one.
+#
+# See http://docs.oracle.com/cd/E37069_01/html/E37075/bkamw.html#OSSCPgnaof
+#
+
+flags sun.compile.c++ OPTIONS <stdlib>sun-stlport : -library=stlport4 -compat=5 -features=zla ;
+flags sun.link OPTIONS <stdlib>sun-stlport : -library=stlport4 -compat=5 ;
+
+flags sun.compile.c++ OPTIONS <stdlib>apache : -library=stdcxx4 -compat=5 -features=zla ;
+flags sun.link OPTIONS <stdlib>apache : -library=stdcxx4 -compat=5 ;
+
+flags sun.compile.c++ OPTIONS <stdlib>gnu : -std=c++03 ;
+flags sun.compile.c++ DEFINES <stdlib>gnu : _GLIBCXX_USE_CXX11_ABI=0 ;
+flags sun.link OPTIONS <stdlib>gnu : -std=c++03 ;
+
+flags sun.compile.c++ OPTIONS <stdlib>gnu11 : -std=c++11 ;
+flags sun.compile.c++ DEFINES <stdlib>gnu11 : _GLIBCXX_USE_CXX11_ABI=1 ;
+flags sun.link OPTIONS <stdlib>gnu11 : -std=c++11 ;
 
 # The -m32 and -m64 options are supported starting
 # with Sun Studio 12.  On earlier compilers, the

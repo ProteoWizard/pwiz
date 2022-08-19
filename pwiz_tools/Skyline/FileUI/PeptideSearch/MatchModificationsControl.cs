@@ -37,11 +37,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public struct ListBoxModification
         {
             public StaticMod Mod { get; private set; }
-            private bool IsDDASearch { get; set; }
-            public ListBoxModification(StaticMod mod, bool isDDA = false) : this()
+            public ModType? ModificationType { get; private set; }
+            public ListBoxModification(StaticMod mod, ModType? modType) : this()
             {
                 Mod = mod;
-                IsDDASearch = isDDA;
+                ModificationType = modType;
             }
 
             public override string ToString()
@@ -53,13 +53,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 sb.Append('[');
                 sb.Append(Math.Round(modMass, 1));
                 sb.Append(']');
-                if (IsDDASearch)
+                if (ModificationType.HasValue)
                 {
                     sb.Append(' ');
-                    if (Mod.IsVariable)
-                        sb.Append(Resources.ListBoxModification_ToString__variable_);
-                    else if (Mod.LabelAtoms != LabelAtoms.None)
+                    if (ModificationType == ModType.heavy)
                         sb.Append(Resources.ListBoxModification_ToString__isotopic_label_);
+                    else if (Mod.IsVariable)
+                        sb.Append(Resources.ListBoxModification_ToString__variable_);
                     else
                         sb.Append(Resources.ListBoxModification_ToString__fixed_);
                 }
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportPeptideSearch.InitializeModifications(document);
             FillLists(document);
-            return modificationsListBox.Items.Count > 1 || unmatchedListBox.Items.Count > 1;
+            return modificationsListBox.Items.Count > 0 || unmatchedListBox.Items.Count > 0;
         }
 
         public SrmSettings AddCheckedModifications(SrmDocument document)
@@ -164,9 +164,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             List<StaticMod> heavyMods; 
             if (ImportPeptideSearch.IsDDASearch)
             {
-                var selectedMods = modificationsListBox.CheckedItems.Cast<ListBoxModification>().Select(o => o.Mod).ToList();
-                structuralMods = selectedMods.Where(o => o.LabelAtoms == LabelAtoms.None).ToList();
-                heavyMods = selectedMods.Where(o => o.LabelAtoms != LabelAtoms.None).ToList();
+                structuralMods = modificationsListBox.CheckedItems.Cast<ListBoxModification>()
+                    .Where(listBoxMod=>listBoxMod.ModificationType == ModType.structural)
+                    .Select(mod=>mod.Mod).ToList();
+                heavyMods = modificationsListBox.CheckedItems.Cast<ListBoxModification>()
+                    .Where(listBoxMod => listBoxMod.ModificationType == ModType.heavy)
+                    .Select(mod => mod.Mod).ToList();
 
             }
             else
@@ -191,27 +194,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void FillLists(SrmDocument document)
         {
-            IList<StaticMod> modsToAdd, modsToCheck;
+            IList<ListBoxModification> modsToAdd;
+            HashSet<ListBoxModification> modsToCheck = new HashSet<ListBoxModification>();
             if (ImportPeptideSearch.IsDDASearch)
             {
-                modsToAdd = Settings.Default.StaticModList.ToList();
-                modsToAdd.AddRange(Settings.Default.HeavyModList.Distinct());
-                modsToCheck = document.Settings.PeptideSettings.Modifications.StaticModifications.ToList();
-                modsToCheck.AddRange(document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Distinct());
-                //modsToAdd = ImportPeptideSearch.UserDefinedTypedMods;
+                modsToAdd = Settings.Default.StaticModList.Select(mod=>new ListBoxModification(mod, ModType.structural)).ToList();
+                modsToAdd.AddRange(Settings.Default.HeavyModList.Distinct().Select(mod=>new ListBoxModification(mod, ModType.heavy)));
+                modsToCheck.UnionWith(document.Settings.PeptideSettings.Modifications.StaticModifications
+                    .Select(mod => new ListBoxModification(mod, ModType.structural)));
+                modsToCheck.UnionWith(document.Settings.PeptideSettings.Modifications.AllHeavyModifications
+                    .Select(mod=>new ListBoxModification(mod, ModType.heavy)));
             }
             else
             {
                 ImportPeptideSearch.UpdateModificationMatches(document);
-                modsToAdd = ImportPeptideSearch.GetMatchedMods().ToList();
-                modsToCheck = new List<StaticMod>(); // don't check any mods
+                modsToAdd = ImportPeptideSearch.GetMatchedMods().Select(mod=>new ListBoxModification(mod, null)).ToList();
+                // don't check any mods
             }
 
             modificationsListBox.Items.Clear();
             unmatchedListBox.Items.Clear();
 
             foreach (var match in modsToAdd)
-                modificationsListBox.Items.Add(new ListBoxModification(match, ImportPeptideSearch.IsDDASearch), modsToCheck.Contains(match));
+                modificationsListBox.Items.Add(match, modsToCheck.Contains(match));
 
             var unmatched = ImportPeptideSearch.GetUnmatchedSequences();
             if (unmatched != null && unmatched.Any())

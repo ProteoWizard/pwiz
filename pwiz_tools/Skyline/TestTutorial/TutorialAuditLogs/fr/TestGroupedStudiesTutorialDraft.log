@@ -17,7 +17,9 @@ Undo Redo : Imported a transition list from the clipboard
 Summary   : Imported a transition list from the clipboard
 All Info  :
 Imported a transition list from the clipboard
-Extra Info: Q1	Q3	stripped_sequence	protein_name
+Extra Info: 459 transitions added
+Columns identified as 'Precursor m/z';'Product m/z';'Peptide Modified Sequence';'Protein Name'
+Q1	Q3	stripped_sequence	protein_name
 853,431469	973,563049	SSSNEEVMFLTVQVK	A2MG
 849,42437	965,54885	SSSNEEVMFLTVQVK	A2MG
 853,431469	582,370087	SSSNEEVMFLTVQVK	A2MG
@@ -477,6 +479,7 @@ Extra Info: Q1	Q3	stripped_sequence	protein_name
 579,79312	532,287808	VDTVDPPYPR	VTNC
 584,797255	445,243313	VDTVDPPYPR	VTNC
 579,79312	435,235044	VDTVDPPYPR	VTNC
+
 
 Undo Redo : Deleted target Tr_peps_set2
 Summary   : Deleted target Tr_peps_set2

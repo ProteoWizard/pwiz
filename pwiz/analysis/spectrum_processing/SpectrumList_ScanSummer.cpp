@@ -265,7 +265,7 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
                 precursorMap.push_back(precursorGroupPtr());
                 continue;
             }
-            double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
+            double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).valueAs<double>();
             double ionMobility = s->scanList.scans[0].cvParamValueOrDefault(MS_inverse_reduced_ion_mobility, 0.0);
 
             if (precursorList.empty()) // set some parameters
@@ -320,6 +320,19 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
         auto precursorGroups = precursorList | boost::adaptors::map_values;
         ms2RetentionTimes.insert(ms2RetentionTimes.end(), precursorGroups.begin(), precursorGroups.end());
         sort(ms2RetentionTimes.begin(), ms2RetentionTimes.end(), sortRtime);
+
+        // add processing methods to the copy of the inner SpectrumList's data processing
+        ProcessingMethod method;
+        method.order = dp_->processingMethods.size();
+        method.userParams.emplace_back("summing of spectra from the same precursor adjacent in time and/or mobility space");
+        method.userParams.emplace_back("m/z tolerance", toString(precursorTol_), "xsd:double");
+        method.userParams.emplace_back("scan time tolerance", toString(rTimeTol_), "xsd:double");
+        method.userParams.emplace_back("ion mobility tolerance", toString(mobilityTol_), "xsd:double");
+        method.userParams.emplace_back("sumMS1", sumMs1_ ? "true" : "false", "xsd:boolean");
+
+        if (!dp_->processingMethods.empty())
+            method.softwarePtr = dp_->processingMethods[0].softwarePtr;
+        dp_->processingMethods.push_back(method);
     }
     catch (exception& e)
     {

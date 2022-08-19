@@ -519,9 +519,9 @@ Targets : YBL087C was added
 Targets > YBL087C > Sequence is "MSGNGAQGTKFRISLGLPVGAIMNCADNSGARNLYIIAVKGSGSRLNRLPAASLGDMVMATVKKGKPELRKKVMPAIVVRQAKSWRRRDGVFLYFEDNAGVIANPKGEMKGSAITGPVGKECADLWPRVASNSGVVV"
 Targets > YBL087C > Name is "YBL087C"
 Targets > YBL087C > Description is "RPL23A SGDID:S000000183, Chr II from 60735-60694,60189-59818, reverse complement, Verified ORF, "Protein component of the large (60S) ribosomal subunit, identical to Rpl23Bp and has similarity to E. coli L14 and rat L23 ribosomal proteins""
-Targets > YBL087C : contains R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2)
-Targets > YBL087C : contains K.ECADLWPR.V [120, 127] (rank 1)
-Targets > YBL087C : contains R.VASNSGVVV.- [128, 136] (rank 3)
+Targets > YBL087C : contains R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2)
+Targets > YBL087C : contains K.ECADLWPR.V [121, 128] (rank 1)
+Targets > YBL087C : contains R.VASNSGVVV.- [129, 137] (rank 3)
 Extra Info: YBL087C
 
 Undo Redo : Added peptide group YDR385W from background proteome in the Targets window
@@ -532,36 +532,36 @@ Targets : YDR385W was added
 Targets > YDR385W > Sequence is "MVAFTVDQMRSLMDKVTNVRNMSVIAHVDHGKSTLTDSLVQRAGIISAAKAGEARFTDTRKDEQERGITIKSTAISLYSEMSDEDVKEIKQKTDGNSFLINLIDSPGHVDFSSEVTAALRVTDGALVVVDTIEGVCVQTETVLRQALGERIKPVVVINKVDRALLELQVSKEDLYQTFARTVESVNVIVSTYADEVLGDVQVYPARGTVAFGSGLHGWAFTIRQFATRYAKKFGVDKAKMMDRLWGDSFFNPKTKKWTNKDTDAEGKPLERAFNMFILDPIFRLFTAIMNFKKDEIPVLLEKLEIVLKGDEKDLEGKALLKVVMRKFLPAADALLEMIVLHLPSPVTAQAYRAEQLYEGPADDANCIAIKNCDPKADLMLYVSKMVPTSDKGRFYAFGRVFAGTVKSGQKVRIQGPNYVPGKKDDLFIKAIQRVVLMMGRFVEPIDDCPAGNIIGLVGIDQFLLKTGTLTTSETAHNMKVMKFSVSPVVQVAVEVKNANDLPKLVEGLKRLSKSDPCVLTYMSESGEHIVAGTGELHLEICLQDLEHDHAGVPLKISPPVVAYRETVESESSQTALSKSPNKHNRIYLKAEPIDEEVSLAIENGIINPRDDFKARARIMADDYGWDVTDARKIWCFGPDGNGPNLVIDQTKAVQYLHEIKDSVVAAFQWATKEGPIFGEEMRSVRVNILDVTLHADAIHRGGGQIIPTMRRATYAGFLLADPKIQEPVFLVEIQCPEQAVGGIYSVLNKKRGQVVSEEQRPGTPLFTVKAYLPVNESFGFTGELRQATGGQAFPQMVFDHWSTLGSDPLDPTSKAGEIVLAARKRHGMKEEVPGWQEYYDKL"
 Targets > YDR385W > Name is "YDR385W"
 Targets > YDR385W > Description is "EFT2 SGDID:S000002793, Chr IV from 1243220-1245748, Verified ORF, "Elongation factor 2 (EF-2), also encoded by EFT1; catalyzes ribosomal translocation during protein synthesis; contains diphthamide, the unique posttranslationally modified histidine residue specifically ADP-ribosylated by diphtheria toxin""
-Targets > YDR385W : contains K.STAISLYSEMSDEDVK.E [71, 86] (rank 2)
-Targets > YDR385W : contains R.AEQLYEGPADDANCIAIK.N [352, 369] (rank 1)
-Targets > YDR385W : contains K.AYLPVNESFGFTGELR.Q [769, 784] (rank 3)
+Targets > YDR385W : contains K.STAISLYSEMSDEDVK.E [72, 87] (rank 2)
+Targets > YDR385W : contains R.AEQLYEGPADDANCIAIK.N [353, 370] (rank 1)
+Targets > YDR385W : contains K.AYLPVNESFGFTGELR.Q [770, 785] (rank 3)
 Extra Info: YDR385W
 
 Undo Redo : Added peptides to peptide group YDR385W from background proteome in the Targets window
 Summary   : Added peptides to peptide group YDR385W from background proteome in the Targets window
 All Info  :
 Added peptides to peptide group YDR385W from background proteome in the Targets window
-Targets > YDR385W : R.IQGPNYVPGK.K [412, 421] (rank 1) was added
+Targets > YDR385W : R.IQGPNYVPGK.K [413, 422] (rank 1) was added
 Extra Info: IQGPNYVPGK::YDR385W
 
 Undo Redo : Picked 4 children for YBL087C
 Summary   : Picked 4 children for YBL087C
 All Info  :
 Picked 4 children for YBL087C
-Picked child R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) for YBL087C
-Picked child K.VMPAIVVR.Q [72, 79] (rank 6) for YBL087C
-Picked child K.ECADLWPR.V [120, 127] (rank 1) for YBL087C
-Picked child R.VASNSGVVV.- [128, 136] (rank 3) for YBL087C
+Picked child R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) for YBL087C
+Picked child K.VMPAIVVR.Q [73, 80] (rank 6) for YBL087C
+Picked child K.ECADLWPR.V [121, 128] (rank 1) for YBL087C
+Picked child R.VASNSGVVV.- [129, 137] (rank 3) for YBL087C
 
-Undo Redo : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
-Summary   : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
+Undo Redo : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
+Summary   : Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
 All Info  :
-Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
-Picked child L [b5] - 484.3130+ (rank 3) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
-Picked child A [b9] - 808.4927+ (rank 1) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
-Picked child I [b10] - 921.5768+ (rank 2) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
-Picked child L [b5] - 242.6601++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
-Picked child V [b7] - 340.7207++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [12, 31] (rank 2) > 672.6716+++
+Picked 5 children for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
+Picked child L [b5] - 484.3130+ (rank 3) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
+Picked child A [b9] - 808.4927+ (rank 1) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
+Picked child I [b10] - 921.5768+ (rank 2) for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
+Picked child L [b5] - 242.6601++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
+Picked child V [b7] - 340.7207++ for YBL087C > R.ISLGLPVGAIMNCADNSGAR.N [13, 32] (rank 2) > 672.6716+++
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed

@@ -74,7 +74,7 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         BiblioSpec::Verbosity::debug("Found %d spectra in %s.",
                                      allSpectra_->size(), filename);
         nativeIdFormat_ = id::getDefaultNativeIDFormat(*fileReader_);
-        if (nativeIdFormat_ == MS_no_nativeID_format)   // This never works
+        if (nativeIdFormat_ == MS_no_nativeID_format || nativeIdFormat_ == CVID_Unknown) // These never work
             nativeIdFormat_ = MS_scan_number_only_nativeID_format;
         
         const auto& nativeIdFormatInfo = cvTermInfo(nativeIdFormat_);
@@ -85,7 +85,7 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         // With this block, I get errors for getSpectrum(n,data,SCAN_NUM_ID)
         // TODO: find out why look-up by index breaks when
         // non-sequential and remove this
-        if( idType_ == BiblioSpec::INDEX_ID ){ 
+        if( idType_ == BiblioSpec::INDEX_ID ){
             for(size_t i=0; i < allSpectra_->size(); i++){
                 SpectrumPtr spec = allSpectra_->spectrum(i, false);
                 if( spec == NULL ){
@@ -94,7 +94,8 @@ void PwizReader::openFile(const char* filename, bool mzSort){
                                  "opening file %s for lookup by index.",
                                  i, fileName_.c_str());
                 } 
-                if(lexical_cast<int>(spec->cvParam(MS_ms_level).value) != 2){
+                if(lexical_cast<int>(spec->cvParam(MS_ms_level).value) != 2 ||
+                                     spec->precursors.size() == 0){
                     continue;
                 }
                 double mz = spec->precursors[0].selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>();
@@ -383,7 +384,7 @@ size_t PwizReader::getSpecIndex(int identifier,
  */
 void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum, 
                             SpectrumPtr foundSpec){
-    
+    int polarity = foundSpec->hasCVParam(MS_negative_scan) ? -1 : 1;
     // for each precursor
     for(size_t prec_i = 0; prec_i < foundSpec->precursors.size(); prec_i++){
         const Precursor& cur_prec = foundSpec->precursors[prec_i];
@@ -395,9 +396,9 @@ void PwizReader::addCharges(BiblioSpec::Spectrum& returnSpectrum,
             for(size_t param_i=0; param_i < cur_ion.cvParams.size(); param_i++){
                 const CVParam& param = cur_ion.cvParams[param_i];
                 if( param.cvid == MS_possible_charge_state ){
-                    returnSpectrum.addCharge(param.valueAs<int>());
+                    returnSpectrum.addCharge(polarity * param.valueAs<int>());
                 } else if( param.cvid == MS_charge_state ){
-                    returnSpectrum.addCharge(param.valueAs<int>());
+                    returnSpectrum.addCharge(polarity * param.valueAs<int>());
                 }
             } // next param
         } // next selected ion
@@ -440,6 +441,7 @@ void PwizReader::transferSpectrum(BiblioSpec::Spectrum& returnSpectrum,
     returnSpectrum.setScanNumber(specInfo->scanNumber);
     returnSpectrum.setMz(specInfo->precursors[0].mz);
     addCharges(returnSpectrum, foundSpec);
+    returnSpectrum.setRetentionTime(specInfo->retentionTime/60);
     
     if( specInfo->data.size() > 0 ){
         vector<BiblioSpec::PEAK_T> peaks;

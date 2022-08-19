@@ -35,7 +35,8 @@
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
 
-
+#using <System.dll>
+#using <System.Data.dll>
 using System::String;
 using System::Math;
 using System::Object;
@@ -69,6 +70,7 @@ struct Device
     string Vendor;
 };
 
+#pragma unmanaged
 struct HandlerDevices : public SAXParser::Handler
 {
     vector<Device> devices;
@@ -114,6 +116,7 @@ struct HandlerDevices : public SAXParser::Handler
         return Status::Ok;
     }
 };
+#pragma managed
 
 MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
 {
@@ -180,7 +183,10 @@ class MassHunterDataImpl : public MassHunterData
     virtual double ccsToDriftTime(double ccs, double mz, int charge) const { throw runtime_error("[MassHunterDataImpl::ccsToDriftTime] not available on non-IMS data"); }
 
     virtual const set<Transition>& getTransitions() const;
-    virtual ChromatogramPtr getChromatogram(const Transition& transition) const;
+    virtual MassChromatogramPtr getChromatogram(const Transition& transition) const;
+
+    virtual const vector<Signal>& getSignals() const;
+    virtual SignalChromatogramPtr getSignal(const Signal& signal) const;
 
     virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
     virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
@@ -208,6 +214,9 @@ class MassHunterDataImpl : public MassHunterData
     gcroot<array<MHDAC::IBDAChromData^>^> chromMrm_;
     // unable to achieve identical results with cached SIM chromatograms
     // gcroot<array<MHDAC::IBDAChromData^>^> chromSim_;
+
+    mutable vector<Signal> signals_;
+    mutable gcroot<System::Collections::Generic::Dictionary<String^, MHDAC::ISignalInfo^>^> signalInfoMap_;
 
     bool hasProfileData_;
 };
@@ -269,18 +278,41 @@ struct SpectrumImpl : public Spectrum
 };
 
 
-struct ChromatogramImpl : public Chromatogram
+struct ChromatogramImpl : public virtual Chromatogram
 {
     ChromatogramImpl(MHDAC::IBDAChromData^ chromData) : chromData_(chromData) {}
 
-    virtual double getCollisionEnergy() const;
     virtual int getTotalDataPoints() const;
     virtual void getXArray(BinaryData<double>& x) const;
     virtual void getYArray(BinaryData<float>& y) const;
+
+    virtual ~ChromatogramImpl() {}
+
+protected:
+    gcroot<MHDAC::IBDAChromData^> chromData_;
+};
+
+
+struct MassChromatogramImpl : public virtual ChromatogramImpl, public virtual MassChromatogram
+{
+    MassChromatogramImpl(MHDAC::IBDAChromData^ chromData) : ChromatogramImpl(chromData), MassChromatogram() {}
+
+    virtual double getCollisionEnergy() const;
     virtual IonPolarity getIonPolarity() const;
 
-    private:
-    gcroot<MHDAC::IBDAChromData^> chromData_;
+    virtual int getTotalDataPoints() const { return static_cast<ChromatogramImpl>(*this).getTotalDataPoints(); }
+    virtual void getXArray(BinaryData<double>& x) const { static_cast<ChromatogramImpl>(*this).getXArray(x); }
+    virtual void getYArray(BinaryData<float>& y) const { static_cast<ChromatogramImpl>(*this).getYArray(y); }
+};
+
+
+struct SignalChromatogramImpl : public virtual ChromatogramImpl, public virtual SignalChromatogram
+{
+    SignalChromatogramImpl(MHDAC::IBDAChromData^ chromData) : ChromatogramImpl(chromData), SignalChromatogram() {}
+
+    virtual int getTotalDataPoints() const { return static_cast<ChromatogramImpl>(*this).getTotalDataPoints(); }
+    virtual void getXArray(BinaryData<double>& x) const { static_cast<ChromatogramImpl>(*this).getXArray(x); }
+    virtual void getYArray(BinaryData<float>& y) const { static_cast<ChromatogramImpl>(*this).getYArray(y); }
 };
 
 
@@ -304,6 +336,15 @@ bool Transition::operator< (const Transition& rhs) const
             return (ionPolarity < rhs.ionPolarity);
     else
         return type < rhs.type;
+}
+
+PWIZ_API_DECL
+bool Signal::operator< (const Signal& rhs) const
+{
+    if (deviceName == rhs.deviceName)
+        return signalName < rhs.signalName;
+    else
+        return deviceName < rhs.deviceName;
 }
 
 
@@ -482,7 +523,7 @@ std::string MassHunterData::getDeviceSerialNumber(DeviceType deviceType) const
     if (!bfs::exists(massHunterDevicesPath))
         return "";
 
-    ifstream devicesXml(massHunterDevicesPath.string().c_str());
+    ifstream devicesXml(massHunterDevicesPath.string().c_str(), ios::binary);
     HandlerDevices handler;
     SAXParser::parse(devicesXml, handler);
 
@@ -584,7 +625,7 @@ const BinaryData<float>& MassHunterDataImpl::getBpcIntensities(bool ms1Only) con
     return ms1Only ? bpcIntensitiesMs1_ : bpcIntensities_;
 }
 
-ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition) const
+MassChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition) const
 {
     try
     {
@@ -605,7 +646,65 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
             chromatograms = reader_->GetChromatogram(filter);
         }
 
-        return ChromatogramPtr(new ChromatogramImpl(chromatograms[index]));
+        return MassChromatogramPtr(new MassChromatogramImpl(chromatograms[index]));
+    }
+    CATCH_AND_FORWARD
+}
+
+const std::vector<Signal>& MassHunterDataImpl::getSignals() const
+{
+    try
+    {
+        if (!signals_.empty() || !reader_->FileInformation->IsNonMSDataPresent())
+            return signals_;
+
+        auto nonMsDataReader = (MHDAC::INonmsDataReader^) (MHDAC::IMsdrDataReader^) reader_;
+        if (nonMsDataReader == nullptr)
+            return signals_;
+        auto devices = nonMsDataReader->GetNonmsDevices();
+        if (devices == nullptr)
+            return signals_;
+
+        signalInfoMap_ = gcnew System::Collections::Generic::Dictionary<String^, MHDAC::ISignalInfo^>();
+        for each (auto device in devices)
+        {
+            auto deviceNameAndOrdinal = device->DeviceName + device->OrdinalNumber.ToString();
+            auto chromatogramSignalTable = reader_->FileInformation->GetSignalTable(deviceNameAndOrdinal, MHDAC::StoredDataType::Chromatograms);
+            auto instrumentCurveSignalTable = reader_->FileInformation->GetSignalTable(deviceNameAndOrdinal, MHDAC::StoredDataType::InstrumentCurves);
+
+            for each (System::Data::DataRow^ chromatogram in chromatogramSignalTable->Rows)
+            {
+                auto signalName = chromatogram["SignalName"]->ToString();
+                auto signalDescription = ToStdString(chromatogram["SignalDescription"]->ToString());
+                signals_.emplace_back(Signal{ ToStdString(deviceNameAndOrdinal), ToStdString(signalName), signalDescription, false, (DeviceType) device->DeviceType });
+            }
+            for each (auto signal in nonMsDataReader->GetSignalInfo(device, MHDAC::StoredDataType::Chromatograms))
+                signalInfoMap_->default[deviceNameAndOrdinal + signal->SignalName] = signal;
+
+            for each (System::Data::DataRow^ curve in instrumentCurveSignalTable->Rows)
+            {
+                auto signalName = curve["SignalName"]->ToString();
+                auto signalDescription = ToStdString(curve["SignalDescription"]->ToString());
+                signals_.emplace_back(Signal{ ToStdString(deviceNameAndOrdinal), ToStdString(signalName), signalDescription, true, (DeviceType) device->DeviceType });
+            }
+            for each (auto signal in nonMsDataReader->GetSignalInfo(device, MHDAC::StoredDataType::InstrumentCurves))
+                signalInfoMap_->default[deviceNameAndOrdinal + signal->SignalName] = signal;
+        }
+        return signals_;
+    }
+    CATCH_AND_FORWARD
+}
+
+SignalChromatogramPtr MassHunterDataImpl::getSignal(const Signal& signal) const
+{
+    try
+    {
+        auto signalKey = ToSystemString(signal.deviceName + signal.signalName);
+        if (!signalInfoMap_->ContainsKey(signalKey))
+            throw gcnew System::Exception("[MassHunterData::getSignal()] Unknown signal.");
+
+        auto nonMsDataReader = (MHDAC::INonmsDataReader^) (MHDAC::IMsdrDataReader^) reader_;
+        return SignalChromatogramPtr(new SignalChromatogramImpl(nonMsDataReader->GetSignal(signalInfoMap_->default[signalKey])));
     }
     CATCH_AND_FORWARD
 }
@@ -774,31 +873,31 @@ void SpectrumImpl::getYArray(pwiz::util::BinaryData<float>& y) const
 }
 
 
-double ChromatogramImpl::getCollisionEnergy() const
-{
-    try {return chromData_->CollisionEnergy;} CATCH_AND_FORWARD
-}
-
 int ChromatogramImpl::getTotalDataPoints() const
 {
-    try {return chromData_->TotalDataPoints;} CATCH_AND_FORWARD
+    try { return chromData_->TotalDataPoints; } CATCH_AND_FORWARD
 }
 
 void ChromatogramImpl::getXArray(BinaryData<double>& x) const
 {
-    try {return ToBinaryData(chromData_->XArray, x);} CATCH_AND_FORWARD
+    try { return ToBinaryData(chromData_->XArray, x); } CATCH_AND_FORWARD
 }
 
 void ChromatogramImpl::getYArray(BinaryData<float>& y) const
 {
-    try {return ToBinaryData(chromData_->YArray, y);} CATCH_AND_FORWARD
+    try { return ToBinaryData(chromData_->YArray, y); } CATCH_AND_FORWARD
 }
 
-IonPolarity ChromatogramImpl::getIonPolarity() const
+
+double MassChromatogramImpl::getCollisionEnergy() const
+{
+    try {return chromData_->CollisionEnergy;} CATCH_AND_FORWARD
+}
+
+IonPolarity MassChromatogramImpl::getIonPolarity() const
 {
     try { return (IonPolarity)chromData_->IonPolarity; } CATCH_AND_FORWARD
 }
-
 
 
 } // Agilent

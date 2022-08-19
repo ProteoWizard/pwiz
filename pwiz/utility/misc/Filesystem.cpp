@@ -25,9 +25,13 @@
 
 #include "Filesystem.hpp"
 
-#ifdef WIN32
+#ifdef _MSC_VER
+    #ifdef _WIN32_WINNT
+        #undef _WIN32_WINNT
+    #endif
     #define _WIN32_WINNT 0x0600
     #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
     #define NOGDI
     #include <windows.h>
     #include <direct.h>
@@ -53,6 +57,7 @@
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/locale/conversion.hpp>
+#include <boost/locale/encoding_utf.hpp>
 #include <boost/spirit/include/karma.hpp>
 //#include <boost/xpressive/xpressive.hpp>
 #include <iostream>
@@ -647,7 +652,7 @@ PWIZ_API_DECL bool isHTTP(const string& s)
     //sregex uriRegex = sregex::compile("^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?");
     //return regex_match(s, uriRegex);
 
-    return bal::istarts_with(s, "http://") || bal::istarts_with(s, "https://");
+    return bal::istarts_with(s, "http:") || bal::istarts_with(s, "https:");
 }
 
 
@@ -708,6 +713,17 @@ PWIZ_API_DECL string read_file_header(const string& filepath, size_t length)
         }
     }
     return head;
+}
+
+
+PWIZ_API_DECL void check_path_length(const string& path)
+{
+#ifdef WIN32
+    if (isHTTP(path)) return;
+    std::wstring wide_path = boost::locale::conv::utf_to_utf<wchar_t>(bfs::absolute(path).string());
+    if (wide_path.length() > 250)
+        throw std::invalid_argument("path is too long (must be 250 characters or less): " + bfs::absolute(path).string());
+#endif
 }
 
 

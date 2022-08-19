@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using SharedBatch.Properties;
@@ -8,23 +9,24 @@ namespace SharedBatch
 {
     public class MainFormUtils
     {
-        public static void OpenFileExplorer(string configName, bool configValid, string folderDescription, string folderPath, IMainUiControl mainUi)
+        public static void OpenFileExplorer(string configName, bool configValid, string folderPath, string folderDescription, IMainUiControl mainUi)
         {
-            if (CanOpen(configName, configValid, folderDescription, mainUi))
+            if (CanOpen(configName, configValid, folderPath, folderDescription, mainUi))
             {
                 Process.Start(folderPath);
             }
         }
 
 
-        public static bool CanOpen(string configName, bool configValid, string fileDescription, IMainUiControl mainUi)
+        public static bool CanOpen(string configName, bool configValid, string path, string fileDescription, IMainUiControl mainUi)
         {
-            if (!configValid)
+            if (!configValid && !Directory.Exists(path) && !File.Exists(path))
             {
-                mainUi.DisplayError(string.Format(Resources.MainFormUtils_OpenFileExplorer_Cannot_open_the__0__of_an_invalid_configuration_, fileDescription) + Environment.NewLine +
-                                    string.Format(Resources.MainFormUtils_OpenFileExplorer_Please_fix___0___and_try_again_, configName));
-            } 
-            return configValid;
+                mainUi.DisplayError(string.Format(Resources.MainFormUtils_CanOpen_The__0__is_not_valid_for__1__, fileDescription, configName) + Environment.NewLine +
+                                    string.Format(Resources.MainFormUtils_OpenFileExplorer_Please_fix__0__and_try_again_, configName));
+                return false;
+            }
+            return true;
         }
     }
 

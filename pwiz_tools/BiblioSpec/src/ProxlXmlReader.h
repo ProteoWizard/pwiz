@@ -31,6 +31,7 @@ public:
     virtual ~ProxlXmlReader();
     
     virtual bool parseFile();
+    std::vector<PSM_SCORE_TYPE> getScoreTypes();
 
     virtual void startElement(const XML_Char* name, const XML_Char** attr);
     virtual void endElement(const XML_Char* name);
@@ -76,8 +77,15 @@ protected:
         LinkType linkType_;
     };
 
+    enum ANALYSIS {
+        UNKNOWN_ANALYSIS,
+        PERCOLATOR_ANALYSIS,
+        BYONIC_ANALYSIS
+    };
+
     static double aaMasses_[128];
     static double calcMass(const std::string& sequence, const std::vector<SeqMod>& mods);
+    static PSM_SCORE_TYPE analysisToScoreType(ANALYSIS analysisType);
 
     void calcPsms();
     void applyStaticMods(const std::string& sequence, std::vector<SeqMod>& mods, int crosslinkPosition);
@@ -85,7 +93,10 @@ protected:
     std::vector<STATE> state_;
     std::map< std::string, vector<PSM*> > fileToPsms_;
     std::map< char, vector<double> > staticMods_;
+    bool isScoreLookup_;
 
+    std::vector<std::string> searchPrograms_;
+    ANALYSIS analysisType_;
     ProxlPsm* curProxlPsm_;
     std::vector<ProxlMatches> proxlMatches_;
     vector<std::string> dirs_;       ///< directories where spec files might be

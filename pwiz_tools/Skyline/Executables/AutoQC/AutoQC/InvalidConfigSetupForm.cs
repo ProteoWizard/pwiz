@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -24,9 +25,10 @@ namespace AutoQC
 
         private bool _askedAboutRootReplacement; // if the user has been asked about replacing path roots for this configuration
 
-        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, AutoQcConfigManager configManager, IMainUiControl mainControl)
+        public InvalidConfigSetupForm(AutoQcConfig invalidConfig, AutoQcConfigManager configManager, IMainUiControl mainControl, AutoQcConfigManagerState state)
         {
             InitializeComponent();
+            State = state;
             _invalidConfig = invalidConfig;
             _configManager = configManager;
             _mainControl = mainControl;
@@ -35,20 +37,22 @@ namespace AutoQC
             CreateValidConfig();
         }
 
-        public AutoQcConfig Config { get; private set; }
+        public AutoQcConfigManagerState State { get; private set; }
+
+        public IValidatorControl CurrentControl { get; private set; } // for functional testing
 
 
         private async void CreateValidConfig()
         {
             // get valid settings
             var validMainSettings = await FixInvalidMainSettings();
-            var validPanoramaSettings = FixInvalidPanoramaSettings();
+            var validPanoramaSettings = await FixInvalidPanoramaSettings();
             var validSkylineSettings = await FixInvalidSkylineSettings();
             // create valid configuration
-            Config = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
+            var validConfig = new AutoQcConfig(_invalidConfig.Name, _invalidConfig.IsEnabled, _invalidConfig.Created, DateTime.Now,
                 validMainSettings, validPanoramaSettings, validSkylineSettings);
             // replace old configuration
-            _configManager.ReplaceSelectedConfig(Config);
+            State.ReplaceSelectedConfig(validConfig, _mainControl);
             _mainControl.UpdateUiConfigurations();
             CloseSetup();
         }
@@ -59,26 +63,18 @@ namespace AutoQC
         {
             var mainSettings = _invalidConfig.MainSettings;
             var validSkylinePath = await GetValidPath("Skyline file",
-                mainSettings.SkylineFilePath, MainSettings.ValidateSkylineFile, PathDialogOptions.File);
+                mainSettings.SkylineFilePath, MainSettings.ValidateSkylineFile, TextUtil.FILTER_SKY, PathDialogOptions.File);
             var validFolderToWatch = await GetValidPath("folder to watch",
-                mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, PathDialogOptions.Folder);
+                mainSettings.FolderToWatch, MainSettings.ValidateFolderToWatch, null, PathDialogOptions.Folder);
             return new MainSettings(validSkylinePath, validFolderToWatch, mainSettings.IncludeSubfolders, mainSettings.QcFileFilter, mainSettings.RemoveResults, 
                 mainSettings.ResultsWindow.ToString(), mainSettings.InstrumentType, mainSettings.AcquisitionTime.ToString());
         }
 
-        private PanoramaSettings FixInvalidPanoramaSettings()
+        private async Task <PanoramaSettings> FixInvalidPanoramaSettings()
         {
             var panoramaSettings = _invalidConfig.PanoramaSettings;
-            try
-            {
-                panoramaSettings.ValidateSettings();
-                return panoramaSettings;
-            }
-            catch (ArgumentException)
-            {
-                return new PanoramaSettings(false, panoramaSettings.PanoramaServerUrl, panoramaSettings.PanoramaUserEmail, 
-                    panoramaSettings.PanoramaPassword, panoramaSettings.PanoramaFolder, panoramaSettings.PanoramaServerUri);
-            }
+            var validPanoramaSettings = await GetValidVariable(new PanoramaControl(panoramaSettings));
+            return (PanoramaSettings)validPanoramaSettings;
         }
 
 
@@ -86,7 +82,7 @@ namespace AutoQC
 
         private async Task<SkylineSettings> FixInvalidSkylineSettings()
         {
-            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath);
+            var skylineTypeControl = new SkylineTypeControl(_mainControl, _invalidConfig.UsesSkyline, _invalidConfig.UsesSkylineDaily, _invalidConfig.UsesCustomSkylinePath, _invalidConfig.SkylineSettings.CmdPath, State.GetRunningConfigs(), State.BaseState);
             return (SkylineSettings)await GetValidVariable(skylineTypeControl);
         }
 
@@ -94,11 +90,11 @@ namespace AutoQC
 
         #region Get Valid Variables
 
-        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, params PathDialogOptions[] pathDialogOptions)
+        private async Task<string> GetValidPath(string variableName, string invalidPath, Validator validator, string filter, params PathDialogOptions[] pathDialogOptions)
         {
-            TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath, out string path);
+            string path = TextUtil.TryReplaceStart(_oldRoot, _newRoot, invalidPath);
 
-            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, pathDialogOptions);
+            var folderControl = new FilePathControl(variableName, path, _lastInputPath, validator, filter, pathDialogOptions);
             path = (string)await GetValidVariable(folderControl, false);
 
             if (path.Equals(invalidPath))
@@ -172,20 +168,24 @@ namespace AutoQC
 
         private void AddControl(UserControl control)
         {
+            var newHeight = Height - panel1.Height + control.Height;
+            var newWidth = Width - panel1.Width + control.Width;
+            Size = new Size(newWidth, newHeight);
             control.Dock = DockStyle.Fill;
             control.Show();
             panel1.Controls.Add(control);
+            CurrentControl = (IValidatorControl)control;
         }
 
         private void RemoveControl(UserControl control)
         {
             control.Hide();
             panel1.Controls.Remove(control);
+            CurrentControl = null;
         }
 
         private void btnSkip_Click(object sender, EventArgs e)
         {
-            Config = _invalidConfig;
             CloseSetup();
         }
 

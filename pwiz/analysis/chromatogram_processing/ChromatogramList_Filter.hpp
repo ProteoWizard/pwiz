@@ -29,7 +29,7 @@
 #include "ChromatogramListWrapper.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
-#include "boost/logic/tribool.hpp"
+#include "boost/logic/tribool_io.hpp"
 
 #include <set>
 

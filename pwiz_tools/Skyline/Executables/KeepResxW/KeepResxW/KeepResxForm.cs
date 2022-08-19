@@ -25,10 +25,12 @@ namespace KeepResxW
             @"bumbershoot\*",
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",
-            @"skyline\executables\autoqc\*",
+            @"skyline\executables\autoqc\*",        // For now
             @"skyline\executables\keepresxw\*",
             @"skyline\executables\localizationhelper\*",
             @"skyline\executables\multiload\*",
+            @"skyline\executables\sharedbatch\*",   // For now
+            @"skyline\executables\skylinebatch\*",  // For now
             @"skyline\executables\skylinepeptidecolorgenerator\*",
             @"skyline\executables\skylinerunner\*",
             @"skyline\executables\tools\exampleargcollector\*",

@@ -58,15 +58,15 @@ Extra Info: 文件名称 =
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
 
-Undo Redo : 应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++
-Summary   : 应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++
+Undo Redo : 应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [29, 42] > 674.8425++
+Summary   : 应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [29, 42] > 674.8425++
 All Info  :
-应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [28, 41] > 674.8425++
+应用所有峰值NP_036629 > K.GILAADESVGSMAK.R [29, 42] > 674.8425++
 
-Undo Redo : 应用所有峰值NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++
-Summary   : 应用所有峰值NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++
+Undo Redo : 应用所有峰值NP_112646 > K.LNDGSQITFEK.C [244, 254] > 626.3144++
+Summary   : 应用所有峰值NP_112646 > K.LNDGSQITFEK.C [244, 254] > 626.3144++
 All Info  :
-应用所有峰值NP_112646 > K.LNDGSQITFEK.C [243, 253] > 626.3144++
+应用所有峰值NP_112646 > K.LNDGSQITFEK.C [244, 254] > 626.3144++
 
 Undo Redo : 应用峰值NP_036620 > DLTGFPQGADQR > 652.8151++到后续
 Summary   : 应用峰值NP_036620 > DLTGFPQGADQR > 652.8151++到后续
@@ -78,103 +78,103 @@ Summary   : 应用峰值NP_445770 > GATYAFSGSHYWR > 751.8442++到后续
 All Info  :
 应用峰值NP_445770 > GATYAFSGSHYWR > 751.8442++到后续
 
-Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
-Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
+Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
 All Info  :
-应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
 
-Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
-Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
+Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
 All Info  :
-应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
 
-Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
-Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+Undo Redo : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
+Summary   : 应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
 All Info  :
-应用所有峰值NP_037030 > R.LGGEEVSVACK.L [237, 247] > 574.7844++
+应用所有峰值NP_037030 > R.LGGEEVSVACK.L [238, 248] > 574.7844++
+
+Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [29, 42]
+Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [29, 42]
+All Info  :
+已删除目标 NP_036629 > K.GILAADESVGSMAK.R [29, 42]
+
+Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 的峰界限
+Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 的峰界限
+All Info  :
+已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 的峰界限
+已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 所有峰的开始时间从 30.50 更改到 30.11
+已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 所有峰的结束时间从 31.10 更改到 30.43
+
+Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 的峰界限
+Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 的峰界限
+All Info  :
+已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 的峰界限
+已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 所有峰的开始时间从 33.47 更改到 30.11
+已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [290, 304] > 905.9565++ 所有峰的结束时间从 33.87 更改到 30.50
+
+Undo Redo : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+All Info  :
+已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+
+Undo Redo : 已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+All Info  :
+已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+
+Undo Redo : 已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+All Info  :
+已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+
+Undo Redo : 已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+Summary   : 已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+All Info  :
+已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 删除所有峰
+
+Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+All Info  :
+已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 所有峰的开始时间从 33.48 更改到 31.93
+已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 所有峰的结束时间从 34.29 更改到 32.20
+
+Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+All Info  :
+已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 所有峰的开始时间从 33.63 更改到 31.93
+已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 所有峰的结束时间从 34.59 更改到 32.21
+
+Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+All Info  :
+已更改 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 的峰界限
+已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 所有峰的开始时间从 33.72 更改到 31.90
+已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [379, 391] > 710.8752++ 所有峰的结束时间从 34.79 更改到 32.21
+
+Undo Redo : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [47, 57]
+Summary   : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [47, 57]
+All Info  :
+已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [47, 57]
+
+Undo Redo : 已更改 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 的峰界限
+Summary   : 已更改 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 的峰界限
+All Info  :
+已更改 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 的峰界限
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 所有峰的开始时间从 27.79 更改到 26.86
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 所有峰的结束时间从 28.72 更改到 27.40
+
+Undo Redo : 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
+Summary   : 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
+All Info  :
+已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
 
 Undo Redo : 离子对设置 -- 整合 > 全部整合 已更改为 真
 Summary   : 设置 > 离子对设置 -- 整合 > 全部整合 已更改为 真
 All Info  :
 离子对设置 -- 整合 > 全部整合 已更改为 真
 设置 > 离子对设置 -- 整合 > 全部整合 从 假 更改到 真
-
-Undo Redo : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-Summary   : 已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-All Info  :
-已删除目标 NP_036629 > K.GILAADESVGSMAK.R [28, 41]
-
-Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-All Info  :
-已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的开始时间从 30.50 更改到 30.11
-已将“D_103_REP3”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的结束时间从 31.10 更改到 30.43
-
-Undo Redo : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-Summary   : 已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-All Info  :
-已更改 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 的峰界限
-已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的开始时间从 33.47 更改到 30.11
-已将“D_108_REP2”中的 NP_036629 > R.CSLPRPWALTFSYGR.A [289, 303] > 905.9565++ 所有峰的结束时间从 33.87 更改到 30.50
-
-Undo Redo : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-Summary   : 已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-All Info  :
-已在重复测定“D_103_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-
-Undo Redo : 已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-Summary   : 已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-All Info  :
-已在重复测定“D_108_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-
-Undo Redo : 已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-Summary   : 已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-All Info  :
-已在重复测定“H_159_REP2”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-
-Undo Redo : 已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-Summary   : 已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-All Info  :
-已在重复测定“H_162_REP3”中从 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 删除所有峰
-
-Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-All Info  :
-已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的开始时间从 33.48 更改到 31.93
-已将“H_148_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.29 更改到 32.20
-
-Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-All Info  :
-已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的开始时间从 33.63 更改到 31.93
-已将“H_159_REP3”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.59 更改到 32.21
-
-Undo Redo : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-Summary   : 已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-All Info  :
-已更改 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 的峰界限
-已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的开始时间从 33.72 更改到 31.90
-已将“H_162_REP2”中的 NP_602308 > R.GSYNLQDLLAQAK.L [378, 390] > 710.8752++ 所有峰的结束时间从 34.79 更改到 32.21
-
-Undo Redo : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-Summary   : 已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-All Info  :
-已删除目标 NP_001012027 > R.DIPVNPMCIYR.S [46, 56]
-
-Undo Redo : 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
-Summary   : 已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
-All Info  :
-已更改 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 的峰界限
-已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的开始时间从 27.79 更改到 26.86
-已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [35, 45] > 614.3164++ 所有峰的结束时间从 28.72 更改到 27.40
-
-Undo Redo : 已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
-Summary   : 已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
-All Info  :
-已删除目标 NP_036870 > K.FGLYSDQMR.E [181, 189]
 
 Undo Redo : 已删除目标 NP_001033064 > GMYESLPVVAVK
 Summary   : 已删除目标 NP_001033064 > GMYESLPVVAVK
@@ -718,24 +718,24 @@ All Info  :
 目标 : NP_037030 已删除
 目标 : NP_602308 已删除
 目标 : NP_001012027 已删除
-目标 > NP_036870 : K.DFATVYVDAVK.D [35, 45] 已删除
+目标 > NP_036870 : K.DFATVYVDAVK.D [36, 46] 已删除
 目标 : NP_037244 已删除
 目标 : NP_001010968 已删除
-目标 > NP_444180 : K.SLLNSLEEAK.K [67, 76] 已删除
+目标 > NP_444180 : K.SLLNSLEEAK.K [68, 77] 已删除
 目标 : NP_872279 已删除
-目标 > NP_001121161 : R.HTNNGMICLTSLLR.I [279, 292] 已删除
-目标 > NP_001121161 : K.YDCVAMNHHGVIR.H [305, 317] 已删除
-目标 > NP_058716 : K.SFSCEVEILEGDK.V [169, 181] 已删除
-目标 > NP_036745 : K.ENSSNILDNLLSR.M [802, 814] 已删除
+目标 > NP_001121161 : R.HTNNGMICLTSLLR.I [280, 293] 已删除
+目标 > NP_001121161 : K.YDCVAMNHHGVIR.H [306, 318] 已删除
+目标 > NP_058716 : K.SFSCEVEILEGDK.V [170, 182] 已删除
+目标 > NP_036745 : K.ENSSNILDNLLSR.M [803, 815] 已删除
 目标 : NP_446290 已删除
 目标 : NP_037001 已删除
-目标 > NP_150641 : R.LTHGDFTWTTK.K [90, 100] 已删除
+目标 > NP_150641 : R.LTHGDFTWTTK.K [91, 101] 已删除
 目标 : NP_001101333 已删除
-目标 > NP_062212 : K.YGLDLGSLLVR.L [1066, 1076] 已删除
+目标 > NP_062212 : K.YGLDLGSLLVR.L [1067, 1077] 已删除
 目标 : NP_036774 已删除
-目标 > NP_001011908 : R.FAEDHFAHEATK.T [116, 127] 已删除
-目标 > NP_001011908 : R.DVNEAIQWMEEK.E [269, 280] 已删除
-目标 > NP_001011908 : K.HQLLEAEMLAR.E [1647, 1657] 已删除
+目标 > NP_001011908 : R.FAEDHFAHEATK.T [117, 128] 已删除
+目标 > NP_001011908 : R.DVNEAIQWMEEK.E [270, 281] 已删除
+目标 > NP_001011908 : K.HQLLEAEMLAR.E [1648, 1658] 已删除
 目标 : NP_758823 已删除
 目标 > NP_036620 : DLTGFPQGADQR 已删除
 目标 : NP_036869 已删除

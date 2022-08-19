@@ -1,8 +1,8 @@
 #  Copyright Noel Belcourt 2007.
 #  Copyright 2017, NVIDIA CORPORATION.
 #  Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import property ;
 import generators ;
@@ -22,14 +22,14 @@ generators.override pgi.searched-lib-generator : searched-lib-generator ;
 # Documentation and toolchain description located
 # http://www.pgroup.com/resources/docs.htm
 
-rule init ( version ? : command * : options * ) 
+rule init ( version ? : command * : options * )
 {
   local condition = [ common.check-init-parameters pgi : version $(version) ] ;
 
   local l_command = [ common.get-invocation-command pgi : pgc++ : $(command) ] ;
 
   common.handle-options pgi : $(condition) : $(l_command) : $(options) ;
-    
+
   command_c = $(command_c[1--2]) $(l_command[-1]:B=pgcc) ;
 
   toolset.flags pgi CONFIG_C_COMMAND $(condition) : $(command_c) ;
@@ -57,6 +57,7 @@ flags pgi.compile.c++ OPTIONS <cxxstd>14 : -std=c++14 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>1z : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>17 : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>2a : -std=c++17 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>20 : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>latest : -std=c++17 ;
 
 flags pgi.compile OPTIONS <link>shared : -fpic ;
@@ -68,6 +69,8 @@ flags pgi.compile OPTIONS <optimization>space : -fast ;
 flags pgi.compile OPTIONS <warnings>off : -Minform=severe ;
 flags pgi.compile OPTIONS <warnings>on : -Minform=warn ;
 flags pgi.compile OPTIONS <warnings>all : -Minform=warn ;
+flags pgi.compile OPTIONS <warnings>extra : -Minform=inform ;
+flags pgi.compile OPTIONS <warnings>pedantic : -Minform=inform ;
 flags pgi.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 flags pgi.compile.c++ OPTIONS <rtti>off : --no_rtti ;

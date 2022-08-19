@@ -144,12 +144,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Executables\SkylineRunner\ErrorChecker.cs">
+      <Link>ErrorChecker.cs</Link>
+    </Compile>
     <Compile Include="CommandLineNoJoinTest.cs" />
     <Compile Include="CommandLineRefineTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="CommandLineImportTest.cs" />
     <Compile Include="CommandLineWiffTest.cs" />
     <Compile Include="ExportMethodShimadzuTest.cs" />
+    <Compile Include="FullScanAcquisitionMethodTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
@@ -220,17 +224,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\app.config">
-      <Link>app.config</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="CommandLineImportTest.zip" />
     <None Include="CommandLineNoJoinTest.zip" />
     <None Include="CommandLineRefine.zip" />
+    <None Include="CommandLineRefineGroupComparisonTest.zip" />
     <None Include="CommandLineTest.zip" />
     <None Include="CommandLineWiffTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
+    <None Include="ImportAllCmdLineTestMzml.zip" />
     <None Include="ImportCommandLineSameName.zip" />
+    <None Include="PressureTracesTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AgilentCEOpt.zip" />

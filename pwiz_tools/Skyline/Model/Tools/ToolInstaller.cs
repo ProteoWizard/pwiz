@@ -425,7 +425,8 @@ namespace pwiz.Skyline.Model.Tools
 
                 if (retval.ValidToolsFound.Count != 0)
                 {
-                    Helpers.TryTwice(() => Directory.Move(tempToolPath, permToolPath));
+                    Helpers.TryTwice(() => Directory.Move(tempToolPath, permToolPath),
+                        $@"Directory.Move({tempToolPath}, {permToolPath})");
                 }
             }
             return retval;

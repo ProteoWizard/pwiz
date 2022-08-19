@@ -1,0 +1,332 @@
+Undo Redo : Transition Settings -- Integration > Integrate All changed to True
+Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
+All Info  :
+Transition Settings -- Integration > Integrate All changed to True
+Settings > Transition Settings -- Integration > Integrate All changed from False to True
+
+Undo Redo : Added spectral library "DIA-PASEF-tutorial"
+Summary   : Added spectral library "DIA-PASEF-tutorial"
+All Info  :
+Added spectral library "DIA-PASEF-tutorial"
+Build Spectral Library > Cut-off score is "0.95"
+Build Spectral Library > Search files : contains { File = "interact.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0.95" }
+Build Spectral Library > iRT standard peptides is "Automatic"
+Build Spectral Library > Include ambiguous matches is False
+Build Spectral Library > Filter for document peptides is False
+Build Spectral Library > Workflow is "DIA"
+Build Spectral Library > Input File Type is "Search results (build library directly)"
+Extra Info: Cut-off score = "0.95",
+Search files = 
+[
+    {
+        File = "interact.pep.xml",
+        Score type = "PeptideProphet confidence",
+        Score threshold = "0.95"
+    }
+],
+iRT standard peptides = "Automatic",
+Include ambiguous matches = False,
+Filter for document peptides = False,
+Workflow = "DIA",
+Input File Type = "Search results (build library directly)"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "A210331_bcc_1180_lfqbA_17min_dia_200ng.d"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "A210331_bcc_1181_lfqbB_17min_dia_200ng.d"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "A210331_bcc_1182_lfqbA_17min_dia_200ng.d"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "A210331_bcc_1183_lfqbB_17min_dia_200ng.d"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "A210331_bcc_1184_lfqbA_17min_dia_200ng.d"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "A210331_bcc_1185_lfqbB_17min_dia_200ng.d"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "A210331_bcc_118"
+Import Peptide Search > Extract Chromatograms > Removed suffix is "_17min_dia_200ng"
+Import Peptide Search > Configure Transition Settings > Precursor charges is "2, 3, 4"
+Import Peptide Search > Configure Transition Settings > Ion charges is "1, 2"
+Import Peptide Search > Configure Transition Settings > Ion types is "y, b"
+Import Peptide Search > Configure Transition Settings > Use DIA precursor window for exclusion is True
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0.05"
+Import Peptide Search > Configure Transition Settings > Pick min product ions is "6"
+Import Peptide Search > Configure Transition Settings > Pick product ions is "6"
+Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 3"
+Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
+Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "diaPASEF (24 fixed)"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "400", End = "425" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "425", End = "450" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "450", End = "475" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "475", End = "500" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "500", End = "525" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "525", End = "550" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "550", End = "575" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "575", End = "600" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "600", End = "625" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "625", End = "650" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "650", End = "675" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "675", End = "700" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "700", End = "725" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "725", End = "750" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "750", End = "775" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "775", End = "800" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "800", End = "825" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "825", End = "850" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "850", End = "875" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "875", End = "900" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "900", End = "925" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "925", End = "950" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "950", End = "975" }
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows : contains { Start = "975", End = "1000" }
+Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "20"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter type is "Use only scans within time frame of predicted RT"
+Import Peptide Search > Import FASTA > FASTA file is "target_protein_sequences.fasta"
+Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
+Import Peptide Search > Import FASTA > Decoys per target is "1"
+Import Peptide Search > Import FASTA > Automatically train mProphet model is True
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "10"
+Import Peptide Search > Associate Proteins > Peptides mapped is "30"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "2"
+Import Peptide Search > Associate Proteins > Protein targets is "10"
+Import Peptide Search > Associate Proteins > Peptide targets is "30"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "A210331_bcc_1180_lfqbA_17min_dia_200ng.d",
+        "A210331_bcc_1181_lfqbB_17min_dia_200ng.d",
+        "A210331_bcc_1182_lfqbA_17min_dia_200ng.d",
+        "A210331_bcc_1183_lfqbB_17min_dia_200ng.d",
+        "A210331_bcc_1184_lfqbA_17min_dia_200ng.d",
+        "A210331_bcc_1185_lfqbB_17min_dia_200ng.d"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "A210331_bcc_118",
+    Removed suffix = "_17min_dia_200ng"
+},
+Configure Transition Settings = 
+{
+    Precursor charges = "2, 3, 4",
+    Ion charges = "1, 2",
+    Ion types = "y, b",
+    Use DIA precursor window for exclusion = True,
+    Ion match tolerance = "0.05",
+    Pick min product ions = "6",
+    Pick product ions = "6",
+    Product ion selection start = "ion 3",
+    Product ion selection end = "last ion",
+    Max ion m/z = "2000"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "DIA",
+    Isolation scheme = "diaPASEF (24 fixed)": 
+{
+        Prespecified isolation windows = 
+        [
+            {
+                Start = "400",
+                End = "425"
+            },
+            {
+                Start = "425",
+                End = "450"
+            },
+            {
+                Start = "450",
+                End = "475"
+            },
+            {
+                Start = "475",
+                End = "500"
+            },
+            {
+                Start = "500",
+                End = "525"
+            },
+            {
+                Start = "525",
+                End = "550"
+            },
+            {
+                Start = "550",
+                End = "575"
+            },
+            {
+                Start = "575",
+                End = "600"
+            },
+            {
+                Start = "600",
+                End = "625"
+            },
+            {
+                Start = "625",
+                End = "650"
+            },
+            {
+                Start = "650",
+                End = "675"
+            },
+            {
+                Start = "675",
+                End = "700"
+            },
+            {
+                Start = "700",
+                End = "725"
+            },
+            {
+                Start = "725",
+                End = "750"
+            },
+            {
+                Start = "750",
+                End = "775"
+            },
+            {
+                Start = "775",
+                End = "800"
+            },
+            {
+                Start = "800",
+                End = "825"
+            },
+            {
+                Start = "825",
+                End = "850"
+            },
+            {
+                Start = "850",
+                End = "875"
+            },
+            {
+                Start = "875",
+                End = "900"
+            },
+            {
+                Start = "900",
+                End = "925"
+            },
+            {
+                Start = "925",
+                End = "950"
+            },
+            {
+                Start = "950",
+                End = "975"
+            },
+            {
+                Start = "975",
+                End = "1000"
+            }
+        ]
+    },
+    Product mass analyzer = "Centroided",
+    Mass accuracy = "20",
+    Retention time filter type = "Use only scans within time frame of predicted RT"
+},
+Import FASTA = 
+{
+    FASTA file = "target_protein_sequences.fasta",
+    Decoy generation method = "Shuffle Sequence",
+    Decoys per target = "1",
+    Automatically train mProphet model = True
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "10",
+    Peptides mapped = "30",
+    Proteins unmapped = "2",
+    Protein targets = "10",
+    Peptide targets = "30"
+}
+
+Undo Redo : Annotations changed
+Summary   : Settings > Document Settings -- Annotations changed
+All Info  :
+Annotations changed
+Settings > Document Settings -- Annotations : "Condition" was added
+Settings > Document Settings -- Annotations > "Condition" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "Condition" > Type is "Value List"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "A"
+Settings > Document Settings -- Annotations > "Condition" > Values : contains "B"
+Settings > Document Settings -- Annotations : "BioReplicate" was added
+Settings > Document Settings -- Annotations > "BioReplicate" > Applies to is "replicate"
+Settings > Document Settings -- Annotations > "BioReplicate" > Type is "Text"
+
+Undo Redo : Pasted 12 values into the document grid
+Summary   : Pasted 12 values into the document grid
+All Info  :
+Pasted 12 values into the document grid
+Document grid > Report name is "Replicates"
+Set Condition of 0_lfqbA to "A"
+Set BioReplicate of 0_lfqbA to "1"
+Set Condition of 1_lfqbB to "B"
+Set BioReplicate of 1_lfqbB to "1"
+Set Condition of 2_lfqbA to "A"
+Set BioReplicate of 2_lfqbA to "2"
+Set Condition of 3_lfqbB to "B"
+Set BioReplicate of 3_lfqbB to "2"
+Set Condition of 4_lfqbA to "A"
+Set BioReplicate of 4_lfqbA to "3"
+Set Condition of 5_lfqbB to "B"
+Set BioReplicate of 5_lfqbB to "3"
+Extra Info: A	1
+B	1
+A	2
+B	2
+A	3
+B	3
+
+Report name = "Replicates"
+
+Undo Redo : Group Comparison : "By Condition" was added
+Summary   : Settings > Document Settings -- Group Comparisons : "By Condition" was added
+All Info  :
+Group Comparison : "By Condition" was added
+Settings > Document Settings -- Group Comparisons : "By Condition" was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Control group annotation is "Condition"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Control group value is "A"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Value to compare against is "B"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Identity Annotation is "BioReplicate"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Normalization method is "None"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method is "Sum of transition areas"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Confidence level is "95"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope is False
+Settings > Document Settings -- Group Comparisons > "By Condition" > Use zero for missing peaks is False
+Settings > Document Settings -- Group Comparisons > "By Condition" > Q-value cutoff is "0.01"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows is Empty
+
+Undo Redo : Group Comparison > "By Condition" > Formatting rows changed
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows changed
+All Info  :
+Group Comparison > "By Condition" > Formatting rows changed
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: ECOLI", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "128, 0, 255" } was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: YEAS", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "255, 128, 0" } was added
+Settings > Document Settings -- Group Comparisons > "By Condition" > Formatting rows : { Expression = "ProteinName: HUMAN", Labeled = False, Size = "Normal", Symbol = "Circle", RGB = "0, 128, 0" } was added
+
+Undo Redo : Group Comparison > "By Condition" > Protein scope changed to True
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope changed to True
+All Info  :
+Group Comparison > "By Condition" > Protein scope changed to True
+Settings > Document Settings -- Group Comparisons > "By Condition" > Protein scope changed from False to True
+
+Undo Redo : Group Comparison > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+Summary   : Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+All Info  :
+Group Comparison > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "By Condition" > Summary method changed from "Sum of transition areas" to "Turkey's Median Polish"
+

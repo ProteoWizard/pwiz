@@ -212,5 +212,26 @@ namespace pwiz.Common.Colors
         {
             return (color.R * .21 + color.G * .72 + color.B * .07) / 256;
         }
+
+        /// <summary>
+        /// If the foreground color is semi-transparent, average its red green and blue values
+        /// with the background.
+        /// </summary>
+        public static Color MergeWithBackground(Color foreground, Color background)
+        {
+            if (foreground.A >= 255)
+            {
+                return foreground;
+            }
+
+            double fraction = foreground.A / 255.0;
+            var red = (int) Math.Round(Math.Sqrt(
+                fraction * foreground.R * foreground.R + (1 - fraction) * background.R * background.R));
+            var green = (int)Math.Round(Math.Sqrt(
+                fraction * foreground.G * foreground.G + (1 - fraction) * background.G * background.G));
+            var blue = (int)Math.Round(Math.Sqrt(
+                fraction * foreground.B * foreground.B + (1 - fraction) * background.B * background.B));
+            return Color.FromArgb(red, green, blue);
+        }
     }
 }

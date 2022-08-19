@@ -81,7 +81,6 @@ Clearcore2.Utility.dll (included automatically from ProteoWizard; DO NOT ADD TO 
 Clearcore2.XmlHelpers.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CLFIO32.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CRHAKEI2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-DataReader.dll
 de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
 DotNetZip.dll
@@ -152,6 +151,10 @@ Method\Agilent\MethodCreator.dll
 Method\Bruker\BDal.Submethod.Wrapper.dll
 Method\Bruker\BdalRetentionTimeMassList.dll
 Method\Bruker\BuildBrukerMethod.exe
+Method\Shimadzu\BuildShimadzuMethod.exe
+Method\Shimadzu\MethodConverter.dll
+Method\Shimadzu\MethodWriter.dll
+Method\Shimadzu\Shimadzu.LabSolutions.IO.IoModule.dll
 Method\Thermo\BuildLTQMethod.exe
 Method\Thermo\BuildThermoMethod.exe
 Method\Thermo\BuildTSQEZMethod.exe
@@ -167,6 +170,7 @@ Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoW
 Microsoft.Practices.Unity.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 MIDAC.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 modifications.xml
+msconvert.exe
 MSGraph.dll
 MSGraph.pdb
 MSMSDBCntl.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

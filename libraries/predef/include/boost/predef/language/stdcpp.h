@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2011-2013
+Copyright Rene Rivera 2011-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,29 +11,34 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_LANG_STDCPP`]
+/* tag::reference[]
+= `BOOST_LANG_STDCPP`
 
-[@http://en.wikipedia.org/wiki/C%2B%2B Standard C++] language.
+http://en.wikipedia.org/wiki/C%2B%2B[Standard {CPP}] language.
 If available, the year of the standard is detected as YYYY.MM.1 from the Epoc date.
-Because of the way the C++ standardization process works the
+Because of the way the {CPP} standardization process works the
 defined version year will not be the commonly known year of the standard.
 Specifically the defined versions are:
 
-[table Detected Version Number vs. C++ Standard Year
-  [[Detected Version Number] [Standard Year] [C++ Standard]]
-  [[27.11.1] [1998] [ISO/IEC 14882:1998]]
-  [[41.12.1] [2011] [ISO/IEC 14882:2011]]
-]
+.Detected Version Number vs. {CPP} Standard Year
+[options="header"]
+|===
+| Detected Version Number | Standard Year | {CPP} Standard
+| 27.11.1 | 1998 | ISO/IEC 14882:1998
+| 41.3.1 | 2011 | ISO/IEC 14882:2011
+| 44.2.1 | 2014 | ISO/IEC 14882:2014
+| 47.3.1 | 2017 | ISO/IEC 14882:2017
+|===
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__cplusplus`] [__predef_detection__]]
+| `+__cplusplus+` | {predef_detection}
 
-    [[`__cplusplus`] [YYYY.MM.1]]
-    ]
- */
+| `+__cplusplus+` | YYYY.MM.1
+|===
+*/ // end::reference[]
 
 #define BOOST_LANG_STDCPP BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -52,24 +57,21 @@ Specifically the defined versions are:
 
 #define BOOST_LANG_STDCPP_NAME "Standard C++"
 
-#include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_LANG_STDCPP,BOOST_LANG_STDCPP_NAME)
+/* tag::reference[]
+= `BOOST_LANG_STDCPPCLI`
 
-
-/*`
-[heading `BOOST_LANG_STDCPPCLI`]
-
-[@http://en.wikipedia.org/wiki/C%2B%2B/CLI Standard C++/CLI] language.
+http://en.wikipedia.org/wiki/C%2B%2B/CLI[Standard {CPP}/CLI] language.
 If available, the year of the standard is detected as YYYY.MM.1 from the Epoc date.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__cplusplus_cli`] [__predef_detection__]]
+| `+__cplusplus_cli+` | {predef_detection}
 
-    [[`__cplusplus_cli`] [YYYY.MM.1]]
-    ]
- */
+| `+__cplusplus_cli+` | YYYY.MM.1
+|===
+*/ // end::reference[]
 
 #define BOOST_LANG_STDCPPCLI BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -88,21 +90,18 @@ If available, the year of the standard is detected as YYYY.MM.1 from the Epoc da
 
 #define BOOST_LANG_STDCPPCLI_NAME "Standard C++/CLI"
 
-#include <boost/predef/detail/test.h>
-BOOST_PREDEF_DECLARE_TEST(BOOST_LANG_STDCPPCLI,BOOST_LANG_STDCPPCLI_NAME)
+/* tag::reference[]
+= `BOOST_LANG_STDECPP`
 
+http://en.wikipedia.org/wiki/Embedded_C%2B%2B[Standard Embedded {CPP}] language.
 
-/*`
-[heading `BOOST_LANG_STDECPP`]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-[@http://en.wikipedia.org/wiki/Embedded_C%2B%2B Standard Embedded C++] language.
-
-[table
-    [[__predef_symbol__] [__predef_version__]]
-
-    [[`__embedded_cplusplus`] [__predef_detection__]]
-    ]
- */
+| `+__embedded_cplusplus+` | {predef_detection}
+|===
+*/ // end::reference[]
 
 #define BOOST_LANG_STDECPP BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -117,8 +116,13 @@ BOOST_PREDEF_DECLARE_TEST(BOOST_LANG_STDCPPCLI,BOOST_LANG_STDCPPCLI_NAME)
 
 #define BOOST_LANG_STDECPP_NAME "Standard Embedded C++"
 
+#endif
+
+#include <boost/predef/detail/test.h>
+BOOST_PREDEF_DECLARE_TEST(BOOST_LANG_STDCPP,BOOST_LANG_STDCPP_NAME)
+
+#include <boost/predef/detail/test.h>
+BOOST_PREDEF_DECLARE_TEST(BOOST_LANG_STDCPPCLI,BOOST_LANG_STDCPPCLI_NAME)
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_LANG_STDECPP,BOOST_LANG_STDECPP_NAME)
-
-
-#endif

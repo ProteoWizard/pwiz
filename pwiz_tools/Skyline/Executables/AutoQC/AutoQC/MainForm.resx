@@ -123,7 +123,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 27</value>
+    <value>26, 32</value>
   </data>
   <data name="btnEdit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -148,13 +148,13 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnEdit.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="btnCopy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnCopy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 54</value>
+    <value>26, 59</value>
   </data>
   <data name="btnCopy.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -178,31 +178,34 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnCopy.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
+  </data>
+  <data name="lblNoConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
   <data name="lblNoConfigs.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblNoConfigs.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 9.75pt</value>
+    <value>Microsoft Sans Serif, 9.75pt, style=Italic</value>
   </data>
   <data name="lblNoConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="lblNoConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-3, 4</value>
+    <value>104, 7</value>
   </data>
   <data name="lblNoConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
   </data>
   <data name="lblNoConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>509, 16</value>
+    <value>510, 16</value>
   </data>
   <data name="lblNoConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="lblNoConfigs.Text" xml:space="preserve">
-    <value>There are no saved configurations. Click the add button to create a new configuration.</value>
+    <value>There are no saved configurations. Click the Add button to create a new configuration.</value>
   </data>
   <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
     <value>lblNoConfigs</value>
@@ -211,10 +214,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
-    <value>panel2</value>
+    <value>panel4</value>
   </data>
   <data name="&gt;&gt;lblNoConfigs.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="labelSavedConfigurations.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -223,7 +226,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelSavedConfigurations.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 9</value>
+    <value>-3, 9</value>
   </data>
   <data name="labelSavedConfigurations.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -244,10 +247,10 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.Parent" xml:space="preserve">
-    <value>tabConfigs</value>
+    <value>panel4</value>
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="btnViewLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -259,7 +262,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnViewLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>538, 22</value>
+    <value>26, 86</value>
   </data>
   <data name="btnViewLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -280,61 +283,82 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnViewLog.Parent" xml:space="preserve">
-    <value>panel2</value>
+    <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnViewLog.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>0</value>
   </data>
   <data name="tabMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="panel4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 7</value>
+  </data>
+  <data name="panel4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>635, 29</value>
+  </data>
+  <data name="panel4.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;panel4.Name" xml:space="preserve">
+    <value>panel4</value>
+  </data>
+  <data name="&gt;&gt;panel4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel4.Parent" xml:space="preserve">
+    <value>tabConfigs</value>
+  </data>
+  <data name="&gt;&gt;panel4.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="listViewConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="columnName.Text" xml:space="preserve">
+  <data name="columnName2.Text" xml:space="preserve">
     <value>Configuration</value>
   </data>
-  <data name="columnName.Width" type="System.Int32, mscorlib">
-    <value>195</value>
+  <data name="columnName2.Width" type="System.Int32, mscorlib">
+    <value>193</value>
   </data>
-  <data name="columnUser.Text" xml:space="preserve">
+  <data name="columnUser2.Text" xml:space="preserve">
     <value>User</value>
   </data>
-  <data name="columnUser.Width" type="System.Int32, mscorlib">
-    <value>127</value>
+  <data name="columnUser2.Width" type="System.Int32, mscorlib">
+    <value>130</value>
   </data>
-  <data name="columnCreated.Text" xml:space="preserve">
+  <data name="columnCreated2.Text" xml:space="preserve">
     <value>Created</value>
   </data>
-  <data name="columnCreated.Width" type="System.Int32, mscorlib">
-    <value>86</value>
+  <data name="columnCreated2.Width" type="System.Int32, mscorlib">
+    <value>84</value>
   </data>
-  <data name="columnStatus.Text" xml:space="preserve">
+  <data name="columnStatus2.Text" xml:space="preserve">
     <value>Status</value>
   </data>
-  <data name="columnStatus.Width" type="System.Int32, mscorlib">
-    <value>86</value>
+  <data name="columnStatus2.Width" type="System.Int32, mscorlib">
+    <value>88</value>
   </data>
   <data name="listViewConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 24</value>
+    <value>15, 37</value>
   </data>
   <data name="listViewConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>510, 381</value>
+    <value>510, 425</value>
   </data>
   <data name="listViewConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
     <value>listViewConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>AutoQC.MyListView, AutoQC, Version=21.1.0.158, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>
   </data>
   <data name="&gt;&gt;listViewConfigs.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Right</value>
@@ -343,7 +367,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 0</value>
+    <value>26, 5</value>
   </data>
   <data name="btnAdd.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -367,7 +391,7 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>285, 17</value>
@@ -426,8 +450,11 @@
   <data name="toolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="toolStrip.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 7, 1, 0</value>
+  </data>
   <data name="toolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 381</value>
+    <value>24, 430</value>
   </data>
   <data name="toolStrip.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
@@ -442,13 +469,13 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;toolStrip.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="btnImportConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnImportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 81</value>
+    <value>26, 145</value>
   </data>
   <data name="btnImportConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -478,13 +505,13 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnImportConfigs.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnExportConfigs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnExportConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 108</value>
+    <value>26, 172</value>
   </data>
   <data name="btnExportConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -511,16 +538,16 @@
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnExportConfigs.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>519, 24</value>
+    <value>530, 32</value>
   </data>
   <data name="panel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>108, 381</value>
+    <value>108, 430</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -537,87 +564,6 @@
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="btnStop.Location" type="System.Drawing.Point, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="btnStop.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnStop.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnStop.Text" xml:space="preserve">
-    <value>St&amp;op</value>
-  </data>
-  <data name="&gt;&gt;btnStop.Name" xml:space="preserve">
-    <value>btnStop</value>
-  </data>
-  <data name="&gt;&gt;btnStop.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnStop.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnStop.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="btnRun.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnRun.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 22</value>
-  </data>
-  <data name="btnRun.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnRun.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnRun.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="btnRun.Text" xml:space="preserve">
-    <value>R&amp;un</value>
-  </data>
-  <data name="&gt;&gt;btnRun.Name" xml:space="preserve">
-    <value>btnRun</value>
-  </data>
-  <data name="&gt;&gt;btnRun.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnRun.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnRun.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 403</value>
-  </data>
-  <data name="panel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>621, 48</value>
-  </data>
-  <data name="panel2.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>tabConfigs</value>
-  </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="tabConfigs.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -625,10 +571,10 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabConfigs.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>10, 10, 10, 10</value>
   </data>
   <data name="tabConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 457</value>
+    <value>651, 475</value>
   </data>
   <data name="tabConfigs.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -648,6 +594,12 @@
   <data name="&gt;&gt;tabConfigs.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="panel3.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="btnOpenLogFolder.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Right</value>
+  </data>
   <data name="btnOpenLogFolder.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -655,13 +607,13 @@
     <value>NoControl</value>
   </data>
   <data name="btnOpenLogFolder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>323, 23</value>
+    <value>518, 0</value>
   </data>
   <data name="btnOpenLogFolder.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="btnOpenLogFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 23</value>
+    <value>109, 27</value>
   </data>
   <data name="btnOpenLogFolder.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -676,7 +628,7 @@
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOpenLogFolder.Parent" xml:space="preserve">
-    <value>tabLog</value>
+    <value>panel3</value>
   </data>
   <data name="&gt;&gt;btnOpenLogFolder.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -688,7 +640,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblConfigSelect.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 9</value>
+    <value>2, 7</value>
   </data>
   <data name="lblConfigSelect.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -709,22 +661,70 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblConfigSelect.Parent" xml:space="preserve">
-    <value>tabLog</value>
+    <value>panel3</value>
   </data>
   <data name="&gt;&gt;lblConfigSelect.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="comboConfigs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="comboConfigs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>85, 4</value>
+  </data>
+  <data name="comboConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="comboConfigs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>377, 21</value>
+  </data>
+  <data name="comboConfigs.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;comboConfigs.Name" xml:space="preserve">
+    <value>comboConfigs</value>
+  </data>
+  <data name="&gt;&gt;comboConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboConfigs.Parent" xml:space="preserve">
+    <value>panel3</value>
+  </data>
+  <data name="&gt;&gt;comboConfigs.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panel3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 10</value>
+  </data>
+  <data name="panel3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>627, 27</value>
+  </data>
+  <data name="panel3.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;panel3.Name" xml:space="preserve">
+    <value>panel3</value>
+  </data>
+  <data name="&gt;&gt;panel3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel3.Parent" xml:space="preserve">
+    <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;panel3.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="textBoxLog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="textBoxLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 50</value>
+    <value>12, 45</value>
   </data>
   <data name="textBoxLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
   <data name="textBoxLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>621, 403</value>
+    <value>627, 424</value>
   </data>
   <data name="textBoxLog.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -742,31 +742,7 @@
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;textBoxLog.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="comboConfigs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 24</value>
-  </data>
-  <data name="comboConfigs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="comboConfigs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>312, 21</value>
-  </data>
-  <data name="comboConfigs.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;comboConfigs.Name" xml:space="preserve">
-    <value>comboConfigs</value>
-  </data>
-  <data name="&gt;&gt;comboConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboConfigs.Parent" xml:space="preserve">
-    <value>tabLog</value>
-  </data>
-  <data name="&gt;&gt;comboConfigs.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="tabLog.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -775,10 +751,10 @@
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabLog.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>10, 10, 10, 10</value>
   </data>
   <data name="tabLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 457</value>
+    <value>651, 475</value>
   </data>
   <data name="tabLog.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -808,7 +784,7 @@
     <value>NoControl</value>
   </data>
   <data name="cb_minimizeToSysTray.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 41</value>
+    <value>10, 46</value>
   </data>
   <data name="cb_minimizeToSysTray.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -841,7 +817,7 @@
     <value>NoControl</value>
   </data>
   <data name="cb_keepRunning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 18</value>
+    <value>10, 23</value>
   </data>
   <data name="cb_keepRunning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -874,7 +850,7 @@ Any configurations that were running when AutoQC Loader was last running are als
     <value>1</value>
   </data>
   <data name="groupBoxAutoQcSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 9</value>
+    <value>12, 17</value>
   </data>
   <data name="groupBoxAutoQcSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -883,7 +859,7 @@ Any configurations that were running when AutoQC Loader was last running are als
     <value>2, 2, 2, 2</value>
   </data>
   <data name="groupBoxAutoQcSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>624, 66</value>
+    <value>646, 83</value>
   </data>
   <data name="groupBoxAutoQcSettings.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -910,10 +886,10 @@ Any configurations that were running when AutoQC Loader was last running are als
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabSettings.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>10, 10, 10, 10</value>
   </data>
   <data name="tabSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 457</value>
+    <value>651, 475</value>
   </data>
   <data name="tabSettings.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -940,7 +916,7 @@ Any configurations that were running when AutoQC Loader was last running are als
     <value>2, 2, 2, 2</value>
   </data>
   <data name="tabMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>640, 483</value>
+    <value>659, 501</value>
   </data>
   <data name="tabMain.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -1538,7 +1514,7 @@ Any configurations that were running when AutoQC Loader was last running are als
     <value>True</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>47</value>
+    <value>25</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -1547,7 +1523,7 @@ Any configurations that were running when AutoQC Loader was last running are als
     <value>True</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>658, 501</value>
+    <value>677, 519</value>
   </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -1960,28 +1936,28 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="$this.Text" xml:space="preserve">
     <value> AutoQC</value>
   </data>
-  <data name="&gt;&gt;columnName.Name" xml:space="preserve">
-    <value>columnName</value>
+  <data name="&gt;&gt;columnName2.Name" xml:space="preserve">
+    <value>columnName2</value>
   </data>
-  <data name="&gt;&gt;columnName.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnName2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnUser.Name" xml:space="preserve">
-    <value>columnUser</value>
+  <data name="&gt;&gt;columnUser2.Name" xml:space="preserve">
+    <value>columnUser2</value>
   </data>
-  <data name="&gt;&gt;columnUser.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnUser2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnCreated.Name" xml:space="preserve">
-    <value>columnCreated</value>
+  <data name="&gt;&gt;columnCreated2.Name" xml:space="preserve">
+    <value>columnCreated2</value>
   </data>
-  <data name="&gt;&gt;columnCreated.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnCreated2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;columnStatus.Name" xml:space="preserve">
-    <value>columnStatus</value>
+  <data name="&gt;&gt;columnStatus2.Name" xml:space="preserve">
+    <value>columnStatus2</value>
   </data>
-  <data name="&gt;&gt;columnStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;columnStatus2.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDelete.Name" xml:space="preserve">

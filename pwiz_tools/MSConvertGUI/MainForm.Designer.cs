@@ -63,7 +63,36 @@ namespace MSConvertGUI
             this.RemoveFileButton = new System.Windows.Forms.Button();
             this.StartButton = new System.Windows.Forms.Button();
             this.FilterGB = new System.Windows.Forms.GroupBox();
+            this.DiaUmpirePanel = new System.Windows.Forms.Panel();
+            this.DiaUmpireParamsFileBrowseButton = new System.Windows.Forms.Button();
+            this.DiaUmpireParamsFileLabel = new System.Windows.Forms.Label();
+            this.DiaUmpireParamsFileTextBox = new System.Windows.Forms.TextBox();
+            this.FilterBox = new System.Windows.Forms.ComboBox();
+            this.ETDFilterPanel = new System.Windows.Forms.Panel();
+            this.ETDBlanketRemovalBox = new System.Windows.Forms.CheckBox();
+            this.ETDRemoveChargeReducedBox = new System.Windows.Forms.CheckBox();
+            this.ETDRemoveNeutralLossBox = new System.Windows.Forms.CheckBox();
+            this.ETDRemovePrecursorBox = new System.Windows.Forms.CheckBox();
+            this.ThresholdFilterPanel = new System.Windows.Forms.Panel();
+            this.thresholdValueLabel = new System.Windows.Forms.Label();
+            this.thresholdOrientationLabel = new System.Windows.Forms.Label();
+            this.thresholdTypeLabel = new System.Windows.Forms.Label();
+            this.thresholdOrientationComboBox = new System.Windows.Forms.ComboBox();
+            this.thresholdValueTextBox = new System.Windows.Forms.TextBox();
+            this.thresholdTypeComboBox = new System.Windows.Forms.ComboBox();
+            this.ChargeStatePredictorPanel = new System.Windows.Forms.Panel();
+            this.ChaMCMaxLabel = new System.Windows.Forms.Label();
+            this.ChaMCMaxBox = new System.Windows.Forms.TextBox();
+            this.ChaMCMinBox = new System.Windows.Forms.TextBox();
+            this.ChaMCMinLabel = new System.Windows.Forms.Label();
+            this.ChaSingleBox = new System.Windows.Forms.NumericUpDown();
+            this.ChaSingleLabel = new System.Windows.Forms.Label();
+            this.ChaOverwriteCharge = new System.Windows.Forms.CheckBox();
             this.SubsetPanel = new System.Windows.Forms.Panel();
+            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.CollisionEnergyExtraOptions = new System.Windows.Forms.ToolStripDropDownButton();
+            this.CollisionEnergyAcceptNonCIDMSnSpectra = new System.Windows.Forms.ToolStripMenuItem();
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE = new System.Windows.Forms.ToolStripMenuItem();
             this.CollisionEnergyHigh = new System.Windows.Forms.TextBox();
             this.CollisionEnergyLabel = new System.Windows.Forms.Label();
             this.CollisionEnergyLow = new System.Windows.Forms.TextBox();
@@ -111,8 +140,8 @@ namespace MSConvertGUI
             this.label6 = new System.Windows.Forms.Label();
             this.ScanSummingScanTimeToleranceTextBox = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
             this.ScanSummingPrecursorToleranceTextBox = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.LockmassRefinerPanel = new System.Windows.Forms.Panel();
             this.LockmassTolerance = new System.Windows.Forms.TextBox();
             this.lockmassToleranceLabel = new System.Windows.Forms.Label();
@@ -123,7 +152,6 @@ namespace MSConvertGUI
             this.DemuxMassErrorValue = new System.Windows.Forms.TextBox();
             this.DemuxMassErrorLabel = new System.Windows.Forms.Label();
             this.DemuxTypeBox = new System.Windows.Forms.ComboBox();
-            this.FilterBox = new System.Windows.Forms.ComboBox();
             this.PeakPickingPanel = new System.Windows.Forms.Panel();
             this.PeakMinSpacingLabel = new System.Windows.Forms.Label();
             this.PeakMinSpacing = new System.Windows.Forms.TextBox();
@@ -143,26 +171,6 @@ namespace MSConvertGUI
             this.ZeroSamplesMSLevelSeperator = new System.Windows.Forms.Label();
             this.ZeroSamplesMSLevelHigh = new System.Windows.Forms.TextBox();
             this.ZeroSamplesMSLevelLow = new System.Windows.Forms.TextBox();
-            this.ETDFilterPanel = new System.Windows.Forms.Panel();
-            this.ETDBlanketRemovalBox = new System.Windows.Forms.CheckBox();
-            this.ETDRemoveChargeReducedBox = new System.Windows.Forms.CheckBox();
-            this.ETDRemoveNeutralLossBox = new System.Windows.Forms.CheckBox();
-            this.ETDRemovePrecursorBox = new System.Windows.Forms.CheckBox();
-            this.ThresholdFilterPanel = new System.Windows.Forms.Panel();
-            this.thresholdValueLabel = new System.Windows.Forms.Label();
-            this.thresholdOrientationLabel = new System.Windows.Forms.Label();
-            this.thresholdTypeLabel = new System.Windows.Forms.Label();
-            this.thresholdOrientationComboBox = new System.Windows.Forms.ComboBox();
-            this.thresholdValueTextBox = new System.Windows.Forms.TextBox();
-            this.thresholdTypeComboBox = new System.Windows.Forms.ComboBox();
-            this.ChargeStatePredictorPanel = new System.Windows.Forms.Panel();
-            this.ChaMCMaxLabel = new System.Windows.Forms.Label();
-            this.ChaMCMaxBox = new System.Windows.Forms.TextBox();
-            this.ChaMCMinBox = new System.Windows.Forms.TextBox();
-            this.ChaMCMinLabel = new System.Windows.Forms.Label();
-            this.ChaSingleBox = new System.Windows.Forms.NumericUpDown();
-            this.ChaSingleLabel = new System.Windows.Forms.Label();
-            this.ChaOverwriteCharge = new System.Windows.Forms.CheckBox();
             this.RemoveFilterButton = new System.Windows.Forms.Button();
             this.AddFilterButton = new System.Windows.Forms.Button();
             this.TextFileRadio = new System.Windows.Forms.RadioButton();
@@ -202,32 +210,25 @@ namespace MSConvertGUI
             this.presetComboBox = new System.Windows.Forms.ComboBox();
             this.filesToConvertInParallelLabel = new System.Windows.Forms.Label();
             this.FilesToConvertInParallelUpDown = new System.Windows.Forms.NumericUpDown();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.CollisionEnergyExtraOptions = new System.Windows.Forms.ToolStripDropDownButton();
-            this.CollisionEnergyAcceptNonCIDMSnSpectra = new System.Windows.Forms.ToolStripMenuItem();
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE = new System.Windows.Forms.ToolStripMenuItem();
-            this.DiaUmpirePanel = new System.Windows.Forms.Panel();
-            this.DiaUmpireParamsFileBrowseButton = new System.Windows.Forms.Button();
-            this.DiaUmpireParamsFileLabel = new System.Windows.Forms.Label();
-            this.DiaUmpireParamsFileTextBox = new System.Windows.Forms.TextBox();
+            this.showCommandLine = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
+            this.DiaUmpirePanel.SuspendLayout();
+            this.ETDFilterPanel.SuspendLayout();
+            this.ThresholdFilterPanel.SuspendLayout();
+            this.ChargeStatePredictorPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
             this.SubsetPanel.SuspendLayout();
+            this.toolStrip1.SuspendLayout();
             this.ScanSummingPanel.SuspendLayout();
             this.LockmassRefinerPanel.SuspendLayout();
             this.DemultiplexPanel.SuspendLayout();
             this.PeakPickingPanel.SuspendLayout();
             this.ZeroSamplesPanel.SuspendLayout();
-            this.ETDFilterPanel.SuspendLayout();
-            this.ThresholdFilterPanel.SuspendLayout();
-            this.ChargeStatePredictorPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
             this.OptionsGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
             this.presetSaveButtonMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.FilesToConvertInParallelUpDown)).BeginInit();
-            this.toolStrip1.SuspendLayout();
-            this.DiaUmpirePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FileBox
@@ -354,6 +355,291 @@ namespace MSConvertGUI
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
             // 
+            // DiaUmpirePanel
+            // 
+            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileBrowseButton);
+            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileLabel);
+            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileTextBox);
+            this.DiaUmpirePanel.Location = new System.Drawing.Point(21, 54);
+            this.DiaUmpirePanel.Name = "DiaUmpirePanel";
+            this.DiaUmpirePanel.Size = new System.Drawing.Size(473, 91);
+            this.DiaUmpirePanel.TabIndex = 10;
+            this.DiaUmpirePanel.Visible = false;
+            // 
+            // DiaUmpireParamsFileBrowseButton
+            // 
+            this.DiaUmpireParamsFileBrowseButton.Location = new System.Drawing.Point(416, 34);
+            this.DiaUmpireParamsFileBrowseButton.Name = "DiaUmpireParamsFileBrowseButton";
+            this.DiaUmpireParamsFileBrowseButton.Size = new System.Drawing.Size(50, 23);
+            this.DiaUmpireParamsFileBrowseButton.TabIndex = 7;
+            this.DiaUmpireParamsFileBrowseButton.Text = "Browse";
+            this.DiaUmpireParamsFileBrowseButton.UseVisualStyleBackColor = true;
+            this.DiaUmpireParamsFileBrowseButton.Click += new System.EventHandler(this.DiaUmpireParamsFileBrowseButton_Click);
+            // 
+            // DiaUmpireParamsFileLabel
+            // 
+            this.DiaUmpireParamsFileLabel.AutoSize = true;
+            this.DiaUmpireParamsFileLabel.Location = new System.Drawing.Point(7, 39);
+            this.DiaUmpireParamsFileLabel.Name = "DiaUmpireParamsFileLabel";
+            this.DiaUmpireParamsFileLabel.Size = new System.Drawing.Size(61, 13);
+            this.DiaUmpireParamsFileLabel.TabIndex = 5;
+            this.DiaUmpireParamsFileLabel.Text = "Params file:";
+            // 
+            // DiaUmpireParamsFileTextBox
+            // 
+            this.DiaUmpireParamsFileTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.DiaUmpireParamsFileTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
+            this.DiaUmpireParamsFileTextBox.Location = new System.Drawing.Point(68, 36);
+            this.DiaUmpireParamsFileTextBox.Name = "DiaUmpireParamsFileTextBox";
+            this.DiaUmpireParamsFileTextBox.Size = new System.Drawing.Size(342, 20);
+            this.DiaUmpireParamsFileTextBox.TabIndex = 6;
+            // 
+            // FilterBox
+            // 
+            this.FilterBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.FilterBox.FormattingEnabled = true;
+            this.FilterBox.Items.AddRange(new object[] {
+            "Charge State Predictor",
+            "Demultiplex",
+            "ETD Peak Filter",
+            "Lockmass Refiner",
+            "Peak Picking",
+            "Threshold Peak Filter",
+            "Scan Summing",
+            "Subset",
+            "Zero Samples",
+            "DIA-Umpire"});
+            this.FilterBox.Location = new System.Drawing.Point(173, 19);
+            this.FilterBox.Name = "FilterBox";
+            this.FilterBox.Size = new System.Drawing.Size(177, 21);
+            this.FilterBox.TabIndex = 0;
+            this.FilterBox.SelectedIndexChanged += new System.EventHandler(this.FilterBox_SelectedIndexChanged);
+            // 
+            // ETDFilterPanel
+            // 
+            this.ETDFilterPanel.Controls.Add(this.ETDBlanketRemovalBox);
+            this.ETDFilterPanel.Controls.Add(this.ETDRemoveChargeReducedBox);
+            this.ETDFilterPanel.Controls.Add(this.ETDRemoveNeutralLossBox);
+            this.ETDFilterPanel.Controls.Add(this.ETDRemovePrecursorBox);
+            this.ETDFilterPanel.Location = new System.Drawing.Point(22, 46);
+            this.ETDFilterPanel.Name = "ETDFilterPanel";
+            this.ETDFilterPanel.Size = new System.Drawing.Size(283, 91);
+            this.ETDFilterPanel.TabIndex = 3;
+            this.ETDFilterPanel.Visible = false;
+            // 
+            // ETDBlanketRemovalBox
+            // 
+            this.ETDBlanketRemovalBox.AutoSize = true;
+            this.ETDBlanketRemovalBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ETDBlanketRemovalBox.Location = new System.Drawing.Point(108, 71);
+            this.ETDBlanketRemovalBox.Name = "ETDBlanketRemovalBox";
+            this.ETDBlanketRemovalBox.Size = new System.Drawing.Size(110, 17);
+            this.ETDBlanketRemovalBox.TabIndex = 9;
+            this.ETDBlanketRemovalBox.Text = "Blanket Removal:";
+            this.ETDBlanketRemovalBox.UseVisualStyleBackColor = true;
+            // 
+            // ETDRemoveChargeReducedBox
+            // 
+            this.ETDRemoveChargeReducedBox.AutoSize = true;
+            this.ETDRemoveChargeReducedBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ETDRemoveChargeReducedBox.Checked = true;
+            this.ETDRemoveChargeReducedBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ETDRemoveChargeReducedBox.Location = new System.Drawing.Point(65, 25);
+            this.ETDRemoveChargeReducedBox.Name = "ETDRemoveChargeReducedBox";
+            this.ETDRemoveChargeReducedBox.Size = new System.Drawing.Size(153, 17);
+            this.ETDRemoveChargeReducedBox.TabIndex = 8;
+            this.ETDRemoveChargeReducedBox.Text = "Remove Charge Reduced:";
+            this.ETDRemoveChargeReducedBox.UseVisualStyleBackColor = true;
+            // 
+            // ETDRemoveNeutralLossBox
+            // 
+            this.ETDRemoveNeutralLossBox.AutoSize = true;
+            this.ETDRemoveNeutralLossBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ETDRemoveNeutralLossBox.Checked = true;
+            this.ETDRemoveNeutralLossBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ETDRemoveNeutralLossBox.Location = new System.Drawing.Point(87, 48);
+            this.ETDRemoveNeutralLossBox.Name = "ETDRemoveNeutralLossBox";
+            this.ETDRemoveNeutralLossBox.Size = new System.Drawing.Size(131, 17);
+            this.ETDRemoveNeutralLossBox.TabIndex = 7;
+            this.ETDRemoveNeutralLossBox.Text = "Remove Neutral Loss:";
+            this.ETDRemoveNeutralLossBox.UseVisualStyleBackColor = true;
+            // 
+            // ETDRemovePrecursorBox
+            // 
+            this.ETDRemovePrecursorBox.AutoSize = true;
+            this.ETDRemovePrecursorBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ETDRemovePrecursorBox.Checked = true;
+            this.ETDRemovePrecursorBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ETDRemovePrecursorBox.Location = new System.Drawing.Point(101, 2);
+            this.ETDRemovePrecursorBox.Name = "ETDRemovePrecursorBox";
+            this.ETDRemovePrecursorBox.Size = new System.Drawing.Size(117, 17);
+            this.ETDRemovePrecursorBox.TabIndex = 6;
+            this.ETDRemovePrecursorBox.Text = "Remove Precursor:";
+            this.ETDRemovePrecursorBox.UseVisualStyleBackColor = true;
+            // 
+            // ThresholdFilterPanel
+            // 
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationComboBox);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueTextBox);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeComboBox);
+            this.ThresholdFilterPanel.Location = new System.Drawing.Point(22, 46);
+            this.ThresholdFilterPanel.Name = "ThresholdFilterPanel";
+            this.ThresholdFilterPanel.Size = new System.Drawing.Size(283, 91);
+            this.ThresholdFilterPanel.TabIndex = 20;
+            this.ThresholdFilterPanel.Visible = false;
+            // 
+            // thresholdValueLabel
+            // 
+            this.thresholdValueLabel.AutoSize = true;
+            this.thresholdValueLabel.Location = new System.Drawing.Point(69, 64);
+            this.thresholdValueLabel.Name = "thresholdValueLabel";
+            this.thresholdValueLabel.Size = new System.Drawing.Size(37, 13);
+            this.thresholdValueLabel.TabIndex = 16;
+            this.thresholdValueLabel.Text = "Value:";
+            // 
+            // thresholdOrientationLabel
+            // 
+            this.thresholdOrientationLabel.AutoSize = true;
+            this.thresholdOrientationLabel.Location = new System.Drawing.Point(45, 37);
+            this.thresholdOrientationLabel.Name = "thresholdOrientationLabel";
+            this.thresholdOrientationLabel.Size = new System.Drawing.Size(61, 13);
+            this.thresholdOrientationLabel.TabIndex = 15;
+            this.thresholdOrientationLabel.Text = "Orientation:";
+            // 
+            // thresholdTypeLabel
+            // 
+            this.thresholdTypeLabel.AutoSize = true;
+            this.thresholdTypeLabel.Location = new System.Drawing.Point(26, 10);
+            this.thresholdTypeLabel.Name = "thresholdTypeLabel";
+            this.thresholdTypeLabel.Size = new System.Drawing.Size(80, 13);
+            this.thresholdTypeLabel.TabIndex = 14;
+            this.thresholdTypeLabel.Text = "Threshold type:";
+            // 
+            // thresholdOrientationComboBox
+            // 
+            this.thresholdOrientationComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.thresholdOrientationComboBox.FormattingEnabled = true;
+            this.thresholdOrientationComboBox.Items.AddRange(new object[] {
+            "Most intense",
+            "Least intense"});
+            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(113, 34);
+            this.thresholdOrientationComboBox.Name = "thresholdOrientationComboBox";
+            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdOrientationComboBox.TabIndex = 2;
+            // 
+            // thresholdValueTextBox
+            // 
+            this.thresholdValueTextBox.Location = new System.Drawing.Point(114, 61);
+            this.thresholdValueTextBox.Name = "thresholdValueTextBox";
+            this.thresholdValueTextBox.Size = new System.Drawing.Size(120, 20);
+            this.thresholdValueTextBox.TabIndex = 1;
+            // 
+            // thresholdTypeComboBox
+            // 
+            this.thresholdTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.thresholdTypeComboBox.FormattingEnabled = true;
+            this.thresholdTypeComboBox.Location = new System.Drawing.Point(113, 7);
+            this.thresholdTypeComboBox.Name = "thresholdTypeComboBox";
+            this.thresholdTypeComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdTypeComboBox.TabIndex = 0;
+            // 
+            // ChargeStatePredictorPanel
+            // 
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxLabel);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxBox);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinBox);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinLabel);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleBox);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleLabel);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaOverwriteCharge);
+            this.ChargeStatePredictorPanel.Location = new System.Drawing.Point(22, 46);
+            this.ChargeStatePredictorPanel.Name = "ChargeStatePredictorPanel";
+            this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(283, 91);
+            this.ChargeStatePredictorPanel.TabIndex = 4;
+            this.ChargeStatePredictorPanel.Visible = false;
+            // 
+            // ChaMCMaxLabel
+            // 
+            this.ChaMCMaxLabel.AutoSize = true;
+            this.ChaMCMaxLabel.Location = new System.Drawing.Point(182, 66);
+            this.ChaMCMaxLabel.Name = "ChaMCMaxLabel";
+            this.ChaMCMaxLabel.Size = new System.Drawing.Size(30, 13);
+            this.ChaMCMaxLabel.TabIndex = 19;
+            this.ChaMCMaxLabel.Text = "Max:";
+            // 
+            // ChaMCMaxBox
+            // 
+            this.ChaMCMaxBox.Location = new System.Drawing.Point(215, 62);
+            this.ChaMCMaxBox.Name = "ChaMCMaxBox";
+            this.ChaMCMaxBox.Size = new System.Drawing.Size(37, 20);
+            this.ChaMCMaxBox.TabIndex = 18;
+            this.ChaMCMaxBox.Text = "3";
+            this.ChaMCMaxBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
+            // ChaMCMinBox
+            // 
+            this.ChaMCMinBox.Location = new System.Drawing.Point(133, 62);
+            this.ChaMCMinBox.Name = "ChaMCMinBox";
+            this.ChaMCMinBox.Size = new System.Drawing.Size(37, 20);
+            this.ChaMCMinBox.TabIndex = 17;
+            this.ChaMCMinBox.Text = "2";
+            this.ChaMCMinBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
+            // ChaMCMinLabel
+            // 
+            this.ChaMCMinLabel.AutoSize = true;
+            this.ChaMCMinLabel.Location = new System.Drawing.Point(30, 66);
+            this.ChaMCMinLabel.Name = "ChaMCMinLabel";
+            this.ChaMCMinLabel.Size = new System.Drawing.Size(103, 13);
+            this.ChaMCMinLabel.TabIndex = 9;
+            this.ChaMCMinLabel.Text = "Multiple Charge Min:";
+            // 
+            // ChaSingleBox
+            // 
+            this.ChaSingleBox.DecimalPlaces = 2;
+            this.ChaSingleBox.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.ChaSingleBox.Location = new System.Drawing.Point(174, 36);
+            this.ChaSingleBox.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ChaSingleBox.Name = "ChaSingleBox";
+            this.ChaSingleBox.Size = new System.Drawing.Size(41, 20);
+            this.ChaSingleBox.TabIndex = 8;
+            this.ChaSingleBox.Value = new decimal(new int[] {
+            9,
+            0,
+            0,
+            65536});
+            // 
+            // ChaSingleLabel
+            // 
+            this.ChaSingleLabel.AutoSize = true;
+            this.ChaSingleLabel.Location = new System.Drawing.Point(67, 38);
+            this.ChaSingleLabel.Name = "ChaSingleLabel";
+            this.ChaSingleLabel.Size = new System.Drawing.Size(107, 13);
+            this.ChaSingleLabel.TabIndex = 7;
+            this.ChaSingleLabel.Text = "Single Charge % TIC:";
+            // 
+            // ChaOverwriteCharge
+            // 
+            this.ChaOverwriteCharge.AutoSize = true;
+            this.ChaOverwriteCharge.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ChaOverwriteCharge.Location = new System.Drawing.Point(86, 12);
+            this.ChaOverwriteCharge.Name = "ChaOverwriteCharge";
+            this.ChaOverwriteCharge.Size = new System.Drawing.Size(111, 17);
+            this.ChaOverwriteCharge.TabIndex = 6;
+            this.ChaOverwriteCharge.Text = "Overwrite Charge:";
+            this.ChaOverwriteCharge.UseVisualStyleBackColor = true;
+            // 
             // SubsetPanel
             // 
             this.SubsetPanel.Controls.Add(this.toolStrip1);
@@ -400,6 +686,53 @@ namespace MSConvertGUI
             this.SubsetPanel.Size = new System.Drawing.Size(500, 145);
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
+            // 
+            // toolStrip1
+            // 
+            this.toolStrip1.AutoSize = false;
+            this.toolStrip1.CanOverflow = false;
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.CollisionEnergyExtraOptions});
+            this.toolStrip1.Location = new System.Drawing.Point(468, 55);
+            this.toolStrip1.Name = "toolStrip1";
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(32, 25);
+            this.toolStrip1.TabIndex = 38;
+            this.toolStrip1.Text = "toolStrip1";
+            // 
+            // CollisionEnergyExtraOptions
+            // 
+            this.CollisionEnergyExtraOptions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.CollisionEnergyExtraOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.CollisionEnergyAcceptNonCIDMSnSpectra,
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE});
+            this.CollisionEnergyExtraOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.CollisionEnergyExtraOptions.Name = "CollisionEnergyExtraOptions";
+            this.CollisionEnergyExtraOptions.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
+            this.CollisionEnergyExtraOptions.Size = new System.Drawing.Size(29, 22);
+            this.CollisionEnergyExtraOptions.Text = "...";
+            this.CollisionEnergyExtraOptions.ToolTipText = "Additional options for collision energy filtering.";
+            // 
+            // CollisionEnergyAcceptNonCIDMSnSpectra
+            // 
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Checked = true;
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.CheckOnClick = true;
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Name = "CollisionEnergyAcceptNonCIDMSnSpectra";
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Size = new System.Drawing.Size(261, 22);
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.Text = "Accept non-CID MSn spectra";
+            this.CollisionEnergyAcceptNonCIDMSnSpectra.ToolTipText = "If checked, non-CID MSn spectra (e.g. ETD, CI, PTD) will be kept by the collision" +
+    " energy filter.";
+            // 
+            // CollisionEnergyAcceptCIDSpectraWithMissingCE
+            // 
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.CheckOnClick = true;
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Name = "CollisionEnergyAcceptCIDSpectraWithMissingCE";
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Size = new System.Drawing.Size(261, 22);
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Text = "Accept CID spectra with missing CE";
+            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.ToolTipText = "If checked, CID MSn spectra that are missing their CE will be kept.";
             // 
             // CollisionEnergyHigh
             // 
@@ -842,6 +1175,14 @@ namespace MSConvertGUI
             this.label4.TabIndex = 3;
             this.label4.Text = "Scan time tolerance: ±";
             // 
+            // ScanSummingPrecursorToleranceTextBox
+            // 
+            this.ScanSummingPrecursorToleranceTextBox.Location = new System.Drawing.Point(136, 10);
+            this.ScanSummingPrecursorToleranceTextBox.Name = "ScanSummingPrecursorToleranceTextBox";
+            this.ScanSummingPrecursorToleranceTextBox.Size = new System.Drawing.Size(48, 20);
+            this.ScanSummingPrecursorToleranceTextBox.TabIndex = 0;
+            this.ScanSummingPrecursorToleranceTextBox.Text = "0.05";
+            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -850,14 +1191,6 @@ namespace MSConvertGUI
             this.label5.Size = new System.Drawing.Size(111, 13);
             this.label5.TabIndex = 13;
             this.label5.Text = "Precursor tolerance: ±";
-            // 
-            // ScanSummingPrecursorToleranceTextBox
-            // 
-            this.ScanSummingPrecursorToleranceTextBox.Location = new System.Drawing.Point(136, 10);
-            this.ScanSummingPrecursorToleranceTextBox.Name = "ScanSummingPrecursorToleranceTextBox";
-            this.ScanSummingPrecursorToleranceTextBox.Size = new System.Drawing.Size(48, 20);
-            this.ScanSummingPrecursorToleranceTextBox.TabIndex = 0;
-            this.ScanSummingPrecursorToleranceTextBox.Text = "0.05";
             // 
             // LockmassRefinerPanel
             // 
@@ -956,27 +1289,6 @@ namespace MSConvertGUI
             this.DemuxTypeBox.Name = "DemuxTypeBox";
             this.DemuxTypeBox.Size = new System.Drawing.Size(189, 21);
             this.DemuxTypeBox.TabIndex = 15;
-            // 
-            // FilterBox
-            // 
-            this.FilterBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.FilterBox.FormattingEnabled = true;
-            this.FilterBox.Items.AddRange(new object[] {
-            "Charge State Predictor",
-            "Demultiplex",
-            "ETD Peak Filter",
-            "Lockmass Refiner",
-            "Peak Picking",
-            "Threshold Peak Filter",
-            "Scan Summing",
-            "Subset",
-            "Zero Samples",
-            "DIA-Umpire"});
-            this.FilterBox.Location = new System.Drawing.Point(173, 19);
-            this.FilterBox.Name = "FilterBox";
-            this.FilterBox.Size = new System.Drawing.Size(177, 21);
-            this.FilterBox.TabIndex = 0;
-            this.FilterBox.SelectedIndexChanged += new System.EventHandler(this.FilterBox_SelectedIndexChanged);
             // 
             // PeakPickingPanel
             // 
@@ -1171,231 +1483,6 @@ namespace MSConvertGUI
             this.ZeroSamplesMSLevelLow.Size = new System.Drawing.Size(37, 20);
             this.ZeroSamplesMSLevelLow.TabIndex = 27;
             this.ZeroSamplesMSLevelLow.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            // 
-            // ETDFilterPanel
-            // 
-            this.ETDFilterPanel.Controls.Add(this.ETDBlanketRemovalBox);
-            this.ETDFilterPanel.Controls.Add(this.ETDRemoveChargeReducedBox);
-            this.ETDFilterPanel.Controls.Add(this.ETDRemoveNeutralLossBox);
-            this.ETDFilterPanel.Controls.Add(this.ETDRemovePrecursorBox);
-            this.ETDFilterPanel.Location = new System.Drawing.Point(22, 46);
-            this.ETDFilterPanel.Name = "ETDFilterPanel";
-            this.ETDFilterPanel.Size = new System.Drawing.Size(283, 91);
-            this.ETDFilterPanel.TabIndex = 3;
-            this.ETDFilterPanel.Visible = false;
-            // 
-            // ETDBlanketRemovalBox
-            // 
-            this.ETDBlanketRemovalBox.AutoSize = true;
-            this.ETDBlanketRemovalBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ETDBlanketRemovalBox.Location = new System.Drawing.Point(108, 71);
-            this.ETDBlanketRemovalBox.Name = "ETDBlanketRemovalBox";
-            this.ETDBlanketRemovalBox.Size = new System.Drawing.Size(110, 17);
-            this.ETDBlanketRemovalBox.TabIndex = 9;
-            this.ETDBlanketRemovalBox.Text = "Blanket Removal:";
-            this.ETDBlanketRemovalBox.UseVisualStyleBackColor = true;
-            // 
-            // ETDRemoveChargeReducedBox
-            // 
-            this.ETDRemoveChargeReducedBox.AutoSize = true;
-            this.ETDRemoveChargeReducedBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ETDRemoveChargeReducedBox.Checked = true;
-            this.ETDRemoveChargeReducedBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ETDRemoveChargeReducedBox.Location = new System.Drawing.Point(65, 25);
-            this.ETDRemoveChargeReducedBox.Name = "ETDRemoveChargeReducedBox";
-            this.ETDRemoveChargeReducedBox.Size = new System.Drawing.Size(153, 17);
-            this.ETDRemoveChargeReducedBox.TabIndex = 8;
-            this.ETDRemoveChargeReducedBox.Text = "Remove Charge Reduced:";
-            this.ETDRemoveChargeReducedBox.UseVisualStyleBackColor = true;
-            // 
-            // ETDRemoveNeutralLossBox
-            // 
-            this.ETDRemoveNeutralLossBox.AutoSize = true;
-            this.ETDRemoveNeutralLossBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ETDRemoveNeutralLossBox.Checked = true;
-            this.ETDRemoveNeutralLossBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ETDRemoveNeutralLossBox.Location = new System.Drawing.Point(87, 48);
-            this.ETDRemoveNeutralLossBox.Name = "ETDRemoveNeutralLossBox";
-            this.ETDRemoveNeutralLossBox.Size = new System.Drawing.Size(131, 17);
-            this.ETDRemoveNeutralLossBox.TabIndex = 7;
-            this.ETDRemoveNeutralLossBox.Text = "Remove Neutral Loss:";
-            this.ETDRemoveNeutralLossBox.UseVisualStyleBackColor = true;
-            // 
-            // ETDRemovePrecursorBox
-            // 
-            this.ETDRemovePrecursorBox.AutoSize = true;
-            this.ETDRemovePrecursorBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ETDRemovePrecursorBox.Checked = true;
-            this.ETDRemovePrecursorBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ETDRemovePrecursorBox.Location = new System.Drawing.Point(101, 2);
-            this.ETDRemovePrecursorBox.Name = "ETDRemovePrecursorBox";
-            this.ETDRemovePrecursorBox.Size = new System.Drawing.Size(117, 17);
-            this.ETDRemovePrecursorBox.TabIndex = 6;
-            this.ETDRemovePrecursorBox.Text = "Remove Precursor:";
-            this.ETDRemovePrecursorBox.UseVisualStyleBackColor = true;
-            // 
-            // ThresholdFilterPanel
-            // 
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueLabel);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationLabel);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeLabel);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationComboBox);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueTextBox);
-            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeComboBox);
-            this.ThresholdFilterPanel.Location = new System.Drawing.Point(22, 46);
-            this.ThresholdFilterPanel.Name = "ThresholdFilterPanel";
-            this.ThresholdFilterPanel.Size = new System.Drawing.Size(283, 91);
-            this.ThresholdFilterPanel.TabIndex = 20;
-            this.ThresholdFilterPanel.Visible = false;
-            // 
-            // thresholdValueLabel
-            // 
-            this.thresholdValueLabel.AutoSize = true;
-            this.thresholdValueLabel.Location = new System.Drawing.Point(69, 64);
-            this.thresholdValueLabel.Name = "thresholdValueLabel";
-            this.thresholdValueLabel.Size = new System.Drawing.Size(37, 13);
-            this.thresholdValueLabel.TabIndex = 16;
-            this.thresholdValueLabel.Text = "Value:";
-            // 
-            // thresholdOrientationLabel
-            // 
-            this.thresholdOrientationLabel.AutoSize = true;
-            this.thresholdOrientationLabel.Location = new System.Drawing.Point(45, 37);
-            this.thresholdOrientationLabel.Name = "thresholdOrientationLabel";
-            this.thresholdOrientationLabel.Size = new System.Drawing.Size(61, 13);
-            this.thresholdOrientationLabel.TabIndex = 15;
-            this.thresholdOrientationLabel.Text = "Orientation:";
-            // 
-            // thresholdTypeLabel
-            // 
-            this.thresholdTypeLabel.AutoSize = true;
-            this.thresholdTypeLabel.Location = new System.Drawing.Point(26, 10);
-            this.thresholdTypeLabel.Name = "thresholdTypeLabel";
-            this.thresholdTypeLabel.Size = new System.Drawing.Size(80, 13);
-            this.thresholdTypeLabel.TabIndex = 14;
-            this.thresholdTypeLabel.Text = "Threshold type:";
-            // 
-            // thresholdOrientationComboBox
-            // 
-            this.thresholdOrientationComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.thresholdOrientationComboBox.FormattingEnabled = true;
-            this.thresholdOrientationComboBox.Items.AddRange(new object[] {
-            "Most intense",
-            "Least intense"});
-            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(113, 34);
-            this.thresholdOrientationComboBox.Name = "thresholdOrientationComboBox";
-            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(121, 21);
-            this.thresholdOrientationComboBox.TabIndex = 2;
-            // 
-            // thresholdValueTextBox
-            // 
-            this.thresholdValueTextBox.Location = new System.Drawing.Point(114, 61);
-            this.thresholdValueTextBox.Name = "thresholdValueTextBox";
-            this.thresholdValueTextBox.Size = new System.Drawing.Size(120, 20);
-            this.thresholdValueTextBox.TabIndex = 1;
-            // 
-            // thresholdTypeComboBox
-            // 
-            this.thresholdTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.thresholdTypeComboBox.FormattingEnabled = true;
-            this.thresholdTypeComboBox.Location = new System.Drawing.Point(113, 7);
-            this.thresholdTypeComboBox.Name = "thresholdTypeComboBox";
-            this.thresholdTypeComboBox.Size = new System.Drawing.Size(121, 21);
-            this.thresholdTypeComboBox.TabIndex = 0;
-            // 
-            // ChargeStatePredictorPanel
-            // 
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxLabel);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxBox);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinBox);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinLabel);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleBox);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleLabel);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaOverwriteCharge);
-            this.ChargeStatePredictorPanel.Location = new System.Drawing.Point(22, 46);
-            this.ChargeStatePredictorPanel.Name = "ChargeStatePredictorPanel";
-            this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(283, 91);
-            this.ChargeStatePredictorPanel.TabIndex = 4;
-            this.ChargeStatePredictorPanel.Visible = false;
-            // 
-            // ChaMCMaxLabel
-            // 
-            this.ChaMCMaxLabel.AutoSize = true;
-            this.ChaMCMaxLabel.Location = new System.Drawing.Point(182, 66);
-            this.ChaMCMaxLabel.Name = "ChaMCMaxLabel";
-            this.ChaMCMaxLabel.Size = new System.Drawing.Size(30, 13);
-            this.ChaMCMaxLabel.TabIndex = 19;
-            this.ChaMCMaxLabel.Text = "Max:";
-            // 
-            // ChaMCMaxBox
-            // 
-            this.ChaMCMaxBox.Location = new System.Drawing.Point(215, 62);
-            this.ChaMCMaxBox.Name = "ChaMCMaxBox";
-            this.ChaMCMaxBox.Size = new System.Drawing.Size(37, 20);
-            this.ChaMCMaxBox.TabIndex = 18;
-            this.ChaMCMaxBox.Text = "3";
-            this.ChaMCMaxBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            // 
-            // ChaMCMinBox
-            // 
-            this.ChaMCMinBox.Location = new System.Drawing.Point(133, 62);
-            this.ChaMCMinBox.Name = "ChaMCMinBox";
-            this.ChaMCMinBox.Size = new System.Drawing.Size(37, 20);
-            this.ChaMCMinBox.TabIndex = 17;
-            this.ChaMCMinBox.Text = "2";
-            this.ChaMCMinBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            // 
-            // ChaMCMinLabel
-            // 
-            this.ChaMCMinLabel.AutoSize = true;
-            this.ChaMCMinLabel.Location = new System.Drawing.Point(30, 66);
-            this.ChaMCMinLabel.Name = "ChaMCMinLabel";
-            this.ChaMCMinLabel.Size = new System.Drawing.Size(103, 13);
-            this.ChaMCMinLabel.TabIndex = 9;
-            this.ChaMCMinLabel.Text = "Multiple Charge Min:";
-            // 
-            // ChaSingleBox
-            // 
-            this.ChaSingleBox.DecimalPlaces = 2;
-            this.ChaSingleBox.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.ChaSingleBox.Location = new System.Drawing.Point(174, 36);
-            this.ChaSingleBox.Maximum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.ChaSingleBox.Name = "ChaSingleBox";
-            this.ChaSingleBox.Size = new System.Drawing.Size(41, 20);
-            this.ChaSingleBox.TabIndex = 8;
-            this.ChaSingleBox.Value = new decimal(new int[] {
-            9,
-            0,
-            0,
-            65536});
-            // 
-            // ChaSingleLabel
-            // 
-            this.ChaSingleLabel.AutoSize = true;
-            this.ChaSingleLabel.Location = new System.Drawing.Point(67, 38);
-            this.ChaSingleLabel.Name = "ChaSingleLabel";
-            this.ChaSingleLabel.Size = new System.Drawing.Size(107, 13);
-            this.ChaSingleLabel.TabIndex = 7;
-            this.ChaSingleLabel.Text = "Single Charge % TIC:";
-            // 
-            // ChaOverwriteCharge
-            // 
-            this.ChaOverwriteCharge.AutoSize = true;
-            this.ChaOverwriteCharge.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ChaOverwriteCharge.Location = new System.Drawing.Point(86, 12);
-            this.ChaOverwriteCharge.Name = "ChaOverwriteCharge";
-            this.ChaOverwriteCharge.Size = new System.Drawing.Size(111, 17);
-            this.ChaOverwriteCharge.TabIndex = 6;
-            this.ChaOverwriteCharge.Text = "Overwrite Charge:";
-            this.ChaOverwriteCharge.UseVisualStyleBackColor = true;
             // 
             // RemoveFilterButton
             // 
@@ -1839,97 +1926,22 @@ namespace MSConvertGUI
             this.FilesToConvertInParallelUpDown.Value = global::MSConvertGUI.Properties.Settings.Default.NumFilesToConvertInParallel;
             this.FilesToConvertInParallelUpDown.ValueChanged += new System.EventHandler(this.FilesToConvertInParallelUpDown_ValueChanged);
             // 
-            // toolStrip1
+            // showCommandLine
             // 
-            this.toolStrip1.AutoSize = false;
-            this.toolStrip1.CanOverflow = false;
-            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.CollisionEnergyExtraOptions});
-            this.toolStrip1.Location = new System.Drawing.Point(468, 55);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip1.Size = new System.Drawing.Size(32, 25);
-            this.toolStrip1.TabIndex = 38;
-            this.toolStrip1.Text = "toolStrip1";
-            // 
-            // CollisionEnergyExtraOptions
-            // 
-            this.CollisionEnergyExtraOptions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.CollisionEnergyExtraOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.CollisionEnergyAcceptNonCIDMSnSpectra,
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE});
-            this.CollisionEnergyExtraOptions.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.CollisionEnergyExtraOptions.Name = "CollisionEnergyExtraOptions";
-            this.CollisionEnergyExtraOptions.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.CollisionEnergyExtraOptions.Size = new System.Drawing.Size(29, 22);
-            this.CollisionEnergyExtraOptions.Text = "...";
-            this.CollisionEnergyExtraOptions.ToolTipText = "Additional options for collision energy filtering.";
-            // 
-            // CollisionEnergyAcceptNonCIDMSnSpectra
-            // 
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.Checked = true;
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.CheckOnClick = true;
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.Name = "CollisionEnergyAcceptNonCIDMSnSpectra";
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.Size = new System.Drawing.Size(261, 22);
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.Text = "Accept non-CID MSn spectra";
-            this.CollisionEnergyAcceptNonCIDMSnSpectra.ToolTipText = "If checked, non-CID MSn spectra (e.g. ETD, CI, PTD) will be kept by the collision" +
-    " energy filter.";
-            // 
-            // CollisionEnergyAcceptCIDSpectraWithMissingCE
-            // 
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.CheckOnClick = true;
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Name = "CollisionEnergyAcceptCIDSpectraWithMissingCE";
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Size = new System.Drawing.Size(261, 22);
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.Text = "Accept CID spectra with missing CE";
-            this.CollisionEnergyAcceptCIDSpectraWithMissingCE.ToolTipText = "If checked, CID MSn spectra that are missing their CE will be kept.";
-            // 
-            // DiaUmpirePanel
-            // 
-            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileBrowseButton);
-            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileLabel);
-            this.DiaUmpirePanel.Controls.Add(this.DiaUmpireParamsFileTextBox);
-            this.DiaUmpirePanel.Location = new System.Drawing.Point(21, 54);
-            this.DiaUmpirePanel.Name = "DiaUmpirePanel";
-            this.DiaUmpirePanel.Size = new System.Drawing.Size(473, 91);
-            this.DiaUmpirePanel.TabIndex = 10;
-            this.DiaUmpirePanel.Visible = false;
-            // 
-            // DiaUmpireParamsFileBrowseButton
-            // 
-            this.DiaUmpireParamsFileBrowseButton.Location = new System.Drawing.Point(416, 34);
-            this.DiaUmpireParamsFileBrowseButton.Name = "DiaUmpireParamsFileBrowseButton";
-            this.DiaUmpireParamsFileBrowseButton.Size = new System.Drawing.Size(50, 23);
-            this.DiaUmpireParamsFileBrowseButton.TabIndex = 7;
-            this.DiaUmpireParamsFileBrowseButton.Text = "Browse";
-            this.DiaUmpireParamsFileBrowseButton.UseVisualStyleBackColor = true;
-            this.DiaUmpireParamsFileBrowseButton.Click += new System.EventHandler(this.DiaUmpireParamsFileBrowseButton_Click);
-            // 
-            // DiaUmpireParamsFileLabel
-            // 
-            this.DiaUmpireParamsFileLabel.AutoSize = true;
-            this.DiaUmpireParamsFileLabel.Location = new System.Drawing.Point(7, 39);
-            this.DiaUmpireParamsFileLabel.Name = "DiaUmpireParamsFileLabel";
-            this.DiaUmpireParamsFileLabel.Size = new System.Drawing.Size(61, 13);
-            this.DiaUmpireParamsFileLabel.TabIndex = 5;
-            this.DiaUmpireParamsFileLabel.Text = "Params file:";
-            // 
-            // DiaUmpireParamsFileTextBox
-            // 
-            this.DiaUmpireParamsFileTextBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
-            this.DiaUmpireParamsFileTextBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
-            this.DiaUmpireParamsFileTextBox.Location = new System.Drawing.Point(68, 36);
-            this.DiaUmpireParamsFileTextBox.Name = "DiaUmpireParamsFileTextBox";
-            this.DiaUmpireParamsFileTextBox.Size = new System.Drawing.Size(342, 20);
-            this.DiaUmpireParamsFileTextBox.TabIndex = 6;
+            this.showCommandLine.Location = new System.Drawing.Point(418, 550);
+            this.showCommandLine.Name = "showCommandLine";
+            this.showCommandLine.Size = new System.Drawing.Size(115, 23);
+            this.showCommandLine.TabIndex = 37;
+            this.showCommandLine.Text = "Show Command Line";
+            this.showCommandLine.UseVisualStyleBackColor = true;
+            this.showCommandLine.Click += new System.EventHandler(this.showCommandLine_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 585);
+            this.Controls.Add(this.showCommandLine);
             this.Controls.Add(this.filesToConvertInParallelLabel);
             this.Controls.Add(this.FilesToConvertInParallelUpDown);
             this.Controls.Add(this.presetComboBox);
@@ -1957,8 +1969,19 @@ namespace MSConvertGUI
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).EndInit();
             this.FilterGB.ResumeLayout(false);
+            this.DiaUmpirePanel.ResumeLayout(false);
+            this.DiaUmpirePanel.PerformLayout();
+            this.ETDFilterPanel.ResumeLayout(false);
+            this.ETDFilterPanel.PerformLayout();
+            this.ThresholdFilterPanel.ResumeLayout(false);
+            this.ThresholdFilterPanel.PerformLayout();
+            this.ChargeStatePredictorPanel.ResumeLayout(false);
+            this.ChargeStatePredictorPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
             this.SubsetPanel.ResumeLayout(false);
             this.SubsetPanel.PerformLayout();
+            this.toolStrip1.ResumeLayout(false);
+            this.toolStrip1.PerformLayout();
             this.ScanSummingPanel.ResumeLayout(false);
             this.ScanSummingPanel.PerformLayout();
             this.LockmassRefinerPanel.ResumeLayout(false);
@@ -1969,23 +1992,12 @@ namespace MSConvertGUI
             this.PeakPickingPanel.PerformLayout();
             this.ZeroSamplesPanel.ResumeLayout(false);
             this.ZeroSamplesPanel.PerformLayout();
-            this.ETDFilterPanel.ResumeLayout(false);
-            this.ETDFilterPanel.PerformLayout();
-            this.ThresholdFilterPanel.ResumeLayout(false);
-            this.ThresholdFilterPanel.PerformLayout();
-            this.ChargeStatePredictorPanel.ResumeLayout(false);
-            this.ChargeStatePredictorPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
             this.OptionsGB.ResumeLayout(false);
             this.OptionsGB.PerformLayout();
             this.SlidingPanel.ResumeLayout(false);
             this.SlidingPanel.PerformLayout();
             this.presetSaveButtonMenu.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.FilesToConvertInParallelUpDown)).EndInit();
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
-            this.DiaUmpirePanel.ResumeLayout(false);
-            this.DiaUmpirePanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -2152,6 +2164,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.Button DiaUmpireParamsFileBrowseButton;
         private System.Windows.Forms.Label DiaUmpireParamsFileLabel;
         private System.Windows.Forms.TextBox DiaUmpireParamsFileTextBox;
+        private System.Windows.Forms.Button showCommandLine;
     }
 }
 

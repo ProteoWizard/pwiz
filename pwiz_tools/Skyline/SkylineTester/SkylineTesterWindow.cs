@@ -190,6 +190,8 @@ namespace SkylineTester
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
 
+            runMode.SelectedIndex = 0;
+
             InitLanguages(formsLanguage);
             InitLanguages(tutorialsLanguage);
             EnableButtonSelectFailedTests(false); // No tests run yet
@@ -344,22 +346,31 @@ namespace SkylineTester
                 var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
-                foreach (var testDll in TEST_DLLS)
+                var arrayDllNames = showTutorialsOnly.Checked ? TUTORIAL_DLLS : TEST_DLLS;
+                foreach (var testDll in arrayDllNames)
                 {
                     var tests = GetTestInfos(testDll).OrderBy(test => test).ToArray();
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
-                    var childNodes = new TreeNode[tests.Length];
-                    for (int i = 0; i < childNodes.Length; i++)
-                        childNodes[i] = new TreeNode(tests[i]);
-                    skylineNode.Nodes.Add(new TreeNode(dllName, childNodes));
+                    var childNodes = new List<TreeNode>(tests.Length);
+                    foreach (var test in tests)
+                    {
+                        if (!showTutorialsOnly.Checked || test.EndsWith("Tutorial"))
+                            childNodes.Add(new TreeNode(test));
                 }
+                    skylineNode.Nodes.Add(new TreeNode(dllName, childNodes.ToArray()));
+                }
+
+                bool tutorialsLoaded = false;
 
                 RunUI(() =>
                 {
+                    testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
+
+                    tutorialsLoaded = tutorialsTree.Nodes.Count > 0;
 
 //                    var focusNode = new TreeNode("Focus tests");
 //                    focusNode.Nodes.Add(new TreeNode("Mzml speed", new []{new TreeNode("x")}));
@@ -367,6 +378,9 @@ namespace SkylineTester
 //                    testsTree.Nodes.Add(focusNode);
 //                    focusNode.Expand();
                 });
+
+                if (tutorialsLoaded)
+                    return;
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
@@ -385,6 +399,7 @@ namespace SkylineTester
                     {
                         tutorialNodes[i] = new TreeNode(tutorialTests[i]);
                     }
+                    tutorialsTree.Nodes.Clear();
                     tutorialsTree.Nodes.Add(new TreeNode("Tutorial tests", tutorialNodes));
                     tutorialsTree.ExpandAll();
                     tutorialsTree.Nodes[0].Checked = true;
@@ -413,7 +428,7 @@ namespace SkylineTester
         public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
             var dllPath = Path.Combine(ExeDir, testDll);
-            var assembly = Assembly.LoadFrom(dllPath);
+            var assembly = LoadFromAssembly.Try(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)
@@ -1027,8 +1042,8 @@ namespace SkylineTester
                 testsTree,
                 runCheckedTests,
                 skipCheckedTests,
-                runFullQualityPass,
-                runDemoMode,
+                showTutorialsOnly,
+                runMode,
 
                 // Build
                 buildTrunk,
@@ -1114,6 +1129,7 @@ namespace SkylineTester
             if (saveFileDialog.ShowDialog() != DialogResult.OK)
                 return;
 
+            commandShell.RunStartTime = DateTime.UtcNow;
             TabBase.StartLog("Zip", null, true);
             commandShell.Add("{0} {1}", Assembly.GetExecutingAssembly().Location.Quote(),
                 saveFileDialog.FileName.Quote());
@@ -1452,8 +1468,7 @@ namespace SkylineTester
         public Button           RunBuild                    { get { return runBuild; } }
         public CheckBox         RunBuildVerificationTests   { get { return runBuildVerificationTests; } }
         public Button           RunForms                    { get { return runForms; } }
-        public CheckBox         RunFullQualityPass          { get { return runFullQualityPass; } }
-        public CheckBox         RunDemoMode                 { get { return runDemoMode; } }
+        public ComboBox         RunTestMode                 { get { return runMode; } }
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
@@ -1463,6 +1478,7 @@ namespace SkylineTester
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
         public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
+        public CheckBox         ShowTutorialsOnly           { get { return showTutorialsOnly; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
@@ -1712,6 +1728,166 @@ namespace SkylineTester
         private void radioNightlyHandles_CheckedChanged(object sender, EventArgs e)
         {
             _tabNightly.UpdateGraph();
+        }
+
+        private void ShowDiff(string path, string path2)
+        {
+            var tGitDiffFiles = "/command:diff /path:" + path + " /path2:" + path2;
+            Process.Start("TortoiseGitProc.exe", tGitDiffFiles);
+        }
+
+        private string GetPathForLanguage(string formName, string languageName)
+        {
+            string skylineDir = Path.GetFullPath(Path.Combine(ExeDir, @"..\..\.."));
+            string fileName = GetFileForLanguage(formName, languageName);
+            var files =  Directory.GetFiles(skylineDir, fileName, SearchOption.AllDirectories);
+            if (files.Length == 0)
+            {
+                string commonDir = Path.GetFullPath(Path.Combine(skylineDir, @"..\Shared\Common"));
+                files = Directory.GetFiles(commonDir, fileName, SearchOption.AllDirectories);
+                if (files.Length == 0)
+                    return String.Empty;
+            }
+
+            return files[0];
+        }
+
+        private string GetFileForLanguage(string formName, string languageName)
+        {
+            if (Equals(languageName, "English"))
+                return formName + ".resx";
+            if (Equals(languageName, "Chinese"))
+                return formName + ".zh-CHS.resx";
+            if (Equals(languageName, "Japanese"))
+                return formName + ".ja.resx";
+            return null;
+        }
+
+        private void diffButton_Click(object sender, EventArgs e)
+        {
+            var formName = formsGrid.CurrentRow?.Cells[0].Value.ToString();
+
+            if (formName != null && formName.Contains("."))
+                formName = formName.Substring(0, formName.IndexOf(".", StringComparison.Ordinal));
+
+            if (formName != null)
+            {
+                ShowDiff(GetPathForLanguage(formName, formsLanguage.SelectedItem.ToString()),
+                    GetPathForLanguage(formName, formsLanguageDiff.SelectedItem.ToString()));
+            }
+        }
+
+        private void PopulateFormsLanguageDiff(string language)
+        {
+            var listLanguages = new List<string> { "English", "Chinese", "Japanese" };
+            listLanguages.Remove(language);
+            if (Equals(language, "English"))
+                listLanguages.Insert(0, string.Empty);
+            if (!formsLanguageDiff.Enabled)
+                formsLanguageDiff.Enabled = true;
+            formsLanguageDiff.Items.Clear();
+            formsLanguageDiff.Items.AddRange(listLanguages.ToArray());
+            if (Equals(language, "Chinese") || Equals(language, "Japanese"))
+            {
+                formsLanguageDiff.SelectedItem = "English";
+                diffButton.Enabled = true;
+            }
+            else
+            {
+                diffButton.Enabled = false;
+            }
+        }
+
+        private void formsLanguage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (Equals(formsLanguage.SelectedItem.ToString(), "French") || Equals(formsLanguage.SelectedItem.ToString(), "Turkish"))
+            {
+                formsLanguageDiff.Items.Clear();
+                formsLanguageDiff.Enabled = false;
+                diffButton.Enabled = false;
+            }
+            else
+            {
+                PopulateFormsLanguageDiff(formsLanguage.SelectedItem.ToString());
+            }
+        }
+
+        private void formsLanguageDiff_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (formsLanguageDiff.SelectedItem.ToString() == "")
+                diffButton.Enabled = false;
+            else
+                diffButton.Enabled = true;
+        }
+
+        private string[] GetChangedFileList()
+        {
+            var skylineDir = Path.GetFullPath(Path.Combine(ExeDir, @"..\..\.."));
+            var procStartInfo = new ProcessStartInfo("cmd", "/c " + skylineDir + " & git diff --name-only");
+
+            procStartInfo.RedirectStandardOutput = true;
+            procStartInfo.UseShellExecute = false;
+            procStartInfo.CreateNoWindow = true;
+            var cmd = new Process();
+            cmd.StartInfo = procStartInfo;
+            cmd.Start();
+
+            var changedFiles = cmd.StandardOutput.ReadToEnd();
+            return changedFiles.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+        }
+
+        private static string GetFileName(string file)
+        {
+            var fileName = Path.GetFileName(file);
+            return fileName.Substring(0, fileName.IndexOf(".", StringComparison.Ordinal));
+        }
+
+        private void showChangedFiles_CheckedChanged(object sender, EventArgs e)
+        {
+            var changedFilesArray = GetChangedFileList();
+
+            if (showChangedFiles.Checked)
+            {
+                foreach (DataGridViewRow row in formsGrid.Rows)
+                {
+                    var formNoExt = row.Cells[0].Value.ToString().Split('.')[0];
+
+                    foreach (var file in changedFilesArray)
+                    {
+                        if (!Equals(file, ""))
+                        {
+                            var filename = GetFileName(file);
+                            if (Equals(formNoExt, filename))
+                            {
+                                row.Visible = true;
+                                break;
+                            }
+                            else
+                            {
+                                row.Visible = false;
+                            }
+                        }
+                    }
+                }
+                formsGrid.Update();
+                formsGrid.Refresh();
+            }
+            else
+            {
+                foreach (DataGridViewRow row in formsGrid.Rows)
+                {
+                    row.Visible = true;
+                }
+                formsGrid.Update();
+                formsGrid.Refresh();
+            }
+        }
+
+        private void showTutorialsOnly_CheckedChanged(object sender, EventArgs e)
+        {
+            var loader = new BackgroundWorker();
+            loader.DoWork += BackgroundLoad;
+            loader.RunWorkerAsync();
         }
 
         #endregion Control events

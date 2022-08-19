@@ -22,12 +22,12 @@ using System.Configuration;
 
 namespace SkylineBatch.Properties
 {
-    internal sealed partial class Settings
+    public sealed partial class Settings
     {
 
         
         
-        [ApplicationScopedSetting]
+        [UserScopedSetting]
         public Dictionary<string,string> RVersions
         {
             get
@@ -42,7 +42,32 @@ namespace SkylineBatch.Properties
             }
             set => this["RVersions"] = value; // Not L10N
         }
+
+        public new void Reset()
+        {
+            base.Reset();
+            SharedBatch.Properties.Settings.Default.Reset();
+        }
+
+        public new void Save()
+        {
+            base.Save();
+            SharedBatch.Properties.Settings.Default.Save();
+        }
+
+        public new void Upgrade()
+        {
+            base.Upgrade();
+            SharedBatch.Properties.Settings.Default.Upgrade();
+        }
+
+        public void UpdateIfNecessary()
+        {
+            SharedBatch.Properties.ConfigList.XmlVersion = Default.XmlVersion;
+            SharedBatch.Properties.ConfigList.Importer = SkylineBatchConfig.ReadXml;
+            Save();
+        }
+
     }
 
-    
 }

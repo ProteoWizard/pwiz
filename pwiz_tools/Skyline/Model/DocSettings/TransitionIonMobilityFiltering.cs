@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -471,7 +470,7 @@ namespace pwiz.Skyline.Model.DocSettings
             switch (WindowWidthMode)
             {
                 case IonMobilityWindowWidthType.resolving_power:
-                    if (ResolvingPower <= 0)
+                    if (ResolvingPower < 0) // Accept 0 as "no IMS filtering"
                         return Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_;
                     break;
                 case IonMobilityWindowWidthType.linear_range:
@@ -498,6 +497,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return other != null &&
                    Equals(other.WindowWidthMode, WindowWidthMode) &&
                    Equals(other.ResolvingPower, ResolvingPower) &&
+                   Equals(other.FixedWindowWidth, FixedWindowWidth) &&
                    Equals(other.PeakWidthAtIonMobilityValueZero, PeakWidthAtIonMobilityValueZero) &&
                    Equals(other.PeakWidthAtIonMobilityValueMax, PeakWidthAtIonMobilityValueMax);
         }
@@ -513,6 +513,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             int result = WindowWidthMode.GetHashCode();
             result = (result * 397) ^ ResolvingPower.GetHashCode();
+            result = (result * 397) ^ FixedWindowWidth.GetHashCode();
             result = (result * 397) ^ PeakWidthAtIonMobilityValueZero.GetHashCode();
             result = (result * 397) ^ PeakWidthAtIonMobilityValueMax.GetHashCode();
             return result;
@@ -707,7 +708,7 @@ namespace pwiz.Skyline.Model.DocSettings
             double? highEnergyIonMobilityValueOffset)
         {
             IonMobility = ionMobility;
-            CollisionalCrossSectionSqA = collisionalCrossSectionSqA;
+            CollisionalCrossSectionSqA = collisionalCrossSectionSqA == 0 ? null : collisionalCrossSectionSqA;
             HighEnergyIonMobilityValueOffset = highEnergyIonMobilityValueOffset;
         }
 
@@ -721,7 +722,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static IonMobilityAndCCS GetIonMobilityAndCCS(IonMobilityValue ionMobilityValue,
             double? collisionalCrossSectionSqA, double? highEnergyIonMobilityValueOffset)
         {
-            return ionMobilityValue.HasValue || collisionalCrossSectionSqA.HasValue
+            return ionMobilityValue.HasValue || (collisionalCrossSectionSqA??0) != 0
                 ? new IonMobilityAndCCS(ionMobilityValue, collisionalCrossSectionSqA, highEnergyIonMobilityValueOffset)
                 : EMPTY;
         }
@@ -803,6 +804,26 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsEmpty { get { return !HasIonMobilityValue && !HasCollisionalCrossSection; } }
         public static bool IsNullOrEmpty(IonMobilityAndCCS val) {  return val == null || val.IsEmpty; }
 
+        public void Write(Stream stream)
+        {
+            PrimitiveArrays.WriteOneValue(stream, IonMobility.Mobility ?? 0);
+            PrimitiveArrays.WriteOneValue(stream, (int)IonMobility.Units);
+            PrimitiveArrays.WriteOneValue(stream, CollisionalCrossSectionSqA ?? 0);
+            PrimitiveArrays.WriteOneValue(stream, HighEnergyIonMobilityValueOffset ?? 0);
+        }
+
+        public static IonMobilityAndCCS Read(Stream stream)
+        {
+            double ionMobility = PrimitiveArrays.ReadOneValue<double>(stream);
+            eIonMobilityUnits units = (eIonMobilityUnits)PrimitiveArrays.ReadOneValue<int>(stream);
+            double collisionalCrossSectionSqA = PrimitiveArrays.ReadOneValue<double>(stream);
+            double highEnergyOffset = PrimitiveArrays.ReadOneValue<double>(stream);
+            return ionMobility == 0 && collisionalCrossSectionSqA == 0 && highEnergyOffset == 0 ?
+                EMPTY :
+                GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(ionMobility != 0 ? ionMobility : (double?)null, units), 
+                    collisionalCrossSectionSqA > 0 ? collisionalCrossSectionSqA : (double?)null, highEnergyOffset);
+        }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -852,6 +873,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public class IonMobilityFilter : Immutable, IComparable, IEquatable<IonMobilityFilter>
     {
         public static readonly IonMobilityFilter EMPTY = new IonMobilityFilter(IonMobilityAndCCS.EMPTY, null);
+        public const double DoubleToIntEpsilon = 0.001; // Allow for a little rounding in double<->int conversion in SONAR use
 
         public static bool IsNullOrEmpty(IonMobilityFilter filter)
         {
@@ -888,7 +910,7 @@ namespace pwiz.Skyline.Model.DocSettings
             double? ionMobilityExtractionWindowWidth,
             double? collisionalCrossSectionSqA)
         {
-            if (!ionMobility.HasValue
+            if (IonMobilityValue.IsNullOrEmpty(ionMobility)
                 && !ionMobilityExtractionWindowWidth.HasValue)
             {
                 return EMPTY;
@@ -912,6 +934,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             IonMobilityAndCCS = ionMobilityAndCCS;
             IonMobilityExtractionWindowWidth = ionMobilityExtractionWindowWidth;
+            // Sanity check for SONAR filters - bounds should evaluate as integers since they're bins
+            Assume.IsTrue(IonMobilityUnits != eIonMobilityUnits.waters_sonar || 
+                          !IonMobilityAndCCS.HasCollisionalCrossSection &&
+                          !IonMobilityAndCCS.HighEnergyIonMobilityValueOffset.HasValue &&
+                          Math.Abs(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value - 
+                                   Math.Round(IonMobilityAndCCS.IonMobility.Mobility.Value - 0.5 * IonMobilityExtractionWindowWidth.Value)) <= DoubleToIntEpsilon,
+                @"unexpected values for Waters SONAR filtering");
         }
         public IonMobilityAndCCS IonMobilityAndCCS { get; private set; }
         public double? CollisionalCrossSectionSqA => IonMobilityAndCCS.CollisionalCrossSectionSqA; // The CCS value used to get the ion mobility, if known
@@ -989,6 +1018,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
                 case eIonMobilityUnits.compensation_V:
                     return Resources.IonMobilityFilter_IonMobilityUnitsString_Compensation_Voltage__V_;
+                case eIonMobilityUnits.waters_sonar: // Not really ion mobility, but uses IMS hardware and our IMS filtering code
                 case eIonMobilityUnits.none:
                     return Resources.IonMobilityFilter_IonMobilityUnitsL10NString_None;
                 default:
@@ -1030,9 +1060,8 @@ namespace pwiz.Skyline.Model.DocSettings
             var currentCulture = Thread.CurrentThread.CurrentUICulture;
             try
             {
-                foreach (var culture in new[] {@"en", @"zh-CHS", @"ja"})
+                foreach (var tryCulture in CultureUtil.AvailableDisplayLanguages())
                 {
-                    var tryCulture = new CultureInfo(culture);
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {
@@ -1065,9 +1094,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var result = new List<string>();
                 var currentCulture = Thread.CurrentThread.CurrentUICulture;
-                foreach (var culture in new[] { @"en", @"zh-CHS", @"ja" })
+                foreach (var tryCulture in CultureUtil.AvailableDisplayLanguages())
                 {
-                    var tryCulture = new CultureInfo(culture);
                     Thread.CurrentThread.CurrentUICulture = tryCulture;
                     foreach (eIonMobilityUnits u in Enum.GetValues(typeof(eIonMobilityUnits)))
                     {

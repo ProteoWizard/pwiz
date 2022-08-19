@@ -6,10 +6,12 @@
 # Copyright (c) 2007-2017 Rene Rivera
 # Copyright (c) 2008 Jurko Gospodnetic
 # Copyright (c) 2014 Microsoft Corporation
+# Copyright (c) 2019 Michał Janiszewski
+# Copyright (c) 2020 Nikita Kniazev
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #| tag::doc[]
 
@@ -22,20 +24,20 @@ tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
 * Visual Studio 2019-14.2
-* Visual Studio 2017-14.1
-* Visual Studio 2015-14.0
-* Visual Studio 2013-12.0
-* Visual Studio 2012-11.0
-* Visual Studio 2010-10.0
-* Visual Studio 2008-9.0
-* Visual Studio 2005-8.0
-* Visual Studio .NET 2003-7.1
-* Visual Studio .NET-7.0
+* Visual Studio 2017—14.1
+* Visual Studio 2015—14.0
+* Visual Studio 2013—12.0
+* Visual Studio 2012—11.0
+* Visual Studio 2010—10.0
+* Visual Studio 2008—9.0
+* Visual Studio 2005—8.0
+* Visual Studio .NET 2003—7.1
+* Visual Studio .NET—7.0
 * Visual Studio 6.0, Service Pack 5--6.5
 
 The user would then call the boost build executable with the toolset set
 equal to `msvc-[version number]` for example to build with Visual Studio
-2017 one could run:
+2019 one could run:
 
 ----
 .\b2 toolset=msvc-14.2 target
@@ -165,7 +167,7 @@ has an IA64 machine to test.
 It is believed that AMD64 and EM64T targets are essentially compatible.
 The compiler options `/favor:AMD64` and `/favor:EM64T`, which are
 accepted only by AMD64 targeting compilers, cause the generated code to
-be tuned to a specific flavor of 64-bit x86. Boost.Build will make use
+be tuned to a specific flavor of 64-bit x86. B2 will make use
 of those options depending on the value of the`instruction-set` feature.
 
 [[bbv2.reference.tools.compiler.msvc.winrt]]
@@ -225,15 +227,53 @@ import property-set ;
 import rc ;
 import sequence ;
 import set ;
+import testing ;
 import toolset ;
 import type ;
 import virtual-target ;
+import version ;
 import targets ;
 
 
 type.register MANIFEST : manifest ;
+
+#| tag::embed-doc[]
+
+[[bbv2.builtin.features.embed-manifest]]`embed-manifest`::
+*Allowed values:* `on`, `off`.
++
+This feature is specific to the `msvc` toolset (see <<Microsoft Visual C++>>),
+and controls whether the manifest files should be embedded inside executables
+and shared libraries, or placed alongside them. This feature corresponds to the
+IDE option found in the project settings dialog, under Configuration Properties
+-> Manifest Tool -> Input and Output -> Embed manifest.
+
+|# # end::embed-doc[]
+
 feature.feature embed-manifest : on off : incidental propagated ;
+
+#| tag::embed-doc[]
+
+[[bbv2.builtin.features.embed-manifest-file]]`embed-manifest-file`::
+This feature is specific to the `msvc` toolset (see <<Microsoft Visual C++>>),
+and controls which manifest files should be embedded inside executables and
+shared libraries. This feature corresponds to the IDE option found in the
+project settings dialog, under Configuration Properties -> Manifest Tool ->
+Input and Output -> Additional Manifest Files.
+
+|# # end::embed-doc[]
+
 feature.feature embed-manifest-file : : free dependency ;
+
+#| tag::embed-doc[]
+
+[[bbv2.builtin.features.embed-manifest-via]]`embed-manifest-via`::
+This feature is specific to the `msvc` toolset (see <<Microsoft Visual C++>>),
+and controls whether a manifest should be embedded via linker or manifest tool.
+
+|# # end::embed-doc[]
+
+feature.feature embed-manifest-via : mt linker : incidental propagated ;
 
 type.register PDB : pdb ;
 type.register CSPROJ : csproj ;
@@ -413,20 +453,109 @@ rule configure-version-specific ( toolset : version : conditions )
     # version 7.* explicitly or if we auto-detected the version ourselves.
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
-        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:forScope" "/Zc:wchar_t" ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions) : "/Zc:forScope" "/Zc:wchar_t" ;
         toolset.flags $(toolset).compile.c++ C++FLAGS $(conditions) : /wd4675 ;
 
         # Explicitly disable the 'function is deprecated' warning. Some msvc
         # versions have a bug, causing them to emit the deprecation warning even
         # with /W0.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>off : /wd4996 ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<warnings>off : /wd4996 ;
 
         if [ MATCH "^([78]\\.)" : $(version) ]
         {
             # 64-bit compatibility warning deprecated since 9.0, see
             # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
-            toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>all : /Wp64 ;
+            toolset.flags $(toolset).compile OPTIONS $(conditions)/<warnings>all : /Wp64 ;
         }
+    }
+
+    # 12.0 (VS2013 Update 2) introduced /Zc:inline opt-in standard conformance
+    # compiler flag that also similar to linker /opt:ref removes unreferenced
+    # variables and functions that have internal linkage
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 12 ]
+    {
+        toolset.flags $(toolset).compile OPTIONS $(conditions) : "/Zc:inline" ;
+
+        # /Gy analog for variables: https://devblogs.microsoft.com/cppblog/introducing-gw-compiler-switch/
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Gw ;
+    }
+
+    # 14.0 introduced /Zc:throwingNew opt-in flag that disables a workaround
+    # for not throwing operator new in VC up to 6.0
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 14 ]
+    {
+        toolset.flags $(toolset).compile C++FLAGS $(conditions) : "/Zc:throwingNew" ;
+    }
+
+    # 14.27 (VS2019 Version 16.7) introduced support for ASAN on x86 and x64 CPUs
+    # This check however now only tests for 14.2 (which is 16.0) as msvc.jam doesn't distinguish between minor versions (e.g. 14.21..14.28 etc)
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 14 2 ]
+    {
+        # General asan compile and link options.
+        toolset.flags $(toolset).compile OPTIONS
+            $(conditions)/<address-sanitizer>on
+            :   /fsanitize=address /FS ;
+        toolset.flags $(toolset).link LINKFLAGS
+            $(conditions)/<address-sanitizer>on
+            :   -incremental\:no ;
+
+        # The various 64 bit runtime asan support libraries and related flags.
+        toolset.flags $(toolset).link FINDLIBS_SA
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>shared
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>shared
+            :   clang_rt.asan_dynamic-x86_64
+                clang_rt.asan_dynamic_runtime_thunk-x86_64 ;
+        toolset.flags $(toolset).link LINKFLAGS
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>shared
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>shared
+            :   /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib"
+                /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
+        toolset.flags $(toolset).link FINDLIBS_SA
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>static/<main-target-type>EXE
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>static/<main-target-type>UNIT_TEST
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>EXE
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>UNIT_TEST
+            :   clang_rt.asan-x86_64
+                clang_rt.asan_cxx-x86_64 ;
+        toolset.flags $(toolset).link LINKFLAGS
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>static/<main-target-type>EXE
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>static/<main-target-type>UNIT_TEST
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>EXE
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>UNIT_TEST
+            :   /wholearchive\:"clang_rt.asan-x86_64.lib"
+                /wholearchive\:"clang_rt.asan_cxx-x86_64.lib" ;
+        toolset.flags $(toolset).link.dll FINDLIBS_SA
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>static
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>static
+            :   clang_rt.asan_dll_thunk-x86_64 ;
+        toolset.flags $(toolset).link.dll LINKFLAGS
+            $(conditions)/<address-sanitizer>on/<address-model>/<runtime-link>static
+            $(conditions)/<address-sanitizer>on/<address-model>64/<runtime-link>static
+            :   /wholearchive\:"clang_rt.asan_dll_thunk-x86_64.lib" ;
+
+        # The various 32 bit runtime asan support libraries and related flags.
+        toolset.flags $(toolset).link FINDLIBS_SA
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>shared
+            :   clang_rt.asan_dynamic-i386 clang_rt.asan_dynamic_runtime_thunk-i386 ;
+        toolset.flags $(toolset).link LINKFLAGS
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>shared
+            :   /wholearchive\:"clang_rt.asan_dynamic-i386.lib"
+                /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
+        toolset.flags $(toolset).link FINDLIBS_SA
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>EXE
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>UNIT_TEST
+            :   clang_rt.asan-i386 clang_rt.asan_cxx-i386 ;
+        toolset.flags $(toolset).link LINKFLAGS
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>EXE
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>UNIT_TEST
+            :   /wholearchive\:"clang_rt.asan-i386.lib"
+                /wholearchive\:"clang_rt.asan_cxx-i386.lib" ;
+        toolset.flags $(toolset).link.dll FINDLIBS_SA
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>LIB/<link>shared
+            :   clang_rt.asan_dll_thunk-i386 ;
+        toolset.flags $(toolset).link.dll LINKFLAGS
+            $(conditions)/<address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>LIB/<link>shared
+            :   /wholearchive\:"clang_rt.asan_dll_thunk-i386.lib" ;
     }
 
     #
@@ -436,34 +565,34 @@ rule configure-version-specific ( toolset : version : conditions )
     if [ MATCH "^([67])" : $(version) ]
     {
         # 8.0 deprecates some of the options.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Ogiy /Gs ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed : /Ot ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>space : /Os ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Ogiy /Gs ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<optimization>speed : /Ot ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<optimization>space : /Os ;
 
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set> : /GB ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>i486 : /G4 ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g5) : /G5 ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g6) : /G6 ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g7) : /G7 ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-i386)/<instruction-set> : /GB ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-i386)/<instruction-set>i486 : /G4 ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g5) : /G5 ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g6) : /G6 ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g7) : /G7 ;
 
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's "math"
         # tests will fail.
-        toolset.flags $(toolset).compile CFLAGS $(conditions) : /Op ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions) : /Op ;
 
         # 7.1 and below have single-threaded static RTL.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
     }
     else
     {
         # 8.0 and above adds some more options.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : "/favor:blend" ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-em64t) : "/favor:EM64T" ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-amd64) : "/favor:AMD64" ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : "/favor:blend" ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-em64t) : "/favor:EM64T" ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-amd64) : "/favor:AMD64" ;
 
         # 8.0 and above only has multi-threaded static RTL.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
+        toolset.flags $(toolset).compile OPTIONS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
 
         # Specify target machine type so the linker will not need to guess.
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : "/MACHINE:X64" ;
@@ -472,9 +601,21 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm64) : "/MACHINE:ARM64" ;
 
-        # Make sure that manifest will be generated even if there is no
-        # dependencies to put there.
-        toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
+        if [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 11 ]
+        {
+            # Make sure that manifest will be generated even if there is no
+            # dependencies to put there.
+            toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
+        }
+        else
+        {
+            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>mt : /MANIFEST ;
+            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>linker/<embed-manifest>off : /MANIFEST ;
+            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>linker/<embed-manifest>on : "/MANIFEST:EMBED" ;
+
+            local conditionx = [ feature.split $(conditions) ] ;
+            toolset.add-defaults $(conditionx:J=,)\:<embed-manifest-via>linker ;
+        }
     }
 
     toolset.pop-checking-for-flags-module ;
@@ -482,9 +623,9 @@ rule configure-version-specific ( toolset : version : conditions )
 
 # Feature for handling targeting different Windows API sets.
 feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
-feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 
+feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602
     <linkflags>/APPCONTAINER ;
-feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 
+feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602
     <linkflags>/APPCONTAINER <linkflags>"/NODEFAULTLIB:ole32.lib" <linkflags>"/NODEFAULTLIB:kernel32.lib" <linkflags>WindowsPhoneCore.lib ;
 feature.set-default windows-api : desktop ;
 
@@ -520,7 +661,7 @@ if [ os.name ] in NT
     actions archive
     {
         if exist "$(<[1])" DEL "$(<[1])"
-        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
     }
 }
 else
@@ -528,7 +669,7 @@ else
     actions archive
     {
         $(.RM) "$(<[1])"
-        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
     }
 }
 
@@ -537,23 +678,16 @@ rule compile.asm ( targets + : sources * : properties * )
     set-setup-command $(targets) : $(properties) ;
 }
 
-# For the assembler the following options are turned on by default:
-#
-#   -Zp4   align structures to 4 bytes
-#   -Cp    preserve case of user identifiers
-#   -Cx    preserve case in publics, externs
-#
 actions compile.asm
 {
-    $(.SETUP) $(.ASM) -c -Zp4 -Cp -Cx -D$(DEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
+    $(.SETUP) $(.ASM) -D$(ASMDEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) $(.ASM_OUTPUT) "$(<:W)" "$(>:W)"
 }
 
 
 rule compile.c ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    C++FLAGS on $(targets[1]) = ;
-    get-rspline $(targets) : -TC ;
+    get-rspline $(targets) : -TC CFLAGS  ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -561,8 +695,7 @@ rule compile.c ( targets + : sources * : properties * )
 rule compile.c.preprocess ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    C++FLAGS on $(targets[1]) = ;
-    get-rspline $(targets) : -TC ;
+    get-rspline $(targets) : -TC CFLAGS ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -570,9 +703,8 @@ rule compile.c.preprocess ( targets + : sources * : properties * )
 rule compile.c.pch ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    C++FLAGS on $(targets[1]) = ;
-    get-rspline $(targets[1]) : -TC ;
-    get-rspline $(targets[2]) : -TC ;
+    get-rspline $(targets[1]) : -TC CFLAGS ;
+    get-rspline $(targets[2]) : -TC CFLAGS ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {
@@ -605,22 +737,22 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #    for each source file by rule archive, as in this case compiler must be used
 #    to create a single PDB for our library.
 #
-actions compile-c-c++ bind PDB_NAME
+actions compile-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER) > "$(<[1]:W).out"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER) > "$(<[1]:W).out"
     set status=%ERRORLEVEL%
     findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
     exit %status%
 }
 
-actions preprocess-c-c++ bind PDB_NAME
+actions preprocess-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -P -Fi"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))
 }
 
 actions compile-c++clr
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)" > "$(<[1]:W).out"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE)) $(.CC.FILTER)" > "$(<[1]:W).out"
     set status=%ERRORLEVEL%
     findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
     exit %status%
@@ -650,7 +782,7 @@ rule preprocess-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER) > "$(<[1]:W).out"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER) > "$(<[1]:W).out"
     set status=%ERRORLEVEL%
     findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
     exit %status%
@@ -662,7 +794,7 @@ actions compile-c-c++-pch
 # given as one of the source parameters.
 actions compile-c-c++-pch-s
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER) > "$(<[1]:W).out"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER) > "$(<[1]:W).out"
     set status=%ERRORLEVEL%
     findstr /V /X "$(>[1]:D=)" "$(<[1]:W).out"
     exit %status%
@@ -672,14 +804,14 @@ actions compile-c-c++-pch-s
 rule compile.c++ ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    get-rspline $(targets) : -TP ;
+    get-rspline $(targets) : -TP C++FLAGS ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
 rule compile.c++.preprocess ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    get-rspline $(targets) : -TP ;
+    get-rspline $(targets) : -TP C++FLAGS ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -735,7 +867,7 @@ rule compile.c++clr ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     set-assemblies $(<[1]) : $(properties) ;
-    get-rspline $(targets) : -TP ;
+    get-rspline $(targets) : -TP C++FLAGS ;
     compile-c++clr $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -743,8 +875,8 @@ rule compile.c++clr ( targets + : sources * : properties * )
 rule compile.c++.pch ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    get-rspline $(targets[1]) : -TP ;
-    get-rspline $(targets[2]) : -TP ;
+    get-rspline $(targets[1]) : -TP C++FLAGS ;
+    get-rspline $(targets[2]) : -TP C++FLAGS ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {
@@ -766,7 +898,7 @@ rule compile.idl ( targets + : sources * : properties * )
 #
 actions compile.idl
 {
-    $(.SETUP) $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(.nl)"$(>:W)" $(.nl)-D$(DEFINES) $(.nl)"-I$(INCLUDES:W)" $(.nl)-U$(UNDEFS) $(.nl)$(MIDLFLAGS) $(.nl)/tlb "$(<[1]:W)" $(.nl)/h "$(<[2]:W)" $(.nl)/iid "$(<[3]:W)" $(.nl)/proxy "$(<[4]:W)" $(.nl)/dlldata "$(<[5]:W)")"
+    $(.SETUP) $(.IDL) /nologo @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>:W)" -D$(DEFINES) "-I$(INCLUDES:W)" -U$(UNDEFS) $(MIDLFLAGS) /tlb "$(<[1]:W)" /h "$(<[2]:W)" /iid "$(<[3]:W)" /proxy "$(<[4]:W)" /dlldata "$(<[5]:W)")
     $(.TOUCH_FILE) "$(<[4]:W)"
     $(.TOUCH_FILE) "$(<[5]:W)"
 }
@@ -822,7 +954,7 @@ rule compile.rc ( targets + : sources * : properties * )
 
 actions compile.rc
 {
-    $(.SETUP) $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
+    $(.SETUP) $(.RC) /nologo -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
 }
 
 toolset.uses-features msvc.link : <embed-manifest> <embed-manifest-file> ;
@@ -958,14 +1090,14 @@ rule link ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     set-manifest-dependencies $(<[1]) : $(properties) ;
-    if <embed-manifest>on in $(properties)
+    if <embed-manifest>on in $(properties) && <embed-manifest-via>mt in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
         {
             DEPENDS $(<) : [ on $(<) return $(EMBED_MANIFEST_FILE) ] ;
             msvc.manifest.user $(targets) $(EMBED_MANIFEST_FILE) : $(sources) : $(properties) ;
         }
-        else 
+        else
         {
             msvc.manifest $(targets) : $(sources) : $(properties) ;
         }
@@ -994,14 +1126,14 @@ rule link.dll ( targets + : sources * : properties * )
     # on it depends on the dll as well.
     NOUPDATE $(import-lib) ;
     INCLUDES $(import-lib) : $(targets[1]) ;
-    if <embed-manifest>on in $(properties)
+    if <embed-manifest>on in $(properties) && <embed-manifest-via>mt in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
         {
             DEPENDS $(<) : [ on $(<) return $(EMBED_MANIFEST_FILE) ] ;
             msvc.manifest.dll.user $(targets) $(EMBED_MANIFEST_FILE) : $(sources) : $(properties) ;
         }
-        else 
+        else
         {
             msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
         }
@@ -1031,19 +1163,15 @@ rule link.clr.dll ( targets + : sources * : properties * )
 # assemblies and Windows native DLLs. The manifests are embedded as resources
 # and are useful in any PE target (both DLL and EXE).
 
-if [ os.name ] in NT
 {
-    actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
-        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(MANIFEST_DEPENDENCIES)
     }
 
     actions manifest
     {
-        if exist "$(<[1]).manifest" (
-            $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
-        )
+        $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
     }
 
     actions manifest.user bind EMBED_MANIFEST_FILE
@@ -1051,59 +1179,22 @@ if [ os.name ] in NT
         $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
     }
 
-    actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+
+    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
-        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)" $(MANIFEST_DEPENDENCIES)
     }
 
-    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link.clr.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
-    }
-
-    actions link.clr.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
-    {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
-        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /def:"$(DEF_FILE)" $(MANIFEST_DEPENDENCIES)
     }
 
     actions manifest.dll
     {
         if exist "$(<[1]).manifest" (
-            $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+        $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    }
-    actions manifest.dll.user bind EMBED_MANIFEST_FILE
-    {
-        $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
-    }
-}
-else
-{
-    actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
-    {
-        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-    }
-
-    actions manifest
-    {
-        if test -e "$(<[1]).manifest"; then
-            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
-        fi
-    }
-
-    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
-    {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-    }
-
-    actions manifest.dll
-    {
-        if test -e "$(<[1]).manifest"; then
-            $(.SETUP) $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
-        fi
     }
 
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
@@ -1164,14 +1255,14 @@ class msvc-pch-generator : pch-generator
 
         # If we do not have the PCH source - that is fine. We will just create a
         # temporary .cpp file in the action.
-
+        local pch-header-dir = [ $(pch-header).path ] ;
         local generated = [ generator.run $(project) $(name)
             : [ property-set.create
                 # Passing of <pch-source> is a dirty trick, needed because
                 # non-composing generators with multiple inputs are subtly
                 # broken. For more detailed information see:
                 # https://zigzag.cs.msu.su:7813/boost.build/ticket/111
-                <pch-source>$(pch-source)
+                <pch-source>$(pch-source) "<include>$(pch-header-dir)"
                 [ $(property-set).raw ] ]
             : $(pch-header) ] ;
 
@@ -1266,13 +1357,13 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
 {
     local setup-options ;
     local setup = [ feature.get-values <setup-$(cpu)> : $(options) ] ;
-    
+
     if ! $(setup)-is-defined
     {
         if $(global-setup)-is-defined
         {
             setup = $(global-setup) ;
-                        
+
             # If needed we can easily add using configuration flags
             # here for overriding which options get passed to the
             # global setup command for which target platform:
@@ -1281,11 +1372,19 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.2)" : $(version) ]
+            if [ MATCH "(14.3)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.2' ;
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.3" ;
+                }
+                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
+            }
+            else if [ MATCH "(14.2)" : $(version) ]
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.2" ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -1293,7 +1392,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.1' ;
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.1" ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -1301,7 +1400,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             setup ?= [ path.join  $(parent) "vcvarsall.bat" ] ;
         }
     }
-    
+
     return $(setup) "$(setup-options:J= )" ;
 }
 
@@ -1344,7 +1443,7 @@ IMPORT msvc : rewrite-setup : : msvc.rewrite-setup ;
 
 # Helper rule to generate a faster alternative to MSVC setup scripts.
 # We used to call MSVC setup scripts directly in every action, however in
-# newer MSVC versions (10.0+) they make long-lasting registry queries 
+# newer MSVC versions (10.0+) they make long-lasting registry queries
 # which have a significant impact on build time.
 local rule set-setup-command ( targets * : properties * )
 {
@@ -1452,7 +1551,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\\\14.2)" : $(command) ]
+            if [ MATCH "(MSVC\\\\14.3)" : $(command) ]
+            {
+                version = 14.3 ;
+            }
+            else if [ MATCH "(MSVC\\\\14.2)" : $(command) ]
             {
                 version = 14.2 ;
             }
@@ -1545,7 +1648,7 @@ local rule configure-really ( version ? : options * )
 
         local below-8.0 = [ MATCH "^([67]\\.)" : $(version) ] ;
         local below-11.0 = [ MATCH "^([6789]\\.|10\\.)" : $(version) ] ;
-        
+
         local cpu = i386 amd64 ia64 arm arm64 ;
         if $(below-8.0)
         {
@@ -1555,7 +1658,7 @@ local rule configure-really ( version ? : options * )
         {
             cpu = i386 amd64 ia64 ;
         }
-        
+
         local setup-amd64 ;
         local setup-i386 ;
         local setup-ia64 ;
@@ -1614,7 +1717,7 @@ local rule configure-really ( version ? : options * )
                     vcvarsall.bat ] ;
             }
 
-            local default-setup-amd64 = vcvarsx86_amd64.bat ;
+            local default-setup-amd64 = vcvars64.bat ;
             local default-setup-i386  = vcvars32.bat ;
             local default-setup-ia64  = vcvarsx86_ia64.bat ;
             local default-setup-arm   = vcvarsx86_arm.bat ;
@@ -1644,7 +1747,7 @@ local rule configure-really ( version ? : options * )
             {
                 default-global-setup-options-amd64 = amd64 ;
             }
-            # When Boost.Build itself is running as a 32-bit process on 64-bit
+            # When B2 itself is running as a 32-bit process on 64-bit
             # Windows, the above test will fail (since WOW64 simulates a 32-bit
             # environment, including environment values).  So check the WOW64
             # variable PROCESSOR_ARCHITEW6432 as well.
@@ -1666,7 +1769,7 @@ local rule configure-really ( version ? : options * )
                 exact-version ?= $(version) ;
                 setup-$(c) = [ generate-setup-cmd $(exact-version) : $(command) : $(parent) : $(options) : $(c) : $(global-setup) : $(default-global-setup-options-$(c)) : $(default-setup-$(c)) ] ;
             }
-            
+
             # Windows phone has different setup scripts, located in a different directory hierarchy.
             # The 11.0 toolset can target Windows Phone 8.0 and the 12.0 toolset can target Windows Phone 8.1,
             # each of which have a different directory for their vcvars setup scripts.
@@ -1681,7 +1784,7 @@ local rule configure-really ( version ? : options * )
                 phone-directory = [ path.native [ path.join $(phone-directory) WP81 ] ] ;
             }
             global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
-                
+
             # If can't locate default phone setup script then this VS version doesn't support Windows Phone.
             if $(global-setup-phone)-is-defined
             {
@@ -1710,8 +1813,26 @@ local rule configure-really ( version ? : options * )
         local default-assembler-amd64 = ml64 ;
         local default-assembler-i386  = "ml -coff" ;
         local default-assembler-ia64  = ias ;
-        local default-assembler-ia64  = armasm ;
+        local default-assembler-arm   = armasm ;
         local default-assembler-arm64 = armasm64 ;
+
+        # For the assembler the following options are turned on by default:
+        #
+        #   -Zp4   align structures to 4 bytes
+        #   -Cp    preserve case of user identifiers
+        #   -Cx    preserve case in publics, externs
+        #
+        local assembler-flags-amd64 = "-c -Zp4 -Cp -Cx" ;
+        local assembler-flags-i386  = "-c -Zp4 -Cp -Cx" ;
+        local assembler-flags-ia64  = "-c -Zp4 -Cp -Cx" ;
+        local assembler-flags-arm   = "" ;
+        local assembler-flags-arm64 = "" ;
+
+        local assembler-output-flag-amd64 = -Fo ;
+        local assembler-output-flag-i386  = -Fo ;
+        local assembler-output-flag-ia64  = -Fo ;
+        local assembler-output-flag-arm   = -o ;
+        local assembler-output-flag-arm64 = -o ;
 
         assembler = [ feature.get-values <assembler> : $(options) ] ;
 
@@ -1744,6 +1865,8 @@ local rule configure-really ( version ? : options * )
 
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
+            local assembler-flags = $(assembler-flags-$(c)) ;
+            local assembler-output-flag = $(assembler-output-flag-$(c)) ;
 
             for local api in desktop store phone
             {
@@ -1755,7 +1878,7 @@ local rule configure-really ( version ? : options * )
 
                 if <rewrite-setup-scripts>always in $(options)
                 {
-                    toolset.flags msvc .REWRITE-SETUP <windows-api>$(api)/$(cpu-conditions) : true ; 
+                    toolset.flags msvc .REWRITE-SETUP <windows-api>$(api)/$(cpu-conditions) : true ;
                 }
 
                 if ! $(setup-script)
@@ -1786,7 +1909,8 @@ local rule configure-really ( version ? : options * )
                 {
                     toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(compiler) /Zm800 /ZW /EHsc -nologo ;
                 }
-                toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(cpu-assembler) -nologo ;
+                toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(cpu-assembler) $(assembler-flags) -nologo ;
+                toolset.flags msvc.compile .ASM_OUTPUT <windows-api>$(api)/$(cpu-conditions) : $(assembler-output-flag) ;
                 toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /NOLOGO "/INCREMENTAL:NO" ;
                 toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /lib /NOLOGO  ;
             }
@@ -1806,6 +1930,10 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-amd64) : [ path.native [ path.join $(storeLibPath) "amd64" ] ] ;
             toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-arm) : [ path.native [ path.join $(storeLibPath) "arm" ] ] ;
         }
+
+        # LTO
+        toolset.flags msvc.compile OPTIONS $(conditions)/<lto>on : /GL ;
+        toolset.flags msvc.link LINKFLAGS $(conditions)/<lto>on : /LTCG ;
 
         # Set version-specific flags.
         configure-version-specific msvc : $(version) : $(conditions) ;
@@ -1827,14 +1955,35 @@ local rule default-path ( version )
         {
             root = [ os.environ "ProgramFiles" ] ;
         }
-        local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
-        if $(version) in 14.1 14.2 default && [ path.exists $(vswhere) ]
+        if ( ! $(root) ) && [ os.name ] in CYGWIN
+        {
+            # We probably are in an 'env -i' Cygwin session, where the user
+            # was unable restore the "ProgramFiles(x86)" environment variable,
+            # because it is an invalid environment variable name in Cygwin.
+            # However, we can try to query cygpath instead.
+            root = [ SHELL "cygpath -w -F 42" : strip-eol ] ; # CSIDL_PROGRAM_FILESX86
+            if ( ! $(root) )
+            {
+                root = [ SHELL "cygpath -w -F 38" : strip-eol ] ; # CSIDL_PROGRAM_FILES
+            }
+        }
+        # When we are a Cygwin build, [ SHELL ] does execute using "/bin/sh -c".
+        # When /bin/sh does find a forward slash, no PATH search is performed,
+        # causing [ SHELL "C:\\...\\Installer/vswhere.exe" ] to succeed.
+        # And fortunately, forward slashes do also work in native Windows.
+        local vswhere = "$(root)/Microsoft Visual Studio/Installer/vswhere.exe" ;
+        # The check for $(root) is to avoid a segmentation fault if not found.
+        if $(version) in 14.1 14.2 14.3 default && $(root) && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
             local limit ;
 
-            if $(version) = 14.2 || $(version) = "default"
+            if $(version) = 14.3
+            {
+                limit = "-version \"[17.0,18.0)\" -prerelease" ;
+            }
+            else if $(version) = 14.2 || $(version) = "default"
             {
                 limit = "-version \"[16.0,17.0)\"" ;
             }
@@ -1843,8 +1992,10 @@ local rule default-path ( version )
                 limit = "-version \"[15.0,16.0)\"" ;
             }
 
-            local vswhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
-            local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vswhere_cmd) ] : "\n" ] ;
+            # Quoting the "*" is for when we are a Cygwin build, to bypass /bin/sh.
+            local vswhere_cmd = "\"$(vswhere)\" -latest -products \"*\" $(req) $(prop) $(limit)" ;
+            # The split character "\r" is for when we are a Cygwin build.
+            local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vswhere_cmd) ] : "\r\n" ] ;
             pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
             if ! [ path.exists $(pseudo_env_VSCOMNTOOLS) ]
             {
@@ -1885,11 +2036,11 @@ local rule default-path ( version )
 
 
 
-rule get-rspline ( target : lang-opt )
+rule get-rspline ( target : lang-opt lang-flags )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
-        $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(.nl)-D$(DEFINES)
-        $(.nl)\"-I$(INCLUDES:W)\" ] ;
+        $($(lang-flags)) $(OPTIONS) -D$(DEFINES)
+        \"-I$(INCLUDES:W)\" \"-FI$(FORCE_INCLUDES:W)\" ] ;
 }
 
 class msvc-linking-generator : linking-generator
@@ -2010,7 +2161,7 @@ local rule register-toolset-really ( )
         feature.feature using-clr           : false true            : composite ;
         feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }
-    
+
     toolset.add-requirements <runtime-checks>on:<optimization>off ;
     toolset.add-requirements <using-clr>true:<runtime-checks>off ;
 
@@ -2074,35 +2225,32 @@ local rule register-toolset-really ( )
     # By default 10.0 sets _SECURE_SCL=0 for release builds while prior versions set _SECURE_SCL=1.
     # We enable or disable it explicitly so we do not have to depend on this
     # default behaviour.
-    toolset.flags msvc.compile CFLAGS <secure-scl>on/<debug-symbols>off : -D_SECURE_SCL=1 ;
-    toolset.flags msvc.compile CFLAGS <secure-scl>off : -D_SECURE_SCL=0 ;
-    
-    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>default : ;
-    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>debug : -D_ITERATOR_DEBUG_LEVEL=1 ;
-    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
-    toolset.flags msvc.compile C++FLAGS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
+    toolset.flags msvc.compile OPTIONS <secure-scl>on/<debug-symbols>off : -D_SECURE_SCL=1 ;
+    toolset.flags msvc.compile OPTIONS <secure-scl>off : -D_SECURE_SCL=0 ;
 
-    toolset.flags msvc.compile CFLAGS <runtime-checks>on : "/RTCs /bigobj" ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>default : ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>on/<variant>debug : -D_ITERATOR_DEBUG_LEVEL=1 ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>on/<variant>release : -D_ITERATOR_DEBUG_LEVEL=2 ;
+    toolset.flags msvc.compile OPTIONS  <iterator-debugging>off : -D_ITERATOR_DEBUG_LEVEL=0 ;
 
-    toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
-    toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;
+    toolset.flags msvc.compile OPTIONS <runtime-checks>on : "/RTCs /bigobj" ;
 
-    toolset.flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium) : /G1 ;
-    toolset.flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium2) : /G2 ;
+    toolset.flags msvc.compile OPTIONS <optimization>speed : /O2 ;
+    toolset.flags msvc.compile OPTIONS <optimization>space : /O1 ;
 
-    toolset.flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
-    toolset.flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
-    toolset.flags msvc.compile CFLAGS <optimization>off : /Od ;
-    toolset.flags msvc.compile CFLAGS <inlining>off : /Ob0 ;
-    toolset.flags msvc.compile CFLAGS <inlining>on : /Ob1 ;
-    toolset.flags msvc.compile CFLAGS <inlining>full : /Ob2 ;
+    toolset.flags msvc.compile OPTIONS <debug-symbols>on/<debug-store>object : /Z7 ;
+    toolset.flags msvc.compile OPTIONS <debug-symbols>on/<debug-store>database : /Zi ;
+    toolset.flags msvc.compile OPTIONS <optimization>off : /Od ;
+    toolset.flags msvc.compile OPTIONS <inlining>off : /Ob0 ;
+    toolset.flags msvc.compile OPTIONS <inlining>on : /Ob1 ;
+    toolset.flags msvc.compile OPTIONS <inlining>full : /Ob2 ;
 
-    toolset.flags msvc.compile CFLAGS <warnings>on : /W3 ;
-    toolset.flags msvc.compile CFLAGS <warnings>off : /W0 ;
-    toolset.flags msvc.compile CFLAGS <warnings>all : /W4 ;
-    toolset.flags msvc.compile CFLAGS <warnings>extra : /W4 ;
-    toolset.flags msvc.compile CFLAGS <warnings>pedantic : /W4 ;
-    toolset.flags msvc.compile CFLAGS <warnings-as-errors>on : /WX ;
+    toolset.flags msvc.compile OPTIONS <warnings>on : /W3 ;
+    toolset.flags msvc.compile OPTIONS <warnings>off : /W0 ;
+    toolset.flags msvc.compile OPTIONS <warnings>all : /W4 ;
+    toolset.flags msvc.compile OPTIONS <warnings>extra : /W4 ;
+    toolset.flags msvc.compile OPTIONS <warnings>pedantic : /W4 ;
+    toolset.flags msvc.compile OPTIONS <warnings-as-errors>on : /WX ;
 
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>off : /EHs ;
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>on : /EHsc ;
@@ -2111,41 +2259,43 @@ local rule register-toolset-really ( )
 
     toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : "/std:c++14" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : "/std:c++17" ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>20 : "/std:c++20" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : "/std:c++latest" ;
 
     # By default 8.0 enables rtti support while prior versions disabled it. We
     # simply enable or disable it explicitly so we do not have to depend on this
     # default behaviour.
-    toolset.flags msvc.compile CFLAGS <rtti>on : /GR ;
-    toolset.flags msvc.compile CFLAGS <rtti>off : /GR- ;
-    toolset.flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>shared : /MD ;
-    toolset.flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>shared : /MDd ;
+    toolset.flags msvc.compile C++FLAGS <rtti>on : /GR ;
+    toolset.flags msvc.compile C++FLAGS <rtti>off : /GR- ;
+    toolset.flags msvc.compile OPTIONS <runtime-debugging>off/<runtime-link>shared : /MD ;
+    toolset.flags msvc.compile OPTIONS <runtime-debugging>on/<runtime-link>shared : /MDd ;
 
-    toolset.flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
-    toolset.flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
+    toolset.flags msvc.compile OPTIONS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
+    toolset.flags msvc.compile OPTIONS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
-    toolset.flags msvc.compile OPTIONS <cflags> : ;
-    toolset.flags msvc.compile.c++ OPTIONS <cxxflags> : ;
-    toolset.flags msvc.compile.c++clr OPTIONS <cxxflags> : ;
+    toolset.flags msvc.compile CFLAGS <cflags> : ;
+    toolset.flags msvc.compile.c++ C++FLAGS <cxxflags> : ;
+    toolset.flags msvc.compile.c++clr C++FLAGS <cxxflags> : ;
 
     toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 
     toolset.flags msvc.compile DEFINES <define> ;
     toolset.flags msvc.compile UNDEFS <undef> ;
     toolset.flags msvc.compile INCLUDES <include> ;
+    toolset.flags msvc.compile FORCE_INCLUDES <force-include> ;
     toolset.flags msvc.compile ASSEMBLIES <assembly> ;
 
     # Declare flags for the assembler.
     toolset.flags msvc.compile.asm USER_ASMFLAGS <asmflags> ;
 
-    toolset.flags msvc.compile.asm ASMFLAGS <debug-symbols>on : "/Zi /Zd" ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<debug-symbols>on : "/Zi /Zd" ;
 
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings>on : /W3 ;
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings>off : /W0 ;
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings>all : /W4 ;
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings-as-errors>on : /WX ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings>on : /W3 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings>off : /W0 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings>all : /W4 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings-as-errors>on : /WX ;
 
-    toolset.flags msvc.compile.asm DEFINES <define> ;
+    toolset.flags msvc.compile.asm ASMDEFINES <architecture>x86 : <define> ;
 
     # Declare flags for linking.
     {
@@ -2153,6 +2303,7 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
         toolset.flags msvc.link LINKFLAGS <debug-store-compress>on : /PDBCOMPRESS ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
+        toolset.flags msvc.link MANIFEST_FILE <embed-manifest-via>linker : <embed-manifest-file> ;
         toolset.flags msvc.link ASSEMBLIES <assembly> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
@@ -2165,18 +2316,21 @@ local rule register-toolset-really ( )
         toolset.flags msvc LINKFLAGS <user-interface>native : "/subsystem:native" ;
         toolset.flags msvc LINKFLAGS <user-interface>auto : "/subsystem:posix" ;
 
-        toolset.flags msvc.link OPTIONS <linkflags> ;
+        toolset.flags msvc.link LINKFLAGS <linkflags> ;
         toolset.flags msvc.link LINKPATH <library-path> ;
 
         toolset.flags msvc.link FINDLIBS_ST <find-static-library> ;
         toolset.flags msvc.link FINDLIBS_SA <find-shared-library> ;
         toolset.flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
         toolset.flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
-        
-        toolset.flags msvc.link.dll LINKFLAGS <suppress-import-lib>true : /NOENTRY ;
     }
 
     toolset.flags msvc.archive AROPTIONS <archiveflags> ;
+
+    # Enable response file control
+    toolset.flags msvc RESPONSE_FILE_SUB <response-file>auto : a ;
+    toolset.flags msvc RESPONSE_FILE_SUB <response-file>file : f ;
+    toolset.flags msvc RESPONSE_FILE_SUB <response-file>contents : c ;
 
     # Create a project to allow building the setup scripts
     project.initialize $(__name__) ;
@@ -2246,35 +2400,57 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .RM = [ common.rm-command ] ;
 .nl = "
 " ;
+_ = " " ;
 .ProgramFiles = [ path.make [ common.get-program-files-dir ] ] ;
 .escaped-double-quote = "\"" ;
+.hash = "\#" ;
 .TOUCH_FILE = [ common.file-touch-command ] ;
 
 # List of all registered configurations.
 .versions = [ new configurations ] ;
 
 # Supported CPU architectures.
-.cpu-arch-i386 =
-    <architecture>/<address-model>
-    <architecture>/<address-model>32
-    <architecture>x86/<address-model>
-    <architecture>x86/<address-model>32 ;
+.cpu-arch-info-i386  = x86  32 ;
+.cpu-arch-info-amd64 = x86  64 ;
+.cpu-arch-info-ia64  = ia64 64 ;
+.cpu-arch-info-arm   = arm  32 ;
+.cpu-arch-info-arm64 = arm  64 ;
 
-.cpu-arch-amd64 =
-    <architecture>/<address-model>64
-    <architecture>x86/<address-model>64 ;
+# Fill explicit architecture and address model values
+for local cpu in [ MATCH "^\\.cpu-arch-info-(.*)" : [ VARNAMES $(__name__) ] ]
+{
+    local arch = $(.cpu-arch-info-$(cpu)[1]) ;
+    .cpus-on-$(arch) += $(cpu) ;
+    .cpu-arch-$(cpu) = <architecture>$(arch)/<address-model>$(.cpu-arch-info-$(cpu)[2]) ;
+}
 
-.cpu-arch-ia64 =
-    <architecture>ia64/<address-model>
-    <architecture>ia64/<address-model>64 ;
+# Match implicit architecture and address model based on the current platform
+.default-cpu-arch = [ os.environ PROCESSOR_ARCHITEW6432 ] ;
+.default-cpu-arch ?= [ os.environ PROCESSOR_ARCHITECTURE ] ;
+.default-cpu-arch = $(.default-cpu-arch:L) ;
+switch $(.default-cpu-arch)
+{
+    case x86   : .default-cpu-arch = i386 ;
+    case em64t : .default-cpu-arch = amd64 ;
+}
 
-.cpu-arch-arm =
-    <architecture>arm/<address-model>
-    <architecture>arm/<address-model>32 ;
+for local cpu in $(.cpus-on-$(.cpu-arch-info-$(.default-cpu-arch)[1]))
+{
+    .cpu-arch-$(cpu) += <architecture>/<address-model>$(.cpu-arch-info-$(cpu)[2]) ;
+}
 
-.cpu-arch-arm64 =
-    <architecture>arm/<address-model>
-    <architecture>arm/<address-model>64 ;
+.cpu-arch-$(.default-cpu-arch) += <architecture>$(.cpu-arch-info-$(.default-cpu-arch)[1])/<address-model> ;
+.cpu-arch-$(.default-cpu-arch) += <architecture>/<address-model> ;
+
+# If there is only one address model for an architecture we allow to ommit it
+for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
+{
+    if ! $(.cpus-on-$(arch)[2-]) && $(.cpus-on-$(arch)[1]) != $(.default-cpu-arch)
+    {
+        .cpu-arch-$(.cpus-on-$(arch)) += <architecture>$(arch)/<address-model> ;
+    }
+}
+
 
 # Supported CPU types (only Itanium optimization options are supported from
 # VC++ 2005 on). See
@@ -2282,15 +2458,16 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 # detailed information.
 .cpu-type-g5       = i586 pentium pentium-mmx ;
 .cpu-type-g6       = i686 pentiumpro pentium2 pentium3 pentium3m pentium-m k6
-                     k6-2 k6-3 winchip-c6 winchip2 c3 c3-2 ;
+                     k6-2 k6-3 winchip-c6 winchip2 c3 c3-2 c7 ;
 .cpu-type-em64t    = prescott nocona core2 corei7 corei7-avx core-avx-i
                      conroe conroe-xe conroe-l allendale merom
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
-                     broadwell skylake skylake-avx512 cannonlake icelake ;
+                     broadwell skylake skylake-avx512 cannonlake icelake-client
+                     icelake-server cascadelake cooperlake tigerlake ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
-                     bdver4 btver1 btver2 znver1 ;
+                     bdver4 btver1 btver2 znver1 znver2 ;
 .cpu-type-g7       = pentium4 pentium4m athlon athlon-tbird athlon-4 athlon-xp
                      athlon-mp $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 .cpu-type-itanium  = itanium itanium1 merced ;
@@ -2299,7 +2476,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 14.3 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -2346,6 +2523,11 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     "Microsoft Visual Studio/2019/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
 .version-14.2-env = VS160COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+.version-14.3-path =
+    "../../VC/Tools/MSVC/*/bin/Host*/*"
+    "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*"
+    ;
+.version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 # Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;

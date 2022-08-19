@@ -565,6 +565,32 @@
     <ClCompile Include="pwiz\utility\misc\BinaryDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReader.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFReaderTest.cpp" />
+    <ClCompile Include="pwiz\analysis\dia_umpire\DiaUmpire.cpp" />
+    <ClCompile Include="pwiz\analysis\dia_umpire\IsotopePatternMap.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.cpp" />
+    <ClCompile Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpireTest.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmSchedulerTest.cpp" />
+    <ClCompile Include="pwiz\analysis\common\CwtPeakDetectorTest.cpp" />
+    <ClCompile Include="pwiz\analysis\common\CwtPeakDetector.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_Filter.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_FilterTest.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefiner.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefinerTest.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactoryTest.cpp" />
+    <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactory.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Configuration_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Connection_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Datastructures_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\ReferenceRead_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\ReferenceWrite_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\mz5\Translator_mz5.cpp" />
+    <ClCompile Include="pwiz\data\msdata\SpectrumListBase.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UIMF\ChromatogramList_UIMF.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.cpp" />
+    <ClCompile Include="pwiz\utility\bindings\CLI\analysis\SpectrumList_IonMobility_Test.cpp" />
+    <ClCompile Include="pwiz\utility\misc\String.cpp" />
+    <ClCompile Include="pwiz_tools\commandline\idcat.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -998,11 +1024,51 @@
     <ClInclude Include="pwiz_tools\BiblioSpec\src\BuildParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\mzxmlParser.h" />
     <ClInclude Include="pwiz_tools\BiblioSpec\src\PwizReader.h" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpire.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\DiaUmpireMath.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\InstrumentParameter.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\IsotopePatternMap.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\IsotopePatternRange.ipp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\PeakCluster.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\PeakCurve.hpp" />
+    <ClInclude Include="pwiz\analysis\dia_umpire\ScanData.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpire.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\prmscheduler.h" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\timstof_prm_scheduler\PrmScheduler.hpp" />
+    <ClInclude Include="pwiz\utility\misc\sort_together.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICalibration.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICollection.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIConstants.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFile.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFrame.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIGate.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIMetadata.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIScan.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIUtils.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Waters\WatersRawFile.hpp" />
+    <ClInclude Include="pwiz\analysis\common\CwtPeakDetector.hpp" />
+    <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramList_Filter.hpp" />
+    <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefiner.hpp" />
+    <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactory.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\SpectrumList_Demux.hpp" />
+    <ClInclude Include="pwiz\analysis\spectrum_processing\MS2NoiseFilter.hpp" />
+    <ClInclude Include="pwiz\utility\chemistry\MzMobilityWindow.hpp" />
+    <ClInclude Include="pwiz\utility\bindings\CLI\common\BinaryData.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UNIFI\ChromatogramList_UNIFI.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\UIMF\ChromatogramList_UIMF.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Translator_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\ReferenceWrite_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\ReferenceRead_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Datastructures_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Connection_mz5.hpp" />
+    <ClInclude Include="pwiz\data\msdata\mz5\Configuration_mz5.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />
     <None Include="scripts\wix\vendor-dlls.wxs-fragment" />
     <None Include="scripts\wix\pwiz-setup.py" />
     <None Include="scripts\wix\pwiz-setup.wxs.template" />
+    <None Include="libraries\boost-build\src\tools\msvc.jam" />
+    <None Include="pwiz\data\common\cv.inl" />
   </ItemGroup>
 </Project>

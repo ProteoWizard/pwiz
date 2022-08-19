@@ -54,18 +54,14 @@ namespace pwiz.Skyline.Model
                 minDetections = _settings.MinimumDetections;
 
             MedianInfo medianInfo = null;
-            int? ratioIndex = null;
             if (settings.NormalizeOption.IsRatioToLabel)
             {
                 var isotopeLabelTypeName = (settings.NormalizeOption.NormalizationMethod as NormalizationMethod.RatioToLabel)
                     ?.IsotopeLabelTypeName;
-                ratioIndex =
-                    document.Settings.PeptideSettings.Modifications.RatioInternalStandardTypes.IndexOf(type =>
-                        type.Name == isotopeLabelTypeName);
             }
             if (_settings.NormalizeOption.Is(NormalizationMethod.EQUALIZE_MEDIANS))
                 medianInfo = CalculateMedianAreas(document);
-            NormalizationData normalizationData = null;
+            var normalizedValueCalculator = new NormalizedValueCalculator(document);
 
             foreach (var peptideGroup in document.MoleculeGroups)
             {
@@ -89,10 +85,10 @@ namespace pwiz.Skyline.Model
                         {
                             continue;
                         }
-                        var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(() =>
-                        {
-                            return normalizationData = normalizationData ?? NormalizationData.GetNormalizationData(document, false, null);
-                        }, document.Settings, peptideGroup, peptide);
+
+                        var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(
+                            () => normalizedValueCalculator.GetNormalizationData(), document.Settings, peptideGroup,
+                            peptide);
                         calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
                         transitionGroups = new[] {peptide.TransitionGroups.First()};
                         if (_settings.NormalizeOption == NormalizeOption.CALIBRATED)
@@ -207,17 +203,13 @@ namespace pwiz.Skyline.Model
                                     }
                                     else if (hasHeavyMods &&
                                              _settings.NormalizeOption.NormalizationMethod is NormalizationMethod
-                                                 .RatioToLabel)
+                                                 .RatioToLabel ratioToLabel)
                                     {
                                         var ci = transitionGroupDocNode.GetSafeChromInfo(replicateIndex)
                                             .FirstOrDefault(c => c.OptimizationStep == 0);
-                                        RatioValue ratioValue = null;
-                                        if (ratioIndex.HasValue && ratioIndex.Value >= 0 &&
-                                            ratioIndex.Value < ci.Ratios.Count)
-                                        {
-                                            ratioValue = ci.Ratios[ratioIndex.Value];
-                                        }
-
+                                        var ratioValue =
+                                            normalizedValueCalculator.GetTransitionGroupRatioValue(ratioToLabel,
+                                                peptide, transitionGroupDocNode, ci);
                                         if (ratioValue == null)
                                         {
                                             continue;

@@ -65,6 +65,10 @@ namespace pwiz.SkylineTestUtil
         {
             if (!Equals(expected, actual))
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = string.Format(@"AssertEx.AreEqual failed, expected: {0} actual: {1}", expected, actual);
+                }
                 if (Assume.InvokeDebuggerOnFail)
                 {
                     Assume.Fail(message); // Handles the debugger launch
@@ -77,6 +81,10 @@ namespace pwiz.SkylineTestUtil
         {
             if (Equals(expected, actual))
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = string.Format(@"AssertEx.AreNotEqual failed, expected: {0} actual: {1}", expected, actual);
+                }
                 if (Assume.InvokeDebuggerOnFail)
                 {
                     Assume.Fail(message); // Handles the debugger launch
@@ -89,11 +97,12 @@ namespace pwiz.SkylineTestUtil
         {
             if (!ReferenceEquals(expected, actual))
             {
+                var message = string.Format(@"AssertEx.AreNotSame failed, expected: {0} actual: {1}", expected, actual);
                 if (Assume.InvokeDebuggerOnFail)
                 {
-                    Assume.Fail(); // Handles the debugger launch
+                    Assume.Fail(message); // Handles the debugger launch
                 }
-                Assert.AreNotSame(expected, actual);
+                Assert.AreNotSame(expected, actual, message);
             }
         }
 
@@ -141,14 +150,14 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void IsTrue(bool expected, string message = null)
+        public static void IsTrue(bool actual, string message = null)
         {
-            AreEqual(expected, true, message);
+            AreEqual(true, actual, message);
         }
 
-        public static void IsFalse(bool expected, string message = null)
+        public static void IsFalse(bool actual, string message = null)
         {
-            AreEqual(expected, false, message);
+            AreEqual(false, actual, message);
         }
 
         public static void IsNull(object obj, string message = null)
@@ -353,7 +362,6 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
-            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
             // Make sure to serialize the document the other way, and make sure it's still the same.
             bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
@@ -407,7 +415,6 @@ namespace pwiz.SkylineTestUtil
             var actual = RoundTrip(target, skylineVersion, ref asXML);
             DocumentClonedLoadable(ref target, ref actual, testPath, forceFullLoad);
             VerifyModifiedSequences(target);
-            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(target);
             // Validate document against indicated schema
             if (checkAgainstSkylineSchema)
                 ValidatesAgainstSchema(actual, skylineVersion.SrmDocumentVersion, nameof(SrmDocument), asXML);
@@ -803,73 +810,91 @@ namespace pwiz.SkylineTestUtil
                     string lineTarget = readerTarget.ReadLine();
                     string lineActual = readerActual.ReadLine();
                     if (lineTarget == null && lineActual == null)
-                        return;
-                    if (lineTarget == null)
-                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
-                    if (lineActual == null)
-                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
-                    if (lineTarget != lineActual)
                     {
-                        // If only difference appears to be a generated GUID, let it pass
-                        var regexLSID = new Regex(@"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
-                        var matchTarget = regexLSID.Match(lineTarget ?? string.Empty);
-                        var matchActual = regexLSID.Match(lineActual ?? string.Empty);
-                        if (matchTarget.Success && matchActual.Success
-                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-                        {
-                            continue;
-                        }
-
-                        // If only difference appears to be a generated ISO timestamp, let it pass
-                        // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
-                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
-                        matchTarget = regexTimestamp.Match(lineTarget ?? string.Empty);
-                        matchActual = regexTimestamp.Match(lineActual ?? string.Empty);
-                        if (matchTarget.Success && matchActual.Success
-                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-                        {
-                            continue;
-                        }
-                        
-                        bool failed = true;
-                        if (columnTolerances != null)
-                        {
-                            // ReSharper disable PossibleNullReferenceException
-                            var colsActual = lineActual.Split('\t');
-                            var colsTarget = lineTarget.Split('\t');
-                            // ReSharper restore PossibleNullReferenceException
-                            if (colsTarget.Length == colsActual.Length)
-                            {
-                                failed = false; // May yet be saved by tolerance check
-                                for (var c = 0; c < colsActual.Length; c++)
-                                {
-                                    if (colsActual[c] != colsTarget[c])
-                                    {
-                                        double valActual, valTarget;
-                                        if (!columnTolerances.ContainsKey(c) ||
-                                            !(double.TryParse(colsActual[c], out valActual) && 
-                                              double.TryParse(colsTarget[c], out valTarget)) ||
-                                            (Math.Abs(valActual - valTarget) > columnTolerances[c] + columnTolerances[c]/1000)) // Allow for rounding cruft
-                                        {
-                                            failed = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (failed)
-                            Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                        return; // We're done
                     }
-
+                    if (lineTarget == null)
+                    {
+                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
+                    }
+                    if (lineActual == null)
+                    {
+                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
+                    }
+                    // If only difference appears to be generated GUIDs or timestamps, let it pass
+                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
+                    {
+                        Fail(string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                    }
                     lineEqualLast = lineTarget;
                     count++;
                 }
 
             }
+        }
+
+        private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
+            Dictionary<int, double> columnTolerances = null)
+        {
+            if (string.Equals(lineExpected, lineActual))
+            {
+                return true; // Identical
+            }
+
+            // If only difference appears to be a generated GUID, let it pass
+            var regexGUID =
+                new Regex(
+                    @"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
+            var matchExpected = regexGUID.Match(lineExpected);
+            var matchActual = regexGUID.Match(lineActual);
+            if (matchExpected.Success && matchActual.Success
+                                    && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                    && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+            {
+                return true;
+            }
+
+            // If only difference appears to be a generated ISO timestamp, let it pass
+            // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
+            var regexTimestamp =
+                new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
+            matchExpected = regexTimestamp.Match(lineExpected);
+            matchActual = regexTimestamp.Match(lineActual);
+            if (matchExpected.Success && matchActual.Success
+                                    && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                    && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+            {
+                return true;
+            }
+
+            if (columnTolerances != null)
+            {
+                // ReSharper disable PossibleNullReferenceException
+                var colsActual = lineActual.Split('\t');
+                var colsExpected = lineExpected.Split('\t');
+                // ReSharper restore PossibleNullReferenceException
+                if (colsExpected.Length == colsActual.Length)
+                {
+                    for (var c = 0; c < colsActual.Length; c++)
+                    {
+                        if (colsActual[c] != colsExpected[c])
+                        {
+                            double valActual, valExpected;
+                            if (!columnTolerances.ContainsKey(c) || // No tolerance given
+                                !(double.TryParse(colsActual[c], out valActual) &&
+                                  double.TryParse(colsExpected[c], out valExpected)) || // One or both don't parse as doubles
+                                (Math.Abs(valActual - valExpected) >
+                                 columnTolerances[c] + columnTolerances[c] / 1000)) // Allow for rounding cruft
+                            {
+                                return false; // Can't account for difference
+                            }
+                        }
+                    }
+                    return true; // Differences accounted for
+                }
+            }
+
+            return false; // Could not account for difference
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
@@ -1160,6 +1185,10 @@ namespace pwiz.SkylineTestUtil
                         target = ForceDocumentLoad(target, testDir);
                         actual = ForceDocumentLoad(actual, testDir);
                     }
+
+                    target = ResultsUtil.ClearFileImportTimes(target);
+                    actual = ResultsUtil.ClearFileImportTimes(actual);
+
                     SettingsCloned(target.Settings, actual.Settings);
                     Cloned(target, actual);
                     return;
@@ -1184,6 +1213,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries, defPep.Libraries);
             Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications, defPep.Modifications);
             Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction, defPep.Prediction);
+            Cloned(target.PeptideSettings.ProteinAssociationSettings, target.PeptideSettings.ProteinAssociationSettings);
             Cloned(target.PeptideSettings, copy.PeptideSettings);
             var defTran = defSet.TransitionSettings;
             Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction, defTran.Prediction);

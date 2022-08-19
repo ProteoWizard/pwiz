@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.3.2.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -31,8 +31,9 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
 
 #ifndef YY_YY_SRC_ENGINE_JAMGRAM_HPP_INCLUDED
 # define YY_YY_SRC_ENGINE_JAMGRAM_HPP_INCLUDED
@@ -44,62 +45,71 @@
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    _BANG_t = 258,
-    _BANG_EQUALS_t = 259,
-    _AMPER_t = 260,
-    _AMPERAMPER_t = 261,
-    _LPAREN_t = 262,
-    _RPAREN_t = 263,
-    _PLUS_EQUALS_t = 264,
-    _COLON_t = 265,
-    _SEMIC_t = 266,
-    _LANGLE_t = 267,
-    _LANGLE_EQUALS_t = 268,
-    _EQUALS_t = 269,
-    _RANGLE_t = 270,
-    _RANGLE_EQUALS_t = 271,
-    _QUESTION_EQUALS_t = 272,
-    _LBRACKET_t = 273,
-    _RBRACKET_t = 274,
-    ACTIONS_t = 275,
-    BIND_t = 276,
-    BREAK_t = 277,
-    CASE_t = 278,
-    CLASS_t = 279,
-    CONTINUE_t = 280,
-    DEFAULT_t = 281,
-    ELSE_t = 282,
-    EXISTING_t = 283,
-    FOR_t = 284,
-    IF_t = 285,
-    IGNORE_t = 286,
-    IN_t = 287,
-    INCLUDE_t = 288,
-    LOCAL_t = 289,
-    MODULE_t = 290,
-    ON_t = 291,
-    PIECEMEAL_t = 292,
-    QUIETLY_t = 293,
-    RETURN_t = 294,
-    RULE_t = 295,
-    SWITCH_t = 296,
-    TOGETHER_t = 297,
-    UPDATED_t = 298,
-    WHILE_t = 299,
-    _LBRACE_t = 300,
-    _BAR_t = 301,
-    _BARBAR_t = 302,
-    _RBRACE_t = 303,
-    ARG = 304,
-    STRING = 305
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    _BANG_t = 258,                 /* _BANG_t  */
+    _BANG_EQUALS_t = 259,          /* _BANG_EQUALS_t  */
+    _AMPER_t = 260,                /* _AMPER_t  */
+    _AMPERAMPER_t = 261,           /* _AMPERAMPER_t  */
+    _LPAREN_t = 262,               /* _LPAREN_t  */
+    _RPAREN_t = 263,               /* _RPAREN_t  */
+    _PLUS_EQUALS_t = 264,          /* _PLUS_EQUALS_t  */
+    _COLON_t = 265,                /* _COLON_t  */
+    _SEMIC_t = 266,                /* _SEMIC_t  */
+    _LANGLE_t = 267,               /* _LANGLE_t  */
+    _LANGLE_EQUALS_t = 268,        /* _LANGLE_EQUALS_t  */
+    _EQUALS_t = 269,               /* _EQUALS_t  */
+    _RANGLE_t = 270,               /* _RANGLE_t  */
+    _RANGLE_EQUALS_t = 271,        /* _RANGLE_EQUALS_t  */
+    _QUESTION_EQUALS_t = 272,      /* _QUESTION_EQUALS_t  */
+    _LBRACKET_t = 273,             /* _LBRACKET_t  */
+    _RBRACKET_t = 274,             /* _RBRACKET_t  */
+    ACTIONS_t = 275,               /* ACTIONS_t  */
+    BIND_t = 276,                  /* BIND_t  */
+    BREAK_t = 277,                 /* BREAK_t  */
+    CASE_t = 278,                  /* CASE_t  */
+    CLASS_t = 279,                 /* CLASS_t  */
+    CONTINUE_t = 280,              /* CONTINUE_t  */
+    DEFAULT_t = 281,               /* DEFAULT_t  */
+    ELSE_t = 282,                  /* ELSE_t  */
+    EXISTING_t = 283,              /* EXISTING_t  */
+    FOR_t = 284,                   /* FOR_t  */
+    IF_t = 285,                    /* IF_t  */
+    IGNORE_t = 286,                /* IGNORE_t  */
+    IN_t = 287,                    /* IN_t  */
+    INCLUDE_t = 288,               /* INCLUDE_t  */
+    LOCAL_t = 289,                 /* LOCAL_t  */
+    MODULE_t = 290,                /* MODULE_t  */
+    ON_t = 291,                    /* ON_t  */
+    PIECEMEAL_t = 292,             /* PIECEMEAL_t  */
+    QUIETLY_t = 293,               /* QUIETLY_t  */
+    RETURN_t = 294,                /* RETURN_t  */
+    RULE_t = 295,                  /* RULE_t  */
+    SWITCH_t = 296,                /* SWITCH_t  */
+    TOGETHER_t = 297,              /* TOGETHER_t  */
+    UPDATED_t = 298,               /* UPDATED_t  */
+    WHILE_t = 299,                 /* WHILE_t  */
+    _LBRACE_t = 300,               /* _LBRACE_t  */
+    _BAR_t = 301,                  /* _BAR_t  */
+    _BARBAR_t = 302,               /* _BARBAR_t  */
+    _RBRACE_t = 303,               /* _RBRACE_t  */
+    ARG = 304,                     /* ARG  */
+    STRING = 305                   /* STRING  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Tokens.  */
+/* Token kinds.  */
+#define YYEMPTY -2
+#define YYEOF 0
+#define YYerror 256
+#define YYUNDEF 257
 #define _BANG_t 258
 #define _BANG_EQUALS_t 259
 #define _AMPER_t 260

@@ -31,6 +31,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
@@ -60,8 +61,6 @@ namespace pwiz.Skyline.Model.Results
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (previous == null)
-                return true;
             // If using full-scan filtering, then completion of library load
             // is a state change event, since peak picking cannot occur until
             // libraries are loaded.
@@ -162,6 +161,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return false;
                 }
+                if (IonMobilityLibraryManager.IsNotLoadedDocumentExplained(document) != null)
+                {
+                    return false; // Need to wait for imsdb file to load into memory
+                }
             }
             // Make sure any iRT calculater gets loaded before starting to import
             var rtPrediction = document.Settings.PeptideSettings.Prediction.RetentionTime;
@@ -180,7 +183,7 @@ namespace pwiz.Skyline.Model.Results
                 // behind this one, or the document has become loaded, then this thread
                 // has nothing to do.
                 var docInLock = container.Document;
-                if (StateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
+                if (IsStateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
                     return false;
                 docCurrent = docInLock;
 
@@ -710,6 +713,7 @@ namespace pwiz.Skyline.Model.Results
             sample_name,
             modified_time,
             acquired_time,
+            import_time,
             cvid,
             name,
             value,
@@ -776,6 +780,12 @@ namespace pwiz.Skyline.Model.Results
                 chromFileInfo = chromFileInfo.ChangeTicArea(reader.GetNullableDoubleAttribute(ATTR.tic_area));
                 chromFileInfo = chromFileInfo.ChangeSampleId(reader.GetAttribute(ATTR.sample_id));
                 chromFileInfo = chromFileInfo.ChangeSerialNumber(reader.GetAttribute(ATTR.instrument_serial_number));
+                var strImportTime = reader.GetAttribute(ATTR.import_time);
+                if (strImportTime != null)
+                {
+                    chromFileInfo = chromFileInfo.ChangeImportTime(XmlConvert.ToDateTime(strImportTime,
+                        XmlDateTimeSerializationMode.RoundtripKind));
+                }
                 chromFileInfos.Add(chromFileInfo);
                 
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
@@ -840,6 +850,11 @@ namespace pwiz.Skyline.Model.Results
                 if(fileInfo.FileWriteTime != null)
                 {
                     writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, @"yyyy-MM-ddTHH:mm:ss"));
+                }
+
+                if (fileInfo.ImportTime.HasValue)
+                {
+                    writer.WriteAttribute(ATTR.import_time, XmlConvert.ToString(fileInfo.ImportTime.Value, XmlDateTimeSerializationMode.RoundtripKind));
                 }
                 writer.WriteAttribute(ATTR.has_midas_spectra, fileInfo.HasMidasSpectra, false);
                 writer.WriteAttributeNullable(ATTR.explicit_global_standard_area, fileInfo.ExplicitGlobalStandardArea);
@@ -983,6 +998,7 @@ namespace pwiz.Skyline.Model.Results
         public MsDataFileUri FilePath { get; private set; }
         public DateTime? FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public DateTime? ImportTime { get; private set; }
         public double MaxRetentionTime { get; private set; }
         public double MaxIntensity { get; private set; }
         public bool HasMidasSpectra { get; private set; }
@@ -995,6 +1011,7 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
         public string SampleId { get; private set; }
         public string InstrumentSerialNumber { get; private set; }
+        public bool IsSrm { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -1043,12 +1060,18 @@ namespace pwiz.Skyline.Model.Results
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;
                                                      im.InstrumentSerialNumber = fileInfo.InstrumentSerialNumber;
+                                                     im.IsSrm = fileInfo.IsSrm;
                                                  });
         }
 
         public ChromFileInfo ChangeTicArea(double? ticArea)
         {
             return ChangeProp(ImClone(this), im => im.TicArea = ticArea);
+        }
+
+        public ChromFileInfo ChangeImportTime(DateTime? importTime)
+        {
+            return ChangeProp(ImClone(this), im => im.ImportTime = importTime);
         }
 
         public ChromFileInfo ChangeSampleId(string sampleId)
@@ -1091,6 +1114,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!other.RunStartTime.Equals(RunStartTime))
                 return false;
+            if (!other.ImportTime.Equals(ImportTime))
+                return false;
             if (!other.MaxIntensity.Equals(MaxIntensity))
                 return false;
             if (!other.MaxRetentionTime.Equals(MaxRetentionTime))
@@ -1115,7 +1140,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
                 return false;
-
+            if (!IsSrm.Equals(other.IsSrm))
+                return false;
             return true;
         }
 
@@ -1133,8 +1159,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 int result = Id.GetHashCode();
                 result = (result*397) ^ FilePath.GetHashCode();
-                result = (result*397) ^ (FileWriteTime.HasValue ? FileWriteTime.Value.GetHashCode() : 0);
-                result = (result*397) ^ (RunStartTime.HasValue ? RunStartTime.Value.GetHashCode() : 0);
+                result = (result*397) ^ FileWriteTime.GetHashCode();
+                result = (result*397) ^ RunStartTime.GetHashCode();
+                result = (result*397) ^ ImportTime.GetHashCode();
                 result = (result*397) ^
                          (InstrumentInfoList != null ? InstrumentInfoList.GetHashCodeDeep() : 0);
                 result = (result*397) ^
@@ -1149,6 +1176,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobilityUnits.GetHashCode();
                 result = (result*397) ^ SampleId?.GetHashCode() ?? 0;
                 result = (result*397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
+                result = (result*397) ^ IsSrm.GetHashCode();
                 return result;
             }
         }

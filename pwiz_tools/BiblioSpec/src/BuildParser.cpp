@@ -92,6 +92,7 @@ void BuildParser::setSpecFileName(
     curSpecFileName_.clear();
 
     string fileroot = specfileroot;
+    Verbosity::debug("checking for basename: %s", fileroot);
     do {
         // try the location of the result file, then all dirs in the list
         for(int i=-1; i<(int)directories.size(); i++) {
@@ -102,10 +103,10 @@ void BuildParser::setSpecFileName(
             }
             if (path.empty())
                 path = ".";
-            for (const auto& dir : bfs::directory_iterator(path)) {
-                bfs::path dirPath = dir.path();
-                string trialName = dirPath.filename().string();
-                for (const string& ext : extensions) {
+            for (const string& ext : extensions) { // Search for extensions in priority order
+                for (const auto& dir : bfs::directory_iterator(path)) {
+                    bfs::path dirPath = dir.path();
+                    string trialName = dirPath.filename().string();
                     // case insensitive filename comparison (i.e. so POSIX systems can match to basename.MGF or BaseName.mgf)
                     if (!bal::iequals(fileroot + ext, trialName))
                         continue;
@@ -184,37 +185,46 @@ void BuildParser::setSpecFileName
  * directories.
  */
 string BuildParser::fileNotFoundMessage(
-     std::string specfileroot,///< basename of file
-     const vector<std::string>& extensions, ///< extensions searched
-     const vector<std::string>& directories ///< directories searched
-                                        )
+    std::string specfileroot,///< basename of file
+    const vector<std::string>& extensions, ///< extensions searched
+    const vector<std::string>& directories) ///< directories searched
 {
-    string extString;
+    return filesNotFoundMessage(vector<std::string>(1, specfileroot), extensions, directories);
+}
 
-    if( extensions.size() == 1 ) {
-        extString = extensions.at(0);
-    } else if( extensions.size() > 1 ){
-        extString = "[";
-        for(int i=0; i<(int)extensions.size(); i++) {
-            extString += extensions.at(i);
-            extString += "|";
-        }
-        extString.replace(extString.length()-1 , 1, "]");
-    }
+/**
+ * \brief Generate a string indicating that no file with the given
+ * base names and any of the extensions could be found in any of the
+ * directories.
+ */
+string BuildParser::filesNotFoundMessage(
+     const vector<std::string>& specfileroots,///< basename of files
+     const vector<std::string>& extensions, ///< extensions searched
+     const vector<std::string>& directories) ///< directories searched
+{
+    if (extensions.empty())
+        throw BlibException(false, "empty extensions list for filesNotFoundMessage");
 
-    string messageString = "Could not find spectrum file '";
-    messageString += specfileroot + extString + "' for search results file '" + fullFilename_ + "' in " + filepath_;
-    if( filepath_.empty() ) {
-        messageString += "current directory";
-    }
+    string extString = boost::algorithm::join(extensions, ", ");
 
-    messageString += ", ";
+    string filesPlural = "file";
+    string namesPlural = "name";
+    if (specfileroots.size() > 1)
+        filesPlural += "s", namesPlural += "s";
 
-    for(unsigned int i=0; i < directories.size(); i++) {
-        messageString += directories.at(i);
-        messageString += ",";
-    }
-    messageString.replace(messageString.length()-1, 1, ".");
+    string messageString = "While searching for spectrum " + filesPlural + " for the search results file '" + fullFilename_ +
+                           "', could not find matches for the following base" + namesPlural +
+                           " with any of the supported file extensions (" + extString + "):";
+    for (const auto& specfileroot : specfileroots)
+        messageString += "\n" + specfileroot;
+
+    bfs::path deepestPath = filepath_.empty() ? bfs::current_path() : bfs::path(filepath_);
+    messageString += "\n\nIn any of the following directories:\n" + bfs::canonical(deepestPath).make_preferred().string();
+    set<string> parentPaths;
+    for (const auto& dir : directories)
+        parentPaths.insert(bfs::canonical(deepestPath / dir).make_preferred().string());
+    for (const auto& dir : boost::make_iterator_range(parentPaths.rbegin(), parentPaths.rend()))
+        messageString += "\n" + dir;
 
     return messageString;
 }

@@ -422,7 +422,8 @@ namespace pwiz.MSGraph
                     {
                         ZOrder = ZOrder.A_InFront,
                         FontSpec = annotation.FontSpec,
-                        IsClippedToChartRect = true
+                        IsClippedToChartRect = true,
+                        Tag = annotation.ZOrder
                     };
 
                     var textRect = _labelBoundsCache.GetLabelBounds(text, this, g);

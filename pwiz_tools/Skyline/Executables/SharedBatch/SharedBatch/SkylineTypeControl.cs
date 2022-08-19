@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using SharedBatch.Properties;
@@ -16,11 +17,17 @@ namespace SharedBatch
         private readonly IMainUiControl _mainUiControl;
         private readonly string _initialSkylineCmdPath;
 
-        public SkylineTypeControl(IMainUiControl mainUiControl, bool skyline, bool skylineDaily, bool custom, string path)
+        private readonly List<string> _runningConfigs;
+
+        public SkylineTypeControl(IMainUiControl mainUiControl, bool skyline, bool skylineDaily, bool custom, string path, List<string> runningConfigs, ConfigManagerState baseState)
         {
             InitializeComponent();
             _mainUiControl = mainUiControl;
             _initialSkylineCmdPath = path;
+
+            _runningConfigs = runningConfigs;
+
+            BaseState = baseState;
 
             radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
             radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
@@ -38,9 +45,14 @@ namespace SharedBatch
             }
         }
 
+        public ConfigManagerState BaseState;
+
         public SkylineTypeControl()
         {
             InitializeComponent();
+
+            radioButtonSkyline.Enabled = SkylineInstallations.HasSkyline;
+            radioButtonSkylineDaily.Enabled = SkylineInstallations.HasSkylineDaily;
 
             // Chooses the first enabled option between Skyline, Skyline-daily, and custom path
             radioButtonSpecifySkylinePath.Checked = true;
@@ -58,30 +70,32 @@ namespace SharedBatch
         {
             get
             {
-                if (radioButtonSkyline.Enabled && radioButtonSkyline.Checked)
+                if (radioButtonSkyline.Checked)
                     return SkylineType.Skyline;
-                if (radioButtonSkylineDaily.Enabled && radioButtonSkylineDaily.Checked)
+                if (radioButtonSkylineDaily.Checked)
                     return SkylineType.SkylineDaily;
                 if (radioButtonSpecifySkylinePath.Checked)
                     return SkylineType.Custom;
-                throw new ArgumentException("No valid skyline type selected.");
+                throw new ArgumentException(Resources.SkylineTypeControl_Type_No_existing_Skyline_type_selected__Please_select_a_Skyline_installation_that_exists_on_this_computer_);
             }
         }
 
         public string CommandPath => textSkylineInstallationPath.Text;
 
 
-        public object GetVariable() => new SkylineSettings(Type, CommandPath);
+        public object GetVariable() => new SkylineSettings(Type, null, CommandPath);
 
         public bool IsValid(out string errorMessage)
         {
             errorMessage = null;
             try
             {
-                var newSettings = new SkylineSettings(Type, CommandPath);
+                var newSettings = new SkylineSettings(Type, null, CommandPath);
                 newSettings.Validate();
                 if (!newSettings.CmdPath.Equals(_initialSkylineCmdPath))
-                    _mainUiControl.ReplaceAllSkylineVersions(newSettings);
+                {
+                    BaseState.AskToReplaceAllSkylineVersions(newSettings, _runningConfigs, _mainUiControl, out _);
+                }
                 return true;
             } catch (ArgumentException e)
             {
@@ -95,7 +109,7 @@ namespace SharedBatch
             using (var folderBrowserDlg = new FolderBrowserDialog())
             {
                 folderBrowserDlg.ShowNewFolderButton = false;
-                folderBrowserDlg.SelectedPath = TextUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
+                folderBrowserDlg.SelectedPath = FileUtil.GetInitialDirectory(textSkylineInstallationPath.Text, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
                 if (folderBrowserDlg.ShowDialog() == DialogResult.OK)
                 {
                     textSkylineInstallationPath.Text = folderBrowserDlg.SelectedPath;
@@ -107,6 +121,12 @@ namespace SharedBatch
         {
             textSkylineInstallationPath.Enabled = radioButtonSpecifySkylinePath.Checked;
             btnBrowse.Enabled = radioButtonSpecifySkylinePath.Checked;
+        }
+
+        public void SetInput(object variable)
+        {
+            radioButtonSpecifySkylinePath.Checked = true;
+            textSkylineInstallationPath.Text = (string)variable;
         }
     }
 }

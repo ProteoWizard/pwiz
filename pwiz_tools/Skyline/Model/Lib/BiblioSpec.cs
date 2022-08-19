@@ -90,15 +90,12 @@ namespace pwiz.Skyline.Model.Lib
             SpectrumCount = spectrumCount;
             Score = score;
             ScoreType = scoreType;
-            _protein = protein;
+            Protein = protein;
         }
 
         public int SpectrumCount { get; private set; }
         public double? Score { get; private set; }
         public string ScoreType { get; private set; }
-        public override string Protein => _protein; // Some .blib files provide a protein accession (or Molecule List Name for small molecules)
-
-        private string _protein; // Using a backing variable so that we can set Protein (which abstract parent class declares readonly) in XML deserialization.
 
         public override float GetRankValue(PeptideRankId rankId)
         {
@@ -129,8 +126,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             count_measured,
             score,
-            score_type,
-            protein
+            score_type
         }
 
         public static BiblioSpecSpectrumHeaderInfo Deserialize(XmlReader reader)
@@ -145,7 +141,6 @@ namespace pwiz.Skyline.Model.Lib
             SpectrumCount = reader.GetIntAttribute(ATTR.count_measured);
             Score = reader.GetNullableDoubleAttribute(ATTR.score);
             ScoreType = reader.GetAttribute(ATTR.score_type);
-            _protein = reader.GetAttribute(ATTR.protein);
             // Consume tag
             reader.Read();
         }
@@ -160,7 +155,6 @@ namespace pwiz.Skyline.Model.Lib
                 writer.WriteAttribute(ATTR.score, Score.Value);
                 writer.WriteAttribute(ATTR.score_type, ScoreType);
             }
-            writer.WriteAttributeIfString(ATTR.protein, Protein);
         }
 
         #endregion

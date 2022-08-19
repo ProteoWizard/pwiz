@@ -162,6 +162,19 @@ namespace pwiz.SkylineTestUtil
                          CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE_11);
             return cacheSize;
         }
+
+        /// <summary>
+        /// Set all of ImportTime values in all of the ChromFileInfos to null.
+        /// </summary>
+        public static SrmDocument ClearFileImportTimes(SrmDocument document)
+        {
+            var newMeasuredResults = document.MeasuredResults?.ClearImportTimes();
+            if (Equals(newMeasuredResults, document.MeasuredResults))
+            {
+                return document;
+            }
+            return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
+        }
     }
 
     public class DocResultsState
@@ -468,11 +481,11 @@ namespace pwiz.SkylineTestUtil
             {
                 ChromatogramGroupInfo[] chromGroupInfo1;
                 Assert.IsTrue(results.TryLoadChromatogram(iChrom1, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo1));
+                    tolerance, out chromGroupInfo1));
                 Assert.AreEqual(1, chromGroupInfo1.Length);
                 ChromatogramGroupInfo[] chromGroupInfo2;
                 Assert.IsTrue(results.TryLoadChromatogram(iChrom2, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo2));
+                    tolerance, out chromGroupInfo2));
                 Assert.AreEqual(1, chromGroupInfo2.Length);
                 if (delta != -1)
                 {
@@ -510,6 +523,6 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             return maxTime;
-        }        
+        }
     }
 }

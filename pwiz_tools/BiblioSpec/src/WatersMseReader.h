@@ -216,6 +216,7 @@ class WatersMseReader : public BuildParser, public SpecFileReader {
         ~WatersMseReader();
         
         bool parseFile();
+        std::vector<PSM_SCORE_TYPE> getScoreTypes();
         // these inherited from SpecFileReader
         virtual void openFile(const char*, bool);
         virtual void setIdType(SPEC_ID_TYPE);

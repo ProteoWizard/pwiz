@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PointPair(xValue, 0);
             }
 
-            private readonly SrmDocument _document;
+            protected readonly SrmDocument _document;
             private readonly ImmutableList<IdentityPath> _selectedDocNodePaths;
             private readonly DisplayTypeChrom _displayType;
             private PaneKey _paneKey;
@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected virtual bool IncludeTransition(TransitionDocNode transitionDocNode)
             {
-                return transitionDocNode.ExplicitQuantitative || !Settings.Default.ShowQuantitativeOnly;
+                return transitionDocNode.IsQuantitative(_document.Settings) || !Settings.Default.ShowQuantitativeOnly;
             }
 
             private void InsertAllGroupsAndPointPairLists(string[] uniqueGroupNames, int docNodeCount)

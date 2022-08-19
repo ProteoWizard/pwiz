@@ -187,7 +187,7 @@ namespace SkylineNightly
 
         public enum RunMode { parse, post, trunk, perf, release, stress, integration, release_perf, integration_perf }
 
-        private string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
+        public static string SkylineTesterStoppedByUser = "SkylineTester stopped by user";
 
         public string RunAndPost()
         {
@@ -306,28 +306,40 @@ namespace SkylineNightly
 
             // Download most recent build of SkylineTester.
             var skylineTesterZip = Path.Combine(_skylineTesterDir, skylineTesterDirBasis + ".zip");
-            const int attempts = 30;
+            const int retryTimeoutInMinutes = 10;
+            const int attempts = 120/ retryTimeoutInMinutes; // Retry for up to two hours
+            var useLastSuccessfulInsteadOfLastFinished = false;
             string branchUrl = null;
             for (int i = 0; i < attempts; i++)
             {
                 try
                 {
-                    DownloadSkylineTester(skylineTesterZip, _runMode);
+                    DownloadSkylineTester(skylineTesterZip, _runMode, useLastSuccessfulInsteadOfLastFinished);
                 }
                 catch (Exception ex)
                 {
-                    Log("Exception while downloading SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
-                    if (i == attempts-1)
+                    if (i == attempts - 1)
                     {
-                        LogAndThrow("Unable to download SkylineTester");
+                        QuitWithError("Unable to download SkylineTester");
                     }
-                    Thread.Sleep(60*1000);  // one minute
+
+                    // After 30 minutes, start trying for lastSuccessful build instead
+                    useLastSuccessfulInsteadOfLastFinished = i > (30 / retryTimeoutInMinutes); 
+                    if (useLastSuccessfulInsteadOfLastFinished)
+                    {
+                        Log("Exception while downloading SkylineTester: " + ex.Message + " (TeamCity outage? Retrying every 60 seconds for an additional 90 minutes, attempting download of lastSuccessful build instead of lastFinished.)");
+                    }
+                    else
+                    {
+                        Log("Exception while downloading SkylineTester: " + ex.Message + " (Retrying every 60 seconds for 30 minutes.)");
+                    }
+                    Thread.Sleep(60*1000 * retryTimeoutInMinutes);
                     continue;
                 }
 
                 // Install SkylineTester.
                 if (!InstallSkylineTester(skylineTesterZip, _skylineTesterDir))
-                    LogAndThrow("SkylineTester installation failed.");
+                    QuitWithError("SkylineTester installation failed.");
                 try
                 {
                     // Delete zip file.
@@ -357,9 +369,9 @@ namespace SkylineNightly
                     Log("Exception while unzipping SkylineTester: " + ex.Message + " (Probably still being built, will retry every 60 seconds for 30 minutes.)");
                     if (i == attempts - 1)
                     {
-                        LogAndThrow("Unable to identify branch from Version.cpp in SkylineTester");
+                        QuitWithError("Unable to identify branch from Version.cpp in SkylineTester");
                     }
-                    Thread.Sleep(60 * 1000);  // one minute
+                    Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                 }
             }
             // Create ".skytr" file to execute nightly build in SkylineTester.
@@ -370,7 +382,7 @@ namespace SkylineNightly
             {
                 if (stream == null)
                 {
-                    LogAndThrow(result = "Embedded resource is broken");
+                    QuitWithError(result = "Embedded resource is broken");
                     return result; 
                 }
                 using (var reader = new StreamReader(stream))
@@ -420,7 +432,7 @@ namespace SkylineNightly
                 var skylineTesterProcess = Process.Start(processInfo);
                 if (skylineTesterProcess == null)
                 {
-                    LogAndThrow(result = "SkylineTester did not start");
+                    QuitWithError(result = "SkylineTester did not start");
                     return result;
                 }
                 Log("SkylineTester started");
@@ -504,7 +516,8 @@ namespace SkylineNightly
                         retryTester = ParseTests(File.ReadAllText(logFile), false) == 0;
                     if (retryTester)
                     {
-                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes retrying.");
+                        Log("No tests run in " + Math.Round(actualDuration.TotalMinutes) + " minutes. Will try again in " + retryTimeoutInMinutes + " minutes.");
+                        Thread.Sleep(60 * 1000 * retryTimeoutInMinutes);
                     }
                 }
             }
@@ -523,10 +536,20 @@ namespace SkylineNightly
             Log(_startTime.ToShortDateString());
         }
 
-        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode)
+        private void DownloadSkylineTester(string skylineTesterZip, RunMode mode, bool desperate)
         {
-            // Make sure we can negotiate with HTTPS servers that demand TLS 1.2 (default in dotNet 4.6, but has to be turned on in 4.5)
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12);
+            // The current recommendation from MSFT for future-proofing HTTPS https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
+            // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly
+            try
+            {
+                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
+            }
+            catch (NotSupportedException)
+            {
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
+            }
+
             using (var client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
@@ -536,7 +559,15 @@ namespace SkylineNightly
                 var buildType = isIntegration ? TEAM_CITY_BUILD_TYPE_64_INTEGRATION : isRelease ? TEAM_CITY_BUILD_TYPE_64_RELEASE : TEAM_CITY_BUILD_TYPE_64_MASTER;
 
                 string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, buildType, branchType);
-                Log("Download SkylineTester zip file as " + zipFileLink);
+                if (desperate)
+                {
+                    zipFileLink = zipFileLink.Replace(".lastFinished", ".lastSuccessful");
+                    Log("In retry, download possibly stale (\".lastSuccessful\" rather than \".lastFinished\") SkylineTester zip file as " + zipFileLink);
+                }
+                else
+                {
+                    Log("Download SkylineTester zip file as " + zipFileLink);
+                }
                 client.DownloadFile(zipFileLink, skylineTesterZip); // N.B. depending on caller to do try/catch
             }
         }
@@ -872,6 +903,12 @@ namespace SkylineNightly
                     xml = doc.ToString();
                 }
             }
+
+            if (string.IsNullOrEmpty(xml) || !xml.Contains("<test id"))
+            {
+                return @"No tests found in log. No results posted";
+            }
+
             string url;
             // Post to server.
             if (mode == RunMode.integration)
@@ -929,40 +966,41 @@ namespace SkylineNightly
                 wr.KeepAlive = true;
                 wr.Credentials = CredentialCache.DefaultCredentials;
 
-                SetCSRFToken(wr, LogFileName);
-
-                var rs = wr.GetRequestStream();
-
-                rs.Write(boundarybytes, 0, boundarybytes.Length);
-                const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-                string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
-                byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-                rs.Write(headerbytes, 0, headerbytes.Length);
-                var bytes = Encoding.UTF8.GetBytes(postData);
-                rs.Write(bytes, 0, bytes.Length);
-
-                byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-                rs.Write(trailer, 0, trailer.Length);
-                rs.Close();
-
-                WebResponse wresp = null;
-                try
+                if (SetCSRFToken(wr, LogFileName))
                 {
-                    wresp = wr.GetResponse();
-                    var stream2 = wresp.GetResponseStream();
-                    if (stream2 != null)
+                    var rs = wr.GetRequestStream();
+
+                    rs.Write(boundarybytes, 0, boundarybytes.Length);
+                    const string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
+                    string header = string.Format(headerTemplate, "xml_file", filePath != null ? Path.GetFileName(filePath) : "xml_file", "text/xml");
+                    byte[] headerbytes = Encoding.UTF8.GetBytes(header);
+                    rs.Write(headerbytes, 0, headerbytes.Length);
+                    var bytes = Encoding.UTF8.GetBytes(postData);
+                    rs.Write(bytes, 0, bytes.Length);
+
+                    byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+                    rs.Write(trailer, 0, trailer.Length);
+                    rs.Close();
+
+                    WebResponse wresp = null;
+                    try
                     {
-                        var reader2 = new StreamReader(stream2);
-                        var result = reader2.ReadToEnd();
-                        return result;
+                        wresp = wr.GetResponse();
+                        var stream2 = wresp.GetResponseStream();
+                        if (stream2 != null)
+                        {
+                            var reader2 = new StreamReader(stream2);
+                            var result = reader2.ReadToEnd();
+                            return result;
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    Log(errmessage = e.ToString());
-                    if (wresp != null)
+                    catch (Exception e)
                     {
-                        wresp.Close();
+                        Log(errmessage = e.ToString());
+                        if (wresp != null)
+                        {
+                            wresp.Close();
+                        }
                     }
                 }
                 if (retry > 1)
@@ -996,32 +1034,34 @@ namespace SkylineNightly
                 request.Credentials = CredentialCache.DefaultCredentials;
                 request.Timeout = 30000; // 30 second timeout
 
-                SetCSRFToken(request, null);
-
-                using (var stream = request.GetRequestStream())
+                if (SetCSRFToken(request, null))
                 {
-                    stream.Write(postData, 0, postData.Length);
-                }
-
-                try
-                {
-                    using (var response = (HttpWebResponse)request.GetResponse())
-                    using (var responseStream = response.GetResponseStream())
+                    try
                     {
-                        if (responseStream != null)
+                        using (var stream = request.GetRequestStream())
                         {
-                            using (var responseReader = new StreamReader(responseStream))
+                            stream.Write(postData, 0, postData.Length);
+                        }
+
+                        using (var response = (HttpWebResponse)request.GetResponse())
+                        using (var responseStream = response.GetResponseStream())
+                        {
+                            if (responseStream != null)
                             {
-                                return responseReader.ReadToEnd();
+                                using (var responseReader = new StreamReader(responseStream))
+                                {
+                                    return responseReader.ReadToEnd();
+                                }
                             }
                         }
                     }
+                    catch (Exception)
+                    {
+                        // We will retry
+                    }
                 }
-                catch (Exception)
-                {
-                    if (retry > 1)
-                        Thread.Sleep(30000);
-                }
+                if (retry > 1)
+                    Thread.Sleep(30000);
             }
             return null;
         }
@@ -1108,9 +1148,9 @@ namespace SkylineNightly
             }
         }
 
-        private string Log(string message)
+        private void Log(string message)
         {
-            return Log(LogFileName, message);
+            Log(LogFileName, message);
         }
 
         public static string Log(string logFileName, string message)
@@ -1127,11 +1167,10 @@ namespace SkylineNightly
             return timestampedMessage;
         }
 
-        private void LogAndThrow(string message)
+        private void QuitWithError(string message)
         {
-            var timestampedMessage = Log(message);
             SaveErrorScreenshot();
-            throw new Exception(timestampedMessage);
+            Finish("Quit with error",message);
         }
 
         private void SaveErrorScreenshot()
@@ -1171,7 +1210,7 @@ namespace SkylineNightly
             }
         }
 
-        private static void SetCSRFToken(HttpWebRequest postReq, string logFileName)
+        private static bool SetCSRFToken(HttpWebRequest postReq, string logFileName)
         {
             var url = LABKEY_HOME_URL;
 
@@ -1195,10 +1234,12 @@ namespace SkylineNightly
                         Log(logFileName, @"CSRF token not found.");
                     }
                 }
+                return true;
             }
             catch (Exception e)
             {
                 Log(logFileName, $@"Error establishing a session and getting a CSRF token: {e}");
+                return false;
             }
         }
 

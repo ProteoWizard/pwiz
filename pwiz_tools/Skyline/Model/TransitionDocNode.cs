@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
@@ -372,15 +373,6 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public float? GetPeakAreaRatio(int i, int indexIS)
-        {
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-                return null;
-            return chromInfo.GetRatio(indexIS);
-        }
-
         private float? GetAverageResultValue(Func<TransitionChromInfo, float?> getVal)
         {
             return HasResults ? Results.GetAverageValue(getVal) : null;
@@ -455,7 +447,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public SkylineDocumentProto.Types.Transition ToTransitionProto(SrmSettings settings)
+        public SkylineDocumentProto.Types.Transition ToTransitionProto(SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
             var transitionProto = new SkylineDocumentProto.Types.Transition
             {
@@ -472,7 +464,7 @@ namespace pwiz.Skyline.Model
             if (HasDistInfo)
             {
                 transitionProto.IsotopeDistRank = DataValues.ToOptional(IsotopeDistInfo.Rank);
-                transitionProto.IsotopeDistProportion = DataValues.ToOptional(IsotopeDistInfo.Proportion);
+                transitionProto.IsotopeDistProportion = IsotopeDistInfo.Proportion;
             }
             if (!Transition.IsPrecursor() || !Equals(Transition.Adduct, Transition.Group.PrecursorAdduct))
             {
@@ -484,7 +476,7 @@ namespace pwiz.Skyline.Model
                 transitionProto.Charge = Transition.Charge;
                 if (!Transition.Adduct.IsProteomic)
                 {
-                    transitionProto.Adduct = DataValues.ToOptional(Transition.Adduct.AsFormulaOrSignedInt());
+                    transitionProto.Adduct = Transition.Adduct.AsFormulaOrSignedInt();
                 }
                 if (!Transition.IsCustom())
                 {
@@ -534,11 +526,11 @@ namespace pwiz.Skyline.Model
 
             if (!Equals(ExplicitValues, ExplicitTransitionValues.EMPTY))
             {
-                transitionProto.ExplicitCollisionEnergy = DataValues.ToOptional(ExplicitValues.CollisionEnergy);
-                transitionProto.ExplicitConeVoltage = DataValues.ToOptional(ExplicitValues.ConeVoltage);
-                transitionProto.ExplicitDeclusteringPotential = DataValues.ToOptional(ExplicitValues.DeclusteringPotential);
-                transitionProto.ExplicitIonMobilityHighEnergyOffset = DataValues.ToOptional(ExplicitValues.IonMobilityHighEnergyOffset);
-                transitionProto.ExplicitSLens = DataValues.ToOptional(ExplicitValues.SLens);
+                transitionProto.ExplicitCollisionEnergy = ExplicitValues.CollisionEnergy;
+                transitionProto.ExplicitConeVoltage = ExplicitValues.ConeVoltage;
+                transitionProto.ExplicitDeclusteringPotential = ExplicitValues.DeclusteringPotential;
+                transitionProto.ExplicitIonMobilityHighEnergyOffset = ExplicitValues.IonMobilityHighEnergyOffset;
+                transitionProto.ExplicitSLens = ExplicitValues.SLens;
             }
 
             foreach (IonOrdinal part in ComplexFragmentIon.NeutralFragmentIon.IonChain.Skip(1))
@@ -555,28 +547,109 @@ namespace pwiz.Skyline.Model
                 }
                 transitionProto.LinkedIons.Add(linkedIon);
             }
+
+            double? ce = GetCollisionEnergy(settings, nodePep, nodeGroup);
+            double? dp = GetDeclusteringPotential(settings, nodePep, nodeGroup);
+
+            if (ce.HasValue)
+            {
+                transitionProto.CollisionEnergy = ce;
+            }
+
+            if (dp.HasValue)
+            {
+                transitionProto.DeclusteringPotential = dp;
+            }
+
             return transitionProto;
+        }
+
+        public double? GetCollisionEnergy(SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        {
+            if (ExplicitValues.CollisionEnergy.HasValue)
+                return ExplicitValues.CollisionEnergy; // Explicitly imported, overrides any calculation
+
+            double? ce = null;
+            TransitionPrediction predict = settings.TransitionSettings.Prediction;
+            var optimizationMethod = predict.OptimizedMethodType;
+            var lib = predict.OptimizedLibrary;
+            if (lib != null && !lib.IsNone)
+            {
+                var optimization = lib.GetOptimization(OptimizationType.collision_energy,
+                    settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,
+                    FragmentIonName, Transition.Adduct);
+                if (optimization != null)
+                {
+                    ce = optimization.Value;
+                }
+            }
+
+            double regressionMz = settings.GetRegressionMz(nodePep, nodeGroup);
+            var ceRegression = predict.CollisionEnergy;
+            if (optimizationMethod == OptimizedMethodType.None)
+            {
+                if (ceRegression != null && !ce.HasValue)
+                {
+                    ce = ceRegression.GetCollisionEnergy(nodeGroup.PrecursorAdduct, regressionMz);
+                }
+            }
+            else
+            {
+                if (!ce.HasValue)
+                {
+                    ce = OptimizationStep<CollisionEnergyRegression>.FindOptimizedValue(settings,
+                        nodePep, nodeGroup, this, optimizationMethod, ceRegression,
+                        SrmDocument.GetCollisionEnergy);
+                }
+            }
+
+            return ce;
+        }
+
+        public double? GetDeclusteringPotential(SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        {
+            double? dp = null;
+
+            TransitionPrediction predict = settings.TransitionSettings.Prediction;
+            var optimizationMethod = predict.OptimizedMethodType;
+            double regressionMz = settings.GetRegressionMz(nodePep, nodeGroup);
+            var dpRegression = predict.DeclusteringPotential;
+            if (optimizationMethod == OptimizedMethodType.None)
+            {
+                if (dpRegression != null)
+                {
+                    dp = dpRegression.GetDeclustringPotential(regressionMz);
+                }
+            }
+            else
+            {
+                dp = OptimizationStep<DeclusteringPotentialRegression>.FindOptimizedValue(settings,
+                    nodePep, nodeGroup, this, optimizationMethod, dpRegression,
+                    SrmDocument.GetDeclusteringPotential);
+            }
+
+            return dp;
         }
 
         private void SetCustomIonFragmentInfo(SkylineDocumentProto.Types.Transition transitionProto)
         {
             if (Transition.IsNonReporterCustomIon())
             {
-                transitionProto.Formula = DataValues.ToOptional(Transition.CustomIon.Formula);
+                transitionProto.Formula = Transition.CustomIon.Formula;
                 if (Transition.CustomIon.AverageMass.IsMassH())
-                    transitionProto.AverageMassH = DataValues.ToOptional(Transition.CustomIon.AverageMass);
+                    transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else
-                    transitionProto.AverageMass = DataValues.ToOptional(Transition.CustomIon.AverageMass);
+                    transitionProto.AverageMass = Transition.CustomIon.AverageMass;
                 if (Transition.CustomIon.MonoisotopicMass.IsMassH())
-                    transitionProto.MonoMassH = DataValues.ToOptional(Transition.CustomIon.MonoisotopicMass);
+                    transitionProto.MonoMassH = Transition.CustomIon.MonoisotopicMass;
                 else
-                    transitionProto.MonoMass = DataValues.ToOptional(Transition.CustomIon.MonoisotopicMass);
-                transitionProto.CustomIonName = DataValues.ToOptional(Transition.CustomIon.Name);
-                transitionProto.MoleculeId = DataValues.ToOptional(Transition.CustomIon.AccessionNumbers.ToString());
+                    transitionProto.MonoMass = Transition.CustomIon.MonoisotopicMass;
+                transitionProto.CustomIonName = Transition.CustomIon.Name;
+                transitionProto.MoleculeId = Transition.CustomIon.AccessionNumbers.ToString();
             }
             else
             {
-                transitionProto.MeasuredIonName = DataValues.ToOptional(Transition.CustomIon.Name);
+                transitionProto.MeasuredIonName = Transition.CustomIon.Name;
             }
         }
 
@@ -590,7 +663,7 @@ namespace pwiz.Skyline.Model
             if (transitionProto.MeasuredIonName != null)
             {
                 measuredIon = settings.TransitionSettings.Filter.MeasuredIons.SingleOrDefault(
-                    i => i.Name.Equals(transitionProto.MeasuredIonName.Value));
+                    i => i.Name.Equals(transitionProto.MeasuredIonName));
                 if (measuredIon == null)
                     throw new InvalidDataException(string.Format(Resources.TransitionInfo_ReadXmlAttributes_The_reporter_ion__0__was_not_found_in_the_transition_filter_settings_, transitionProto.MeasuredIonName));
                 ionType = IonType.custom;
@@ -610,20 +683,20 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var formula = DataValues.FromOptional(transitionProto.Formula);
-                    var moleculeID = MoleculeAccessionNumbers.FromString(DataValues.FromOptional(transitionProto.MoleculeId)); // Tab separated list of InChiKey, CAS etc
-                    var monoMassH = DataValues.FromOptional(transitionProto.MonoMassH);
-                    var averageMassH = DataValues.FromOptional(transitionProto.AverageMassH);
-                    var monoMass = DataValues.FromOptional(transitionProto.MonoMass) ?? monoMassH;
-                    var averageMass = DataValues.FromOptional(transitionProto.AverageMass) ?? averageMassH;
+                    var formula = transitionProto.Formula;
+                    var moleculeID = MoleculeAccessionNumbers.FromString(transitionProto.MoleculeId); // Tab separated list of InChiKey, CAS etc
+                    var monoMassH = transitionProto.MonoMassH;
+                    var averageMassH = transitionProto.AverageMassH;
+                    var monoMass = transitionProto.MonoMass ?? monoMassH;
+                    var averageMass = transitionProto.AverageMass ?? averageMassH;
                     customIon = new CustomMolecule(formula,
                         new TypedMass(monoMass.Value, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
                         new TypedMass(averageMass.Value, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
-                        DataValues.FromOptional(transitionProto.CustomIonName), moleculeID);
+                        transitionProto.CustomIonName, moleculeID);
                 }
             }
             Transition transition;
-            var adductString = DataValues.FromOptional(transitionProto.Adduct);
+            var adductString = transitionProto.Adduct;
             var adduct = string.IsNullOrEmpty(adductString)
                 ? Adduct.FromChargeProtonated(transitionProto.Charge)
                 : Adduct.FromStringAssumeChargeOnly(adductString);
@@ -658,11 +731,11 @@ namespace pwiz.Skyline.Model
             var annotations = scrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionProto.Annotations), AnnotationDef.AnnotationTarget.transition);
             var results = TransitionChromInfo.FromProtoTransitionResults(scrubber, settings, transitionProto.Results);
             var explicitTransitionValues = pre422ExplicitTransitionValues ?? ExplicitTransitionValues.Create(
-                DataValues.FromOptional(transitionProto.ExplicitCollisionEnergy),
-                DataValues.FromOptional(transitionProto.ExplicitIonMobilityHighEnergyOffset),
-                DataValues.FromOptional(transitionProto.ExplicitSLens),
-                DataValues.FromOptional(transitionProto.ExplicitConeVoltage),
-                DataValues.FromOptional(transitionProto.ExplicitDeclusteringPotential));
+                transitionProto.ExplicitCollisionEnergy,
+                transitionProto.ExplicitIonMobilityHighEnergyOffset,
+                transitionProto.ExplicitSLens,
+                transitionProto.ExplicitConeVoltage,
+                transitionProto.ExplicitDeclusteringPotential);
 
             TransitionDocNode transitionDocNode;
             var transitionQuantInfo =
@@ -731,12 +804,12 @@ namespace pwiz.Skyline.Model
                     }
                     transitionPeak.ReplicateIndex = replicateIndex;
                     transitionPeak.FileIndexInReplicate = measuredResults.Chromatograms[replicateIndex].IndexOfId(transitionChromInfo.FileId);
-                    transitionPeak.MassError = DataValues.ToOptional(transitionChromInfo.MassError);
+                    transitionPeak.MassError = transitionChromInfo.MassError;
                     transitionPeak.RetentionTime = transitionChromInfo.RetentionTime;
                     transitionPeak.StartRetentionTime = transitionChromInfo.StartRetentionTime;
                     transitionPeak.EndRetentionTime = transitionChromInfo.EndRetentionTime;
-                    transitionPeak.IonMobility = DataValues.ToOptional(transitionChromInfo.IonMobility.IonMobility.Mobility);
-                    transitionPeak.IonMobilityWindow = DataValues.ToOptional(transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth);
+                    transitionPeak.IonMobility = transitionChromInfo.IonMobility.IonMobility.Mobility;
+                    transitionPeak.IonMobilityWindow = transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth;
                     transitionPeak.Area = transitionChromInfo.Area;
                     transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
                     transitionPeak.Height = transitionChromInfo.Height;
@@ -849,7 +922,7 @@ namespace pwiz.Skyline.Model
 
         private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, IonMobilityFilter ionMobility, int ratioCount, UserSet userSet)
         {
-            return new TransitionChromInfo(fileId, step, peak, ionMobility, new float?[ratioCount], Annotations.EMPTY, userSet);
+            return new TransitionChromInfo(fileId, step, peak, ionMobility, Annotations.EMPTY, userSet);
         }
 
         public DocNode RemovePeak(int indexSet, ChromFileInfoId fileId, UserSet userSet)
@@ -1051,5 +1124,15 @@ namespace pwiz.Skyline.Model
             get { return TransitionTreeNode.GetLabel(this, string.Empty); }
         }
 
+        public TransitionDocNode ChangeTransitionGroup(TransitionGroup newTransitionGroup)
+        {
+            return ChangeTransitionId(new Transition(newTransitionGroup, Transition.IonType, Transition.CleavageOffset,
+                Transition.MassIndex, Transition.Adduct, Transition.DecoyMassShift, Transition.CustomIon));
+        }
+
+        public TransitionDocNode ChangeTransitionId(Transition transition)
+        {
+            return (TransitionDocNode)ChangeId(transition);
+        }
     }
 }

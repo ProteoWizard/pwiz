@@ -70,6 +70,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -115,7 +116,7 @@ namespace pwiz.Skyline
         private readonly LibraryManager _libraryManager;
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
-        private readonly ImportPeptideSearchManager _importPeptideSearchManager;
+        private readonly AutoTrainManager _autoTrainManager;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
@@ -181,14 +182,14 @@ namespace pwiz.Skyline
             _proteinMetadataManager = new ProteinMetadataManager();
             _proteinMetadataManager.ProgressUpdateEvent += UpdateProgress;
             _proteinMetadataManager.Register(this);
-            _importPeptideSearchManager = new ImportPeptideSearchManager();
-            _importPeptideSearchManager.ProgressUpdateEvent += UpdateProgress;
-            _importPeptideSearchManager.Register(this);
+            _autoTrainManager = new AutoTrainManager();
+            _autoTrainManager.ProgressUpdateEvent += UpdateProgress;
+            _autoTrainManager.Register(this);
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
 
-            DocumentUIChangedEvent += ShowAutoTrainResults;
+            DocumentUIChangedEvent += AutoTrainCompleted;
 
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
@@ -290,11 +291,10 @@ namespace pwiz.Skyline
             }
             // If the parent directory ends with .zip and lives in AppData\Local\Temp
             // then the user has double-clicked a file in Windows Explorer inside a ZIP file
-            if (parentDir != null && PathEx.HasExtension(parentDir, @".zip") &&
-                parentDir.ToLower().Contains(@"appdata\local\temp"))
+            if (DirectoryEx.IsTempZipFolder(parentDir, out string zipFileName))
             {
                 MessageDlg.Show(this, TextUtil.LineSeparate(Resources.SkylineWindow_HasFileToOpen_Opening_a_document_inside_a_ZIP_file_is_not_supported_,
-                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, Path.GetFileName(parentDir), Path.GetFileName(_fileToOpen))));
+                    string.Format(Resources.SkylineWindow_HasFileToOpen_Unzip_the_file__0__first_and_then_open_the_extracted_file__1__, zipFileName, Path.GetFileName(_fileToOpen))));
                 return false;
             }
 
@@ -435,9 +435,9 @@ namespace pwiz.Skyline
             get { return _ionMobilityLibraryManager; }
         }
 
-        public ImportPeptideSearchManager ImportPeptideSearchManager
+        public AutoTrainManager AutoTrainManager
         {
-            get { return _importPeptideSearchManager; }
+            get { return _autoTrainManager; }
         }
 
         private bool _useKeysOverride;
@@ -609,13 +609,18 @@ namespace pwiz.Skyline
             ViewMenu.DocumentUiChanged();
         }
 
-        public void ShowAutoTrainResults(object sender, DocumentChangedEventArgs e)
+        private void AutoTrainCompleted(object sender, DocumentChangedEventArgs e)
         {
-            if (!PeptideIntegration.AutoTrainCompleted(DocumentUI, e.DocumentPrevious))
+            var trainedType = AutoTrainManager.CompletedType(DocumentUI, e.DocumentPrevious);
+            if (Equals(trainedType, PeptideIntegration.AutoTrainType.none))
                 return;
 
             var model = DocumentUI.Settings.PeptideSettings.Integration.PeakScoringModel;
             Settings.Default.PeakScoringModelList.Add(model);
+
+            if (Equals(trainedType, PeptideIntegration.AutoTrainType.default_model))
+                return; // don't show dialog when auto trained model is the default model
+
             var modelIndex = Settings.Default.PeakScoringModelList.IndexOf(model);
             var newModel = Settings.Default.PeakScoringModelList.EditItem(this, model, Settings.Default.PeakScoringModelList, null);
             if (newModel == null || model.Equals(newModel))
@@ -928,6 +933,7 @@ namespace pwiz.Skyline
             private readonly IdentityPath _treeSelection;
             private readonly IList<IdentityPath> _treeSelections;
             private readonly string _resultName;
+            private IDictionary<DataGridId, DataboundGridForm.UndoState> _gridStates;
 
             public UndoState(SkylineWindow window)
             {
@@ -936,16 +942,18 @@ namespace pwiz.Skyline
                 _treeSelections = window.SequenceTree.SelectedPaths;
                 _treeSelection = window.SequenceTree.SelectedPath;
                 _resultName = ResultNameCurrent;
+                _gridStates = DataboundGridForm.GetUndoStates();
             }
 
             private UndoState(SkylineWindow window, SrmDocument document, IList<IdentityPath> treeSelections,
-                IdentityPath treeSelection, string resultName)
+                IdentityPath treeSelection, string resultName, IDictionary<DataGridId, DataboundGridForm.UndoState> gridStates)
             {
                 _window = window;
                 _document = document;
                 _treeSelections = treeSelections;
                 _treeSelection = treeSelection;
                 _resultName = resultName;
+                _gridStates = gridStates;
             }
 
             private string ResultNameCurrent
@@ -968,6 +976,8 @@ namespace pwiz.Skyline
                 // Get results name
                 string resultName = ResultNameCurrent;
 
+                var gridStates = DataboundGridForm.GetUndoStates();
+
                 // Restore document state
                 SrmDocument docReplaced = _window.RestoreDocument(_document);
 
@@ -983,9 +993,12 @@ namespace pwiz.Skyline
                 if (_resultName != null)
                     _window.ComboResults.SelectedItem = _resultName;
 
+                if (_gridStates != null)
+                    DataboundGridForm.RestoreUndoStates(_gridStates);
+
                 // Return a record that can be used to restore back to the state
                 // before this action.
-                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName);
+                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName, gridStates);
             }
         }
 
@@ -1083,10 +1096,28 @@ namespace pwiz.Skyline
             _retentionTimeManager.ProgressUpdateEvent -= UpdateProgress;
             _ionMobilityLibraryManager.ProgressUpdateEvent -= UpdateProgress;
             _proteinMetadataManager.ProgressUpdateEvent -= UpdateProgress;
-            _importPeptideSearchManager.ProgressUpdateEvent -= UpdateProgress;
+            _autoTrainManager.ProgressUpdateEvent -= UpdateProgress;
             
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
+
+            if (_graphFullScan != null)
+            {
+                var chargeSelector = _graphFullScan.GetHostedControl<ChargeSelectionPanel>();
+                if(chargeSelector != null)
+                {
+                    chargeSelector.HostedControl.OnCharge1Changed -= ShowCharge1;
+                    chargeSelector.HostedControl.OnCharge2Changed -= ShowCharge2;
+                    chargeSelector.HostedControl.OnCharge3Changed -= ShowCharge3;
+                    chargeSelector.HostedControl.OnCharge4Changed -= ShowCharge4;
+                }
+                var ionTypeSelector = _graphFullScan.GetHostedControl<IonTypeSelectionPanel>();
+                if (ionTypeSelector != null)
+                {
+                    ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                    ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
+                }
+            }
         }
 
         protected override void OnClosed(EventArgs e)
@@ -1352,7 +1383,13 @@ namespace pwiz.Skyline
                 var liveResultsGrid = _resultsGridForm;
                 if (null != liveResultsGrid)
                 {
-                    bookmark = bookmark.ChangeChromFileInfoId(liveResultsGrid.GetCurrentChromFileInfoId());
+                    var replicateIndex = liveResultsGrid.GetReplicateIndex();
+                    var chromFileInfoId = liveResultsGrid.GetCurrentChromFileInfoId();
+                    if (replicateIndex.HasValue && chromFileInfoId != null)
+                    {
+                        bookmark = bookmark.ChangeResult(replicateIndex.Value, chromFileInfoId, 0);
+                    }
+                    
                 }
             }            
             var findResult = DocumentUI.SearchDocument(bookmark,
@@ -1646,7 +1683,7 @@ namespace pwiz.Skyline
 
         public void ShowPasteTransitionListDlg()
         {
-            EditMenu.ShowPasteTransitionListDlg();
+            EditMenu.ShowInsertTransitionListDlg();
         }
 
         public void ShowRefineDlg()
@@ -2164,7 +2201,7 @@ namespace pwiz.Skyline
                             OwnedForms[libraryExpIndex].Activate();
                     }
 
-                    HandleStandardsChanged(oldStandard);
+                    HandleStandardsChanged(oldStandard, RCalcIrt.Calculator(Document));
                 }
             }
 
@@ -2173,12 +2210,23 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void HandleStandardsChanged(ICollection<Target> oldStandard)
+        public void HandleStandardsChanged(ICollection<Target> oldStandard, RCalcIrt calc)
         {
-            var calc = RCalcIrt.Calculator(Document);
             if (calc == null)
                 return;
-            calc = calc.Initialize(null) as RCalcIrt;
+            var dbPath = calc.DatabasePath;
+            try
+            {
+                calc = calc.Initialize(null) as RCalcIrt;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowWithException(this,
+                    string.Format(
+                        Resources.SkylineWindow_HandleStandardsChanged_An_error_occurred_while_attempting_to_load_the_iRT_database__0___iRT_standards_cannot_be_automatically_added_to_the_document_,
+                        dbPath), e);
+                return;
+            }
             if (calc == null)
                 return;
             var newStandard = calc.GetStandardPeptides().ToArray();
@@ -2237,11 +2285,12 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            if (newDoc != null)
+
+            var standardPepGroup = firstAdded != null ? (PeptideGroupDocNode)newDoc?.FindNode(firstAdded) : null;
+            if (standardPepGroup != null)
             {
                 ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
                 {
-                    var standardPepGroup = newDoc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
                     var pepList = new List<DocNode>();
                     foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.ContainsKey(pep.ModifiedTarget)))
                     {
@@ -2453,6 +2502,7 @@ namespace pwiz.Skyline
                                     {
                                         return;
                                     }
+
                                     // Looping here in case some other agent interrupts us with a change to Document
                                     while (newSettings.PeptideSettings.NeedsBackgroundProteomeUniquenessCheckProcessing)
                                     {
@@ -2481,6 +2531,15 @@ namespace pwiz.Skyline
                 {
                     // Canceled mid-change due to background document change
                     documentChanged = true;
+                }
+                catch (Exception exception)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(exception))
+                    {
+                        throw;
+                    }
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), exception);
+                    return false;
                 }
                 finally
                 {
@@ -2830,6 +2889,10 @@ namespace pwiz.Skyline
                         _tool.RunTool(_parent.Document, _parent, null, _parent, _parent);
                     }
                 }
+                catch (ToolDeprecatedException e)
+                {
+                    MessageDlg.Show(_parent, e.Message);
+                }
                 catch (WebToolException e)
                 {
                     WebHelpers.ShowLinkFailure(_parent, e.Link);
@@ -2984,6 +3047,11 @@ namespace pwiz.Skyline
         #endregion
 
         #region SequenceTree events
+
+        public bool SequenceTreeFormIsVisible
+        {
+            get { return _sequenceTreeForm != null && _sequenceTreeForm.Visible; }
+        }
 
         public void ShowSequenceTreeForm(bool show, bool forceUpdate = false)
         {
@@ -3384,15 +3452,14 @@ namespace pwiz.Skyline
 
             protected virtual void OnMenuItemClick()
             {
-                _skyline.SequenceTree.NormalizeOption = _ratioIndex;
-                _skyline._listGraphPeakArea.ForEach(g => g.NormalizeOption = _ratioIndex);
+                _skyline.AreaNormalizeOption = _ratioIndex;
             }
 
             public static void Create(SkylineWindow skylineWindow, ToolStripMenuItem menu, string text, NormalizeOption i)
             {
                 var handler = new SelectRatioHandler(skylineWindow, i);
                 var item = new ToolStripMenuItem(text, null, handler.ToolStripMenuItemClick)
-                { Checked = (skylineWindow.SequenceTree.NormalizeOption == i) };
+                    { Checked = skylineWindow.SequenceTree.NormalizeOption == i };
                 menu.DropDownItems.Add(item);
             }
         }
@@ -4295,15 +4362,23 @@ namespace pwiz.Skyline
                 }
                 return;
             }
-            var bookmark = new Bookmark();
+            var bookmark = Bookmark.ROOT;
             var resultRef = elementRef as ResultRef;
             if (resultRef != null)
             {
-                var chromFileInfo = resultRef.FindChromFileInfo(document);
+                if (measuredResults == null)
+                {
+                    return;
+                }
+                int replicateIndex = resultRef.FindReplicateIndex(document);
+                if (replicateIndex < 0)
+                {
+                    return;
+                }
+                var chromFileInfo = resultRef.FindChromFileInfo(measuredResults.Chromatograms[replicateIndex]);
                 if (chromFileInfo != null)
                 {
-                    bookmark = bookmark.ChangeChromFileInfoId(chromFileInfo.FileId)
-                        .ChangeOptStep(resultRef.OptimizationStep);
+                    bookmark = bookmark.ChangeResult(replicateIndex, chromFileInfo.FileId, resultRef.OptimizationStep);
                 }
                 elementRef = elementRef.Parent;
             }

@@ -30,8 +30,6 @@ namespace pwiz.Skyline.Model.Databinding.Collections
     public abstract class SkylineObjectList<TKey, TItem> : AbstractRowSource
     {
         private IDocumentChangeListener _documentChangeListener;
-        protected IDictionary<TKey, int> _keyIndexes 
-            = new Dictionary<TKey, int>();
 
         protected SkylineObjectList(SkylineDataSchema dataSchema)
         {

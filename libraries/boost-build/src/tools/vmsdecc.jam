@@ -1,11 +1,11 @@
 #  Copyright (c) 2015 Artur Shepilko
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Implements OpenVMS-based HP DECC/C++ toolset.
-# Relies on POSIX-style path handling bjam/Boost.Build implementation for VMS.
+# Relies on POSIX-style path handling bjam/B2 implementation for VMS.
 
 import "class" : new ;
 import property ;
@@ -93,6 +93,8 @@ flags vmsdecc.compile OPTIONS <optimization>space : /OPT=INLINE=SIZE/OPT=NOINLIN
 flags vmsdecc.compile OPTIONS <warnings>off : /NOWARN ;
 flags vmsdecc.compile OPTIONS <warnings>on : /WARN ;
 flags vmsdecc.compile OPTIONS <warnings>all  : /WARN=ENABLE=ALL ;
+flags vmsdecc.compile OPTIONS <warnings>extra : /WARN=ENABLE=ALL ;
+flags vmsdecc.compile OPTIONS <warnings>pedantic : /WARN=ENABLE=ALL ;
 
 flags vmsdecc.compile.c++ OPTIONS <inlining>off : /OPT=NOINLINE ;
 

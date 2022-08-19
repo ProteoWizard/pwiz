@@ -2,8 +2,8 @@
 # Copyright 2006 Ilya Sokolov
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 ##### Using Precompiled Headers (Quick Guide) #####
 #
@@ -61,7 +61,7 @@ class pch-generator : generator
         {
             # Unless this generator is invoked as the top-most generator for a
             # main target, fail. This allows using 'H' type as input type for
-            # this generator, while preventing Boost.Build to try this generator
+            # this generator, while preventing B2 to try this generator
             # when not explicitly asked for.
             #
             # One bad example is msvc, where pch generator produces both PCH

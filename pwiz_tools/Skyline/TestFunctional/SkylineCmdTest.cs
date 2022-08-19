@@ -78,13 +78,13 @@ namespace pwiz.SkylineTestFunctional
                 try
                 {
                     string output = RunWithOutput("--help=ascii");
-
-                    Assert.Fail(TextUtil.LineSeparate("Successful run of SkylineCmd.exe with --help unexpected:", output));
+                    Assert.IsTrue(Helpers.CountLinesInString(output) > 100);
+                    AssertEx.Contains(output, "SkylineCmd");
                 }
                 catch (IOException e)
                 {
-                    Assert.IsTrue(Helpers.CountLinesInString(e.Message) > 100);
-                    AssertEx.Contains(e.Message, "SkylineCmd");
+                    Assert.Fail(TextUtil.LineSeparate("Expected successful run of SkylineCmd.exe with --help:",
+                        e.Message));
                 }
             }
         }

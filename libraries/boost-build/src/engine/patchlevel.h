@@ -5,12 +5,12 @@
  */
 /*
 This file is ALSO:
-Copyright 2018-2019 Rene Rivera
+Copyright 2018-2021 Rene Rivera
 Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+(See accompanying file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
 
 #define VERSION_MAJOR 4
-#define VERSION_MINOR 0
-#define VERSION_PATCH 0
+#define VERSION_MINOR 7
+#define VERSION_PATCH 2

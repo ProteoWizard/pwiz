@@ -61,7 +61,8 @@ int main(int argc, const char* argv[])
         {
             try
             {
-                thermo::RawFilePtr rawfile = thermo::RawFile::create(filename.string());
+                thermo::RawFilePtr rawfilePtr = thermo::RawFile::create(filename.string());
+                thermo::RawFile* rawfile = rawfilePtr->getRawByThread(0);
 
                 cout << " ==== Instrument methods for " << filename.filename() << " ====" << endl;
                 vector<string> instrumentMethods = rawfile->getInstrumentMethods();
@@ -119,9 +120,9 @@ int main(int argc, const char* argv[])
                 for (long i = 1; i <= numSpectra; ++i)
                 {
                     thermo::ScanInfoPtr scanInfo = rawfile->getScanInfo(i);
-                    cout << i << " " << scanInfo->filter() << "\n";
+                    cout << i << " {" << scanInfo->scanSegmentNumber() << ", " << scanInfo->scanSegmentNumber() << "} FILTER " << scanInfo->filter() << "\n";
                     for (long j = 0; j < scanInfo->trailerExtraSize(); ++j)
-                        cout << i << " " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << "\n";
+                        cout << i << " {" << scanInfo->scanSegmentNumber() << ", " << scanInfo->scanSegmentNumber() << "} " << scanInfo->trailerExtraLabel(j) << scanInfo->trailerExtraValue(j) << "\n";
                 }
             }
             catch (exception& e)

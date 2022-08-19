@@ -15,22 +15,22 @@ namespace pwiz.SkylineTestUtil
 {
     public static class PeakMatcherTestUtil
     {
-        public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, bool group, double rt)
+        public static void Select(string modifiedSequence, double? precursorMz, string resultsName, out IdentityPath path, out ChromatogramSet chromSet)
         {
-            bool found = false;
+            var found = false;
             var skylineWindow = Program.MainWindow;
             var doc = skylineWindow.Document;
-            IdentityPath identityPath = null;
+
+            path = null;
             var libKeyToMatch = new PeptideLibraryKey(modifiedSequence, 0);
-            foreach (PeptideGroupDocNode nodePepGroup in doc.MoleculeGroups)
+            foreach (var nodePepGroup in doc.MoleculeGroups)
             {
                 foreach (var nodePep in nodePepGroup.Peptides.Where(nodePep => LibKeyIndex.KeysMatch(libKeyToMatch, nodePep.ModifiedTarget.GetLibKey(Adduct.EMPTY))))
                 {
                     var nodeTranGroup = precursorMz.HasValue
                         ? nodePep.TransitionGroups.First(tranGroup => Math.Abs(tranGroup.PrecursorMz - precursorMz.Value) < 0.01)
                         : nodePep.TransitionGroups.First();
-                    identityPath = new IdentityPath(nodePepGroup.Id, nodePep.Id, nodeTranGroup.Id);
-                    IdentityPath path = identityPath;
+                    path = new IdentityPath(nodePepGroup.Id, nodePep.Id, nodeTranGroup.Id);
                     skylineWindow.SelectedPath = path;
                     found = true;
                     break;
@@ -39,26 +39,25 @@ namespace pwiz.SkylineTestUtil
                     break;
             }
             if (!found)
-            {
                 Assert.Fail("Could not find peptide {0}", modifiedSequence);
-            }
 
-            found = false;
+            chromSet = null;
             var chromatograms = doc.Settings.MeasuredResults.Chromatograms;
-            foreach (var chromatogram in chromatograms.Where(chromSet => chromSet.Name.Equals(resultsName)))
+            foreach (var chromatogram in chromatograms.Where(c => c.Name.Equals(resultsName)))
             {
-                found = true;
-                ChromatogramSet chromSet = chromatogram;
+                chromSet = chromatogram;
                 skylineWindow.SelectedResultsIndex = chromatograms.IndexOf(chromSet);
-                skylineWindow.ModifyDocument("change peak", document =>
-                    document.ChangePeak(identityPath, chromSet.Name, chromSet.MSDataFilePaths.First(), null, rt, UserSet.TRUE));
-                break;
+                return;
             }
-            if (!found)
-            {
-                Assert.Fail("Could not find results {0}", resultsName);
-            }
-            skylineWindow.ApplyPeak(subsequent, group);
+            Assert.Fail("Could not find results {0}", resultsName);
+        }
+
+        public static void SelectAndApplyPeak(string modifiedSequence, double? precursorMz, string resultsName, bool subsequent, bool group, double rt)
+        {
+            Select(modifiedSequence, precursorMz, resultsName, out var path, out var chromSet);
+            Program.MainWindow.ModifyDocument("change peak", document =>
+                document.ChangePeak(path, chromSet.Name, chromSet.MSDataFilePaths.First(), null, rt, UserSet.TRUE));
+            Program.MainWindow.ApplyPeak(subsequent, group);
         }
 
         public static void VerifyPeaks(IReadOnlyDictionary<string, double> expected)
@@ -83,7 +82,7 @@ namespace pwiz.SkylineTestUtil
                 var chromSet = chromatograms[resultsIndex];
                 Assert.IsTrue(chromSet.FileCount == 1);
                 ChromatogramGroupInfo[] chromGroupInfos;
-                Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, false, out chromGroupInfos));
+                Assert.IsTrue(settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out chromGroupInfos));
                 var rt = nodeTranGroup.Results[resultsIndex][0].RetentionTime;
                 Assert.IsTrue(rt.HasValue);
                 var chromName = chromSet.Name;

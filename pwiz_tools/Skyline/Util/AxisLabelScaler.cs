@@ -150,7 +150,14 @@ namespace pwiz.Skyline.Util
                 _reducedTextLabels = Axis.Scale.TextLabels.ToArray();
             }
 
-            Axis.Scale.FontSpec.Size = pointSize;
+            try
+            {
+                Axis.Scale.FontSpec.Size = pointSize;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(string.Format(@"Unable to set Axis.Scale.FontSpec.Size to {0} for AreaFontSize {1}", pointSize, Settings.Default.AreaFontSize), e);
+            }
         }
 
         private static int MaxWidth(Font font, IEnumerable<String> labels, out string maxString)
@@ -216,7 +223,7 @@ namespace pwiz.Skyline.Util
             }
             else
             {
-                Axis.Scale.FontSpec.Angle = 0;
+                Axis.Scale.FontSpec.Angle = AxisIsHorizontal ? 0 : 90;
                 Axis.Scale.Align = AlignP.Center;
             }
         }

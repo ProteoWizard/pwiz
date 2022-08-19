@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 22</value>
@@ -125,7 +128,7 @@
     <value>スペクトル：</value>
   </data>
   <data name="comboSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 23</value>
+    <value>121, 28</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -134,8 +137,11 @@
   <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 25</value>
   </data>
+  <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>7, 6, 7, 6</value>
+  </data>
   <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>473, 361</value>
+    <value>642, 452</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
@@ -154,7 +160,7 @@
     <value>0</value>
   </data>
   <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+    <value>160, 17</value>
   </metadata>
   <data name="toolStripLabel2.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 22</value>
@@ -261,11 +267,42 @@
   <data name="btnIsolationWindow.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="toolStripButtonShowAnnotations.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.Text" xml:space="preserve">
+    <value>toolStripButton1</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.ToolTipText" xml:space="preserve">
+    <value>ピーク注釈を表示します。</value>
+  </data>
+  <data name="toolStripLabelPeakType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 22</value>
+  </data>
+  <data name="toolStripLabelPeakType.Text" xml:space="preserve">
+    <value>ピークタイプ：</value>
+  </data>
+  <data name="comboBoxPeakType.Items" xml:space="preserve">
+    <value>セントロイド化</value>
+  </data>
+  <data name="comboBoxPeakType.Items1" xml:space="preserve">
+    <value>プロファイル</value>
+  </data>
+  <data name="comboBoxPeakType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 25</value>
+  </data>
+  <data name="comboBoxPeakType.ToolTipText" xml:space="preserve">
+    <value>スペクトルウィンドウに表示するピークタイプを選択します。
+デフォルトはクロマトグラム抽出に使用されるピークタイプです。</value>
+  </data>
   <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>473, 25</value>
+    <value>642, 25</value>
   </data>
   <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -288,8 +325,11 @@
   <data name="GraphPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="GraphPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
   <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>473, 386</value>
+    <value>642, 477</value>
   </data>
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -307,16 +347,22 @@
     <value>1</value>
   </data>
   <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>108, 17</value>
+    <value>251, 17</value>
   </metadata>
   <data name="showScanNumberContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 22</value>
+    <value>191, 22</value>
   </data>
   <data name="showScanNumberContextMenuItem.Text" xml:space="preserve">
     <value>スキャン番号を表示</value>
   </data>
+  <data name="showIonTypesRanksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="showIonTypesRanksToolStripMenuItem.Text" xml:space="preserve">
+    <value>ピーク注釈を表示</value>
+  </data>
   <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>179, 48</value>
+    <value>192, 54</value>
   </data>
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
@@ -334,10 +380,19 @@
     <value>True</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>473, 386</value>
+    <value>642, 477</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
   </data>
   <data name="$this.TabText" xml:space="preserve">
     <value>フルスキャン</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolStripLabel1.Name" xml:space="preserve">
     <value>toolStripLabel1</value>
@@ -405,11 +460,44 @@
   <data name="&gt;&gt;btnIsolationWindow.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;toolStripButtonShowAnnotations.Name" xml:space="preserve">
+    <value>toolStripButtonShowAnnotations</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonShowAnnotations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabelPeakType.Name" xml:space="preserve">
+    <value>toolStripLabelPeakType</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabelPeakType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeakType.Name" xml:space="preserve">
+    <value>comboBoxPeakType</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeakType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;showScanNumberContextMenuItem.Name" xml:space="preserve">
     <value>showScanNumberContextMenuItem</value>
   </data>
   <data name="&gt;&gt;showScanNumberContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showIonTypesRanksToolStripMenuItem.Name" xml:space="preserve">
+    <value>showIonTypesRanksToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showIonTypesRanksToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>188, 6</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>GraphFullScan</value>

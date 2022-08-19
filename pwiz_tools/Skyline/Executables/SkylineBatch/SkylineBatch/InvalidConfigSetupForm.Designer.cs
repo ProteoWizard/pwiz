@@ -44,6 +44,7 @@
             resources.ApplyResources(this.btnNext, "btnNext");
             this.btnNext.Name = "btnNext";
             this.btnNext.UseVisualStyleBackColor = true;
+            this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
             // btnSkip
             // 
@@ -70,7 +71,7 @@
         #endregion
 
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnNext;
-        private System.Windows.Forms.Button btnSkip;
+        public System.Windows.Forms.Button btnNext;
+        public System.Windows.Forms.Button btnSkip;
     }
 }
