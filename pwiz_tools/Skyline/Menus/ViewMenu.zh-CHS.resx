@@ -124,6 +124,43 @@
     <value>155, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>150, 24</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="menuStrip1.Text" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Name" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 20</value>
+  </data>
+  <data name="viewToolStripMenuItem.Text" xml:space="preserve">
+    <value>视图(&amp;V)</value>
+  </data>
+  <data name="viewProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="viewProteinsMenuItem.Text" xml:space="preserve">
+    <value>蛋白质(&amp;P)</value>
+  </data>
   <data name="viewTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
@@ -154,17 +191,17 @@
   <data name="showTargetsByGeneToolStripMenuItem.Text" xml:space="preserve">
     <value>按基因(&amp;G)</value>
   </data>
-  <data name="viewProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="viewProteinsMenuItem.Text" xml:space="preserve">
-    <value>蛋白质(&amp;P)</value>
-  </data>
   <data name="viewModificationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
   <data name="viewModificationsMenuItem.Text" xml:space="preserve">
     <value>修饰</value>
+  </data>
+  <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
+    <value>文本缩放(&amp;X)</value>
   </data>
   <data name="defaultTextToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 22</value>
@@ -184,11 +221,11 @@
   <data name="extraLargeToolStripMenuItem.Text" xml:space="preserve">
     <value>超大(&amp;X)</value>
   </data>
-  <data name="textZoomToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="userInterfaceToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="textZoomToolStripMenuItem.Text" xml:space="preserve">
-    <value>文本缩放(&amp;X)</value>
+  <data name="userInterfaceToolStripMenuItem.Text" xml:space="preserve">
+    <value>用户接口(&amp;S)</value>
   </data>
   <data name="proteomicsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>134, 22</value>
@@ -208,12 +245,6 @@
   <data name="mixedToolStripMenuItem.Text" xml:space="preserve">
     <value>混合(&amp;X)</value>
   </data>
-  <data name="userInterfaceToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="userInterfaceToolStripMenuItem.Text" xml:space="preserve">
-    <value>用户接口(&amp;S)</value>
-  </data>
   <data name="toolStripSeparator41.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -226,6 +257,12 @@
   <data name="toolStripSeparator32.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
+  <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="arrangeGraphsToolStripMenuItem.Text" xml:space="preserve">
+    <value>排列图(&amp;A)</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="arrangeTiledMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+T</value>
@@ -236,7 +273,6 @@
   <data name="arrangeTiledMenuItem.Text" xml:space="preserve">
     <value>平铺(&amp;T)</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="arrangeColumnMenuItem.ShowShortcutKeys" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -270,12 +306,6 @@
   <data name="groupedMenuItem.Text" xml:space="preserve">
     <value>分组(&amp;G)…</value>
   </data>
-  <data name="arrangeGraphsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="arrangeGraphsToolStripMenuItem.Text" xml:space="preserve">
-    <value>排列图(&amp;A)</value>
-  </data>
   <data name="toolStripSeparator39.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -290,6 +320,15 @@
   </data>
   <data name="libraryMatchToolStripMenuItem.Text" xml:space="preserve">
     <value>库匹配(&amp;M)</value>
+  </data>
+  <data name="ionTypesMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="ionTypesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="ionTypesMenuItem.Text" xml:space="preserve">
+    <value>离子类型(&amp;I)</value>
   </data>
   <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -327,6 +366,18 @@
   <data name="zMenuItem.Text" xml:space="preserve">
     <value>Z(&amp;Z)</value>
   </data>
+  <data name="zhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="zhMenuItem.Text" xml:space="preserve">
+    <value>Z•</value>
+  </data>
+  <data name="zhhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="zhhMenuItem.Text" xml:space="preserve">
+    <value>Z′</value>
+  </data>
   <data name="fragmentsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
   </data>
@@ -339,14 +390,14 @@
   <data name="precursorIonMenuItem.Text" xml:space="preserve">
     <value>母离子(&amp;P)</value>
   </data>
-  <data name="ionTypesMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="chargesMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="ionTypesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="chargesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="ionTypesMenuItem.Text" xml:space="preserve">
-    <value>离子类型(&amp;I)</value>
+  <data name="chargesMenuItem.Text" xml:space="preserve">
+    <value>电荷(&amp;C)</value>
   </data>
   <data name="charge1MenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 22</value>
@@ -372,15 +423,6 @@
   <data name="charge4MenuItem.Text" xml:space="preserve">
     <value>4(&amp;4)</value>
   </data>
-  <data name="chargesMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="chargesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="chargesMenuItem.Text" xml:space="preserve">
-    <value>电荷(&amp;C)</value>
-  </data>
   <data name="ranksMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -392,6 +434,15 @@
   </data>
   <data name="toolStripSeparator9.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
+  </data>
+  <data name="chromatogramsMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="chromatogramsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="chromatogramsMenuItem.Text" xml:space="preserve">
+    <value>色谱图(&amp;O)</value>
   </data>
   <data name="showChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>219, 22</value>
@@ -441,14 +492,14 @@
   <data name="closeAllChromatogramsMenuItem.Text" xml:space="preserve">
     <value>全部关闭(&amp;A)</value>
   </data>
-  <data name="chromatogramsMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="transitionsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="chromatogramsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transitionsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="chromatogramsMenuItem.Text" xml:space="preserve">
-    <value>色谱图(&amp;O)</value>
+  <data name="transitionsMenuItem.Text" xml:space="preserve">
+    <value>离子对(&amp;N)</value>
   </data>
   <data name="allTranMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F10</value>
@@ -540,14 +591,14 @@
   <data name="splitGraphMenuItem.Text" xml:space="preserve">
     <value>分割图(&amp;G)</value>
   </data>
-  <data name="transitionsMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="transformChromMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="transitionsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="transformChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="transitionsMenuItem.Text" xml:space="preserve">
-    <value>离子对(&amp;N)</value>
+  <data name="transformChromMenuItem.Text" xml:space="preserve">
+    <value>转化(&amp;F)</value>
   </data>
   <data name="transformChromNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F12</value>
@@ -591,14 +642,14 @@
   <data name="smoothSGChromMenuItem.Text" xml:space="preserve">
     <value>Savitzky-Golay 平滑(&amp;G)</value>
   </data>
-  <data name="transformChromMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="autoZoomMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="transformChromMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="autoZoomMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="transformChromMenuItem.Text" xml:space="preserve">
-    <value>转化(&amp;F)</value>
+  <data name="autoZoomMenuItem.Text" xml:space="preserve">
+    <value>自动缩放(&amp;Z)</value>
   </data>
   <data name="autoZoomNoneMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Shift+F11</value>
@@ -636,17 +687,17 @@
   <data name="autoZoomBothMenuItem.Text" xml:space="preserve">
     <value>两个都是(&amp;O)</value>
   </data>
-  <data name="autoZoomMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="autoZoomMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="autoZoomMenuItem.Text" xml:space="preserve">
-    <value>自动缩放(&amp;Z)</value>
-  </data>
   <data name="toolStripSeparator10.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
+  </data>
+  <data name="retentionTimesMenuItem.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="retentionTimesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="retentionTimesMenuItem.Text" xml:space="preserve">
+    <value>保留时间(&amp;T)</value>
   </data>
   <data name="replicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F8</value>
@@ -666,6 +717,12 @@
   <data name="timePeptideComparisonMenuItem.Text" xml:space="preserve">
     <value>肽段比较(&amp;P)</value>
   </data>
+  <data name="regressionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="regressionMenuItem.Text" xml:space="preserve">
+    <value>回归(&amp;R)</value>
+  </data>
   <data name="scoreToRunMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>142, 22</value>
   </data>
@@ -677,12 +734,6 @@
   </data>
   <data name="runToRunMenuItem.Text" xml:space="preserve">
     <value>运行到运行(&amp;R)</value>
-  </data>
-  <data name="regressionMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>228, 22</value>
-  </data>
-  <data name="regressionMenuItem.Text" xml:space="preserve">
-    <value>回归(&amp;R)</value>
   </data>
   <data name="retentionTimeAlignmentsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -696,14 +747,14 @@
   <data name="schedulingMenuItem.Text" xml:space="preserve">
     <value>时序安排(&amp;S)</value>
   </data>
-  <data name="retentionTimesMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="retentionTimesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="peakAreasMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="retentionTimesMenuItem.Text" xml:space="preserve">
-    <value>保留时间(&amp;T)</value>
+  <data name="peakAreasMenuItem.Text" xml:space="preserve">
+    <value>峰面积(&amp;K)</value>
   </data>
   <data name="areaReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F7</value>
@@ -735,14 +786,14 @@
   <data name="areaCVHistogram2DMenuItem.Text" xml:space="preserve">
     <value>CV 2D 直方图(&amp;D)</value>
   </data>
-  <data name="peakAreasMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="detectionsPlotsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="peakAreasMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="detectionsPlotsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="peakAreasMenuItem.Text" xml:space="preserve">
-    <value>峰面积(&amp;K)</value>
+  <data name="detectionsPlotsMenuItem.Text" xml:space="preserve">
+    <value>检测(&amp;D)</value>
   </data>
   <data name="detectionsReplicateComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -756,14 +807,14 @@
   <data name="detectionsHistogramMenuItem.Text" xml:space="preserve">
     <value>直方图(&amp;H)</value>
   </data>
-  <data name="detectionsPlotsMenuItem.Enabled" type="System.Boolean, mscorlib">
+  <data name="massErrorsMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="detectionsPlotsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="massErrorsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
-  <data name="detectionsPlotsMenuItem.Text" xml:space="preserve">
-    <value>检测(&amp;D)</value>
+  <data name="massErrorsMenuItem.Text" xml:space="preserve">
+    <value>质量误差(&amp;E)</value>
   </data>
   <data name="massErrorReplicateComparisonMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>F6</value>
@@ -795,15 +846,6 @@
   <data name="massErrorHistogram2DMenuItem.Text" xml:space="preserve">
     <value>2D 直方图(&amp;D)</value>
   </data>
-  <data name="massErrorsMenuItem.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="massErrorsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="massErrorsMenuItem.Text" xml:space="preserve">
-    <value>质量误差(&amp;E)</value>
-  </data>
   <data name="calibrationCurveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
@@ -819,6 +861,12 @@
   <data name="documentGridMenuItem.Text" xml:space="preserve">
     <value>文档网格(&amp;G)</value>
   </data>
+  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="otherGridsMenuItem.Text" xml:space="preserve">
+    <value>其它网格(&amp;H)</value>
+  </data>
   <data name="resultsGridMenuItem.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -830,6 +878,12 @@
   </data>
   <data name="resultsGridMenuItem.Text" xml:space="preserve">
     <value>结果网格(&amp;R)</value>
+  </data>
+  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
+    <value>群组比较(&amp;G)</value>
   </data>
   <data name="addGroupComparisonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>124, 22</value>
@@ -843,23 +897,17 @@
   <data name="editGroupComparisonListMenuItem.Text" xml:space="preserve">
     <value>编辑列表(&amp;E)…</value>
   </data>
-  <data name="groupComparisonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>180, 22</value>
   </data>
-  <data name="groupComparisonsMenuItem.Text" xml:space="preserve">
-    <value>群组比较(&amp;G)</value>
+  <data name="listsMenuItem.Text" xml:space="preserve">
+    <value>列表(&amp;L)</value>
   </data>
   <data name="defineNewListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>165, 22</value>
   </data>
   <data name="defineNewListMenuItem.Text" xml:space="preserve">
     <value>定义新列表(&amp;N)…</value>
-  </data>
-  <data name="listsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="listsMenuItem.Text" xml:space="preserve">
-    <value>列表(&amp;L)</value>
   </data>
   <data name="auditLogMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Alt+4</value>
@@ -869,12 +917,6 @@
   </data>
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>审计日志(&amp;A)</value>
-  </data>
-  <data name="otherGridsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="otherGridsMenuItem.Text" xml:space="preserve">
-    <value>其它网格(&amp;H)</value>
   </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -891,35 +933,11 @@
   <data name="statusToolStripMenuItem.Text" xml:space="preserve">
     <value>状态栏(&amp;U)</value>
   </data>
-  <data name="viewToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 20</value>
+  <data name="candidatePeaksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
   </data>
-  <data name="viewToolStripMenuItem.Text" xml:space="preserve">
-    <value>视图(&amp;V)</value>
-  </data>
-  <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>150, 24</value>
-  </data>
-  <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="menuStrip1.Text" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Name" xml:space="preserve">
-    <value>menuStrip1</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;menuStrip1.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="candidatePeaksToolStripMenuItem.Text" xml:space="preserve">
+    <value>候选峰</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -1129,6 +1147,18 @@
     <value>zMenuItem</value>
   </data>
   <data name="&gt;&gt;zMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;zhMenuItem.Name" xml:space="preserve">
+    <value>zhMenuItem</value>
+  </data>
+  <data name="&gt;&gt;zhMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;zhhMenuItem.Name" xml:space="preserve">
+    <value>zhhMenuItem</value>
+  </data>
+  <data name="&gt;&gt;zhhMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fragmentsMenuItem.Name" xml:space="preserve">
@@ -1591,6 +1621,12 @@
     <value>statusToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;statusToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;candidatePeaksToolStripMenuItem.Name" xml:space="preserve">
+    <value>candidatePeaksToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;candidatePeaksToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
