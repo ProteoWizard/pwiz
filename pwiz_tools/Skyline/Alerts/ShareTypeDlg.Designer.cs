@@ -67,7 +67,7 @@
             resources.ApplyResources(this.btnShare, "btnShare");
             this.btnShare.Name = "btnShare";
             this.btnShare.UseVisualStyleBackColor = true;
-            this.btnShare.Click += new System.EventHandler(this.btnShare_Click);
+            this.btnShare.Click += new System.EventHandler(this.BtnShare_Click);
             // 
             // comboSkylineVersion
             // 
