@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,131 +105,59 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>398, 126</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="toolStripButtonCopy.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterScreen</value>
+  <data name="toolStripButtonCopy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 20</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>AlertDlg</value>
+  <data name="toolStripButtonCopy.Text" xml:space="preserve">
+    <value>メッセージをコピー</value>
   </data>
-  <data name="&gt;&gt;btnMoreInfo.Name" xml:space="preserve">
-    <value>btnMoreInfo</value>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 7</value>
   </data>
-  <data name="&gt;&gt;btnMoreInfo.Parent" xml:space="preserve">
-    <value>buttonPanel</value>
+  <data name="toolStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
   </data>
-  <data name="&gt;&gt;btnMoreInfo.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 42</value>
   </data>
-  <data name="&gt;&gt;buttonPanel.Name" xml:space="preserve">
-    <value>buttonPanel</value>
-  </data>
-  <data name="&gt;&gt;buttonPanel.Parent" xml:space="preserve">
-    <value>lowerPanel</value>
-  </data>
-  <data name="&gt;&gt;buttonPanel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
-    <value>labelMessage</value>
-  </data>
-  <data name="&gt;&gt;labelMessage.Parent" xml:space="preserve">
-    <value>messageScrollPanel</value>
-  </data>
-  <data name="&gt;&gt;labelMessage.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;lowerPanel.Name" xml:space="preserve">
-    <value>lowerPanel</value>
-  </data>
-  <data name="&gt;&gt;lowerPanel.Parent" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
-  </data>
-  <data name="&gt;&gt;lowerPanel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;messageScrollPanel.Name" xml:space="preserve">
-    <value>messageScrollPanel</value>
-  </data>
-  <data name="&gt;&gt;messageScrollPanel.Parent" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
-  </data>
-  <data name="&gt;&gt;messageScrollPanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Name" xml:space="preserve">
-    <value>splitContainer</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
-    <value>splitContainer.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel2.Name" xml:space="preserve">
-    <value>splitContainer.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel2.Parent" xml:space="preserve">
-    <value>splitContainer</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tbxDetail.Name" xml:space="preserve">
-    <value>tbxDetail</value>
-  </data>
-  <data name="&gt;&gt;tbxDetail.Parent" xml:space="preserve">
-    <value>splitContainer.Panel2</value>
-  </data>
-  <data name="&gt;&gt;tbxDetail.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>lowerPanel</value>
   </data>
   <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;toolStripButtonCopy.Name" xml:space="preserve">
-    <value>toolStripButtonCopy</value>
   </data>
   <data name="btnMoreInfo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -252,6 +180,18 @@
   <data name="btnMoreInfo.Text" xml:space="preserve">
     <value>詳細</value>
   </data>
+  <data name="&gt;&gt;btnMoreInfo.Name" xml:space="preserve">
+    <value>btnMoreInfo</value>
+  </data>
+  <data name="&gt;&gt;btnMoreInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnMoreInfo.Parent" xml:space="preserve">
+    <value>buttonPanel</value>
+  </data>
+  <data name="&gt;&gt;btnMoreInfo.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="buttonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
   </data>
@@ -269,6 +209,54 @@
   </data>
   <data name="buttonPanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Name" xml:space="preserve">
+    <value>buttonPanel</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.Parent" xml:space="preserve">
+    <value>lowerPanel</value>
+  </data>
+  <data name="&gt;&gt;buttonPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lowerPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="lowerPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 91</value>
+  </data>
+  <data name="lowerPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 35</value>
+  </data>
+  <data name="lowerPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.Name" xml:space="preserve">
+    <value>lowerPanel</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.Parent" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;lowerPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="splitContainer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="splitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="messageScrollPanel.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
   <data name="labelMessage.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -288,20 +276,17 @@
   <data name="labelMessage.Text" xml:space="preserve">
     <value>メッセージ</value>
   </data>
-  <data name="lowerPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
+  <data name="&gt;&gt;labelMessage.Name" xml:space="preserve">
+    <value>labelMessage</value>
   </data>
-  <data name="lowerPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 91</value>
+  <data name="&gt;&gt;labelMessage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="lowerPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>398, 35</value>
+  <data name="&gt;&gt;labelMessage.Parent" xml:space="preserve">
+    <value>messageScrollPanel</value>
   </data>
-  <data name="lowerPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="messageScrollPanel.AutoScroll" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;labelMessage.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="messageScrollPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -318,23 +303,29 @@
   <data name="messageScrollPanel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="splitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="&gt;&gt;messageScrollPanel.Name" xml:space="preserve">
+    <value>messageScrollPanel</value>
   </data>
-  <data name="splitContainer.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="&gt;&gt;messageScrollPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="splitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
-    <value>Horizontal</value>
+  <data name="&gt;&gt;messageScrollPanel.Parent" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
   </data>
-  <data name="splitContainer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>398, 126</value>
+  <data name="&gt;&gt;messageScrollPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="splitContainer.SplitterDistance" type="System.Int32, mscorlib">
-    <value>97</value>
+  <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
+    <value>splitContainer.Panel1</value>
   </data>
-  <data name="splitContainer.TabIndex" type="System.Int32, mscorlib">
-    <value>102</value>
+  <data name="&gt;&gt;splitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.Parent" xml:space="preserve">
+    <value>splitContainer</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tbxDetail.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -360,28 +351,73 @@
   <data name="tbxDetail.WordWrap" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>None</value>
+  <data name="&gt;&gt;tbxDetail.Name" xml:space="preserve">
+    <value>tbxDetail</value>
   </data>
-  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 7</value>
+  <data name="&gt;&gt;tbxDetail.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="toolStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
+  <data name="&gt;&gt;tbxDetail.Parent" xml:space="preserve">
+    <value>splitContainer.Panel2</value>
   </data>
-  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>31, 42</value>
+  <data name="&gt;&gt;tbxDetail.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="&gt;&gt;splitContainer.Panel2.Name" xml:space="preserve">
+    <value>splitContainer.Panel2</value>
   </data>
-  <data name="toolStripButtonCopy.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="&gt;&gt;splitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="toolStripButtonCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 20</value>
+  <data name="&gt;&gt;splitContainer.Panel2.Parent" xml:space="preserve">
+    <value>splitContainer</value>
   </data>
-  <data name="toolStripButtonCopy.Text" xml:space="preserve">
-    <value>メッセージをコピー</value>
+  <data name="&gt;&gt;splitContainer.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="splitContainer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>398, 126</value>
+  </data>
+  <data name="splitContainer.SplitterDistance" type="System.Int32, mscorlib">
+    <value>97</value>
+  </data>
+  <data name="splitContainer.TabIndex" type="System.Int32, mscorlib">
+    <value>102</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Name" xml:space="preserve">
+    <value>splitContainer</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>398, 126</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterScreen</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonCopy.Name" xml:space="preserve">
+    <value>toolStripButtonCopy</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonCopy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>AlertDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

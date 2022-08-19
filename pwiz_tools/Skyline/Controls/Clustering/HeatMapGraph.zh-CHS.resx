@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,26 +105,50 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
+  </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="zedGraphControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="zedGraphControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="zedGraphControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>682, 450</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="zedGraphControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;zedGraphControl1.Name" xml:space="preserve">
+    <value>zedGraphControl1</value>
+  </data>
+  <data name="&gt;&gt;zedGraphControl1.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7685.18506, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphControl1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;zedGraphControl1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
@@ -551,31 +575,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Hierarchical Cluster Graph</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>HeatMapGraph</value>
-  </data>
   <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
     <value>ModeUIExtender</value>
   </data>
-  <data name="&gt;&gt;zedGraphControl1.Name" xml:space="preserve">
-    <value>zedGraphControl1</value>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;zedGraphControl1.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>HeatMapGraph</value>
   </data>
-  <data name="&gt;&gt;zedGraphControl1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="zedGraphControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="zedGraphControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="zedGraphControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>682, 450</value>
-  </data>
-  <data name="zedGraphControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

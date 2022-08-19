@@ -105,14 +105,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -128,75 +128,6 @@
   </data>
   <data name="AnnotationType_value_list" xml:space="preserve">
     <value>Value List</value>
-  </data>
-  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
-    <value>Precursors</value>
-  </data>
-  <data name="AreaCVMsLevel_products" xml:space="preserve">
-    <value>Products</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
-    <value>Global Standards</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
-    <value>Medians</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
-    <value>Ratio</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
-    <value>Total Ion Current</value>
-  </data>
-  <data name="AreaCVTransitions_all" xml:space="preserve">
-    <value>All</value>
-  </data>
-  <data name="AreaCVTransitions_best" xml:space="preserve">
-    <value>Best</value>
-  </data>
-  <data name="AreaCVTransitions_count" xml:space="preserve">
-    <value>Count</value>
-  </data>
-  <data name="BilinearFit_bilinear" xml:space="preserve">
-    <value>Bilinear</value>
-  </data>
-  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
-    <value>Chebyshev</value>
-  </data>
-  <data name="ClusterMetricType_euclidean" xml:space="preserve">
-    <value>Euclidean</value>
-  </data>
-  <data name="ClusterMetricType_manhattan" xml:space="preserve">
-    <value>City block</value>
-  </data>
-  <data name="ClusterMetricType_pearson" xml:space="preserve">
-    <value>Pearson</value>
-  </data>
-  <data name="CountImpl_Count" xml:space="preserve">
-    <value>Count</value>
-  </data>
-  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
-    <value>1 ion</value>
-  </data>
-  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
-    <value>2 ions</value>
-  </data>
-  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
-    <value>3 ions</value>
-  </data>
-  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
-    <value>4 ions</value>
-  </data>
-  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
-    <value>5 ions</value>
-  </data>
-  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
-    <value>6 ions</value>
-  </data>
-  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
-    <value>Compensation Voltage (V)</value>
   </data>
   <data name="eIonMobilityUnits_drift_time_msec" xml:space="preserve">
     <value>Drift Time (ms)</value>
@@ -221,12 +152,6 @@
   </data>
   <data name="FullScanAcquisitionMethod_None" xml:space="preserve">
     <value>None</value>
-  </data>
-  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
-    <value>PRM</value>
-  </data>
-  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
-    <value>SureQuant</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
     <value>Targeted (obsolete)</value>
@@ -258,21 +183,6 @@
   <data name="FullScanPrecursorIsotopes_Percent" xml:space="preserve">
     <value>Percent</value>
   </data>
-  <data name="GraphFontSize_10" xml:space="preserve">
-    <value>Small</value>
-  </data>
-  <data name="GraphFontSize_12" xml:space="preserve">
-    <value>Normal</value>
-  </data>
-  <data name="GraphFontSize_14" xml:space="preserve">
-    <value>Large</value>
-  </data>
-  <data name="GraphFontSize_16" xml:space="preserve">
-    <value>X-Large</value>
-  </data>
-  <data name="GraphFontSize_8" xml:space="preserve">
-    <value>X-Small</value>
-  </data>
   <data name="ImportResultsSimultaneousFileOptions_many" xml:space="preserve">
     <value>Many</value>
   </data>
@@ -281,45 +191,6 @@
   </data>
   <data name="ImportResultsSimultaneousFileOptions_several" xml:space="preserve">
     <value>Several</value>
-  </data>
-  <data name="InputFile_dda_raw" xml:space="preserve">
-    <value>DDA raw (search and build library)</value>
-  </data>
-  <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA raw (deconvolute, search, and build library)</value>
-  </data>
-  <data name="InputFile_search_result" xml:space="preserve">
-    <value>Search results (build library directly)</value>
-  </data>
-  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
-    <value>Orbitrap LTQ</value>
-  </data>
-  <data name="InstrumentPreset_QExactive" xml:space="preserve">
-    <value>Q Exactive</value>
-  </data>
-  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
-    <value>TripleTOF</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
-    <value>Fixed width</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
-    <value>Linear range</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
-    <value>Resolving power</value>
-  </data>
-  <data name="IrtRegressionType_linear" xml:space="preserve">
-    <value>Linear</value>
-  </data>
-  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
-    <value>Logarithmic</value>
-  </data>
-  <data name="IrtRegressionType_lowess" xml:space="preserve">
-    <value>Lowess</value>
   </data>
   <data name="IsolationWidthType_fixed_width" xml:space="preserve">
     <value>Fixed</value>
@@ -332,27 +203,6 @@
   </data>
   <data name="IsolationWidthType_results_with_margin" xml:space="preserve">
     <value>Results with margin</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
-    <value>last ion</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
-    <value>last ion - 1</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
-    <value>last ion - 2</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
-    <value>last ion - 3</value>
-  </data>
-  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
-    <value>Linear in Log Space</value>
-  </data>
-  <data name="ListSortDirection_Ascending" xml:space="preserve">
-    <value>Ascending</value>
-  </data>
-  <data name="ListSortDirection_Descending" xml:space="preserve">
-    <value>Descending</value>
   </data>
   <data name="LodCalculation_blank_plus_2_sd" xml:space="preserve">
     <value>Blank plus 2 * SD</value>
@@ -381,38 +231,20 @@
   <data name="MassType_Monoisotopic" xml:space="preserve">
     <value>Monoisotopic</value>
   </data>
-  <data name="ModTerminus_C" xml:space="preserve">
-    <value>C</value>
+  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
+    <value>Equalize Medians</value>
   </data>
-  <data name="ModTerminus_N" xml:space="preserve">
-    <value>N</value>
+  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
+    <value>Ratio to Global Standards</value>
   </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
-    <value>(m/z &gt; precursor) - 1</value>
+  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
+    <value>None</value>
   </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
-    <value>(m/z &gt; precursor) - 2</value>
+  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
+    <value>Quantile</value>
   </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
-    <value>(m/z &gt; precursor) + 1</value>
-  </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
-    <value>(m/z &gt; precursor) + 2</value>
-  </data>
-  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
-    <value>m/z &gt; precursor</value>
-  </data>
-  <data name="NumericAggregate_Cv" xml:space="preserve">
-    <value>Coefficent Of Variation</value>
-  </data>
-  <data name="NumericAggregate_Mean" xml:space="preserve">
-    <value>Mean</value>
-  </data>
-  <data name="NumericAggregate_StdDev" xml:space="preserve">
-    <value>Standard Deviation</value>
-  </data>
-  <data name="NumericAggregate_Sum" xml:space="preserve">
-    <value>Sum</value>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>Total Ion Current</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>None</value>
@@ -422,18 +254,6 @@
   </data>
   <data name="OptimizedMethodType_Transition" xml:space="preserve">
     <value>Transition</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
-    <value>ion 1</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
-    <value>ion 2</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
-    <value>ion 3</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
-    <value>ion 4</value>
   </data>
   <data name="PeptidePick_both" xml:space="preserve">
     <value>Library and Filter</value>
@@ -446,18 +266,6 @@
   </data>
   <data name="PeptidePick_library" xml:space="preserve">
     <value>Library</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
-    <value>gene</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
-    <value>none</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
-    <value>protein</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
-    <value>species</value>
   </data>
   <data name="PointSize_large" xml:space="preserve">
     <value>Large</value>
@@ -498,23 +306,23 @@
   <data name="PointSymbol_XCross" xml:space="preserve">
     <value>X Cross</value>
   </data>
-  <data name="Protocol_dia_umpire" xml:space="preserve">
-    <value>DIA-Umpire</value>
+  <data name="BilinearFit_bilinear" xml:space="preserve">
+    <value>Bilinear</value>
   </data>
-  <data name="Protocol_msconvert" xml:space="preserve">
-    <value>MSConvert</value>
+  <data name="SimpleRegressionFit_linear" xml:space="preserve">
+    <value>Linear</value>
   </data>
-  <data name="Protocol_none" xml:space="preserve">
+  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
+    <value>Linear in Log Space</value>
+  </data>
+  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
+    <value>Linear through zero</value>
+  </data>
+  <data name="SimpleRegressionFit_none" xml:space="preserve">
     <value>None</value>
   </data>
   <data name="QuadraticFit_quadratic" xml:space="preserve">
     <value>Quadratic</value>
-  </data>
-  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
-    <value>Ratio to Heavy</value>
-  </data>
-  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
-    <value>Ratio to Light</value>
   </data>
   <data name="RegressionWeighting_1_over_x" xml:space="preserve">
     <value>1 / x</value>
@@ -534,6 +342,54 @@
   <data name="RetentionTimeFilterType_scheduling_windows" xml:space="preserve">
     <value>Use only scans within time frame of predicted RT</value>
   </data>
+  <data name="String1FullScanMassAnalyzerType_centroided" xml:space="preserve">
+    <value>Centroided</value>
+  </data>
+  <data name="SummarizationMethod_averaging" xml:space="preserve">
+    <value>Sum of transition areas</value>
+  </data>
+  <data name="SummarizationMethod_medianpolish" xml:space="preserve">
+    <value>Turkey's Median Polish</value>
+  </data>
+  <data name="SummarizationMethod_regression" xml:space="preserve">
+    <value>Regression</value>
+  </data>
+  <data name="TransitionLibraryPick_all" xml:space="preserve">
+    <value>From filtered ion charges and types</value>
+  </data>
+  <data name="TransitionLibraryPick_all_plus" xml:space="preserve">
+    <value>From filtered ion charges and types plus filtered product ions</value>
+  </data>
+  <data name="TransitionLibraryPick_filter" xml:space="preserve">
+    <value>From filtered product ions</value>
+  </data>
+  <data name="Workflow_dda" xml:space="preserve">
+    <value>DDA with MS1 filtering</value>
+  </data>
+  <data name="Workflow_dia" xml:space="preserve">
+    <value>DIA</value>
+  </data>
+  <data name="Workflow_prm" xml:space="preserve">
+    <value>PRM</value>
+  </data>
+  <data name="TransitionLibraryPick_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
+    <value>Compensation Voltage (V)</value>
+  </data>
+  <data name="ModTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="ModTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="SequenceTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="SequenceTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
   <data name="SampleType_blank" xml:space="preserve">
     <value>Blank</value>
   </data>
@@ -552,6 +408,222 @@
   <data name="SampleType_unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="GraphFontSize_10" xml:space="preserve">
+    <value>Small</value>
+  </data>
+  <data name="GraphFontSize_12" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="GraphFontSize_14" xml:space="preserve">
+    <value>Large</value>
+  </data>
+  <data name="GraphFontSize_16" xml:space="preserve">
+    <value>X-Large</value>
+  </data>
+  <data name="GraphFontSize_8" xml:space="preserve">
+    <value>X-Small</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
+    <value>Ratio to Heavy</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
+    <value>Ratio to Light</value>
+  </data>
+  <data name="ListSortDirection_Ascending" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="ListSortDirection_Descending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="CountImpl_Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="NumericAggregate_Cv" xml:space="preserve">
+    <value>Coefficent Of Variation</value>
+  </data>
+  <data name="NumericAggregate_Mean" xml:space="preserve">
+    <value>Mean</value>
+  </data>
+  <data name="NumericAggregate_StdDev" xml:space="preserve">
+    <value>Standard Deviation</value>
+  </data>
+  <data name="NumericAggregate_Sum" xml:space="preserve">
+    <value>Sum</value>
+  </data>
+  <data name="SelectOne_Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="SelectOne_Min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="ViewGroup_" xml:space="preserve">
+    <value>Built in Views</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
+    <value>ion 1</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
+    <value>ion 2</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
+    <value>ion 3</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
+    <value>ion 4</value>
+  </data>
+  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
+    <value>1 ion</value>
+  </data>
+  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
+    <value>2 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
+    <value>3 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
+    <value>4 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
+    <value>5 ions</value>
+  </data>
+  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
+    <value>6 ions</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
+    <value>last ion</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
+    <value>last ion - 1</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
+    <value>last ion - 2</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
+    <value>last ion - 3</value>
+  </data>
+  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
+    <value>m/z &gt; precursor</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
+    <value>(m/z &gt; precursor) - 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
+    <value>(m/z &gt; precursor) - 2</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
+    <value>(m/z &gt; precursor) + 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
+    <value>(m/z &gt; precursor) + 2</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
+    <value>protein</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
+    <value>gene</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
+    <value>species</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>Global Standards</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>Medians</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>Ratio</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>Total Ion Current</value>
+  </data>
+  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
+    <value>Precursors</value>
+  </data>
+  <data name="AreaCVMsLevel_products" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="AreaCVTransitions_all" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="AreaCVTransitions_best" xml:space="preserve">
+    <value>Best</value>
+  </data>
+  <data name="AreaCVTransitions_count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>Lowess</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>Logarithmic</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
+    <value>Linear range</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
+    <value>Resolving power</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
+    <value>Fixed width</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>Chebyshev</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>City block</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>Pearson</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>Euclidean</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA raw (search and build library)</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA raw (deconvolute, search, and build library)</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>Search results (build library directly)</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
+    <value>SureQuant</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
+    <value>PRM</value>
+  </data>
   <data name="SearchEngine_MSAmanda" xml:space="preserve">
     <value>MS Amanda</value>
   </data>
@@ -560,18 +632,6 @@
   </data>
   <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
-  </data>
-  <data name="SelectOne_Max" xml:space="preserve">
-    <value>Max</value>
-  </data>
-  <data name="SelectOne_Min" xml:space="preserve">
-    <value>Min</value>
-  </data>
-  <data name="SequenceTerminus_C" xml:space="preserve">
-    <value>C</value>
-  </data>
-  <data name="SequenceTerminus_N" xml:space="preserve">
-    <value>N</value>
   </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>Assigned to the protein with the most peptides</value>
@@ -596,65 +656,5 @@
   </data>
   <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
     <value>Removed (peptides must be unique to a single protein group)</value>
-  </data>
-  <data name="SimpleRegressionFit_linear" xml:space="preserve">
-    <value>Linear</value>
-  </data>
-  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
-    <value>Linear through zero</value>
-  </data>
-  <data name="SimpleRegressionFit_none" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
-    <value>Equalize Medians</value>
-  </data>
-  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
-    <value>Ratio to Global Standards</value>
-  </data>
-  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
-    <value>Quantile</value>
-  </data>
-  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
-    <value>Total Ion Current</value>
-  </data>
-  <data name="String1FullScanMassAnalyzerType_centroided" xml:space="preserve">
-    <value>Centroided</value>
-  </data>
-  <data name="SummarizationMethod_averaging" xml:space="preserve">
-    <value>Sum of transition areas</value>
-  </data>
-  <data name="SummarizationMethod_medianpolish" xml:space="preserve">
-    <value>Turkey's Median Polish</value>
-  </data>
-  <data name="SummarizationMethod_regression" xml:space="preserve">
-    <value>Regression</value>
-  </data>
-  <data name="TransitionLibraryPick_all" xml:space="preserve">
-    <value>From filtered ion charges and types</value>
-  </data>
-  <data name="TransitionLibraryPick_all_plus" xml:space="preserve">
-    <value>From filtered ion charges and types plus filtered product ions</value>
-  </data>
-  <data name="TransitionLibraryPick_filter" xml:space="preserve">
-    <value>From filtered product ions</value>
-  </data>
-  <data name="TransitionLibraryPick_none" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="ViewGroup_" xml:space="preserve">
-    <value>Built in Views</value>
-  </data>
-  <data name="Workflow_dda" xml:space="preserve">
-    <value>DDA with MS1 filtering</value>
-  </data>
-  <data name="Workflow_dia" xml:space="preserve">
-    <value>DIA</value>
-  </data>
-  <data name="Workflow_prm" xml:space="preserve">
-    <value>PRM</value>
   </data>
 </root>

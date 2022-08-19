@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,206 +105,53 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>61</value>
-  </metadata>
-  <metadata name="bindingListSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>310, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>583, 450</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>ルールエディター</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>MetadataRuleEditor</value>
-  </data>
-  <data name="&gt;&gt;bindingListSource1.Name" xml:space="preserve">
-    <value>bindingListSource1</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView1.Name" xml:space="preserve">
-    <value>boundDataGridView1</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;boundDataGridView1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
-    <value>btnOK</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboMetadataTarget.Name" xml:space="preserve">
-    <value>comboMetadataTarget</value>
-  </data>
-  <data name="&gt;&gt;comboMetadataTarget.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboMetadataTarget.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;comboSourceText.Name" xml:space="preserve">
-    <value>comboSourceText</value>
-  </data>
-  <data name="&gt;&gt;comboSourceText.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboSourceText.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;lblPreview.Name" xml:space="preserve">
-    <value>lblPreview</value>
-  </data>
-  <data name="&gt;&gt;lblPreview.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblPreview.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;lblReplacement.Name" xml:space="preserve">
-    <value>lblReplacement</value>
-  </data>
-  <data name="&gt;&gt;lblReplacement.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblReplacement.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblSourceText.Name" xml:space="preserve">
-    <value>lblSourceText</value>
-  </data>
-  <data name="&gt;&gt;lblSourceText.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblSourceText.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;lblTarget.Name" xml:space="preserve">
-    <value>lblTarget</value>
-  </data>
-  <data name="&gt;&gt;lblTarget.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblTarget.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;linkLabelRegularExpression.Name" xml:space="preserve">
-    <value>linkLabelRegularExpression</value>
-  </data>
-  <data name="&gt;&gt;linkLabelRegularExpression.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;linkLabelRegularExpression.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;tbxRegularExpression.Name" xml:space="preserve">
-    <value>tbxRegularExpression</value>
-  </data>
-  <data name="&gt;&gt;tbxRegularExpression.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tbxRegularExpression.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;tbxReplacement.Name" xml:space="preserve">
-    <value>tbxReplacement</value>
-  </data>
-  <data name="&gt;&gt;tbxReplacement.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tbxReplacement.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
-    <value>toolTip</value>
-  </data>
-  <data name="boundDataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="boundDataGridView1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 223</value>
-  </data>
-  <data name="boundDataGridView1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>562, 190</value>
-  </data>
-  <data name="boundDataGridView1.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>505, 3</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -324,6 +171,99 @@
   <data name="btnOK.Text" xml:space="preserve">
     <value>OK</value>
   </data>
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
+    <value>btnOK</value>
+  </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="panelButtons.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
+    <value>RightToLeft</value>
+  </data>
+  <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 421</value>
+  </data>
+  <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>583, 29</value>
+  </data>
+  <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="tbxRegularExpression.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 77</value>
+  </data>
+  <data name="tbxRegularExpression.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 20</value>
+  </data>
+  <data name="tbxRegularExpression.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>310, 17</value>
+  </metadata>
+  <data name="tbxRegularExpression.ToolTip" xml:space="preserve">
+    <value>ソーステキストと一致する正規表現</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.Name" xml:space="preserve">
+    <value>tbxRegularExpression</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxRegularExpression.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="lblTarget.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 151</value>
+  </data>
+  <data name="lblTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 13</value>
+  </data>
+  <data name="lblTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lblTarget.Text" xml:space="preserve">
+    <value>ターゲット(&amp;T)：</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.Name" xml:space="preserve">
+    <value>lblTarget</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblTarget.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
   <data name="comboMetadataTarget.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 167</value>
   </data>
@@ -336,47 +276,17 @@
   <data name="comboMetadataTarget.ToolTip" xml:space="preserve">
     <value>置換テキストが入力される繰り返し測定の注釈または値です。</value>
   </data>
-  <data name="comboSourceText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 26</value>
+  <data name="&gt;&gt;comboMetadataTarget.Name" xml:space="preserve">
+    <value>comboMetadataTarget</value>
   </data>
-  <data name="comboSourceText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>268, 21</value>
+  <data name="&gt;&gt;comboMetadataTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="comboSourceText.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;comboMetadataTarget.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="comboSourceText.ToolTip" xml:space="preserve">
-    <value>ソーステキストとして使用する結果ファイルプロパティを指定します</value>
-  </data>
-  <data name="lblPreview.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblPreview.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 207</value>
-  </data>
-  <data name="lblPreview.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 13</value>
-  </data>
-  <data name="lblPreview.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="lblPreview.Text" xml:space="preserve">
-    <value>プレビュー(&amp;P)：</value>
-  </data>
-  <data name="lblReplacement.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblReplacement.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 104</value>
-  </data>
-  <data name="lblReplacement.Size" type="System.Drawing.Size, System.Drawing">
-    <value>73, 13</value>
-  </data>
-  <data name="lblReplacement.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="lblReplacement.Text" xml:space="preserve">
-    <value>置換(&amp;R)：</value>
+  <data name="&gt;&gt;comboMetadataTarget.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="lblSourceText.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -393,20 +303,68 @@
   <data name="lblSourceText.Text" xml:space="preserve">
     <value>ソース値(&amp;S)：</value>
   </data>
-  <data name="lblTarget.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;lblSourceText.Name" xml:space="preserve">
+    <value>lblSourceText</value>
   </data>
-  <data name="lblTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 151</value>
+  <data name="&gt;&gt;lblSourceText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="lblTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>41, 13</value>
+  <data name="&gt;&gt;lblSourceText.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="lblTarget.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;lblSourceText.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="lblTarget.Text" xml:space="preserve">
-    <value>ターゲット(&amp;T)：</value>
+  <data name="comboSourceText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 26</value>
+  </data>
+  <data name="comboSourceText.Size" type="System.Drawing.Size, System.Drawing">
+    <value>268, 21</value>
+  </data>
+  <data name="comboSourceText.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="comboSourceText.ToolTip" xml:space="preserve">
+    <value>ソーステキストとして使用する結果ファイルプロパティを指定します</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.Name" xml:space="preserve">
+    <value>comboSourceText</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboSourceText.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="lblPreview.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblPreview.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 207</value>
+  </data>
+  <data name="lblPreview.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="lblPreview.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblPreview.Text" xml:space="preserve">
+    <value>プレビュー(&amp;P)：</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.Name" xml:space="preserve">
+    <value>lblPreview</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblPreview.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="linkLabelRegularExpression.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -426,32 +384,71 @@
   <data name="linkLabelRegularExpression.Text" xml:space="preserve">
     <value>パターン（正規表現）(&amp;P)：</value>
   </data>
-  <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
+  <data name="&gt;&gt;linkLabelRegularExpression.Name" xml:space="preserve">
+    <value>linkLabelRegularExpression</value>
   </data>
-  <data name="panelButtons.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
-    <value>RightToLeft</value>
+  <data name="&gt;&gt;linkLabelRegularExpression.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 421</value>
+  <data name="&gt;&gt;linkLabelRegularExpression.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>583, 29</value>
-  </data>
-  <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="tbxRegularExpression.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 77</value>
-  </data>
-  <data name="tbxRegularExpression.Size" type="System.Drawing.Size, System.Drawing">
-    <value>268, 20</value>
-  </data>
-  <data name="tbxRegularExpression.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;linkLabelRegularExpression.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="tbxRegularExpression.ToolTip" xml:space="preserve">
-    <value>ソーステキストと一致する正規表現</value>
+  <metadata name="bindingListSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="boundDataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="boundDataGridView1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 223</value>
+  </data>
+  <data name="boundDataGridView1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>562, 190</value>
+  </data>
+  <data name="boundDataGridView1.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.Name" xml:space="preserve">
+    <value>boundDataGridView1</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;boundDataGridView1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblReplacement.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblReplacement.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 104</value>
+  </data>
+  <data name="lblReplacement.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="lblReplacement.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblReplacement.Text" xml:space="preserve">
+    <value>置換(&amp;R)：</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.Name" xml:space="preserve">
+    <value>lblReplacement</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblReplacement.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="tbxReplacement.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 120</value>
@@ -467,5 +464,59 @@
 正規表現で括弧が使用されているときは、
 置換テキストに$1、$2、$3などを含んで
 一致する代替表記に言及できます。</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.Name" xml:space="preserve">
+    <value>tbxReplacement</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxReplacement.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>61</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>583, 450</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>ルールエディター</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;bindingListSource1.Name" xml:space="preserve">
+    <value>bindingListSource1</value>
+  </data>
+  <data name="&gt;&gt;bindingListSource1.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
+    <value>toolTip</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>MetadataRuleEditor</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

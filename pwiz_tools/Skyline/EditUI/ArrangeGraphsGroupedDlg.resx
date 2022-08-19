@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,161 +105,47 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="toolTipControls.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="toolTipControls.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>298, 276</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>Arrange Graphs Grouped</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ArrangeGraphsGroupedDlg</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;cbReversed.Name" xml:space="preserve">
-    <value>cbReversed</value>
-  </data>
-  <data name="&gt;&gt;cbReversed.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbReversed.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboBoxDisplay.Name" xml:space="preserve">
-    <value>comboBoxDisplay</value>
-  </data>
-  <data name="&gt;&gt;comboBoxDisplay.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboBoxDisplay.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;comboSortOrder.Name" xml:space="preserve">
-    <value>comboSortOrder</value>
-  </data>
-  <data name="&gt;&gt;comboSortOrder.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboSortOrder.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;labelDisplay.Name" xml:space="preserve">
-    <value>labelDisplay</value>
-  </data>
-  <data name="&gt;&gt;labelDisplay.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelDisplay.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;radioDistribute.Name" xml:space="preserve">
-    <value>radioDistribute</value>
-  </data>
-  <data name="&gt;&gt;radioDistribute.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioDistribute.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;radioSeparate.Name" xml:space="preserve">
-    <value>radioSeparate</value>
-  </data>
-  <data name="&gt;&gt;radioSeparate.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioSeparate.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;textGroups.Name" xml:space="preserve">
-    <value>textGroups</value>
-  </data>
-  <data name="&gt;&gt;textGroups.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textGroups.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;toolTipControls.Name" xml:space="preserve">
-    <value>toolTipControls</value>
-  </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>211, 42</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>9</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -276,56 +162,17 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name="cbReversed.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
   </data>
-  <data name="cbReversed.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 242</value>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbReversed.Size" type="System.Drawing.Size, System.Drawing">
-    <value>72, 17</value>
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="cbReversed.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="cbReversed.Text" xml:space="preserve">
-    <value>&amp;Reversed</value>
-  </data>
-  <data name="comboBoxDisplay.Items" xml:space="preserve">
-    <value>Tiled</value>
-  </data>
-  <data name="comboBoxDisplay.Items1" xml:space="preserve">
-    <value>Row</value>
-  </data>
-  <data name="comboBoxDisplay.Items2" xml:space="preserve">
-    <value>Column</value>
-  </data>
-  <data name="comboBoxDisplay.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 157</value>
-  </data>
-  <data name="comboBoxDisplay.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
-  </data>
-  <data name="comboBoxDisplay.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboSortOrder.Items" xml:space="preserve">
-    <value>Position</value>
-  </data>
-  <data name="comboSortOrder.Items1" xml:space="preserve">
-    <value>Document</value>
-  </data>
-  <data name="comboSortOrder.Items2" xml:space="preserve">
-    <value>Acquired Time</value>
-  </data>
-  <data name="comboSortOrder.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 215</value>
-  </data>
-  <data name="comboSortOrder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
-  </data>
-  <data name="comboSortOrder.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>10</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -342,38 +189,45 @@
   <data name="label1.Text" xml:space="preserve">
     <value>&amp;Group panes:</value>
   </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 199</value>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 13</value>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>Sort &amp;order:</value>
+  <metadata name="toolTipControls.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="textGroups.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 29</value>
   </data>
-  <data name="labelDisplay.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="textGroups.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
   </data>
-  <data name="labelDisplay.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="textGroups.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="labelDisplay.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 141</value>
+  <data name="textGroups.ToolTip" xml:space="preserve">
+    <value>Enter the number of panes into which
+the graphs will be grouped.</value>
   </data>
-  <data name="labelDisplay.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 13</value>
+  <data name="&gt;&gt;textGroups.Name" xml:space="preserve">
+    <value>textGroups</value>
   </data>
-  <data name="labelDisplay.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="&gt;&gt;textGroups.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelDisplay.Text" xml:space="preserve">
-    <value>Di&amp;splay:</value>
+  <data name="&gt;&gt;textGroups.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textGroups.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="radioDistribute.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -393,6 +247,18 @@
   <data name="radioDistribute.ToolTip" xml:space="preserve">
     <value>Graphs are distributed among the panes as if
 dealing a deck of cards.</value>
+  </data>
+  <data name="&gt;&gt;radioDistribute.Name" xml:space="preserve">
+    <value>radioDistribute</value>
+  </data>
+  <data name="&gt;&gt;radioDistribute.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioDistribute.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioDistribute.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="radioSeparate.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -414,17 +280,190 @@ dealing a deck of cards.</value>
 with each pane receiving its share before any are
 added to the next pane.</value>
   </data>
-  <data name="textGroups.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 29</value>
+  <data name="&gt;&gt;radioSeparate.Name" xml:space="preserve">
+    <value>radioSeparate</value>
   </data>
-  <data name="textGroups.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+  <data name="&gt;&gt;radioSeparate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textGroups.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;radioSeparate.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioSeparate.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <metadata name="toolTipControls.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 199</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Sort &amp;order:</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="comboSortOrder.Items" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="comboSortOrder.Items1" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="comboSortOrder.Items2" xml:space="preserve">
+    <value>Acquired Time</value>
+  </data>
+  <data name="comboSortOrder.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 215</value>
+  </data>
+  <data name="comboSortOrder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboSortOrder.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboSortOrder.Name" xml:space="preserve">
+    <value>comboSortOrder</value>
+  </data>
+  <data name="&gt;&gt;comboSortOrder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSortOrder.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboSortOrder.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="cbReversed.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbReversed.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 242</value>
+  </data>
+  <data name="cbReversed.Size" type="System.Drawing.Size, System.Drawing">
+    <value>72, 17</value>
+  </data>
+  <data name="cbReversed.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="cbReversed.Text" xml:space="preserve">
+    <value>&amp;Reversed</value>
+  </data>
+  <data name="&gt;&gt;cbReversed.Name" xml:space="preserve">
+    <value>cbReversed</value>
+  </data>
+  <data name="&gt;&gt;cbReversed.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbReversed.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbReversed.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboBoxDisplay.Items" xml:space="preserve">
+    <value>Tiled</value>
+  </data>
+  <data name="comboBoxDisplay.Items1" xml:space="preserve">
+    <value>Row</value>
+  </data>
+  <data name="comboBoxDisplay.Items2" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="comboBoxDisplay.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 157</value>
+  </data>
+  <data name="comboBoxDisplay.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboBoxDisplay.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDisplay.Name" xml:space="preserve">
+    <value>comboBoxDisplay</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDisplay.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDisplay.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDisplay.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelDisplay.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDisplay.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelDisplay.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 141</value>
+  </data>
+  <data name="labelDisplay.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 13</value>
+  </data>
+  <data name="labelDisplay.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelDisplay.Text" xml:space="preserve">
+    <value>Di&amp;splay:</value>
+  </data>
+  <data name="&gt;&gt;labelDisplay.Name" xml:space="preserve">
+    <value>labelDisplay</value>
+  </data>
+  <data name="&gt;&gt;labelDisplay.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDisplay.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelDisplay.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="textGroups.ToolTip" xml:space="preserve">
-    <value>Enter the number of panes into which
-the graphs will be grouped.</value>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>298, 276</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Arrange Graphs Grouped</value>
+  </data>
+  <data name="&gt;&gt;toolTipControls.Name" xml:space="preserve">
+    <value>toolTipControls</value>
+  </data>
+  <data name="&gt;&gt;toolTipControls.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ArrangeGraphsGroupedDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

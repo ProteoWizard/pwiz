@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,455 +105,50 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>51</value>
-  </metadata>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 641</value>
-  </data>
-  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>418, 585</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>Import Peptide Search</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ImportPeptideSearchDlg</value>
-  </data>
-  <data name="&gt;&gt;addModsTitlePanel.Name" xml:space="preserve">
-    <value>addModsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;addModsTitlePanel.Parent" xml:space="preserve">
-    <value>matchModificationsPage</value>
-  </data>
-  <data name="&gt;&gt;addModsTitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnBack.Name" xml:space="preserve">
-    <value>btnBack</value>
-  </data>
-  <data name="&gt;&gt;btnBack.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnBack.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;btnEarlyFinish.Name" xml:space="preserve">
-    <value>btnEarlyFinish</value>
-  </data>
-  <data name="&gt;&gt;btnEarlyFinish.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnEarlyFinish.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
-    <value>btnNext</value>
-  </data>
-  <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;buildLibraryPanel.Name" xml:space="preserve">
-    <value>buildLibraryPanel</value>
-  </data>
-  <data name="&gt;&gt;buildLibraryPanel.Parent" xml:space="preserve">
-    <value>buildSearchSpecLibPage</value>
-  </data>
-  <data name="&gt;&gt;buildLibraryPanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.Name" xml:space="preserve">
-    <value>buildSearchSpecLibPage</value>
-  </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;buildSearchSpecLibPage.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Name" xml:space="preserve">
-    <value>buildSpectralLibraryTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Parent" xml:space="preserve">
-    <value>buildSearchSpecLibPage</value>
-  </data>
-  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
-    <value>cbMissedCleavages</value>
-  </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
-    <value>comboBackgroundProteome</value>
-  </data>
-  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
-    <value>comboBox1</value>
-  </data>
-  <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
-    <value>comboBox2</value>
-  </data>
-  <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
-    <value>comboBox3</value>
-  </data>
-  <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
-    <value>comboEnzyme</value>
-  </data>
-  <data name="&gt;&gt;converterSettingsPage.Name" xml:space="preserve">
-    <value>converterSettingsPage</value>
-  </data>
-  <data name="&gt;&gt;converterSettingsPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;converterSettingsPage.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;converterSettingsTitlePanel.Name" xml:space="preserve">
-    <value>converterSettingsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;converterSettingsTitlePanel.Parent" xml:space="preserve">
-    <value>converterSettingsPage</value>
-  </data>
-  <data name="&gt;&gt;converterSettingsTitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Name" xml:space="preserve">
-    <value>ddaSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearch.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;ddaSearchSettingsPage.Name" xml:space="preserve">
-    <value>ddaSearchSettingsPage</value>
-  </data>
-  <data name="&gt;&gt;ddaSearchSettingsPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearchSettingsPage.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;ddaSearchTitlePanel.Name" xml:space="preserve">
-    <value>ddaSearchTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;ddaSearchTitlePanel.Parent" xml:space="preserve">
-    <value>ddaSearch</value>
-  </data>
-  <data name="&gt;&gt;ddaSearchTitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;extractChromatogramsTitlePanel.Name" xml:space="preserve">
-    <value>extractChromatogramsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;extractChromatogramsTitlePanel.Parent" xml:space="preserve">
-    <value>getChromatogramsPage</value>
-  </data>
-  <data name="&gt;&gt;extractChromatogramsTitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;getChromatogramsPage.Name" xml:space="preserve">
-    <value>getChromatogramsPage</value>
-  </data>
-  <data name="&gt;&gt;getChromatogramsPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;getChromatogramsPage.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
-    <value>helpTip</value>
-  </data>
-  <data name="&gt;&gt;importFastaPage.Name" xml:space="preserve">
-    <value>importFastaPage</value>
-  </data>
-  <data name="&gt;&gt;importFastaPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;importFastaPage.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;importFASTATitlePanel.Name" xml:space="preserve">
-    <value>importFASTATitlePanel</value>
-  </data>
-  <data name="&gt;&gt;importFASTATitlePanel.Parent" xml:space="preserve">
-    <value>importFastaPage</value>
-  </data>
-  <data name="&gt;&gt;importFASTATitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label14.Name" xml:space="preserve">
-    <value>label14</value>
-  </data>
-  <data name="&gt;&gt;label14.Parent" xml:space="preserve">
-    <value>buildSpectralLibraryTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label15.Name" xml:space="preserve">
-    <value>label15</value>
-  </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
-  </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
-    <value>addModsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label19.Name" xml:space="preserve">
-    <value>label19</value>
-  </data>
-  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
-    <value>ms1FullScanSettingsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>converterSettingsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label20.Name" xml:space="preserve">
-    <value>label20</value>
-  </data>
-  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
-    <value>extractChromatogramsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label8.Name" xml:space="preserve">
-    <value>label8</value>
-  </data>
-  <data name="&gt;&gt;label9.Name" xml:space="preserve">
-    <value>label9</value>
-  </data>
-  <data name="&gt;&gt;lblDDASearch.Name" xml:space="preserve">
-    <value>lblDDASearch</value>
-  </data>
-  <data name="&gt;&gt;lblDDASearch.Parent" xml:space="preserve">
-    <value>ddaSearchTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;lblDDASearch.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
-    <value>lblFasta</value>
-  </data>
-  <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
-    <value>importFASTATitlePanel</value>
-  </data>
-  <data name="&gt;&gt;lblFasta.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
-    <value>lblSearchSettings</value>
-  </data>
-  <data name="&gt;&gt;lblSearchSettings.Parent" xml:space="preserve">
-    <value>searchSettingsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;lblSearchSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;matchModificationsPage.Name" xml:space="preserve">
-    <value>matchModificationsPage</value>
-  </data>
-  <data name="&gt;&gt;matchModificationsPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;matchModificationsPage.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.Name" xml:space="preserve">
-    <value>ms1FullScanSettingsPage</value>
-  </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Name" xml:space="preserve">
-    <value>ms1FullScanSettingsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Parent" xml:space="preserve">
-    <value>ms1FullScanSettingsPage</value>
-  </data>
-  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>transitionSettingsUiPage</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;searchSettingsTitlePanel.Name" xml:space="preserve">
-    <value>searchSettingsTitlePanel</value>
-  </data>
-  <data name="&gt;&gt;searchSettingsTitlePanel.Parent" xml:space="preserve">
-    <value>ddaSearchSettingsPage</value>
-  </data>
-  <data name="&gt;&gt;searchSettingsTitlePanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;transitionSettingsUiPage.Name" xml:space="preserve">
-    <value>transitionSettingsUiPage</value>
-  </data>
-  <data name="&gt;&gt;transitionSettingsUiPage.Parent" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;transitionSettingsUiPage.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Name" xml:space="preserve">
-    <value>wizardPagesImportPeptideSearch</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;wizardPagesImportPeptideSearch.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="addModsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="addModsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="addModsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 43</value>
-  </data>
-  <data name="addModsTitlePanel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnBack.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnBack.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnBack.Location" type="System.Drawing.Point, System.Drawing">
-    <value>335, 605</value>
-  </data>
-  <data name="btnBack.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnBack.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnBack.Text" xml:space="preserve">
-    <value>&lt; &amp;Back</value>
-  </data>
-  <data name="btnBack.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>497, 605</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
   </data>
-  <data name="btnEarlyFinish.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
   </data>
-  <data name="btnEarlyFinish.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="btnEarlyFinish.Location" type="System.Drawing.Point, System.Drawing">
-    <value>254, 605</value>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="btnEarlyFinish.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnEarlyFinish.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="btnEarlyFinish.Text" xml:space="preserve">
-    <value>&amp;Finish</value>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -570,48 +165,21 @@
   <data name="btnNext.Text" xml:space="preserve">
     <value>&amp;Next &gt;</value>
   </data>
-  <data name="buildLibraryPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
+    <value>btnNext</value>
   </data>
-  <data name="buildLibraryPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 46</value>
+  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="buildLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 524</value>
+  <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="buildLibraryPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
-  <data name="buildSearchSpecLibPage.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
-    <value>None</value>
-  </data>
-  <data name="buildSearchSpecLibPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="buildSearchSpecLibPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="buildSearchSpecLibPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
-  </data>
-  <data name="buildSearchSpecLibPage.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="buildSearchSpecLibPage.Text" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="buildSpectralLibraryTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="buildSpectralLibraryTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="buildSpectralLibraryTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 43</value>
-  </data>
-  <data name="buildSpectralLibraryTitlePanel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
     <value>0</value>
   </data>
@@ -655,6 +223,32 @@
     <value>The maximum number of missed cleavages allowed in a peptide when
 considering protein digestion.</value>
   </data>
+  <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
+    <value>cbMissedCleavages</value>
+  </data>
+  <data name="&gt;&gt;cbMissedCleavages.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 36</value>
+  </data>
+  <data name="comboEnzyme.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 21</value>
+  </data>
+  <data name="comboEnzyme.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="comboEnzyme.ToolTip" xml:space="preserve">
+    <value>The protease enzyme used for digesting proteins into peptides prior
+to injection into the mass spectrometer
+</value>
+  </data>
+  <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
+    <value>comboEnzyme</value>
+  </data>
+  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 158</value>
   </data>
@@ -668,6 +262,12 @@ considering protein digestion.</value>
     <value>Processed FASTA sequence information specifying the full
 set of proteins that may be present in the sample matrix to be
 injected into the mass spectrometer.</value>
+  </data>
+  <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
+    <value>comboBackgroundProteome</value>
+  </data>
+  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox1.Items" xml:space="preserve">
     <value>0</value>
@@ -712,6 +312,12 @@ injected into the mass spectrometer.</value>
     <value>The maximum number of missed cleavages allowed in a peptide when
 considering protein digestion.</value>
   </data>
+  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
+    <value>comboBox1</value>
+  </data>
+  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="comboBox2.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
   </data>
@@ -725,6 +331,12 @@ considering protein digestion.</value>
     <value>The protease enzyme used for digesting proteins into peptides prior
 to injection into the mass spectrometer
 </value>
+  </data>
+  <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
+    <value>comboBox2</value>
+  </data>
+  <data name="&gt;&gt;comboBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox3.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 158</value>
@@ -740,82 +352,308 @@ to injection into the mass spectrometer
 set of proteins that may be present in the sample matrix to be
 injected into the mass spectrometer.</value>
   </data>
-  <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 36</value>
+  <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
+    <value>comboBox3</value>
   </data>
-  <data name="comboEnzyme.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
+  <data name="&gt;&gt;comboBox3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="comboEnzyme.TabIndex" type="System.Int32, mscorlib">
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 79</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>&amp;Max missed cleavages:</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>&amp;Enzyme:</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label15.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 142</value>
+  </data>
+  <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 13</value>
+  </data>
+  <data name="label15.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label15.Text" xml:space="preserve">
+    <value>&amp;Background proteome:</value>
+  </data>
+  <data name="&gt;&gt;label15.Name" xml:space="preserve">
+    <value>label15</value>
+  </data>
+  <data name="&gt;&gt;label15.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 79</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>&amp;Max missed cleavages:</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="label8.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label8.Text" xml:space="preserve">
+    <value>&amp;Enzyme:</value>
+  </data>
+  <data name="&gt;&gt;label8.Name" xml:space="preserve">
+    <value>label8</value>
+  </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 142</value>
+  </data>
+  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 13</value>
+  </data>
+  <data name="label9.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label9.Text" xml:space="preserve">
+    <value>&amp;Background proteome:</value>
+  </data>
+  <data name="&gt;&gt;label9.Name" xml:space="preserve">
+    <value>label9</value>
+  </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="btnEarlyFinish.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnEarlyFinish.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnEarlyFinish.Location" type="System.Drawing.Point, System.Drawing">
+    <value>254, 605</value>
+  </data>
+  <data name="btnEarlyFinish.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnEarlyFinish.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="comboEnzyme.ToolTip" xml:space="preserve">
-    <value>The protease enzyme used for digesting proteins into peptides prior
-to injection into the mass spectrometer
-</value>
+  <data name="btnEarlyFinish.Text" xml:space="preserve">
+    <value>&amp;Finish</value>
   </data>
-  <data name="converterSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;btnEarlyFinish.Name" xml:space="preserve">
+    <value>btnEarlyFinish</value>
   </data>
-  <data name="converterSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;btnEarlyFinish.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="converterSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
+  <data name="&gt;&gt;btnEarlyFinish.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="converterSettingsPage.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+  <data name="&gt;&gt;btnEarlyFinish.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
-  <data name="converterSettingsPage.Text" xml:space="preserve">
-    <value>7</value>
+  <data name="wizardPagesImportPeptideSearch.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="converterSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="buildSearchSpecLibPage.BackgroundImageLayout" type="System.Windows.Forms.ImageLayout, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="buildLibraryPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="buildLibraryPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 46</value>
+  </data>
+  <data name="buildLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>570, 524</value>
+  </data>
+  <data name="buildLibraryPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;buildLibraryPanel.Name" xml:space="preserve">
+    <value>buildLibraryPanel</value>
+  </data>
+  <data name="&gt;&gt;buildLibraryPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buildLibraryPanel.Parent" xml:space="preserve">
+    <value>buildSearchSpecLibPage</value>
+  </data>
+  <data name="&gt;&gt;buildLibraryPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="label14.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label14.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial Rounded MT Bold, 12pt</value>
+  </data>
+  <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 9</value>
+  </data>
+  <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 18</value>
+  </data>
+  <data name="label14.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label14.Text" xml:space="preserve">
+    <value>Spectral Library</value>
+  </data>
+  <data name="&gt;&gt;label14.Name" xml:space="preserve">
+    <value>label14</value>
+  </data>
+  <data name="&gt;&gt;label14.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label14.Parent" xml:space="preserve">
+    <value>buildSpectralLibraryTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buildSpectralLibraryTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="converterSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="buildSpectralLibraryTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="converterSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="buildSpectralLibraryTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>570, 43</value>
   </data>
-  <data name="converterSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+  <data name="buildSpectralLibraryTitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="ddaSearch.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Name" xml:space="preserve">
+    <value>buildSpectralLibraryTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Parent" xml:space="preserve">
+    <value>buildSearchSpecLibPage</value>
+  </data>
+  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="buildSearchSpecLibPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="ddaSearch.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="buildSearchSpecLibPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="buildSearchSpecLibPage.Size" type="System.Drawing.Size, System.Drawing">
     <value>576, 573</value>
   </data>
-  <data name="ddaSearch.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+  <data name="buildSearchSpecLibPage.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="ddaSearch.Text" xml:space="preserve">
-    <value>9</value>
+  <data name="buildSearchSpecLibPage.Text" xml:space="preserve">
+    <value>1</value>
   </data>
-  <data name="ddaSearchSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;buildSearchSpecLibPage.Name" xml:space="preserve">
+    <value>buildSearchSpecLibPage</value>
   </data>
-  <data name="ddaSearchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
+  <data name="&gt;&gt;buildSearchSpecLibPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="ddaSearchSettingsPage.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="&gt;&gt;buildSearchSpecLibPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="ddaSearchSettingsPage.Text" xml:space="preserve">
-    <value>8</value>
+  <data name="&gt;&gt;buildSearchSpecLibPage.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="ddaSearchTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
+  <data name="label20.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="ddaSearchTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="label20.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial Rounded MT Bold, 12pt</value>
   </data>
-  <data name="ddaSearchTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 43</value>
+  <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
   </data>
-  <data name="ddaSearchTitlePanel.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
+  <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
+    <value>199, 18</value>
+  </data>
+  <data name="label20.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label20.Text" xml:space="preserve">
+    <value>Extract Chromatograms</value>
+  </data>
+  <data name="&gt;&gt;label20.Name" xml:space="preserve">
+    <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label20.Parent" xml:space="preserve">
+    <value>extractChromatogramsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="extractChromatogramsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -828,6 +666,18 @@ to injection into the mass spectrometer
   </data>
   <data name="extractChromatogramsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
+  </data>
+  <data name="&gt;&gt;extractChromatogramsTitlePanel.Name" xml:space="preserve">
+    <value>extractChromatogramsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;extractChromatogramsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;extractChromatogramsTitlePanel.Parent" xml:space="preserve">
+    <value>getChromatogramsPage</value>
+  </data>
+  <data name="&gt;&gt;extractChromatogramsTitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="getChromatogramsPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -844,32 +694,98 @@ to injection into the mass spectrometer
   <data name="getChromatogramsPage.Text" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="importFastaPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;getChromatogramsPage.Name" xml:space="preserve">
+    <value>getChromatogramsPage</value>
   </data>
-  <data name="importFastaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;getChromatogramsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="importFastaPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
+  <data name="&gt;&gt;getChromatogramsPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="importFastaPage.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="&gt;&gt;getChromatogramsPage.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
-  <data name="importFastaPage.Text" xml:space="preserve">
-    <value>6</value>
+  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="importFASTATitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="label16.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial Rounded MT Bold, 12pt</value>
+  </data>
+  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
+  </data>
+  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 18</value>
+  </data>
+  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label16.Text" xml:space="preserve">
+    <value>Add Modifications</value>
+  </data>
+  <data name="&gt;&gt;label16.Name" xml:space="preserve">
+    <value>label16</value>
+  </data>
+  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+    <value>addModsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="addModsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
   </data>
-  <data name="importFASTATitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="addModsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="importFASTATitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="addModsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>570, 43</value>
   </data>
-  <data name="importFASTATitlePanel.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+  <data name="addModsTitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;addModsTitlePanel.Name" xml:space="preserve">
+    <value>addModsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;addModsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;addModsTitlePanel.Parent" xml:space="preserve">
+    <value>matchModificationsPage</value>
+  </data>
+  <data name="&gt;&gt;addModsTitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="matchModificationsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="matchModificationsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="matchModificationsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 573</value>
+  </data>
+  <data name="matchModificationsPage.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="matchModificationsPage.Text" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;matchModificationsPage.Name" xml:space="preserve">
+    <value>matchModificationsPage</value>
+  </data>
+  <data name="&gt;&gt;matchModificationsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;matchModificationsPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;matchModificationsPage.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -892,56 +808,65 @@ to injection into the mass spectrometer
   <data name="label1.Text" xml:space="preserve">
     <value>Configure Transition Settings</value>
   </data>
-  <data name="label14.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
   </data>
-  <data name="label14.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 9</value>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>panel1</value>
   </data>
-  <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 18</value>
-  </data>
-  <data name="label14.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label14.Text" xml:space="preserve">
-    <value>Spectral Library</value>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
   </data>
-  <data name="label15.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
   </data>
-  <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 43</value>
   </data>
-  <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="label15.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>transitionSettingsUiPage</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="transitionSettingsUiPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="transitionSettingsUiPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 573</value>
+  </data>
+  <data name="transitionSettingsUiPage.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="transitionSettingsUiPage.Text" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="label15.Text" xml:space="preserve">
-    <value>&amp;Background proteome:</value>
+  <data name="&gt;&gt;transitionSettingsUiPage.Name" xml:space="preserve">
+    <value>transitionSettingsUiPage</value>
   </data>
-  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;transitionSettingsUiPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label16.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+  <data name="&gt;&gt;transitionSettingsUiPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
-  </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 18</value>
-  </data>
-  <data name="label16.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label16.Text" xml:space="preserve">
-    <value>Add Modifications</value>
+  <data name="&gt;&gt;transitionSettingsUiPage.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="label19.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -961,6 +886,147 @@ to injection into the mass spectrometer
   <data name="label19.Text" xml:space="preserve">
     <value>Configure Full-Scan Settings</value>
   </data>
+  <data name="&gt;&gt;label19.Name" xml:space="preserve">
+    <value>label19</value>
+  </data>
+  <data name="&gt;&gt;label19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label19.Parent" xml:space="preserve">
+    <value>ms1FullScanSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;label19.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ms1FullScanSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="ms1FullScanSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="ms1FullScanSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>570, 43</value>
+  </data>
+  <data name="ms1FullScanSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Name" xml:space="preserve">
+    <value>ms1FullScanSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Parent" xml:space="preserve">
+    <value>ms1FullScanSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ms1FullScanSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="ms1FullScanSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="ms1FullScanSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 573</value>
+  </data>
+  <data name="ms1FullScanSettingsPage.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="ms1FullScanSettingsPage.Text" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsPage.Name" xml:space="preserve">
+    <value>ms1FullScanSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsPage.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial Rounded MT Bold, 12pt</value>
+  </data>
+  <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
+  </data>
+  <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>350, 18</value>
+  </data>
+  <data name="lblFasta.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblFasta.Text" xml:space="preserve">
+    <value>Import FASTA</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
+    <value>lblFasta</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
+    <value>importFASTATitlePanel</value>
+  </data>
+  <data name="&gt;&gt;lblFasta.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="importFASTATitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="importFASTATitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="importFASTATitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>570, 43</value>
+  </data>
+  <data name="importFASTATitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="&gt;&gt;importFASTATitlePanel.Name" xml:space="preserve">
+    <value>importFASTATitlePanel</value>
+  </data>
+  <data name="&gt;&gt;importFASTATitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importFASTATitlePanel.Parent" xml:space="preserve">
+    <value>importFastaPage</value>
+  </data>
+  <data name="&gt;&gt;importFASTATitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="importFastaPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="importFastaPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="importFastaPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 573</value>
+  </data>
+  <data name="importFastaPage.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="importFastaPage.Text" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;importFastaPage.Name" xml:space="preserve">
+    <value>importFastaPage</value>
+  </data>
+  <data name="&gt;&gt;importFastaPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importFastaPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;importFastaPage.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
     <value>Arial Rounded MT Bold, 12pt</value>
   </data>
@@ -979,131 +1045,68 @@ to injection into the mass spectrometer
   <data name="label2.Text" xml:space="preserve">
     <value>Adjust Conversion Settings</value>
   </data>
-  <data name="label20.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
   </data>
-  <data name="label20.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>converterSettingsTitlePanel</value>
   </data>
-  <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 18</value>
-  </data>
-  <data name="label20.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label20.Text" xml:space="preserve">
-    <value>Extract Chromatograms</value>
+  <data name="converterSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
   </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="converterSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
   </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
+  <data name="converterSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>570, 43</value>
   </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
+  <data name="converterSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
   </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Name" xml:space="preserve">
+    <value>converterSettingsTitlePanel</value>
   </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>&amp;Max missed cleavages:</value>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Parent" xml:space="preserve">
+    <value>converterSettingsPage</value>
   </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;converterSettingsTitlePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>&amp;Enzyme:</value>
+  <data name="converterSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
   </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="converterSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
   </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 79</value>
+  <data name="converterSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 573</value>
   </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
+  <data name="converterSettingsPage.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
   </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="converterSettingsPage.Text" xml:space="preserve">
+    <value>7</value>
   </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>&amp;Max missed cleavages:</value>
+  <data name="&gt;&gt;converterSettingsPage.Name" xml:space="preserve">
+    <value>converterSettingsPage</value>
   </data>
-  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;converterSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
+  <data name="&gt;&gt;converterSettingsPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
   </data>
-  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label8.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label8.Text" xml:space="preserve">
-    <value>&amp;Enzyme:</value>
-  </data>
-  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 142</value>
-  </data>
-  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
-  </data>
-  <data name="label9.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label9.Text" xml:space="preserve">
-    <value>&amp;Background proteome:</value>
-  </data>
-  <data name="lblDDASearch.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
-  <data name="lblDDASearch.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblDDASearch.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
-  </data>
-  <data name="lblDDASearch.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
-  </data>
-  <data name="lblDDASearch.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="lblDDASearch.Text" xml:space="preserve">
-    <value>DDA Search</value>
-  </data>
-  <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
-  </data>
-  <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
-  </data>
-  <data name="lblFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>350, 18</value>
-  </data>
-  <data name="lblFasta.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="lblFasta.Text" xml:space="preserve">
-    <value>Import FASTA</value>
+  <data name="&gt;&gt;converterSettingsPage.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="lblSearchSettings.Font" type="System.Drawing.Font, System.Drawing">
     <value>Arial Rounded MT Bold, 12pt</value>
@@ -1123,59 +1126,17 @@ to injection into the mass spectrometer
   <data name="lblSearchSettings.Text" xml:space="preserve">
     <value>Adjust Search Settings</value>
   </data>
-  <data name="matchModificationsPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
+    <value>lblSearchSettings</value>
   </data>
-  <data name="matchModificationsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;lblSearchSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="matchModificationsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
+  <data name="&gt;&gt;lblSearchSettings.Parent" xml:space="preserve">
+    <value>searchSettingsTitlePanel</value>
   </data>
-  <data name="matchModificationsPage.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="matchModificationsPage.Text" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="ms1FullScanSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="ms1FullScanSettingsPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="ms1FullScanSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 573</value>
-  </data>
-  <data name="ms1FullScanSettingsPage.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="ms1FullScanSettingsPage.Text" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="ms1FullScanSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="ms1FullScanSettingsTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="ms1FullScanSettingsTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>570, 43</value>
-  </data>
-  <data name="ms1FullScanSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>576, 43</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;lblSearchSettings.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="searchSettingsTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -1189,20 +1150,119 @@ to injection into the mass spectrometer
   <data name="searchSettingsTitlePanel.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
-  <data name="transitionSettingsUiPage.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;searchSettingsTitlePanel.Name" xml:space="preserve">
+    <value>searchSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsTitlePanel.Parent" xml:space="preserve">
+    <value>ddaSearchSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;searchSettingsTitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ddaSearchSettingsPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="transitionSettingsUiPage.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="ddaSearchSettingsPage.Size" type="System.Drawing.Size, System.Drawing">
     <value>576, 573</value>
   </data>
-  <data name="transitionSettingsUiPage.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="ddaSearchSettingsPage.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
   </data>
-  <data name="transitionSettingsUiPage.Text" xml:space="preserve">
-    <value>4</value>
+  <data name="ddaSearchSettingsPage.Text" xml:space="preserve">
+    <value>8</value>
   </data>
-  <data name="wizardPagesImportPeptideSearch.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="&gt;&gt;ddaSearchSettingsPage.Name" xml:space="preserve">
+    <value>ddaSearchSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchSettingsPage.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchSettingsPage.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="lblDDASearch.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Arial Rounded MT Bold, 12pt</value>
+  </data>
+  <data name="lblDDASearch.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblDDASearch.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
+  </data>
+  <data name="lblDDASearch.Size" type="System.Drawing.Size, System.Drawing">
+    <value>350, 18</value>
+  </data>
+  <data name="lblDDASearch.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblDDASearch.Text" xml:space="preserve">
+    <value>DDA Search</value>
+  </data>
+  <data name="&gt;&gt;lblDDASearch.Name" xml:space="preserve">
+    <value>lblDDASearch</value>
+  </data>
+  <data name="&gt;&gt;lblDDASearch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblDDASearch.Parent" xml:space="preserve">
+    <value>ddaSearchTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;lblDDASearch.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ddaSearchTitlePanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="ddaSearchTitlePanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="ddaSearchTitlePanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 43</value>
+  </data>
+  <data name="ddaSearchTitlePanel.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchTitlePanel.Name" xml:space="preserve">
+    <value>ddaSearchTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchTitlePanel.Parent" xml:space="preserve">
+    <value>ddaSearch</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchTitlePanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="ddaSearch.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="ddaSearch.Size" type="System.Drawing.Size, System.Drawing">
+    <value>576, 573</value>
+  </data>
+  <data name="ddaSearch.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="ddaSearch.Text" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;ddaSearch.Name" xml:space="preserve">
+    <value>ddaSearch</value>
+  </data>
+  <data name="&gt;&gt;ddaSearch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ddaSearch.Parent" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;ddaSearch.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="wizardPagesImportPeptideSearch.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -1212,5 +1272,89 @@ to injection into the mass spectrometer
   </data>
   <data name="wizardPagesImportPeptideSearch.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Name" xml:space="preserve">
+    <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesImportPeptideSearch.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnBack.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnBack.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnBack.Location" type="System.Drawing.Point, System.Drawing">
+    <value>335, 605</value>
+  </data>
+  <data name="btnBack.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBack.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnBack.Text" xml:space="preserve">
+    <value>&lt; &amp;Back</value>
+  </data>
+  <data name="btnBack.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Name" xml:space="preserve">
+    <value>btnBack</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBack.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnBack.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>51</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>584, 641</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>418, 585</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Import Peptide Search</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ImportPeptideSearchDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

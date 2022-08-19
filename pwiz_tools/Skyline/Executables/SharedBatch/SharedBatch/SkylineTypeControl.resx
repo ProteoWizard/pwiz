@@ -105,125 +105,53 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
-  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>364, 91</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>SkylineTypeControl</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 64</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
-    <value>btnBrowse</value>
+  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>310, 20</value>
   </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
-    <value>radioButtonSkyline</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
+  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
-    <value>radioButtonSkylineDaily</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
-    <value>radioButtonSpecifySkylinePath</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
+    <value>C:\Program Files\Skyline</value>
   </data>
   <data name="&gt;&gt;textSkylineInstallationPath.Name" xml:space="preserve">
     <value>textSkylineInstallationPath</value>
+  </data>
+  <data name="&gt;&gt;textSkylineInstallationPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSkylineInstallationPath.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textSkylineInstallationPath.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>332, 62</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 23</value>
-  </data>
-  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnBrowse.Text" xml:space="preserve">
-    <value>...</value>
-  </data>
-  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopLeft</value>
-  </data>
-  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 1</value>
-  </data>
-  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>81, 17</value>
-  </data>
-  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="radioButtonSkyline.Text" xml:space="preserve">
-    <value>&amp;Use Skyline</value>
   </data>
   <data name="radioButtonSkylineDaily.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -249,6 +177,18 @@
   <data name="radioButtonSkylineDaily.Text" xml:space="preserve">
     <value>Use Skyline-&amp;daily</value>
   </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Name" xml:space="preserve">
+    <value>radioButtonSkylineDaily</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkylineDaily.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="radioButtonSpecifySkylinePath.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -273,25 +213,103 @@
   <data name="radioButtonSpecifySkylinePath.Text" xml:space="preserve">
     <value>&amp;Specify Skyline installation directory</value>
   </data>
-  <data name="textSkylineInstallationPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Name" xml:space="preserve">
+    <value>radioButtonSpecifySkylinePath</value>
   </data>
-  <data name="textSkylineInstallationPath.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textSkylineInstallationPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 64</value>
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="textSkylineInstallationPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="&gt;&gt;radioButtonSpecifySkylinePath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="radioButtonSkyline.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioButtonSkyline.CheckAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopLeft</value>
+  </data>
+  <data name="radioButtonSkyline.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="radioButtonSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 1</value>
+  </data>
+  <data name="radioButtonSkyline.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="textSkylineInstallationPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>310, 20</value>
+  <data name="radioButtonSkyline.Size" type="System.Drawing.Size, System.Drawing">
+    <value>81, 17</value>
   </data>
-  <data name="textSkylineInstallationPath.TabIndex" type="System.Int32, mscorlib">
+  <data name="radioButtonSkyline.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="radioButtonSkyline.Text" xml:space="preserve">
+    <value>&amp;Use Skyline</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Name" xml:space="preserve">
+    <value>radioButtonSkyline</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioButtonSkyline.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="textSkylineInstallationPath.Text" xml:space="preserve">
-    <value>C:\Program Files\Skyline</value>
+  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowse.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnBrowse.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
+    <value>332, 62</value>
+  </data>
+  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnBrowse.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>364, 91</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>SkylineTypeControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

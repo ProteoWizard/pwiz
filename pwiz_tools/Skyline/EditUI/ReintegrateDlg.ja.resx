@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,137 +105,50 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>312, 215</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>再積分</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ReintegrateDlg</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;checkBoxOverwrite.Name" xml:space="preserve">
-    <value>checkBoxOverwrite</value>
-  </data>
-  <data name="&gt;&gt;checkBoxOverwrite.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkBoxOverwrite.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboBoxScoringModel.Name" xml:space="preserve">
-    <value>comboBoxScoringModel</value>
-  </data>
-  <data name="&gt;&gt;comboBoxScoringModel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboBoxScoringModel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;label36.Name" xml:space="preserve">
-    <value>label36</value>
-  </data>
-  <data name="&gt;&gt;label36.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label36.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.Name" xml:space="preserve">
-    <value>reintegrateAllPeaks</value>
-  </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;reintegrateAllPeaks.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;reintegrateQCutoff.Name" xml:space="preserve">
-    <value>reintegrateQCutoff</value>
-  </data>
-  <data name="&gt;&gt;reintegrateQCutoff.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;reintegrateQCutoff.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textBoxCutoff.Name" xml:space="preserve">
-    <value>textBoxCutoff</value>
-  </data>
-  <data name="&gt;&gt;textBoxCutoff.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textBoxCutoff.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>225, 41</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -255,29 +168,41 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name="checkBoxOverwrite.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
   </data>
-  <data name="checkBoxOverwrite.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 181</value>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="checkBoxOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>160, 17</value>
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="checkBoxOverwrite.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
-  <data name="checkBoxOverwrite.Text" xml:space="preserve">
-    <value>手動による積分を上書き(&amp;O)</value>
+  <data name="textBoxCutoff.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
-  <data name="comboBoxScoringModel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 33</value>
+  <data name="textBoxCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 143</value>
   </data>
-  <data name="comboBoxScoringModel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 21</value>
+  <data name="textBoxCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
   </data>
-  <data name="comboBoxScoringModel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="textBoxCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textBoxCutoff.Name" xml:space="preserve">
+    <value>textBoxCutoff</value>
+  </data>
+  <data name="&gt;&gt;textBoxCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textBoxCutoff.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -293,6 +218,99 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>Q値のカットオフ(&amp;Q)：</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="reintegrateAllPeaks.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="reintegrateAllPeaks.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 78</value>
+  </data>
+  <data name="reintegrateAllPeaks.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 17</value>
+  </data>
+  <data name="reintegrateAllPeaks.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="reintegrateAllPeaks.Text" xml:space="preserve">
+    <value>すべてのピークを積分(&amp;A)</value>
+  </data>
+  <data name="&gt;&gt;reintegrateAllPeaks.Name" xml:space="preserve">
+    <value>reintegrateAllPeaks</value>
+  </data>
+  <data name="&gt;&gt;reintegrateAllPeaks.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;reintegrateAllPeaks.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;reintegrateAllPeaks.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="reintegrateQCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="reintegrateQCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 101</value>
+  </data>
+  <data name="reintegrateQCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>183, 17</value>
+  </data>
+  <data name="reintegrateQCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="reintegrateQCutoff.Text" xml:space="preserve">
+    <value>有意なq値のみを積分(&amp;O)</value>
+  </data>
+  <data name="&gt;&gt;reintegrateQCutoff.Name" xml:space="preserve">
+    <value>reintegrateQCutoff</value>
+  </data>
+  <data name="&gt;&gt;reintegrateQCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;reintegrateQCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;reintegrateQCutoff.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="checkBoxOverwrite.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxOverwrite.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 181</value>
+  </data>
+  <data name="checkBoxOverwrite.Size" type="System.Drawing.Size, System.Drawing">
+    <value>160, 17</value>
+  </data>
+  <data name="checkBoxOverwrite.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="checkBoxOverwrite.Text" xml:space="preserve">
+    <value>手動による積分を上書き(&amp;O)</value>
+  </data>
+  <data name="&gt;&gt;checkBoxOverwrite.Name" xml:space="preserve">
+    <value>checkBoxOverwrite</value>
+  </data>
+  <data name="&gt;&gt;checkBoxOverwrite.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxOverwrite.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxOverwrite.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="label36.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -312,46 +330,58 @@
   <data name="label36.Text" xml:space="preserve">
     <value>ピークスコアリングモデル(&amp;P)：</value>
   </data>
-  <data name="reintegrateAllPeaks.AutoSize" type="System.Boolean, mscorlib">
+  <data name="&gt;&gt;label36.Name" xml:space="preserve">
+    <value>label36</value>
+  </data>
+  <data name="&gt;&gt;label36.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label36.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label36.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboBoxScoringModel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 33</value>
+  </data>
+  <data name="comboBoxScoringModel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>168, 21</value>
+  </data>
+  <data name="comboBoxScoringModel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboBoxScoringModel.Name" xml:space="preserve">
+    <value>comboBoxScoringModel</value>
+  </data>
+  <data name="&gt;&gt;comboBoxScoringModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxScoringModel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboBoxScoringModel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="reintegrateAllPeaks.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 78</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>312, 215</value>
   </data>
-  <data name="reintegrateAllPeaks.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 17</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="reintegrateAllPeaks.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>再積分</value>
   </data>
-  <data name="reintegrateAllPeaks.Text" xml:space="preserve">
-    <value>すべてのピークを積分(&amp;A)</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ReintegrateDlg</value>
   </data>
-  <data name="reintegrateQCutoff.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="reintegrateQCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 101</value>
-  </data>
-  <data name="reintegrateQCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>183, 17</value>
-  </data>
-  <data name="reintegrateQCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="reintegrateQCutoff.Text" xml:space="preserve">
-    <value>有意なq値のみを積分(&amp;O)</value>
-  </data>
-  <data name="textBoxCutoff.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="textBoxCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>45, 143</value>
-  </data>
-  <data name="textBoxCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textBoxCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

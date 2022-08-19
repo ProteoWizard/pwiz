@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,227 +105,50 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>337, 285</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>色谱图属性</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ChromChartPropertyDlg</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;cbRelative.Name" xml:space="preserve">
-    <value>cbRelative</value>
-  </data>
-  <data name="&gt;&gt;cbRelative.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;cbRelative.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.Name" xml:space="preserve">
-    <value>cbShowMultiplePeptides</value>
-  </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbShowMultiplePeptides.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;labelRTDigits.Name" xml:space="preserve">
-    <value>labelRTDigits</value>
-  </data>
-  <data name="&gt;&gt;labelRTDigits.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelRTDigits.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelTimeUnits.Name" xml:space="preserve">
-    <value>labelTimeUnits</value>
-  </data>
-  <data name="&gt;&gt;labelTimeUnits.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;labelTimeUnits.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;numericUpDownRTDigits.Name" xml:space="preserve">
-    <value>numericUpDownRTDigits</value>
-  </data>
-  <data name="&gt;&gt;numericUpDownRTDigits.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;numericUpDownRTDigits.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;textLineWidth.Name" xml:space="preserve">
-    <value>textLineWidth</value>
-  </data>
-  <data name="&gt;&gt;textLineWidth.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textLineWidth.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;textMaxIntensity.Name" xml:space="preserve">
-    <value>textMaxIntensity</value>
-  </data>
-  <data name="&gt;&gt;textMaxIntensity.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;textMaxIntensity.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textMinIntensity.Name" xml:space="preserve">
-    <value>textMinIntensity</value>
-  </data>
-  <data name="&gt;&gt;textMinIntensity.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;textMinIntensity.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;textSizeComboBox.Name" xml:space="preserve">
-    <value>textSizeComboBox</value>
-  </data>
-  <data name="&gt;&gt;textSizeComboBox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textSizeComboBox.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;textTimeRange.Name" xml:space="preserve">
-    <value>textTimeRange</value>
-  </data>
-  <data name="&gt;&gt;textTimeRange.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;textTimeRange.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>250, 39</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -342,53 +165,65 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name="cbRelative.AutoSize" type="System.Boolean, mscorlib">
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbRelative.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 72</value>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 9</value>
   </data>
-  <data name="cbRelative.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 17</value>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
   </data>
-  <data name="cbRelative.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="cbRelative.Text" xml:space="preserve">
-    <value>相对峰宽(&amp;P)</value>
+  <data name="label3.Text" xml:space="preserve">
+    <value>线宽(&amp;L)：</value>
   </data>
-  <data name="cbShowMultiplePeptides.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
   </data>
-  <data name="cbShowMultiplePeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbShowMultiplePeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 51</value>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="cbShowMultiplePeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>134, 17</value>
-  </data>
-  <data name="cbShowMultiplePeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="cbShowMultiplePeptides.Text" xml:space="preserve">
-    <value>显示多个肽段</value>
-  </data>
-  <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 119</value>
-  </data>
-  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>310, 153</value>
-  </data>
-  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="groupBox1.Text" xml:space="preserve">
-    <value>图形面积尺寸(&amp;G)：</value>
+  <data name="textLineWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 25</value>
+  </data>
+  <data name="textLineWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 20</value>
+  </data>
+  <data name="textLineWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textLineWidth.Name" xml:space="preserve">
+    <value>textLineWidth</value>
+  </data>
+  <data name="&gt;&gt;textLineWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textLineWidth.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textLineWidth.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -405,6 +240,39 @@
   <data name="label1.Text" xml:space="preserve">
     <value>字体大小(&amp;F)：</value>
   </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="textTimeRange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 49</value>
+  </data>
+  <data name="textTimeRange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 20</value>
+  </data>
+  <data name="textTimeRange.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textTimeRange.Name" xml:space="preserve">
+    <value>textTimeRange</value>
+  </data>
+  <data name="&gt;&gt;textTimeRange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textTimeRange.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;textTimeRange.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -420,20 +288,68 @@
   <data name="label2.Text" xml:space="preserve">
     <value>最佳峰值时间范围(&amp;B)：</value>
   </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="labelTimeUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 9</value>
+  <data name="labelTimeUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>148, 52</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
+  <data name="labelTimeUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>43, 13</value>
   </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+  <data name="labelTimeUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelTimeUnits.Text" xml:space="preserve">
+    <value>分钟</value>
+  </data>
+  <data name="&gt;&gt;labelTimeUnits.Name" xml:space="preserve">
+    <value>labelTimeUnits</value>
+  </data>
+  <data name="&gt;&gt;labelTimeUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelTimeUnits.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;labelTimeUnits.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="groupBox1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="textMinIntensity.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 122</value>
+  </data>
+  <data name="textMinIntensity.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 20</value>
+  </data>
+  <data name="textMinIntensity.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textMinIntensity.Name" xml:space="preserve">
+    <value>textMinIntensity</value>
+  </data>
+  <data name="&gt;&gt;textMinIntensity.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMinIntensity.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;textMinIntensity.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>线宽(&amp;L)：</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -453,6 +369,66 @@
   <data name="label4.Text" xml:space="preserve">
     <value>最大强度(&amp;X)：</value>
   </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbRelative.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbRelative.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 72</value>
+  </data>
+  <data name="cbRelative.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 17</value>
+  </data>
+  <data name="cbRelative.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="cbRelative.Text" xml:space="preserve">
+    <value>相对峰宽(&amp;P)</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.Name" xml:space="preserve">
+    <value>cbRelative</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;cbRelative.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textMaxIntensity.Location" type="System.Drawing.Point, System.Drawing">
+    <value>167, 122</value>
+  </data>
+  <data name="textMaxIntensity.Size" type="System.Drawing.Size, System.Drawing">
+    <value>116, 20</value>
+  </data>
+  <data name="textMaxIntensity.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.Name" xml:space="preserve">
+    <value>textMaxIntensity</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;textMaxIntensity.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -468,80 +444,71 @@
   <data name="label5.Text" xml:space="preserve">
     <value>最小强度(&amp;N)：</value>
   </data>
-  <data name="labelRTDigits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
   </data>
-  <data name="labelRTDigits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelRTDigits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 74</value>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>groupBox1</value>
   </data>
-  <data name="labelRTDigits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>158, 13</value>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
-  <data name="labelRTDigits.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 119</value>
   </data>
-  <data name="labelRTDigits.Text" xml:space="preserve">
-    <value>保留时间注释位数(&amp;R)：</value>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>310, 153</value>
   </data>
-  <data name="labelTimeUnits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelTimeUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>148, 52</value>
-  </data>
-  <data name="labelTimeUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>43, 13</value>
-  </data>
-  <data name="labelTimeUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="labelTimeUnits.Text" xml:space="preserve">
-    <value>分钟</value>
-  </data>
-  <data name="numericUpDownRTDigits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="numericUpDownRTDigits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 90</value>
-  </data>
-  <data name="numericUpDownRTDigits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>41, 20</value>
-  </data>
-  <data name="numericUpDownRTDigits.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="numericUpDownRTDigits.ToolTip" xml:space="preserve">
-    <value>设置峰注释中为保留时间显示的小数位数</value>
-  </data>
-  <data name="textLineWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 25</value>
-  </data>
-  <data name="textLineWidth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 20</value>
-  </data>
-  <data name="textLineWidth.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textMaxIntensity.Location" type="System.Drawing.Point, System.Drawing">
-    <value>167, 122</value>
-  </data>
-  <data name="textMaxIntensity.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 20</value>
-  </data>
-  <data name="textMaxIntensity.TabIndex" type="System.Int32, mscorlib">
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="textMinIntensity.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 122</value>
+  <data name="groupBox1.Text" xml:space="preserve">
+    <value>图形面积尺寸(&amp;G)：</value>
   </data>
-  <data name="textMinIntensity.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 20</value>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
   </data>
-  <data name="textMinIntensity.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="cbShowMultiplePeptides.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbShowMultiplePeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbShowMultiplePeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 51</value>
+  </data>
+  <data name="cbShowMultiplePeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 17</value>
+  </data>
+  <data name="cbShowMultiplePeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbShowMultiplePeptides.Text" xml:space="preserve">
+    <value>显示多个肽段</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.Name" xml:space="preserve">
+    <value>cbShowMultiplePeptides</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbShowMultiplePeptides.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="textSizeComboBox.Items" xml:space="preserve">
     <value>超小</value>
@@ -567,13 +534,109 @@
   <data name="textSizeComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="textTimeRange.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 49</value>
+  <data name="&gt;&gt;textSizeComboBox.Name" xml:space="preserve">
+    <value>textSizeComboBox</value>
   </data>
-  <data name="textTimeRange.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 20</value>
+  <data name="&gt;&gt;textSizeComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textTimeRange.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;textSizeComboBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textSizeComboBox.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="numericUpDownRTDigits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="numericUpDownRTDigits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 90</value>
+  </data>
+  <data name="numericUpDownRTDigits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 20</value>
+  </data>
+  <data name="numericUpDownRTDigits.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="numericUpDownRTDigits.ToolTip" xml:space="preserve">
+    <value>设置峰注释中为保留时间显示的小数位数</value>
+  </data>
+  <data name="&gt;&gt;numericUpDownRTDigits.Name" xml:space="preserve">
+    <value>numericUpDownRTDigits</value>
+  </data>
+  <data name="&gt;&gt;numericUpDownRTDigits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numericUpDownRTDigits.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;numericUpDownRTDigits.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelRTDigits.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelRTDigits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelRTDigits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 74</value>
+  </data>
+  <data name="labelRTDigits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>158, 13</value>
+  </data>
+  <data name="labelRTDigits.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="labelRTDigits.Text" xml:space="preserve">
+    <value>保留时间注释位数(&amp;R)：</value>
+  </data>
+  <data name="&gt;&gt;labelRTDigits.Name" xml:space="preserve">
+    <value>labelRTDigits</value>
+  </data>
+  <data name="&gt;&gt;labelRTDigits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelRTDigits.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelRTDigits.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>337, 285</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>色谱图属性</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ChromChartPropertyDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

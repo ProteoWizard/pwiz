@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,38 +105,41 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
-  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 398</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnAdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 335</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ConverterSettingsControl</value>
+  <data name="btnAdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 23</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="btnAdditionalSettings.Text" xml:space="preserve">
+    <value>其他设置(&amp;D)</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
     <value>btnAdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
     <value>diaUmpireTabPage</value>
@@ -144,86 +147,35 @@
   <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="&gt;&gt;cbEstimateBg.Name" xml:space="preserve">
-    <value>cbEstimateBg</value>
+  <data name="converterTabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;cbEstimateBg.Parent" xml:space="preserve">
-    <value>diaUmpireTabPage</value>
+  <data name="msconvertTabPage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
   </data>
-  <data name="&gt;&gt;cbEstimateBg.ZOrder" xml:space="preserve">
+  <data name="msconvertTabPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="msconvertTabPage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>367, 364</value>
+  </data>
+  <data name="msconvertTabPage.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;cbInstrumentPreset.Name" xml:space="preserve">
-    <value>cbInstrumentPreset</value>
-  </data>
-  <data name="&gt;&gt;cbInstrumentPreset.Parent" xml:space="preserve">
-    <value>diaUmpireTabPage</value>
-  </data>
-  <data name="&gt;&gt;cbInstrumentPreset.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;converterTabControl.Name" xml:space="preserve">
-    <value>converterTabControl</value>
-  </data>
-  <data name="&gt;&gt;converterTabControl.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;converterTabControl.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;diaUmpireTabPage.Name" xml:space="preserve">
-    <value>diaUmpireTabPage</value>
-  </data>
-  <data name="&gt;&gt;diaUmpireTabPage.Parent" xml:space="preserve">
-    <value>converterTabControl</value>
-  </data>
-  <data name="&gt;&gt;diaUmpireTabPage.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>diaUmpireTabPage</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblInstrumentPreset.Name" xml:space="preserve">
-    <value>lblInstrumentPreset</value>
-  </data>
-  <data name="&gt;&gt;lblInstrumentPreset.Parent" xml:space="preserve">
-    <value>diaUmpireTabPage</value>
-  </data>
-  <data name="&gt;&gt;lblInstrumentPreset.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="msconvertTabPage.Text" xml:space="preserve">
+    <value>MSConvert</value>
   </data>
   <data name="&gt;&gt;msconvertTabPage.Name" xml:space="preserve">
     <value>msconvertTabPage</value>
+  </data>
+  <data name="&gt;&gt;msconvertTabPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;msconvertTabPage.Parent" xml:space="preserve">
     <value>converterTabControl</value>
   </data>
   <data name="&gt;&gt;msconvertTabPage.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
-    <value>toolTip</value>
-  </data>
-  <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="btnAdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 335</value>
-  </data>
-  <data name="btnAdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>107, 23</value>
-  </data>
-  <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="btnAdditionalSettings.Text" xml:space="preserve">
-    <value>其他设置(&amp;D)</value>
   </data>
   <data name="cbEstimateBg.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -240,44 +192,23 @@
   <data name="cbEstimateBg.Text" xml:space="preserve">
     <value>预估背景(&amp;E)</value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="cbEstimateBg.ToolTip" xml:space="preserve">
     <value>预估背景信号将使 DIA-Umpire 处理速度明显加快，但准确性会受到一定程度的影响。 (EstimateBG)</value>
   </data>
-  <data name="cbInstrumentPreset.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 79</value>
+  <data name="&gt;&gt;cbEstimateBg.Name" xml:space="preserve">
+    <value>cbEstimateBg</value>
   </data>
-  <data name="cbInstrumentPreset.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 21</value>
+  <data name="&gt;&gt;cbEstimateBg.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbInstrumentPreset.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+  <data name="&gt;&gt;cbEstimateBg.Parent" xml:space="preserve">
+    <value>diaUmpireTabPage</value>
   </data>
-  <data name="converterTabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="converterTabControl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="converterTabControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>375, 390</value>
-  </data>
-  <data name="converterTabControl.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
-  </data>
-  <data name="diaUmpireTabPage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="diaUmpireTabPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="diaUmpireTabPage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>367, 364</value>
-  </data>
-  <data name="diaUmpireTabPage.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="diaUmpireTabPage.Text" xml:space="preserve">
-    <value>DIA-Umpire</value>
+  <data name="&gt;&gt;cbEstimateBg.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -297,6 +228,39 @@
   <data name="label1.Text" xml:space="preserve">
     <value>DIA-Umpire 将 DIA 谱图转换为伪 DDA 谱图。Skyline 通过搜索 DDA 谱图来构建库，但是对原始 DIA 谱图进行定量。</value>
   </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>diaUmpireTabPage</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbInstrumentPreset.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 79</value>
+  </data>
+  <data name="cbInstrumentPreset.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 21</value>
+  </data>
+  <data name="cbInstrumentPreset.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;cbInstrumentPreset.Name" xml:space="preserve">
+    <value>cbInstrumentPreset</value>
+  </data>
+  <data name="&gt;&gt;cbInstrumentPreset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbInstrumentPreset.Parent" xml:space="preserve">
+    <value>diaUmpireTabPage</value>
+  </data>
+  <data name="&gt;&gt;cbInstrumentPreset.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="lblInstrumentPreset.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -315,19 +279,85 @@
   <data name="lblInstrumentPreset.Text" xml:space="preserve">
     <value>仪器预设(&amp;N)：</value>
   </data>
-  <data name="msconvertTabPage.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="&gt;&gt;lblInstrumentPreset.Name" xml:space="preserve">
+    <value>lblInstrumentPreset</value>
+  </data>
+  <data name="&gt;&gt;lblInstrumentPreset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblInstrumentPreset.Parent" xml:space="preserve">
+    <value>diaUmpireTabPage</value>
+  </data>
+  <data name="&gt;&gt;lblInstrumentPreset.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="diaUmpireTabPage.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
-  <data name="msconvertTabPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="diaUmpireTabPage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="msconvertTabPage.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="diaUmpireTabPage.Size" type="System.Drawing.Size, System.Drawing">
     <value>367, 364</value>
   </data>
-  <data name="msconvertTabPage.TabIndex" type="System.Int32, mscorlib">
+  <data name="diaUmpireTabPage.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="diaUmpireTabPage.Text" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="&gt;&gt;diaUmpireTabPage.Name" xml:space="preserve">
+    <value>diaUmpireTabPage</value>
+  </data>
+  <data name="&gt;&gt;diaUmpireTabPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;diaUmpireTabPage.Parent" xml:space="preserve">
+    <value>converterTabControl</value>
+  </data>
+  <data name="&gt;&gt;diaUmpireTabPage.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="converterTabControl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="converterTabControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>375, 390</value>
+  </data>
+  <data name="converterTabControl.TabIndex" type="System.Int32, mscorlib">
+    <value>28</value>
+  </data>
+  <data name="&gt;&gt;converterTabControl.Name" xml:space="preserve">
+    <value>converterTabControl</value>
+  </data>
+  <data name="&gt;&gt;converterTabControl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;converterTabControl.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;converterTabControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="msconvertTabPage.Text" xml:space="preserve">
-    <value>MSConvert</value>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 398</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
+    <value>toolTip</value>
+  </data>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ConverterSettingsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

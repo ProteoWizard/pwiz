@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,55 +105,19 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__" xml:space="preserve">
-    <value>剪切板数据复制出现错误：</value>
-  </data>
-  <data name="AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_" xml:space="preserve">
-    <value>你想替换它们吗？</value>
-  </data>
-  <data name="AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_" xml:space="preserve">
-    <value>以下名称已存在：</value>
-  </data>
-  <data name="AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_" xml:space="preserve">
-    <value>名称“{0}”已存在。你想替换它吗？</value>
-  </data>
-  <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
-    <value>查询执行中</value>
-  </data>
-  <data name="AbstractViewContext_Export_There_was_an_error_writing_to_the_file__" xml:space="preserve">
-    <value>写入文件出现错误：</value>
-  </data>
-  <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
-    <value>更新数值出错：
-{0}</value>
-  </data>
-  <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
-    <value>更新数值时出现未知错误。</value>
-  </data>
-  <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
-    <value>写入 {0} 行</value>
-  </data>
-  <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
-    <value>写入行 </value>
-    <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
-</comment>
-  </data>
-  <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
-    <value>写入行 {0:#,0}/{1:#,0}</value>
-  </data>
   <data name="agg_count" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\agg_count.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -178,95 +142,47 @@
   <data name="agg_sum" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\agg_sum.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AggregateOperation_Cv_Coefficient_Of_Variation" xml:space="preserve">
-    <value>变异系数</value>
+  <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AggregateOperation_Cv_CV_Of__0_" xml:space="preserve">
-    <value>CV（变异系统）{0}</value>
+  <data name="down_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\down-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="AggregateOperation_Max_Max" xml:space="preserve">
-    <value>最大</value>
-  </data>
-  <data name="AggregateOperation_Max_Max__0_" xml:space="preserve">
-    <value>最大值 {0}</value>
-  </data>
-  <data name="AggregateOperation_Mean_Mean" xml:space="preserve">
-    <value>平均</value>
-  </data>
-  <data name="AggregateOperation_Mean_Mean__0_" xml:space="preserve">
-    <value>平均值 {0}</value>
-  </data>
-  <data name="AggregateOperation_Min_Min" xml:space="preserve">
-    <value>最小</value>
-  </data>
-  <data name="AggregateOperation_Min_Min__0_" xml:space="preserve">
-    <value>最小值 {0}</value>
-  </data>
-  <data name="AggregateOperation_StdDev_Standard_Deviation" xml:space="preserve">
-    <value>标准偏差</value>
-  </data>
-  <data name="AggregateOperation_StdDev_StdDev__0_" xml:space="preserve">
-    <value>标准差 {0}</value>
-  </data>
-  <data name="AggregateOperation_Sum_Sum" xml:space="preserve">
-    <value>总和</value>
-  </data>
-  <data name="AggregateOperation_Sum_Sum__0_" xml:space="preserve">
-    <value>总和 {0}</value>
-  </data>
-  <data name="BoolColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\BoolColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="BooleanTransform_BooleanTransform_Boolean" xml:space="preserve">
-    <value>布尔</value>
-  </data>
-  <data name="ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank" xml:space="preserve">
-    <value>名称不能为空</value>
-  </data>
-  <data name="ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___" xml:space="preserve">
-    <value>已有一个名为“{0}”的报告。</value>
+  <data name="up_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\up-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="close" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\close.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_" xml:space="preserve">
-    <value>Chebyshev 距离 (L-inf norm)</value>
+  <data name="maximize" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\maximize.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_" xml:space="preserve">
-    <value>Euclidean 距离 (L2 norm)</value>
+  <data name="restore" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\restore.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_" xml:space="preserve">
-    <value>城市街区距离 (L-1 norm)</value>
+  <data name="MatchCase" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\matchcase.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterMetricType_PEARSON_Pearson_correlation" xml:space="preserve">
-    <value>Pearson 关联</value>
+  <data name="BoolColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\BoolColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterRole_COLUMNHEADER_Column_Header" xml:space="preserve">
-    <value>列标题</value>
+  <data name="DataColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DataColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterRole_IGNORED_Ignored" xml:space="preserve">
-    <value>已忽略</value>
+  <data name="LinkColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\LinkColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterRole_LOGARITHM_Log10" xml:space="preserve">
-    <value>Log10</value>
+  <data name="NumberColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NumberColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterRole_RAW_Raw_Value" xml:space="preserve">
-    <value>原始值</value>
+  <data name="PivotColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PivotColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ClusterRole_ROWHEADER_Row_Header" xml:space="preserve">
-    <value>行标题</value>
+  <data name="SublistColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SublistColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="ColumnLimitExceededColumn_ColumnLimitExceededColumn_Column_Limit_Exceeded" xml:space="preserve">
-    <value>超过列限制</value>
-  </data>
-  <data name="ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_" xml:space="preserve">
-    <value>{0} 个附加列未显示。</value>
-  </data>
-  <data name="CountImpl_CountImpl_Count" xml:space="preserve">
-    <value>计数</value>
-  </data>
-  <data name="CountImpl_CountImpl_Count__0_" xml:space="preserve">
-    <value>计数 {0}</value>
+  <data name="TextColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\TextColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="CustomizeViewForm_AdvancedShowing____Hide__Advanced" xml:space="preserve">
     <value>&lt;&lt; 隐藏高级(&amp;A)</value>
@@ -277,134 +193,26 @@
   <data name="CustomizeViewForm_SetFilterInfo_This_column_does_not_exist" xml:space="preserve">
     <value>本列不存在</value>
   </data>
-  <data name="CustomizeViewForm_UpdatePropertySheet_Column_Properties" xml:space="preserve">
-    <value>列属性</value>
-  </data>
-  <data name="CustomizeViewForm_UpdatePropertySheet_Multiple_Selection" xml:space="preserve">
-    <value>多重选择</value>
-  </data>
-  <data name="CustomizeViewForm_UpdatePropertySheet_No_Selection" xml:space="preserve">
-    <value>没有选择</value>
-  </data>
-  <data name="CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__" xml:space="preserve">
-    <value>您是否要覆盖名为“{0}”的现有报告</value>
+  <data name="CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_" xml:space="preserve">
+    <value>报告名称不能为空。</value>
   </data>
   <data name="CustomizeViewForm_ValidateViewName_There_is_already_a_built_in_view_named___0___" xml:space="preserve">
     <value>已有一个名为“{0}”的内置报告。</value>
   </data>
-  <data name="CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_" xml:space="preserve">
-    <value>报告名称不能为空。</value>
+  <data name="CustomizeViewForm_ValidateViewName_Do_you_want_to_overwrite_the_existing_view_named___0__" xml:space="preserve">
+    <value>您是否要覆盖名为“{0}”的现有报告</value>
   </data>
-  <data name="DataColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\DataColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="CustomizeViewForm_UpdatePropertySheet_Column_Properties" xml:space="preserve">
+    <value>列属性</value>
   </data>
-  <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="CustomizeViewForm_UpdatePropertySheet_No_Selection" xml:space="preserve">
+    <value>没有选择</value>
   </data>
-  <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
-    <value>本列为只读模式</value>
+  <data name="CustomizeViewForm_UpdatePropertySheet_Multiple_Selection" xml:space="preserve">
+    <value>多重选择</value>
   </data>
-  <data name="DocumentationGenerator_GetHtmlForType_List_of__0_" xml:space="preserve">
-    <value>{0} 列表</value>
-  </data>
-  <data name="DocumentationGenerator_GetHtmlForType_Map_of__0_" xml:space="preserve">
-    <value>{0} 的图谱</value>
-  </data>
-  <data name="DocumentationGenerator_GetHtmlForType_Map_of__0__to__1_" xml:space="preserve">
-    <value>{0} 到 {1} 的图谱</value>
-  </data>
-  <data name="down_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\down-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Filter" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Filter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Filter1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Filter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="FilterOperations_Contains" xml:space="preserve">
-    <value>包含</value>
-  </data>
-  <data name="FilterOperations_Does_Not_Contain" xml:space="preserve">
-    <value>不包含</value>
-  </data>
-  <data name="FilterOperations_Does_Not_Equal" xml:space="preserve">
-    <value>不等于</value>
-  </data>
-  <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
-    <value>不开始于</value>
-  </data>
-  <data name="FilterOperations_Equals" xml:space="preserve">
-    <value>等于</value>
-  </data>
-  <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
-    <value>拥有任何值</value>
-  </data>
-  <data name="FilterOperations_Is_Blank" xml:space="preserve">
-    <value>为空白</value>
-  </data>
-  <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
-    <value>大于</value>
-  </data>
-  <data name="FilterOperations_Is_Greater_Than_Or_Equal_To" xml:space="preserve">
-    <value>大于或等于</value>
-  </data>
-  <data name="FilterOperations_Is_Less_Than" xml:space="preserve">
-    <value>小于</value>
-  </data>
-  <data name="FilterOperations_Is_Less_Than_Or_Equal_To" xml:space="preserve">
-    <value>小于或等于</value>
-  </data>
-  <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
-    <value>不为空白</value>
-  </data>
-  <data name="FilterOperations_Starts_With" xml:space="preserve">
-    <value>开始于</value>
-  </data>
-  <data name="LinkColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\LinkColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="ManageLayoutsForm_UpdateButtons_Clear_Default" xml:space="preserve">
-    <value>清除默认</value>
-  </data>
-  <data name="ManageLayoutsForm_UpdateButtons_Set_Default" xml:space="preserve">
-    <value>设置默认</value>
-  </data>
-  <data name="ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_" xml:space="preserve">
-    <value>管理 {0} 的布局</value>
-  </data>
-  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
-    <value>您是否确定要删除报告“{0}”？</value>
-  </data>
-  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
-    <value>您是否确定要删除这 {0} 个报告？</value>
-  </data>
-  <data name="MatchCase" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\resources\matchcase.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="maximize" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\maximize.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="NameLayoutForm_OkDialog_Name_cannot_be_empty" xml:space="preserve">
-    <value>名称不能为空</value>
-  </data>
-  <data name="NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_replace_it_" xml:space="preserve">
-    <value>您已经有名称为“{0}”的布局。您是否想要替换它？</value>
-  </data>
-  <data name="NavBar_MakeTransformStackMenuItem_No_Transforms" xml:space="preserve">
-    <value>无转化</value>
-  </data>
-  <data name="NavBar_NavBar_Waiting_for_data___" xml:space="preserve">
-    <value>等待数据…</value>
-  </data>
-  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
-    <value>自定义报告…</value>
-  </data>
-  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
-    <value>编辑报告…</value>
-  </data>
-  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
-    <value>管理报告…</value>
+  <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
+    <value>转换数据…</value>
   </data>
   <data name="NavBar_RefreshUi__Filtered_from__0__" xml:space="preserve">
     <value>（从{0}过滤）</value>
@@ -412,65 +220,14 @@
   <data name="NavBar_RefreshUi__Transforming_data____" xml:space="preserve">
     <value>（转换数据…）</value>
   </data>
-  <data name="NavBar_RefreshUi_Transforming_data___" xml:space="preserve">
-    <value>转换数据…</value>
+  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Edit_View___" xml:space="preserve">
+    <value>编辑报告…</value>
   </data>
-  <data name="NavBar_UpdateGroupTotalDropdown_Manage_layouts___" xml:space="preserve">
-    <value>管理布局...</value>
+  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___" xml:space="preserve">
+    <value>管理报告…</value>
   </data>
-  <data name="NavBar_UpdateGroupTotalDropdown_Modify_Current_Pivot___" xml:space="preserve">
-    <value>修改当前枢轴...</value>
-  </data>
-  <data name="NavBar_UpdateGroupTotalDropdown_New_Pivot___" xml:space="preserve">
-    <value>新枢轴...</value>
-  </data>
-  <data name="NavBar_UpdateGroupTotalDropdown_Remember_current_layout___" xml:space="preserve">
-    <value>记住当前布局...</value>
-  </data>
-  <data name="NavBar_UpdateGroupTotalDropdown_Transforms" xml:space="preserve">
-    <value>转化</value>
-  </data>
-  <data name="NumberColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\NumberColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
-    <value>在位置{1}: {2}解析{0}时出错</value>
-  </data>
-  <data name="Pivot" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Pivot.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="PivotAndFilter" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\PivotAndFilter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="PivotColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\PivotColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="PivotEditor_MakeListItem_Unable_to_find_column___0___" xml:space="preserve">
-    <value>无法找到列“{0}”。</value>
-  </data>
-  <data name="PivotingForm_ShowPivotingForm_The_Pivot_Editor_cannot_be_shown_because_there_are_more_than__0__columns_" xml:space="preserve">
-    <value>因为列数超过 {0} 个，所以不能显示枢轴编辑器。</value>
-  </data>
-  <data name="PivotSpec_GetDescription_Column_Headers_" xml:space="preserve">
-    <value>列标题：</value>
-  </data>
-  <data name="PivotSpec_GetDescription_Row_Headers_" xml:space="preserve">
-    <value>行标题：</value>
-  </data>
-  <data name="PivotSpec_GetDescription_Values_" xml:space="preserve">
-    <value>值：</value>
-  </data>
-  <data name="PivotSpec_Summary_Pivot__0_x_1_x_2_" xml:space="preserve">
-    <value>枢轴 {0}x{1}x{2}</value>
-  </data>
-  <data name="PlainLayout" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\PlainLayout.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="PropertyPath_Parse_Empty_name" xml:space="preserve">
-    <value>空名称</value>
-  </data>
-  <data name="PropertyPath_Parse_Invalid_character" xml:space="preserve">
-    <value>无效字符</value>
+  <data name="NavBar_NavBarButtonViewsOnDropDownOpening_Customize_View" xml:space="preserve">
+    <value>自定义报告…</value>
   </data>
   <data name="PropertyPath_Parse_Invalid_character____" xml:space="preserve">
     <value>无效字符'*'</value>
@@ -478,22 +235,263 @@
   <data name="PropertyPath_Parse_Unterminated_quote" xml:space="preserve">
     <value>未结束的引用</value>
   </data>
-  <data name="QuickFilterForm_SetPropertyDescriptor_No_other_filter" xml:space="preserve">
-    <value>无其他过滤器</value>
+  <data name="PropertyPath_Parse_Empty_name" xml:space="preserve">
+    <value>空名称</value>
   </data>
-  <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
-    <value>显示行{0}…</value>
+  <data name="PropertyPath_Parse_Invalid_character" xml:space="preserve">
+    <value>无效字符</value>
+  </data>
+  <data name="ParseException_ParseException_Error_parsing__0__at_location__1____2_" xml:space="preserve">
+    <value>在位置{1}: {2}解析{0}时出错</value>
+  </data>
+  <data name="DisplayColumn_SetValue_Column_is_read_only" xml:space="preserve">
+    <value>本列为只读模式</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_An_unknown_error_occurred_updating_the_value_" xml:space="preserve">
+    <value>更新数值时出现未知错误。</value>
+  </data>
+  <data name="AbstractViewContext_OnDataError_" xml:space="preserve">
+    <value>更新数值出错：
+{0}</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row_" xml:space="preserve">
+    <value>写入行 </value>
+    <comment>Context: ("Writing row " + (rowIndex + 1) + "/" + rowCount)
+</comment>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing__0__rows" xml:space="preserve">
+    <value>写入 {0} 行</value>
+  </data>
+  <data name="AbstractViewContext_ExecuteQuery_Executing_query" xml:space="preserve">
+    <value>查询执行中</value>
+  </data>
+  <data name="AbstractViewContext_WriteData_Writing_row__0___1_" xml:space="preserve">
+    <value>写入行 {0:#,0}/{1:#,0}</value>
+  </data>
+  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_the_view___0___" xml:space="preserve">
+    <value>您是否确定要删除报告“{0}”？</value>
+  </data>
+  <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
+    <value>您是否确定要删除这 {0} 个报告？</value>
+  </data>
+  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
+    <value>（从{0}过滤）</value>
   </data>
   <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
     <value>{0}/{1}</value>
     <comment>Example : 1 of 10
 </comment>
   </data>
-  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
-    <value>（从{0}过滤）</value>
+  <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
+    <value>拥有任何值</value>
   </data>
-  <data name="restore" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\restore.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="FilterOperations_Equals" xml:space="preserve">
+    <value>等于</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Equal" xml:space="preserve">
+    <value>不等于</value>
+  </data>
+  <data name="FilterOperations_Is_Blank" xml:space="preserve">
+    <value>为空白</value>
+  </data>
+  <data name="FilterOperations_Is_Not_Blank" xml:space="preserve">
+    <value>不为空白</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than" xml:space="preserve">
+    <value>大于</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than" xml:space="preserve">
+    <value>小于</value>
+  </data>
+  <data name="FilterOperations_Is_Greater_Than_Or_Equal_To" xml:space="preserve">
+    <value>大于或等于</value>
+  </data>
+  <data name="FilterOperations_Is_Less_Than_Or_Equal_To" xml:space="preserve">
+    <value>小于或等于</value>
+  </data>
+  <data name="FilterOperations_Contains" xml:space="preserve">
+    <value>包含</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Contain" xml:space="preserve">
+    <value>不包含</value>
+  </data>
+  <data name="FilterOperations_Starts_With" xml:space="preserve">
+    <value>开始于</value>
+  </data>
+  <data name="FilterOperations_Does_Not_Start_With" xml:space="preserve">
+    <value>不开始于</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_No_other_filter" xml:space="preserve">
+    <value>无其他过滤器</value>
+  </data>
+  <data name="QuickFilterForm_SetPropertyDescriptor_Show_rows_where__0____" xml:space="preserve">
+    <value>显示行{0}…</value>
+  </data>
+  <data name="AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__" xml:space="preserve">
+    <value>剪切板数据复制出现错误：</value>
+  </data>
+  <data name="AbstractViewContext_Export_There_was_an_error_writing_to_the_file__" xml:space="preserve">
+    <value>写入文件出现错误：</value>
+  </data>
+  <data name="NavBar_NavBar_Waiting_for_data___" xml:space="preserve">
+    <value>等待数据…</value>
+  </data>
+  <data name="ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank" xml:space="preserve">
+    <value>名称不能为空</value>
+  </data>
+  <data name="ChooseViewsControl_listView1_AfterLabelEdit_There_is_already_a_view_named___0___" xml:space="preserve">
+    <value>已有一个名为“{0}”的报告。</value>
+  </data>
+  <data name="ViewGroup_BUILT_IN_Built_In_Views" xml:space="preserve">
+    <value>内置报告</value>
+  </data>
+  <data name="AbstractViewContext_CopyViewsToGroup_The_name___0___already_exists__Do_you_want_to_replace_it_" xml:space="preserve">
+    <value>名称“{0}”已存在。你想替换它吗？</value>
+  </data>
+  <data name="AbstractViewContext_CopyViewsToGroup_The_following_names_already_exist_" xml:space="preserve">
+    <value>以下名称已存在：</value>
+  </data>
+  <data name="AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_" xml:space="preserve">
+    <value>你想替换它们吗？</value>
+  </data>
+  <data name="ViewEditor_ValidateViewName_There_is_already_a_view_named___0___" xml:space="preserve">
+    <value>已有一个名为“{0}”的报告。</value>
+  </data>
+  <data name="DocumentationGenerator_GetHtmlForType_Map_of__0__to__1_" xml:space="preserve">
+    <value>{0} 到 {1} 的图谱</value>
+  </data>
+  <data name="DocumentationGenerator_GetHtmlForType_Map_of__0_" xml:space="preserve">
+    <value>{0} 的图谱</value>
+  </data>
+  <data name="DocumentationGenerator_GetHtmlForType_List_of__0_" xml:space="preserve">
+    <value>{0} 列表</value>
+  </data>
+  <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
+    <value>无法在保持读取锁定的同时获取写入锁定。</value>
+  </data>
+  <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
+    <value>必须具备写入锁定</value>
+  </data>
+  <data name="Filter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Filter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Filter1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Filter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Pivot" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Pivot.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PivotAndFilter" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PivotAndFilter.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PlainLayout" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PlainLayout.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AggregateOperation_Sum_Sum__0_" xml:space="preserve">
+    <value>总和 {0}</value>
+  </data>
+  <data name="AggregateOperation_Mean_Mean__0_" xml:space="preserve">
+    <value>平均值 {0}</value>
+  </data>
+  <data name="AggregateOperation_Min_Min__0_" xml:space="preserve">
+    <value>最小值 {0}</value>
+  </data>
+  <data name="AggregateOperation_Max_Max__0_" xml:space="preserve">
+    <value>最大值 {0}</value>
+  </data>
+  <data name="AggregateOperation_StdDev_StdDev__0_" xml:space="preserve">
+    <value>标准差 {0}</value>
+  </data>
+  <data name="AggregateOperation_Cv_CV_Of__0_" xml:space="preserve">
+    <value>CV（变异系统）{0}</value>
+  </data>
+  <data name="CountImpl_CountImpl_Count__0_" xml:space="preserve">
+    <value>计数 {0}</value>
+  </data>
+  <data name="AggregateOperation_Sum_Sum" xml:space="preserve">
+    <value>总和</value>
+  </data>
+  <data name="AggregateOperation_Mean_Mean" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="AggregateOperation_Min_Min" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="AggregateOperation_Max_Max" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="AggregateOperation_StdDev_Standard_Deviation" xml:space="preserve">
+    <value>标准偏差</value>
+  </data>
+  <data name="AggregateOperation_Cv_Coefficient_Of_Variation" xml:space="preserve">
+    <value>变异系数</value>
+  </data>
+  <data name="CountImpl_CountImpl_Count" xml:space="preserve">
+    <value>计数</value>
+  </data>
+  <data name="ColumnLimitExceededColumn_TruncatedColumnCount__0__additional_columns_not_shown_" xml:space="preserve">
+    <value>{0} 个附加列未显示。</value>
+  </data>
+  <data name="ColumnLimitExceededColumn_ColumnLimitExceededColumn_Column_Limit_Exceeded" xml:space="preserve">
+    <value>超过列限制</value>
+  </data>
+  <data name="PivotingForm_ShowPivotingForm_The_Pivot_Editor_cannot_be_shown_because_there_are_more_than__0__columns_" xml:space="preserve">
+    <value>因为列数超过 {0} 个，所以不能显示枢轴编辑器。</value>
+  </data>
+  <data name="NavBar_MakeTransformStackMenuItem_No_Transforms" xml:space="preserve">
+    <value>无转化</value>
+  </data>
+  <data name="ManageLayoutsForm_UpdateButtons_Clear_Default" xml:space="preserve">
+    <value>清除默认</value>
+  </data>
+  <data name="ManageLayoutsForm_UpdateButtons_Set_Default" xml:space="preserve">
+    <value>设置默认</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_New_Pivot___" xml:space="preserve">
+    <value>新枢轴...</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Remember_current_layout___" xml:space="preserve">
+    <value>记住当前布局...</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Manage_layouts___" xml:space="preserve">
+    <value>管理布局...</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Modify_Current_Pivot___" xml:space="preserve">
+    <value>修改当前枢轴...</value>
+  </data>
+  <data name="ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_" xml:space="preserve">
+    <value>管理 {0} 的布局</value>
+  </data>
+  <data name="NameLayoutForm_OkDialog_Name_cannot_be_empty" xml:space="preserve">
+    <value>名称不能为空</value>
+  </data>
+  <data name="NameLayoutForm_OkDialog_You_already_have_a_layout_named___0____Do_you_want_to_replace_it_" xml:space="preserve">
+    <value>您已经有名称为“{0}”的布局。您是否想要替换它？</value>
+  </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_Transforms" xml:space="preserve">
+    <value>转化</value>
+  </data>
+  <data name="PivotEditor_MakeListItem_Unable_to_find_column___0___" xml:space="preserve">
+    <value>无法找到列“{0}”。</value>
+  </data>
+  <data name="RowFilter_Summary_Sort_on_" xml:space="preserve">
+    <value>排序</value>
+  </data>
+  <data name="RowFilter_Summary__desc" xml:space="preserve">
+    <value> 降序</value>
+    <comment>This is short for "descending".</comment>
+  </data>
+  <data name="RowFilter_Summary_Filter_on__0_" xml:space="preserve">
+    <value>在 {0} 上过滤</value>
+  </data>
+  <data name="RowFilter_Summary_Filter_on__0__columns" xml:space="preserve">
+    <value>在 {0} 列上过滤</value>
+  </data>
+  <data name="RowFilter_Summary_Filter_for__0_" xml:space="preserve">
+    <value>针对 {0} 过滤</value>
+  </data>
+  <data name="RowFilter_Summary_Filter_for_text_and__0__columns" xml:space="preserve">
+    <value>针对文本和 {0} 列过滤</value>
   </data>
   <data name="RowFilter_GetDescription__case_sensitive" xml:space="preserve">
     <value> 区分大小写</value>
@@ -504,48 +502,50 @@
   <data name="RowFilter_GetDescription_then_" xml:space="preserve">
     <value>然后 </value>
   </data>
-  <data name="RowFilter_Summary__desc" xml:space="preserve">
-    <value> 降序</value>
-    <comment>This is short for "descending".</comment>
+  <data name="PivotSpec_Summary_Pivot__0_x_1_x_2_" xml:space="preserve">
+    <value>枢轴 {0}x{1}x{2}</value>
   </data>
-  <data name="RowFilter_Summary_Filter_for__0_" xml:space="preserve">
-    <value>针对 {0} 过滤</value>
+  <data name="PivotSpec_GetDescription_Row_Headers_" xml:space="preserve">
+    <value>行标题：</value>
   </data>
-  <data name="RowFilter_Summary_Filter_for_text_and__0__columns" xml:space="preserve">
-    <value>针对文本和 {0} 列过滤</value>
+  <data name="PivotSpec_GetDescription_Column_Headers_" xml:space="preserve">
+    <value>列标题：</value>
   </data>
-  <data name="RowFilter_Summary_Filter_on__0_" xml:space="preserve">
-    <value>在 {0} 上过滤</value>
-  </data>
-  <data name="RowFilter_Summary_Filter_on__0__columns" xml:space="preserve">
-    <value>在 {0} 列上过滤</value>
-  </data>
-  <data name="RowFilter_Summary_Sort_on_" xml:space="preserve">
-    <value>排序</value>
-  </data>
-  <data name="SessionWithLock_EnsureWriteLock_Must_have_write_lock" xml:space="preserve">
-    <value>必须具备写入锁定</value>
-  </data>
-  <data name="SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock" xml:space="preserve">
-    <value>无法在保持读取锁定的同时获取写入锁定。</value>
-  </data>
-  <data name="SublistColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\SublistColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="TextColumn" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\TextColumn.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="PivotSpec_GetDescription_Values_" xml:space="preserve">
+    <value>值：</value>
   </data>
   <data name="UnknownUiMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="up_pro32" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\up-pro32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_" xml:space="preserve">
+    <value>Chebyshev 距离 (L-inf norm)</value>
   </data>
-  <data name="ViewEditor_ValidateViewName_There_is_already_a_view_named___0___" xml:space="preserve">
-    <value>已有一个名为“{0}”的报告。</value>
+  <data name="ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_" xml:space="preserve">
+    <value>城市街区距离 (L-1 norm)</value>
   </data>
-  <data name="ViewGroup_BUILT_IN_Built_In_Views" xml:space="preserve">
-    <value>内置报告</value>
+  <data name="ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_" xml:space="preserve">
+    <value>Euclidean 距离 (L2 norm)</value>
+  </data>
+  <data name="ClusterMetricType_PEARSON_Pearson_correlation" xml:space="preserve">
+    <value>Pearson 关联</value>
+  </data>
+  <data name="ClusterRole_IGNORED_Ignored" xml:space="preserve">
+    <value>已忽略</value>
+  </data>
+  <data name="ClusterRole_ROWHEADER_Row_Header" xml:space="preserve">
+    <value>行标题</value>
+  </data>
+  <data name="ClusterRole_COLUMNHEADER_Column_Header" xml:space="preserve">
+    <value>列标题</value>
+  </data>
+  <data name="ClusterRole_RAW_Raw_Value" xml:space="preserve">
+    <value>原始值</value>
+  </data>
+  <data name="ClusterRole_LOGARITHM_Log10" xml:space="preserve">
+    <value>Log10</value>
+  </data>
+  <data name="BooleanTransform_BooleanTransform_Boolean" xml:space="preserve">
+    <value>布尔</value>
   </data>
   <data name="ZScore_ZScore_Z_Score" xml:space="preserve">
     <value>Z-Score</value>

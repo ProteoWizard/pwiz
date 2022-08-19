@@ -105,14 +105,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -127,17 +127,14 @@
   <data name="CustomReports_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\customreports_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="DDASearch_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\resources\startpage\ddasearch_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="DIA_PASEF_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\resources\startpage\dia-pasef_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="DIA_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\dia_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DIA_SWATH_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\dia-swath_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DIA_PASEF_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\resources\startpage\dia-pasef_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ExistingQuant_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\existingquant_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -166,14 +163,14 @@
   <data name="MS1Filtering_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\ms1filtering_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="DDASearch_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\resources\startpage\ddasearch_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="OptimizeCE_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\optimizece_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="PeakPicking_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\peakpicking_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="SmallMolecule_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\resources\startpage\smallmolecule_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\smallmoleculemethoddevceopt_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -183,6 +180,9 @@
   </data>
   <data name="SmallMolLibraries_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\smallmollibraries_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SmallMolecule_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\resources\startpage\smallmolecule_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="TargetedMSMS_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\targetedmsms_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

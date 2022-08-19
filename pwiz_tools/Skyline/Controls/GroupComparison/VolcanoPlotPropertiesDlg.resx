@@ -105,155 +105,53 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>335, 144</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>Volcano Plot Properties</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>VolcanoPlotPropertiesDlg</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;checkBoxFilter.Name" xml:space="preserve">
-    <value>checkBoxFilter</value>
-  </data>
-  <data name="&gt;&gt;checkBoxFilter.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkBoxFilter.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLog.Name" xml:space="preserve">
-    <value>checkBoxLog</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLog.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkBoxLog.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;foldChangeUnitLabel.Name" xml:space="preserve">
-    <value>foldChangeUnitLabel</value>
-  </data>
-  <data name="&gt;&gt;foldChangeUnitLabel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;foldChangeUnitLabel.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;pValueLowerBoundLabel.Name" xml:space="preserve">
-    <value>pValueLowerBoundLabel</value>
-  </data>
-  <data name="&gt;&gt;pValueLowerBoundLabel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;pValueLowerBoundLabel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;textFoldChange.Name" xml:space="preserve">
-    <value>textFoldChange</value>
-  </data>
-  <data name="&gt;&gt;textFoldChange.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textFoldChange.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;textPValue.Name" xml:space="preserve">
-    <value>textPValue</value>
-  </data>
-  <data name="&gt;&gt;textPValue.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textPValue.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>251, 40</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -273,59 +171,41 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name="checkBoxFilter.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
   </data>
-  <data name="checkBoxFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>84, 119</value>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="checkBoxFilter.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="textFoldChange.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 21</value>
+  </data>
+  <data name="textFoldChange.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="checkBoxFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 17</value>
+  <data name="textFoldChange.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
   </data>
-  <data name="checkBoxFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="textFoldChange.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="checkBoxFilter.Text" xml:space="preserve">
-    <value>&amp;Filter insignificant points</value>
+  <data name="&gt;&gt;textFoldChange.Name" xml:space="preserve">
+    <value>textFoldChange</value>
   </data>
-  <data name="checkBoxLog.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;textFoldChange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="checkBoxLog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 119</value>
+  <data name="&gt;&gt;textFoldChange.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="checkBoxLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="checkBoxLog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 17</value>
-  </data>
-  <data name="checkBoxLog.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="checkBoxLog.Text" xml:space="preserve">
-    <value>&amp;Log</value>
-  </data>
-  <data name="foldChangeUnitLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="foldChangeUnitLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>81, 23</value>
-  </data>
-  <data name="foldChangeUnitLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
-  </data>
-  <data name="foldChangeUnitLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>31, 13</value>
-  </data>
-  <data name="foldChangeUnitLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="foldChangeUnitLabel.Text" xml:space="preserve">
-    <value>Log2</value>
+  <data name="&gt;&gt;textFoldChange.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -348,6 +228,42 @@
   <data name="label1.Text" xml:space="preserve">
     <value>Fold &amp;change cutoff:</value>
   </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="textPValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 77</value>
+  </data>
+  <data name="textPValue.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textPValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textPValue.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;textPValue.Name" xml:space="preserve">
+    <value>textPValue</value>
+  </data>
+  <data name="&gt;&gt;textPValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textPValue.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textPValue.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -368,6 +284,78 @@
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>Adjusted &amp;p value cutoff:</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="checkBoxLog.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxLog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 119</value>
+  </data>
+  <data name="checkBoxLog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="checkBoxLog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 17</value>
+  </data>
+  <data name="checkBoxLog.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="checkBoxLog.Text" xml:space="preserve">
+    <value>&amp;Log</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.Name" xml:space="preserve">
+    <value>checkBoxLog</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxLog.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="foldChangeUnitLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="foldChangeUnitLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>81, 23</value>
+  </data>
+  <data name="foldChangeUnitLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="foldChangeUnitLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 13</value>
+  </data>
+  <data name="foldChangeUnitLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="foldChangeUnitLabel.Text" xml:space="preserve">
+    <value>Log2</value>
+  </data>
+  <data name="&gt;&gt;foldChangeUnitLabel.Name" xml:space="preserve">
+    <value>foldChangeUnitLabel</value>
+  </data>
+  <data name="&gt;&gt;foldChangeUnitLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;foldChangeUnitLabel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;foldChangeUnitLabel.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="pValueLowerBoundLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -390,28 +378,76 @@
   <data name="pValueLowerBoundLabel.Text" xml:space="preserve">
     <value>-Log10</value>
   </data>
-  <data name="textFoldChange.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 21</value>
+  <data name="&gt;&gt;pValueLowerBoundLabel.Name" xml:space="preserve">
+    <value>pValueLowerBoundLabel</value>
   </data>
-  <data name="textFoldChange.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+  <data name="&gt;&gt;pValueLowerBoundLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textFoldChange.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
+  <data name="&gt;&gt;pValueLowerBoundLabel.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="textFoldChange.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;pValueLowerBoundLabel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="textPValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 77</value>
+  <data name="checkBoxFilter.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="textPValue.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="checkBoxFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>84, 119</value>
+  </data>
+  <data name="checkBoxFilter.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="textPValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 20</value>
+  <data name="checkBoxFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 17</value>
   </data>
-  <data name="textPValue.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="checkBoxFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="checkBoxFilter.Text" xml:space="preserve">
+    <value>&amp;Filter insignificant points</value>
+  </data>
+  <data name="&gt;&gt;checkBoxFilter.Name" xml:space="preserve">
+    <value>checkBoxFilter</value>
+  </data>
+  <data name="&gt;&gt;checkBoxFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxFilter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>335, 144</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Volcano Plot Properties</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>VolcanoPlotPropertiesDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

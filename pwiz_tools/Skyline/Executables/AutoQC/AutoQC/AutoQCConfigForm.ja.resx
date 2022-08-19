@@ -105,19 +105,136 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="labelConfigName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 13</value>
+  </data>
+  <data name="labelConfigName.Text" xml:space="preserve">
+    <value>構成名</value>
+  </data>
+  <data name="checkBoxRemoveResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 17</value>
+  </data>
+  <data name="checkBoxRemoveResults.Text" xml:space="preserve">
+    <value>結果を削除</value>
+  </data>
+  <data name="labelQcFilePattern.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="labelQcFilePattern.Text" xml:space="preserve">
+    <value>パターン：</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 13</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>ファイルフィルター：</value>
+  </data>
+  <data name="includeSubfoldersCb.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 17</value>
+  </data>
+  <data name="includeSubfoldersCb.Text" xml:space="preserve">
+    <value>サブフォルダーを含める</value>
+  </data>
+  <data name="labelMinutes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>19, 13</value>
+  </data>
+  <data name="labelMinutes.Text" xml:space="preserve">
+    <value>分</value>
+  </data>
+  <data name="labelAquisitionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>113, 13</value>
+  </data>
+  <data name="labelAquisitionTime.Text" xml:space="preserve">
+    <value>予想される取得期間：</value>
+  </data>
+  <data name="labelDays.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 13</value>
+  </data>
+  <data name="labelDays.Text" xml:space="preserve">
+    <value>日々</value>
+  </data>
+  <data name="labelAccumulationTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
+  </data>
+  <data name="labelAccumulationTimeWindow.Text" xml:space="preserve">
+    <value>結果の時間枠：</value>
+  </data>
+  <data name="labelInstrumentType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 13</value>
+  </data>
+  <data name="labelInstrumentType.Text" xml:space="preserve">
+    <value>楽器タイプ：</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>105, 15</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Skylineファイルパス：</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>91, 15</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>監視するフォルダ：</value>
+  </data>
+  <data name="tabSettings.Text" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="cbPublishToPanorama.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 17</value>
+  </data>
+  <data name="cbPublishToPanorama.Text" xml:space="preserve">
+    <value>Panoramaに公開</value>
+  </data>
+  <data name="labelPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>223, 13</value>
+  </data>
+  <data name="labelPanoramaFolder.Text" xml:space="preserve">
+    <value>パノラマ上のフォルダー（例：/ MacCoss / QC）：</value>
+  </data>
+  <data name="lblPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 13</value>
+  </data>
+  <data name="lblPanoramaUrl.Text" xml:space="preserve">
+    <value>URL（例：https://panoramaweb.org/）：</value>
+  </data>
+  <data name="lblPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>60, 13</value>
+  </data>
+  <data name="lblPanoramaPasswd.Text" xml:space="preserve">
+    <value>パスワード：</value>
+  </data>
+  <data name="lblPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="lblPanoramaEmail.Text" xml:space="preserve">
+    <value>Eメール：</value>
+  </data>
+  <data name="tabPanoramaSettings.Text" xml:space="preserve">
+    <value>Panorama設定</value>
+  </data>
+  <data name="btnOkConfig.Text" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="btnCancelConfig.Text" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="btnSaveConfig.Text" xml:space="preserve">
+    <value>保存する</value>
+  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAEBAAAAAAIABoBAAARgAAACAgAAAAACAAqBAAAK4EAAAwMAAAAAAgAKglAABWFQAAQEAAAAAA
@@ -655,122 +772,5 @@
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 </value>
-  </data>
-  <data name="btnCancelConfig.Text" xml:space="preserve">
-    <value>キャンセル</value>
-  </data>
-  <data name="btnOkConfig.Text" xml:space="preserve">
-    <value>はい</value>
-  </data>
-  <data name="btnSaveConfig.Text" xml:space="preserve">
-    <value>保存する</value>
-  </data>
-  <data name="cbPublishToPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>107, 17</value>
-  </data>
-  <data name="cbPublishToPanorama.Text" xml:space="preserve">
-    <value>Panoramaに公開</value>
-  </data>
-  <data name="checkBoxRemoveResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 17</value>
-  </data>
-  <data name="checkBoxRemoveResults.Text" xml:space="preserve">
-    <value>結果を削除</value>
-  </data>
-  <data name="includeSubfoldersCb.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 17</value>
-  </data>
-  <data name="includeSubfoldersCb.Text" xml:space="preserve">
-    <value>サブフォルダーを含める</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>105, 15</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>Skylineファイルパス：</value>
-  </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>91, 15</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>監視するフォルダ：</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 13</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>ファイルフィルター：</value>
-  </data>
-  <data name="labelAccumulationTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 13</value>
-  </data>
-  <data name="labelAccumulationTimeWindow.Text" xml:space="preserve">
-    <value>結果の時間枠：</value>
-  </data>
-  <data name="labelAquisitionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>113, 13</value>
-  </data>
-  <data name="labelAquisitionTime.Text" xml:space="preserve">
-    <value>予想される取得期間：</value>
-  </data>
-  <data name="labelConfigName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 13</value>
-  </data>
-  <data name="labelConfigName.Text" xml:space="preserve">
-    <value>構成名</value>
-  </data>
-  <data name="labelDays.Size" type="System.Drawing.Size, System.Drawing">
-    <value>31, 13</value>
-  </data>
-  <data name="labelDays.Text" xml:space="preserve">
-    <value>日々</value>
-  </data>
-  <data name="labelInstrumentType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 13</value>
-  </data>
-  <data name="labelInstrumentType.Text" xml:space="preserve">
-    <value>楽器タイプ：</value>
-  </data>
-  <data name="labelMinutes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>19, 13</value>
-  </data>
-  <data name="labelMinutes.Text" xml:space="preserve">
-    <value>分</value>
-  </data>
-  <data name="labelPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 13</value>
-  </data>
-  <data name="labelPanoramaFolder.Text" xml:space="preserve">
-    <value>パノラマ上のフォルダー（例：/ MacCoss / QC）：</value>
-  </data>
-  <data name="labelQcFilePattern.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 13</value>
-  </data>
-  <data name="labelQcFilePattern.Text" xml:space="preserve">
-    <value>パターン：</value>
-  </data>
-  <data name="lblPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 13</value>
-  </data>
-  <data name="lblPanoramaEmail.Text" xml:space="preserve">
-    <value>Eメール：</value>
-  </data>
-  <data name="lblPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>60, 13</value>
-  </data>
-  <data name="lblPanoramaPasswd.Text" xml:space="preserve">
-    <value>パスワード：</value>
-  </data>
-  <data name="lblPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 13</value>
-  </data>
-  <data name="lblPanoramaUrl.Text" xml:space="preserve">
-    <value>URL（例：https://panoramaweb.org/）：</value>
-  </data>
-  <data name="tabPanoramaSettings.Text" xml:space="preserve">
-    <value>Panorama設定</value>
-  </data>
-  <data name="tabSettings.Text" xml:space="preserve">
-    <value>設定</value>
   </data>
 </root>

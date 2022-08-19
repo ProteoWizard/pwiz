@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,80 +105,38 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Above" xml:space="preserve">
-    <value>以上</value>
+  <data name="FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_" xml:space="preserve">
+    <value>消逝时间：{0}</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
-    <value>在右截止值以上</value>
+  <data name="VolcanoPlot_VolcanoPlot_One_Over_Adjusted_P_value" xml:space="preserve">
+    <value>1/已调整的 P 值</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
-    <value>以下</value>
+  <data name="VolcanoPlot_VolcanoPlot_Fold_Change" xml:space="preserve">
+    <value>变化倍数</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
-    <value>在左截止值以下</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
-    <value>分子式</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
-    <value>分子列表名称</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
-    <value>肽段修饰序列</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
-    <value>肽段分子名称</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence" xml:space="preserve">
-    <value>肽段序列</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Accession" xml:space="preserve">
-    <value>蛋白质检索号</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Gene" xml:space="preserve">
-    <value>蛋白质编码基因</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Name" xml:space="preserve">
-    <value>蛋白质名称</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name" xml:space="preserve">
-    <value>蛋白质首选名称</value>
+  <data name="VolcanoPlot_VolcanoPlot_Volcano_Plot" xml:space="preserve">
+    <value>火山图</value>
   </data>
   <data name="EditGroupComparisonDlg_btnOK_Click_There_is_already_a_group_comparison_named__0__" xml:space="preserve">
     <value>已存在名称为{0}的群组比较。</value>
   </data>
-  <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
-    <value>-Log10（P 值）</value>
+  <data name="SummarizationMethod_REGRESSION_Regression" xml:space="preserve">
+    <value>回归</value>
   </data>
-  <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
-    <value>Log2（倍数变化）</value>
-  </data>
-  <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
-    <value>条状图</value>
-  </data>
-  <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
-    <value>记录 2 倍数变化</value>
-  </data>
-  <data name="FoldChangeBarGraph_UpdateGraph_Peptide" xml:space="preserve">
-    <value>肽段</value>
-  </data>
-  <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
-    <value>蛋白质</value>
+  <data name="SummarizationMethod_AVERAGING_Averaging" xml:space="preserve">
+    <value>平均</value>
   </data>
   <data name="FoldChangeDetails_UpdateUi_Details_for_protein__0_" xml:space="preserve">
     <value>蛋白质{0}细节</value>
@@ -186,53 +144,53 @@
   <data name="FoldChangeDetails_UpdateUi_Select_a_protein_to_see_details_for_that_calculation_" xml:space="preserve">
     <value>选择一个蛋白质以查看该计算细节。</value>
   </data>
-  <data name="FoldChangeForm_GetTitle_New_Group_Comparison" xml:space="preserve">
-    <value>新群组比较</value>
-  </data>
-  <data name="FoldChangeGrid_GetTitle_Grid" xml:space="preserve">
-    <value>网格</value>
-  </data>
-  <data name="FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_" xml:space="preserve">
-    <value>消逝时间：{0}</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
-    <value>变化倍数</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
-    <value>P 值</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_Peptide" xml:space="preserve">
-    <value>肽段</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_Protein" xml:space="preserve">
-    <value>蛋白质</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
-    <value>格式化...</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties___" xml:space="preserve">
-    <value>属性…</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
-    <value>删除截止值以下</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
-    <value>选择</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_GetTitle_Volcano_Plot" xml:space="preserve">
-    <value>火山图</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
-    <value>删除截止值以下的肽段</value>
-  </data>
-  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
+  <data name="GroupComparisonWindow_timer_Tick_Group_Comparison" xml:space="preserve">
     <value>群组比较</value>
+  </data>
+  <data name="GroupComparisonWindow_timer_Tick_Group_Comparision" xml:space="preserve">
+    <value>群组比较</value>
+  </data>
+  <data name="GroupComparisonSettingsForm_GroupComparisonDef_Change_Group_Comparison" xml:space="preserve">
+    <value>更改群组比较</value>
   </data>
   <data name="GroupComparisonDefList_Title_Define_Group_Comparisons" xml:space="preserve">
     <value>定义群组比较</value>
   </data>
-  <data name="GroupComparisonSettingsForm_GroupComparisonDef_Change_Group_Comparison" xml:space="preserve">
-    <value>更改群组比较</value>
+  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
+    <value>群组比较</value>
+  </data>
+  <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="FoldChangeBarGraph_UpdateGraph_Peptide" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
+    <value>记录 2 倍数变化</value>
+  </data>
+  <data name="FoldChangeGrid_GetTitle_Grid" xml:space="preserve">
+    <value>网格</value>
+  </data>
+  <data name="FoldChangeForm_GetTitle_New_Group_Comparison" xml:space="preserve">
+    <value>新群组比较</value>
+  </data>
+  <data name="NormalizationMethod_NONE_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians" xml:space="preserve">
+    <value>均衡中位数</value>
+  </data>
+  <data name="NormalizationMethod_QUANTILE_Quantile" xml:space="preserve">
+    <value>分位数</value>
+  </data>
+  <data name="NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards" xml:space="preserve">
+    <value>相对于总体标准品比率</value>
+  </data>
+  <data name="NormalizationMethod_FromName_Ratio_to__0_" xml:space="preserve">
+    <value>相对于{0}的比率</value>
+  </data>
+  <data name="GroupComparisonViewContext_Delete_No_rows_are_selected" xml:space="preserve">
+    <value>无选择的行。</value>
   </data>
   <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_" xml:space="preserve">
     <value>您是否确定想要删除肽段{0}？</value>
@@ -251,59 +209,86 @@
   <data name="GroupComparisonViewContext_Delete_Delete_items" xml:space="preserve">
     <value>删除项</value>
   </data>
-  <data name="GroupComparisonViewContext_Delete_No_rows_are_selected" xml:space="preserve">
-    <value>无选择的行。</value>
-  </data>
-  <data name="GroupComparisonWindow_timer_Tick_Group_Comparision" xml:space="preserve">
-    <value>群组比较</value>
-  </data>
-  <data name="GroupComparisonWindow_timer_Tick_Group_Comparison" xml:space="preserve">
-    <value>群组比较</value>
-  </data>
-  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians" xml:space="preserve">
-    <value>均衡中位数</value>
-  </data>
-  <data name="NormalizationMethod_FromName_Ratio_to__0_" xml:space="preserve">
-    <value>相对于{0}的比率</value>
-  </data>
-  <data name="NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards" xml:space="preserve">
-    <value>相对于总体标准品比率</value>
-  </data>
-  <data name="NormalizationMethod_NONE_None" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="NormalizationMethod_QUANTILE_Quantile" xml:space="preserve">
-    <value>分位数</value>
-  </data>
-  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
-    <value>总离子电流</value>
-  </data>
-  <data name="SummarizationMethod_AVERAGING_Averaging" xml:space="preserve">
-    <value>平均</value>
-  </data>
   <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
     <value>离子对面积总和</value>
   </data>
   <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
     <value>Tukey 中位数平滑</value>
   </data>
-  <data name="SummarizationMethod_REGRESSION_Regression" xml:space="preserve">
-    <value>回归</value>
+  <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
+    <value>条状图</value>
   </data>
-  <data name="VolcanoPlot_VolcanoPlot_Fold_Change" xml:space="preserve">
-    <value>变化倍数</value>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
+    <value>选择</value>
   </data>
-  <data name="VolcanoPlot_VolcanoPlot_One_Over_Adjusted_P_value" xml:space="preserve">
-    <value>1/已调整的 P 值</value>
-  </data>
-  <data name="VolcanoPlot_VolcanoPlot_Volcano_Plot" xml:space="preserve">
+  <data name="FoldChangeVolcanoPlot_GetTitle_Volcano_Plot" xml:space="preserve">
     <value>火山图</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
-    <value>圆圈</value>
+  <data name="FoldChangeRowTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>肽段</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
-    <value>菱形</value>
+  <data name="FoldChangeRowTipProvider_RenderTip_Protein" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
+    <value>变化倍数</value>
+  </data>
+  <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
+    <value>P 值</value>
+  </data>
+  <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
+    <value>Log2（倍数变化）</value>
+  </data>
+  <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
+    <value>-Log10（P 值）</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties___" xml:space="preserve">
+    <value>属性…</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
+    <value>删除截止值以下</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
+    <value>删除截止值以下的肽段</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Name" xml:space="preserve">
+    <value>蛋白质名称</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Accession" xml:space="preserve">
+    <value>蛋白质检索号</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name" xml:space="preserve">
+    <value>蛋白质首选名称</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Gene" xml:space="preserve">
+    <value>蛋白质编码基因</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
+    <value>肽段分子名称</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
+    <value>在左截止值以下</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
+    <value>在右截止值以上</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
+    <value>以下</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Above" xml:space="preserve">
+    <value>以上</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
+    <value>肽段修饰序列</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence" xml:space="preserve">
+    <value>肽段序列</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
+    <value>格式化...</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression" xml:space="preserve">
     <value>表达式</value>
@@ -311,32 +296,44 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled" xml:space="preserve">
     <value>已标记</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Large" xml:space="preserve">
-    <value>大</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
+    <value>分子式</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Normal" xml:space="preserve">
-    <value>正常</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
-    <value>加号</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
+    <value>分子列表名称</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
     <value>大小</value>
   </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol" xml:space="preserve">
+    <value>符号</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small" xml:space="preserve">
+    <value>超小</value>
+  </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Small" xml:space="preserve">
     <value>小</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Normal" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Large" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Large" xml:space="preserve">
+    <value>超大</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square" xml:space="preserve">
     <value>正方形</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
-    <value>星号</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol" xml:space="preserve">
-    <value>符号</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
+    <value>菱形</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
     <value>三角形</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
+    <value>圆圈</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown" xml:space="preserve">
     <value>倒三角</value>
@@ -344,10 +341,13 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
     <value>X 十字</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Large" xml:space="preserve">
-    <value>超大</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
+    <value>加号</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small" xml:space="preserve">
-    <value>超小</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
+    <value>星号</value>
+  </data>
+  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
+    <value>总离子电流</value>
   </data>
 </root>

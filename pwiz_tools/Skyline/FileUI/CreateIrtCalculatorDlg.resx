@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,113 +105,37 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 13</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>358, 463</value>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>255, 55</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>Create iRT calculator</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>CreateIrtCalculatorDlg</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseDb.Name" xml:space="preserve">
-    <value>btnBrowseDb</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseDb.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseDb.ZOrder" xml:space="preserve">
-    <value>16</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseText.Name" xml:space="preserve">
-    <value>btnBrowseText</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseText.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseText.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDb.Name" xml:space="preserve">
-    <value>btnCreateDb</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDb.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDb.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDbProteins.Name" xml:space="preserve">
-    <value>btnCreateDbProteins</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDbProteins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDbProteins.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>15</value>
-  </data>
-  <data name="&gt;&gt;comboBoxProteins.Name" xml:space="preserve">
-    <value>comboBoxProteins</value>
-  </data>
-  <data name="&gt;&gt;comboBoxProteins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboBoxProteins.ZOrder" xml:space="preserve">
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>9</value>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Document does not have an iRT calculator.  An iRT calculator is necessary to add iRT library values.  Create an iRT calculator?</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
@@ -219,152 +143,33 @@
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>21</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>18</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>20</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;label7.Name" xml:space="preserve">
-    <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;radioUseExisting.Name" xml:space="preserve">
-    <value>radioUseExisting</value>
-  </data>
-  <data name="&gt;&gt;radioUseExisting.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioUseExisting.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;radioUseList.Name" xml:space="preserve">
-    <value>radioUseList</value>
-  </data>
-  <data name="&gt;&gt;radioUseList.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioUseList.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;radioUseProtein.Name" xml:space="preserve">
-    <value>radioUseProtein</value>
-  </data>
-  <data name="&gt;&gt;radioUseProtein.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioUseProtein.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;textCalculatorName.Name" xml:space="preserve">
-    <value>textCalculatorName</value>
-  </data>
-  <data name="&gt;&gt;textCalculatorName.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textCalculatorName.ZOrder" xml:space="preserve">
-    <value>19</value>
-  </data>
-  <data name="&gt;&gt;textImportText.Name" xml:space="preserve">
-    <value>textImportText</value>
-  </data>
-  <data name="&gt;&gt;textImportText.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textImportText.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabase.Name" xml:space="preserve">
-    <value>textNewDatabase</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabase.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabase.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabaseProteins.Name" xml:space="preserve">
-    <value>textNewDatabaseProteins</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabaseProteins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabaseProteins.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textOpenDatabase.Name" xml:space="preserve">
-    <value>textOpenDatabase</value>
-  </data>
-  <data name="&gt;&gt;textOpenDatabase.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textOpenDatabase.ZOrder" xml:space="preserve">
-    <value>17</value>
-  </data>
-  <data name="btnBrowseDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnCreateDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnBrowseDb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 420</value>
+  <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 328</value>
   </data>
-  <data name="btnBrowseDb.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnCreateDb.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="btnBrowseDb.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="btnCreateDb.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
   </data>
-  <data name="btnBrowseDb.Text" xml:space="preserve">
-    <value>&amp;Browse...</value>
+  <data name="btnCreateDb.Text" xml:space="preserve">
+    <value>Brow&amp;se...</value>
   </data>
-  <data name="btnBrowseText.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;btnCreateDb.Name" xml:space="preserve">
+    <value>btnCreateDb</value>
   </data>
-  <data name="btnBrowseText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 283</value>
+  <data name="&gt;&gt;btnCreateDb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="btnBrowseText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="&gt;&gt;btnCreateDb.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="btnBrowseText.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="btnBrowseText.Text" xml:space="preserve">
-    <value>Bro&amp;wse...</value>
+  <data name="&gt;&gt;btnCreateDb.ZOrder" xml:space="preserve">
+    <value>13</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -384,35 +189,17 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
   </data>
-  <data name="btnCreateDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
   </data>
-  <data name="btnCreateDb.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 328</value>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="btnCreateDb.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="btnCreateDb.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="btnCreateDb.Text" xml:space="preserve">
-    <value>Brow&amp;se...</value>
-  </data>
-  <data name="btnCreateDbProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCreateDbProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 193</value>
-  </data>
-  <data name="btnCreateDbProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCreateDbProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="btnCreateDbProteins.Text" xml:space="preserve">
-    <value>Brows&amp;e...</value>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>14</value>
   </data>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -432,62 +219,65 @@
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
   </data>
-  <data name="comboBoxProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 150</value>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
   </data>
-  <data name="comboBoxProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>179, 21</value>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="comboBoxProteins.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="btnBrowseDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnBrowseDb.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 420</value>
+  </data>
+  <data name="btnBrowseDb.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseDb.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="btnBrowseDb.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseDb.Name" xml:space="preserve">
+    <value>btnBrowseDb</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseDb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseDb.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseDb.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="textOpenDatabase.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 422</value>
   </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="textOpenDatabase.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 20</value>
   </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 312</value>
+  <data name="textOpenDatabase.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 13</value>
+  <data name="&gt;&gt;textOpenDatabase.Name" xml:space="preserve">
+    <value>textOpenDatabase</value>
   </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+  <data name="&gt;&gt;textOpenDatabase.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>iRT &amp;database:</value>
+  <data name="&gt;&gt;textOpenDatabase.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 13</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>255, 55</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>Document does not have an iRT calculator.  An iRT calculator is necessary to add iRT library values.  Create an iRT calculator?</value>
-  </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 264</value>
-  </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>71, 13</value>
-  </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>&amp;Transition list:</value>
+  <data name="&gt;&gt;textOpenDatabase.ZOrder" xml:space="preserve">
+    <value>17</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -507,6 +297,39 @@
   <data name="label4.Text" xml:space="preserve">
     <value>i&amp;RT database:</value>
   </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>18</value>
+  </data>
+  <data name="textCalculatorName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 82</value>
+  </data>
+  <data name="textCalculatorName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 20</value>
+  </data>
+  <data name="textCalculatorName.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textCalculatorName.Name" xml:space="preserve">
+    <value>textCalculatorName</value>
+  </data>
+  <data name="&gt;&gt;textCalculatorName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textCalculatorName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textCalculatorName.ZOrder" xml:space="preserve">
+    <value>19</value>
+  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -524,6 +347,228 @@
   </data>
   <data name="label5.Text" xml:space="preserve">
     <value>&amp;Name:</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="radioUseExisting.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioUseExisting.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 375</value>
+  </data>
+  <data name="radioUseExisting.Size" type="System.Drawing.Size, System.Drawing">
+    <value>158, 17</value>
+  </data>
+  <data name="radioUseExisting.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="radioUseExisting.Text" xml:space="preserve">
+    <value>&amp;Open existing iRT calculator</value>
+  </data>
+  <data name="&gt;&gt;radioUseExisting.Name" xml:space="preserve">
+    <value>radioUseExisting</value>
+  </data>
+  <data name="&gt;&gt;radioUseExisting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioUseExisting.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioUseExisting.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="radioUseList.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioUseList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 240</value>
+  </data>
+  <data name="radioUseList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>278, 17</value>
+  </data>
+  <data name="radioUseList.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="radioUseList.Text" xml:space="preserve">
+    <value>&amp;Create new iRT calculator from separate transition list:</value>
+  </data>
+  <data name="&gt;&gt;radioUseList.Name" xml:space="preserve">
+    <value>radioUseList</value>
+  </data>
+  <data name="&gt;&gt;radioUseList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioUseList.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioUseList.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="textNewDatabase.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 330</value>
+  </data>
+  <data name="textNewDatabase.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 20</value>
+  </data>
+  <data name="textNewDatabase.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabase.Name" xml:space="preserve">
+    <value>textNewDatabase</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabase.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabase.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabase.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>23, 312</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>iRT &amp;database:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>23, 264</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>71, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>&amp;Transition list:</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="textImportText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 285</value>
+  </data>
+  <data name="textImportText.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 20</value>
+  </data>
+  <data name="textImportText.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;textImportText.Name" xml:space="preserve">
+    <value>textImportText</value>
+  </data>
+  <data name="&gt;&gt;textImportText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textImportText.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textImportText.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="btnBrowseText.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnBrowseText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 283</value>
+  </data>
+  <data name="btnBrowseText.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowseText.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnBrowseText.Text" xml:space="preserve">
+    <value>Bro&amp;wse...</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseText.Name" xml:space="preserve">
+    <value>btnBrowseText</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseText.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseText.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="radioUseProtein.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioUseProtein.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 108</value>
+  </data>
+  <data name="radioUseProtein.Size" type="System.Drawing.Size, System.Drawing">
+    <value>323, 17</value>
+  </data>
+  <data name="radioUseProtein.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="radioUseProtein.Text" xml:space="preserve">
+    <value>Create ne&amp;w iRT calculator from protein in imported transition list:</value>
+  </data>
+  <data name="&gt;&gt;radioUseProtein.Name" xml:space="preserve">
+    <value>radioUseProtein</value>
+  </data>
+  <data name="&gt;&gt;radioUseProtein.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioUseProtein.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioUseProtein.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -543,6 +588,66 @@
   <data name="label6.Text" xml:space="preserve">
     <value>iRT &amp;database:</value>
   </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textNewDatabaseProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 195</value>
+  </data>
+  <data name="textNewDatabaseProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>176, 20</value>
+  </data>
+  <data name="textNewDatabaseProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabaseProteins.Name" xml:space="preserve">
+    <value>textNewDatabaseProteins</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabaseProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabaseProteins.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textNewDatabaseProteins.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnCreateDbProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCreateDbProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 193</value>
+  </data>
+  <data name="btnCreateDbProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCreateDbProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="btnCreateDbProteins.Text" xml:space="preserve">
+    <value>Brows&amp;e...</value>
+  </data>
+  <data name="&gt;&gt;btnCreateDbProteins.Name" xml:space="preserve">
+    <value>btnCreateDbProteins</value>
+  </data>
+  <data name="&gt;&gt;btnCreateDbProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCreateDbProteins.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCreateDbProteins.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -561,94 +666,58 @@
   <data name="label7.Text" xml:space="preserve">
     <value>&amp;Protein name:</value>
   </data>
-  <data name="radioUseExisting.AutoSize" type="System.Boolean, mscorlib">
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboBoxProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 150</value>
+  </data>
+  <data name="comboBoxProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>179, 21</value>
+  </data>
+  <data name="comboBoxProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;comboBoxProteins.Name" xml:space="preserve">
+    <value>comboBoxProteins</value>
+  </data>
+  <data name="&gt;&gt;comboBoxProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxProteins.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboBoxProteins.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="radioUseExisting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 375</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>358, 463</value>
   </data>
-  <data name="radioUseExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>158, 17</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="radioUseExisting.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Create iRT calculator</value>
   </data>
-  <data name="radioUseExisting.Text" xml:space="preserve">
-    <value>&amp;Open existing iRT calculator</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>CreateIrtCalculatorDlg</value>
   </data>
-  <data name="radioUseList.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioUseList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 240</value>
-  </data>
-  <data name="radioUseList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>278, 17</value>
-  </data>
-  <data name="radioUseList.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="radioUseList.Text" xml:space="preserve">
-    <value>&amp;Create new iRT calculator from separate transition list:</value>
-  </data>
-  <data name="radioUseProtein.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioUseProtein.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 108</value>
-  </data>
-  <data name="radioUseProtein.Size" type="System.Drawing.Size, System.Drawing">
-    <value>323, 17</value>
-  </data>
-  <data name="radioUseProtein.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="radioUseProtein.Text" xml:space="preserve">
-    <value>Create ne&amp;w iRT calculator from protein in imported transition list:</value>
-  </data>
-  <data name="textCalculatorName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 82</value>
-  </data>
-  <data name="textCalculatorName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
-  </data>
-  <data name="textCalculatorName.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="textImportText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 285</value>
-  </data>
-  <data name="textImportText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
-  </data>
-  <data name="textImportText.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="textNewDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 330</value>
-  </data>
-  <data name="textNewDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
-  </data>
-  <data name="textNewDatabase.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="textNewDatabaseProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 195</value>
-  </data>
-  <data name="textNewDatabaseProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
-  </data>
-  <data name="textNewDatabaseProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="textOpenDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 422</value>
-  </data>
-  <data name="textOpenDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 20</value>
-  </data>
-  <data name="textOpenDatabase.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

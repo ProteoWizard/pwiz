@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,466 +105,66 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="radioCreateMultipleMulti.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>374, 409</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="radioCreateMultipleMulti.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="radioCreateMultipleMulti.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 103</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>导入结果</value>
+  <data name="radioCreateMultipleMulti.Size" type="System.Drawing.Size, System.Drawing">
+    <value>220, 17</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ImportResultsDlg</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
-    <value>cbAutoRetry</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;cbShowAllChromatograms.Name" xml:space="preserve">
-    <value>cbShowAllChromatograms</value>
-  </data>
-  <data name="&gt;&gt;cbShowAllChromatograms.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;cbShowAllChromatograms.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;comboName.Name" xml:space="preserve">
-    <value>comboName</value>
-  </data>
-  <data name="&gt;&gt;comboName.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboName.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizing.Name" xml:space="preserve">
-    <value>comboOptimizing</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizing.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizing.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;comboSimultaneousFiles.Name" xml:space="preserve">
-    <value>comboSimultaneousFiles</value>
-  </data>
-  <data name="&gt;&gt;comboSimultaneousFiles.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;comboSimultaneousFiles.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
-    <value>comboTuning</value>
-  </data>
-  <data name="&gt;&gt;comboTuning.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboTuning.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
-    <value>helpTip</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+  <data name="radioCreateMultipleMulti.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;labelNameAdd.Name" xml:space="preserve">
-    <value>labelNameAdd</value>
+  <data name="radioCreateMultipleMulti.Text" xml:space="preserve">
+    <value>在目录中添加多次注射重复测定(&amp;M)</value>
   </data>
-  <data name="&gt;&gt;labelNameAdd.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelNameAdd.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;labelNameNew.Name" xml:space="preserve">
-    <value>labelNameNew</value>
-  </data>
-  <data name="&gt;&gt;labelNameNew.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelNameNew.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizing.Name" xml:space="preserve">
-    <value>labelOptimizing</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizing.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizing.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;labelTuning.Name" xml:space="preserve">
-    <value>labelTuning</value>
-  </data>
-  <data name="&gt;&gt;labelTuning.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelTuning.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;radioAddExisting.Name" xml:space="preserve">
-    <value>radioAddExisting</value>
-  </data>
-  <data name="&gt;&gt;radioAddExisting.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioAddExisting.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;radioCreateMultiple.Name" xml:space="preserve">
-    <value>radioCreateMultiple</value>
-  </data>
-  <data name="&gt;&gt;radioCreateMultiple.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioCreateMultiple.ZOrder" xml:space="preserve">
-    <value>6</value>
+  <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
+    <value>添加任意数量的多次注射重复测定并在目录
+中编组为：
+    &lt;root&gt;\
+        replicate1\
+            *.RAW
+        replicate2\
+            *.wiff
+        replicate3\
+            *.mzML
+选择根目录，且系统会为其每个子目
+录创建新的重复测定。</value>
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Name" xml:space="preserve">
     <value>radioCreateMultipleMulti</value>
+  </data>
+  <data name="&gt;&gt;radioCreateMultipleMulti.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <data name="&gt;&gt;radioCreateNew.Name" xml:space="preserve">
-    <value>radioCreateNew</value>
-  </data>
-  <data name="&gt;&gt;radioCreateNew.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioCreateNew.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
-    <value>textName</value>
-  </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>287, 40</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>取消</value>
-  </data>
-  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>287, 10</value>
-  </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>确定</value>
-  </data>
-  <data name="cbAutoRetry.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbAutoRetry.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 87</value>
-  </data>
-  <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 17</value>
-  </data>
-  <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="cbAutoRetry.Text" xml:space="preserve">
-    <value>导入失败后重试(&amp;R)</value>
-  </data>
-  <data name="cbShowAllChromatograms.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbShowAllChromatograms.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbShowAllChromatograms.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 64</value>
-  </data>
-  <data name="cbShowAllChromatograms.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 17</value>
-  </data>
-  <data name="cbShowAllChromatograms.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="cbShowAllChromatograms.Text" xml:space="preserve">
-    <value>导入时显示色谱图(&amp;C)</value>
-  </data>
-  <data name="comboName.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="comboName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 248</value>
-  </data>
-  <data name="comboName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>209, 21</value>
-  </data>
-  <data name="comboName.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>34, 54</value>
-  </data>
-  <data name="comboOptimizing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>131, 21</value>
-  </data>
-  <data name="comboOptimizing.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="comboSimultaneousFiles.Items" xml:space="preserve">
-    <value>每次一个</value>
-  </data>
-  <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
-    <value>数个</value>
-  </data>
-  <data name="comboSimultaneousFiles.Items2" xml:space="preserve">
-    <value>许多个 </value>
-  </data>
-  <data name="comboSimultaneousFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 31</value>
-  </data>
-  <data name="comboSimultaneousFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>131, 21</value>
-  </data>
-  <data name="comboSimultaneousFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="comboTuning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>171, 54</value>
-  </data>
-  <data name="comboTuning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>101, 21</value>
-  </data>
-  <data name="comboTuning.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="comboTuning.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 15</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>145, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>要同步导入的文件(&amp;I)：</value>
-  </data>
-  <data name="labelNameAdd.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelNameAdd.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="labelNameAdd.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelNameAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 232</value>
-  </data>
-  <data name="labelNameAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 13</value>
-  </data>
-  <data name="labelNameAdd.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="labelNameAdd.Text" xml:space="preserve">
-    <value>名称(&amp;N)：</value>
-  </data>
-  <data name="labelNameNew.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelNameNew.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="labelNameNew.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelNameNew.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 156</value>
-  </data>
-  <data name="labelNameNew.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 13</value>
-  </data>
-  <data name="labelNameNew.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="labelNameNew.Text" xml:space="preserve">
-    <value>名称(&amp;N)：</value>
-  </data>
-  <data name="labelOptimizing.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelOptimizing.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelOptimizing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>31, 38</value>
-  </data>
-  <data name="labelOptimizing.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
-  </data>
-  <data name="labelOptimizing.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="labelOptimizing.Text" xml:space="preserve">
-    <value>最优化(&amp;Z)：</value>
-  </data>
-  <data name="labelTuning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelTuning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelTuning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>171, 38</value>
-  </data>
-  <data name="labelTuning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>43, 13</value>
-  </data>
-  <data name="labelTuning.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="labelTuning.Text" xml:space="preserve">
-    <value>调谐(&amp;T)：</value>
-  </data>
-  <data name="labelTuning.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-2, 292</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>378, 141</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="radioAddExisting.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="radioAddExisting.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="radioAddExisting.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 212</value>
-  </data>
-  <data name="radioAddExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 17</value>
-  </data>
-  <data name="radioAddExisting.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="radioAddExisting.Text" xml:space="preserve">
-    <value>将文件添加至当前重复测定(&amp;E)</value>
-  </data>
-  <data name="radioAddExisting.ToolTip" xml:space="preserve">
-    <value>从文件中将注射添加到当前重复测定，
-并作为多次注射收集，但当注射结果可用时，
-不导入多个操作中。</value>
   </data>
   <data name="radioCreateMultiple.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -591,36 +191,52 @@
 作为单独的重复测定被添加。
 </value>
   </data>
-  <data name="radioCreateMultipleMulti.AutoSize" type="System.Boolean, mscorlib">
+  <data name="&gt;&gt;radioCreateMultiple.Name" xml:space="preserve">
+    <value>radioCreateMultiple</value>
+  </data>
+  <data name="&gt;&gt;radioCreateMultiple.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioCreateMultiple.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioCreateMultiple.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="radioAddExisting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="radioCreateMultipleMulti.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="radioAddExisting.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="radioCreateMultipleMulti.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 103</value>
+  <data name="radioAddExisting.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 212</value>
   </data>
-  <data name="radioCreateMultipleMulti.Size" type="System.Drawing.Size, System.Drawing">
-    <value>220, 17</value>
+  <data name="radioAddExisting.Size" type="System.Drawing.Size, System.Drawing">
+    <value>173, 17</value>
   </data>
-  <data name="radioCreateMultipleMulti.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="radioAddExisting.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="radioCreateMultipleMulti.Text" xml:space="preserve">
-    <value>在目录中添加多次注射重复测定(&amp;M)</value>
+  <data name="radioAddExisting.Text" xml:space="preserve">
+    <value>将文件添加至当前重复测定(&amp;E)</value>
   </data>
-  <data name="radioCreateMultipleMulti.ToolTip" xml:space="preserve">
-    <value>添加任意数量的多次注射重复测定并在目录
-中编组为：
-    &lt;root&gt;\
-        replicate1\
-            *.RAW
-        replicate2\
-            *.wiff
-        replicate3\
-            *.mzML
-选择根目录，且系统会为其每个子目
-录创建新的重复测定。</value>
+  <data name="radioAddExisting.ToolTip" xml:space="preserve">
+    <value>从文件中将注射添加到当前重复测定，
+并作为多次注射收集，但当注射结果可用时，
+不导入多个操作中。</value>
+  </data>
+  <data name="&gt;&gt;radioAddExisting.Name" xml:space="preserve">
+    <value>radioAddExisting</value>
+  </data>
+  <data name="&gt;&gt;radioAddExisting.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioAddExisting.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioAddExisting.ZOrder" xml:space="preserve">
+    <value>13</value>
   </data>
   <data name="radioCreateNew.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -644,6 +260,273 @@
     <value>添加一个带有任意数量注射和特定名称的
 新重复测定。</value>
   </data>
+  <data name="&gt;&gt;radioCreateNew.Name" xml:space="preserve">
+    <value>radioCreateNew</value>
+  </data>
+  <data name="&gt;&gt;radioCreateNew.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioCreateNew.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioCreateNew.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>287, 10</value>
+  </data>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>287, 40</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="labelTuning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelTuning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelTuning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>171, 38</value>
+  </data>
+  <data name="labelTuning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>43, 13</value>
+  </data>
+  <data name="labelTuning.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="labelTuning.Text" xml:space="preserve">
+    <value>调谐(&amp;T)：</value>
+  </data>
+  <data name="labelTuning.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;labelTuning.Name" xml:space="preserve">
+    <value>labelTuning</value>
+  </data>
+  <data name="&gt;&gt;labelTuning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelTuning.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelTuning.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboTuning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>171, 54</value>
+  </data>
+  <data name="comboTuning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 21</value>
+  </data>
+  <data name="comboTuning.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="comboTuning.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
+    <value>comboTuning</value>
+  </data>
+  <data name="&gt;&gt;comboTuning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboTuning.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboTuning.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="cbShowAllChromatograms.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbShowAllChromatograms.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbShowAllChromatograms.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 64</value>
+  </data>
+  <data name="cbShowAllChromatograms.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 17</value>
+  </data>
+  <data name="cbShowAllChromatograms.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="cbShowAllChromatograms.Text" xml:space="preserve">
+    <value>导入时显示色谱图(&amp;C)</value>
+  </data>
+  <data name="&gt;&gt;cbShowAllChromatograms.Name" xml:space="preserve">
+    <value>cbShowAllChromatograms</value>
+  </data>
+  <data name="&gt;&gt;cbShowAllChromatograms.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbShowAllChromatograms.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;cbShowAllChromatograms.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelOptimizing.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelOptimizing.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelOptimizing.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 38</value>
+  </data>
+  <data name="labelOptimizing.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="labelOptimizing.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelOptimizing.Text" xml:space="preserve">
+    <value>最优化(&amp;Z)：</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizing.Name" xml:space="preserve">
+    <value>labelOptimizing</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizing.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizing.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelOptimizing.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
+    <value>34, 54</value>
+  </data>
+  <data name="comboOptimizing.Size" type="System.Drawing.Size, System.Drawing">
+    <value>131, 21</value>
+  </data>
+  <data name="comboOptimizing.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizing.Name" xml:space="preserve">
+    <value>comboOptimizing</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizing.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizing.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizing.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="comboName.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="comboName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>34, 248</value>
+  </data>
+  <data name="comboName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 21</value>
+  </data>
+  <data name="comboName.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;comboName.Name" xml:space="preserve">
+    <value>comboName</value>
+  </data>
+  <data name="&gt;&gt;comboName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboName.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="labelNameAdd.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelNameAdd.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="labelNameAdd.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelNameAdd.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 232</value>
+  </data>
+  <data name="labelNameAdd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>38, 13</value>
+  </data>
+  <data name="labelNameAdd.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelNameAdd.Text" xml:space="preserve">
+    <value>名称(&amp;N)：</value>
+  </data>
+  <data name="&gt;&gt;labelNameAdd.Name" xml:space="preserve">
+    <value>labelNameAdd</value>
+  </data>
+  <data name="&gt;&gt;labelNameAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelNameAdd.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelNameAdd.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
   <data name="textName.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -655,5 +538,185 @@
   </data>
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
+  </data>
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+    <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="labelNameNew.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelNameNew.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="labelNameNew.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelNameNew.Location" type="System.Drawing.Point, System.Drawing">
+    <value>31, 156</value>
+  </data>
+  <data name="labelNameNew.Size" type="System.Drawing.Size, System.Drawing">
+    <value>38, 13</value>
+  </data>
+  <data name="labelNameNew.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelNameNew.Text" xml:space="preserve">
+    <value>名称(&amp;N)：</value>
+  </data>
+  <data name="&gt;&gt;labelNameNew.Name" xml:space="preserve">
+    <value>labelNameNew</value>
+  </data>
+  <data name="&gt;&gt;labelNameNew.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelNameNew.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelNameNew.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 15</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>145, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>要同步导入的文件(&amp;I)：</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items" xml:space="preserve">
+    <value>每次一个</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items1" xml:space="preserve">
+    <value>数个</value>
+  </data>
+  <data name="comboSimultaneousFiles.Items2" xml:space="preserve">
+    <value>许多个 </value>
+  </data>
+  <data name="comboSimultaneousFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 31</value>
+  </data>
+  <data name="comboSimultaneousFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>131, 21</value>
+  </data>
+  <data name="comboSimultaneousFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Name" xml:space="preserve">
+    <value>comboSimultaneousFiles</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;comboSimultaneousFiles.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="cbAutoRetry.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoRetry.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 87</value>
+  </data>
+  <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 17</value>
+  </data>
+  <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="cbAutoRetry.Text" xml:space="preserve">
+    <value>导入失败后重试(&amp;R)</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
+    <value>cbAutoRetry</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;cbAutoRetry.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-2, 292</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>378, 141</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>374, 409</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>导入结果</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ImportResultsDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

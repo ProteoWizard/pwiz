@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,254 +105,43 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>34</value>
-  </metadata>
-  <metadata name="bindingPeakCalculators.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>334, 17</value>
   </metadata>
-  <metadata name="IsEnabled.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="PeakCalculatorName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PeakCalculatorPercentContribution.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PeakCalculatorWeight.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="toolStripFind.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>426, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 28</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>899, 520</value>
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>385, 20</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>编辑峰值计得分型</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>EditPeakScoringModelDlg</value>
-  </data>
-  <data name="&gt;&gt;bindingPeakCalculators.Name" xml:space="preserve">
-    <value>bindingPeakCalculators</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;btnTrainModel.Name" xml:space="preserve">
-    <value>btnTrainModel</value>
-  </data>
-  <data name="&gt;&gt;btnTrainModel.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;btnTrainModel.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboModel.Name" xml:space="preserve">
-    <value>comboModel</value>
-  </data>
-  <data name="&gt;&gt;comboModel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboModel.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn2</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn3</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Name" xml:space="preserve">
-    <value>decoyCheckBox</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;decoyCheckBox.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;findPeptidesButton.Name" xml:space="preserve">
-    <value>findPeptidesButton</value>
-  </data>
-  <data name="&gt;&gt;gridPeakCalculators.Name" xml:space="preserve">
-    <value>gridPeakCalculators</value>
-  </data>
-  <data name="&gt;&gt;gridPeakCalculators.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;gridPeakCalculators.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
-    <value>helpTip</value>
-  </data>
-  <data name="&gt;&gt;IsEnabled.Name" xml:space="preserve">
-    <value>IsEnabled</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;lblColinearWarning.Name" xml:space="preserve">
-    <value>lblColinearWarning</value>
-  </data>
-  <data name="&gt;&gt;lblColinearWarning.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblColinearWarning.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;PeakCalculatorName.Name" xml:space="preserve">
-    <value>PeakCalculatorName</value>
-  </data>
-  <data name="&gt;&gt;PeakCalculatorPercentContribution.Name" xml:space="preserve">
-    <value>PeakCalculatorPercentContribution</value>
-  </data>
-  <data name="&gt;&gt;PeakCalculatorWeight.Name" xml:space="preserve">
-    <value>PeakCalculatorWeight</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Name" xml:space="preserve">
-    <value>secondBestCheckBox</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.Name" xml:space="preserve">
-    <value>tabPage3</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage3.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.Name" xml:space="preserve">
-    <value>tabPage4</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPage4.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>用于在肽段设置分类中列出此方程式的名称</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -360,87 +149,7 @@
   <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
-  <data name="&gt;&gt;toolStripFind.Name" xml:space="preserve">
-    <value>toolStripFind</value>
-  </data>
-  <data name="&gt;&gt;toolStripFind.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;toolStripFind.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Name" xml:space="preserve">
-    <value>zedGraphMProphet</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;zedGraphMProphet.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Name" xml:space="preserve">
-    <value>zedGraphPValues</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
-    <value>tabPage4</value>
-  </data>
-  <data name="&gt;&gt;zedGraphPValues.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.Name" xml:space="preserve">
-    <value>zedGraphQValues</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
-    <value>tabPage3</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQValues.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.Name" xml:space="preserve">
-    <value>zedGraphSelectedCalculator</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;zedGraphSelectedCalculator.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>812, 485</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>取消</value>
-  </data>
-  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>731, 485</value>
-  </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>确定</value>
-  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnTrainModel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -460,6 +169,594 @@
     <value>在此文档中点击使用目前已导入肽段的结果数据，
 并用线性回归计算方程式</value>
   </data>
+  <data name="&gt;&gt;btnTrainModel.Name" xml:space="preserve">
+    <value>btnTrainModel</value>
+  </data>
+  <data name="&gt;&gt;btnTrainModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnTrainModel.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;btnTrainModel.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="gridPeakCalculators.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left</value>
+  </data>
+  <metadata name="IsEnabled.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="IsEnabled.HeaderText" xml:space="preserve">
+    <value>已启用</value>
+  </data>
+  <data name="IsEnabled.Width" type="System.Int32, mscorlib">
+    <value>50</value>
+  </data>
+  <metadata name="PeakCalculatorName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PeakCalculatorName.HeaderText" xml:space="preserve">
+    <value>得分名称</value>
+  </data>
+  <data name="PeakCalculatorName.MinimumWidth" type="System.Int32, mscorlib">
+    <value>120</value>
+  </data>
+  <metadata name="PeakCalculatorWeight.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PeakCalculatorWeight.HeaderText" xml:space="preserve">
+    <value>权重</value>
+  </data>
+  <data name="PeakCalculatorWeight.MinimumWidth" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <data name="PeakCalculatorWeight.Width" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <metadata name="PeakCalculatorPercentContribution.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PeakCalculatorPercentContribution.HeaderText" xml:space="preserve">
+    <value>贡献百分比</value>
+  </data>
+  <data name="PeakCalculatorPercentContribution.MinimumWidth" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <data name="PeakCalculatorPercentContribution.Width" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <metadata name="bindingPeakCalculators.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="gridPeakCalculators.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 213</value>
+  </data>
+  <data name="gridPeakCalculators.Size" type="System.Drawing.Size, System.Drawing">
+    <value>385, 266</value>
+  </data>
+  <data name="gridPeakCalculators.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;gridPeakCalculators.Name" xml:space="preserve">
+    <value>gridPeakCalculators</value>
+  </data>
+  <data name="&gt;&gt;gridPeakCalculators.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;gridPeakCalculators.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;gridPeakCalculators.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>731, 485</value>
+  </data>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>812, 485</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
+  </data>
+  <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
+    <value>447, 443</value>
+  </data>
+  <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;zedGraphMProphet.Name" xml:space="preserve">
+    <value>zedGraphMProphet</value>
+  </data>
+  <data name="&gt;&gt;zedGraphMProphet.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphMProphet.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;zedGraphMProphet.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 441</value>
+  </data>
+  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabPage1.Text" xml:space="preserve">
+    <value>模型得分</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="toolStripFind.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>426, 17</value>
+  </metadata>
+  <data name="toolStripFind.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="toolStripFind.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="findPeptidesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="findPeptidesButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
+    <value>查找未知肽段</value>
+  </data>
+  <data name="toolStripFind.Location" type="System.Drawing.Point, System.Drawing">
+    <value>399, 410</value>
+  </data>
+  <data name="toolStripFind.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 25</value>
+  </data>
+  <data name="toolStripFind.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="toolStripFind.Text" xml:space="preserve">
+    <value>toolStripFind</value>
+  </data>
+  <data name="&gt;&gt;toolStripFind.Name" xml:space="preserve">
+    <value>toolStripFind</value>
+  </data>
+  <data name="&gt;&gt;toolStripFind.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripFind.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;toolStripFind.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-2, -1</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>448, 444</value>
+  </data>
+  <data name="zedGraphSelectedCalculator.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;zedGraphSelectedCalculator.Name" xml:space="preserve">
+    <value>zedGraphSelectedCalculator</value>
+  </data>
+  <data name="&gt;&gt;zedGraphSelectedCalculator.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphSelectedCalculator.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;zedGraphSelectedCalculator.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 441</value>
+  </data>
+  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabPage2.Text" xml:space="preserve">
+    <value>特征分数</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
+  </data>
+  <data name="zedGraphPValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>499, 443</value>
+  </data>
+  <data name="zedGraphPValues.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;zedGraphPValues.Name" xml:space="preserve">
+    <value>zedGraphPValues</value>
+  </data>
+  <data name="&gt;&gt;zedGraphPValues.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphPValues.Parent" xml:space="preserve">
+    <value>tabPage4</value>
+  </data>
+  <data name="&gt;&gt;zedGraphPValues.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPage4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage4.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 441</value>
+  </data>
+  <data name="tabPage4.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabPage4.Text" xml:space="preserve">
+    <value>P 值</value>
+  </data>
+  <data name="&gt;&gt;tabPage4.Name" xml:space="preserve">
+    <value>tabPage4</value>
+  </data>
+  <data name="&gt;&gt;tabPage4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage4.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPage4.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, -1</value>
+  </data>
+  <data name="zedGraphQValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>499, 443</value>
+  </data>
+  <data name="zedGraphQValues.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQValues.Name" xml:space="preserve">
+    <value>zedGraphQValues</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQValues.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7932.27595, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQValues.Parent" xml:space="preserve">
+    <value>tabPage3</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQValues.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPage3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage3.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>445, 441</value>
+  </data>
+  <data name="tabPage3.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabPage3.Text" xml:space="preserve">
+    <value>Q 值</value>
+  </data>
+  <data name="&gt;&gt;tabPage3.Name" xml:space="preserve">
+    <value>tabPage3</value>
+  </data>
+  <data name="&gt;&gt;tabPage3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage3.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPage3.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>434, 12</value>
+  </data>
+  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>453, 467</value>
+  </data>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 193</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>123, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>可用的特征分数(&amp;A)：</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="decoyCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="decoyCheckBox.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="decoyCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 18</value>
+  </data>
+  <data name="decoyCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>82, 17</value>
+  </data>
+  <data name="decoyCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="decoyCheckBox.Text" xml:space="preserve">
+    <value>采用诱饵(&amp;D)</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.Name" xml:space="preserve">
+    <value>decoyCheckBox</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;decoyCheckBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="secondBestCheckBox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="secondBestCheckBox.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="secondBestCheckBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>20, 41</value>
+  </data>
+  <data name="secondBestCheckBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>138, 17</value>
+  </data>
+  <data name="secondBestCheckBox.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="secondBestCheckBox.Text" xml:space="preserve">
+    <value>采用次优峰值(&amp;S)</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.Name" xml:space="preserve">
+    <value>secondBestCheckBox</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;secondBestCheckBox.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 112</value>
+  </data>
+  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>385, 67</value>
+  </data>
+  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="groupBox2.Text" xml:space="preserve">
+    <value>正在训练</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Name" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBox2.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 61</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>选择模型(&amp;M)：</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblColinearWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="lblColinearWarning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblColinearWarning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblColinearWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 482</value>
+  </data>
+  <data name="lblColinearWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>226, 13</value>
+  </data>
+  <data name="lblColinearWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="lblColinearWarning.Text" xml:space="preserve">
+    <value>警告：计算器已产生共线性得分</value>
+  </data>
+  <data name="&gt;&gt;lblColinearWarning.Name" xml:space="preserve">
+    <value>lblColinearWarning</value>
+  </data>
+  <data name="&gt;&gt;lblColinearWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblColinearWarning.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblColinearWarning.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="comboModel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 77</value>
   </data>
@@ -468,6 +765,48 @@
   </data>
   <data name="comboModel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Name" xml:space="preserve">
+    <value>comboModel</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboModel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboModel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 12</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>38, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>名称(&amp;N)：</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
     <value>峰值计算器</value>
@@ -493,328 +832,94 @@
   <data name="dataGridViewTextBoxColumn3.Width" type="System.Int32, mscorlib">
     <value>70</value>
   </data>
-  <data name="decoyCheckBox.AutoSize" type="System.Boolean, mscorlib">
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>34</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="decoyCheckBox.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>899, 520</value>
   </data>
-  <data name="decoyCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 18</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="decoyCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>82, 17</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>编辑峰值计得分型</value>
   </data>
-  <data name="decoyCheckBox.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
   </data>
-  <data name="decoyCheckBox.Text" xml:space="preserve">
-    <value>采用诱饵(&amp;D)</value>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="findPeptidesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
   </data>
-  <data name="findPeptidesButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="findPeptidesButton.ToolTipText" xml:space="preserve">
-    <value>查找未知肽段</value>
+  <data name="&gt;&gt;IsEnabled.Name" xml:space="preserve">
+    <value>IsEnabled</value>
   </data>
-  <data name="gridPeakCalculators.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left</value>
+  <data name="&gt;&gt;IsEnabled.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="gridPeakCalculators.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 213</value>
+  <data name="&gt;&gt;PeakCalculatorName.Name" xml:space="preserve">
+    <value>PeakCalculatorName</value>
   </data>
-  <data name="gridPeakCalculators.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 266</value>
+  <data name="&gt;&gt;PeakCalculatorName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="gridPeakCalculators.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="&gt;&gt;PeakCalculatorWeight.Name" xml:space="preserve">
+    <value>PeakCalculatorWeight</value>
   </data>
-  <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 112</value>
+  <data name="&gt;&gt;PeakCalculatorWeight.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 67</value>
+  <data name="&gt;&gt;PeakCalculatorPercentContribution.Name" xml:space="preserve">
+    <value>PeakCalculatorPercentContribution</value>
   </data>
-  <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="&gt;&gt;PeakCalculatorPercentContribution.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="groupBox2.Text" xml:space="preserve">
-    <value>正在训练</value>
+  <data name="&gt;&gt;bindingPeakCalculators.Name" xml:space="preserve">
+    <value>bindingPeakCalculators</value>
   </data>
-  <data name="IsEnabled.HeaderText" xml:space="preserve">
-    <value>已启用</value>
+  <data name="&gt;&gt;bindingPeakCalculators.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="IsEnabled.Width" type="System.Int32, mscorlib">
-    <value>50</value>
+  <data name="&gt;&gt;findPeptidesButton.Name" xml:space="preserve">
+    <value>findPeptidesButton</value>
   </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;findPeptidesButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn1</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 193</value>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>123, 13</value>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn2</value>
   </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>可用的特征分数(&amp;A)：</value>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn3</value>
   </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>EditPeakScoringModelDlg</value>
   </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 12</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>名称(&amp;N)：</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 61</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 13</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>选择模型(&amp;M)：</value>
-  </data>
-  <data name="lblColinearWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="lblColinearWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblColinearWarning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblColinearWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 482</value>
-  </data>
-  <data name="lblColinearWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 13</value>
-  </data>
-  <data name="lblColinearWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="lblColinearWarning.Text" xml:space="preserve">
-    <value>警告：计算器已产生共线性得分</value>
-  </data>
-  <data name="PeakCalculatorName.HeaderText" xml:space="preserve">
-    <value>得分名称</value>
-  </data>
-  <data name="PeakCalculatorName.MinimumWidth" type="System.Int32, mscorlib">
-    <value>120</value>
-  </data>
-  <data name="PeakCalculatorPercentContribution.HeaderText" xml:space="preserve">
-    <value>贡献百分比</value>
-  </data>
-  <data name="PeakCalculatorPercentContribution.MinimumWidth" type="System.Int32, mscorlib">
-    <value>70</value>
-  </data>
-  <data name="PeakCalculatorPercentContribution.Width" type="System.Int32, mscorlib">
-    <value>70</value>
-  </data>
-  <data name="PeakCalculatorWeight.HeaderText" xml:space="preserve">
-    <value>权重</value>
-  </data>
-  <data name="PeakCalculatorWeight.MinimumWidth" type="System.Int32, mscorlib">
-    <value>70</value>
-  </data>
-  <data name="PeakCalculatorWeight.Width" type="System.Int32, mscorlib">
-    <value>70</value>
-  </data>
-  <data name="secondBestCheckBox.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="secondBestCheckBox.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="secondBestCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 41</value>
-  </data>
-  <data name="secondBestCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>138, 17</value>
-  </data>
-  <data name="secondBestCheckBox.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="secondBestCheckBox.Text" xml:space="preserve">
-    <value>采用次优峰值(&amp;S)</value>
-  </data>
-  <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>434, 12</value>
-  </data>
-  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>453, 467</value>
-  </data>
-  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 441</value>
-  </data>
-  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="tabPage1.Text" xml:space="preserve">
-    <value>模型得分</value>
-  </data>
-  <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 441</value>
-  </data>
-  <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="tabPage2.Text" xml:space="preserve">
-    <value>特征分数</value>
-  </data>
-  <data name="tabPage3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPage3.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPage3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 441</value>
-  </data>
-  <data name="tabPage3.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="tabPage3.Text" xml:space="preserve">
-    <value>Q 值</value>
-  </data>
-  <data name="tabPage4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabPage4.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
-  </data>
-  <data name="tabPage4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>445, 441</value>
-  </data>
-  <data name="tabPage4.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tabPage4.Text" xml:space="preserve">
-    <value>P 值</value>
-  </data>
-  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 28</value>
-  </data>
-  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 20</value>
-  </data>
-  <data name="textName.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textName.ToolTip" xml:space="preserve">
-    <value>用于在肽段设置分类中列出此方程式的名称</value>
-  </data>
-  <data name="toolStripFind.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="toolStripFind.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>None</value>
-  </data>
-  <data name="toolStripFind.Location" type="System.Drawing.Point, System.Drawing">
-    <value>399, 410</value>
-  </data>
-  <data name="toolStripFind.Size" type="System.Drawing.Size, System.Drawing">
-    <value>26, 25</value>
-  </data>
-  <data name="toolStripFind.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="toolStripFind.Text" xml:space="preserve">
-    <value>toolStripFind</value>
-  </data>
-  <data name="zedGraphMProphet.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphMProphet.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphMProphet.Size" type="System.Drawing.Size, System.Drawing">
-    <value>447, 443</value>
-  </data>
-  <data name="zedGraphMProphet.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="zedGraphPValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphPValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphPValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>499, 443</value>
-  </data>
-  <data name="zedGraphPValues.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="zedGraphQValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphQValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, -1</value>
-  </data>
-  <data name="zedGraphQValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>499, 443</value>
-  </data>
-  <data name="zedGraphQValues.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="zedGraphSelectedCalculator.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphSelectedCalculator.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-2, -1</value>
-  </data>
-  <data name="zedGraphSelectedCalculator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>448, 444</value>
-  </data>
-  <data name="zedGraphSelectedCalculator.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

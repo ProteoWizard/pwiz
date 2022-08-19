@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,191 +105,47 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 12</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 12</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>303, 314</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>216, 23</value>
   </data>
-  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 7.25pt</value>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>TurnoveR</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ProteinTurnoverUI</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>14</value>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>15</value>
-  </data>
-  <data name="&gt;&gt;comboReference.Name" xml:space="preserve">
-    <value>comboReference</value>
-  </data>
-  <data name="&gt;&gt;comboReference.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboReference.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;labelQValue.Name" xml:space="preserve">
-    <value>labelQValue</value>
-  </data>
-  <data name="&gt;&gt;labelQValue.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelQValue.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;labelQValueWarning.Name" xml:space="preserve">
-    <value>labelQValueWarning</value>
-  </data>
-  <data name="&gt;&gt;labelQValueWarning.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelQValueWarning.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;percentLabel.Name" xml:space="preserve">
-    <value>percentLabel</value>
-  </data>
-  <data name="&gt;&gt;percentLabel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;percentLabel.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;textAverageTurnover.Name" xml:space="preserve">
-    <value>textAverageTurnover</value>
-  </data>
-  <data name="&gt;&gt;textAverageTurnover.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textAverageTurnover.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;textDietEnrichment.Name" xml:space="preserve">
-    <value>textDietEnrichment</value>
-  </data>
-  <data name="&gt;&gt;textDietEnrichment.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textDietEnrichment.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;textFolderName.Name" xml:space="preserve">
-    <value>textFolderName</value>
-  </data>
-  <data name="&gt;&gt;textFolderName.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textFolderName.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;textIDP.Name" xml:space="preserve">
-    <value>textIDP</value>
-  </data>
-  <data name="&gt;&gt;textIDP.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textIDP.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;textQValue.Name" xml:space="preserve">
-    <value>textQValue</value>
-  </data>
-  <data name="&gt;&gt;textQValue.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textQValue.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -306,71 +162,17 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
   </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>216, 23</value>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>确定</value>
-  </data>
-  <data name="comboReference.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 216</value>
-  </data>
-  <data name="comboReference.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 21</value>
-  </data>
-  <data name="comboReference.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 7.25pt</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 59</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>163, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>最小平均周转得分(&amp;M):</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 7.25pt</value>
-  </data>
-  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 107</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>144, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>最小同位素点积(&amp;N):</value>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>14</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -389,6 +191,45 @@
   </data>
   <data name="label3.Text" xml:space="preserve">
     <value>子文件夹名称(&amp;S)：</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 12</value>
+  </metadata>
+  <data name="textDietEnrichment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 25</value>
+  </data>
+  <data name="textDietEnrichment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>164, 18</value>
+  </data>
+  <data name="textDietEnrichment.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textDietEnrichment.ToolTip" xml:space="preserve">
+    <value>饮食中亮氨酸的百分比 (0, 100]</value>
+  </data>
+  <data name="&gt;&gt;textDietEnrichment.Name" xml:space="preserve">
+    <value>textDietEnrichment</value>
+  </data>
+  <data name="&gt;&gt;textDietEnrichment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textDietEnrichment.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textDietEnrichment.ZOrder" xml:space="preserve">
+    <value>11</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -411,59 +252,17 @@
   <data name="label4.Text" xml:space="preserve">
     <value>同位素标记富集(&amp;O)：</value>
   </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
   </data>
-  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 200</value>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>参考(&amp;R)：</value>
-  </data>
-  <data name="labelQValue.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelQValue.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelQValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 252</value>
-  </data>
-  <data name="labelQValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="labelQValue.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="labelQValue.Text" xml:space="preserve">
-    <value>Q 值(&amp;Q)：</value>
-  </data>
-  <data name="labelQValueWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelQValueWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 289</value>
-  </data>
-  <data name="labelQValueWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>249, 13</value>
-  </data>
-  <data name="labelQValueWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="labelQValueWarning.Text" xml:space="preserve">
-    <value>Q 值不确定的肽段将被滤除</value>
-  </data>
-  <data name="labelQValueWarning.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>12</value>
   </data>
   <data name="percentLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -486,6 +285,18 @@
   <data name="percentLabel.Text" xml:space="preserve">
     <value>%</value>
   </data>
+  <data name="&gt;&gt;percentLabel.Name" xml:space="preserve">
+    <value>percentLabel</value>
+  </data>
+  <data name="&gt;&gt;percentLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;percentLabel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;percentLabel.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
   <data name="textAverageTurnover.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 75</value>
   </data>
@@ -498,29 +309,50 @@
   <data name="textAverageTurnover.ToolTip" xml:space="preserve">
     <value>允许 [0,1) 的最小平均周转得分</value>
   </data>
-  <data name="textDietEnrichment.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 25</value>
+  <data name="&gt;&gt;textAverageTurnover.Name" xml:space="preserve">
+    <value>textAverageTurnover</value>
   </data>
-  <data name="textDietEnrichment.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 18</value>
+  <data name="&gt;&gt;textAverageTurnover.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textDietEnrichment.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;textAverageTurnover.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="textDietEnrichment.ToolTip" xml:space="preserve">
-    <value>饮食中亮氨酸的百分比 (0, 100]</value>
+  <data name="&gt;&gt;textAverageTurnover.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
-  <data name="textFolderName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 172</value>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="textFolderName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>163, 18</value>
+  <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 7.25pt</value>
   </data>
-  <data name="textFolderName.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="textFolderName.ToolTip" xml:space="preserve">
-    <value>要放入结果的文件夹的名称</value>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 59</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>最小平均周转得分(&amp;M):</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>9</value>
   </data>
   <data name="textIDP.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 123</value>
@@ -534,6 +366,75 @@
   <data name="textIDP.ToolTip" xml:space="preserve">
     <value>允许 [0,1) 的最小 IDP</value>
   </data>
+  <data name="&gt;&gt;textIDP.Name" xml:space="preserve">
+    <value>textIDP</value>
+  </data>
+  <data name="&gt;&gt;textIDP.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIDP.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textIDP.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 7.25pt</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 107</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>144, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>最小同位素点积(&amp;N):</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="textFolderName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 172</value>
+  </data>
+  <data name="textFolderName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 18</value>
+  </data>
+  <data name="textFolderName.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="textFolderName.ToolTip" xml:space="preserve">
+    <value>要放入结果的文件夹的名称</value>
+  </data>
+  <data name="&gt;&gt;textFolderName.Name" xml:space="preserve">
+    <value>textFolderName</value>
+  </data>
+  <data name="&gt;&gt;textFolderName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textFolderName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textFolderName.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="textQValue.Location" type="System.Drawing.Point, System.Drawing">
     <value>11, 268</value>
   </data>
@@ -543,7 +444,160 @@
   <data name="textQValue.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 12</value>
+  </metadata>
   <data name="textQValue.ToolTip" xml:space="preserve">
     <value>允许 [0.0001,1] 的最小 Q 值</value>
+  </data>
+  <data name="&gt;&gt;textQValue.Name" xml:space="preserve">
+    <value>textQValue</value>
+  </data>
+  <data name="&gt;&gt;textQValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQValue.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textQValue.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelQValue.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelQValue.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelQValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 252</value>
+  </data>
+  <data name="labelQValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="labelQValue.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="labelQValue.Text" xml:space="preserve">
+    <value>Q 值(&amp;Q)：</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.Name" xml:space="preserve">
+    <value>labelQValue</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelQValue.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 200</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>参考(&amp;R)：</value>
+  </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelQValueWarning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelQValueWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 289</value>
+  </data>
+  <data name="labelQValueWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>249, 13</value>
+  </data>
+  <data name="labelQValueWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="labelQValueWarning.Text" xml:space="preserve">
+    <value>Q 值不确定的肽段将被滤除</value>
+  </data>
+  <data name="labelQValueWarning.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.Name" xml:space="preserve">
+    <value>labelQValueWarning</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelQValueWarning.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboReference.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 216</value>
+  </data>
+  <data name="comboReference.Size" type="System.Drawing.Size, System.Drawing">
+    <value>164, 21</value>
+  </data>
+  <data name="comboReference.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;comboReference.Name" xml:space="preserve">
+    <value>comboReference</value>
+  </data>
+  <data name="&gt;&gt;comboReference.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboReference.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboReference.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>303, 314</value>
+  </data>
+  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 7.25pt</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>TurnoveR</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ProteinTurnoverUI</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

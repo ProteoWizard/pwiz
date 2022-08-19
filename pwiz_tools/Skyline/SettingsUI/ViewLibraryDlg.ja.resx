@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,41 +105,238 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>785, 451</value>
+  <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 243</value>
   </data>
-  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>Inherit</value>
+  <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 243</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>スペクトルライブラリエクスプローラー</value>
+  <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 17</value>
   </data>
-  <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
+  <data name="cbShowModMasses.Text" xml:space="preserve">
+    <value>修飾の質量を表示(&amp;S)</value>
   </data>
-  <data name="aionsContextMenuItem.Text" xml:space="preserve">
+  <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 260</value>
+  </data>
+  <data name="PageCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 13</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="PageCount.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="PageCount.Text" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="PeptideCount.Size" type="System.Drawing.Size, System.Drawing">
+    <value>44, 13</value>
+  </data>
+  <data name="PeptideCount.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="PeptideCount.Text" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="NextLink.Location" type="System.Drawing.Point, System.Drawing">
+    <value>169, 0</value>
+  </data>
+  <data name="NextLink.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 13</value>
+  </data>
+  <data name="NextLink.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="NextLink.Text" xml:space="preserve">
+    <value>次へ&gt;&gt;</value>
+  </data>
+  <data name="PreviousLink.Size" type="System.Drawing.Size, System.Drawing">
+    <value>41, 13</value>
+  </data>
+  <data name="PreviousLink.Text" xml:space="preserve">
+    <value>&lt;&lt;前へ</value>
+  </data>
+  <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 339</value>
+  </data>
+  <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
+    <value>263</value>
+  </data>
+  <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="byLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>110, 24</value>
+  </data>
+  <data name="byLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="byLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="byLabel.Text" xml:space="preserve">
+    <value>基準(&amp;B)：</value>
+  </data>
+  <data name="comboFilterCategory.Location" type="System.Drawing.Point, System.Drawing">
+    <value>110, 39</value>
+  </data>
+  <data name="comboFilterCategory.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 21</value>
+  </data>
+  <data name="comboFilterCategory.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="filterLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="filterLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="filterLabel.Text" xml:space="preserve">
+    <value>フィルタ(&amp;F)：</value>
+  </data>
+  <data name="MoleculeLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 13</value>
+  </data>
+  <data name="MoleculeLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="MoleculeLabel.Text" xml:space="preserve">
+    <value>分子(&amp;M)：</value>
+  </data>
+  <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>189, 21</value>
+  </data>
+  <data name="btnLibDetails.Location" type="System.Drawing.Point, System.Drawing">
+    <value>189, 0</value>
+  </data>
+  <data name="btnLibDetails.Size" type="System.Drawing.Size, System.Drawing">
+    <value>21, 21</value>
+  </data>
+  <data name="btnLibDetails.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 24</value>
+  </data>
+  <data name="PeptideLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 13</value>
+  </data>
+  <data name="PeptideLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="PeptideLabel.Text" xml:space="preserve">
+    <value>ペプチド(&amp;P)：</value>
+  </data>
+  <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 39</value>
+  </data>
+  <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 20</value>
+  </data>
+  <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 77</value>
+  </data>
+  <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>523, 356</value>
+  </data>
+  <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnAIons.ToolTipText" xml:space="preserve">
     <value>Aイオン</value>
   </data>
-  <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="bionsContextMenuItem.Text" xml:space="preserve">
+  <data name="btnBIons.ToolTipText" xml:space="preserve">
     <value>Bイオン</value>
+  </data>
+  <data name="btnCIons.ToolTipText" xml:space="preserve">
+    <value>Cイオン</value>
+  </data>
+  <data name="btnXIons.ToolTipText" xml:space="preserve">
+    <value>Xイオン</value>
+  </data>
+  <data name="btnYIons.ToolTipText" xml:space="preserve">
+    <value>Yイオン</value>
+  </data>
+  <data name="btnZIons.ToolTipText" xml:space="preserve">
+    <value>Zイオン</value>
+  </data>
+  <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
+    <value>フラグメントイオン</value>
+  </data>
+  <data name="charge1Button.ToolTipText" xml:space="preserve">
+    <value>1価のイオン</value>
+  </data>
+  <data name="charge2Button.ToolTipText" xml:space="preserve">
+    <value>2価のイオン</value>
+  </data>
+  <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
+    <value>メタファイルをコピー</value>
+  </data>
+  <data name="btnCopy.ToolTipText" xml:space="preserve">
+    <value>ビットマップをコピー</value>
+  </data>
+  <data name="btnSave.ToolTipText" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="btnPrint.ToolTipText" xml:space="preserve">
+    <value>印刷</value>
+  </data>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>523, 0</value>
+  </data>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>24, 356</value>
+  </data>
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>551, 360</value>
+  </data>
+  <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
+    <value>64, 13</value>
+  </data>
+  <data name="labelFilename.Text" xml:space="preserve">
+    <value>ファイル(&amp;E)：</value>
+  </data>
+  <data name="comboRedundantSpectra.Location" type="System.Drawing.Point, System.Drawing">
+    <value>73, 3</value>
+  </data>
+  <data name="comboRedundantSpectra.Size" type="System.Drawing.Size, System.Drawing">
+    <value>400, 21</value>
+  </data>
+  <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>476, 26</value>
+  </data>
+  <data name="cbAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 36</value>
+  </data>
+  <data name="cbAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>142, 17</value>
+  </data>
+  <data name="cbAssociateProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="cbAssociateProteins.Text" xml:space="preserve">
+    <value>タンパク質の関連付け(&amp;C)</value>
   </data>
   <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -156,12 +353,6 @@
   <data name="btnAddAll.Text" xml:space="preserve">
     <value>すべて追加(&amp;D)...</value>
   </data>
-  <data name="btnAIons.ToolTipText" xml:space="preserve">
-    <value>Aイオン</value>
-  </data>
-  <data name="btnBIons.ToolTipText" xml:space="preserve">
-    <value>Bイオン</value>
-  </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>476, 33</value>
   </data>
@@ -171,212 +362,11 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>閉じる</value>
   </data>
-  <data name="btnCIons.ToolTipText" xml:space="preserve">
-    <value>Cイオン</value>
-  </data>
-  <data name="btnCopy.ToolTipText" xml:space="preserve">
-    <value>ビットマップをコピー</value>
-  </data>
-  <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
-    <value>フラグメントイオン</value>
-  </data>
-  <data name="btnLibDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>189, 0</value>
-  </data>
-  <data name="btnLibDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 21</value>
-  </data>
-  <data name="btnLibDetails.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="btnPrint.ToolTipText" xml:space="preserve">
-    <value>印刷</value>
-  </data>
-  <data name="btnSave.ToolTipText" xml:space="preserve">
-    <value>保存</value>
-  </data>
-  <data name="btnXIons.ToolTipText" xml:space="preserve">
-    <value>Xイオン</value>
-  </data>
-  <data name="btnYIons.ToolTipText" xml:space="preserve">
-    <value>Yイオン</value>
-  </data>
-  <data name="btnZIons.ToolTipText" xml:space="preserve">
-    <value>Zイオン</value>
-  </data>
-  <data name="byLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>110, 24</value>
-  </data>
-  <data name="byLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 13</value>
-  </data>
-  <data name="byLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="byLabel.Text" xml:space="preserve">
-    <value>基準(&amp;B)：</value>
-  </data>
-  <data name="cbAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 36</value>
-  </data>
-  <data name="cbAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>142, 17</value>
-  </data>
-  <data name="cbAssociateProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="cbAssociateProteins.Text" xml:space="preserve">
-    <value>タンパク質の関連付け(&amp;C)</value>
-  </data>
-  <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 243</value>
-  </data>
-  <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 17</value>
-  </data>
-  <data name="cbShowModMasses.Text" xml:space="preserve">
-    <value>修飾の質量を表示(&amp;S)</value>
-  </data>
-  <data name="charge1Button.ToolTipText" xml:space="preserve">
-    <value>1価のイオン</value>
-  </data>
-  <data name="charge2Button.ToolTipText" xml:space="preserve">
-    <value>2価のイオン</value>
-  </data>
-  <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="chargesContextMenuItem.Text" xml:space="preserve">
-    <value>電荷</value>
-  </data>
-  <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="cionsContextMenuItem.Text" xml:space="preserve">
-    <value>Cイオン</value>
-  </data>
-  <data name="comboFilterCategory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>110, 39</value>
-  </data>
-  <data name="comboFilterCategory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 21</value>
-  </data>
-  <data name="comboFilterCategory.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>189, 21</value>
-  </data>
-  <data name="comboRedundantSpectra.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 3</value>
-  </data>
-  <data name="comboRedundantSpectra.Size" type="System.Drawing.Size, System.Drawing">
-    <value>400, 21</value>
-  </data>
-  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>178, 436</value>
-  </data>
-  <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
-    <value>メタファイルをコピー</value>
-  </data>
-  <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="duplicatesContextMenuItem.Text" xml:space="preserve">
-    <value>重複イオン</value>
-  </data>
-  <data name="filterLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
-  </data>
-  <data name="filterLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="filterLabel.Text" xml:space="preserve">
-    <value>フィルタ(&amp;F)：</value>
-  </data>
-  <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
-    <value>フラグメントイオン</value>
-  </data>
-  <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>523, 356</value>
-  </data>
-  <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>551, 360</value>
-  </data>
-  <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>イオンm/z値</value>
-  </data>
-  <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>64, 13</value>
-  </data>
-  <data name="labelFilename.Text" xml:space="preserve">
-    <value>ファイル(&amp;E)：</value>
-  </data>
   <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
     <value>146, 6</value>
   </data>
   <data name="labelRT.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
-  </data>
-  <data name="LibraryLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 13</value>
-  </data>
-  <data name="LibraryLabel.Text" xml:space="preserve">
-    <value>ライブラリ(&amp;L)：</value>
-  </data>
-  <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 243</value>
-  </data>
-  <data name="lockYaxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="lockYaxisContextMenuItem.Text" xml:space="preserve">
-    <value>自動スケールY軸</value>
-  </data>
-  <data name="MoleculeLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 13</value>
-  </data>
-  <data name="MoleculeLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="MoleculeLabel.Text" xml:space="preserve">
-    <value>分子(&amp;M)：</value>
-  </data>
-  <data name="NextLink.Location" type="System.Drawing.Point, System.Drawing">
-    <value>169, 0</value>
-  </data>
-  <data name="NextLink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>41, 13</value>
-  </data>
-  <data name="NextLink.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="NextLink.Text" xml:space="preserve">
-    <value>次へ&gt;&gt;</value>
-  </data>
-  <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
-    <value>観測されたm/z値</value>
-  </data>
-  <data name="PageCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 13</value>
-  </data>
-  <data name="PageCount.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="PageCount.Text" xml:space="preserve">
-    <value>ページ</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 360</value>
@@ -387,125 +377,38 @@
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="PeptideCount.Size" type="System.Drawing.Size, System.Drawing">
-    <value>44, 13</value>
-  </data>
-  <data name="PeptideCount.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="PeptideCount.Text" xml:space="preserve">
-    <value>ペプチド</value>
-  </data>
-  <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 77</value>
-  </data>
-  <data name="PeptideLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 13</value>
-  </data>
-  <data name="PeptideLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="PeptideLabel.Text" xml:space="preserve">
-    <value>ペプチド(&amp;P)：</value>
-  </data>
-  <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 260</value>
-  </data>
-  <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
-    <value>プリカーサー</value>
-  </data>
-  <data name="PreviousLink.Size" type="System.Drawing.Size, System.Drawing">
-    <value>41, 13</value>
-  </data>
-  <data name="PreviousLink.Text" xml:space="preserve">
-    <value>&lt;&lt;前へ</value>
-  </data>
-  <data name="ranksContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="ranksContextMenuItem.Text" xml:space="preserve">
-    <value>ランク</value>
-  </data>
-  <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="scoreContextMenuItem.Text" xml:space="preserve">
-    <value>スコア</value>
-  </data>
-  <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="showChromatogramsContextMenuItem.Text" xml:space="preserve">
-    <value>クロマトグラムを表示</value>
-  </data>
-  <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 22</value>
-  </data>
-  <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>プロパティ...</value>
-  </data>
   <data name="splitMain.Size" type="System.Drawing.Size, System.Drawing">
     <value>765, 416</value>
   </data>
   <data name="splitMain.SplitterDistance" type="System.Int32, mscorlib">
     <value>210</value>
   </data>
-  <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 339</value>
-  </data>
-  <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
-    <value>263</value>
-  </data>
-  <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 24</value>
-  </data>
-  <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>476, 26</value>
-  </data>
-  <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 39</value>
-  </data>
-  <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 20</value>
-  </data>
-  <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>523, 0</value>
-  </data>
-  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 356</value>
-  </data>
-  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 6</value>
-  </data>
-  <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 6</value>
-  </data>
-  <data name="toolStripSeparator13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 6</value>
-  </data>
-  <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 6</value>
-  </data>
-  <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 6</value>
-  </data>
-  <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
-    <value>174, 6</value>
-  </data>
   <data name="ViewLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>765, 416</value>
+  </data>
+  <data name="LibraryLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>66, 13</value>
+  </data>
+  <data name="LibraryLabel.Text" xml:space="preserve">
+    <value>ライブラリ(&amp;L)：</value>
+  </data>
+  <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="aionsContextMenuItem.Text" xml:space="preserve">
+    <value>Aイオン</value>
+  </data>
+  <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="bionsContextMenuItem.Text" xml:space="preserve">
+    <value>Bイオン</value>
+  </data>
+  <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="cionsContextMenuItem.Text" xml:space="preserve">
+    <value>Cイオン</value>
   </data>
   <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
@@ -525,10 +428,107 @@
   <data name="zionsContextMenuItem.Text" xml:space="preserve">
     <value>Zイオン</value>
   </data>
+  <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
+    <value>フラグメントイオン</value>
+  </data>
+  <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 6</value>
+  </data>
+  <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="chargesContextMenuItem.Text" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 6</value>
+  </data>
+  <data name="ranksContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="ranksContextMenuItem.Text" xml:space="preserve">
+    <value>ランク</value>
+  </data>
+  <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="scoreContextMenuItem.Text" xml:space="preserve">
+    <value>スコア</value>
+  </data>
+  <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
+    <value>イオンm/z値</value>
+  </data>
+  <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
+    <value>観測されたm/z値</value>
+  </data>
+  <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="duplicatesContextMenuItem.Text" xml:space="preserve">
+    <value>重複イオン</value>
+  </data>
+  <data name="toolStripSeparator13.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 6</value>
+  </data>
+  <data name="lockYaxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="lockYaxisContextMenuItem.Text" xml:space="preserve">
+    <value>自動スケールY軸</value>
+  </data>
+  <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 6</value>
+  </data>
+  <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
+    <value>プロパティ...</value>
+  </data>
+  <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="showChromatogramsContextMenuItem.Text" xml:space="preserve">
+    <value>クロマトグラムを表示</value>
+  </data>
+  <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 6</value>
+  </data>
   <data name="zoomSpectrumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>177, 22</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>縮小</value>
+  </data>
+  <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
+    <value>174, 6</value>
+  </data>
+  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>178, 436</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>785, 451</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>Inherit</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>スペクトルライブラリエクスプローラー</value>
   </data>
 </root>

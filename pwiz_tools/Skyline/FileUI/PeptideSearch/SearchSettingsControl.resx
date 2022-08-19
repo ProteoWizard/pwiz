@@ -105,62 +105,34 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="cbMS1TolUnit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>153, 106</value>
   </data>
-  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 425</value>
+  <data name="cbMS1TolUnit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 21</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>SearchSettingsControl</value>
-  </data>
-  <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
-    <value>btnAdditionalSettings</value>
-  </data>
-  <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;cbFragmentIons.Name" xml:space="preserve">
-    <value>cbFragmentIons</value>
-  </data>
-  <data name="&gt;&gt;cbFragmentIons.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;cbMaxVariableMods.Name" xml:space="preserve">
-    <value>cbMaxVariableMods</value>
-  </data>
-  <data name="&gt;&gt;cbMaxVariableMods.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="cbMS1TolUnit.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Name" xml:space="preserve">
     <value>cbMS1TolUnit</value>
+  </data>
+  <data name="&gt;&gt;cbMS1TolUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Parent" xml:space="preserve">
     <value>$this</value>
@@ -168,71 +140,26 @@
   <data name="&gt;&gt;cbMS1TolUnit.ZOrder" xml:space="preserve">
     <value>17</value>
   </data>
-  <data name="&gt;&gt;cbMs2Analyzer.Name" xml:space="preserve">
-    <value>cbMs2Analyzer</value>
+  <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;cbMs2Analyzer.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="lblMs1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 89</value>
   </data>
-  <data name="&gt;&gt;cbMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="lblMs1Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
   </data>
-  <data name="&gt;&gt;cbMS2TolUnit.Name" xml:space="preserve">
-    <value>cbMS2TolUnit</value>
+  <data name="lblMs1Tolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="&gt;&gt;cbMS2TolUnit.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;lblFragmentIons.Name" xml:space="preserve">
-    <value>lblFragmentIons</value>
-  </data>
-  <data name="&gt;&gt;lblFragmentIons.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblFragmentIons.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;lblMaxVariableMods.Name" xml:space="preserve">
-    <value>lblMaxVariableMods</value>
-  </data>
-  <data name="&gt;&gt;lblMaxVariableMods.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>5</value>
+  <data name="lblMs1Tolerance.Text" xml:space="preserve">
+    <value>MS&amp;1 tolerance:</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.Name" xml:space="preserve">
     <value>lblMs1Tolerance</value>
+  </data>
+  <data name="&gt;&gt;lblMs1Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
@@ -240,44 +167,20 @@
   <data name="&gt;&gt;lblMs1Tolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
-  <data name="&gt;&gt;lblMs2Analyzer.Name" xml:space="preserve">
-    <value>lblMs2Analyzer</value>
+  <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 106</value>
   </data>
-  <data name="&gt;&gt;lblMs2Analyzer.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="txtMS1Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 20</value>
   </data>
-  <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblMs2Tolerance.Name" xml:space="preserve">
-    <value>lblMs2Tolerance</value>
-  </data>
-  <data name="&gt;&gt;lblMs2Tolerance.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;pBLogo.Name" xml:space="preserve">
-    <value>pBLogo</value>
-  </data>
-  <data name="&gt;&gt;pBLogo.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;pBLogo.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;searchEngineComboBox.Name" xml:space="preserve">
-    <value>searchEngineComboBox</value>
-  </data>
-  <data name="&gt;&gt;searchEngineComboBox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;searchEngineComboBox.ZOrder" xml:space="preserve">
-    <value>3</value>
+  <data name="txtMS1Tolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.Name" xml:space="preserve">
     <value>txtMS1Tolerance</value>
+  </data>
+  <data name="&gt;&gt;txtMS1Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
@@ -285,8 +188,20 @@
   <data name="&gt;&gt;txtMS1Tolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
+  <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 146</value>
+  </data>
+  <data name="txtMS2Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 20</value>
+  </data>
+  <data name="txtMS2Tolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
   <data name="&gt;&gt;txtMS2Tolerance.Name" xml:space="preserve">
     <value>txtMS2Tolerance</value>
+  </data>
+  <data name="&gt;&gt;txtMS2Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
@@ -294,6 +209,103 @@
   <data name="&gt;&gt;txtMS2Tolerance.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
+  <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMs2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 130</value>
+  </data>
+  <data name="lblMs2Tolerance.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="lblMs2Tolerance.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblMs2Tolerance.Text" xml:space="preserve">
+    <value>MS&amp;2 tolerance:</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Name" xml:space="preserve">
+    <value>lblMs2Tolerance</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>153, 146</value>
+  </data>
+  <data name="cbMS2TolUnit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 21</value>
+  </data>
+  <data name="cbMS2TolUnit.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;cbMS2TolUnit.Name" xml:space="preserve">
+    <value>cbMS2TolUnit</value>
+  </data>
+  <data name="&gt;&gt;cbMS2TolUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMS2TolUnit.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 174</value>
+  </data>
+  <data name="lblFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 13</value>
+  </data>
+  <data name="lblFragmentIons.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="lblFragmentIons.Text" xml:space="preserve">
+    <value>&amp;Fragment ions:</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentIons.Name" xml:space="preserve">
+    <value>lblFragmentIons</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentIons.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblFragmentIons.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="cbFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 190</value>
+  </data>
+  <data name="cbFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 21</value>
+  </data>
+  <data name="cbFragmentIons.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;cbFragmentIons.Name" xml:space="preserve">
+    <value>cbFragmentIons</value>
+  </data>
+  <data name="&gt;&gt;cbFragmentIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbFragmentIons.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -309,14 +321,125 @@
   <data name="btnAdditionalSettings.Text" xml:space="preserve">
     <value>A&amp;dditional Settings</value>
   </data>
-  <data name="cbFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 190</value>
+  <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
+    <value>btnAdditionalSettings</value>
   </data>
-  <data name="cbFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 21</value>
+  <data name="&gt;&gt;btnAdditionalSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbFragmentIons.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="pBLogo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>323, 4</value>
+  </data>
+  <data name="pBLogo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>55, 50</value>
+  </data>
+  <data name="pBLogo.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="&gt;&gt;pBLogo.Name" xml:space="preserve">
+    <value>pBLogo</value>
+  </data>
+  <data name="&gt;&gt;pBLogo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pBLogo.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;pBLogo.ZOrder" xml:space="preserve">
     <value>8</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>153, 89</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>Unit:</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>153, 130</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>Unit:</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMaxVariableMods.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblMaxVariableMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 274</value>
+  </data>
+  <data name="lblMaxVariableMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>98, 13</value>
+  </data>
+  <data name="lblMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblMaxVariableMods.Text" xml:space="preserve">
+    <value>Max &amp;variable mods:</value>
+  </data>
+  <data name="&gt;&gt;lblMaxVariableMods.Name" xml:space="preserve">
+    <value>lblMaxVariableMods</value>
+  </data>
+  <data name="&gt;&gt;lblMaxVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMaxVariableMods.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblMaxVariableMods.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="cbMaxVariableMods.Items" xml:space="preserve">
     <value>0</value>
@@ -357,173 +480,17 @@
   <data name="cbMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name="cbMS1TolUnit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 106</value>
+  <data name="&gt;&gt;cbMaxVariableMods.Name" xml:space="preserve">
+    <value>cbMaxVariableMods</value>
   </data>
-  <data name="cbMS1TolUnit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 21</value>
+  <data name="&gt;&gt;cbMaxVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbMS1TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;cbMaxVariableMods.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="cbMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 239</value>
-  </data>
-  <data name="cbMs2Analyzer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 21</value>
-  </data>
-  <data name="cbMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
-    <value>31</value>
-  </data>
-  <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 146</value>
-  </data>
-  <data name="cbMS2TolUnit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 21</value>
-  </data>
-  <data name="cbMS2TolUnit.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 89</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>Unit:</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 23</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>29</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>&amp;Search engine:</value>
-  </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>153, 130</value>
-  </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 13</value>
-  </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>Unit:</value>
-  </data>
-  <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 174</value>
-  </data>
-  <data name="lblFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>76, 13</value>
-  </data>
-  <data name="lblFragmentIons.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="lblFragmentIons.Text" xml:space="preserve">
-    <value>&amp;Fragment ions:</value>
-  </data>
-  <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMaxVariableMods.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblMaxVariableMods.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 274</value>
-  </data>
-  <data name="lblMaxVariableMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98, 13</value>
-  </data>
-  <data name="lblMaxVariableMods.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="lblMaxVariableMods.Text" xml:space="preserve">
-    <value>Max &amp;variable mods:</value>
-  </data>
-  <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMs1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 89</value>
-  </data>
-  <data name="lblMs1Tolerance.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
-  </data>
-  <data name="lblMs1Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="lblMs1Tolerance.Text" xml:space="preserve">
-    <value>MS&amp;1 tolerance:</value>
-  </data>
-  <data name="lblMs2Analyzer.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMs2Analyzer.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 223</value>
-  </data>
-  <data name="lblMs2Analyzer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 13</value>
-  </data>
-  <data name="lblMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
-    <value>30</value>
-  </data>
-  <data name="lblMs2Analyzer.Text" xml:space="preserve">
-    <value>MS2 &amp;analyzer:</value>
-  </data>
-  <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblMs2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 130</value>
-  </data>
-  <data name="lblMs2Tolerance.Size" type="System.Drawing.Size, System.Drawing">
-    <value>79, 13</value>
-  </data>
-  <data name="lblMs2Tolerance.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;cbMaxVariableMods.ZOrder" xml:space="preserve">
     <value>4</value>
-  </data>
-  <data name="lblMs2Tolerance.Text" xml:space="preserve">
-    <value>MS&amp;2 tolerance:</value>
-  </data>
-  <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="pBLogo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>323, 4</value>
-  </data>
-  <data name="pBLogo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 50</value>
-  </data>
-  <data name="pBLogo.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
   </data>
   <data name="searchEngineComboBox.Items" xml:space="preserve">
     <value>MSAmanda</value>
@@ -543,22 +510,112 @@
   <data name="searchEngineComboBox.TabIndex" type="System.Int32, mscorlib">
     <value>28</value>
   </data>
-  <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 106</value>
+  <data name="&gt;&gt;searchEngineComboBox.Name" xml:space="preserve">
+    <value>searchEngineComboBox</value>
   </data>
-  <data name="txtMS1Tolerance.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 20</value>
+  <data name="&gt;&gt;searchEngineComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="txtMS1Tolerance.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;searchEngineComboBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;searchEngineComboBox.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 23</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>29</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>&amp;Search engine:</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 146</value>
+  <data name="cbMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 239</value>
   </data>
-  <data name="txtMS2Tolerance.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 20</value>
+  <data name="cbMs2Analyzer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 21</value>
   </data>
-  <data name="txtMS2Tolerance.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="cbMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
+    <value>31</value>
+  </data>
+  <data name="&gt;&gt;cbMs2Analyzer.Name" xml:space="preserve">
+    <value>cbMs2Analyzer</value>
+  </data>
+  <data name="&gt;&gt;cbMs2Analyzer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMs2Analyzer.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbMs2Analyzer.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblMs2Analyzer.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMs2Analyzer.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 223</value>
+  </data>
+  <data name="lblMs2Analyzer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 13</value>
+  </data>
+  <data name="lblMs2Analyzer.TabIndex" type="System.Int32, mscorlib">
+    <value>30</value>
+  </data>
+  <data name="lblMs2Analyzer.Text" xml:space="preserve">
+    <value>MS2 &amp;analyzer:</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Analyzer.Name" xml:space="preserve">
+    <value>lblMs2Analyzer</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Analyzer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Analyzer.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 425</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>SearchSettingsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

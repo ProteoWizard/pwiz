@@ -105,14 +105,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -121,19 +121,19 @@
   <data name="icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icon.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Program_Main_CSV__Comma_delimited_____csv____csv" xml:space="preserve">
-    <value>CSV (Comma delimited) (*.csv)|*.csv</value>
-  </data>
-  <data name="Program_Main_Error___0_" xml:space="preserve">
-    <value>Error: {0}</value>
+  <data name="Program_Main_Missing_report_file_path_argument_from_Skyline__try_re_installing_TFExport_" xml:space="preserve">
+    <value>Missing report file path argument from Skyline, try re-installing TFExport.</value>
   </data>
   <data name="Program_Main_Failure_reading_the_report_file__0__" xml:space="preserve">
     <value>Failure reading the report file {0}.</value>
   </data>
+  <data name="Program_Main_CSV__Comma_delimited_____csv____csv" xml:space="preserve">
+    <value>CSV (Comma delimited) (*.csv)|*.csv</value>
+  </data>
   <data name="Program_Main_File_saved_to__0__" xml:space="preserve">
     <value>File saved to {0}.</value>
   </data>
-  <data name="Program_Main_Missing_report_file_path_argument_from_Skyline__try_re_installing_TFExport_" xml:space="preserve">
-    <value>Missing report file path argument from Skyline, try re-installing TFExport.</value>
+  <data name="Program_Main_Error___0_" xml:space="preserve">
+    <value>Error: {0}</value>
   </data>
 </root>

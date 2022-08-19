@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,254 +105,53 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>48</value>
-  </metadata>
-  <metadata name="colPeptideProtein.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colPeptideProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colPeptideSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinAccession.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinGene.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="colProteinSpecies.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>200, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tbxFasta.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>805, 518</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 16</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tbxFasta.MaxLength" type="System.Int32, mscorlib">
+    <value>2147483647</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>插入</value>
+  <data name="tbxFasta.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>PasteDlg</value>
+  <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
+    <value>791, 384</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;btnInsert.Name" xml:space="preserve">
-    <value>btnInsert</value>
-  </data>
-  <data name="&gt;&gt;btnInsert.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnInsert.ZOrder" xml:space="preserve">
+  <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;btnValidate.Name" xml:space="preserve">
-    <value>btnValidate</value>
-  </data>
-  <data name="&gt;&gt;btnValidate.Parent" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;btnValidate.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;colPeptideProtein.Name" xml:space="preserve">
-    <value>colPeptideProtein</value>
-  </data>
-  <data name="&gt;&gt;colPeptideProteinDescription.Name" xml:space="preserve">
-    <value>colPeptideProteinDescription</value>
-  </data>
-  <data name="&gt;&gt;colPeptideSequence.Name" xml:space="preserve">
-    <value>colPeptideSequence</value>
-  </data>
-  <data name="&gt;&gt;colProteinAccession.Name" xml:space="preserve">
-    <value>colProteinAccession</value>
-  </data>
-  <data name="&gt;&gt;colProteinDescription.Name" xml:space="preserve">
-    <value>colProteinDescription</value>
-  </data>
-  <data name="&gt;&gt;colProteinGene.Name" xml:space="preserve">
-    <value>colProteinGene</value>
-  </data>
-  <data name="&gt;&gt;colProteinName.Name" xml:space="preserve">
-    <value>colProteinName</value>
-  </data>
-  <data name="&gt;&gt;colProteinPreferredName.Name" xml:space="preserve">
-    <value>colProteinPreferredName</value>
-  </data>
-  <data name="&gt;&gt;colProteinSequence.Name" xml:space="preserve">
-    <value>colProteinSequence</value>
-  </data>
-  <data name="&gt;&gt;colProteinSpecies.Name" xml:space="preserve">
-    <value>colProteinSpecies</value>
-  </data>
-  <data name="&gt;&gt;gridViewPeptides.Name" xml:space="preserve">
-    <value>gridViewPeptides</value>
-  </data>
-  <data name="&gt;&gt;gridViewPeptides.Parent" xml:space="preserve">
-    <value>tabPagePeptideList</value>
-  </data>
-  <data name="&gt;&gt;gridViewPeptides.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;gridViewProteins.Name" xml:space="preserve">
-    <value>gridViewProteins</value>
-  </data>
-  <data name="&gt;&gt;gridViewProteins.Parent" xml:space="preserve">
-    <value>tabPageProteinList</value>
-  </data>
-  <data name="&gt;&gt;gridViewProteins.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>tabPageFasta</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
-    <value>panelButtons</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;panelError.Name" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;panelError.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabPageFasta.Name" xml:space="preserve">
-    <value>tabPageFasta</value>
-  </data>
-  <data name="&gt;&gt;tabPageFasta.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPageFasta.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tabPagePeptideList.Name" xml:space="preserve">
-    <value>tabPagePeptideList</value>
-  </data>
-  <data name="&gt;&gt;tabPagePeptideList.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPagePeptideList.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;tabPageProteinList.Name" xml:space="preserve">
-    <value>tabPageProteinList</value>
-  </data>
-  <data name="&gt;&gt;tabPageProteinList.Parent" xml:space="preserve">
-    <value>tabControl1</value>
-  </data>
-  <data name="&gt;&gt;tabPageProteinList.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;tbxError.Name" xml:space="preserve">
-    <value>tbxError</value>
-  </data>
-  <data name="&gt;&gt;tbxError.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;tbxError.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="&gt;&gt;tbxFasta.Name" xml:space="preserve">
     <value>tbxFasta</value>
+  </data>
+  <data name="&gt;&gt;tbxFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxFasta.Parent" xml:space="preserve">
     <value>tabPageFasta</value>
   </data>
   <data name="&gt;&gt;tbxFasta.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>718, 9</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>取消(&amp;C)</value>
   </data>
   <data name="btnInsert.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -369,6 +168,45 @@
   <data name="btnInsert.Text" xml:space="preserve">
     <value>插入(&amp;I)</value>
   </data>
+  <data name="&gt;&gt;btnInsert.Name" xml:space="preserve">
+    <value>btnInsert</value>
+  </data>
+  <data name="&gt;&gt;btnInsert.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnInsert.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;btnInsert.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>718, 9</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消(&amp;C)</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="btnValidate.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -384,58 +222,16 @@
   <data name="btnValidate.Text" xml:space="preserve">
     <value>检查错误(&amp;E)</value>
   </data>
-  <data name="colPeptideProtein.HeaderText" xml:space="preserve">
-    <value>蛋白质名称</value>
+  <data name="&gt;&gt;btnValidate.Name" xml:space="preserve">
+    <value>btnValidate</value>
   </data>
-  <data name="colPeptideProteinDescription.HeaderText" xml:space="preserve">
-    <value>蛋白质描述</value>
+  <data name="&gt;&gt;btnValidate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="colPeptideSequence.HeaderText" xml:space="preserve">
-    <value>肽段序列</value>
+  <data name="&gt;&gt;btnValidate.Parent" xml:space="preserve">
+    <value>panelButtons</value>
   </data>
-  <data name="colProteinAccession.HeaderText" xml:space="preserve">
-    <value>编号</value>
-  </data>
-  <data name="colProteinDescription.HeaderText" xml:space="preserve">
-    <value>描述</value>
-  </data>
-  <data name="colProteinGene.HeaderText" xml:space="preserve">
-    <value>基因</value>
-  </data>
-  <data name="colProteinName.HeaderText" xml:space="preserve">
-    <value>名称</value>
-  </data>
-  <data name="colProteinPreferredName.HeaderText" xml:space="preserve">
-    <value>首选名称</value>
-  </data>
-  <data name="colProteinSequence.HeaderText" xml:space="preserve">
-    <value>序列</value>
-  </data>
-  <data name="colProteinSpecies.HeaderText" xml:space="preserve">
-    <value>物种</value>
-  </data>
-  <data name="gridViewPeptides.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="gridViewPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="gridViewPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
-  </data>
-  <data name="gridViewPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="gridViewProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="gridViewProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 397</value>
-  </data>
-  <data name="gridViewProteins.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnValidate.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -456,44 +252,17 @@
   <data name="label1.Text" xml:space="preserve">
     <value>FASTA 记录以“&gt;”作为开头并含有蛋白质名称，名称后可带有蛋白质描述。</value>
   </data>
-  <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
   </data>
-  <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 474</value>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 44</value>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>tabPageFasta</value>
   </data>
-  <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="panelError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 45</value>
-  </data>
-  <data name="panelError.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="panelError.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="tabControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 45</value>
-  </data>
-  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>805, 429</value>
-  </data>
-  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
   </data>
   <data name="tabPageFasta.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -510,20 +279,83 @@
   <data name="tabPageFasta.Text" xml:space="preserve">
     <value>Fasta</value>
   </data>
-  <data name="tabPagePeptideList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;tabPageFasta.Name" xml:space="preserve">
+    <value>tabPageFasta</value>
   </data>
-  <data name="tabPagePeptideList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;tabPageFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="tabPagePeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>797, 403</value>
+  <data name="&gt;&gt;tabPageFasta.Parent" xml:space="preserve">
+    <value>tabControl1</value>
   </data>
-  <data name="tabPagePeptideList.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="&gt;&gt;tabPageFasta.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="tabPagePeptideList.Text" xml:space="preserve">
-    <value>肽段列表</value>
+  <metadata name="colProteinName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinName.HeaderText" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <metadata name="colProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinDescription.HeaderText" xml:space="preserve">
+    <value>描述</value>
+  </data>
+  <metadata name="colProteinSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinSequence.HeaderText" xml:space="preserve">
+    <value>序列</value>
+  </data>
+  <metadata name="colProteinAccession.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinAccession.HeaderText" xml:space="preserve">
+    <value>编号</value>
+  </data>
+  <metadata name="colProteinPreferredName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinPreferredName.HeaderText" xml:space="preserve">
+    <value>首选名称</value>
+  </data>
+  <metadata name="colProteinGene.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinGene.HeaderText" xml:space="preserve">
+    <value>基因</value>
+  </data>
+  <metadata name="colProteinSpecies.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colProteinSpecies.HeaderText" xml:space="preserve">
+    <value>物种</value>
+  </data>
+  <data name="gridViewProteins.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="gridViewProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="gridViewProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>791, 397</value>
+  </data>
+  <data name="gridViewProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;gridViewProteins.Name" xml:space="preserve">
+    <value>gridViewProteins</value>
+  </data>
+  <data name="&gt;&gt;gridViewProteins.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;gridViewProteins.Parent" xml:space="preserve">
+    <value>tabPageProteinList</value>
+  </data>
+  <data name="&gt;&gt;gridViewProteins.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="tabPageProteinList.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -540,6 +372,111 @@
   <data name="tabPageProteinList.Text" xml:space="preserve">
     <value>蛋白质列表</value>
   </data>
+  <data name="&gt;&gt;tabPageProteinList.Name" xml:space="preserve">
+    <value>tabPageProteinList</value>
+  </data>
+  <data name="&gt;&gt;tabPageProteinList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPageProteinList.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPageProteinList.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="colPeptideSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colPeptideSequence.HeaderText" xml:space="preserve">
+    <value>肽段序列</value>
+  </data>
+  <metadata name="colPeptideProtein.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colPeptideProtein.HeaderText" xml:space="preserve">
+    <value>蛋白质名称</value>
+  </data>
+  <metadata name="colPeptideProteinDescription.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colPeptideProteinDescription.HeaderText" xml:space="preserve">
+    <value>蛋白质描述</value>
+  </data>
+  <data name="gridViewPeptides.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="gridViewPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="gridViewPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>791, 397</value>
+  </data>
+  <data name="gridViewPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;gridViewPeptides.Name" xml:space="preserve">
+    <value>gridViewPeptides</value>
+  </data>
+  <data name="&gt;&gt;gridViewPeptides.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;gridViewPeptides.Parent" xml:space="preserve">
+    <value>tabPagePeptideList</value>
+  </data>
+  <data name="&gt;&gt;gridViewPeptides.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tabPagePeptideList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPagePeptideList.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPagePeptideList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>797, 403</value>
+  </data>
+  <data name="tabPagePeptideList.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabPagePeptideList.Text" xml:space="preserve">
+    <value>肽段列表</value>
+  </data>
+  <data name="&gt;&gt;tabPagePeptideList.Name" xml:space="preserve">
+    <value>tabPagePeptideList</value>
+  </data>
+  <data name="&gt;&gt;tabPagePeptideList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPagePeptideList.Parent" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabPagePeptideList.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabControl1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tabControl1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 45</value>
+  </data>
+  <data name="tabControl1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>805, 429</value>
+  </data>
+  <data name="tabControl1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
+    <value>tabControl1</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="tbxError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -555,22 +492,166 @@
   <data name="tbxError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="tbxFasta.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="&gt;&gt;tbxError.Name" xml:space="preserve">
+    <value>tbxError</value>
   </data>
-  <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
+  <data name="&gt;&gt;tbxError.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="tbxFasta.MaxLength" type="System.Int32, mscorlib">
-    <value>2147483647</value>
+  <data name="&gt;&gt;tbxError.Parent" xml:space="preserve">
+    <value>panelError</value>
   </data>
-  <data name="tbxFasta.Multiline" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;tbxError.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="tbxFasta.Size" type="System.Drawing.Size, System.Drawing">
-    <value>791, 384</value>
+  <data name="panelError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
   </data>
-  <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
+  <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
+    <value>805, 45</value>
+  </data>
+  <data name="panelError.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="panelError.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;panelError.Name" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;panelError.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelError.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelButtons.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="panelButtons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 474</value>
+  </data>
+  <data name="panelButtons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>805, 44</value>
+  </data>
+  <data name="panelButtons.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
+    <value>panelButtons</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelButtons.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>200, 17</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>48</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>805, 518</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>插入</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;colProteinName.Name" xml:space="preserve">
+    <value>colProteinName</value>
+  </data>
+  <data name="&gt;&gt;colProteinName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinDescription.Name" xml:space="preserve">
+    <value>colProteinDescription</value>
+  </data>
+  <data name="&gt;&gt;colProteinDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinSequence.Name" xml:space="preserve">
+    <value>colProteinSequence</value>
+  </data>
+  <data name="&gt;&gt;colProteinSequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinAccession.Name" xml:space="preserve">
+    <value>colProteinAccession</value>
+  </data>
+  <data name="&gt;&gt;colProteinAccession.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinPreferredName.Name" xml:space="preserve">
+    <value>colProteinPreferredName</value>
+  </data>
+  <data name="&gt;&gt;colProteinPreferredName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinGene.Name" xml:space="preserve">
+    <value>colProteinGene</value>
+  </data>
+  <data name="&gt;&gt;colProteinGene.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colProteinSpecies.Name" xml:space="preserve">
+    <value>colProteinSpecies</value>
+  </data>
+  <data name="&gt;&gt;colProteinSpecies.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colPeptideSequence.Name" xml:space="preserve">
+    <value>colPeptideSequence</value>
+  </data>
+  <data name="&gt;&gt;colPeptideSequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colPeptideProtein.Name" xml:space="preserve">
+    <value>colPeptideProtein</value>
+  </data>
+  <data name="&gt;&gt;colPeptideProtein.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;colPeptideProteinDescription.Name" xml:space="preserve">
+    <value>colPeptideProteinDescription</value>
+  </data>
+  <data name="&gt;&gt;colPeptideProteinDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>PasteDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -105,171 +105,27 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>248, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 209</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>IonMobilityFilteringUserControl</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Name" xml:space="preserve">
-    <value>cbUseSpectralLibraryIonMobilities</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;comboBoxWindowType.Name" xml:space="preserve">
-    <value>comboBoxWindowType</value>
-  </data>
-  <data name="&gt;&gt;comboBoxWindowType.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;comboBoxWindowType.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboIonMobilityLibrary.Name" xml:space="preserve">
-    <value>comboIonMobilityLibrary</value>
-  </data>
-  <data name="&gt;&gt;comboIonMobilityLibrary.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;comboIonMobilityLibrary.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;groupBoxIonMobilityFiltering.Name" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;groupBoxIonMobilityFiltering.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBoxIonMobilityFiltering.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;labelFixedWidth.Name" xml:space="preserve">
-    <value>labelFixedWidth</value>
-  </data>
-  <data name="&gt;&gt;labelFixedWidth.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;labelFixedWidth.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityLibrary.Name" xml:space="preserve">
-    <value>labelIonMobilityLibrary</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityLibrary.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityLibrary.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
-    <value>labelResolvingPower</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtMobilityMax.Name" xml:space="preserve">
-    <value>labelWidthAtMobilityMax</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtMobilityMax.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtMobilityMax.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtMobilityZero.Name" xml:space="preserve">
-    <value>labelWidthAtMobilityZero</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtMobilityZero.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;labelWidthAtMobilityZero.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;labelWindowType.Name" xml:space="preserve">
-    <value>labelWindowType</value>
-  </data>
-  <data name="&gt;&gt;labelWindowType.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;labelWindowType.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.Name" xml:space="preserve">
-    <value>textIonMobilityFilterFixedWidth</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.Name" xml:space="preserve">
-    <value>textIonMobilityFilterResolvingPower</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.Name" xml:space="preserve">
-    <value>textIonMobilityFilterWidthAtMobility0</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.Name" xml:space="preserve">
-    <value>textIonMobilityFilterWidthAtMobilityMax</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.Parent" xml:space="preserve">
-    <value>groupBoxIonMobilityFiltering</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
   <data name="cbUseSpectralLibraryIonMobilities.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbUseSpectralLibraryIonMobilities.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="cbUseSpectralLibraryIonMobilities.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 78</value>
   </data>
@@ -282,8 +138,131 @@
   <data name="cbUseSpectralLibraryIonMobilities.Text" xml:space="preserve">
     <value>Use &amp;spectral library ion mobility values when present</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>248, 17</value>
+  </metadata>
   <data name="cbUseSpectralLibraryIonMobilities.ToolTip" xml:space="preserve">
     <value>If checked, then ion mobility values in any loaded spectral libraries will be used in chromatogram extraction if the ion mobility library does not provide a value.</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Name" xml:space="preserve">
+    <value>cbUseSpectralLibraryIonMobilities</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;cbUseSpectralLibraryIonMobilities.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="comboIonMobilityLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 40</value>
+  </data>
+  <data name="comboIonMobilityLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>169, 21</value>
+  </data>
+  <data name="comboIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="comboIonMobilityLibrary.ToolTip" xml:space="preserve">
+    <value>Select or create a table of collisional cross section values and/or measured ion mobility values for specific peptides and adducts.</value>
+  </data>
+  <data name="&gt;&gt;comboIonMobilityLibrary.Name" xml:space="preserve">
+    <value>comboIonMobilityLibrary</value>
+  </data>
+  <data name="&gt;&gt;comboIonMobilityLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboIonMobilityLibrary.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;comboIonMobilityLibrary.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelIonMobilityLibrary.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelIonMobilityLibrary.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelIonMobilityLibrary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 25</value>
+  </data>
+  <data name="labelIonMobilityLibrary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 13</value>
+  </data>
+  <data name="labelIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
+    <value>&amp;Ion mobility library:</value>
+  </data>
+  <data name="labelIonMobilityLibrary.ToolTip" xml:space="preserve">
+    <value>Specifies an ion mobility library for use in ion mobility filtering during chromatogram extraction</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityLibrary.Name" xml:space="preserve">
+    <value>labelIonMobilityLibrary</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityLibrary.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityLibrary.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="groupBoxIonMobilityFiltering.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textIonMobilityFilterFixedWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>147, 172</value>
+  </data>
+  <data name="textIonMobilityFilterFixedWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 20</value>
+  </data>
+  <data name="textIonMobilityFilterFixedWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.Name" xml:space="preserve">
+    <value>textIonMobilityFilterFixedWidth</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterFixedWidth.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelFixedWidth.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFixedWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>144, 155</value>
+  </data>
+  <data name="labelFixedWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>63, 13</value>
+  </data>
+  <data name="labelFixedWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="labelFixedWidth.Text" xml:space="preserve">
+    <value>&amp;Fixed width:</value>
+  </data>
+  <data name="&gt;&gt;labelFixedWidth.Name" xml:space="preserve">
+    <value>labelFixedWidth</value>
+  </data>
+  <data name="&gt;&gt;labelFixedWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFixedWidth.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;labelFixedWidth.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="comboBoxWindowType.Items" xml:space="preserve">
     <value>Resolving power</value>
@@ -309,122 +288,17 @@
   <data name="comboBoxWindowType.ToolTip" xml:space="preserve">
     <value>Choose a calculation type for ion mobility filter window sizes ('None' disables ion mobility filtering)</value>
   </data>
-  <data name="comboIonMobilityLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 40</value>
+  <data name="&gt;&gt;comboBoxWindowType.Name" xml:space="preserve">
+    <value>comboBoxWindowType</value>
   </data>
-  <data name="comboIonMobilityLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 21</value>
+  <data name="&gt;&gt;comboBoxWindowType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="comboIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;comboBoxWindowType.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
   </data>
-  <data name="comboIonMobilityLibrary.ToolTip" xml:space="preserve">
-    <value>Select or create a table of collisional cross section values and/or measured ion mobility values for specific peptides and adducts.</value>
-  </data>
-  <data name="groupBoxIonMobilityFiltering.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="groupBoxIonMobilityFiltering.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="groupBoxIonMobilityFiltering.Size" type="System.Drawing.Size, System.Drawing">
-    <value>324, 206</value>
-  </data>
-  <data name="groupBoxIonMobilityFiltering.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="groupBoxIonMobilityFiltering.Text" xml:space="preserve">
-    <value>Ion mobility filtering</value>
-  </data>
-  <data name="labelFixedWidth.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelFixedWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 155</value>
-  </data>
-  <data name="labelFixedWidth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>63, 13</value>
-  </data>
-  <data name="labelFixedWidth.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="labelFixedWidth.Text" xml:space="preserve">
-    <value>&amp;Fixed width:</value>
-  </data>
-  <data name="labelIonMobilityLibrary.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelIonMobilityLibrary.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelIonMobilityLibrary.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 25</value>
-  </data>
-  <data name="labelIonMobilityLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 13</value>
-  </data>
-  <data name="labelIonMobilityLibrary.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="labelIonMobilityLibrary.Text" xml:space="preserve">
-    <value>&amp;Ion mobility library:</value>
-  </data>
-  <data name="labelIonMobilityLibrary.ToolTip" xml:space="preserve">
-    <value>Specifies an ion mobility library for use in ion mobility filtering during chromatogram extraction</value>
-  </data>
-  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>144, 114</value>
-  </data>
-  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
-    <value>89, 13</value>
-  </data>
-  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="labelResolvingPower.Text" xml:space="preserve">
-    <value>Resolving &amp;power:</value>
-  </data>
-  <data name="labelWidthAtMobilityMax.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthAtMobilityMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtMobilityMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 155</value>
-  </data>
-  <data name="labelWidthAtMobilityMax.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 13</value>
-  </data>
-  <data name="labelWidthAtMobilityMax.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="labelWidthAtMobilityMax.Text" xml:space="preserve">
-    <value>Width at imMa&amp;x:</value>
-  </data>
-  <data name="labelWidthAtMobilityZero.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelWidthAtMobilityZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelWidthAtMobilityZero.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 114</value>
-  </data>
-  <data name="labelWidthAtMobilityZero.Size" type="System.Drawing.Size, System.Drawing">
-    <value>69, 13</value>
-  </data>
-  <data name="labelWidthAtMobilityZero.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="labelWidthAtMobilityZero.Text" xml:space="preserve">
-    <value>Width at im&amp;0:</value>
+  <data name="&gt;&gt;comboBoxWindowType.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="labelWindowType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -444,28 +318,46 @@
   <data name="labelWindowType.ToolTip" xml:space="preserve">
     <value>Specifies calculation type for ion mobility filter window sizes</value>
   </data>
-  <data name="textIonMobilityFilterFixedWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>147, 172</value>
+  <data name="&gt;&gt;labelWindowType.Name" xml:space="preserve">
+    <value>labelWindowType</value>
   </data>
-  <data name="textIonMobilityFilterFixedWidth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 20</value>
+  <data name="&gt;&gt;labelWindowType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textIonMobilityFilterFixedWidth.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+  <data name="&gt;&gt;labelWindowType.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
   </data>
-  <data name="textIonMobilityFilterResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
-    <value>147, 132</value>
+  <data name="&gt;&gt;labelWindowType.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
-  <data name="textIonMobilityFilterResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textIonMobilityFilterWidthAtMobilityMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>249, 172</value>
+  </data>
+  <data name="textIonMobilityFilterWidthAtMobilityMax.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
-  <data name="textIonMobilityFilterResolvingPower.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="textIonMobilityFilterWidthAtMobilityMax.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
   </data>
-  <data name="textIonMobilityFilterResolvingPower.ToolTip" xml:space="preserve">
-    <value>Determines window size for ion mobility filtering in chromatogram extraction (for example, drift time): 
-For resolving power "R" at drift time "T", the width "W" of the drift time filter window centered at T is
-W = 2T/R</value>
+  <data name="textIonMobilityFilterWidthAtMobilityMax.ToolTip" xml:space="preserve">
+    <value>Determines ion mobility filter window size for chromatogram extraction, where: 
+imMax = maximum measured ion mobility
+W0 = width at ion mobility zero
+Wmax = width at imMax
+The width "W" of the ion mobility filter window centered at any ion mobility "M" is
+W = (W0 + M*(Wmax-W0)/imMax)</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.Name" xml:space="preserve">
+    <value>textIonMobilityFilterWidthAtMobilityMax</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobilityMax.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
   <data name="textIonMobilityFilterWidthAtMobility0.Location" type="System.Drawing.Point, System.Drawing">
     <value>249, 132</value>
@@ -484,21 +376,177 @@ Wmax = width at imMax
 The width "W" of the ion mobility filter window centered at any ion mobility "M" is
 W = (W0 + M*(Wmax-W0)/imMax)</value>
   </data>
-  <data name="textIonMobilityFilterWidthAtMobilityMax.Location" type="System.Drawing.Point, System.Drawing">
-    <value>249, 172</value>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.Name" xml:space="preserve">
+    <value>textIonMobilityFilterWidthAtMobility0</value>
   </data>
-  <data name="textIonMobilityFilterWidthAtMobilityMax.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textIonMobilityFilterWidthAtMobilityMax.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterWidthAtMobility0.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="labelWidthAtMobilityMax.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthAtMobilityMax.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthAtMobilityMax.Location" type="System.Drawing.Point, System.Drawing">
+    <value>246, 155</value>
+  </data>
+  <data name="labelWidthAtMobilityMax.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
+  </data>
+  <data name="labelWidthAtMobilityMax.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelWidthAtMobilityMax.Text" xml:space="preserve">
+    <value>Width at imMa&amp;x:</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityMax.Name" xml:space="preserve">
+    <value>labelWidthAtMobilityMax</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityMax.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityMax.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityMax.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="labelResolvingPower.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelResolvingPower.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>144, 114</value>
+  </data>
+  <data name="labelResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>89, 13</value>
+  </data>
+  <data name="labelResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelResolvingPower.Text" xml:space="preserve">
+    <value>Resolving &amp;power:</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Name" xml:space="preserve">
+    <value>labelResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;labelResolvingPower.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
-  <data name="textIonMobilityFilterWidthAtMobilityMax.ToolTip" xml:space="preserve">
-    <value>Determines ion mobility filter window size for chromatogram extraction, where: 
-imMax = maximum measured ion mobility
-W0 = width at ion mobility zero
-Wmax = width at imMax
-The width "W" of the ion mobility filter window centered at any ion mobility "M" is
-W = (W0 + M*(Wmax-W0)/imMax)</value>
+  <data name="labelWidthAtMobilityZero.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelWidthAtMobilityZero.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelWidthAtMobilityZero.Location" type="System.Drawing.Point, System.Drawing">
+    <value>246, 114</value>
+  </data>
+  <data name="labelWidthAtMobilityZero.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 13</value>
+  </data>
+  <data name="labelWidthAtMobilityZero.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelWidthAtMobilityZero.Text" xml:space="preserve">
+    <value>Width at im&amp;0:</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityZero.Name" xml:space="preserve">
+    <value>labelWidthAtMobilityZero</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityZero.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityZero.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;labelWidthAtMobilityZero.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="textIonMobilityFilterResolvingPower.Location" type="System.Drawing.Point, System.Drawing">
+    <value>147, 132</value>
+  </data>
+  <data name="textIonMobilityFilterResolvingPower.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textIonMobilityFilterResolvingPower.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textIonMobilityFilterResolvingPower.ToolTip" xml:space="preserve">
+    <value>Determines window size for ion mobility filtering in chromatogram extraction (for example, drift time): 
+For resolving power "R" at drift time "T", the width "W" of the drift time filter window centered at T is
+W = 2T/R</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.Name" xml:space="preserve">
+    <value>textIonMobilityFilterResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.Parent" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityFilterResolvingPower.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="groupBoxIonMobilityFiltering.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="groupBoxIonMobilityFiltering.Size" type="System.Drawing.Size, System.Drawing">
+    <value>324, 206</value>
+  </data>
+  <data name="groupBoxIonMobilityFiltering.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="groupBoxIonMobilityFiltering.Text" xml:space="preserve">
+    <value>Ion mobility filtering</value>
+  </data>
+  <data name="&gt;&gt;groupBoxIonMobilityFiltering.Name" xml:space="preserve">
+    <value>groupBoxIonMobilityFiltering</value>
+  </data>
+  <data name="&gt;&gt;groupBoxIonMobilityFiltering.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxIonMobilityFiltering.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxIonMobilityFiltering.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>332, 209</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>IonMobilityFilteringUserControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

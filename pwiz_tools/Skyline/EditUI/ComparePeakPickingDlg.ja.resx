@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,125 +105,44 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="bindingSourceScore.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="bindingSourceScoreCompare.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>178, 17</value>
-  </metadata>
-  <metadata name="Charge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="dataGridViewTextBoxColumn1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="dataGridViewTextBoxColumn2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="dataGridViewTextBoxColumn3.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="endTrue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="File.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="leftApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PeakMatch.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PeakMatch1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PeakMatch2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PickedApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PickedEnd.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="PickedStart.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="qValue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="QValue1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="QValue2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="rightApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Score.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Score1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Score2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="Sequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="startTrue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="TrueApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="TrueEnd.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="TrueStart.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>870, 635</value>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>ピークピッキングを比較</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>776, 600</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ComparePeakPickingDlg</value>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name="&gt;&gt;bindingSourceScore.Name" xml:space="preserve">
-    <value>bindingSourceScore</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="&gt;&gt;bindingSourceScoreCompare.Name" xml:space="preserve">
-    <value>bindingSourceScoreCompare</value>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>閉じる(&amp;C)</value>
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -231,509 +150,8 @@
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="&gt;&gt;btnRefresh.Name" xml:space="preserve">
-    <value>btnRefresh</value>
-  </data>
-  <data name="&gt;&gt;btnRefresh.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnRefresh.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;buttonAdd.Name" xml:space="preserve">
-    <value>buttonAdd</value>
-  </data>
-  <data name="&gt;&gt;buttonAdd.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;buttonAdd.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;buttonApply.Name" xml:space="preserve">
-    <value>buttonApply</value>
-  </data>
-  <data name="&gt;&gt;buttonApply.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;buttonApply.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;buttonEdit.Name" xml:space="preserve">
-    <value>buttonEdit</value>
-  </data>
-  <data name="&gt;&gt;buttonEdit.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;buttonEdit.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;Charge.Name" xml:space="preserve">
-    <value>Charge</value>
-  </data>
-  <data name="&gt;&gt;checkBoxConflicts.Name" xml:space="preserve">
-    <value>checkBoxConflicts</value>
-  </data>
-  <data name="&gt;&gt;checkBoxConflicts.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;checkBoxConflicts.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
-    <value>checkBoxExpectedFp</value>
-  </data>
-  <data name="&gt;&gt;checkBoxExpectedFp.Parent" xml:space="preserve">
-    <value>tabQq</value>
-  </data>
-  <data name="&gt;&gt;checkBoxExpectedFp.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
-    <value>checkBoxIDLabels</value>
-  </data>
-  <data name="&gt;&gt;checkBoxIDLabels.Parent" xml:space="preserve">
-    <value>tabROC</value>
-  </data>
-  <data name="&gt;&gt;checkBoxIDLabels.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
-    <value>checkBoxXRange</value>
-  </data>
-  <data name="&gt;&gt;checkBoxXRange.Parent" xml:space="preserve">
-    <value>tabROC</value>
-  </data>
-  <data name="&gt;&gt;checkBoxXRange.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;checkedListCompare.Name" xml:space="preserve">
-    <value>checkedListCompare</value>
-  </data>
-  <data name="&gt;&gt;checkedListCompare.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkedListCompare.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;checkObserved.Name" xml:space="preserve">
-    <value>checkObserved</value>
-  </data>
-  <data name="&gt;&gt;checkObserved.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;checkObserved.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCompare1.Name" xml:space="preserve">
-    <value>comboBoxCompare1</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCompare1.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCompare1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCompare2.Name" xml:space="preserve">
-    <value>comboBoxCompare2</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCompare2.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCompare2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboBoxDetails.Name" xml:space="preserve">
-    <value>comboBoxDetails</value>
-  </data>
-  <data name="&gt;&gt;comboBoxDetails.Parent" xml:space="preserve">
-    <value>tabDetails</value>
-  </data>
-  <data name="&gt;&gt;comboBoxDetails.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboBoxFilesYAxis.Name" xml:space="preserve">
-    <value>comboBoxFilesYAxis</value>
-  </data>
-  <data name="&gt;&gt;comboBoxFilesYAxis.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;comboBoxFilesYAxis.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;comboBoxYAxis.Name" xml:space="preserve">
-    <value>comboBoxYAxis</value>
-  </data>
-  <data name="&gt;&gt;comboBoxYAxis.Parent" xml:space="preserve">
-    <value>tabROC</value>
-  </data>
-  <data name="&gt;&gt;comboBoxYAxis.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScore.Name" xml:space="preserve">
-    <value>dataGridViewScore</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScore.Parent" xml:space="preserve">
-    <value>tabDetails</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScore.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScoreComparison.Name" xml:space="preserve">
-    <value>dataGridViewScoreComparison</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScoreComparison.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScoreComparison.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScoreDetails.Name" xml:space="preserve">
-    <value>dataGridViewScoreDetails</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScoreDetails.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewScoreDetails.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn2</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
-    <value>dataGridViewTextBoxColumn3</value>
-  </data>
-  <data name="&gt;&gt;endTrue.Name" xml:space="preserve">
-    <value>endTrue</value>
-  </data>
-  <data name="&gt;&gt;File.Name" xml:space="preserve">
-    <value>File</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>tabDetails</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>tabROC</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;labelCutoff.Name" xml:space="preserve">
-    <value>labelCutoff</value>
-  </data>
-  <data name="&gt;&gt;labelCutoff.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;labelCutoff.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;leftApex.Name" xml:space="preserve">
-    <value>leftApex</value>
-  </data>
-  <data name="&gt;&gt;PeakMatch.Name" xml:space="preserve">
-    <value>PeakMatch</value>
-  </data>
-  <data name="&gt;&gt;PeakMatch1.Name" xml:space="preserve">
-    <value>PeakMatch1</value>
-  </data>
-  <data name="&gt;&gt;PeakMatch2.Name" xml:space="preserve">
-    <value>PeakMatch2</value>
-  </data>
-  <data name="&gt;&gt;PickedApex.Name" xml:space="preserve">
-    <value>PickedApex</value>
-  </data>
-  <data name="&gt;&gt;PickedEnd.Name" xml:space="preserve">
-    <value>PickedEnd</value>
-  </data>
-  <data name="&gt;&gt;PickedStart.Name" xml:space="preserve">
-    <value>PickedStart</value>
-  </data>
-  <data name="&gt;&gt;qValue.Name" xml:space="preserve">
-    <value>qValue</value>
-  </data>
-  <data name="&gt;&gt;QValue1.Name" xml:space="preserve">
-    <value>QValue1</value>
-  </data>
-  <data name="&gt;&gt;QValue2.Name" xml:space="preserve">
-    <value>QValue2</value>
-  </data>
-  <data name="&gt;&gt;rightApex.Name" xml:space="preserve">
-    <value>rightApex</value>
-  </data>
-  <data name="&gt;&gt;Score.Name" xml:space="preserve">
-    <value>Score</value>
-  </data>
-  <data name="&gt;&gt;Score1.Name" xml:space="preserve">
-    <value>Score1</value>
-  </data>
-  <data name="&gt;&gt;Score2.Name" xml:space="preserve">
-    <value>Score2</value>
-  </data>
-  <data name="&gt;&gt;Sequence.Name" xml:space="preserve">
-    <value>Sequence</value>
-  </data>
-  <data name="&gt;&gt;startTrue.Name" xml:space="preserve">
-    <value>startTrue</value>
-  </data>
-  <data name="&gt;&gt;tabDetails.Name" xml:space="preserve">
-    <value>tabDetails</value>
-  </data>
-  <data name="&gt;&gt;tabDetails.Parent" xml:space="preserve">
-    <value>dataGridViewScoreDetails</value>
-  </data>
-  <data name="&gt;&gt;tabDetails.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
-    <value>tabPage1</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
-    <value>dataGridViewScoreDetails</value>
-  </data>
-  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
-    <value>dataGridViewScoreDetails</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;tabQq.Name" xml:space="preserve">
-    <value>tabQq</value>
-  </data>
-  <data name="&gt;&gt;tabQq.Parent" xml:space="preserve">
-    <value>dataGridViewScoreDetails</value>
-  </data>
-  <data name="&gt;&gt;tabQq.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;tabROC.Name" xml:space="preserve">
-    <value>tabROC</value>
-  </data>
-  <data name="&gt;&gt;tabROC.Parent" xml:space="preserve">
-    <value>dataGridViewScoreDetails</value>
-  </data>
-  <data name="&gt;&gt;tabROC.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;textBoxFilesQCutoff.Name" xml:space="preserve">
-    <value>textBoxFilesQCutoff</value>
-  </data>
-  <data name="&gt;&gt;textBoxFilesQCutoff.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;textBoxFilesQCutoff.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;TrueApex.Name" xml:space="preserve">
-    <value>TrueApex</value>
-  </data>
-  <data name="&gt;&gt;TrueEnd.Name" xml:space="preserve">
-    <value>TrueEnd</value>
-  </data>
-  <data name="&gt;&gt;TrueStart.Name" xml:space="preserve">
-    <value>TrueStart</value>
-  </data>
-  <data name="&gt;&gt;zedGraphFiles.Name" xml:space="preserve">
-    <value>zedGraphFiles</value>
-  </data>
-  <data name="&gt;&gt;zedGraphFiles.Parent" xml:space="preserve">
-    <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;zedGraphFiles.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQq.Name" xml:space="preserve">
-    <value>zedGraphQq</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQq.Parent" xml:space="preserve">
-    <value>tabQq</value>
-  </data>
-  <data name="&gt;&gt;zedGraphQq.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;zedGraphRoc.Name" xml:space="preserve">
-    <value>zedGraphRoc</value>
-  </data>
-  <data name="&gt;&gt;zedGraphRoc.Parent" xml:space="preserve">
-    <value>tabROC</value>
-  </data>
-  <data name="&gt;&gt;zedGraphRoc.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>776, 600</value>
-  </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>閉じる(&amp;C)</value>
-  </data>
-  <data name="btnRefresh.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="btnRefresh.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="btnRefresh.Location" type="System.Drawing.Point, System.Drawing">
-    <value>222, 600</value>
-  </data>
-  <data name="btnRefresh.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnRefresh.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="btnRefresh.Text" xml:space="preserve">
-    <value>更新(&amp;R)</value>
-  </data>
-  <data name="buttonAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="buttonAdd.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="buttonAdd.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 567</value>
-  </data>
-  <data name="buttonAdd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 23</value>
-  </data>
-  <data name="buttonAdd.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="buttonAdd.Text" xml:space="preserve">
-    <value>追加(&amp;D)...</value>
-  </data>
-  <data name="buttonApply.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="buttonApply.Location" type="System.Drawing.Point, System.Drawing">
-    <value>131, 15</value>
-  </data>
-  <data name="buttonApply.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="buttonApply.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="buttonApply.Text" xml:space="preserve">
-    <value>適用(&amp;A)</value>
-  </data>
-  <data name="buttonEdit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="buttonEdit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="buttonEdit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>95, 567</value>
-  </data>
-  <data name="buttonEdit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 23</value>
-  </data>
-  <data name="buttonEdit.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="buttonEdit.Text" xml:space="preserve">
-    <value>リストを編集(&amp;E)...</value>
-  </data>
-  <data name="Charge.HeaderText" xml:space="preserve">
-    <value>電荷</value>
-  </data>
-  <data name="checkBoxConflicts.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxConflicts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="checkBoxConflicts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>309, 20</value>
-  </data>
-  <data name="checkBoxConflicts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 17</value>
-  </data>
-  <data name="checkBoxConflicts.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="checkBoxConflicts.Text" xml:space="preserve">
-    <value>不一致のみ表示</value>
-  </data>
-  <data name="checkBoxExpectedFp.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxExpectedFp.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 19</value>
-  </data>
-  <data name="checkBoxExpectedFp.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
-  </data>
-  <data name="checkBoxExpectedFp.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="checkBoxExpectedFp.Text" xml:space="preserve">
-    <value>{0} 予測FP線を表示</value>
+  <data name="dataGridViewScoreDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="checkBoxIDLabels.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -753,6 +171,18 @@
   <data name="checkBoxIDLabels.Text" xml:space="preserve">
     <value>{0} FPで#IDを表示</value>
   </data>
+  <data name="&gt;&gt;checkBoxIDLabels.Name" xml:space="preserve">
+    <value>checkBoxIDLabels</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;checkBoxIDLabels.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="checkBoxXRange.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -771,206 +201,17 @@
   <data name="checkBoxXRange.Text" xml:space="preserve">
     <value>{0} FPのX範囲にフォーカス</value>
   </data>
-  <data name="checkedListCompare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left</value>
+  <data name="&gt;&gt;checkBoxXRange.Name" xml:space="preserve">
+    <value>checkBoxXRange</value>
   </data>
-  <data name="checkedListCompare.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 28</value>
+  <data name="&gt;&gt;checkBoxXRange.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="checkedListCompare.Size" type="System.Drawing.Size, System.Drawing">
-    <value>195, 514</value>
+  <data name="&gt;&gt;checkBoxXRange.Parent" xml:space="preserve">
+    <value>tabROC</value>
   </data>
-  <data name="checkedListCompare.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;checkBoxXRange.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="checkObserved.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkObserved.Location" type="System.Drawing.Point, System.Drawing">
-    <value>131, -1</value>
-  </data>
-  <data name="checkObserved.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 17</value>
-  </data>
-  <data name="checkObserved.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="checkObserved.Text" xml:space="preserve">
-    <value>観測済み</value>
-  </data>
-  <data name="comboBoxCompare1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>5, 18</value>
-  </data>
-  <data name="comboBoxCompare1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>133, 21</value>
-  </data>
-  <data name="comboBoxCompare1.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="comboBoxCompare2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>160, 18</value>
-  </data>
-  <data name="comboBoxCompare2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>131, 21</value>
-  </data>
-  <data name="comboBoxCompare2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="comboBoxDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 21</value>
-  </data>
-  <data name="comboBoxDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 21</value>
-  </data>
-  <data name="comboBoxDetails.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="comboBoxFilesYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="comboBoxFilesYAxis.Location" type="System.Drawing.Point, System.Drawing">
-    <value>454, 17</value>
-  </data>
-  <data name="comboBoxFilesYAxis.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 21</value>
-  </data>
-  <data name="comboBoxFilesYAxis.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="comboBoxYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="comboBoxYAxis.Location" type="System.Drawing.Point, System.Drawing">
-    <value>454, 19</value>
-  </data>
-  <data name="comboBoxYAxis.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 21</value>
-  </data>
-  <data name="comboBoxYAxis.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="dataGridViewScore.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="dataGridViewScore.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 48</value>
-  </data>
-  <data name="dataGridViewScore.Size" type="System.Drawing.Size, System.Drawing">
-    <value>629, 508</value>
-  </data>
-  <data name="dataGridViewScore.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="dataGridViewScoreComparison.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="dataGridViewScoreComparison.Location" type="System.Drawing.Point, System.Drawing">
-    <value>1, 45</value>
-  </data>
-  <data name="dataGridViewScoreComparison.Size" type="System.Drawing.Size, System.Drawing">
-    <value>629, 508</value>
-  </data>
-  <data name="dataGridViewScoreComparison.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="dataGridViewScoreDetails.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="dataGridViewScoreDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 12</value>
-  </data>
-  <data name="dataGridViewScoreDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>640, 582</value>
-  </data>
-  <data name="dataGridViewScoreDetails.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value>繰り返し測定</value>
-  </data>
-  <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
-    <value>シークエンス</value>
-  </data>
-  <data name="dataGridViewTextBoxColumn3.HeaderText" xml:space="preserve">
-    <value>電荷</value>
-  </data>
-  <data name="endTrue.HeaderText" xml:space="preserve">
-    <value>トゥルーエンドピーク</value>
-  </data>
-  <data name="File.HeaderText" xml:space="preserve">
-    <value>繰り返し測定</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 12</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>142, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>対比較用モデルおよびファイル(&amp;M)：</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 4</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>85, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>次の結果を表示します：</value>
-  </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
-  </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 13</value>
-  </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>比較：</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>157, 2</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>次を伴う：</value>
   </data>
   <data name="label5.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -993,6 +234,711 @@
   <data name="label5.Text" xml:space="preserve">
     <value>Y軸目盛り：</value>
   </data>
+  <data name="&gt;&gt;label5.Name" xml:space="preserve">
+    <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="comboBoxYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="comboBoxYAxis.Location" type="System.Drawing.Point, System.Drawing">
+    <value>454, 19</value>
+  </data>
+  <data name="comboBoxYAxis.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 21</value>
+  </data>
+  <data name="comboBoxYAxis.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.Name" xml:space="preserve">
+    <value>comboBoxYAxis</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;comboBoxYAxis.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="zedGraphRoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphRoc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 34</value>
+  </data>
+  <data name="zedGraphRoc.Size" type="System.Drawing.Size, System.Drawing">
+    <value>634, 522</value>
+  </data>
+  <data name="zedGraphRoc.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;zedGraphRoc.Name" xml:space="preserve">
+    <value>zedGraphRoc</value>
+  </data>
+  <data name="&gt;&gt;zedGraphRoc.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6392.10286, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphRoc.Parent" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;zedGraphRoc.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="tabROC.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabROC.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabROC.Size" type="System.Drawing.Size, System.Drawing">
+    <value>632, 556</value>
+  </data>
+  <data name="tabROC.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabROC.Text" xml:space="preserve">
+    <value>ROCプロット</value>
+  </data>
+  <data name="&gt;&gt;tabROC.Name" xml:space="preserve">
+    <value>tabROC</value>
+  </data>
+  <data name="&gt;&gt;tabROC.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabROC.Parent" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
+  </data>
+  <data name="&gt;&gt;tabROC.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="checkBoxExpectedFp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxExpectedFp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="checkBoxExpectedFp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 17</value>
+  </data>
+  <data name="checkBoxExpectedFp.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="checkBoxExpectedFp.Text" xml:space="preserve">
+    <value>{0} 予測FP線を表示</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.Name" xml:space="preserve">
+    <value>checkBoxExpectedFp</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.Parent" xml:space="preserve">
+    <value>tabQq</value>
+  </data>
+  <data name="&gt;&gt;checkBoxExpectedFp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="zedGraphQq.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="zedGraphQq.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, 31</value>
+  </data>
+  <data name="zedGraphQq.Size" type="System.Drawing.Size, System.Drawing">
+    <value>634, 527</value>
+  </data>
+  <data name="zedGraphQq.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQq.Name" xml:space="preserve">
+    <value>zedGraphQq</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQq.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6392.10286, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQq.Parent" xml:space="preserve">
+    <value>tabQq</value>
+  </data>
+  <data name="&gt;&gt;zedGraphQq.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabQq.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabQq.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabQq.Size" type="System.Drawing.Size, System.Drawing">
+    <value>632, 556</value>
+  </data>
+  <data name="tabQq.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tabQq.Text" xml:space="preserve">
+    <value>Q-qプロット</value>
+  </data>
+  <data name="&gt;&gt;tabQq.Name" xml:space="preserve">
+    <value>tabQq</value>
+  </data>
+  <data name="&gt;&gt;tabQq.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabQq.Parent" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
+  </data>
+  <data name="&gt;&gt;tabQq.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 4</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>85, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>次の結果を表示します：</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>tabDetails</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboBoxDetails.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 21</value>
+  </data>
+  <data name="comboBoxDetails.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 21</value>
+  </data>
+  <data name="comboBoxDetails.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDetails.Name" xml:space="preserve">
+    <value>comboBoxDetails</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDetails.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDetails.Parent" xml:space="preserve">
+    <value>tabDetails</value>
+  </data>
+  <data name="&gt;&gt;comboBoxDetails.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="dataGridViewScore.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <metadata name="File.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="File.HeaderText" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <metadata name="Sequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="Sequence.HeaderText" xml:space="preserve">
+    <value>シークエンス</value>
+  </data>
+  <metadata name="Charge.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="Charge.HeaderText" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <metadata name="PeakMatch.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PeakMatch.HeaderText" xml:space="preserve">
+    <value>ピーク一致</value>
+  </data>
+  <metadata name="Score.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="Score.HeaderText" xml:space="preserve">
+    <value>スコア</value>
+  </data>
+  <metadata name="qValue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="qValue.HeaderText" xml:space="preserve">
+    <value>Q値</value>
+  </data>
+  <metadata name="PickedApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PickedApex.HeaderText" xml:space="preserve">
+    <value>選択された頂点</value>
+  </data>
+  <metadata name="PickedStart.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PickedStart.HeaderText" xml:space="preserve">
+    <value>選択した開始点</value>
+  </data>
+  <metadata name="PickedEnd.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PickedEnd.HeaderText" xml:space="preserve">
+    <value>選択した終了点</value>
+  </data>
+  <metadata name="TrueApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="TrueApex.HeaderText" xml:space="preserve">
+    <value>真の頂点</value>
+  </data>
+  <metadata name="TrueStart.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="TrueStart.HeaderText" xml:space="preserve">
+    <value>トゥルースタート</value>
+  </data>
+  <metadata name="TrueEnd.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="TrueEnd.HeaderText" xml:space="preserve">
+    <value>トゥルーエンド</value>
+  </data>
+  <metadata name="bindingSourceScore.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="dataGridViewScore.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 48</value>
+  </data>
+  <data name="dataGridViewScore.Size" type="System.Drawing.Size, System.Drawing">
+    <value>629, 508</value>
+  </data>
+  <data name="dataGridViewScore.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScore.Name" xml:space="preserve">
+    <value>dataGridViewScore</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScore.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScore.Parent" xml:space="preserve">
+    <value>tabDetails</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScore.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tabDetails.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabDetails.Size" type="System.Drawing.Size, System.Drawing">
+    <value>632, 556</value>
+  </data>
+  <data name="tabDetails.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="tabDetails.Text" xml:space="preserve">
+    <value>スコア詳細</value>
+  </data>
+  <data name="&gt;&gt;tabDetails.Name" xml:space="preserve">
+    <value>tabDetails</value>
+  </data>
+  <data name="&gt;&gt;tabDetails.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabDetails.Parent" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
+  </data>
+  <data name="&gt;&gt;tabDetails.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="checkBoxConflicts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkBoxConflicts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkBoxConflicts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>309, 20</value>
+  </data>
+  <data name="checkBoxConflicts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 17</value>
+  </data>
+  <data name="checkBoxConflicts.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="checkBoxConflicts.Text" xml:space="preserve">
+    <value>不一致のみ表示</value>
+  </data>
+  <data name="&gt;&gt;checkBoxConflicts.Name" xml:space="preserve">
+    <value>checkBoxConflicts</value>
+  </data>
+  <data name="&gt;&gt;checkBoxConflicts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxConflicts.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;checkBoxConflicts.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboBoxCompare2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>160, 18</value>
+  </data>
+  <data name="comboBoxCompare2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>131, 21</value>
+  </data>
+  <data name="comboBoxCompare2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare2.Name" xml:space="preserve">
+    <value>comboBoxCompare2</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare2.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboBoxCompare1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>5, 18</value>
+  </data>
+  <data name="comboBoxCompare1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>133, 21</value>
+  </data>
+  <data name="comboBoxCompare1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare1.Name" xml:space="preserve">
+    <value>comboBoxCompare1</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare1.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;comboBoxCompare1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>157, 2</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>次を伴う：</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>比較：</value>
+  </data>
+  <data name="&gt;&gt;label3.Name" xml:space="preserve">
+    <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="dataGridViewScoreComparison.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <metadata name="dataGridViewTextBoxColumn1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <metadata name="dataGridViewTextBoxColumn2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
+    <value>シークエンス</value>
+  </data>
+  <metadata name="dataGridViewTextBoxColumn3.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="dataGridViewTextBoxColumn3.HeaderText" xml:space="preserve">
+    <value>電荷</value>
+  </data>
+  <metadata name="PeakMatch1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PeakMatch1.HeaderText" xml:space="preserve">
+    <value>ピーク一致（左）</value>
+  </data>
+  <metadata name="PeakMatch2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="PeakMatch2.HeaderText" xml:space="preserve">
+    <value>ピーク一致（右）</value>
+  </data>
+  <metadata name="Score1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="Score1.HeaderText" xml:space="preserve">
+    <value>スコア（左）</value>
+  </data>
+  <metadata name="Score2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="Score2.HeaderText" xml:space="preserve">
+    <value>スコア（右）</value>
+  </data>
+  <metadata name="QValue1.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="QValue1.HeaderText" xml:space="preserve">
+    <value>Q値（左）</value>
+  </data>
+  <metadata name="QValue2.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="QValue2.HeaderText" xml:space="preserve">
+    <value>Q値（右）</value>
+  </data>
+  <metadata name="leftApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="leftApex.HeaderText" xml:space="preserve">
+    <value>頂点（左）</value>
+  </data>
+  <metadata name="rightApex.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="rightApex.HeaderText" xml:space="preserve">
+    <value>頂点（右）</value>
+  </data>
+  <metadata name="startTrue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="startTrue.HeaderText" xml:space="preserve">
+    <value>トゥルースタートピーク</value>
+  </data>
+  <metadata name="endTrue.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="endTrue.HeaderText" xml:space="preserve">
+    <value>トゥルーエンドピーク</value>
+  </data>
+  <metadata name="bindingSourceScoreCompare.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>178, 17</value>
+  </metadata>
+  <data name="dataGridViewScoreComparison.Location" type="System.Drawing.Point, System.Drawing">
+    <value>1, 45</value>
+  </data>
+  <data name="dataGridViewScoreComparison.Size" type="System.Drawing.Size, System.Drawing">
+    <value>629, 508</value>
+  </data>
+  <data name="dataGridViewScoreComparison.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScoreComparison.Name" xml:space="preserve">
+    <value>dataGridViewScoreComparison</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScoreComparison.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScoreComparison.Parent" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewScoreComparison.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
+  </data>
+  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>632, 556</value>
+  </data>
+  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tabPage1.Text" xml:space="preserve">
+    <value>スコア比較</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="checkObserved.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="checkObserved.Location" type="System.Drawing.Point, System.Drawing">
+    <value>131, -1</value>
+  </data>
+  <data name="checkObserved.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 17</value>
+  </data>
+  <data name="checkObserved.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="checkObserved.Text" xml:space="preserve">
+    <value>観測済み</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.Name" xml:space="preserve">
+    <value>checkObserved</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;checkObserved.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonApply.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonApply.Location" type="System.Drawing.Point, System.Drawing">
+    <value>131, 15</value>
+  </data>
+  <data name="buttonApply.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="buttonApply.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="buttonApply.Text" xml:space="preserve">
+    <value>適用(&amp;A)</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.Name" xml:space="preserve">
+    <value>buttonApply</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;buttonApply.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCutoff.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 1</value>
+  </data>
+  <data name="labelCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="labelCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelCutoff.Text" xml:space="preserve">
+    <value>Q値のカットオフ：</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.Name" xml:space="preserve">
+    <value>labelCutoff</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;labelCutoff.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textBoxFilesQCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 17</value>
+  </data>
+  <data name="textBoxFilesQCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>104, 20</value>
+  </data>
+  <data name="textBoxFilesQCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.Name" xml:space="preserve">
+    <value>textBoxFilesQCutoff</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.Parent" xml:space="preserve">
+    <value>tabPage2</value>
+  </data>
+  <data name="&gt;&gt;textBoxFilesQCutoff.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="label6.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -1014,95 +960,65 @@
   <data name="label6.Text" xml:space="preserve">
     <value>Y軸目盛り：</value>
   </data>
-  <data name="labelCutoff.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
   </data>
-  <data name="labelCutoff.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 1</value>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>tabPage2</value>
   </data>
-  <data name="labelCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 13</value>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
-  <data name="labelCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="comboBoxFilesYAxis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="labelCutoff.Text" xml:space="preserve">
-    <value>Q値のカットオフ：</value>
+  <data name="comboBoxFilesYAxis.Location" type="System.Drawing.Point, System.Drawing">
+    <value>454, 17</value>
   </data>
-  <data name="leftApex.HeaderText" xml:space="preserve">
-    <value>頂点（左）</value>
+  <data name="comboBoxFilesYAxis.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 21</value>
   </data>
-  <data name="PeakMatch.HeaderText" xml:space="preserve">
-    <value>ピーク一致</value>
+  <data name="comboBoxFilesYAxis.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="PeakMatch1.HeaderText" xml:space="preserve">
-    <value>ピーク一致（左）</value>
+  <data name="&gt;&gt;comboBoxFilesYAxis.Name" xml:space="preserve">
+    <value>comboBoxFilesYAxis</value>
   </data>
-  <data name="PeakMatch2.HeaderText" xml:space="preserve">
-    <value>ピーク一致（右）</value>
+  <data name="&gt;&gt;comboBoxFilesYAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="PickedApex.HeaderText" xml:space="preserve">
-    <value>選択された頂点</value>
+  <data name="&gt;&gt;comboBoxFilesYAxis.Parent" xml:space="preserve">
+    <value>tabPage2</value>
   </data>
-  <data name="PickedEnd.HeaderText" xml:space="preserve">
-    <value>選択した終了点</value>
+  <data name="&gt;&gt;comboBoxFilesYAxis.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
-  <data name="PickedStart.HeaderText" xml:space="preserve">
-    <value>選択した開始点</value>
+  <data name="zedGraphFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="qValue.HeaderText" xml:space="preserve">
-    <value>Q値</value>
+  <data name="zedGraphFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>-1, 32</value>
   </data>
-  <data name="QValue1.HeaderText" xml:space="preserve">
-    <value>Q値（左）</value>
+  <data name="zedGraphFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>634, 522</value>
   </data>
-  <data name="QValue2.HeaderText" xml:space="preserve">
-    <value>Q値（右）</value>
-  </data>
-  <data name="rightApex.HeaderText" xml:space="preserve">
-    <value>頂点（右）</value>
-  </data>
-  <data name="Score.HeaderText" xml:space="preserve">
-    <value>スコア</value>
-  </data>
-  <data name="Score1.HeaderText" xml:space="preserve">
-    <value>スコア（左）</value>
-  </data>
-  <data name="Score2.HeaderText" xml:space="preserve">
-    <value>スコア（右）</value>
-  </data>
-  <data name="Sequence.HeaderText" xml:space="preserve">
-    <value>シークエンス</value>
-  </data>
-  <data name="startTrue.HeaderText" xml:space="preserve">
-    <value>トゥルースタートピーク</value>
-  </data>
-  <data name="tabDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
-  </data>
-  <data name="tabDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 556</value>
-  </data>
-  <data name="tabDetails.TabIndex" type="System.Int32, mscorlib">
+  <data name="zedGraphFiles.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="tabDetails.Text" xml:space="preserve">
-    <value>スコア詳細</value>
+  <data name="&gt;&gt;zedGraphFiles.Name" xml:space="preserve">
+    <value>zedGraphFiles</value>
   </data>
-  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;zedGraphFiles.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.6392.10286, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
-  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 556</value>
+  <data name="&gt;&gt;zedGraphFiles.Parent" xml:space="preserve">
+    <value>tabPage2</value>
   </data>
-  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tabPage1.Text" xml:space="preserve">
-    <value>スコア比較</value>
+  <data name="&gt;&gt;zedGraphFiles.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1119,88 +1035,361 @@
   <data name="tabPage2.Text" xml:space="preserve">
     <value>比較を実行</value>
   </data>
-  <data name="tabQq.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
+    <value>tabPage2</value>
   </data>
-  <data name="tabQq.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="tabQq.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 556</value>
+  <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
   </data>
-  <data name="tabQq.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
-  <data name="tabQq.Text" xml:space="preserve">
-    <value>Q-qプロット</value>
+  <data name="dataGridViewScoreDetails.Location" type="System.Drawing.Point, System.Drawing">
+    <value>218, 12</value>
   </data>
-  <data name="tabROC.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 22</value>
+  <data name="dataGridViewScoreDetails.Size" type="System.Drawing.Size, System.Drawing">
+    <value>640, 582</value>
   </data>
-  <data name="tabROC.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="dataGridViewScoreDetails.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
-  <data name="tabROC.Size" type="System.Drawing.Size, System.Drawing">
-    <value>632, 556</value>
+  <data name="&gt;&gt;dataGridViewScoreDetails.Name" xml:space="preserve">
+    <value>dataGridViewScoreDetails</value>
   </data>
-  <data name="tabROC.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;dataGridViewScoreDetails.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="tabROC.Text" xml:space="preserve">
-    <value>ROCプロット</value>
+  <data name="&gt;&gt;dataGridViewScoreDetails.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="textBoxFilesQCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 17</value>
+  <data name="&gt;&gt;dataGridViewScoreDetails.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
-  <data name="textBoxFilesQCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>104, 20</value>
+  <data name="buttonAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
-  <data name="textBoxFilesQCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="buttonAdd.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="TrueApex.HeaderText" xml:space="preserve">
-    <value>真の頂点</value>
+  <data name="buttonAdd.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 567</value>
   </data>
-  <data name="TrueEnd.HeaderText" xml:space="preserve">
-    <value>トゥルーエンド</value>
+  <data name="buttonAdd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 23</value>
   </data>
-  <data name="TrueStart.HeaderText" xml:space="preserve">
-    <value>トゥルースタート</value>
-  </data>
-  <data name="zedGraphFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="zedGraphFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, 32</value>
-  </data>
-  <data name="zedGraphFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>634, 522</value>
-  </data>
-  <data name="zedGraphFiles.TabIndex" type="System.Int32, mscorlib">
+  <data name="buttonAdd.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="zedGraphQq.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="buttonAdd.Text" xml:space="preserve">
+    <value>追加(&amp;D)...</value>
   </data>
-  <data name="zedGraphQq.Location" type="System.Drawing.Point, System.Drawing">
-    <value>-1, 31</value>
+  <data name="&gt;&gt;buttonAdd.Name" xml:space="preserve">
+    <value>buttonAdd</value>
   </data>
-  <data name="zedGraphQq.Size" type="System.Drawing.Size, System.Drawing">
-    <value>634, 527</value>
+  <data name="&gt;&gt;buttonAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="zedGraphQq.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;buttonAdd.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;buttonAdd.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="buttonEdit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="buttonEdit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonEdit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>95, 567</value>
+  </data>
+  <data name="buttonEdit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 23</value>
+  </data>
+  <data name="buttonEdit.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="buttonEdit.Text" xml:space="preserve">
+    <value>リストを編集(&amp;E)...</value>
+  </data>
+  <data name="&gt;&gt;buttonEdit.Name" xml:space="preserve">
+    <value>buttonEdit</value>
+  </data>
+  <data name="&gt;&gt;buttonEdit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonEdit.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;buttonEdit.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="checkedListCompare.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left</value>
+  </data>
+  <data name="checkedListCompare.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 28</value>
+  </data>
+  <data name="checkedListCompare.Size" type="System.Drawing.Size, System.Drawing">
+    <value>195, 514</value>
+  </data>
+  <data name="checkedListCompare.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;checkedListCompare.Name" xml:space="preserve">
+    <value>checkedListCompare</value>
+  </data>
+  <data name="&gt;&gt;checkedListCompare.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkedListCompare.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkedListCompare.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="zedGraphRoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="zedGraphRoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 34</value>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="zedGraphRoc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>634, 522</value>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 12</value>
   </data>
-  <data name="zedGraphRoc.TabIndex" type="System.Int32, mscorlib">
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>142, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>対比較用モデルおよびファイル(&amp;M)：</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnRefresh.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="btnRefresh.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="btnRefresh.Location" type="System.Drawing.Point, System.Drawing">
+    <value>222, 600</value>
+  </data>
+  <data name="btnRefresh.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnRefresh.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="btnRefresh.Text" xml:space="preserve">
+    <value>更新(&amp;R)</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Name" xml:space="preserve">
+    <value>btnRefresh</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnRefresh.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>870, 635</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>ピークピッキングを比較</value>
+  </data>
+  <data name="&gt;&gt;File.Name" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="&gt;&gt;File.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Sequence.Name" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="&gt;&gt;Sequence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Charge.Name" xml:space="preserve">
+    <value>Charge</value>
+  </data>
+  <data name="&gt;&gt;Charge.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch.Name" xml:space="preserve">
+    <value>PeakMatch</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Score.Name" xml:space="preserve">
+    <value>Score</value>
+  </data>
+  <data name="&gt;&gt;Score.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;qValue.Name" xml:space="preserve">
+    <value>qValue</value>
+  </data>
+  <data name="&gt;&gt;qValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PickedApex.Name" xml:space="preserve">
+    <value>PickedApex</value>
+  </data>
+  <data name="&gt;&gt;PickedApex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PickedStart.Name" xml:space="preserve">
+    <value>PickedStart</value>
+  </data>
+  <data name="&gt;&gt;PickedStart.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PickedEnd.Name" xml:space="preserve">
+    <value>PickedEnd</value>
+  </data>
+  <data name="&gt;&gt;PickedEnd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TrueApex.Name" xml:space="preserve">
+    <value>TrueApex</value>
+  </data>
+  <data name="&gt;&gt;TrueApex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TrueStart.Name" xml:space="preserve">
+    <value>TrueStart</value>
+  </data>
+  <data name="&gt;&gt;TrueStart.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;TrueEnd.Name" xml:space="preserve">
+    <value>TrueEnd</value>
+  </data>
+  <data name="&gt;&gt;TrueEnd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingSourceScore.Name" xml:space="preserve">
+    <value>bindingSourceScore</value>
+  </data>
+  <data name="&gt;&gt;bindingSourceScore.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn2</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewLinkColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
+    <value>dataGridViewTextBoxColumn3</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch1.Name" xml:space="preserve">
+    <value>PeakMatch1</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch2.Name" xml:space="preserve">
+    <value>PeakMatch2</value>
+  </data>
+  <data name="&gt;&gt;PeakMatch2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Score1.Name" xml:space="preserve">
+    <value>Score1</value>
+  </data>
+  <data name="&gt;&gt;Score1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;Score2.Name" xml:space="preserve">
+    <value>Score2</value>
+  </data>
+  <data name="&gt;&gt;Score2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;QValue1.Name" xml:space="preserve">
+    <value>QValue1</value>
+  </data>
+  <data name="&gt;&gt;QValue1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;QValue2.Name" xml:space="preserve">
+    <value>QValue2</value>
+  </data>
+  <data name="&gt;&gt;QValue2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;leftApex.Name" xml:space="preserve">
+    <value>leftApex</value>
+  </data>
+  <data name="&gt;&gt;leftApex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rightApex.Name" xml:space="preserve">
+    <value>rightApex</value>
+  </data>
+  <data name="&gt;&gt;rightApex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;startTrue.Name" xml:space="preserve">
+    <value>startTrue</value>
+  </data>
+  <data name="&gt;&gt;startTrue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;endTrue.Name" xml:space="preserve">
+    <value>endTrue</value>
+  </data>
+  <data name="&gt;&gt;endTrue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;bindingSourceScoreCompare.Name" xml:space="preserve">
+    <value>bindingSourceScoreCompare</value>
+  </data>
+  <data name="&gt;&gt;bindingSourceScoreCompare.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ComparePeakPickingDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

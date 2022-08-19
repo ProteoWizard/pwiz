@@ -1,6 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
+	<!-- 
 		Microsoft ResX Schema
 
 		Version 1.3
@@ -58,7 +58,8 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
 		<xsd:element name="root" msdata:IsDataSet="true">
 			<xsd:complexType>
 				<xsd:choice maxOccurs="unbounded">
@@ -85,59 +86,20 @@
 			</xsd:complexType>
 		</xsd:element>
 	</xsd:schema>
-  <resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-  <resheader name="resmimetype">
+	<resheader name="resmimetype">
 		<value>text/microsoft-resx</value>
 	</resheader>
-  <resheader name="version">
+	<resheader name="version">
 		<value>1.3</value>
 	</resheader>
-  <resheader name="writer">
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-  <data name="ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interference_detection" xml:space="preserve">
-    <value>如选中，则 QuaSAR 将执行 AuDIT 用于干扰检测</value>
-  </data>
-  <data name="ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of_variation_below_which_transition_is_quantification_worthy" xml:space="preserve">
-    <value>针对 AuDIT 来说，离子对值得量化以下的变异系数阈值</value>
-  </data>
-  <data name="ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curves" xml:space="preserve">
-    <value>如选中，则 QuaSAR 生成校准曲线</value>
-  </data>
-  <data name="ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table" xml:space="preserve">
-    <value>如选中，则 QuaSAR 生成 CV（变异系数）表</value>
-  </data>
-  <data name="ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__between_0_and_1__typically_0_95_or_0_99_" xml:space="preserve">
-    <value>内生判断的置信水平（在 0 和 1 之间，通常是 0.95 或 0.99）</value>
-  </data>
-  <data name="ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_comparing_multiple_methods_of_calculating_LOD_LOQ" xml:space="preserve">
-    <value>如选中，则 QuaSAR 生成一个表，比较计算 LOD/LOQ 的多种方法</value>
-  </data>
-  <data name="ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_table" xml:space="preserve">
-    <value>如选中，则 QuaSAR 生成 LOD/LOQ 表</value>
-  </data>
-  <data name="ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul" xml:space="preserve">
-    <value>以 fmols/ul 为单位的线性标尺之最大值</value>
-  </data>
-  <data name="ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul" xml:space="preserve">
-    <value>以 fmols/ul 为单位的对数标尺之最大值</value>
-  </data>
-  <data name="ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves" xml:space="preserve">
-    <value>将要在校准曲线上绘制的离子对最大数目</value>
-  </data>
-  <data name="ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
-    <value>如选中，将峰面积比 (PAR) 用于分析（代替浓度），其中 y 轴上具有 PAR，x 轴上具有分析物浓度</value>
-  </data>
-  <data name="ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_plots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
-    <value>如选中，则 QuaSAR 生成峰面积图，其中 y 轴上具有峰面积单元，x 轴上具有分析物浓度</value>
-  </data>
-  <data name="ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_the_peptide_has_endogenous_levels_and_will_provide_an_estimate_" xml:space="preserve">
-    <value>如果选中，QuaSAR 将确定肽段是否拥有内生水平并且将提供一个估计。</value>
-  </data>
-  <data name="ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot" xml:space="preserve">
-    <value>显示于每张校准图上的标题</value>
+  <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_areas_for_multiple_label_types_" xml:space="preserve">
+    <value>QuaSAR 需要针对多种标记类型的峰面积。</value>
   </data>
   <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___Input_report_format_may_be_incorrect_" xml:space="preserve">
     <value>QuaSAR 需要峰面积值。 输入报告格式可能不正确。</value>
@@ -145,17 +107,14 @@
   <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___The_document_must_have_imported_data_" xml:space="preserve">
     <value>QuaSAR 需要峰面积值。 文档必须拥有导入的数据。</value>
   </data>
-  <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_areas_for_multiple_label_types_" xml:space="preserve">
-    <value>QuaSAR 需要针对多种标记类型的峰面积。</value>
-  </data>
   <data name="QuaSARUI_VerifyArguments_Please_enter_a_title" xml:space="preserve">
     <value>请输入一个标题</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_AuDIT_CV_threshold" xml:space="preserve">
-    <value>请针对 AuDIT CV 阈值输入一个值</value>
+  <data name="QuaSARUI_VerifyArguments_The_analyte_and_standard_cannot_be_the_same" xml:space="preserve">
+    <value>分析物和标准不可以相同</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_endogenous_confidence_level" xml:space="preserve">
-    <value>请针对内生置信水平输入一个值</value>
+  <data name="QuaSARUI_VerifyArguments_Please_enter_the_units_label" xml:space="preserve">
+    <value>请输入单位标记</value>
   </data>
   <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_maximum_linear_scale" xml:space="preserve">
     <value>请针对最大线性尺度输入一个值</value>
@@ -163,13 +122,55 @@
   <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_maximum_log_scale" xml:space="preserve">
     <value>请针对最大对数尺度输入一个值</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_Please_enter_the_units_label" xml:space="preserve">
-    <value>请输入单位标记</value>
+  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_AuDIT_CV_threshold" xml:space="preserve">
+    <value>请针对 AuDIT CV 阈值输入一个值</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_The_analyte_and_standard_cannot_be_the_same" xml:space="preserve">
-    <value>分析物和标准不可以相同</value>
+  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_endogenous_confidence_level" xml:space="preserve">
+    <value>请针对内生置信水平输入一个值</value>
   </data>
   <data name="QuaSARUI_VerifyArguments_The_endogenous_confidence_interval_must_be_between_0_and_1" xml:space="preserve">
     <value>内生置信间隔必须在 0 和 1 之间</value>
+  </data>
+  <data name="ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot" xml:space="preserve">
+    <value>显示于每张校准图上的标题</value>
+  </data>
+  <data name="ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table" xml:space="preserve">
+    <value>如选中，则 QuaSAR 生成 CV（变异系数）表</value>
+  </data>
+  <data name="ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curves" xml:space="preserve">
+    <value>如选中，则 QuaSAR 生成校准曲线</value>
+  </data>
+  <data name="ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_table" xml:space="preserve">
+    <value>如选中，则 QuaSAR 生成 LOD/LOQ 表</value>
+  </data>
+  <data name="ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_plots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
+    <value>如选中，则 QuaSAR 生成峰面积图，其中 y 轴上具有峰面积单元，x 轴上具有分析物浓度</value>
+  </data>
+  <data name="ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_comparing_multiple_methods_of_calculating_LOD_LOQ" xml:space="preserve">
+    <value>如选中，则 QuaSAR 生成一个表，比较计算 LOD/LOQ 的多种方法</value>
+  </data>
+  <data name="ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves" xml:space="preserve">
+    <value>将要在校准曲线上绘制的离子对最大数目</value>
+  </data>
+  <data name="ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
+    <value>如选中，将峰面积比 (PAR) 用于分析（代替浓度），其中 y 轴上具有 PAR，x 轴上具有分析物浓度</value>
+  </data>
+  <data name="ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul" xml:space="preserve">
+    <value>以 fmols/ul 为单位的线性标尺之最大值</value>
+  </data>
+  <data name="ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul" xml:space="preserve">
+    <value>以 fmols/ul 为单位的对数标尺之最大值</value>
+  </data>
+  <data name="ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interference_detection" xml:space="preserve">
+    <value>如选中，则 QuaSAR 将执行 AuDIT 用于干扰检测</value>
+  </data>
+  <data name="ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of_variation_below_which_transition_is_quantification_worthy" xml:space="preserve">
+    <value>针对 AuDIT 来说，离子对值得量化以下的变异系数阈值</value>
+  </data>
+  <data name="ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_the_peptide_has_endogenous_levels_and_will_provide_an_estimate_" xml:space="preserve">
+    <value>如果选中，QuaSAR 将确定肽段是否拥有内生水平并且将提供一个估计。</value>
+  </data>
+  <data name="ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__between_0_and_1__typically_0_95_or_0_99_" xml:space="preserve">
+    <value>内生判断的置信水平（在 0 和 1 之间，通常是 0.95 或 0.99）</value>
   </data>
 </root>

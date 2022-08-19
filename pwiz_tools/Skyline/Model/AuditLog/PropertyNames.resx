@@ -105,152 +105,47 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AddIrtStandardsToDocumentSettings" xml:space="preserve">
-    <value>Add Standard Peptides</value>
-  </data>
-  <data name="AddIrtStandardsToDocumentSettings_NumTransitions" xml:space="preserve">
-    <value>Maximum transitions per peptide</value>
-  </data>
-  <data name="Adduct_AdductCharge" xml:space="preserve">
-    <value>Charge</value>
-  </data>
-  <data name="Adduct_AdductFormula" xml:space="preserve">
-    <value>Chemical formula</value>
-  </data>
-  <data name="AggregateColumn_AggregateOperation" xml:space="preserve">
-    <value>Aggregate operation</value>
-  </data>
-  <data name="Annotation_Value" xml:space="preserve">
-    <value>Value</value>
-  </data>
-  <data name="AnnotationDef_AnnotationTargets" xml:space="preserve">
-    <value>Applies to</value>
-  </data>
-  <data name="AnnotationDef_Items" xml:space="preserve">
-    <value>Values</value>
-  </data>
-  <data name="AnnotationDef_Type" xml:space="preserve">
-    <value>Type</value>
-  </data>
-  <data name="Annotations_AnnotationsEnumerable" xml:space="preserve">
+  <data name="DataSettings_AnnotationDefs" xml:space="preserve">
     <value>Annotations</value>
-  </data>
-  <data name="Annotations_ColorBrush" xml:space="preserve">
-    <value>Color</value>
-  </data>
-  <data name="Annotations_Note" xml:space="preserve">
-    <value>Note</value>
-  </data>
-  <data name="AssociateProteinsSettings" xml:space="preserve">
-    <value>Associate Proteins</value>
-  </data>
-  <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
-    <value>Background proteome</value>
-  </data>
-  <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
-    <value>FASTA</value>
-  </data>
-  <data name="AssociateProteinsSettings_MappedPeptides" xml:space="preserve">
-    <value>Peptides mapped</value>
-  </data>
-  <data name="AssociateProteinsSettings_MappedProteins" xml:space="preserve">
-    <value>Proteins mapped</value>
-  </data>
-  <data name="AssociateProteinsSettings_TargetPeptides" xml:space="preserve">
-    <value>Peptide targets</value>
-  </data>
-  <data name="AssociateProteinsSettings_TargetProteinGroups" xml:space="preserve">
-    <value>Protein group targets</value>
-  </data>
-  <data name="AssociateProteinsSettings_TargetProteins" xml:space="preserve">
-    <value>Protein targets</value>
-  </data>
-  <data name="AssociateProteinsSettings_UnmappedPeptides" xml:space="preserve">
-    <value>Peptides unmapped</value>
-  </data>
-  <data name="AssociateProteinsSettings_UnmappedProteins" xml:space="preserve">
-    <value>Proteins unmapped</value>
-  </data>
-  <data name="BackgroundProteomeSpec_DatabasePathAuditLog" xml:space="preserve">
-    <value>Background proteome database path</value>
-  </data>
-  <data name="BatchModifyInfo" xml:space="preserve">
-    <value>Document grid</value>
-  </data>
-  <data name="BatchModifyInfo_Filter" xml:space="preserve">
-    <value>Column settings</value>
-  </data>
-  <data name="BatchModifyInfo_ViewName" xml:space="preserve">
-    <value>Report name</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings" xml:space="preserve">
-    <value>Build Spectral Library</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_CutoffScore" xml:space="preserve">
-    <value>Cut-off score</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
-    <value>Filter for document peptides</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
-    <value>Include ambiguous matches</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
-    <value>Input File Type</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
-    <value>Search files</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_Standard" xml:space="preserve">
-    <value>iRT standard peptides</value>
-  </data>
-  <data name="BuildPeptideSearchLibrarySettings_WorkFlow" xml:space="preserve">
-    <value>Workflow</value>
   </data>
   <data name="ChargeRegressionLine_Charge" xml:space="preserve">
     <value>Charge</value>
   </data>
-  <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
-    <value>Intercept</value>
-  </data>
-  <data name="ChargeRegressionLine_Slope" xml:space="preserve">
-    <value>Slope</value>
-  </data>
-  <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
-    <value>Choose RT Prediction Replicates</value>
-  </data>
-  <data name="ChooseSchedulingReplicatesSettings_ReplicateNames" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
-  <data name="ClusteringSpec_DistanceMetric" xml:space="preserve">
-    <value>Distance Metric</value>
-  </data>
-  <data name="ClusteringSpec_Values" xml:space="preserve">
-    <value>Values</value>
-  </data>
   <data name="CollisionEnergyRegression_Conversions" xml:space="preserve">
     <value>Regression parameters</value>
   </data>
-  <data name="ColumnFilter_ColumnId" xml:space="preserve">
-    <value>Column</value>
+  <data name="BackgroundProteomeSpec_DatabasePathAuditLog" xml:space="preserve">
+    <value>Background proteome database path</value>
   </data>
-  <data name="ColumnSort_ColumnId" xml:space="preserve">
-    <value>Column</value>
+  <data name="SrmSettings_DataSettings" xml:space="preserve">
+    <value>Document Settings</value>
   </data>
-  <data name="ColumnSort_ListSortDirection" xml:space="preserve">
-    <value>Direction</value>
+  <data name="TransitionPrediction_NonNullDeclusteringPotential" xml:space="preserve">
+    <value>Declustering potential</value>
+  </data>
+  <data name="TransitionPrediction_FragmentMassType" xml:space="preserve">
+    <value>Product ion mass</value>
+  </data>
+  <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>Group Comparisons</value>
+  </data>
+  <data name="DataSettings_Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
+  <data name="ChargeRegressionLine_Intercept" xml:space="preserve">
+    <value>Intercept</value>
   </data>
   <data name="CompensationVoltageParameters_MaxCov" xml:space="preserve">
     <value>Maximum CoV</value>
@@ -258,8 +153,26 @@
   <data name="CompensationVoltageParameters_MinCov" xml:space="preserve">
     <value>Minimum CoV</value>
   </data>
-  <data name="CompensationVoltageParameters_StepCount" xml:space="preserve">
-    <value>Step count</value>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="TransitionPrediction_NonNullOptimizedLibrary" xml:space="preserve">
+    <value>Optimization library</value>
+  </data>
+  <data name="SrmSettings_PeptideSettings" xml:space="preserve">
+    <value>Peptide Settings</value>
+  </data>
+  <data name="TransitionPrediction_PrecursorMassType" xml:space="preserve">
+    <value>Precursor mass</value>
+  </data>
+  <data name="PeptideSettings_Prediction" xml:space="preserve">
+    <value>Prediction</value>
+  </data>
+  <data name="SrmDocument_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ChargeRegressionLine_Slope" xml:space="preserve">
+    <value>Slope</value>
   </data>
   <data name="CompensationVoltageParameters_StepCountFine" xml:space="preserve">
     <value>Fine tune step count</value>
@@ -270,137 +183,326 @@
   <data name="CompensationVoltageParameters_StepCountRough" xml:space="preserve">
     <value>Rough tune step count</value>
   </data>
-  <data name="CompensationVoltageParameters_StepSize" xml:space="preserve">
-    <value>Step size</value>
+  <data name="SrmSettings_TransitionSettings" xml:space="preserve">
+    <value>Transition Settings</value>
   </data>
-  <data name="CrosslinkStructure_Crosslinks" xml:space="preserve">
-    <value>Crosslinks</value>
+  <data name="TransitionFilter_AutoSelect" xml:space="preserve">
+    <value>Auto-select all matching transitions</value>
   </data>
-  <data name="CrosslinkStructure_LinkedExplicitMods" xml:space="preserve">
-    <value>Linked explicit modifications</value>
+  <data name="TransitionFilter_PeptidePrecursorChargesString" xml:space="preserve">
+    <value>Peptide Precursor charges</value>
   </data>
-  <data name="CrosslinkStructure_LinkedPeptides" xml:space="preserve">
-    <value>Linked peptides</value>
+  <data name="TransitionFilter_PeptideProductChargesString" xml:space="preserve">
+    <value>Peptide Ion charges</value>
   </data>
-  <data name="CustomIon_AverageMassMz" xml:space="preserve">
-    <value>Average m/z</value>
+  <data name="TransitionFilter_PrecursorMzWindow" xml:space="preserve">
+    <value>Precursor m/z exclusion window</value>
   </data>
-  <data name="CustomIon_MonoisotopicMassMz" xml:space="preserve">
-    <value>Monoisotopic m/z</value>
+  <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
+    <value>Molecule Fragment adducts</value>
   </data>
-  <data name="CustomIon_NeutralFormula" xml:space="preserve">
-    <value>Ion chemical formula</value>
+  <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
+    <value>Molecule Ion types</value>
   </data>
-  <data name="CustomMolecule_Formula" xml:space="preserve">
-    <value>Molecular formula</value>
+  <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
+    <value>Molecule Precursor adducts</value>
   </data>
-  <data name="CustomMolecule_Name" xml:space="preserve">
-    <value>Name</value>
+  <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
+    <value>Acquisition method</value>
   </data>
-  <data name="DataSettings_AnnotationDefs" xml:space="preserve">
-    <value>Annotations</value>
+  <data name="IsotopeEnrichmentItem_AtomPercentEnrichment" xml:space="preserve">
+    <value>Enrichment percentage</value>
   </data>
-  <data name="DataSettings_AuditLogging" xml:space="preserve">
-    <value>Audit logging</value>
+  <data name="IsotopeEnrichments_Enrichments" xml:space="preserve">
+    <value>Stable isotope labeling atoms</value>
   </data>
-  <data name="DataSettings_GroupComparisonDefs" xml:space="preserve">
-    <value>Group Comparisons</value>
+  <data name="MeasuredIon_Fragment" xml:space="preserve">
+    <value>Fragment amino acids</value>
   </data>
-  <data name="DataSettings_Lists" xml:space="preserve">
-    <value>Lists</value>
+  <data name="TransitionFilter_StartFragmentFinderLabel" xml:space="preserve">
+    <value>Product ion selection start</value>
   </data>
-  <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
-    <value>Rule sets</value>
+  <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
+    <value>Product ion selection end</value>
   </data>
-  <data name="DataSettings_PanoramaPublishUri" xml:space="preserve">
-    <value>Panorama URL</value>
+  <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
+    <value>Ion match tolerance</value>
   </data>
-  <data name="DdaConverterSettings_InstrumentPreset" xml:space="preserve">
-    <value>Instrument preset</value>
+  <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
+    <value>Dynamic min product m/z</value>
   </data>
-  <data name="DdaConverterSettings_NonDefaultAdditionalSettings" xml:space="preserve">
-    <value>DDA conversion non-default settings</value>
+  <data name="TransitionInstrument_TriggeredAcquisition" xml:space="preserve">
+    <value>Triggered Acquisition</value>
   </data>
-  <data name="DdaConverterSettings_Protocol" xml:space="preserve">
-    <value>DDA conversion protocol</value>
+  <data name="MeasuredIon_IsFragment" xml:space="preserve">
+    <value>Intense fragment</value>
   </data>
-  <data name="DdaSearchSettings_FragmentIons" xml:space="preserve">
-    <value>Fragment ion types</value>
+  <data name="TransitionFullScan_IsotopeEnrichments" xml:space="preserve">
+    <value>Isotope labeling enrichment</value>
   </data>
-  <data name="DdaSearchSettings_FragmentTolerance" xml:space="preserve">
-    <value>Fragment tolerance</value>
+  <data name="IsotopeEnrichmentItem_IsotopeSymbol" xml:space="preserve">
+    <value>Atom</value>
   </data>
-  <data name="DdaSearchSettings_MaxVariableMods" xml:space="preserve">
-    <value>Max variable mods per peptide</value>
+  <data name="TransitionInstrument_MaxInclusions" xml:space="preserve">
+    <value>Firmware inclusion limit</value>
   </data>
-  <data name="DdaSearchSettings_Ms2Analyzer" xml:space="preserve">
-    <value>MS2 analyzer</value>
+  <data name="TransitionInstrument_MaxMz" xml:space="preserve">
+    <value>Max m/z</value>
   </data>
-  <data name="DdaSearchSettings_PrecursorTolerance" xml:space="preserve">
-    <value>Precursor tolerance</value>
+  <data name="TransitionInstrument_MaxTime" xml:space="preserve">
+    <value>Max time</value>
   </data>
-  <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
-    <value>Search Engine</value>
+  <data name="TransitionInstrument_MaxTransitions" xml:space="preserve">
+    <value>Firmware transition limit</value>
   </data>
-  <data name="DigestSettings_ExcludeRaggedEnds" xml:space="preserve">
-    <value>Exclude potential ragged ends</value>
+  <data name="TransitionFilter_MeasuredIons" xml:space="preserve">
+    <value>Special ions</value>
+  </data>
+  <data name="MeasuredIon_MinFragmentLength" xml:space="preserve">
+    <value>Min amino acids</value>
+  </data>
+  <data name="TransitionInstrument_MinMz" xml:space="preserve">
+    <value>Min m/z</value>
+  </data>
+  <data name="TransitionInstrument_MinTime" xml:space="preserve">
+    <value>Min time</value>
+  </data>
+  <data name="TransitionInstrument_MzMatchTolerance" xml:space="preserve">
+    <value>Method match tolerance m/z</value>
+  </data>
+  <data name="TransitionLibraries_PickMostIntenseIons" xml:space="preserve">
+    <value>If a library spectrum is available, pick its most intense ions</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorIsotopeFilter" xml:space="preserve">
+    <value>Peaks</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorIsotopes" xml:space="preserve">
+    <value>Isotope peaks included</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorMassAnalyzer" xml:space="preserve">
+    <value>Precursor mass analyzer</value>
+  </data>
+  <data name="TransitionFullScan_PrecursorResMz" xml:space="preserve">
+    <value>Resolving power m/z</value>
+  </data>
+  <data name="TransitionFullScan_ProductMassAnalyzer" xml:space="preserve">
+    <value>Product mass analyzer</value>
+  </data>
+  <data name="TransitionFullScan_ProductResMz" xml:space="preserve">
+    <value>Resolving power m/z</value>
+  </data>
+  <data name="MeasuredIon_Restrict" xml:space="preserve">
+    <value>Unless next amino acids</value>
+  </data>
+  <data name="TransitionFullScan_RetentionTimeFilterLength" xml:space="preserve">
+    <value>Retention time filter length</value>
+  </data>
+  <data name="TransitionFullScan_RetentionTimeFilterType" xml:space="preserve">
+    <value>Retention time filter type</value>
+  </data>
+  <data name="IsotopeEnrichmentItem_Symbol" xml:space="preserve">
+    <value>Symbol</value>
+  </data>
+  <data name="StaticMod_Terminus" xml:space="preserve">
+    <value>Terminus</value>
+  </data>
+  <data name="StaticMod_IsCrosslinker" xml:space="preserve">
+    <value>Crosslinker</value>
+  </data>
+  <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
+    <value>Use high-selectivity extraction</value>
+  </data>
+  <data name="IsolationWindow_CERange" xml:space="preserve">
+    <value>CE Range</value>
+  </data>
+  <data name="IsolationWindow_End" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="IsolationScheme_PrespecifiedIsolationWindows" xml:space="preserve">
+    <value>Prespecified isolation windows</value>
+  </data>
+  <data name="IsolationScheme_SpecialHandling" xml:space="preserve">
+    <value>Deconvolution</value>
+  </data>
+  <data name="IsolationWindow_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="IsolationWindow_StartMargin" xml:space="preserve">
+    <value>Margin</value>
+  </data>
+  <data name="IsolationScheme_IsolationWidth" xml:space="preserve">
+    <value>Isolation width</value>
+  </data>
+  <data name="IsolationScheme_WindowsPerScan" xml:space="preserve">
+    <value>Windows per scan</value>
+  </data>
+  <data name="TransitionPrediction_OptimizedMethodType" xml:space="preserve">
+    <value>Optimization method</value>
+  </data>
+  <data name="TransitionPrediction_NonNullCompensationVoltage" xml:space="preserve">
+    <value>Compensation voltage</value>
+  </data>
+  <data name="PeptideSettings_Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="TransitionSettings_FullScan" xml:space="preserve">
+    <value>Full-Scan</value>
+  </data>
+  <data name="TransitionSettings_Instrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="TransitionLibraries_IonCount" xml:space="preserve">
+    <value>Product ions</value>
+  </data>
+  <data name="TransitionFullScan_IsolationScheme" xml:space="preserve">
+    <value>Isolation scheme</value>
+  </data>
+  <data name="PeptideSettings_Libraries" xml:space="preserve">
+    <value>Library</value>
+  </data>
+  <data name="TransitionLibraries_MinIonCount" xml:space="preserve">
+    <value>Minimum product ions</value>
+  </data>
+  <data name="PeptideLibraries_Pick" xml:space="preserve">
+    <value>Pick from</value>
+  </data>
+  <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
+    <value>Precursor filter m/z</value>
+  </data>
+  <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
+    <value>Collision energy</value>
+  </data>
+  <data name="TransitionPrediction_UseOptimizationValues" xml:space="preserve">
+    <value>Use optimization values when present</value>
+  </data>
+  <data name="GroupComparisonDef_ConfidenceLevelTimes100" xml:space="preserve">
+    <value>Confidence level</value>
+  </data>
+  <data name="PeptideSettings_DigestSettings" xml:space="preserve">
+    <value>Digestion</value>
   </data>
   <data name="DigestSettings_MaxMissedCleavages" xml:space="preserve">
     <value>Max missed cleavages</value>
   </data>
-  <data name="DocumentNodeCounts" xml:space="preserve">
-    <value>Document</value>
+  <data name="TransitionFullScan_MassAccuracy" xml:space="preserve">
+    <value>Mass accuracy</value>
   </data>
-  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
-    <value>Peptide count</value>
+  <data name="TransitionFullScan_Resolution" xml:space="preserve">
+    <value>Resolution</value>
   </data>
-  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
-    <value>Molecule count</value>
+  <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
+    <value>Resolving power</value>
   </data>
-  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
-    <value>Protein count</value>
+  <data name="TransitionFilter_ExclusionUseDIAWindow" xml:space="preserve">
+    <value>Use DIA precursor window for exlucison</value>
   </data>
-  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
-    <value>Molecule list count</value>
+  <data name="View_Layouts" xml:space="preserve">
+    <value>Layouts</value>
   </data>
-  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
-    <value>Precursor count</value>
+  <data name="ViewSpecLayout_Layouts" xml:space="preserve">
+    <value>Layouts</value>
   </data>
-  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
-    <value>Transition count</value>
+  <data name="ViewSpecLayout_DefaultLayoutName" xml:space="preserve">
+    <value>Default Layout Name</value>
   </data>
-  <data name="EditCustomMoleculeSettings_AverageMz" xml:space="preserve">
-    <value>Average m/z</value>
+  <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
+    <value>Column</value>
   </data>
-  <data name="EditCustomMoleculeSettings_Charge" xml:space="preserve">
-    <value>Charge</value>
+  <data name="ViewSpec_Filters" xml:space="preserve">
+    <value>Filters</value>
   </data>
-  <data name="EditCustomMoleculeSettings_Formula" xml:space="preserve">
-    <value>Formula</value>
+  <data name="FilterPredicate_InvariantOperandText" xml:space="preserve">
+    <value>Value</value>
   </data>
-  <data name="EditCustomMoleculeSettings_LabelType" xml:space="preserve">
-    <value>Isotope label type</value>
+  <data name="IFilterOperation_DisplayName" xml:space="preserve">
+    <value>Operation</value>
   </data>
-  <data name="EditCustomMoleculeSettings_MonoisotopicMz" xml:space="preserve">
-    <value>Monoisotopic m/z</value>
+  <data name="ViewSpec_Columns" xml:space="preserve">
+    <value>Columns</value>
   </data>
-  <data name="EditCustomMoleculeSettings_Name" xml:space="preserve">
-    <value>Name</value>
+  <data name="ViewSpecList_Views" xml:space="preserve">
+    <value>Reports</value>
   </data>
-  <data name="EditCustomMoleculeSettings_OptionalExplicitValues" xml:space="preserve">
-    <value>Explicit values</value>
+  <data name="ViewSpecList_ViewLayouts" xml:space="preserve">
+    <value>Layouts</value>
   </data>
-  <data name="EmptyProteinsSettings" xml:space="preserve">
-    <value>Empty Proteins</value>
+  <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
+    <value>Column headers</value>
   </data>
-  <data name="EnabledFeatureScores_Calculator" xml:space="preserve">
-    <value>Score Name</value>
+  <data name="PivotSpec_RowHeaders" xml:space="preserve">
+    <value>Row headers</value>
   </data>
-  <data name="EnabledFeatureScores_PercentageContribution" xml:space="preserve">
-    <value>Percentage Contribution</value>
+  <data name="PivotSpec_Values" xml:space="preserve">
+    <value>Values</value>
   </data>
-  <data name="EnabledFeatureScores_Weight" xml:space="preserve">
-    <value>Weight</value>
+  <data name="AnnotationDef_AnnotationTargets" xml:space="preserve">
+    <value>Applies to</value>
+  </data>
+  <data name="GroupComparisonDef_CaseValue" xml:space="preserve">
+    <value>Value to compare against</value>
+  </data>
+  <data name="GroupComparisonDef_ColorRows" xml:space="preserve">
+    <value>Formatting rows</value>
+  </data>
+  <data name="GroupComparisonDef_ControlAnnotation" xml:space="preserve">
+    <value>Control group annotation</value>
+  </data>
+  <data name="GroupComparisonDef_ControlValue" xml:space="preserve">
+    <value>Control group value</value>
+  </data>
+  <data name="MatchRgbHexColor_Expression" xml:space="preserve">
+    <value>Expression</value>
+  </data>
+  <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
+    <value>Identity Annotation</value>
+  </data>
+  <data name="ListDef_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="ListDef_IdProperty" xml:space="preserve">
+    <value>ID property</value>
+  </data>
+  <data name="ListDef_DisplayProperty" xml:space="preserve">
+    <value>Display property</value>
+  </data>
+  <data name="AnnotationDef_Items" xml:space="preserve">
+    <value>Values</value>
+  </data>
+  <data name="MatchRgbHexColor_Labeled" xml:space="preserve">
+    <value>Labeled</value>
+  </data>
+  <data name="QuantificationSettings_NormalizationMethod" xml:space="preserve">
+    <value>Normalization method</value>
+  </data>
+  <data name="GroupComparisonDef_PerProtein" xml:space="preserve">
+    <value>Protein scope</value>
+  </data>
+  <data name="MatchRgbHexColor_PointSize" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="MatchRgbHexColor_PointSymbol" xml:space="preserve">
+    <value>Symbol</value>
+  </data>
+  <data name="GroupComparisonDef_QValueCutoff" xml:space="preserve">
+    <value>Q-value cutoff</value>
+  </data>
+  <data name="GroupComparisonDef_SummarizationMethod" xml:space="preserve">
+    <value>Summary method</value>
+  </data>
+  <data name="Enzyme_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="GroupComparisonDef_UseZeroForMissingPeaks" xml:space="preserve">
+    <value>Use zero for missing peaks</value>
+  </data>
+  <data name="RgbHexColor_Rgb" xml:space="preserve">
+    <value>RGB</value>
+  </data>
+  <data name="TransitionFilter_PeptideIonTypesString" xml:space="preserve">
+    <value>Ion types</value>
+  </data>
+  <data name="AggregateColumn_AggregateOperation" xml:space="preserve">
+    <value>Aggregate operation</value>
   </data>
   <data name="Enzyme_CleavageC" xml:space="preserve">
     <value>Cleave C-terminal to</value>
@@ -408,8 +510,34 @@
   <data name="Enzyme_CleavageN" xml:space="preserve">
     <value>Cleave N-terminal to</value>
   </data>
+  <data name="PeptideSettings_Enzyme" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="PeptideFilter_ExcludeNTermAAs" xml:space="preserve">
+    <value>Exclude N-terminal AAs</value>
+  </data>
+  <data name="PeptideFilter_Exclusions" xml:space="preserve">
+    <value>Exclude peptides containing</value>
+  </data>
+  <data name="PeptideExcludeRegex_IsIncludeMatch" xml:space="preserve">
+    <value>Not matching expression</value>
+    <comment>CustomPropertyLocalizer needed</comment>
+  </data>
+  <data name="PeptideExcludeRegex_IsMatchMod" xml:space="preserve">
+    <value>Light modified sequence</value>
+    <comment>CustomPropertyLocalizer  needed</comment>
+  </data>
   <data name="Enzyme_IsSemiCleaving" xml:space="preserve">
     <value>Allow semi-cleavage</value>
+  </data>
+  <data name="PeptideFilter_MaxPeptideLength" xml:space="preserve">
+    <value>Max length</value>
+  </data>
+  <data name="PeptideFilter_MinPeptideLength" xml:space="preserve">
+    <value>Min length</value>
+  </data>
+  <data name="PeptideExcludeRegex_Regex" xml:space="preserve">
+    <value>Exclusion regular expression</value>
   </data>
   <data name="Enzyme_RestrictC" xml:space="preserve">
     <value>Unless C-terminal followed by</value>
@@ -417,110 +545,173 @@
   <data name="Enzyme_RestrictN" xml:space="preserve">
     <value>Unless N-terminal followed by</value>
   </data>
-  <data name="Enzyme_Type" xml:space="preserve">
+  <data name="RetentionTimeRegression_AutoCalcRegression" xml:space="preserve">
+    <value>Auto-calculate regression</value>
+  </data>
+  <data name="IonMobilityPredictor_ChargeRegressionLines" xml:space="preserve">
+    <value>Conversion parameters</value>
+  </data>
+  <data name="PeptidePrediction_NonNullIonMobilityPredictor" xml:space="preserve">
+    <value>Ion mobility predictor</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_LinearPeakWidth" xml:space="preserve">
+    <value>Linear peak width</value>
+  </data>
+  <data name="IonMobilityPredictor_MeasuredMobilityIons" xml:space="preserve">
+    <value>Measured ion mobilities</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueMax" xml:space="preserve">
+    <value>Width at DtMax</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
+    <value>Width at Dt0</value>
+  </data>
+  <data name="IonMobilityLibrary_Status" xml:space="preserve">
+    <value>Contents changed</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Added" xml:space="preserve">
+    <value>Items added</value>
+  </data>
+  <data name="IonMobilityLibraryChange_Deleted" xml:space="preserve">
+    <value>Items deleted</value>
+  </data>
+  <data name="IonMobilityLibraryChange_LSID" xml:space="preserve">
+    <value>LSID</value>
+  </data>
+  <data name="IonMobilityLibraryChange_CreationTime" xml:space="preserve">
+    <value>Timestamp</value>
+  </data>
+  <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
+    <value>Measured peptides</value>
+  </data>
+  <data name="PeptidePrediction_NonNullRetentionTime" xml:space="preserve">
+    <value>Retention time predictor</value>
+  </data>
+  <data name="RetentionTimeRegression_TimeWindow" xml:space="preserve">
+    <value>Time window</value>
+  </data>
+  <data name="PeptidePrediction_UseLibraryIonMobilityValues" xml:space="preserve">
+    <value>Use spectral library ion mobility values when present</value>
+  </data>
+  <data name="PeptidePrediction_UseMeasuredRTs" xml:space="preserve">
+    <value>Use measured retention times when present</value>
+  </data>
+  <data name="StaticMod_AAs" xml:space="preserve">
+    <value>Amino acid</value>
+  </data>
+  <data name="StaticMod_AverageMass" xml:space="preserve">
+    <value>Average mass</value>
+  </data>
+  <data name="StaticMod_Formula" xml:space="preserve">
+    <value>Chemical formula</value>
+  </data>
+  <data name="PeptideModifications_InternalStandardTypes" xml:space="preserve">
+    <value>Internal standard types</value>
+  </data>
+  <data name="StaticMod_IsVariable" xml:space="preserve">
+    <value>Variable</value>
+  </data>
+  <data name="StaticMod_Losses" xml:space="preserve">
+    <value>Neutral losses</value>
+  </data>
+  <data name="PeptideModifications_MaxNeutralLosses" xml:space="preserve">
+    <value>Max neutral losses</value>
+  </data>
+  <data name="PeptideModifications_MaxVariableMods" xml:space="preserve">
+    <value>Max variable mods</value>
+  </data>
+  <data name="PeptideSettings_Modifications" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="StaticMod_MonoisotopicMass" xml:space="preserve">
+    <value>Monoisotopic mass</value>
+  </data>
+  <data name="PeptideModifications_StaticModifications" xml:space="preserve">
+    <value>Structural modifications</value>
+  </data>
+  <data name="PeptideModifications_HeavyModifications" xml:space="preserve">
+    <value>Isotope modifications</value>
+  </data>
+  <data name="QuantificationSettings_LodCalculation" xml:space="preserve">
+    <value>Calculate LOD by</value>
+  </data>
+  <data name="QuantificationSettings_MaxLoqBias" xml:space="preserve">
+    <value>Max LOQ bias</value>
+  </data>
+  <data name="QuantificationSettings_MaxLoqCv" xml:space="preserve">
+    <value>Max LOQ CV</value>
+  </data>
+  <data name="QuantificationSettings_MsLevel" xml:space="preserve">
+    <value>MS level</value>
+  </data>
+  <data name="QuantificationSettings_RegressionFit" xml:space="preserve">
+    <value>Regression fit</value>
+  </data>
+  <data name="QuantificationSettings_RegressionWeighting" xml:space="preserve">
+    <value>RegressionWeighting</value>
+  </data>
+  <data name="QuantificationSettings_Units" xml:space="preserve">
+    <value>Units</value>
+  </data>
+  <data name="PeptideSettings_Quantification" xml:space="preserve">
+    <value>Quantification</value>
+  </data>
+  <data name="PeptideSettings_BackgroundProteome" xml:space="preserve">
+    <value>Background proteome</value>
+  </data>
+  <data name="RetentionTimeRegression_Calculator" xml:space="preserve">
+    <value>Calculator</value>
+  </data>
+  <data name="IonMobilityPredictor_IonMobilityLibrary" xml:space="preserve">
+    <value>Ion mobility library</value>
+  </data>
+  <data name="PeptidePrediction_MeasuredRTWindow" xml:space="preserve">
+    <value>Time window</value>
+  </data>
+  <data name="LibrarySpec_FilePathAuditLog" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="PeptideLibraries_LibrarySpecs" xml:space="preserve">
+    <value>Libraries</value>
+  </data>
+  <data name="PeptideLibraries_LimitPeptidesPerProtein" xml:space="preserve">
+    <value>Limit peptides per protein</value>
+  </data>
+  <data name="PeptideLibraries_PeptideCount" xml:space="preserve">
+    <value>Peptides</value>
+  </data>
+  <data name="PeptideLibraries_RankId" xml:space="preserve">
+    <value>Rank peptides by</value>
+  </data>
+  <data name="LibrarySpec_UseExplicitPeakBounds" xml:space="preserve">
+    <value>Use explicit peak bounds</value>
+  </data>
+  <data name="DigestSettings_ExcludeRaggedEnds" xml:space="preserve">
+    <value>Exclude potential ragged ends</value>
+  </data>
+  <data name="TransitionSettings_Prediction" xml:space="preserve">
+    <value>Prediction</value>
+  </data>
+  <data name="AnnotationDef_Type" xml:space="preserve">
     <value>Type</value>
   </data>
-  <data name="ExplicitMod_IndexAA" xml:space="preserve">
-    <value>Amino Acid index</value>
+  <data name="NamedRegressionLine_Intercept" xml:space="preserve">
+    <value>Intercept</value>
   </data>
-  <data name="ExplicitMod_Modification" xml:space="preserve">
-    <value>Modification</value>
+  <data name="NamedRegressionLine_Slope" xml:space="preserve">
+    <value>Slope</value>
   </data>
-  <data name="ExplicitMods_CrosslinkStructure" xml:space="preserve">
-    <value>Crosslink structure</value>
+  <data name="GroupComparisonDef_NormalizationMethod" xml:space="preserve">
+    <value>Normalization method</value>
   </data>
-  <data name="ExplicitRetentionTimeInfo_RetentionTime" xml:space="preserve">
-    <value>Retention time</value>
+  <data name="OptimizationLibrary_DatabasePathAuditLog" xml:space="preserve">
+    <value>Optimization library path</value>
   </data>
-  <data name="ExplicitRetentionTimeInfo_RetentionTimeWindow" xml:space="preserve">
-    <value>Retention time window</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_CollisionalCrossSectionSqA" xml:space="preserve">
-    <value>Collisional Cross Section (sqA)</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
-    <value>Collision energy</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
-    <value>Compensation voltage</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
-    <value>Cone voltage</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
-    <value>Declustering potential</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
-    <value>Ion mobility</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
-    <value>High energy ion mobility offset</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_IonMobilityUnits" xml:space="preserve">
-    <value>Ion mobility units</value>
-  </data>
-  <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
-    <value>S-Lens</value>
-  </data>
-  <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
-    <value>Collision energy</value>
-  </data>
-  <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
-    <value>Cone voltage</value>
-  </data>
-  <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
-    <value>Declustering potential</value>
-  </data>
-  <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
-    <value>High energy ion mobility offset</value>
-  </data>
-  <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
-    <value>S-Lens</value>
-  </data>
-  <data name="File_FileName" xml:space="preserve">
-    <value>File</value>
-  </data>
-  <data name="File_ScoreThreshold" xml:space="preserve">
-    <value>Score threshold</value>
-  </data>
-  <data name="File_ScoreTypeName" xml:space="preserve">
-    <value>Score type</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings" xml:space="preserve">
-    <value>Filter Peptides</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_AddToAll" xml:space="preserve">
-    <value>Add to all matching proteins</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_AddUnmatched" xml:space="preserve">
-    <value>Add to a peptide list</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_DoNotAddFiltered" xml:space="preserve">
-    <value>Do not add</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_FilterUnmatched" xml:space="preserve">
-    <value>Do not add</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_FirstOccurence" xml:space="preserve">
-    <value>Add to only the first matching protein</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_KeepFiltered" xml:space="preserve">
-    <value>Include all peptides</value>
-  </data>
-  <data name="FilterMatchedPeptidesSettings_NoDuplicates" xml:space="preserve">
-    <value>Do not add</value>
-  </data>
-  <data name="FilterPredicate_InvariantOperandText" xml:space="preserve">
-    <value>Value</value>
-  </data>
-  <data name="FilterSpec_AuditLogColumn" xml:space="preserve">
-    <value>Column</value>
+  <data name="TransitionFullScan_ResolvingPower" xml:space="preserve">
+    <value>Resolving power</value>
   </data>
   <data name="FragmentLoss_AverageMass" xml:space="preserve">
     <value>Average loss</value>
-  </data>
-  <data name="FragmentLoss_Charge" xml:space="preserve">
-    <value>Charge</value>
   </data>
   <data name="FragmentLoss_Formula" xml:space="preserve">
     <value>Neutral loss chemical formula</value>
@@ -531,116 +722,149 @@
   <data name="FragmentLoss_MonoisotopicMass" xml:space="preserve">
     <value>Monoisotopic loss</value>
   </data>
-  <data name="GroupComparisonDef_CaseValue" xml:space="preserve">
-    <value>Value to compare against</value>
+  <data name="FragmentLoss_Charge" xml:space="preserve">
+    <value>Charge</value>
   </data>
-  <data name="GroupComparisonDef_ColorRows" xml:space="preserve">
-    <value>Formatting rows</value>
+  <data name="MeasuredIon_Charge" xml:space="preserve">
+    <value>Charge</value>
   </data>
-  <data name="GroupComparisonDef_ConfidenceLevelTimes100" xml:space="preserve">
-    <value>Confidence level</value>
+  <data name="MeasuredIon_Terminus" xml:space="preserve">
+    <value>Type</value>
   </data>
-  <data name="GroupComparisonDef_ControlAnnotation" xml:space="preserve">
-    <value>Control group annotation</value>
+  <data name="MeasuredRetentionTime_PeptideSequence" xml:space="preserve">
+    <value>Modified Sequence</value>
   </data>
-  <data name="GroupComparisonDef_ControlValue" xml:space="preserve">
-    <value>Control group value</value>
+  <data name="MeasuredRetentionTime_RetentionTime" xml:space="preserve">
+    <value>Retention time</value>
   </data>
-  <data name="GroupComparisonDef_IdentityAnnotation" xml:space="preserve">
-    <value>Identity Annotation</value>
+  <data name="PeptideFilter_AutoSelect" xml:space="preserve">
+    <value>Auto-select all matching peptides</value>
   </data>
-  <data name="GroupComparisonDef_NormalizationMethod" xml:space="preserve">
-    <value>Normalization method</value>
+  <data name="TransitionLibraries_Pick" xml:space="preserve">
+    <value>Pick</value>
   </data>
-  <data name="GroupComparisonDef_PerProtein" xml:space="preserve">
-    <value>Protein scope</value>
+  <data name="TransitionSettings_Filter" xml:space="preserve">
+    <value>Filter</value>
   </data>
-  <data name="GroupComparisonDef_QValueCutoff" xml:space="preserve">
-    <value>Q-value cutoff</value>
+  <data name="TransitionSettings_Libraries" xml:space="preserve">
+    <value>Library</value>
   </data>
-  <data name="GroupComparisonDef_SummarizationMethod" xml:space="preserve">
-    <value>Summary method</value>
+  <data name="Adduct_AdductCharge" xml:space="preserve">
+    <value>Charge</value>
   </data>
-  <data name="GroupComparisonDef_UseZeroForMissingPeaks" xml:space="preserve">
-    <value>Use zero for missing peaks</value>
+  <data name="CustomIon_AverageMassMz" xml:space="preserve">
+    <value>Average m/z</value>
   </data>
-  <data name="IFilterOperation_DisplayName" xml:space="preserve">
-    <value>Operation</value>
+  <data name="CustomIon_MonoisotopicMassMz" xml:space="preserve">
+    <value>Monoisotopic m/z</value>
   </data>
-  <data name="ImportDocResultsSettings" xml:space="preserve">
-    <value>Import document results</value>
+  <data name="CustomIon_NeutralFormula" xml:space="preserve">
+    <value>Ion chemical formula</value>
   </data>
-  <data name="ImportDocResultsSettings_AddNew" xml:space="preserve">
-    <value>Add new replicates</value>
+  <data name="MeasuredIon_SettingsCustomIon" xml:space="preserve">
+    <value>Custom product ion</value>
   </data>
-  <data name="ImportDocResultsSettings_MergeName" xml:space="preserve">
-    <value>Merge with existing results by replicate name</value>
+  <data name="Targets" xml:space="preserve">
+    <value>Targets</value>
   </data>
-  <data name="ImportDocResultsSettings_MergeOrder" xml:space="preserve">
-    <value>Merge with existing results by replicate order</value>
+  <data name="PeptideDocNode_GlobalStandardType" xml:space="preserve">
+    <value>Standard type</value>
   </data>
-  <data name="ImportDocResultsSettings_MergePeptides" xml:space="preserve">
-    <value>Merge matching peptides</value>
+  <data name="Annotations_Note" xml:space="preserve">
+    <value>Note</value>
   </data>
-  <data name="ImportDocResultsSettings_Remove" xml:space="preserve">
-    <value>Remove results information</value>
+  <data name="Annotations_AnnotationsEnumerable" xml:space="preserve">
+    <value>Annotations</value>
   </data>
-  <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
-    <value>Automatically train mProphet model</value>
+  <data name="Annotations_ColorBrush" xml:space="preserve">
+    <value>Color</value>
   </data>
-  <data name="ImportFastaSettings_DecoyGenerationMethod" xml:space="preserve">
-    <value>Decoy generation method</value>
+  <data name="PeptideDocNode_ExplicitModsTyped" xml:space="preserve">
+    <value>Isotope modifications</value>
   </data>
-  <data name="ImportFastaSettings_Enzyme" xml:space="preserve">
-    <value>Enzyme</value>
+  <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
+    <value>Heavy modifications</value>
   </data>
-  <data name="ImportFastaSettings_FastaFile" xml:space="preserve">
-    <value>FASTA file</value>
+  <data name="PeptideDocNode_ExplicitModsStatic" xml:space="preserve">
+    <value>Structural modifications</value>
   </data>
-  <data name="ImportFastaSettings_FastaImportTargetsFile" xml:space="preserve">
-    <value>FASTA file for importing targets</value>
+  <data name="ExplicitMod_IndexAA" xml:space="preserve">
+    <value>Amino Acid index</value>
   </data>
-  <data name="ImportFastaSettings_FastaText" xml:space="preserve">
-    <value>FASTA text</value>
+  <data name="ExplicitMod_Modification" xml:space="preserve">
+    <value>Modification</value>
   </data>
-  <data name="ImportFastaSettings_MaxMissedCleavages" xml:space="preserve">
-    <value>Max missed cleavages</value>
+  <data name="PeptideDocNode_ExplicitMods" xml:space="preserve">
+    <value>Modifications</value>
   </data>
-  <data name="ImportFastaSettings_NumDecoys" xml:space="preserve">
-    <value>Decoys per target</value>
+  <data name="PeptideGroupDocNode_Sequence" xml:space="preserve">
+    <value>Sequence</value>
   </data>
-  <data name="ImportPeptideSearchSettings" xml:space="preserve">
-    <value>Import Peptide Search</value>
+  <data name="ProteinMetadata_Accession" xml:space="preserve">
+    <value>Accession</value>
   </data>
-  <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
-    <value>Associate Proteins</value>
+  <data name="ProteinMetadata_Description" xml:space="preserve">
+    <value>Description</value>
   </data>
-  <data name="ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings" xml:space="preserve">
-    <value>Build Spectral Library</value>
+  <data name="ProteinMetadata_Gene" xml:space="preserve">
+    <value>Gene</value>
   </data>
-  <data name="ImportPeptideSearchSettings_DdaConverterSettings" xml:space="preserve">
-    <value>DDA converter settings</value>
+  <data name="ProteinMetadata_PreferredName" xml:space="preserve">
+    <value>Preferred name</value>
   </data>
-  <data name="ImportPeptideSearchSettings_DdaSearchSettings" xml:space="preserve">
-    <value>DDA search settings</value>
+  <data name="ProteinMetadata_Species" xml:space="preserve">
+    <value>Species</value>
   </data>
-  <data name="ImportPeptideSearchSettings_FilterAndLibrariesSettings" xml:space="preserve">
-    <value>Configure Transition Settings</value>
+  <data name="ProteinMetadata_Name" xml:space="preserve">
+    <value>Name</value>
   </data>
-  <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
-    <value>Configure Full-Scan Settings</value>
+  <data name="Annotation_Value" xml:space="preserve">
+    <value>Value</value>
   </data>
-  <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
-    <value>Import FASTA</value>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
   </data>
-  <data name="ImportPeptideSearchSettings_ImportResultsSettings" xml:space="preserve">
-    <value>Extract Chromatograms</value>
+  <data name="RefinementSettings_AddLabelType" xml:space="preserve">
+    <value>Add</value>
   </data>
-  <data name="ImportPeptideSearchSettings_ModificationsSettings" xml:space="preserve">
-    <value>Add Modifications</value>
+  <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
+    <value>Auto-select all peptides</value>
+  </data>
+  <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
+    <value>Auto-select all precursors</value>
+  </data>
+  <data name="RefinementSettings_AutoPickTransitionsAll" xml:space="preserve">
+    <value>Auto-select all transitions</value>
+  </data>
+  <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>Min peptides per protein</value>
+  </data>
+  <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
+    <value>Min transitions per precursor</value>
+  </data>
+  <data name="RefinementSettings_RefineLabelType" xml:space="preserve">
+    <value>Remove label type</value>
+  </data>
+  <data name="RefinementSettings_RemoveDuplicatePeptides" xml:space="preserve">
+    <value>Remove duplicate peptides</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
+    <value>Remove peptides missing library match</value>
+  </data>
+  <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
+    <value>Remove repeated peptides</value>
+  </data>
+  <data name="RefinementSettings" xml:space="preserve">
+    <value>Advanced refinement settings</value>
   </data>
   <data name="ImportResultsSettings" xml:space="preserve">
     <value>Import results settings</value>
+  </data>
+  <data name="ImportResultsSettings_FileNames" xml:space="preserve">
+    <value>File names</value>
+  </data>
+  <data name="ImportResultsSettings_SingleInjectionReplicates" xml:space="preserve">
+    <value>Add single-injection replicates in files</value>
   </data>
   <data name="ImportResultsSettings_AddNewReplicate" xml:space="preserve">
     <value>Add one new replicate</value>
@@ -648,17 +872,8 @@
   <data name="ImportResultsSettings_AddToExistingReplicate" xml:space="preserve">
     <value>Add files to an existing replicate</value>
   </data>
-  <data name="ImportResultsSettings_ExcludeSpectrumSourceFiles" xml:space="preserve">
-    <value>Exclude spectrum source files</value>
-  </data>
   <data name="ImportResultsSettings_FileImportOption" xml:space="preserve">
     <value>Files to import simultaneously</value>
-  </data>
-  <data name="ImportResultsSettings_FileNames" xml:space="preserve">
-    <value>File names</value>
-  </data>
-  <data name="ImportResultsSettings_FoundResultsFiles" xml:space="preserve">
-    <value>Found results files</value>
   </data>
   <data name="ImportResultsSettings_MultiInjectionReplicates" xml:space="preserve">
     <value>Add multi-injection replicates in directories</value>
@@ -678,616 +893,8 @@
   <data name="ImportResultsSettings_ShowChromatogramsDuringImport" xml:space="preserve">
     <value>Show chromatograms during import</value>
   </data>
-  <data name="ImportResultsSettings_SingleInjectionReplicates" xml:space="preserve">
-    <value>Add single-injection replicates in files</value>
-  </data>
   <data name="ImportResultsSettings_Suffix" xml:space="preserve">
     <value>Removed suffix</value>
-  </data>
-  <data name="IonMobilityAndCCS_CollisionalCrossSectionSqA" xml:space="preserve">
-    <value>CCS (sqA)</value>
-  </data>
-  <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
-    <value>Offset ion mobility values for high energy spectra</value>
-  </data>
-  <data name="IonMobilityAndCCS_Units" xml:space="preserve">
-    <value>Ion mobility units</value>
-  </data>
-  <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
-    <value>File path</value>
-  </data>
-  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
-    <value>Library ion mobility values</value>
-  </data>
-  <data name="IonMobilityLibrary_Status" xml:space="preserve">
-    <value>Contents changed</value>
-  </data>
-  <data name="IonMobilityLibraryChange_Added" xml:space="preserve">
-    <value>Items added</value>
-  </data>
-  <data name="IonMobilityLibraryChange_CreationTime" xml:space="preserve">
-    <value>Timestamp</value>
-  </data>
-  <data name="IonMobilityLibraryChange_Deleted" xml:space="preserve">
-    <value>Items deleted</value>
-  </data>
-  <data name="IonMobilityLibraryChange_LSID" xml:space="preserve">
-    <value>LSID</value>
-  </data>
-  <data name="IonMobilityPredictor_ChargeRegressionLines" xml:space="preserve">
-    <value>Conversion parameters</value>
-  </data>
-  <data name="IonMobilityPredictor_IonMobilityLibrary" xml:space="preserve">
-    <value>Ion mobility library</value>
-  </data>
-  <data name="IonMobilityPredictor_IonMobilityRows" xml:space="preserve">
-    <value>Measured ion mobilities</value>
-  </data>
-  <data name="IonMobilityPredictor_MeasuredMobilityIons" xml:space="preserve">
-    <value>Measured ion mobilities</value>
-  </data>
-  <data name="IonMobilityRow_Adduct" xml:space="preserve">
-    <value>Adduct</value>
-  </data>
-  <data name="IonMobilityRow_Charge" xml:space="preserve">
-    <value>Charge</value>
-  </data>
-  <data name="IonMobilityRow_Sequence" xml:space="preserve">
-    <value>Modified Sequence</value>
-  </data>
-  <data name="IonMobilityValue_Mobility" xml:space="preserve">
-    <value>Ion Mobility</value>
-  </data>
-  <data name="IonMobilityWindowWidthCalculator_FixedWindowWidth" xml:space="preserve">
-    <value>Ion mobility filter window fixed width value</value>
-  </data>
-  <data name="IonMobilityWindowWidthCalculator_LinearPeakWidth" xml:space="preserve">
-    <value>Linear peak width</value>
-  </data>
-  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueMax" xml:space="preserve">
-    <value>Width at DtMax</value>
-  </data>
-  <data name="IonMobilityWindowWidthCalculator_PeakWidthAtIonMobilityValueZero" xml:space="preserve">
-    <value>Width at Dt0</value>
-  </data>
-  <data name="IonMobilityWindowWidthCalculator_ResolvingPower" xml:space="preserve">
-    <value>Resolving power</value>
-  </data>
-  <data name="IonMobilityWindowWidthCalculator_WindowWidthMode" xml:space="preserve">
-    <value>Ion mobility filter window width calculation type</value>
-  </data>
-  <data name="IsolationScheme_IsolationWidth" xml:space="preserve">
-    <value>Isolation width</value>
-  </data>
-  <data name="IsolationScheme_PrecursorFilter" xml:space="preserve">
-    <value>Precursor filter m/z</value>
-  </data>
-  <data name="IsolationScheme_PrespecifiedIsolationWindows" xml:space="preserve">
-    <value>Prespecified isolation windows</value>
-  </data>
-  <data name="IsolationScheme_SpecialHandling" xml:space="preserve">
-    <value>Deconvolution</value>
-  </data>
-  <data name="IsolationScheme_WindowsPerScan" xml:space="preserve">
-    <value>Windows per scan</value>
-  </data>
-  <data name="IsolationWindow_CERange" xml:space="preserve">
-    <value>CE Range</value>
-  </data>
-  <data name="IsolationWindow_End" xml:space="preserve">
-    <value>End</value>
-  </data>
-  <data name="IsolationWindow_Start" xml:space="preserve">
-    <value>Start</value>
-  </data>
-  <data name="IsolationWindow_StartMargin" xml:space="preserve">
-    <value>Margin</value>
-  </data>
-  <data name="IsotopeEnrichmentItem_AtomPercentEnrichment" xml:space="preserve">
-    <value>Enrichment percentage</value>
-  </data>
-  <data name="IsotopeEnrichmentItem_IsotopeSymbol" xml:space="preserve">
-    <value>Atom</value>
-  </data>
-  <data name="IsotopeEnrichmentItem_Symbol" xml:space="preserve">
-    <value>Symbol</value>
-  </data>
-  <data name="IsotopeEnrichments_Enrichments" xml:space="preserve">
-    <value>Stable isotope labeling atoms</value>
-  </data>
-  <data name="LibrarySpec_FilePathAuditLog" xml:space="preserve">
-    <value>Path</value>
-  </data>
-  <data name="LibrarySpec_UseExplicitPeakBounds" xml:space="preserve">
-    <value>Use explicit peak bounds</value>
-  </data>
-  <data name="LinkedPeptide_ExplicitModsStatic" xml:space="preserve">
-    <value>Modifications</value>
-  </data>
-  <data name="LinkedPeptide_PeptideSequence" xml:space="preserve">
-    <value>Sequence</value>
-  </data>
-  <data name="LinkedPeptide_Position" xml:space="preserve">
-    <value>Position</value>
-  </data>
-  <data name="ListData_Rows" xml:space="preserve">
-    <value>Rows</value>
-  </data>
-  <data name="ListDef_DisplayProperty" xml:space="preserve">
-    <value>Display property</value>
-  </data>
-  <data name="ListDef_IdProperty" xml:space="preserve">
-    <value>ID property</value>
-  </data>
-  <data name="ListDef_Properties" xml:space="preserve">
-    <value>Properties</value>
-  </data>
-  <data name="LoggableExplicitMod_LinkedPeptide" xml:space="preserve">
-    <value>Linked peptide</value>
-  </data>
-  <data name="ManageResultsSettings" xml:space="preserve">
-    <value>Manage Results</value>
-  </data>
-  <data name="ManageResultsSettings_RemoveCorrespondingLibraryRuns" xml:space="preserve">
-    <value>Remove corresponding library runs</value>
-  </data>
-  <data name="ManageResultsSettings_RemoveCorrespondingReplicates" xml:space="preserve">
-    <value>Remove corresponding replicates</value>
-  </data>
-  <data name="MatchModificationsSettings_Modifications" xml:space="preserve">
-    <value>Added modifications</value>
-  </data>
-  <data name="MatchRgbHexColor_Expression" xml:space="preserve">
-    <value>Expression</value>
-  </data>
-  <data name="MatchRgbHexColor_Labeled" xml:space="preserve">
-    <value>Labeled</value>
-  </data>
-  <data name="MatchRgbHexColor_PointSize" xml:space="preserve">
-    <value>Size</value>
-  </data>
-  <data name="MatchRgbHexColor_PointSymbol" xml:space="preserve">
-    <value>Symbol</value>
-  </data>
-  <data name="MeasuredIon_Charge" xml:space="preserve">
-    <value>Charge</value>
-  </data>
-  <data name="MeasuredIon_Fragment" xml:space="preserve">
-    <value>Fragment amino acids</value>
-  </data>
-  <data name="MeasuredIon_IsFragment" xml:space="preserve">
-    <value>Intense fragment</value>
-  </data>
-  <data name="MeasuredIon_MinFragmentLength" xml:space="preserve">
-    <value>Min amino acids</value>
-  </data>
-  <data name="MeasuredIon_Restrict" xml:space="preserve">
-    <value>Unless next amino acids</value>
-  </data>
-  <data name="MeasuredIon_SettingsCustomIon" xml:space="preserve">
-    <value>Custom product ion</value>
-  </data>
-  <data name="MeasuredIon_Terminus" xml:space="preserve">
-    <value>Type</value>
-  </data>
-  <data name="MeasuredResults" xml:space="preserve">
-    <value>Results</value>
-  </data>
-  <data name="MeasuredResults_Chromatograms" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
-  <data name="MeasuredRetentionTime_PeptideSequence" xml:space="preserve">
-    <value>Modified Sequence</value>
-  </data>
-  <data name="MeasuredRetentionTime_RetentionTime" xml:space="preserve">
-    <value>Retention time</value>
-  </data>
-  <data name="MetadataRule_Pattern" xml:space="preserve">
-    <value>Pattern</value>
-  </data>
-  <data name="MetadataRule_Replacement" xml:space="preserve">
-    <value>Replacement</value>
-  </data>
-  <data name="MetadataRule_Source" xml:space="preserve">
-    <value>Source</value>
-  </data>
-  <data name="MetadataRule_Target" xml:space="preserve">
-    <value>Target</value>
-  </data>
-  <data name="MetadataRuleSet_Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="MetadataRuleSet_RowSource" xml:space="preserve">
-    <value>Row source</value>
-  </data>
-  <data name="MetadataRuleSet_Rules" xml:space="preserve">
-    <value>Rules</value>
-  </data>
-  <data name="Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="NamedRegressionLine_Intercept" xml:space="preserve">
-    <value>Intercept</value>
-  </data>
-  <data name="NamedRegressionLine_Slope" xml:space="preserve">
-    <value>Slope</value>
-  </data>
-  <data name="OptimizableRegression_StepCount" xml:space="preserve">
-    <value>Step count</value>
-  </data>
-  <data name="OptimizableRegression_StepSize" xml:space="preserve">
-    <value>Step size</value>
-  </data>
-  <data name="OptimizationLibrary_DatabasePathAuditLog" xml:space="preserve">
-    <value>Optimization library path</value>
-  </data>
-  <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
-    <value>Find minimal protein list</value>
-  </data>
-  <data name="ParsimonySettings_GroupProteins" xml:space="preserve">
-    <value>Group proteins</value>
-  </data>
-  <data name="ParsimonySettings_MinPeptidesPerProtein" xml:space="preserve">
-    <value>Min peptides per protein</value>
-  </data>
-  <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
-    <value>Remove subset proteins</value>
-  </data>
-  <data name="ParsimonySettings_SharedPeptides" xml:space="preserve">
-    <value>Shared peptides option</value>
-  </data>
-  <data name="PeakScoringModelSpec_EnabledFeatureScores" xml:space="preserve">
-    <value>Feature scores</value>
-  </data>
-  <data name="PeakScoringModelSpec_UsesDecoys" xml:space="preserve">
-    <value>Use decoys</value>
-  </data>
-  <data name="PeakScoringModelSpec_UsesSecondBest" xml:space="preserve">
-    <value>Uses second best peaks</value>
-  </data>
-  <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
-    <value>Analyte Concentration</value>
-  </data>
-  <data name="PeptideChromInfo_ExcludeFromCalibration" xml:space="preserve">
-    <value>Exclude From Calibration</value>
-  </data>
-  <data name="PeptideDocNode_ExplicitMods" xml:space="preserve">
-    <value>Modifications</value>
-  </data>
-  <data name="PeptideDocNode_ExplicitModsHeavy" xml:space="preserve">
-    <value>Heavy modifications</value>
-  </data>
-  <data name="PeptideDocNode_ExplicitModsStatic" xml:space="preserve">
-    <value>Structural modifications</value>
-  </data>
-  <data name="PeptideDocNode_ExplicitModsTyped" xml:space="preserve">
-    <value>Isotope modifications</value>
-  </data>
-  <data name="PeptideDocNode_ExplicitRetentionTime" xml:space="preserve">
-    <value>Explicit values</value>
-  </data>
-  <data name="PeptideDocNode_GlobalStandardType" xml:space="preserve">
-    <value>Standard type</value>
-  </data>
-  <data name="PeptideExcludeRegex_IsIncludeMatch" xml:space="preserve">
-    <value>Not matching expression</value>
-    <comment>CustomPropertyLocalizer needed</comment>
-  </data>
-  <data name="PeptideExcludeRegex_IsMatchMod" xml:space="preserve">
-    <value>Light modified sequence</value>
-    <comment>CustomPropertyLocalizer  needed</comment>
-  </data>
-  <data name="PeptideExcludeRegex_Regex" xml:space="preserve">
-    <value>Exclusion regular expression</value>
-  </data>
-  <data name="PeptideFilter_AutoSelect" xml:space="preserve">
-    <value>Auto-select all matching peptides</value>
-  </data>
-  <data name="PeptideFilter_ExcludeNTermAAs" xml:space="preserve">
-    <value>Exclude N-terminal AAs</value>
-  </data>
-  <data name="PeptideFilter_Exclusions" xml:space="preserve">
-    <value>Exclude peptides containing</value>
-  </data>
-  <data name="PeptideFilter_MaxPeptideLength" xml:space="preserve">
-    <value>Max length</value>
-  </data>
-  <data name="PeptideFilter_MinPeptideLength" xml:space="preserve">
-    <value>Min length</value>
-  </data>
-  <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
-    <value>Peptide Uniqueness</value>
-  </data>
-  <data name="PeptideGroupDocNode_Sequence" xml:space="preserve">
-    <value>Sequence</value>
-  </data>
-  <data name="PeptideIntegration_PeakScoringModel" xml:space="preserve">
-    <value>Peak scoring model</value>
-  </data>
-  <data name="PeptideLibraries_LibrarySpecs" xml:space="preserve">
-    <value>Libraries</value>
-  </data>
-  <data name="PeptideLibraries_LimitPeptidesPerProtein" xml:space="preserve">
-    <value>Limit peptides per protein</value>
-  </data>
-  <data name="PeptideLibraries_PeptideCount" xml:space="preserve">
-    <value>Peptides</value>
-  </data>
-  <data name="PeptideLibraries_Pick" xml:space="preserve">
-    <value>Pick from</value>
-  </data>
-  <data name="PeptideLibraries_RankId" xml:space="preserve">
-    <value>Rank peptides by</value>
-  </data>
-  <data name="PeptideModifications_HeavyModifications" xml:space="preserve">
-    <value>Isotope modifications</value>
-  </data>
-  <data name="PeptideModifications_InternalStandardTypes" xml:space="preserve">
-    <value>Internal standard types</value>
-  </data>
-  <data name="PeptideModifications_MaxNeutralLosses" xml:space="preserve">
-    <value>Max neutral losses</value>
-  </data>
-  <data name="PeptideModifications_MaxVariableMods" xml:space="preserve">
-    <value>Max variable mods</value>
-  </data>
-  <data name="PeptideModifications_StaticModifications" xml:space="preserve">
-    <value>Structural modifications</value>
-  </data>
-  <data name="PeptidePrediction_MeasuredRTWindow" xml:space="preserve">
-    <value>Time window</value>
-  </data>
-  <data name="PeptidePrediction_NonNullIonMobilityPredictor" xml:space="preserve">
-    <value>Ion mobility predictor</value>
-  </data>
-  <data name="PeptidePrediction_NonNullRetentionTime" xml:space="preserve">
-    <value>Retention time predictor</value>
-  </data>
-  <data name="PeptidePrediction_UseLibraryIonMobilityValues" xml:space="preserve">
-    <value>Use spectral library ion mobility values when present</value>
-  </data>
-  <data name="PeptidePrediction_UseMeasuredRTs" xml:space="preserve">
-    <value>Use measured retention times when present</value>
-  </data>
-  <data name="PeptideSettings_BackgroundProteome" xml:space="preserve">
-    <value>Background proteome</value>
-  </data>
-  <data name="PeptideSettings_DigestSettings" xml:space="preserve">
-    <value>Digestion</value>
-  </data>
-  <data name="PeptideSettings_Enzyme" xml:space="preserve">
-    <value>Enzyme</value>
-  </data>
-  <data name="PeptideSettings_Filter" xml:space="preserve">
-    <value>Filter</value>
-  </data>
-  <data name="PeptideSettings_Integration" xml:space="preserve">
-    <value>Integration</value>
-  </data>
-  <data name="PeptideSettings_Libraries" xml:space="preserve">
-    <value>Library</value>
-  </data>
-  <data name="PeptideSettings_Modifications" xml:space="preserve">
-    <value>Modifications</value>
-  </data>
-  <data name="PeptideSettings_Prediction" xml:space="preserve">
-    <value>Prediction</value>
-  </data>
-  <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
-    <value>Protein association settings</value>
-  </data>
-  <data name="PeptideSettings_Quantification" xml:space="preserve">
-    <value>Quantification</value>
-  </data>
-  <data name="PivotSpec_ColumnHeaders" xml:space="preserve">
-    <value>Column headers</value>
-  </data>
-  <data name="PivotSpec_RowHeaders" xml:space="preserve">
-    <value>Row headers</value>
-  </data>
-  <data name="PivotSpec_Values" xml:space="preserve">
-    <value>Values</value>
-  </data>
-  <data name="PropertiesCutoffSettings" xml:space="preserve">
-    <value>Volcano plot cutoff settings</value>
-  </data>
-  <data name="PropertiesCutoffSettings_Log2FoldChangeCutoff" xml:space="preserve">
-    <value>Log2 Fold change cutoff</value>
-  </data>
-  <data name="PropertiesCutoffSettings_PValueCutoff" xml:space="preserve">
-    <value>PValue cutoff</value>
-  </data>
-  <data name="ProteinMetadata_Accession" xml:space="preserve">
-    <value>Accession</value>
-  </data>
-  <data name="ProteinMetadata_Description" xml:space="preserve">
-    <value>Description</value>
-  </data>
-  <data name="ProteinMetadata_Gene" xml:space="preserve">
-    <value>Gene</value>
-  </data>
-  <data name="ProteinMetadata_Name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="ProteinMetadata_PreferredName" xml:space="preserve">
-    <value>Preferred name</value>
-  </data>
-  <data name="ProteinMetadata_Species" xml:space="preserve">
-    <value>Species</value>
-  </data>
-  <data name="ProteinPeptideSelection_Peptides" xml:space="preserve">
-    <value>Excluded peptides</value>
-  </data>
-  <data name="QuantificationSettings_LodCalculation" xml:space="preserve">
-    <value>Calculate LOD by</value>
-  </data>
-  <data name="QuantificationSettings_MaxLoqBias" xml:space="preserve">
-    <value>Max LOQ bias</value>
-  </data>
-  <data name="QuantificationSettings_MaxLoqCv" xml:space="preserve">
-    <value>Max LOQ CV</value>
-  </data>
-  <data name="QuantificationSettings_MsLevel" xml:space="preserve">
-    <value>MS level</value>
-  </data>
-  <data name="QuantificationSettings_NormalizationMethod" xml:space="preserve">
-    <value>Normalization method</value>
-  </data>
-  <data name="QuantificationSettings_QualitativeIonRatioThreshold" xml:space="preserve">
-    <value>Qualitative ion ratio threshold</value>
-  </data>
-  <data name="QuantificationSettings_RegressionFit" xml:space="preserve">
-    <value>Regression fit</value>
-  </data>
-  <data name="QuantificationSettings_RegressionWeighting" xml:space="preserve">
-    <value>RegressionWeighting</value>
-  </data>
-  <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
-    <value>Simple ratios</value>
-  </data>
-  <data name="QuantificationSettings_Units" xml:space="preserve">
-    <value>Units</value>
-  </data>
-  <data name="RefineListSettings" xml:space="preserve">
-    <value>Accept Peptides</value>
-  </data>
-  <data name="RefineListSettings_AcceptedPeptides" xml:space="preserve">
-    <value>Peptides to keep</value>
-  </data>
-  <data name="RefineListSettings_MatchModified" xml:space="preserve">
-    <value>Match modified sequence</value>
-  </data>
-  <data name="RefineListSettings_RemoveEmptyProteins" xml:space="preserve">
-    <value>Remove empty proteins</value>
-  </data>
-  <data name="RefinementSettings" xml:space="preserve">
-    <value>Advanced refinement settings</value>
-  </data>
-  <data name="RefinementSettings_AddLabelType" xml:space="preserve">
-    <value>Add</value>
-  </data>
-  <data name="RefinementSettings_AddRefineLabelType" xml:space="preserve">
-    <value>Add label type</value>
-  </data>
-  <data name="RefinementSettings_AdjustedPValueCutoff" xml:space="preserve">
-    <value>Adjusted p value cutoff</value>
-  </data>
-  <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
-    <value>Auto-select all peptides</value>
-  </data>
-  <data name="RefinementSettings_AutoPickPrecursorsAll" xml:space="preserve">
-    <value>Auto-select all precursors</value>
-  </data>
-  <data name="RefinementSettings_AutoPickTransitionsAll" xml:space="preserve">
-    <value>Auto-select all transitions</value>
-  </data>
-  <data name="RefinementSettings_CountTransitions" xml:space="preserve">
-    <value>Transitions count</value>
-  </data>
-  <data name="RefinementSettings_CVCutoff" xml:space="preserve">
-    <value>Remove above cv cutoff</value>
-  </data>
-  <data name="RefinementSettings_DotProductThreshold" xml:space="preserve">
-    <value>Min dotp</value>
-  </data>
-  <data name="RefinementSettings_FoldChangeCutoff" xml:space="preserve">
-    <value>Fold change cutoff</value>
-  </data>
-  <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
-    <value>Group comparisons</value>
-  </data>
-  <data name="RefinementSettings_IdotProductThreshold" xml:space="preserve">
-    <value>Min idotp</value>
-  </data>
-  <data name="RefinementSettings_IgnoreMissingResults" xml:space="preserve">
-    <value>Ignore nodes missing results</value>
-  </data>
-  <data name="RefinementSettings_MaxPeakFoundRatio" xml:space="preserve">
-    <value>Max peak found ratio</value>
-  </data>
-  <data name="RefinementSettings_MaxPeakRank" xml:space="preserve">
-    <value>Max transition peak rank</value>
-  </data>
-  <data name="RefinementSettings_MaxPepPeakRank" xml:space="preserve">
-    <value>Max peptide peak rank</value>
-  </data>
-  <data name="RefinementSettings_MaxPrecursorPeakOnly" xml:space="preserve">
-    <value>Max precursor peak only</value>
-  </data>
-  <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
-    <value>Minimum Detections</value>
-  </data>
-  <data name="RefinementSettings_MinPeakFoundRatio" xml:space="preserve">
-    <value>Min peak found ratio</value>
-  </data>
-  <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
-    <value>Min peptides per protein</value>
-  </data>
-  <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
-    <value>Min transitions per precursor</value>
-  </data>
-  <data name="RefinementSettings_MSLevel" xml:space="preserve">
-    <value>MS level</value>
-  </data>
-  <data name="RefinementSettings_MSLevelGroupComparison" xml:space="preserve">
-    <value>MS Level</value>
-  </data>
-  <data name="RefinementSettings_NormalizationLabelType" xml:space="preserve">
-    <value>Normalization to standard type</value>
-  </data>
-  <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
-    <value>Normalization method</value>
-  </data>
-  <data name="RefinementSettings_PreferLargeIons" xml:space="preserve">
-    <value>Prefer larger product ions</value>
-  </data>
-  <data name="RefinementSettings_QValueCutoff" xml:space="preserve">
-    <value>Remove above qvalue cutoff</value>
-  </data>
-  <data name="RefinementSettings_RefineLabelType" xml:space="preserve">
-    <value>Remove label type</value>
-  </data>
-  <data name="RefinementSettings_RemoveDuplicatePeptides" xml:space="preserve">
-    <value>Remove duplicate peptides</value>
-  </data>
-  <data name="RefinementSettings_RemoveMissingLibrary" xml:space="preserve">
-    <value>Remove peptides missing library match</value>
-  </data>
-  <data name="RefinementSettings_RemoveMissingResults" xml:space="preserve">
-    <value>Remove nodes missing results</value>
-  </data>
-  <data name="RefinementSettings_RemoveRepeatedPeptides" xml:space="preserve">
-    <value>Remove repeated peptides</value>
-  </data>
-  <data name="RefinementSettings_ReplInclusion" xml:space="preserve">
-    <value>Replciate inclusion</value>
-  </data>
-  <data name="RefinementSettings_RTRegressionThreshold" xml:space="preserve">
-    <value>Target r value for linear regression</value>
-  </data>
-  <data name="RefinementSettings_Transitions" xml:space="preserve">
-    <value>Transitions</value>
-  </data>
-  <data name="RefineProteinListSettings" xml:space="preserve">
-    <value>Accept proteins</value>
-  </data>
-  <data name="RefineProteinListSettings_AcceptedProteins" xml:space="preserve">
-    <value>Proteins to keep</value>
-  </data>
-  <data name="RefineProteinListSettings_Accessions" xml:space="preserve">
-    <value>Accessions</value>
-  </data>
-  <data name="RefineProteinListSettings_Names" xml:space="preserve">
-    <value>Names</value>
-  </data>
-  <data name="RefineProteinListSettings_PreferredNames" xml:space="preserve">
-    <value>Preferred names</value>
-  </data>
-  <data name="RegressionLine_Intercept" xml:space="preserve">
-    <value>Intercept</value>
-  </data>
-  <data name="RegressionLine_Slope" xml:space="preserve">
-    <value>Slope</value>
   </data>
   <data name="RegressionLineElement_Intercept" xml:space="preserve">
     <value>Intercept</value>
@@ -1295,92 +902,38 @@
   <data name="RegressionLineElement_Slope" xml:space="preserve">
     <value>Slope</value>
   </data>
-  <data name="ReintegrateDlgSettings" xml:space="preserve">
-    <value>Reintegrate</value>
-  </data>
-  <data name="ReintegrateDlgSettings_Cutoff" xml:space="preserve">
-    <value>Q value cutoff</value>
-  </data>
-  <data name="ReintegrateDlgSettings_OverwriteManualIntegration" xml:space="preserve">
-    <value>Overwrite manual integration</value>
-  </data>
-  <data name="ReintegrateDlgSettings_PeakScoringModel" xml:space="preserve">
-    <value>Peak scoring model</value>
-  </data>
-  <data name="ReintegrateDlgSettings_ReintegrateAll" xml:space="preserve">
-    <value>Integrate all peaks</value>
-  </data>
-  <data name="ReintegrateDlgSettings_ReintegrateQCutoff" xml:space="preserve">
-    <value>Only integrate significant q values</value>
-  </data>
-  <data name="RenameProteins_CurrentName" xml:space="preserve">
-    <value>Current Name</value>
-  </data>
-  <data name="RenameProteins_NewName" xml:space="preserve">
-    <value>New Name</value>
-  </data>
-  <data name="RenameProteinsSettings" xml:space="preserve">
-    <value>Rename proteins</value>
-  </data>
-  <data name="RenameProteinsSettings_RenamedProteins" xml:space="preserve">
-    <value>Renamed</value>
-  </data>
-  <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
-    <value>iRT database path</value>
-  </data>
-  <data name="RetentionTimeRegression_AutoCalcRegression" xml:space="preserve">
-    <value>Auto-calculate regression</value>
-  </data>
-  <data name="RetentionTimeRegression_Calculator" xml:space="preserve">
-    <value>Calculator</value>
-  </data>
   <data name="RetentionTimeRegression_Conversion" xml:space="preserve">
     <value>Regression</value>
   </data>
-  <data name="RetentionTimeRegression_PeptideTimes" xml:space="preserve">
-    <value>Measured peptides</value>
+  <data name="OptimizableRegression_StepCount" xml:space="preserve">
+    <value>Step count</value>
   </data>
-  <data name="RetentionTimeRegression_TimeWindow" xml:space="preserve">
-    <value>Time window</value>
+  <data name="OptimizableRegression_StepSize" xml:space="preserve">
+    <value>Step size</value>
   </data>
-  <data name="RgbHexColor_Rgb" xml:space="preserve">
-    <value>RGB</value>
+  <data name="CompensationVoltageParameters_StepCount" xml:space="preserve">
+    <value>Step count</value>
   </data>
-  <data name="RowFilter_ColumnFilters" xml:space="preserve">
-    <value>Column Filters</value>
+  <data name="CompensationVoltageParameters_StepSize" xml:space="preserve">
+    <value>Step size</value>
   </data>
-  <data name="RowFilter_ColumnSorts" xml:space="preserve">
-    <value>Column Sorts</value>
+  <data name="IonMobilityPredictor_IonMobilityRows" xml:space="preserve">
+    <value>Measured ion mobilities</value>
   </data>
-  <data name="Settings" xml:space="preserve">
-    <value>Settings</value>
+  <data name="IonMobilityAndCCS_HighEnergyIonMobilityValueOffset" xml:space="preserve">
+    <value>Offset ion mobility values for high energy spectra</value>
   </data>
-  <data name="SrmDocument_Settings" xml:space="preserve">
-    <value>Settings</value>
+  <data name="IonMobilityAndCCS_Units" xml:space="preserve">
+    <value>Ion mobility units</value>
   </data>
-  <data name="SrmSettings_DataSettings" xml:space="preserve">
-    <value>Document Settings</value>
+  <data name="IonMobilityRow_Adduct" xml:space="preserve">
+    <value>Adduct</value>
   </data>
-  <data name="SrmSettings_PeptideSettings" xml:space="preserve">
-    <value>Peptide Settings</value>
+  <data name="IonMobilityRow_Sequence" xml:space="preserve">
+    <value>Modified Sequence</value>
   </data>
-  <data name="SrmSettings_TransitionSettings" xml:space="preserve">
-    <value>Transition Settings</value>
-  </data>
-  <data name="StaticMod_AAs" xml:space="preserve">
-    <value>Amino acid</value>
-  </data>
-  <data name="StaticMod_AverageMass" xml:space="preserve">
-    <value>Average mass</value>
-  </data>
-  <data name="StaticMod_Formula" xml:space="preserve">
-    <value>Chemical formula</value>
-  </data>
-  <data name="StaticMod_IsCrosslinker" xml:space="preserve">
-    <value>Crosslinker</value>
-  </data>
-  <data name="StaticMod_IsVariable" xml:space="preserve">
-    <value>Variable</value>
+  <data name="IonMobilityValue_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
   </data>
   <data name="StaticMod_Label13C" xml:space="preserve">
     <value>13C</value>
@@ -1412,59 +965,239 @@
   <data name="StaticMod_Label81Br" xml:space="preserve">
     <value>81Br</value>
   </data>
-  <data name="StaticMod_Losses" xml:space="preserve">
-    <value>Neutral losses</value>
+  <data name="IonMobilityAndCCS_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>CCS (sqA)</value>
   </data>
-  <data name="StaticMod_MonoisotopicMass" xml:space="preserve">
-    <value>Monoisotopic mass</value>
+  <data name="Adduct_AdductFormula" xml:space="preserve">
+    <value>Chemical formula</value>
   </data>
-  <data name="StaticMod_Terminus" xml:space="preserve">
-    <value>Terminus</value>
+  <data name="CustomMolecule_Formula" xml:space="preserve">
+    <value>Molecular formula</value>
   </data>
-  <data name="Targets" xml:space="preserve">
-    <value>Targets</value>
+  <data name="CustomMolecule_Name" xml:space="preserve">
+    <value>Name</value>
   </data>
-  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
-    <value>Quantitative</value>
+  <data name="DataSettings_PanoramaPublishUri" xml:space="preserve">
+    <value>Panorama URL</value>
   </data>
-  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
+  <data name="ImportDocResultsSettings" xml:space="preserve">
+    <value>Import document results</value>
+  </data>
+  <data name="ImportDocResultsSettings_AddNew" xml:space="preserve">
+    <value>Add new replicates</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergeName" xml:space="preserve">
+    <value>Merge with existing results by replicate name</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergeOrder" xml:space="preserve">
+    <value>Merge with existing results by replicate order</value>
+  </data>
+  <data name="ImportDocResultsSettings_MergePeptides" xml:space="preserve">
+    <value>Merge matching peptides</value>
+  </data>
+  <data name="ImportDocResultsSettings_Remove" xml:space="preserve">
+    <value>Remove results information</value>
+  </data>
+  <data name="EnabledFeatureScores_Calculator" xml:space="preserve">
+    <value>Score Name</value>
+  </data>
+  <data name="EnabledFeatureScores_PercentageContribution" xml:space="preserve">
+    <value>Percentage Contribution</value>
+  </data>
+  <data name="EnabledFeatureScores_Weight" xml:space="preserve">
+    <value>Weight</value>
+  </data>
+  <data name="PeakScoringModelSpec_EnabledFeatureScores" xml:space="preserve">
+    <value>Feature scores</value>
+  </data>
+  <data name="PeakScoringModelSpec_UsesDecoys" xml:space="preserve">
+    <value>Use decoys</value>
+  </data>
+  <data name="PeakScoringModelSpec_UsesSecondBest" xml:space="preserve">
+    <value>Uses second best peaks</value>
+  </data>
+  <data name="ReintegrateDlgSettings" xml:space="preserve">
+    <value>Reintegrate</value>
+  </data>
+  <data name="ReintegrateDlgSettings_Cutoff" xml:space="preserve">
+    <value>Q value cutoff</value>
+  </data>
+  <data name="ReintegrateDlgSettings_OverwriteManualIntegration" xml:space="preserve">
+    <value>Overwrite manual integration</value>
+  </data>
+  <data name="ReintegrateDlgSettings_PeakScoringModel" xml:space="preserve">
+    <value>Peak scoring model</value>
+  </data>
+  <data name="ReintegrateDlgSettings_ReintegrateAll" xml:space="preserve">
+    <value>Integrate all peaks</value>
+  </data>
+  <data name="ReintegrateDlgSettings_ReintegrateQCutoff" xml:space="preserve">
+    <value>Only integrate significant q values</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_CutoffScore" xml:space="preserve">
+    <value>Cut-off score</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_FilterForDocumentPeptides" xml:space="preserve">
+    <value>Filter for document peptides</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
+    <value>Include ambiguous matches</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
+    <value>Search files</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_Standard" xml:space="preserve">
+    <value>iRT standard peptides</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_WorkFlow" xml:space="preserve">
+    <value>Workflow</value>
+  </data>
+  <data name="ExplicitRetentionTimeInfo_RetentionTime" xml:space="preserve">
+    <value>Retention time</value>
+  </data>
+  <data name="ExplicitRetentionTimeInfo_RetentionTimeWindow" xml:space="preserve">
+    <value>Retention time window</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CollisionalCrossSectionSqA" xml:space="preserve">
+    <value>Collisional Cross Section (sqA)</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CollisionEnergy" xml:space="preserve">
+    <value>Collision energy</value>
+  </data>
+  <data name="ExplicitTransitionValues_CollisionEnergy" xml:space="preserve">
+    <value>Collision energy</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_CompensationVoltage" xml:space="preserve">
+    <value>Compensation voltage</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_ConeVoltage" xml:space="preserve">
+    <value>Cone voltage</value>
+  </data>
+  <data name="ExplicitTransitionValues_ConeVoltage" xml:space="preserve">
+    <value>Cone voltage</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_DeclusteringPotential" xml:space="preserve">
+    <value>Declustering potential</value>
+  </data>
+  <data name="ExplicitTransitionValues_DeclusteringPotential" xml:space="preserve">
+    <value>Declustering potential</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobility" xml:space="preserve">
+    <value>Ion mobility</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobilityUnits" xml:space="preserve">
+    <value>Ion mobility units</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>High energy ion mobility offset</value>
+  </data>
+  <data name="ExplicitTransitionValues_IonMobilityHighEnergyOffset" xml:space="preserve">
+    <value>High energy ion mobility offset</value>
+  </data>
+  <data name="ExplicitTransitionGroupValues_SLens" xml:space="preserve">
+    <value>S-Lens</value>
+  </data>
+  <data name="ExplicitTransitionValues_SLens" xml:space="preserve">
+    <value>S-Lens</value>
+  </data>
+  <data name="ImportFastaSettings_AutoTrain" xml:space="preserve">
+    <value>Automatically train mProphet model</value>
+  </data>
+  <data name="ImportFastaSettings_DecoyGenerationMethod" xml:space="preserve">
+    <value>Decoy generation method</value>
+  </data>
+  <data name="ImportFastaSettings_Enzyme" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="ImportFastaSettings_FastaFile" xml:space="preserve">
+    <value>FASTA file</value>
+  </data>
+  <data name="ImportFastaSettings_FastaText" xml:space="preserve">
+    <value>FASTA text</value>
+  </data>
+  <data name="ImportFastaSettings_MaxMissedCleavages" xml:space="preserve">
+    <value>Max missed cleavages</value>
+  </data>
+  <data name="ImportFastaSettings_NumDecoys" xml:space="preserve">
+    <value>Decoys per target</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_BuildPeptideSearchLibrarySettings" xml:space="preserve">
+    <value>Build Spectral Library</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_FullScanSettings" xml:space="preserve">
+    <value>Configure Full-Scan Settings</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
+    <value>Import FASTA</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ImportResultsSettings" xml:space="preserve">
+    <value>Extract Chromatograms</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_ModificationsSettings" xml:space="preserve">
+    <value>Add Modifications</value>
+  </data>
+  <data name="ImportResultsSettings_ExcludeSpectrumSourceFiles" xml:space="preserve">
+    <value>Exclude spectrum source files</value>
+  </data>
+  <data name="MatchModificationsSettings_Modifications" xml:space="preserve">
+    <value>Added modifications</value>
+  </data>
+  <data name="PropertiesCutoffSettings_Log2FoldChangeCutoff" xml:space="preserve">
+    <value>Log2 Fold change cutoff</value>
+  </data>
+  <data name="PropertiesCutoffSettings_PValueCutoff" xml:space="preserve">
+    <value>PValue cutoff</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings_NumTransitions" xml:space="preserve">
+    <value>Maximum transitions per peptide</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings" xml:space="preserve">
+    <value>Build Spectral Library</value>
+  </data>
+  <data name="ImportPeptideSearchSettings" xml:space="preserve">
+    <value>Import Peptide Search</value>
+  </data>
+  <data name="RegressionLine_Intercept" xml:space="preserve">
+    <value>Intercept</value>
+  </data>
+  <data name="RegressionLine_Slope" xml:space="preserve">
+    <value>Slope</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings_ReplicateNames" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_AverageMz" xml:space="preserve">
+    <value>Average m/z</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Charge" xml:space="preserve">
+    <value>Charge</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Formula" xml:space="preserve">
+    <value>Formula</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_LabelType" xml:space="preserve">
+    <value>Isotope label type</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_MonoisotopicMz" xml:space="preserve">
+    <value>Monoisotopic m/z</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditCustomMoleculeSettings_OptionalExplicitValues" xml:space="preserve">
     <value>Explicit values</value>
   </data>
-  <data name="TransitionFilter_AutoSelect" xml:space="preserve">
-    <value>Auto-select all matching transitions</value>
+  <data name="ImportPeptideSearchSettings_FilterAndLibrariesSettings" xml:space="preserve">
+    <value>Configure Transition Settings</value>
   </data>
-  <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
-    <value>Product ion selection end</value>
+  <data name="MeasuredResults_Chromatograms" xml:space="preserve">
+    <value>Replicates</value>
   </data>
-  <data name="TransitionFilter_ExclusionUseDIAWindow" xml:space="preserve">
-    <value>Use DIA precursor window for exlucison</value>
+  <data name="PeptideDocNode_ExplicitRetentionTime" xml:space="preserve">
+    <value>Explicit values</value>
   </data>
-  <data name="TransitionFilter_MeasuredIons" xml:space="preserve">
-    <value>Special ions</value>
-  </data>
-  <data name="TransitionFilter_PeptideIonTypesString" xml:space="preserve">
-    <value>Ion types</value>
-  </data>
-  <data name="TransitionFilter_PeptidePrecursorChargesString" xml:space="preserve">
-    <value>Peptide Precursor charges</value>
-  </data>
-  <data name="TransitionFilter_PeptideProductChargesString" xml:space="preserve">
-    <value>Peptide Ion charges</value>
-  </data>
-  <data name="TransitionFilter_PrecursorMzWindow" xml:space="preserve">
-    <value>Precursor m/z exclusion window</value>
-  </data>
-  <data name="TransitionFilter_SmallMoleculeFragmentAdductsString" xml:space="preserve">
-    <value>Molecule Fragment adducts</value>
-  </data>
-  <data name="TransitionFilter_SmallMoleculeIonTypesString" xml:space="preserve">
-    <value>Molecule Ion types</value>
-  </data>
-  <data name="TransitionFilter_SmallMoleculePrecursorAdductsString" xml:space="preserve">
-    <value>Molecule Precursor adducts</value>
-  </data>
-  <data name="TransitionFilter_StartFragmentFinderLabel" xml:space="preserve">
-    <value>Product ion selection start</value>
+  <data name="ProteinPeptideSelection_Peptides" xml:space="preserve">
+    <value>Excluded peptides</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_ExclusionUseDIAWindow" xml:space="preserve">
     <value>Use DIA precursor window for exclusion</value>
@@ -1475,20 +1208,8 @@
   <data name="TransitionFilterAndLibrariesSettings_IonMatchTolerance" xml:space="preserve">
     <value>Ion match tolerance</value>
   </data>
-  <data name="TransitionFilterAndLibrariesSettings_IonRangeFrom" xml:space="preserve">
-    <value>Product ion selection start</value>
-  </data>
-  <data name="TransitionFilterAndLibrariesSettings_IonRangeTo" xml:space="preserve">
-    <value>Product ion selection end</value>
-  </data>
-  <data name="TransitionFilterAndLibrariesSettings_MaxIonMz" xml:space="preserve">
-    <value>Max ion m/z</value>
-  </data>
   <data name="TransitionFilterAndLibrariesSettings_MinIonCount" xml:space="preserve">
     <value>Pick min product ions</value>
-  </data>
-  <data name="TransitionFilterAndLibrariesSettings_MinIonMz" xml:space="preserve">
-    <value>Min ion m/z</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_PeptideIonCharges" xml:space="preserve">
     <value>Ion charges</value>
@@ -1499,104 +1220,332 @@
   <data name="TransitionFilterAndLibrariesSettings_PeptidePrecursorCharges" xml:space="preserve">
     <value>Precursor charges</value>
   </data>
-  <data name="TransitionFullScan_AcquisitionMethod" xml:space="preserve">
-    <value>Acquisition method</value>
-  </data>
-  <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
-    <value>Ignore SIM scans</value>
-  </data>
-  <data name="TransitionFullScan_IsolationScheme" xml:space="preserve">
-    <value>Isolation scheme</value>
-  </data>
-  <data name="TransitionFullScan_IsotopeEnrichments" xml:space="preserve">
-    <value>Isotope labeling enrichment</value>
-  </data>
-  <data name="TransitionFullScan_MassAccuracy" xml:space="preserve">
-    <value>Mass accuracy</value>
-  </data>
-  <data name="TransitionFullScan_PrecursorIsotopeFilter" xml:space="preserve">
-    <value>Peaks</value>
-  </data>
-  <data name="TransitionFullScan_PrecursorIsotopes" xml:space="preserve">
-    <value>Isotope peaks included</value>
-  </data>
-  <data name="TransitionFullScan_PrecursorMassAnalyzer" xml:space="preserve">
-    <value>Precursor mass analyzer</value>
-  </data>
-  <data name="TransitionFullScan_PrecursorResMz" xml:space="preserve">
-    <value>Resolving power m/z</value>
-  </data>
-  <data name="TransitionFullScan_ProductMassAnalyzer" xml:space="preserve">
-    <value>Product mass analyzer</value>
-  </data>
-  <data name="TransitionFullScan_ProductResMz" xml:space="preserve">
-    <value>Resolving power m/z</value>
-  </data>
-  <data name="TransitionFullScan_Resolution" xml:space="preserve">
-    <value>Resolution</value>
-  </data>
-  <data name="TransitionFullScan_ResolvingPower" xml:space="preserve">
-    <value>Resolving power</value>
-  </data>
-  <data name="TransitionFullScan_RetentionTimeFilterLength" xml:space="preserve">
-    <value>Retention time filter length</value>
-  </data>
-  <data name="TransitionFullScan_RetentionTimeFilterType" xml:space="preserve">
-    <value>Retention time filter type</value>
-  </data>
-  <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
-    <value>Use high-selectivity extraction</value>
-  </data>
   <data name="TransitionGroupDocNode_ExplicitValues" xml:space="preserve">
+    <value>Explicit values</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitValues" xml:space="preserve">
     <value>Explicit values</value>
   </data>
   <data name="TransitionGroupDocNode_LabelType" xml:space="preserve">
     <value>Isotope label type</value>
   </data>
-  <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
-    <value>Adduct</value>
-  </data>
   <data name="TransitionGroupDocNode_PrecursorConcentration" xml:space="preserve">
     <value>Precursor concentration</value>
   </data>
-  <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
-    <value>Dynamic min product m/z</value>
+  <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
+    <value>Unique peptides</value>
   </data>
-  <data name="TransitionInstrument_MaxInclusions" xml:space="preserve">
-    <value>Firmware inclusion limit</value>
+  <data name="RefinementSettings_DotProductThreshold" xml:space="preserve">
+    <value>Min dotp</value>
   </data>
-  <data name="TransitionInstrument_MaxMz" xml:space="preserve">
-    <value>Max m/z</value>
+  <data name="RefinementSettings_IdotProductThreshold" xml:space="preserve">
+    <value>Min idotp</value>
   </data>
-  <data name="TransitionInstrument_MaxTime" xml:space="preserve">
-    <value>Max time</value>
+  <data name="RefinementSettings_MaxPeakFoundRatio" xml:space="preserve">
+    <value>Max peak found ratio</value>
   </data>
-  <data name="TransitionInstrument_MaxTransitions" xml:space="preserve">
-    <value>Firmware transition limit</value>
+  <data name="RefinementSettings_MaxPeakRank" xml:space="preserve">
+    <value>Max transition peak rank</value>
   </data>
-  <data name="TransitionInstrument_MinMz" xml:space="preserve">
-    <value>Min m/z</value>
+  <data name="RefinementSettings_MaxPepPeakRank" xml:space="preserve">
+    <value>Max peptide peak rank</value>
   </data>
-  <data name="TransitionInstrument_MinTime" xml:space="preserve">
-    <value>Min time</value>
+  <data name="RefinementSettings_MinPeakFoundRatio" xml:space="preserve">
+    <value>Min peak found ratio</value>
   </data>
-  <data name="TransitionInstrument_MzMatchTolerance" xml:space="preserve">
-    <value>Method match tolerance m/z</value>
+  <data name="RefinementSettings_PreferLargeIons" xml:space="preserve">
+    <value>Prefer larger product ions</value>
   </data>
-  <data name="TransitionInstrument_TriggeredAcquisition" xml:space="preserve">
-    <value>Triggered Acquisition</value>
+  <data name="RefinementSettings_ReplInclusion" xml:space="preserve">
+    <value>Replciate inclusion</value>
+  </data>
+  <data name="RefinementSettings_IgnoreMissingResults" xml:space="preserve">
+    <value>Ignore nodes missing results</value>
+  </data>
+  <data name="RefinementSettings_RemoveMissingResults" xml:space="preserve">
+    <value>Remove nodes missing results</value>
+  </data>
+  <data name="RefinementSettings_RTRegressionThreshold" xml:space="preserve">
+    <value>Target r value for linear regression</value>
+  </data>
+  <data name="MeasuredResults" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="ViewLibrarySettings_AssociateProteins" xml:space="preserve">
+    <value>Associate proteins</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_AddToAll" xml:space="preserve">
+    <value>Add to all matching proteins</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_AddUnmatched" xml:space="preserve">
+    <value>Add to a peptide list</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_DoNotAddFiltered" xml:space="preserve">
+    <value>Do not add</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_FilterUnmatched" xml:space="preserve">
+    <value>Do not add</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_FirstOccurence" xml:space="preserve">
+    <value>Add to only the first matching protein</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_KeepFiltered" xml:space="preserve">
+    <value>Include all peptides</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings_NoDuplicates" xml:space="preserve">
+    <value>Do not add</value>
+  </data>
+  <data name="ImportResultsSettings_FoundResultsFiles" xml:space="preserve">
+    <value>Found results files</value>
+  </data>
+  <data name="ViewLibrarySettings" xml:space="preserve">
+    <value>Spectral Library Explorer</value>
+  </data>
+  <data name="UniquePeptideSettings" xml:space="preserve">
+    <value>Unique peptide settings</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingLibraryRuns" xml:space="preserve">
+    <value>Remove corresponding library runs</value>
+  </data>
+  <data name="ManageResultsSettings_RemoveCorrespondingReplicates" xml:space="preserve">
+    <value>Remove corresponding replicates</value>
+  </data>
+  <data name="RefineListSettings" xml:space="preserve">
+    <value>Accept Peptides</value>
+  </data>
+  <data name="RefineListSettings_AcceptedPeptides" xml:space="preserve">
+    <value>Peptides to keep</value>
+  </data>
+  <data name="RefineListSettings_MatchModified" xml:space="preserve">
+    <value>Match modified sequence</value>
+  </data>
+  <data name="RefineListSettings_RemoveEmptyProteins" xml:space="preserve">
+    <value>Remove empty proteins</value>
+  </data>
+  <data name="RefineProteinListSettings" xml:space="preserve">
+    <value>Accept proteins</value>
+  </data>
+  <data name="RefineProteinListSettings_AcceptedProteins" xml:space="preserve">
+    <value>Proteins to keep</value>
+  </data>
+  <data name="RefineProteinListSettings_Accessions" xml:space="preserve">
+    <value>Accessions</value>
+  </data>
+  <data name="RefineProteinListSettings_Names" xml:space="preserve">
+    <value>Names</value>
+  </data>
+  <data name="RefineProteinListSettings_PreferredNames" xml:space="preserve">
+    <value>Preferred names</value>
+  </data>
+  <data name="RenameProteinsSettings" xml:space="preserve">
+    <value>Rename proteins</value>
+  </data>
+  <data name="RenameProteinsSettings_RenamedProteins" xml:space="preserve">
+    <value>Renamed</value>
+  </data>
+  <data name="RenameProteins_CurrentName" xml:space="preserve">
+    <value>Current Name</value>
+  </data>
+  <data name="RenameProteins_NewName" xml:space="preserve">
+    <value>New Name</value>
+  </data>
+  <data name="AssociateProteinsSettings" xml:space="preserve">
+    <value>Associate Proteins</value>
+  </data>
+  <data name="AssociateProteinsSettings_BackgroundProteome" xml:space="preserve">
+    <value>Background proteome</value>
+  </data>
+  <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
+    <value>FASTA</value>
+  </data>
+  <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
+    <value>Find minimal protein list</value>
+  </data>
+  <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
+    <value>Choose RT Prediction Replicates</value>
+  </data>
+  <data name="FilterMatchedPeptidesSettings" xml:space="preserve">
+    <value>Filter Peptides</value>
+  </data>
+  <data name="AddIrtStandardsToDocumentSettings" xml:space="preserve">
+    <value>Add Standard Peptides</value>
+  </data>
+  <data name="EmptyProteinsSettings" xml:space="preserve">
+    <value>Empty Proteins</value>
+  </data>
+  <data name="ManageResultsSettings" xml:space="preserve">
+    <value>Manage Results</value>
+  </data>
+  <data name="PropertiesCutoffSettings" xml:space="preserve">
+    <value>Volcano plot cutoff settings</value>
+  </data>
+  <data name="RetentionScoreCalculatorSpec_AuditLogPersistencePath" xml:space="preserve">
+    <value>iRT database path</value>
+  </data>
+  <data name="ColumnFilter_ColumnId" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="BatchModifyInfo" xml:space="preserve">
+    <value>Document grid</value>
+  </data>
+  <data name="BatchModifyInfo_Filter" xml:space="preserve">
+    <value>Column settings</value>
+  </data>
+  <data name="ColumnSort_ColumnId" xml:space="preserve">
+    <value>Column</value>
+  </data>
+  <data name="RowFilter_ColumnFilters" xml:space="preserve">
+    <value>Column Filters</value>
+  </data>
+  <data name="RowFilter_ColumnSorts" xml:space="preserve">
+    <value>Column Sorts</value>
+  </data>
+  <data name="BatchModifyInfo_ViewName" xml:space="preserve">
+    <value>Report name</value>
+  </data>
+  <data name="ColumnSort_ListSortDirection" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="IonMobilityRow_Charge" xml:space="preserve">
+    <value>Charge</value>
+  </data>
+  <data name="TransitionGroupDocNode_PrecursorAdduct" xml:space="preserve">
+    <value>Adduct</value>
+  </data>
+  <data name="ViewLayoutList_Layouts" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
+  <data name="DocumentNodeCounts" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="DocumentNodeCounts_PrecursorCount" xml:space="preserve">
+    <value>Precursor count</value>
+  </data>
+  <data name="DocumentNodeCounts_TransitionCount" xml:space="preserve">
+    <value>Transition count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount" xml:space="preserve">
+    <value>Peptide count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeCount_smallmol" xml:space="preserve">
+    <value>Molecule count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount" xml:space="preserve">
+    <value>Protein count</value>
+  </data>
+  <data name="DocumentNodeCounts_MoleculeGroupCount_smallmol" xml:space="preserve">
+    <value>Molecule list count</value>
+  </data>
+  <data name="RefinementSettings_AddRefineLabelType" xml:space="preserve">
+    <value>Add label type</value>
+  </data>
+  <data name="DataSettings_AuditLogging" xml:space="preserve">
+    <value>Audit logging</value>
+  </data>
+  <data name="ListData_Rows" xml:space="preserve">
+    <value>Rows</value>
+  </data>
+  <data name="RefinementSettings_MaxPrecursorPeakOnly" xml:space="preserve">
+    <value>Max precursor peak only</value>
+  </data>
+  <data name="PeptideFilter_PeptideUniqueness" xml:space="preserve">
+    <value>Peptide Uniqueness</value>
+  </data>
+  <data name="RefinementSettings_CVCutoff" xml:space="preserve">
+    <value>Remove above cv cutoff</value>
+  </data>
+  <data name="RefinementSettings_QValueCutoff" xml:space="preserve">
+    <value>Remove above qvalue cutoff</value>
+  </data>
+  <data name="RefinementSettings_MinimumDetections" xml:space="preserve">
+    <value>Minimum Detections</value>
+  </data>
+  <data name="RefinementSettings_NormalizationLabelType" xml:space="preserve">
+    <value>Normalization to standard type</value>
+  </data>
+  <data name="RefinementSettings_NormalizationMethod" xml:space="preserve">
+    <value>Normalization method</value>
+  </data>
+  <data name="RefinementSettings_CountTransitions" xml:space="preserve">
+    <value>Transitions count</value>
+  </data>
+  <data name="RefinementSettings_Transitions" xml:space="preserve">
+    <value>Transitions</value>
+  </data>
+  <data name="RefinementSettings_MSLevel" xml:space="preserve">
+    <value>MS level</value>
+  </data>
+  <data name="RefinementSettings_AdjustedPValueCutoff" xml:space="preserve">
+    <value>Adjusted p value cutoff</value>
+  </data>
+  <data name="RefinementSettings_FoldChangeCutoff" xml:space="preserve">
+    <value>Fold change cutoff</value>
+  </data>
+  <data name="RefinementSettings_MSLevelGroupComparison" xml:space="preserve">
+    <value>MS Level</value>
+  </data>
+  <data name="RefinementSettings_GroupComparisonDefs" xml:space="preserve">
+    <value>Group comparisons</value>
+  </data>
+  <data name="PeptideChromInfo_ExcludeFromCalibration" xml:space="preserve">
+    <value>Exclude From Calibration</value>
+  </data>
+  <data name="PeptideChromInfo_AnalyteConcentration" xml:space="preserve">
+    <value>Analyte Concentration</value>
+  </data>
+  <data name="TransitionDocNode_ExplicitQuantitative" xml:space="preserve">
+    <value>Quantitative</value>
   </data>
   <data name="TransitionIntegration_IsIntegrateAll" xml:space="preserve">
     <value>Integrate All</value>
   </data>
-  <data name="TransitionIntegration_SynchronizedIntegrationAll" xml:space="preserve">
-    <value>Synchronized Integration All</value>
-  </data>
   <data name="TransitionIntegration_SynchronizedIntegrationGroupBy" xml:space="preserve">
     <value>Synchronized Integration Group By</value>
   </data>
+  <data name="TransitionIntegration_SynchronizedIntegrationAll" xml:space="preserve">
+    <value>Synchronized Integration All</value>
+  </data>
   <data name="TransitionIntegration_SynchronizedIntegrationTargets" xml:space="preserve">
     <value>Synchronized Integration Targets</value>
+  </data>
+  <data name="TransitionSettings_Integration" xml:space="preserve">
+    <value>Integration</value>
+  </data>
+  <data name="PeptideIntegration_PeakScoringModel" xml:space="preserve">
+    <value>Peak scoring model</value>
+  </data>
+  <data name="PeptideSettings_Integration" xml:space="preserve">
+    <value>Integration</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeFrom" xml:space="preserve">
+    <value>Product ion selection start</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_IonRangeTo" xml:space="preserve">
+    <value>Product ion selection end</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MinIonMz" xml:space="preserve">
+    <value>Min ion m/z</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_MaxIonMz" xml:space="preserve">
+    <value>Max ion m/z</value>
+  </data>
+  <data name="LoggableExplicitMod_LinkedPeptide" xml:space="preserve">
+    <value>Linked peptide</value>
+  </data>
+  <data name="LinkedPeptide_ExplicitModsStatic" xml:space="preserve">
+    <value>Modifications</value>
+  </data>
+  <data name="LinkedPeptide_PeptideSequence" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="LinkedPeptide_Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_FixedWindowWidth" xml:space="preserve">
+    <value>Ion mobility filter window fixed width value</value>
+  </data>
+  <data name="IonMobilityWindowWidthCalculator_WindowWidthMode" xml:space="preserve">
+    <value>Ion mobility filter window width calculation type</value>
   </data>
   <data name="TransitionIonMobilityFiltering_IonMobilityLibrary" xml:space="preserve">
     <value>Ion mobility library</value>
@@ -1604,106 +1553,157 @@
   <data name="TransitionIonMobilityFiltering_UseSpectralLibraryIonMobilityValues" xml:space="preserve">
     <value>Use spectral library ion mobility values</value>
   </data>
-  <data name="TransitionLibraries_IonCount" xml:space="preserve">
-    <value>Product ions</value>
-  </data>
-  <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
-    <value>Ion match tolerance</value>
-  </data>
-  <data name="TransitionLibraries_MinIonCount" xml:space="preserve">
-    <value>Minimum product ions</value>
-  </data>
-  <data name="TransitionLibraries_Pick" xml:space="preserve">
-    <value>Pick</value>
-  </data>
-  <data name="TransitionLibraries_PickMostIntenseIons" xml:space="preserve">
-    <value>If a library spectrum is available, pick its most intense ions</value>
-  </data>
-  <data name="TransitionPrediction_FragmentMassType" xml:space="preserve">
-    <value>Product ion mass</value>
-  </data>
-  <data name="TransitionPrediction_NonNullCollisionEnergy" xml:space="preserve">
-    <value>Collision energy</value>
-  </data>
-  <data name="TransitionPrediction_NonNullCompensationVoltage" xml:space="preserve">
-    <value>Compensation voltage</value>
-  </data>
-  <data name="TransitionPrediction_NonNullDeclusteringPotential" xml:space="preserve">
-    <value>Declustering potential</value>
-  </data>
-  <data name="TransitionPrediction_NonNullOptimizedLibrary" xml:space="preserve">
-    <value>Optimization library</value>
-  </data>
-  <data name="TransitionPrediction_OptimizedMethodType" xml:space="preserve">
-    <value>Optimization method</value>
-  </data>
-  <data name="TransitionPrediction_PrecursorMassType" xml:space="preserve">
-    <value>Precursor mass</value>
-  </data>
-  <data name="TransitionPrediction_UseOptimizationValues" xml:space="preserve">
-    <value>Use optimization values when present</value>
-  </data>
-  <data name="TransitionSettings_Filter" xml:space="preserve">
-    <value>Filter</value>
-  </data>
-  <data name="TransitionSettings_FullScan" xml:space="preserve">
-    <value>Full-Scan</value>
-  </data>
-  <data name="TransitionSettings_Instrument" xml:space="preserve">
-    <value>Instrument</value>
-  </data>
-  <data name="TransitionSettings_Integration" xml:space="preserve">
-    <value>Integration</value>
-  </data>
   <data name="TransitionSettings_IonMobilityFiltering" xml:space="preserve">
     <value>Ion mobility</value>
   </data>
-  <data name="TransitionSettings_Libraries" xml:space="preserve">
-    <value>Library</value>
+  <data name="IonMobilityLibrary_FilePathAuditLog" xml:space="preserve">
+    <value>File path</value>
   </data>
-  <data name="TransitionSettings_Prediction" xml:space="preserve">
-    <value>Prediction</value>
+  <data name="DataSettings_MetadataRuleSets" xml:space="preserve">
+    <value>Rule sets</value>
   </data>
-  <data name="UniquePeptideSettings" xml:space="preserve">
-    <value>Unique peptide settings</value>
+  <data name="IonMobilityLibrary_IonMobilityValues" xml:space="preserve">
+    <value>Library ion mobility values</value>
   </data>
-  <data name="UniquePeptideSettings_ProteinPeptideSelections" xml:space="preserve">
-    <value>Unique peptides</value>
+  <data name="MetadataRule_Source" xml:space="preserve">
+    <value>Source</value>
   </data>
-  <data name="ValueSpec_ColumnRef" xml:space="preserve">
-    <value>Column reference</value>
+  <data name="MetadataRule_Pattern" xml:space="preserve">
+    <value>Pattern</value>
   </data>
-  <data name="View_Layouts" xml:space="preserve">
-    <value>Layouts</value>
+  <data name="MetadataRule_Replacement" xml:space="preserve">
+    <value>Replacement</value>
+  </data>
+  <data name="MetadataRule_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="MetadataRuleSet_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="MetadataRuleSet_RowSource" xml:space="preserve">
+    <value>Row source</value>
+  </data>
+  <data name="MetadataRuleSet_Rules" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="QuantificationSettings_QualitativeIonRatioThreshold" xml:space="preserve">
+    <value>Qualitative ion ratio threshold</value>
+  </data>
+  <data name="QuantificationSettings_SimpleRatios" xml:space="preserve">
+    <value>Simple ratios</value>
   </data>
   <data name="ViewLayout_ClusterSpec" xml:space="preserve">
     <value>Clustering specification</value>
   </data>
-  <data name="ViewLayoutList_Layouts" xml:space="preserve">
-    <value>Layouts</value>
+  <data name="ClusteringSpec_Values" xml:space="preserve">
+    <value>Values</value>
   </data>
-  <data name="ViewLibrarySettings" xml:space="preserve">
-    <value>Spectral Library Explorer</value>
+  <data name="ClusteringSpec_DistanceMetric" xml:space="preserve">
+    <value>Distance Metric</value>
   </data>
-  <data name="ViewLibrarySettings_AssociateProteins" xml:space="preserve">
-    <value>Associate proteins</value>
+  <data name="ValueSpec_ColumnRef" xml:space="preserve">
+    <value>Column reference</value>
   </data>
-  <data name="ViewSpec_Columns" xml:space="preserve">
-    <value>Columns</value>
+  <data name="ExplicitMods_CrosslinkStructure" xml:space="preserve">
+    <value>Crosslink structure</value>
   </data>
-  <data name="ViewSpec_Filters" xml:space="preserve">
-    <value>Filters</value>
+  <data name="CrosslinkStructure_LinkedPeptides" xml:space="preserve">
+    <value>Linked peptides</value>
   </data>
-  <data name="ViewSpecLayout_DefaultLayoutName" xml:space="preserve">
-    <value>Default Layout Name</value>
+  <data name="CrosslinkStructure_LinkedExplicitMods" xml:space="preserve">
+    <value>Linked explicit modifications</value>
   </data>
-  <data name="ViewSpecLayout_Layouts" xml:space="preserve">
-    <value>Layouts</value>
+  <data name="CrosslinkStructure_Crosslinks" xml:space="preserve">
+    <value>Crosslinks</value>
   </data>
-  <data name="ViewSpecList_ViewLayouts" xml:space="preserve">
-    <value>Layouts</value>
+  <data name="BuildPeptideSearchLibrarySettings_InputFileType" xml:space="preserve">
+    <value>Input File Type</value>
   </data>
-  <data name="ViewSpecList_Views" xml:space="preserve">
-    <value>Reports</value>
+  <data name="ImportFastaSettings_FastaImportTargetsFile" xml:space="preserve">
+    <value>FASTA file for importing targets</value>
+  </data>
+  <data name="DdaConverterSettings_InstrumentPreset" xml:space="preserve">
+    <value>Instrument preset</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentIons" xml:space="preserve">
+    <value>Fragment ion types</value>
+  </data>
+  <data name="DdaSearchSettings_FragmentTolerance" xml:space="preserve">
+    <value>Fragment tolerance</value>
+  </data>
+  <data name="DdaSearchSettings_MaxVariableMods" xml:space="preserve">
+    <value>Max variable mods per peptide</value>
+  </data>
+  <data name="DdaSearchSettings_PrecursorTolerance" xml:space="preserve">
+    <value>Precursor tolerance</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaConverterSettings" xml:space="preserve">
+    <value>DDA converter settings</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_DdaSearchSettings" xml:space="preserve">
+    <value>DDA search settings</value>
+  </data>
+  <data name="DdaConverterSettings_NonDefaultAdditionalSettings" xml:space="preserve">
+    <value>DDA conversion non-default settings</value>
+  </data>
+  <data name="DdaConverterSettings_Protocol" xml:space="preserve">
+    <value>DDA conversion protocol</value>
+  </data>
+  <data name="DdaSearchSettings_Ms2Analyzer" xml:space="preserve">
+    <value>MS2 analyzer</value>
+  </data>
+  <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
+    <value>Search Engine</value>
+  </data>
+  <data name="File_FileName" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="File_ScoreTypeName" xml:space="preserve">
+    <value>Score type</value>
+  </data>
+  <data name="File_ScoreThreshold" xml:space="preserve">
+    <value>Score threshold</value>
+  </data>
+  <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
+    <value>Ignore SIM scans</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedPeptides" xml:space="preserve">
+    <value>Peptides mapped</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedProteins" xml:space="preserve">
+    <value>Proteins mapped</value>
+  </data>
+  <data name="ParsimonySettings_SharedPeptides" xml:space="preserve">
+    <value>Shared peptides option</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetPeptides" xml:space="preserve">
+    <value>Peptide targets</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteins" xml:space="preserve">
+    <value>Protein targets</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedPeptides" xml:space="preserve">
+    <value>Peptides unmapped</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedProteins" xml:space="preserve">
+    <value>Proteins unmapped</value>
+  </data>
+  <data name="ParsimonySettings_GroupProteins" xml:space="preserve">
+    <value>Group proteins</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteinGroups" xml:space="preserve">
+    <value>Protein group targets</value>
+  </data>
+  <data name="ParsimonySettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>Min peptides per protein</value>
+  </data>
+  <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
+    <value>Remove subset proteins</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
+    <value>Associate Proteins</value>
+  </data>
+  <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
+    <value>Protein association settings</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,14 +105,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -128,75 +128,6 @@
   </data>
   <data name="AnnotationType_value_list" xml:space="preserve">
     <value>值列表</value>
-  </data>
-  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
-    <value>母离子</value>
-  </data>
-  <data name="AreaCVMsLevel_products" xml:space="preserve">
-    <value>子离子</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
-    <value>全球标准</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
-    <value>中位数</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
-    <value>比率</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
-    <value>总离子电流</value>
-  </data>
-  <data name="AreaCVTransitions_all" xml:space="preserve">
-    <value>全部</value>
-  </data>
-  <data name="AreaCVTransitions_best" xml:space="preserve">
-    <value>最佳</value>
-  </data>
-  <data name="AreaCVTransitions_count" xml:space="preserve">
-    <value>计数</value>
-  </data>
-  <data name="BilinearFit_bilinear" xml:space="preserve">
-    <value>双线性</value>
-  </data>
-  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
-    <value>Chebyshev</value>
-  </data>
-  <data name="ClusterMetricType_euclidean" xml:space="preserve">
-    <value>Euclidean</value>
-  </data>
-  <data name="ClusterMetricType_manhattan" xml:space="preserve">
-    <value>城市街区</value>
-  </data>
-  <data name="ClusterMetricType_pearson" xml:space="preserve">
-    <value>Pearson</value>
-  </data>
-  <data name="CountImpl_Count" xml:space="preserve">
-    <value>计数</value>
-  </data>
-  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
-    <value>1 个离子</value>
-  </data>
-  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
-    <value>2 个离子</value>
-  </data>
-  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
-    <value>3 个离子</value>
-  </data>
-  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
-    <value>4 个离子</value>
-  </data>
-  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
-    <value>5 个离子</value>
-  </data>
-  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
-    <value>6 个离子</value>
-  </data>
-  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
-    <value>补偿电压 (V)</value>
   </data>
   <data name="eIonMobilityUnits_drift_time_msec" xml:space="preserve">
     <value>漂移时间 （毫秒）</value>
@@ -221,12 +152,6 @@
   </data>
   <data name="FullScanAcquisitionMethod_None" xml:space="preserve">
     <value>无</value>
-  </data>
-  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
-    <value>PRM</value>
-  </data>
-  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
-    <value>SureQuant</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
     <value>定向(已过时)</value>
@@ -258,21 +183,6 @@
   <data name="FullScanPrecursorIsotopes_Percent" xml:space="preserve">
     <value>百分比</value>
   </data>
-  <data name="GraphFontSize_10" xml:space="preserve">
-    <value>小</value>
-  </data>
-  <data name="GraphFontSize_12" xml:space="preserve">
-    <value>正常</value>
-  </data>
-  <data name="GraphFontSize_14" xml:space="preserve">
-    <value>大</value>
-  </data>
-  <data name="GraphFontSize_16" xml:space="preserve">
-    <value>超大</value>
-  </data>
-  <data name="GraphFontSize_8" xml:space="preserve">
-    <value>超小</value>
-  </data>
   <data name="ImportResultsSimultaneousFileOptions_many" xml:space="preserve">
     <value>许多个</value>
   </data>
@@ -281,45 +191,6 @@
   </data>
   <data name="ImportResultsSimultaneousFileOptions_several" xml:space="preserve">
     <value>数个</value>
-  </data>
-  <data name="InputFile_dda_raw" xml:space="preserve">
-    <value>DDA 原始（搜索和构建库）</value>
-  </data>
-  <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA 原始（去卷积、搜索和构建库）</value>
-  </data>
-  <data name="InputFile_search_result" xml:space="preserve">
-    <value>搜索结果（直接构建库）</value>
-  </data>
-  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
-    <value>Orbitrap LTQ</value>
-  </data>
-  <data name="InstrumentPreset_QExactive" xml:space="preserve">
-    <value>Q Exactive</value>
-  </data>
-  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
-    <value>TripleTOF</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
-    <value>固定宽度</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
-    <value>线性范围</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
-    <value>分辨力</value>
-  </data>
-  <data name="IrtRegressionType_linear" xml:space="preserve">
-    <value>线性</value>
-  </data>
-  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
-    <value>对数</value>
-  </data>
-  <data name="IrtRegressionType_lowess" xml:space="preserve">
-    <value>局部加权回归</value>
   </data>
   <data name="IsolationWidthType_fixed_width" xml:space="preserve">
     <value>已修复</value>
@@ -332,27 +203,6 @@
   </data>
   <data name="IsolationWidthType_results_with_margin" xml:space="preserve">
     <value>带差异的结果</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
-    <value>最后一个离子</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
-    <value>最后一个离子 - 1</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
-    <value>最后一个离子 - 2</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
-    <value>最后一个离子 - 3</value>
-  </data>
-  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
-    <value>对数空间中的线性</value>
-  </data>
-  <data name="ListSortDirection_Ascending" xml:space="preserve">
-    <value>升序</value>
-  </data>
-  <data name="ListSortDirection_Descending" xml:space="preserve">
-    <value>降序</value>
   </data>
   <data name="LodCalculation_blank_plus_2_sd" xml:space="preserve">
     <value>空白加 2 * SD</value>
@@ -381,38 +231,20 @@
   <data name="MassType_Monoisotopic" xml:space="preserve">
     <value>单一同位素</value>
   </data>
-  <data name="ModTerminus_C" xml:space="preserve">
-    <value>C</value>
+  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
+    <value>均衡中位数</value>
   </data>
-  <data name="ModTerminus_N" xml:space="preserve">
-    <value>N</value>
+  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
+    <value>相对于总体标准品比率</value>
   </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
-    <value>（质荷比 &gt; 母离子） - 1</value>
+  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
+    <value>无</value>
   </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
-    <value>（质荷比 &gt; 母离子） - 2</value>
+  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
+    <value>分位数</value>
   </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
-    <value>（质荷比 &gt; 母离子） + 1</value>
-  </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
-    <value>（质荷比 &gt; 母离子） + 2</value>
-  </data>
-  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
-    <value>质荷比 &gt; 母离子</value>
-  </data>
-  <data name="NumericAggregate_Cv" xml:space="preserve">
-    <value>变异系数</value>
-  </data>
-  <data name="NumericAggregate_Mean" xml:space="preserve">
-    <value>平均</value>
-  </data>
-  <data name="NumericAggregate_StdDev" xml:space="preserve">
-    <value>标准偏差</value>
-  </data>
-  <data name="NumericAggregate_Sum" xml:space="preserve">
-    <value>总和</value>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>总离子电流</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>无</value>
@@ -422,18 +254,6 @@
   </data>
   <data name="OptimizedMethodType_Transition" xml:space="preserve">
     <value>离子对</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
-    <value>离子 1</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
-    <value>离子 2</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
-    <value>离子 3</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
-    <value>离子 4</value>
   </data>
   <data name="PeptidePick_both" xml:space="preserve">
     <value>库和过滤器</value>
@@ -446,18 +266,6 @@
   </data>
   <data name="PeptidePick_library" xml:space="preserve">
     <value>库</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
-    <value>基因</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
-    <value>蛋白质</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
-    <value>物种</value>
   </data>
   <data name="PointSize_large" xml:space="preserve">
     <value>大</value>
@@ -498,23 +306,23 @@
   <data name="PointSymbol_XCross" xml:space="preserve">
     <value>X 十字</value>
   </data>
-  <data name="Protocol_dia_umpire" xml:space="preserve">
-    <value>DIA-Umpire</value>
+  <data name="BilinearFit_bilinear" xml:space="preserve">
+    <value>双线性</value>
   </data>
-  <data name="Protocol_msconvert" xml:space="preserve">
-    <value>MSConvert</value>
+  <data name="SimpleRegressionFit_linear" xml:space="preserve">
+    <value>线性</value>
   </data>
-  <data name="Protocol_none" xml:space="preserve">
+  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
+    <value>对数空间中的线性</value>
+  </data>
+  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
+    <value>过零点的线性</value>
+  </data>
+  <data name="SimpleRegressionFit_none" xml:space="preserve">
     <value>无</value>
   </data>
   <data name="QuadraticFit_quadratic" xml:space="preserve">
     <value>二次的</value>
-  </data>
-  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
-    <value>相对于重的比率</value>
-  </data>
-  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
-    <value>相对于轻的比率</value>
   </data>
   <data name="RegressionWeighting_1_over_x" xml:space="preserve">
     <value>1 / x</value>
@@ -533,69 +341,6 @@
   </data>
   <data name="RetentionTimeFilterType_scheduling_windows" xml:space="preserve">
     <value>仅使用预测的 RT 时间范围内的扫描</value>
-  </data>
-  <data name="SampleType_blank" xml:space="preserve">
-    <value>空白</value>
-  </data>
-  <data name="SampleType_double_blank" xml:space="preserve">
-    <value>双空白</value>
-  </data>
-  <data name="SampleType_qc" xml:space="preserve">
-    <value>质量控制</value>
-  </data>
-  <data name="SampleType_solvent" xml:space="preserve">
-    <value>溶剂</value>
-  </data>
-  <data name="SampleType_standard" xml:space="preserve">
-    <value>标准</value>
-  </data>
-  <data name="SampleType_unknown" xml:space="preserve">
-    <value>未知</value>
-  </data>
-  <data name="SearchEngine_MSAmanda" xml:space="preserve">
-    <value>MS Amanda</value>
-  </data>
-  <data name="SearchEngine_MSFragger" xml:space="preserve">
-    <value>MSFragger</value>
-  </data>
-  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
-    <value>MS-GF+</value>
-  </data>
-  <data name="SelectOne_Max" xml:space="preserve">
-    <value>最大</value>
-  </data>
-  <data name="SelectOne_Min" xml:space="preserve">
-    <value>最小</value>
-  </data>
-  <data name="SequenceTerminus_C" xml:space="preserve">
-    <value>C</value>
-  </data>
-  <data name="SequenceTerminus_N" xml:space="preserve">
-    <value>N</value>
-  </data>
-  <data name="SimpleRegressionFit_linear" xml:space="preserve">
-    <value>线性</value>
-  </data>
-  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
-    <value>过零点的线性</value>
-  </data>
-  <data name="SimpleRegressionFit_none" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
-    <value>均衡中位数</value>
-  </data>
-  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
-    <value>相对于总体标准品比率</value>
-  </data>
-  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
-    <value>分位数</value>
-  </data>
-  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
-    <value>总离子电流</value>
   </data>
   <data name="String1FullScanMassAnalyzerType_centroided" xml:space="preserve">
     <value>棒状图形式</value>
@@ -618,12 +363,6 @@
   <data name="TransitionLibraryPick_filter" xml:space="preserve">
     <value>从已过滤的子离子</value>
   </data>
-  <data name="TransitionLibraryPick_none" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="ViewGroup_" xml:space="preserve">
-    <value>内置视图</value>
-  </data>
   <data name="Workflow_dda" xml:space="preserve">
     <value>含有 MS1 筛选器的 DDA</value>
   </data>
@@ -632,5 +371,266 @@
   </data>
   <data name="Workflow_prm" xml:space="preserve">
     <value>PRM（并行反应离子监测）</value>
+  </data>
+  <data name="TransitionLibraryPick_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
+    <value>补偿电压 (V)</value>
+  </data>
+  <data name="ModTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="ModTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="SequenceTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="SequenceTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="SampleType_blank" xml:space="preserve">
+    <value>空白</value>
+  </data>
+  <data name="SampleType_double_blank" xml:space="preserve">
+    <value>双空白</value>
+  </data>
+  <data name="SampleType_qc" xml:space="preserve">
+    <value>质量控制</value>
+  </data>
+  <data name="SampleType_solvent" xml:space="preserve">
+    <value>溶剂</value>
+  </data>
+  <data name="SampleType_standard" xml:space="preserve">
+    <value>标准</value>
+  </data>
+  <data name="SampleType_unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="GraphFontSize_10" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="GraphFontSize_12" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="GraphFontSize_14" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="GraphFontSize_16" xml:space="preserve">
+    <value>超大</value>
+  </data>
+  <data name="GraphFontSize_8" xml:space="preserve">
+    <value>超小</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
+    <value>相对于重的比率</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
+    <value>相对于轻的比率</value>
+  </data>
+  <data name="ListSortDirection_Ascending" xml:space="preserve">
+    <value>升序</value>
+  </data>
+  <data name="ListSortDirection_Descending" xml:space="preserve">
+    <value>降序</value>
+  </data>
+  <data name="CountImpl_Count" xml:space="preserve">
+    <value>计数</value>
+  </data>
+  <data name="NumericAggregate_Cv" xml:space="preserve">
+    <value>变异系数</value>
+  </data>
+  <data name="NumericAggregate_Mean" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="NumericAggregate_StdDev" xml:space="preserve">
+    <value>标准偏差</value>
+  </data>
+  <data name="NumericAggregate_Sum" xml:space="preserve">
+    <value>总和</value>
+  </data>
+  <data name="SelectOne_Max" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="SelectOne_Min" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="ViewGroup_" xml:space="preserve">
+    <value>内置视图</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
+    <value>离子 1</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
+    <value>离子 2</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
+    <value>离子 3</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
+    <value>离子 4</value>
+  </data>
+  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
+    <value>1 个离子</value>
+  </data>
+  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
+    <value>2 个离子</value>
+  </data>
+  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
+    <value>3 个离子</value>
+  </data>
+  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
+    <value>4 个离子</value>
+  </data>
+  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
+    <value>5 个离子</value>
+  </data>
+  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
+    <value>6 个离子</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
+    <value>最后一个离子</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
+    <value>最后一个离子 - 1</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
+    <value>最后一个离子 - 2</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
+    <value>最后一个离子 - 3</value>
+  </data>
+  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
+    <value>质荷比 &gt; 母离子</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） - 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） - 2</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） + 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
+    <value>（质荷比 &gt; 母离子） + 2</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
+    <value>蛋白质</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
+    <value>基因</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
+    <value>物种</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>全球标准</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>中位数</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>比率</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
+  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
+    <value>母离子</value>
+  </data>
+  <data name="AreaCVMsLevel_products" xml:space="preserve">
+    <value>子离子</value>
+  </data>
+  <data name="AreaCVTransitions_all" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="AreaCVTransitions_best" xml:space="preserve">
+    <value>最佳</value>
+  </data>
+  <data name="AreaCVTransitions_count" xml:space="preserve">
+    <value>计数</value>
+  </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>线性</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>局部加权回归</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>对数</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
+    <value>线性范围</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
+    <value>分辨力</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
+    <value>固定宽度</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>Chebyshev</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>城市街区</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>Pearson</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>Euclidean</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA 原始（搜索和构建库）</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA 原始（去卷积、搜索和构建库）</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>搜索结果（直接构建库）</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
+    <value>SureQuant</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
+    <value>PRM</value>
+  </data>
+  <data name="SearchEngine_MSAmanda" xml:space="preserve">
+    <value>MS Amanda</value>
+  </data>
+  <data name="SearchEngine_MSFragger" xml:space="preserve">
+    <value>MSFragger</value>
+  </data>
+  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
+    <value>MS-GF+</value>
   </data>
 </root>

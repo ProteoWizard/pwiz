@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,444 +105,21 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="elapsedTimer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>573, 17</value>
-  </metadata>
   <metadata name="imageListLock.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="imageListPushPin.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>322, 17</value>
-  </metadata>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>468, 17</value>
-  </metadata>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>120, 17</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>734, 386</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>結果の読み込み中…</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>AllChromatogramsGraph</value>
-  </data>
-  <data name="&gt;&gt;btnAutoCloseWindow.Name" xml:space="preserve">
-    <value>btnAutoCloseWindow</value>
-  </data>
-  <data name="&gt;&gt;btnAutoScaleGraphs.Name" xml:space="preserve">
-    <value>btnAutoScaleGraphs</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
-    <value>btnCopyText</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
-    <value>btnCopyText</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;btnHide.Name" xml:space="preserve">
-    <value>btnHide</value>
-  </data>
-  <data name="&gt;&gt;btnHide.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
-    <value>cbMoreInfo</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
-    <value>cbMoreInfo</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;elapsedTimer.Name" xml:space="preserve">
-    <value>elapsedTimer</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
-    <value>flowFileStatus</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
-    <value>flowFileStatus</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
-    <value>panelFileList</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
-    <value>panelFileList</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;flowFileStatus.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;graphChromatograms.Name" xml:space="preserve">
-    <value>graphChromatograms</value>
-  </data>
-  <data name="&gt;&gt;graphChromatograms.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;graphChromatograms.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;imageListLock.Name" xml:space="preserve">
-    <value>imageListLock</value>
-  </data>
-  <data name="&gt;&gt;imageListPushPin.Name" xml:space="preserve">
-    <value>imageListPushPin</value>
-  </data>
-  <data name="&gt;&gt;labelFileName.Name" xml:space="preserve">
-    <value>labelFileName</value>
-  </data>
-  <data name="&gt;&gt;labelFileName.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelFileName.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
-    <value>lblDuration</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
-    <value>lblDuration</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblDuration.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>panelStatus</value>
-  </data>
-  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
-    <value>panelStatus</value>
-  </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panelError.Name" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;panelError.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panelFileList.Name" xml:space="preserve">
-    <value>panelFileList</value>
-  </data>
-  <data name="&gt;&gt;panelFileList.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelFileList.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;panelStatus.Name" xml:space="preserve">
-    <value>panelStatus</value>
-  </data>
-  <data name="&gt;&gt;panelStatus.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelStatus.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
-    <value>progressBarTotal</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
-    <value>progressBarTotal</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
-    <value>textBoxError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
-    <value>textBoxError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
-    <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
-  <data name="btnAutoCloseWindow.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="btnAutoCloseWindow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnAutoCloseWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
-  </data>
-  <data name="btnAutoCloseWindow.ToolTipText" xml:space="preserve">
-    <value>自動的に隠します</value>
-  </data>
-  <data name="btnAutoScaleGraphs.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
-        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
-        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
-        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
-        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
-        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
-        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
-        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
-        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
-        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
-</value>
-  </data>
-  <data name="btnAutoScaleGraphs.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnAutoScaleGraphs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>22, 20</value>
-  </data>
-  <data name="btnAutoScaleGraphs.ToolTipText" xml:space="preserve">
-    <value>グラフのスケーリングを固定します</value>
-  </data>
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>510, 0</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 21</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>インポートをキャンセル(&amp;M)</value>
-  </data>
-  <data name="btnCopyText.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCopyText.Location" type="System.Drawing.Point, System.Drawing">
-    <value>94, 308</value>
-  </data>
-  <data name="btnCopyText.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCopyText.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
-  </data>
-  <data name="btnCopyText.Text" xml:space="preserve">
-    <value>テキストをコピー(&amp;T)</value>
-  </data>
-  <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Right</value>
-  </data>
-  <data name="btnHide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnHide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>608, 0</value>
-  </data>
-  <data name="btnHide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="btnHide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 21</value>
-  </data>
-  <data name="btnHide.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="btnHide.Text" xml:space="preserve">
-    <value>隠す(&amp;H)</value>
-  </data>
-  <data name="btnHide.ToolTip" xml:space="preserve">
-    <value>隠します</value>
-  </data>
-  <data name="cbMoreInfo.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbMoreInfo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 312</value>
-  </data>
-  <data name="cbMoreInfo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 17</value>
-  </data>
-  <data name="cbMoreInfo.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
-  </data>
-  <data name="cbMoreInfo.Text" xml:space="preserve">
-    <value>詳細(&amp;M)</value>
-  </data>
-  <data name="flowFileStatus.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left</value>
-  </data>
-  <data name="flowFileStatus.AutoScroll" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="flowFileStatus.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="flowFileStatus.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="flowFileStatus.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
-    <value>TopDown</value>
-  </data>
-  <data name="flowFileStatus.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 9</value>
-  </data>
-  <data name="flowFileStatus.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="flowFileStatus.MaximumSize" type="System.Drawing.Size, System.Drawing">
-    <value>210, 328</value>
-  </data>
-  <data name="flowFileStatus.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>210, 20</value>
-  </data>
-  <data name="flowFileStatus.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 20</value>
-  </data>
-  <data name="flowFileStatus.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="flowFileStatus.WrapContents" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="graphChromatograms.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="graphChromatograms.Location" type="System.Drawing.Point, System.Drawing">
-    <value>220, 0</value>
-  </data>
-  <data name="graphChromatograms.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="graphChromatograms.Size" type="System.Drawing.Size, System.Drawing">
-    <value>491, 337</value>
-  </data>
-  <data name="graphChromatograms.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
   <data name="imageListLock.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
@@ -706,6 +283,51 @@
         A///AP8AAwAL
 </value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>120, 17</value>
+  </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Right</value>
+  </data>
+  <data name="btnHide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnHide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>608, 0</value>
+  </data>
+  <data name="btnHide.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnHide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 21</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnHide.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnHide.Text" xml:space="preserve">
+    <value>隠す(&amp;H)</value>
+  </data>
+  <data name="btnHide.ToolTip" xml:space="preserve">
+    <value>隠します</value>
+  </data>
+  <data name="&gt;&gt;btnHide.Name" xml:space="preserve">
+    <value>btnHide</value>
+  </data>
+  <data name="&gt;&gt;btnHide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnHide.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <metadata name="imageListPushPin.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>322, 17</value>
+  </metadata>
   <data name="imageListPushPin.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
@@ -866,6 +488,39 @@
         AbQB9MAAAUIBTQE+BwABPgMAASgDAAGAAwABIAMAAQEBAAEBBgABAhYAA///AP8AAwAL
 </value>
   </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>510, 0</value>
+  </data>
+  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 21</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>インポートをキャンセル(&amp;M)</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="labelFileName.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -890,6 +545,411 @@
   <data name="labelFileName.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleCenter</value>
   </data>
+  <data name="&gt;&gt;labelFileName.Name" xml:space="preserve">
+    <value>labelFileName</value>
+  </data>
+  <data name="&gt;&gt;labelFileName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFileName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelFileName.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
+    <value>textBoxError</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
+    <value>btnCopyText</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
+    <value>cbMoreInfo</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="panelError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
+    <value>220, 0</value>
+  </data>
+  <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
+    <value>491, 337</value>
+  </data>
+  <data name="panelError.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="&gt;&gt;panelError.Name" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;panelError.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelError.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelError.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textBoxError.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 9</value>
+  </data>
+  <data name="textBoxError.ScrollBars" type="System.Windows.Forms.RichTextBoxScrollBars, System.Windows.Forms">
+    <value>ForcedVertical</value>
+  </data>
+  <data name="textBoxError.Size" type="System.Drawing.Size, System.Drawing">
+    <value>472, 293</value>
+  </data>
+  <data name="textBoxError.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="textBoxError.Text" xml:space="preserve">
+    <value />
+  </data>
+  <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
+    <value>textBoxError</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;textBoxError.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnCopyText.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCopyText.Location" type="System.Drawing.Point, System.Drawing">
+    <value>94, 308</value>
+  </data>
+  <data name="btnCopyText.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCopyText.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="btnCopyText.Text" xml:space="preserve">
+    <value>テキストをコピー(&amp;T)</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
+    <value>btnCopyText</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;btnCopyText.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbMoreInfo.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbMoreInfo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 312</value>
+  </data>
+  <data name="cbMoreInfo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 17</value>
+  </data>
+  <data name="cbMoreInfo.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="cbMoreInfo.Text" xml:space="preserve">
+    <value>詳細(&amp;M)</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
+    <value>cbMoreInfo</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
+    <value>panelError</value>
+  </data>
+  <data name="&gt;&gt;cbMoreInfo.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>468, 17</value>
+  </metadata>
+  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Right</value>
+  </data>
+  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>711, 0</value>
+  </data>
+  <data name="toolStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 337</value>
+  </data>
+  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="toolStrip1.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;toolStrip1.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="btnAutoCloseWindow.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
+        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
+        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
+        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
+        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
+        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
+        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
+        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
+        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="btnAutoCloseWindow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnAutoCloseWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>22, 20</value>
+  </data>
+  <data name="btnAutoCloseWindow.ToolTipText" xml:space="preserve">
+    <value>自動的に隠します</value>
+  </data>
+  <data name="btnAutoScaleGraphs.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
+        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
+        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
+        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
+        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
+        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
+        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
+        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
+        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="btnAutoScaleGraphs.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnAutoScaleGraphs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>22, 20</value>
+  </data>
+  <data name="btnAutoScaleGraphs.ToolTipText" xml:space="preserve">
+    <value>グラフのスケーリングを固定します</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
+    <value>flowFileStatus</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
+    <value>panelFileList</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panelFileList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="panelFileList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panelFileList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>220, 337</value>
+  </data>
+  <data name="panelFileList.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="&gt;&gt;panelFileList.Name" xml:space="preserve">
+    <value>panelFileList</value>
+  </data>
+  <data name="&gt;&gt;panelFileList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelFileList.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelFileList.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="flowFileStatus.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left</value>
+  </data>
+  <data name="flowFileStatus.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="flowFileStatus.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="flowFileStatus.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="flowFileStatus.FlowDirection" type="System.Windows.Forms.FlowDirection, System.Windows.Forms">
+    <value>TopDown</value>
+  </data>
+  <data name="flowFileStatus.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 9</value>
+  </data>
+  <data name="flowFileStatus.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 0, 0</value>
+  </data>
+  <data name="flowFileStatus.MaximumSize" type="System.Drawing.Size, System.Drawing">
+    <value>210, 328</value>
+  </data>
+  <data name="flowFileStatus.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>210, 20</value>
+  </data>
+  <data name="flowFileStatus.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 20</value>
+  </data>
+  <data name="flowFileStatus.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="flowFileStatus.WrapContents" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
+    <value>flowFileStatus</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
+    <value>panelFileList</value>
+  </data>
+  <data name="&gt;&gt;flowFileStatus.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+    <value>panelStatus</value>
+  </data>
+  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="panelStatus.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Bottom</value>
+  </data>
+  <data name="panelStatus.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 337</value>
+  </data>
+  <data name="panelStatus.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 49</value>
+  </data>
+  <data name="panelStatus.TabIndex" type="System.Int32, mscorlib">
+    <value>20</value>
+  </data>
+  <data name="&gt;&gt;panelStatus.Name" xml:space="preserve">
+    <value>panelStatus</value>
+  </data>
+  <data name="&gt;&gt;panelStatus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelStatus.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelStatus.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
+    <value>lblDuration</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;lblDuration.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
+    <value>progressBarTotal</value>
+  </data>
+  <data name="&gt;&gt;progressBarTotal.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;progressBarTotal.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 17</value>
+  </data>
+  <data name="panel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>702, 21</value>
+  </data>
+  <data name="panel2.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panel2.Name" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
+    <value>panelStatus</value>
+  </data>
+  <data name="&gt;&gt;panel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="lblDuration.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -908,56 +968,17 @@
   <data name="lblDuration.Text" xml:space="preserve">
     <value>00：00：00</value>
   </data>
-  <data name="panel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
+  <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
+    <value>lblDuration</value>
   </data>
-  <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 17</value>
+  <data name="&gt;&gt;lblDuration.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="panel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+  <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
+    <value>panel2</value>
   </data>
-  <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>702, 21</value>
-  </data>
-  <data name="panel2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="panelError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="panelError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>220, 0</value>
-  </data>
-  <data name="panelError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>491, 337</value>
-  </data>
-  <data name="panelError.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
-  </data>
-  <data name="panelFileList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="panelFileList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="panelFileList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>220, 337</value>
-  </data>
-  <data name="panelFileList.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="panelStatus.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
-  </data>
-  <data name="panelStatus.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 337</value>
-  </data>
-  <data name="panelStatus.Size" type="System.Drawing.Size, System.Drawing">
-    <value>734, 49</value>
-  </data>
-  <data name="panelStatus.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+  <data name="&gt;&gt;lblDuration.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="progressBarTotal.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -977,37 +998,103 @@
   <data name="progressBarTotal.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="textBoxError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>7, 9</value>
+  <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
+    <value>progressBarTotal</value>
   </data>
-  <data name="textBoxError.ScrollBars" type="System.Windows.Forms.RichTextBoxScrollBars, System.Windows.Forms">
-    <value>ForcedVertical</value>
+  <data name="&gt;&gt;progressBarTotal.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="textBoxError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>472, 293</value>
+  <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
+    <value>panel2</value>
   </data>
-  <data name="textBoxError.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+  <data name="&gt;&gt;progressBarTotal.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
-  <data name="textBoxError.Text" xml:space="preserve">
-    <value />
+  <data name="graphChromatograms.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
   </data>
-  <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Right</value>
+  <data name="graphChromatograms.Location" type="System.Drawing.Point, System.Drawing">
+    <value>220, 0</value>
   </data>
-  <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>711, 0</value>
-  </data>
-  <data name="toolStrip1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="graphChromatograms.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
-  <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 337</value>
+  <data name="graphChromatograms.Size" type="System.Drawing.Size, System.Drawing">
+    <value>491, 337</value>
   </data>
-  <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
+  <data name="graphChromatograms.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="toolStrip1.Text" xml:space="preserve">
-    <value>toolStrip1</value>
+  <data name="&gt;&gt;graphChromatograms.Name" xml:space="preserve">
+    <value>graphChromatograms</value>
+  </data>
+  <data name="&gt;&gt;graphChromatograms.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph2, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;graphChromatograms.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;graphChromatograms.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="elapsedTimer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>573, 17</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>734, 386</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>結果の読み込み中…</value>
+  </data>
+  <data name="&gt;&gt;imageListLock.Name" xml:space="preserve">
+    <value>imageListLock</value>
+  </data>
+  <data name="&gt;&gt;imageListLock.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;imageListPushPin.Name" xml:space="preserve">
+    <value>imageListPushPin</value>
+  </data>
+  <data name="&gt;&gt;imageListPushPin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAutoCloseWindow.Name" xml:space="preserve">
+    <value>btnAutoCloseWindow</value>
+  </data>
+  <data name="&gt;&gt;btnAutoCloseWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAutoScaleGraphs.Name" xml:space="preserve">
+    <value>btnAutoScaleGraphs</value>
+  </data>
+  <data name="&gt;&gt;btnAutoScaleGraphs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;elapsedTimer.Name" xml:space="preserve">
+    <value>elapsedTimer</value>
+  </data>
+  <data name="&gt;&gt;elapsedTimer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Timer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>AllChromatogramsGraph</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

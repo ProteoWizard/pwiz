@@ -1,6 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
+	<!-- 
 		Microsoft ResX Schema
 
 		Version 1.3
@@ -58,7 +58,8 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+	
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
 		<xsd:element name="root" msdata:IsDataSet="true">
 			<xsd:complexType>
 				<xsd:choice maxOccurs="unbounded">
@@ -85,59 +86,20 @@
 			</xsd:complexType>
 		</xsd:element>
 	</xsd:schema>
-  <resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-  <resheader name="resmimetype">
+	<resheader name="resmimetype">
 		<value>text/microsoft-resx</value>
 	</resheader>
-  <resheader name="version">
+	<resheader name="version">
 		<value>1.3</value>
 	</resheader>
-  <resheader name="writer">
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-  <data name="ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interference_detection" xml:space="preserve">
-    <value>If checked then QuaSAR will perform AuDIT for interference detection</value>
-  </data>
-  <data name="ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of_variation_below_which_transition_is_quantification_worthy" xml:space="preserve">
-    <value>For AuDIT the threshold for coefficient of variation below which transition is quantification-worthy</value>
-  </data>
-  <data name="ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curves" xml:space="preserve">
-    <value>If checked then QuaSAR generates calibration curves</value>
-  </data>
-  <data name="ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table" xml:space="preserve">
-    <value>If checked then QuaSAR generates a CV (coefficient of variation) table</value>
-  </data>
-  <data name="ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__between_0_and_1__typically_0_95_or_0_99_" xml:space="preserve">
-    <value>Confidence level for endogenous determination (between 0 and 1, typically 0.95 or 0.99)</value>
-  </data>
-  <data name="ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_comparing_multiple_methods_of_calculating_LOD_LOQ" xml:space="preserve">
-    <value>If checked then QuaSAR generates a table comparing multiple methods of calculating LOD/LOQ</value>
-  </data>
-  <data name="ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_table" xml:space="preserve">
-    <value>If checked then QuaSAR generates a LOD/LOQ table</value>
-  </data>
-  <data name="ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul" xml:space="preserve">
-    <value>The maximum value for linear scale in fmols/ul</value>
-  </data>
-  <data name="ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul" xml:space="preserve">
-    <value>The maximum value for log scale in fmols/ul</value>
-  </data>
-  <data name="ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves" xml:space="preserve">
-    <value>Max number of transitions to be plotted on the calibration curves</value>
-  </data>
-  <data name="ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
-    <value>If checked then use peak area ratio (PAR) for analysis (instead of concentration) with PAR on the y-axis and analyte concentration on the x-axis</value>
-  </data>
-  <data name="ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_plots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
-    <value>If checked then QuaSAR generates peak area plots with Peak Area units on the y-axis and analyte concentration on the x-axis</value>
-  </data>
-  <data name="ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_the_peptide_has_endogenous_levels_and_will_provide_an_estimate_" xml:space="preserve">
-    <value>If checked then QuaSAR will determine if the peptide has endogenous levels and will provide an estimate.</value>
-  </data>
-  <data name="ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot" xml:space="preserve">
-    <value>The title to be displayed on each calibration plot</value>
+  <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_areas_for_multiple_label_types_" xml:space="preserve">
+    <value>QuaSAR requires peak areas for multiple label types.</value>
   </data>
   <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___Input_report_format_may_be_incorrect_" xml:space="preserve">
     <value>QuaSAR requires peak area values.  Input report format may be incorrect.</value>
@@ -145,17 +107,14 @@
   <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_area_values___The_document_must_have_imported_data_" xml:space="preserve">
     <value>QuaSAR requires peak area values.  The document must have imported data.</value>
   </data>
-  <data name="QuaSARCollector_CollectArgs_QuaSAR_requires_peak_areas_for_multiple_label_types_" xml:space="preserve">
-    <value>QuaSAR requires peak areas for multiple label types.</value>
-  </data>
   <data name="QuaSARUI_VerifyArguments_Please_enter_a_title" xml:space="preserve">
     <value>Please enter a title</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_AuDIT_CV_threshold" xml:space="preserve">
-    <value>Please enter a value for the AuDIT CV threshold</value>
+  <data name="QuaSARUI_VerifyArguments_The_analyte_and_standard_cannot_be_the_same" xml:space="preserve">
+    <value>The analyte and standard cannot be the same</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_endogenous_confidence_level" xml:space="preserve">
-    <value>Please enter a value for the endogenous confidence level</value>
+  <data name="QuaSARUI_VerifyArguments_Please_enter_the_units_label" xml:space="preserve">
+    <value>Please enter the units label</value>
   </data>
   <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_maximum_linear_scale" xml:space="preserve">
     <value>Please enter a value for the maximum linear scale</value>
@@ -163,13 +122,55 @@
   <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_maximum_log_scale" xml:space="preserve">
     <value>Please enter a value for the maximum log scale</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_Please_enter_the_units_label" xml:space="preserve">
-    <value>Please enter the units label</value>
+  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_AuDIT_CV_threshold" xml:space="preserve">
+    <value>Please enter a value for the AuDIT CV threshold</value>
   </data>
-  <data name="QuaSARUI_VerifyArguments_The_analyte_and_standard_cannot_be_the_same" xml:space="preserve">
-    <value>The analyte and standard cannot be the same</value>
+  <data name="QuaSARUI_VerifyArguments_Please_enter_a_value_for_the_endogenous_confidence_level" xml:space="preserve">
+    <value>Please enter a value for the endogenous confidence level</value>
   </data>
   <data name="QuaSARUI_VerifyArguments_The_endogenous_confidence_interval_must_be_between_0_and_1" xml:space="preserve">
     <value>The endogenous confidence interval must be between 0 and 1</value>
+  </data>
+  <data name="ArgumentDocumentation_TITLE_The_title_to_be_displayed_on_each_calibration_plot" xml:space="preserve">
+    <value>The title to be displayed on each calibration plot</value>
+  </data>
+  <data name="ArgumentDocumentation_CVTABLE_If_checked_then_QuaSAR_generates_a_CV__coefficient_of_variation__table" xml:space="preserve">
+    <value>If checked then QuaSAR generates a CV (coefficient of variation) table</value>
+  </data>
+  <data name="ArgumentDocumentation_CALCURVES_If_checked_then_QuaSAR_generates_calibration_curves" xml:space="preserve">
+    <value>If checked then QuaSAR generates calibration curves</value>
+  </data>
+  <data name="ArgumentDocumentation_LODLOQTABLE_If_checked_then_QuaSAR_generates_a_LOD_LOQ_table" xml:space="preserve">
+    <value>If checked then QuaSAR generates a LOD/LOQ table</value>
+  </data>
+  <data name="ArgumentDocumentation_PEAKAREAPLOTS_If_checked_then_QuaSAR_generates_peak_area_plots_with_Peak_Area_units_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
+    <value>If checked then QuaSAR generates peak area plots with Peak Area units on the y-axis and analyte concentration on the x-axis</value>
+  </data>
+  <data name="ArgumentDocumentation_LODLOQCOMP_If_checked_then_QuaSAR_generates_a_table_comparing_multiple_methods_of_calculating_LOD_LOQ" xml:space="preserve">
+    <value>If checked then QuaSAR generates a table comparing multiple methods of calculating LOD/LOQ</value>
+  </data>
+  <data name="ArgumentDocumentation_NUMBER_TRANSITIONS_Max_number_of_transitions_to_be_plotted_on_the_calibration_curves" xml:space="preserve">
+    <value>Max number of transitions to be plotted on the calibration curves</value>
+  </data>
+  <data name="ArgumentDocumentation_PAR_If_checked_then_use_peak_area_ratio__PAR__for_analysis__instead_of_concentration__with_PAR_on_the_y_axis_and_analyte_concentration_on_the_x_axis" xml:space="preserve">
+    <value>If checked then use peak area ratio (PAR) for analysis (instead of concentration) with PAR on the y-axis and analyte concentration on the x-axis</value>
+  </data>
+  <data name="ArgumentDocumentation_MAXLINEAR_The_maximum_value_for_linear_scale_in_fmols_ul" xml:space="preserve">
+    <value>The maximum value for linear scale in fmols/ul</value>
+  </data>
+  <data name="ArgumentDocumentation_MAXLOG_The_maximum_value_for_log_scale_in_fmols_ul" xml:space="preserve">
+    <value>The maximum value for log scale in fmols/ul</value>
+  </data>
+  <data name="ArgumentDocumentation_AUDIT_If_checked_then_QuaSAR_will_perform_AuDIT_for_interference_detection" xml:space="preserve">
+    <value>If checked then QuaSAR will perform AuDIT for interference detection</value>
+  </data>
+  <data name="ArgumentDocumentation_AUDITCVTHRESHOLD_For_AuDIT_the_threshold_for_coefficient_of_variation_below_which_transition_is_quantification_worthy" xml:space="preserve">
+    <value>For AuDIT the threshold for coefficient of variation below which transition is quantification-worthy</value>
+  </data>
+  <data name="ArgumentDocumentation_PERFORMENDOCALC_If_checked_then_QuaSAR_will_determine_if_the_peptide_has_endogenous_levels_and_will_provide_an_estimate_" xml:space="preserve">
+    <value>If checked then QuaSAR will determine if the peptide has endogenous levels and will provide an estimate.</value>
+  </data>
+  <data name="ArgumentDocumentation_ENDOCONF_Confidence_level_for_endogenous_determination__between_0_and_1__typically_0_95_or_0_99_" xml:space="preserve">
+    <value>Confidence level for endogenous determination (between 0 and 1, typically 0.95 or 0.99)</value>
   </data>
 </root>

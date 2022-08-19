@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,278 +105,47 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>716, 364</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
+    <value>548, 329</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>枢轴编辑器</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>PivotEditor</value>
-  </data>
-  <data name="&gt;&gt;availableColumnList.Name" xml:space="preserve">
-    <value>availableColumnList</value>
-  </data>
-  <data name="&gt;&gt;availableColumnList.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;availableColumnList.ZOrder" xml:space="preserve">
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;btnAddColumnHeader.Name" xml:space="preserve">
-    <value>btnAddColumnHeader</value>
-  </data>
-  <data name="&gt;&gt;btnAddColumnHeader.Parent" xml:space="preserve">
-    <value>columnHeaderButtonPanel</value>
-  </data>
-  <data name="&gt;&gt;btnAddColumnHeader.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnAddRowHeader.Name" xml:space="preserve">
-    <value>btnAddRowHeader</value>
-  </data>
-  <data name="&gt;&gt;btnAddRowHeader.Parent" xml:space="preserve">
-    <value>rowHeaderButtonPanel</value>
-  </data>
-  <data name="&gt;&gt;btnAddRowHeader.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.Name" xml:space="preserve">
-    <value>btnAddValue</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.Parent" xml:space="preserve">
-    <value>valueButtons</value>
-  </data>
-  <data name="&gt;&gt;btnAddValue.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="btnOK.Text" xml:space="preserve">
+    <value>确定</value>
   </data>
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
+  </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;columnHeaderButtonPanel.Name" xml:space="preserve">
-    <value>columnHeaderButtonPanel</value>
-  </data>
-  <data name="&gt;&gt;columnHeaderButtonPanel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;columnHeaderButtonPanel.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;columnHeadersList.Name" xml:space="preserve">
-    <value>columnHeadersList</value>
-  </data>
-  <data name="&gt;&gt;columnHeadersList.Parent" xml:space="preserve">
-    <value>panel3</value>
-  </data>
-  <data name="&gt;&gt;columnHeadersList.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.Name" xml:space="preserve">
-    <value>comboAggregateOp</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.Parent" xml:space="preserve">
-    <value>valueButtons</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOp.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblColumnHeaders.Name" xml:space="preserve">
-    <value>lblColumnHeaders</value>
-  </data>
-  <data name="&gt;&gt;lblColumnHeaders.Parent" xml:space="preserve">
-    <value>panel3</value>
-  </data>
-  <data name="&gt;&gt;lblColumnHeaders.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblRowHeaders.Name" xml:space="preserve">
-    <value>lblRowHeaders</value>
-  </data>
-  <data name="&gt;&gt;lblRowHeaders.Parent" xml:space="preserve">
-    <value>rowHeadersPanel</value>
-  </data>
-  <data name="&gt;&gt;lblRowHeaders.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lblValues.Name" xml:space="preserve">
-    <value>lblValues</value>
-  </data>
-  <data name="&gt;&gt;lblValues.Parent" xml:space="preserve">
-    <value>panelValues</value>
-  </data>
-  <data name="&gt;&gt;lblValues.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;panel3.Name" xml:space="preserve">
-    <value>panel3</value>
-  </data>
-  <data name="&gt;&gt;panel3.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;panel3.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;panelValues.Name" xml:space="preserve">
-    <value>panelValues</value>
-  </data>
-  <data name="&gt;&gt;panelValues.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;panelValues.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;rowHeaderButtonPanel.Name" xml:space="preserve">
-    <value>rowHeaderButtonPanel</value>
-  </data>
-  <data name="&gt;&gt;rowHeaderButtonPanel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;rowHeaderButtonPanel.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;rowHeadersList.Name" xml:space="preserve">
-    <value>rowHeadersList</value>
-  </data>
-  <data name="&gt;&gt;rowHeadersList.Parent" xml:space="preserve">
-    <value>rowHeadersPanel</value>
-  </data>
-  <data name="&gt;&gt;rowHeadersList.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;rowHeadersPanel.Name" xml:space="preserve">
-    <value>rowHeadersPanel</value>
-  </data>
-  <data name="&gt;&gt;rowHeadersPanel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;rowHeadersPanel.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;valueButtonPanel.Name" xml:space="preserve">
-    <value>valueButtonPanel</value>
-  </data>
-  <data name="&gt;&gt;valueButtonPanel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;valueButtonPanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;valueButtons.Name" xml:space="preserve">
-    <value>valueButtons</value>
-  </data>
-  <data name="&gt;&gt;valueButtons.Parent" xml:space="preserve">
-    <value>valueButtonPanel</value>
-  </data>
-  <data name="&gt;&gt;valueButtons.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;valuesList.Name" xml:space="preserve">
-    <value>valuesList</value>
-  </data>
-  <data name="&gt;&gt;valuesList.Parent" xml:space="preserve">
-    <value>panelValues</value>
-  </data>
-  <data name="&gt;&gt;valuesList.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="availableColumnList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="availableColumnList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
-  </data>
-  <data name="availableColumnList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 301</value>
-  </data>
-  <data name="availableColumnList.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnAddColumnHeader.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 36</value>
-  </data>
-  <data name="btnAddColumnHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 23</value>
-  </data>
-  <data name="btnAddColumnHeader.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnAddColumnHeader.Text" xml:space="preserve">
-    <value>添加列标题(&amp;D) &gt;&gt;</value>
-  </data>
-  <data name="btnAddRowHeader.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 37</value>
-  </data>
-  <data name="btnAddRowHeader.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 23</value>
-  </data>
-  <data name="btnAddRowHeader.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnAddRowHeader.Text" xml:space="preserve">
-    <value>添加行标题(&amp;A) &gt;&gt;</value>
-  </data>
-  <data name="btnAddValue.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <data name="btnAddValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="btnAddValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 23</value>
-  </data>
-  <data name="btnAddValue.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnAddValue.Text" xml:space="preserve">
-    <value>添加值(&amp;U) &gt;&gt;</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -393,44 +162,50 @@
   <data name="btnCancel.Text" xml:space="preserve">
     <value>取消</value>
   </data>
-  <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
   </data>
-  <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>548, 329</value>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="btnOK.Text" xml:space="preserve">
-    <value>确定</value>
+  <data name="tableLayoutPanel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="columnHeaderButtonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="columnHeaderButtonPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 105</value>
+  <data name="btnAddValue.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
   </data>
-  <data name="columnHeaderButtonPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 96</value>
+  <data name="btnAddValue.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
   </data>
-  <data name="columnHeaderButtonPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+  <data name="btnAddValue.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 23</value>
   </data>
-  <data name="columnHeadersList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="btnAddValue.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="columnHeadersList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 19</value>
+  <data name="btnAddValue.Text" xml:space="preserve">
+    <value>添加值(&amp;U) &gt;&gt;</value>
   </data>
-  <data name="columnHeadersList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 77</value>
+  <data name="&gt;&gt;btnAddValue.Name" xml:space="preserve">
+    <value>btnAddValue</value>
   </data>
-  <data name="columnHeadersList.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="&gt;&gt;btnAddValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.Parent" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;btnAddValue.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="comboAggregateOp.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Bottom</value>
@@ -444,26 +219,203 @@
   <data name="comboAggregateOp.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="lblColumnHeaders.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;comboAggregateOp.Name" xml:space="preserve">
+    <value>comboAggregateOp</value>
   </data>
-  <data name="lblColumnHeaders.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
+  <data name="&gt;&gt;comboAggregateOp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="lblColumnHeaders.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <data name="&gt;&gt;comboAggregateOp.Parent" xml:space="preserve">
+    <value>valueButtons</value>
   </data>
-  <data name="lblColumnHeaders.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 3, 3</value>
+  <data name="&gt;&gt;comboAggregateOp.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
-  <data name="lblColumnHeaders.Size" type="System.Drawing.Size, System.Drawing">
-    <value>91, 19</value>
+  <data name="valueButtons.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 23</value>
   </data>
-  <data name="lblColumnHeaders.TabIndex" type="System.Int32, mscorlib">
+  <data name="valueButtons.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 51</value>
+  </data>
+  <data name="valueButtons.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.Name" xml:space="preserve">
+    <value>valueButtons</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.Parent" xml:space="preserve">
+    <value>valueButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;valueButtons.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblColumnHeaders.Text" xml:space="preserve">
-    <value>列标题(&amp;C)</value>
+  <data name="valueButtonPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 207</value>
+  </data>
+  <data name="valueButtonPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 97</value>
+  </data>
+  <data name="valueButtonPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;valueButtonPanel.Name" xml:space="preserve">
+    <value>valueButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;valueButtonPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;valueButtonPanel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;valueButtonPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="availableColumnList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="availableColumnList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 3</value>
+  </data>
+  <data name="availableColumnList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 301</value>
+  </data>
+  <data name="availableColumnList.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;availableColumnList.Name" xml:space="preserve">
+    <value>availableColumnList</value>
+  </data>
+  <data name="&gt;&gt;availableColumnList.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.ColumnListView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;availableColumnList.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;availableColumnList.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnAddRowHeader.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 37</value>
+  </data>
+  <data name="btnAddRowHeader.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 23</value>
+  </data>
+  <data name="btnAddRowHeader.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnAddRowHeader.Text" xml:space="preserve">
+    <value>添加行标题(&amp;A) &gt;&gt;</value>
+  </data>
+  <data name="&gt;&gt;btnAddRowHeader.Name" xml:space="preserve">
+    <value>btnAddRowHeader</value>
+  </data>
+  <data name="&gt;&gt;btnAddRowHeader.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddRowHeader.Parent" xml:space="preserve">
+    <value>rowHeaderButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;btnAddRowHeader.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="rowHeaderButtonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="rowHeaderButtonPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 3</value>
+  </data>
+  <data name="rowHeaderButtonPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 96</value>
+  </data>
+  <data name="rowHeaderButtonPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;rowHeaderButtonPanel.Name" xml:space="preserve">
+    <value>rowHeaderButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;rowHeaderButtonPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rowHeaderButtonPanel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;rowHeaderButtonPanel.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnAddColumnHeader.Location" type="System.Drawing.Point, System.Drawing">
+    <value>24, 36</value>
+  </data>
+  <data name="btnAddColumnHeader.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 23</value>
+  </data>
+  <data name="btnAddColumnHeader.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnAddColumnHeader.Text" xml:space="preserve">
+    <value>添加列标题(&amp;D) &gt;&gt;</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.Name" xml:space="preserve">
+    <value>btnAddColumnHeader</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.Parent" xml:space="preserve">
+    <value>columnHeaderButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;btnAddColumnHeader.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="columnHeaderButtonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="columnHeaderButtonPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 105</value>
+  </data>
+  <data name="columnHeaderButtonPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 96</value>
+  </data>
+  <data name="columnHeaderButtonPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderButtonPanel.Name" xml:space="preserve">
+    <value>columnHeaderButtonPanel</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderButtonPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderButtonPanel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;columnHeaderButtonPanel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="rowHeadersList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="rowHeadersList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 19</value>
+  </data>
+  <data name="rowHeadersList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 77</value>
+  </data>
+  <data name="rowHeadersList.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersList.Name" xml:space="preserve">
+    <value>rowHeadersList</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersList.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.ColumnListEditor, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersList.Parent" xml:space="preserve">
+    <value>rowHeadersPanel</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersList.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="lblRowHeaders.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -486,6 +438,147 @@
   <data name="lblRowHeaders.Text" xml:space="preserve">
     <value>行标题(&amp;R)</value>
   </data>
+  <data name="&gt;&gt;lblRowHeaders.Name" xml:space="preserve">
+    <value>lblRowHeaders</value>
+  </data>
+  <data name="&gt;&gt;lblRowHeaders.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRowHeaders.Parent" xml:space="preserve">
+    <value>rowHeadersPanel</value>
+  </data>
+  <data name="&gt;&gt;lblRowHeaders.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="rowHeadersPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="rowHeadersPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>461, 3</value>
+  </data>
+  <data name="rowHeadersPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 96</value>
+  </data>
+  <data name="rowHeadersPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersPanel.Name" xml:space="preserve">
+    <value>rowHeadersPanel</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersPanel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;rowHeadersPanel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="columnHeadersList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="columnHeadersList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 19</value>
+  </data>
+  <data name="columnHeadersList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 77</value>
+  </data>
+  <data name="columnHeadersList.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;columnHeadersList.Name" xml:space="preserve">
+    <value>columnHeadersList</value>
+  </data>
+  <data name="&gt;&gt;columnHeadersList.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.ColumnListEditor, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;columnHeadersList.Parent" xml:space="preserve">
+    <value>panel3</value>
+  </data>
+  <data name="&gt;&gt;columnHeadersList.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblColumnHeaders.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblColumnHeaders.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="lblColumnHeaders.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="lblColumnHeaders.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="lblColumnHeaders.Size" type="System.Drawing.Size, System.Drawing">
+    <value>91, 19</value>
+  </data>
+  <data name="lblColumnHeaders.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblColumnHeaders.Text" xml:space="preserve">
+    <value>列标题(&amp;C)</value>
+  </data>
+  <data name="&gt;&gt;lblColumnHeaders.Name" xml:space="preserve">
+    <value>lblColumnHeaders</value>
+  </data>
+  <data name="&gt;&gt;lblColumnHeaders.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblColumnHeaders.Parent" xml:space="preserve">
+    <value>panel3</value>
+  </data>
+  <data name="&gt;&gt;lblColumnHeaders.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="panel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="panel3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>461, 105</value>
+  </data>
+  <data name="panel3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 96</value>
+  </data>
+  <data name="panel3.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;panel3.Name" xml:space="preserve">
+    <value>panel3</value>
+  </data>
+  <data name="&gt;&gt;panel3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel3.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;panel3.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="valuesList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="valuesList.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 19</value>
+  </data>
+  <data name="valuesList.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 78</value>
+  </data>
+  <data name="valuesList.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;valuesList.Name" xml:space="preserve">
+    <value>valuesList</value>
+  </data>
+  <data name="&gt;&gt;valuesList.Type" xml:space="preserve">
+    <value>pwiz.Common.DataBinding.Controls.ColumnListEditor, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;valuesList.Parent" xml:space="preserve">
+    <value>panelValues</value>
+  </data>
+  <data name="&gt;&gt;valuesList.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="lblValues.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -507,17 +600,17 @@
   <data name="lblValues.Text" xml:space="preserve">
     <value>值(&amp;V)</value>
   </data>
-  <data name="panel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="&gt;&gt;lblValues.Name" xml:space="preserve">
+    <value>lblValues</value>
   </data>
-  <data name="panel3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>461, 105</value>
+  <data name="&gt;&gt;lblValues.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="panel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 96</value>
+  <data name="&gt;&gt;lblValues.Parent" xml:space="preserve">
+    <value>panelValues</value>
   </data>
-  <data name="panel3.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+  <data name="&gt;&gt;lblValues.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="panelValues.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -531,50 +624,17 @@
   <data name="panelValues.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="rowHeaderButtonPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="&gt;&gt;panelValues.Name" xml:space="preserve">
+    <value>panelValues</value>
   </data>
-  <data name="rowHeaderButtonPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 3</value>
+  <data name="&gt;&gt;panelValues.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="rowHeaderButtonPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 96</value>
+  <data name="&gt;&gt;panelValues.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
   </data>
-  <data name="rowHeaderButtonPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="rowHeadersList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="rowHeadersList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 19</value>
-  </data>
-  <data name="rowHeadersList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 77</value>
-  </data>
-  <data name="rowHeadersList.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="rowHeadersPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="rowHeadersPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>461, 3</value>
-  </data>
-  <data name="rowHeadersPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 96</value>
-  </data>
-  <data name="rowHeadersPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="tableLayoutPanel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="valueButtonPanel" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="availableColumnList" Row="0" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="rowHeaderButtonPanel" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="columnHeaderButtonPanel" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="rowHeadersPanel" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="panel3" Row="1" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="panelValues" Row="2" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,50,Absolute,200,Percent,50" /&gt;&lt;Rows Styles="Percent,33.33333,Percent,33.33333,Percent,33.33333" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  <data name="&gt;&gt;panelValues.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 3</value>
@@ -588,34 +648,40 @@
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="valueButtonPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 207</value>
+  <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
   </data>
-  <data name="valueButtonPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 97</value>
+  <data name="&gt;&gt;tableLayoutPanel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="valueButtonPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="valueButtons.Location" type="System.Drawing.Point, System.Drawing">
-    <value>24, 23</value>
-  </data>
-  <data name="valueButtons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 51</value>
-  </data>
-  <data name="valueButtons.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;tableLayoutPanel2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="valuesList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
+  <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="valueButtonPanel" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="availableColumnList" Row="0" RowSpan="3" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="rowHeaderButtonPanel" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="columnHeaderButtonPanel" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="rowHeadersPanel" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="panel3" Row="1" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;Control Name="panelValues" Row="2" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,50,Absolute,200,Percent,50" /&gt;&lt;Rows Styles="Percent,33.33333,Percent,33.33333,Percent,33.33333" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
-  <data name="valuesList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 19</value>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="valuesList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 78</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>716, 364</value>
   </data>
-  <data name="valuesList.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>枢轴编辑器</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>PivotEditor</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Common.Controls.CommonFormEx, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

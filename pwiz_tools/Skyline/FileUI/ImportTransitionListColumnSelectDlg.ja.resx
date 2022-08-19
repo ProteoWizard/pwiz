@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,143 +105,53 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="buttonOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>772, 392</value>
+  <data name="buttonOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="buttonOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>610, 358</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>トランジションリストのインポート：列を特定</value>
+  <data name="buttonOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>ImportTransitionListColumnSelectDlg</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="buttonOk.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="&gt;&gt;buttonCancel.Name" xml:space="preserve">
-    <value>buttonCancel</value>
-  </data>
-  <data name="&gt;&gt;buttonCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;buttonCancel.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;buttonCheckForErrors.Name" xml:space="preserve">
-    <value>buttonCheckForErrors</value>
-  </data>
-  <data name="&gt;&gt;buttonCheckForErrors.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;buttonCheckForErrors.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="buttonOk.Text" xml:space="preserve">
+    <value>OK</value>
   </data>
   <data name="&gt;&gt;buttonOk.Name" xml:space="preserve">
     <value>buttonOk</value>
+  </data>
+  <data name="&gt;&gt;buttonOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;buttonOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;buttonOk.ZOrder" xml:space="preserve">
     <value>8</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAssociateProteins.Name" xml:space="preserve">
-    <value>checkBoxAssociateProteins</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAssociateProteins.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkBoxAssociateProteins.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;CheckShowUnusedColumns.Name" xml:space="preserve">
-    <value>CheckShowUnusedColumns</value>
-  </data>
-  <data name="&gt;&gt;CheckShowUnusedColumns.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;CheckShowUnusedColumns.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;comboPanelInner.Name" xml:space="preserve">
-    <value>comboPanelInner</value>
-  </data>
-  <data name="&gt;&gt;comboPanelInner.Parent" xml:space="preserve">
-    <value>comboPanelOuter</value>
-  </data>
-  <data name="&gt;&gt;comboPanelInner.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;comboPanelOuter.Name" xml:space="preserve">
-    <value>comboPanelOuter</value>
-  </data>
-  <data name="&gt;&gt;comboPanelOuter.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;comboPanelOuter.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;dataGrid.Name" xml:space="preserve">
-    <value>dataGrid</value>
-  </data>
-  <data name="&gt;&gt;dataGrid.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;dataGrid.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;fileLabel.Name" xml:space="preserve">
-    <value>fileLabel</value>
-  </data>
-  <data name="&gt;&gt;fileLabel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;fileLabel.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.Name" xml:space="preserve">
-    <value>radioMolecule</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioMolecule.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.Name" xml:space="preserve">
-    <value>radioPeptide</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;radioPeptide.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="buttonCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -261,6 +171,18 @@
   <data name="buttonCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
   </data>
+  <data name="&gt;&gt;buttonCancel.Name" xml:space="preserve">
+    <value>buttonCancel</value>
+  </data>
+  <data name="&gt;&gt;buttonCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;buttonCancel.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
   <data name="buttonCheckForErrors.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -276,44 +198,113 @@
   <data name="buttonCheckForErrors.Text" xml:space="preserve">
     <value>エラーを確認</value>
   </data>
-  <data name="buttonOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
+  <data name="&gt;&gt;buttonCheckForErrors.Name" xml:space="preserve">
+    <value>buttonCheckForErrors</value>
   </data>
-  <data name="buttonOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;buttonCheckForErrors.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="buttonOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>610, 358</value>
+  <data name="&gt;&gt;buttonCheckForErrors.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="buttonOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="&gt;&gt;buttonCheckForErrors.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
-  <data name="buttonOk.TabIndex" type="System.Int32, mscorlib">
+  <data name="comboPanelInner.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="comboPanelInner.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 23</value>
+  </data>
+  <data name="comboPanelInner.Size" type="System.Drawing.Size, System.Drawing">
+    <value>736, 35</value>
+  </data>
+  <data name="comboPanelInner.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;comboPanelInner.Name" xml:space="preserve">
+    <value>comboPanelInner</value>
+  </data>
+  <data name="&gt;&gt;comboPanelInner.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboPanelInner.Parent" xml:space="preserve">
+    <value>comboPanelOuter</value>
+  </data>
+  <data name="&gt;&gt;comboPanelInner.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboPanelOuter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 36</value>
+  </data>
+  <data name="comboPanelOuter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>739, 75</value>
+  </data>
+  <data name="comboPanelOuter.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;comboPanelOuter.Name" xml:space="preserve">
+    <value>comboPanelOuter</value>
+  </data>
+  <data name="&gt;&gt;comboPanelOuter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboPanelOuter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;comboPanelOuter.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="buttonOk.Text" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name="checkBoxAssociateProteins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="checkBoxAssociateProteins.AutoSize" type="System.Boolean, mscorlib">
+  <data name="fileLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="checkBoxAssociateProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="fileLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>23, 9</value>
   </data>
-  <data name="checkBoxAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>364, 362</value>
+  <data name="fileLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
   </data>
-  <data name="checkBoxAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>113, 17</value>
+  <data name="fileLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
   </data>
-  <data name="checkBoxAssociateProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+  <data name="fileLabel.Text" xml:space="preserve">
+    <value>CSVファイル</value>
   </data>
-  <data name="checkBoxAssociateProteins.Text" xml:space="preserve">
-    <value>タンパク質の関連付け</value>
+  <data name="&gt;&gt;fileLabel.Name" xml:space="preserve">
+    <value>fileLabel</value>
+  </data>
+  <data name="&gt;&gt;fileLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;fileLabel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;fileLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="dataGrid.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="dataGrid.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 36</value>
+  </data>
+  <data name="dataGrid.Size" type="System.Drawing.Size, System.Drawing">
+    <value>739, 307</value>
+  </data>
+  <data name="dataGrid.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;dataGrid.Name" xml:space="preserve">
+    <value>dataGrid</value>
+  </data>
+  <data name="&gt;&gt;dataGrid.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;dataGrid.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;dataGrid.ZOrder" xml:space="preserve">
+    <value>7</value>
   </data>
   <data name="CheckShowUnusedColumns.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -336,53 +327,47 @@
   <data name="CheckShowUnusedColumns.Text" xml:space="preserve">
     <value>未使用列を表示</value>
   </data>
-  <data name="comboPanelInner.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="&gt;&gt;CheckShowUnusedColumns.Name" xml:space="preserve">
+    <value>CheckShowUnusedColumns</value>
   </data>
-  <data name="comboPanelInner.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 23</value>
+  <data name="&gt;&gt;CheckShowUnusedColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="comboPanelInner.Size" type="System.Drawing.Size, System.Drawing">
-    <value>736, 35</value>
+  <data name="&gt;&gt;CheckShowUnusedColumns.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="comboPanelInner.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;CheckShowUnusedColumns.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
-  <data name="comboPanelOuter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 36</value>
+  <data name="radioPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
-  <data name="comboPanelOuter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>739, 75</value>
-  </data>
-  <data name="comboPanelOuter.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="dataGrid.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="dataGrid.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 36</value>
-  </data>
-  <data name="dataGrid.Size" type="System.Drawing.Size, System.Drawing">
-    <value>739, 307</value>
-  </data>
-  <data name="dataGrid.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="fileLabel.AutoSize" type="System.Boolean, mscorlib">
+  <data name="radioPeptide.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="fileLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 9</value>
+  <data name="radioPeptide.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 360</value>
   </data>
-  <data name="fileLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
+  <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
+    <value>66, 17</value>
   </data>
-  <data name="fileLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="radioPeptide.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
   </data>
-  <data name="fileLabel.Text" xml:space="preserve">
-    <value>CSVファイル</value>
+  <data name="radioPeptide.Text" xml:space="preserve">
+    <value>ペプチド(&amp;P)</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.Name" xml:space="preserve">
+    <value>radioPeptide</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioPeptide.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="radioMolecule.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -402,22 +387,76 @@
   <data name="radioMolecule.Text" xml:space="preserve">
     <value>分子(&amp;M)</value>
   </data>
-  <data name="radioPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="&gt;&gt;radioMolecule.Name" xml:space="preserve">
+    <value>radioMolecule</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;radioMolecule.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="checkBoxAssociateProteins.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <data name="radioPeptide.AutoSize" type="System.Boolean, mscorlib">
+  <data name="checkBoxAssociateProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="radioPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 360</value>
+  <data name="checkBoxAssociateProteins.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="radioPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 17</value>
+  <data name="checkBoxAssociateProteins.Location" type="System.Drawing.Point, System.Drawing">
+    <value>364, 362</value>
   </data>
-  <data name="radioPeptide.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
+  <data name="checkBoxAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
+    <value>113, 17</value>
   </data>
-  <data name="radioPeptide.Text" xml:space="preserve">
-    <value>ペプチド(&amp;P)</value>
+  <data name="checkBoxAssociateProteins.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="checkBoxAssociateProteins.Text" xml:space="preserve">
+    <value>タンパク質の関連付け</value>
+  </data>
+  <data name="&gt;&gt;checkBoxAssociateProteins.Name" xml:space="preserve">
+    <value>checkBoxAssociateProteins</value>
+  </data>
+  <data name="&gt;&gt;checkBoxAssociateProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkBoxAssociateProteins.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;checkBoxAssociateProteins.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>772, 392</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>トランジションリストのインポート：列を特定</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>ImportTransitionListColumnSelectDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,161 +105,44 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="zgIsolationGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>603, 313</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="zgIsolationGraph.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 12</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <data name="zgIsolationGraph.Size" type="System.Drawing.Size, System.Drawing">
+    <value>579, 257</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>分离窗口图</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>DiaIsolationWindowsGraphForm</value>
-  </data>
-  <data name="&gt;&gt;btnClose.Name" xml:space="preserve">
-    <value>btnClose</value>
-  </data>
-  <data name="&gt;&gt;btnClose.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnClose.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="&gt;&gt;cbMargin.Name" xml:space="preserve">
-    <value>cbMargin</value>
-  </data>
-  <data name="&gt;&gt;cbMargin.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbMargin.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="&gt;&gt;cbShowGaps.Name" xml:space="preserve">
-    <value>cbShowGaps</value>
-  </data>
-  <data name="&gt;&gt;cbShowGaps.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbShowGaps.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;cbShowOverlapRays.Name" xml:space="preserve">
-    <value>cbShowOverlapRays</value>
-  </data>
-  <data name="&gt;&gt;cbShowOverlapRays.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbShowOverlapRays.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;cbShowOverlapsSingle.Name" xml:space="preserve">
-    <value>cbShowOverlapsSingle</value>
-  </data>
-  <data name="&gt;&gt;cbShowOverlapsSingle.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbShowOverlapsSingle.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="&gt;&gt;labelGapColor.Name" xml:space="preserve">
-    <value>labelGapColor</value>
-  </data>
-  <data name="&gt;&gt;labelGapColor.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelGapColor.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;labelMarginColor.Name" xml:space="preserve">
-    <value>labelMarginColor</value>
-  </data>
-  <data name="&gt;&gt;labelMarginColor.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelMarginColor.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;labelOverlapColor.Name" xml:space="preserve">
-    <value>labelOverlapColor</value>
-  </data>
-  <data name="&gt;&gt;labelOverlapColor.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelOverlapColor.ZOrder" xml:space="preserve">
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="zgIsolationGraph.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
-  </data>
-  <data name="&gt;&gt;labelSingleOverlapColor.Name" xml:space="preserve">
-    <value>labelSingleOverlapColor</value>
-  </data>
-  <data name="&gt;&gt;labelSingleOverlapColor.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelSingleOverlapColor.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelWindow.Name" xml:space="preserve">
-    <value>labelWindow</value>
-  </data>
-  <data name="&gt;&gt;labelWindow.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelWindow.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;labelWindowColor.Name" xml:space="preserve">
-    <value>labelWindowColor</value>
-  </data>
-  <data name="&gt;&gt;labelWindowColor.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelWindowColor.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="&gt;&gt;zgIsolationGraph.Name" xml:space="preserve">
     <value>zgIsolationGraph</value>
+  </data>
+  <data name="&gt;&gt;zgIsolationGraph.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.16667, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zgIsolationGraph.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;zgIsolationGraph.ZOrder" xml:space="preserve">
     <value>11</value>
-  </data>
-  <data name="btnClose.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnClose.Location" type="System.Drawing.Point, System.Drawing">
-    <value>516, 284</value>
-  </data>
-  <data name="btnClose.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnClose.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnClose.Text" xml:space="preserve">
-    <value>关闭</value>
   </data>
   <data name="cbMargin.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -279,6 +162,45 @@
   <data name="cbMargin.Text" xml:space="preserve">
     <value>显示边距</value>
   </data>
+  <data name="&gt;&gt;cbMargin.Name" xml:space="preserve">
+    <value>cbMargin</value>
+  </data>
+  <data name="&gt;&gt;cbMargin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMargin.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbMargin.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="btnClose.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnClose.Location" type="System.Drawing.Point, System.Drawing">
+    <value>516, 284</value>
+  </data>
+  <data name="btnClose.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnClose.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnClose.Text" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="&gt;&gt;btnClose.Name" xml:space="preserve">
+    <value>btnClose</value>
+  </data>
+  <data name="&gt;&gt;btnClose.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnClose.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnClose.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
   <data name="cbShowGaps.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -297,23 +219,17 @@
   <data name="cbShowGaps.Text" xml:space="preserve">
     <value>显示间距</value>
   </data>
-  <data name="cbShowOverlapRays.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="&gt;&gt;cbShowGaps.Name" xml:space="preserve">
+    <value>cbShowGaps</value>
   </data>
-  <data name="cbShowOverlapRays.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;cbShowGaps.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="cbShowOverlapRays.Location" type="System.Drawing.Point, System.Drawing">
-    <value>414, 275</value>
+  <data name="&gt;&gt;cbShowGaps.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="cbShowOverlapRays.Size" type="System.Drawing.Size, System.Drawing">
-    <value>91, 17</value>
-  </data>
-  <data name="cbShowOverlapRays.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="cbShowOverlapRays.Text" xml:space="preserve">
-    <value>显示重叠</value>
+  <data name="&gt;&gt;cbShowGaps.ZOrder" xml:space="preserve">
+    <value>8</value>
   </data>
   <data name="cbShowOverlapsSingle.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -333,65 +249,47 @@
   <data name="cbShowOverlapsSingle.Text" xml:space="preserve">
     <value>显示单循环重叠</value>
   </data>
-  <data name="labelGapColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="&gt;&gt;cbShowOverlapsSingle.Name" xml:space="preserve">
+    <value>cbShowOverlapsSingle</value>
   </data>
-  <data name="labelGapColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;cbShowOverlapsSingle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelGapColor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>164, 294</value>
+  <data name="&gt;&gt;cbShowOverlapsSingle.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="labelGapColor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 10</value>
-  </data>
-  <data name="labelGapColor.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="labelMarginColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelMarginColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelMarginColor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>63, 294</value>
-  </data>
-  <data name="labelMarginColor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 10</value>
-  </data>
-  <data name="labelMarginColor.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;cbShowOverlapsSingle.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="labelOverlapColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="cbShowOverlapRays.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <data name="labelOverlapColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="cbShowOverlapRays.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="labelOverlapColor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>410, 294</value>
+  <data name="cbShowOverlapRays.Location" type="System.Drawing.Point, System.Drawing">
+    <value>414, 275</value>
   </data>
-  <data name="labelOverlapColor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 10</value>
+  <data name="cbShowOverlapRays.Size" type="System.Drawing.Size, System.Drawing">
+    <value>91, 17</value>
   </data>
-  <data name="labelOverlapColor.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
+  <data name="cbShowOverlapRays.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="labelSingleOverlapColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="cbShowOverlapRays.Text" xml:space="preserve">
+    <value>显示重叠</value>
   </data>
-  <data name="labelSingleOverlapColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;cbShowOverlapRays.Name" xml:space="preserve">
+    <value>cbShowOverlapRays</value>
   </data>
-  <data name="labelSingleOverlapColor.Location" type="System.Drawing.Point, System.Drawing">
-    <value>250, 294</value>
+  <data name="&gt;&gt;cbShowOverlapRays.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelSingleOverlapColor.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 10</value>
+  <data name="&gt;&gt;cbShowOverlapRays.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="labelSingleOverlapColor.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+  <data name="&gt;&gt;cbShowOverlapRays.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="labelWindow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -411,6 +309,18 @@
   <data name="labelWindow.Text" xml:space="preserve">
     <value>窗口</value>
   </data>
+  <data name="&gt;&gt;labelWindow.Name" xml:space="preserve">
+    <value>labelWindow</value>
+  </data>
+  <data name="&gt;&gt;labelWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelWindow.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelWindow.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
   <data name="labelWindowColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -423,16 +333,145 @@
   <data name="labelWindowColor.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="zgIsolationGraph.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <data name="&gt;&gt;labelWindowColor.Name" xml:space="preserve">
+    <value>labelWindowColor</value>
   </data>
-  <data name="zgIsolationGraph.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 12</value>
+  <data name="&gt;&gt;labelWindowColor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="zgIsolationGraph.Size" type="System.Drawing.Size, System.Drawing">
-    <value>579, 257</value>
+  <data name="&gt;&gt;labelWindowColor.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="zgIsolationGraph.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;labelWindowColor.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="labelMarginColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelMarginColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelMarginColor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>63, 294</value>
+  </data>
+  <data name="labelMarginColor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>25, 10</value>
+  </data>
+  <data name="labelMarginColor.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;labelMarginColor.Name" xml:space="preserve">
+    <value>labelMarginColor</value>
+  </data>
+  <data name="&gt;&gt;labelMarginColor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMarginColor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelMarginColor.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelGapColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelGapColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelGapColor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>164, 294</value>
+  </data>
+  <data name="labelGapColor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>25, 10</value>
+  </data>
+  <data name="labelGapColor.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;labelGapColor.Name" xml:space="preserve">
+    <value>labelGapColor</value>
+  </data>
+  <data name="&gt;&gt;labelGapColor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelGapColor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelGapColor.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelSingleOverlapColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelSingleOverlapColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelSingleOverlapColor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>250, 294</value>
+  </data>
+  <data name="labelSingleOverlapColor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>25, 10</value>
+  </data>
+  <data name="labelSingleOverlapColor.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;labelSingleOverlapColor.Name" xml:space="preserve">
+    <value>labelSingleOverlapColor</value>
+  </data>
+  <data name="&gt;&gt;labelSingleOverlapColor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelSingleOverlapColor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelSingleOverlapColor.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelOverlapColor.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelOverlapColor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelOverlapColor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>410, 294</value>
+  </data>
+  <data name="labelOverlapColor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>25, 10</value>
+  </data>
+  <data name="labelOverlapColor.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;labelOverlapColor.Name" xml:space="preserve">
+    <value>labelOverlapColor</value>
+  </data>
+  <data name="&gt;&gt;labelOverlapColor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelOverlapColor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelOverlapColor.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>603, 313</value>
+  </data>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>分离窗口图</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>DiaIsolationWindowsGraphForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

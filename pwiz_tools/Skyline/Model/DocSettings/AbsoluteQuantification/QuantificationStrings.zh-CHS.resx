@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
 		Microsoft ResX Schema
@@ -85,14 +85,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -103,35 +103,11 @@
   <data name="Area" xml:space="preserve">
     <value>面积</value>
   </data>
-  <data name="Calculated_Concentration" xml:space="preserve">
-    <value>计算的浓度</value>
-  </data>
   <data name="Calibration_Curve" xml:space="preserve">
     <value>校准曲线</value>
   </data>
-  <data name="CalibrationCurve_ToString_Error__" xml:space="preserve">
-    <value>错误：</value>
-  </data>
-  <data name="CalibrationCurve_ToString_Intercept___0_" xml:space="preserve">
-    <value>截距：{0}</value>
-  </data>
-  <data name="CalibrationCurve_ToString_Slope___0_" xml:space="preserve">
-    <value>斜率：{0}</value>
-  </data>
-  <data name="CalibrationCurve_ToString_Slope___0__Intercept___1_" xml:space="preserve">
-    <value>斜率：{0} 截距：{1}</value>
-  </data>
-  <data name="CalibrationCurve_ToString_Turning_Point___0_" xml:space="preserve">
-    <value>转折点：{0}</value>
-  </data>
-  <data name="CalibrationCurve_ToString_y_x_2_x_c" xml:space="preserve">
-    <value>y = {0} x^2 + {1} x + {2}</value>
-  </data>
-  <data name="CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio" xml:space="preserve">
-    <value>{0}：{1} 浓度比</value>
-  </data>
-  <data name="CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_" xml:space="preserve">
-    <value>相对于{0}的浓度比</value>
+  <data name="Calculated_Concentration" xml:space="preserve">
+    <value>计算的浓度</value>
   </data>
   <data name="CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_" xml:space="preserve">
     <value>所有外标均缺少一个或多个峰。</value>
@@ -139,32 +115,11 @@
   <data name="CalibrationCurveFitter_GetCalibrationCurve_The_external_standards_and_the_target_replicate_have_no_peaks_in_common_" xml:space="preserve">
     <value>外标和目标重复测定没有共同的峰。</value>
   </data>
-  <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_" xml:space="preserve">
-    <value>一个或多个离子对缺失或被截短。</value>
-  </data>
-  <data name="CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_" xml:space="preserve">
-    <value>由相对于{0}的比率计算出的浓度</value>
-  </data>
   <data name="CalibrationCurveFitter_GetXAxisTitle_Ratio_to__0_" xml:space="preserve">
     <value>相对于{0}的比率</value>
   </data>
-  <data name="CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area" xml:space="preserve">
-    <value>校准后的峰面积</value>
-  </data>
-  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area" xml:space="preserve">
-    <value>峰面积</value>
-  </data>
-  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area_Ratio" xml:space="preserve">
-    <value>峰面积比</value>
-  </data>
-  <data name="CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio" xml:space="preserve">
-    <value>{0}：{1} 峰面积比</value>
-  </data>
-  <data name="CalibrationCurveFitter_PeakAreaRatioText_Peak_Area_Ratio_to__0_" xml:space="preserve">
-    <value>相对于{0}的峰面积比</value>
-  </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_" xml:space="preserve">
-    <value>R 平方 = </value>
+  <data name="CalibrationCurveFitter_GetXAxisTitle_Concentration_from_ratio_to_0_" xml:space="preserve">
+    <value>由相对于{0}的比率计算出的浓度</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_No_results_available" xml:space="preserve">
     <value>无可用的结果</value>
@@ -172,104 +127,35 @@
   <data name="CalibrationForm_DisplayCalibrationCurve_Select_a_peptide_to_see_its_calibration_curve" xml:space="preserve">
     <value>选择一个肽段，查看其校准曲线</value>
   </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_" xml:space="preserve">
-    <value>选定的肽段不再是 Skyline 文档的一部分。</value>
-  </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions" xml:space="preserve">
-    <value>所选的重复测定有缺失或截短的离子对</value>
-  </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_no_transitions_that_can_be_quantified_" xml:space="preserve">
-    <value>所选的重复测定没有可以定量的离子对。</value>
-  </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
-    <value>为将峰面积比转换为浓度，指定{0}的内标浓度。</value>
-  </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_" xml:space="preserve">
-    <value>为切合校准曲线，将一些重复测定的样品类型设定为标准，再指定其浓度。</value>
-  </data>
-  <data name="CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_" xml:space="preserve">
-    <value>使用肽段设置对话框的定量标签，控制峰面积向浓度的转换。</value>
-  </data>
-  <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
-    <value>（全部重复测定）</value>
-  </data>
-  <data name="CalibrationForm_GetFormTitle__Batch___0__" xml:space="preserve">
-    <value>（批次：{0}）</value>
-  </data>
-  <data name="CalibrationForm_GetFormTitle__Replicate___0__" xml:space="preserve">
-    <value>（重复测定：{0}）</value>
-  </data>
-  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard" xml:space="preserve">
-    <value>排除标准</value>
-  </data>
-  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard" xml:space="preserve">
-    <value>包含标准</value>
-  </data>
-  <data name="Concentration_Ratio" xml:space="preserve">
-    <value>浓度比</value>
-  </data>
-  <data name="FiguresOfMerit_ToString_LOD__" xml:space="preserve">
-    <value>LOD（检出极限）：</value>
-    <comment>This stands for "Limit of Detection"</comment>
-  </data>
-  <data name="FiguresOfMerit_ToString_LOQ__" xml:space="preserve">
-    <value>LOQ（定量极限）：</value>
-    <comment>This stands for "Limit of Quantification"</comment>
-  </data>
-  <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">
-    <value>空白加 2 * SD</value>
-    <comment>This says "median value of the blank replicates plus 2 times their standard deviation"</comment>
-  </data>
-  <data name="LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD" xml:space="preserve">
-    <value>空白加 3 * SD</value>
-    <comment>This says "median value of the blank replicates plus 3 times their standard deviation"</comment>
-  </data>
-  <data name="LodCalculation_NONE_None" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point" xml:space="preserve">
-    <value>双线性转折点</value>
-  </data>
   <data name="Normalized_Intensity" xml:space="preserve">
     <value>归一化强度</value>
   </data>
-  <data name="NormalizeOption_CALIBRATED_Calibration_Curve" xml:space="preserve">
-    <value>校准曲线</value>
+  <data name="Weighting" xml:space="preserve">
+    <value>权重</value>
   </data>
-  <data name="NormalizeOption_DEFAULT_Default_Normalization_Method" xml:space="preserve">
-    <value>默认归一化方法</value>
+  <data name="SampleType_UNKNOWN_Unknown" xml:space="preserve">
+    <value>未知</value>
   </data>
-  <data name="NormalizeOption_MAXIMUM_Maximum" xml:space="preserve">
-    <value>最大值</value>
+  <data name="SampleType_STANDARD_Standard" xml:space="preserve">
+    <value>标准</value>
   </data>
-  <data name="NormalizeOption_TOTAL_Total" xml:space="preserve">
-    <value>总计</value>
+  <data name="SampleType_QC_Quality_Control" xml:space="preserve">
+    <value>质量控制</value>
   </data>
-  <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
-    <value>校准后面积：{0}</value>
+  <data name="SampleType_SOLVENT_Solvent" xml:space="preserve">
+    <value>溶剂</value>
   </data>
-  <data name="RatioToLabel_GetAxisTitle__0__Ratio_To__1_" xml:space="preserve">
-    <value>相对于  {1} 的 {0} 比率</value>
-    <comment>Example: Peak Area Ratio To Global Standards</comment>
+  <data name="SampleType_BLANK_Blank" xml:space="preserve">
+    <value>空白</value>
   </data>
-  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0_" xml:space="preserve">
-    <value>替代 {0}</value>
-  </data>
-  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0____1__" xml:space="preserve">
-    <value>替代 {0} ({1})</value>
-    <comment>Example: Surrogate Leucine (Heavy)</comment>
-  </data>
-  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
-    <value>双线性</value>
+  <data name="SampleType_DOUBLE_BLANK_Double_Blank" xml:space="preserve">
+    <value>双空白</value>
   </data>
   <data name="RegressionFit_LINEAR_Linear" xml:space="preserve">
     <value>线性</value>
   </data>
   <data name="RegressionFit_LINEAR_THROUGH_ZERO_Linear_through_zero" xml:space="preserve">
     <value>过零点的线性</value>
-  </data>
-  <data name="RegressionFit_NONE_None" xml:space="preserve">
-    <value>无</value>
   </data>
   <data name="RegressionFit_QUADRATIC_Quadratic" xml:space="preserve">
     <value>二次的</value>
@@ -283,50 +169,164 @@
   <data name="RegressionWeighting_ONE_OVER_X_SQUARED" xml:space="preserve">
     <value>1 / (x * x)</value>
   </data>
-  <data name="SampleType_BLANK_Blank" xml:space="preserve">
-    <value>空白</value>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_no_transitions_that_can_be_quantified_" xml:space="preserve">
+    <value>所选的重复测定没有可以定量的离子对。</value>
   </data>
-  <data name="SampleType_DOUBLE_BLANK_Double_Blank" xml:space="preserve">
-    <value>双空白</value>
+  <data name="CalibrationForm_DisplayCalibrationCurve_" xml:space="preserve">
+    <value>R 平方 = </value>
   </data>
-  <data name="SampleType_QC_Quality_Control" xml:space="preserve">
-    <value>质量控制</value>
+  <data name="CalibrationCurve_ToString_Error__" xml:space="preserve">
+    <value>错误：</value>
   </data>
-  <data name="SampleType_SOLVENT_Solvent" xml:space="preserve">
-    <value>溶剂</value>
+  <data name="CalibrationCurve_ToString_y_x_2_x_c" xml:space="preserve">
+    <value>y = {0} x^2 + {1} x + {2}</value>
   </data>
-  <data name="SampleType_STANDARD_Standard" xml:space="preserve">
-    <value>标准</value>
+  <data name="CalibrationCurve_ToString_Slope___0__Intercept___1_" xml:space="preserve">
+    <value>斜率：{0} 截距：{1}</value>
   </data>
-  <data name="SampleType_UNKNOWN_Unknown" xml:space="preserve">
-    <value>未知</value>
+  <data name="CalibrationCurve_ToString_Slope___0_" xml:space="preserve">
+    <value>斜率：{0}</value>
   </data>
-  <data name="SkylineWindow_MakeNormalizeToMenuItem_Default___0__" xml:space="preserve">
-    <value>默认（{0}）</value>
-    <comment>Example: Default (Global Standards)</comment>
+  <data name="Concentration_Ratio" xml:space="preserve">
+    <value>浓度比</value>
   </data>
-  <data name="ValueStatus_EQUAL_Equal" xml:space="preserve">
-    <value>等于</value>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area_Ratio" xml:space="preserve">
+    <value>峰面积比</value>
   </data>
-  <data name="ValueStatus_FAIL_Fail" xml:space="preserve">
-    <value>失败</value>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Peak_Area" xml:space="preserve">
+    <value>峰面积</value>
   </data>
-  <data name="ValueStatus_HIGH_High" xml:space="preserve">
-    <value>高</value>
+  <data name="CalibrationCurveFitter_GetYAxisTitle_Normalized_Peak_Area" xml:space="preserve">
+    <value>校准后的峰面积</value>
   </data>
-  <data name="ValueStatus_LOW_Low" xml:space="preserve">
-    <value>低</value>
+  <data name="CalibrationCurveFitter_PeakAreaRatioText__0___1__Peak_Area_Ratio" xml:space="preserve">
+    <value>{0}：{1} 峰面积比</value>
   </data>
-  <data name="ValueStatus_PASS_Pass" xml:space="preserve">
-    <value>通过</value>
+  <data name="CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_" xml:space="preserve">
+    <value>使用肽段设置对话框的定量标签，控制峰面积向浓度的转换。</value>
   </data>
-  <data name="ValueStatus_PRESENT_Present" xml:space="preserve">
-    <value>存在</value>
+  <data name="CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__" xml:space="preserve">
+    <value>为将峰面积比转换为浓度，指定{0}的内标浓度。</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_" xml:space="preserve">
+    <value>为切合校准曲线，将一些重复测定的样品类型设定为标准，再指定其浓度。</value>
+  </data>
+  <data name="CalibrationCurveFitter_ConcentrationRatioText__0___1__Concentration_Ratio" xml:space="preserve">
+    <value>{0}：{1} 浓度比</value>
+  </data>
+  <data name="RegressionFit_NONE_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="CalibrationCurveFitter_PeakAreaRatioText_Peak_Area_Ratio_to__0_" xml:space="preserve">
+    <value>相对于{0}的峰面积比</value>
+  </data>
+  <data name="CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_" xml:space="preserve">
+    <value>相对于{0}的浓度比</value>
+  </data>
+  <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_" xml:space="preserve">
+    <value>一个或多个离子对缺失或被截短。</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions" xml:space="preserve">
+    <value>所选的重复测定有缺失或截短的离子对</value>
+  </data>
+  <data name="QuantificationResult_ToString_Normalized_Area___0_" xml:space="preserve">
+    <value>校准后面积：{0}</value>
+  </data>
+  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard" xml:space="preserve">
+    <value>包含标准</value>
+  </data>
+  <data name="CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard" xml:space="preserve">
+    <value>排除标准</value>
+  </data>
+  <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_peptide_is_no_longer_part_of_the_Skyline_document_" xml:space="preserve">
+    <value>选定的肽段不再是 Skyline 文档的一部分。</value>
+  </data>
+  <data name="RegressionFit_BILINEAR_Bilinear" xml:space="preserve">
+    <value>双线性</value>
+  </data>
+  <data name="FiguresOfMerit_ToString_LOD__" xml:space="preserve">
+    <value>LOD（检出极限）：</value>
+    <comment>This stands for "Limit of Detection"</comment>
+  </data>
+  <data name="FiguresOfMerit_ToString_LOQ__" xml:space="preserve">
+    <value>LOQ（定量极限）：</value>
+    <comment>This stands for "Limit of Quantification"</comment>
+  </data>
+  <data name="LodCalculation_NONE_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point" xml:space="preserve">
+    <value>双线性转折点</value>
+  </data>
+  <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">
+    <value>空白加 2 * SD</value>
+    <comment>This says "median value of the blank replicates plus 2 times their standard deviation"</comment>
+  </data>
+  <data name="LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD" xml:space="preserve">
+    <value>空白加 3 * SD</value>
+    <comment>This says "median value of the blank replicates plus 3 times their standard deviation"</comment>
+  </data>
+  <data name="CalibrationCurve_ToString_Intercept___0_" xml:space="preserve">
+    <value>截距：{0}</value>
+  </data>
+  <data name="CalibrationCurve_ToString_Turning_Point___0_" xml:space="preserve">
+    <value>转折点：{0}</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__Replicate___0__" xml:space="preserve">
+    <value>（重复测定：{0}）</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__Batch___0__" xml:space="preserve">
+    <value>（批次：{0}）</value>
+  </data>
+  <data name="CalibrationForm_GetFormTitle__All_Replicates_" xml:space="preserve">
+    <value>（全部重复测定）</value>
   </data>
   <data name="ValueStatus_UNDEFINED_Undefined" xml:space="preserve">
     <value>未定义</value>
   </data>
-  <data name="Weighting" xml:space="preserve">
-    <value>权重</value>
+  <data name="ValueStatus_PRESENT_Present" xml:space="preserve">
+    <value>存在</value>
+  </data>
+  <data name="ValueStatus_EQUAL_Equal" xml:space="preserve">
+    <value>等于</value>
+  </data>
+  <data name="ValueStatus_LOW_Low" xml:space="preserve">
+    <value>低</value>
+  </data>
+  <data name="ValueStatus_HIGH_High" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="ValueStatus_PASS_Pass" xml:space="preserve">
+    <value>通过</value>
+  </data>
+  <data name="ValueStatus_FAIL_Fail" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="RatioToLabel_GetAxisTitle__0__Ratio_To__1_" xml:space="preserve">
+    <value>相对于  {1} 的 {0} 比率</value>
+    <comment>Example: Peak Area Ratio To Global Standards</comment>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0_" xml:space="preserve">
+    <value>替代 {0}</value>
+  </data>
+  <data name="RatioToSurrogate_NormalizeToCaption_Surrogate__0____1__" xml:space="preserve">
+    <value>替代 {0} ({1})</value>
+    <comment>Example: Surrogate Leucine (Heavy)</comment>
+  </data>
+  <data name="NormalizeOption_MAXIMUM_Maximum" xml:space="preserve">
+    <value>最大值</value>
+  </data>
+  <data name="NormalizeOption_TOTAL_Total" xml:space="preserve">
+    <value>总计</value>
+  </data>
+  <data name="NormalizeOption_DEFAULT_Default_Normalization_Method" xml:space="preserve">
+    <value>默认归一化方法</value>
+  </data>
+  <data name="NormalizeOption_CALIBRATED_Calibration_Curve" xml:space="preserve">
+    <value>校准曲线</value>
+  </data>
+  <data name="SkylineWindow_MakeNormalizeToMenuItem_Default___0__" xml:space="preserve">
+    <value>默认（{0}）</value>
+    <comment>Example: Default (Global Standards)</comment>
   </data>
 </root>

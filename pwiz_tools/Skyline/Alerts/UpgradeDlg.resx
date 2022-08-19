@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,21 +105,294 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnLater.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="btnLater.Location" type="System.Drawing.Point, System.Drawing">
+    <value>217, 193</value>
+  </data>
+  <data name="btnLater.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 23</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnLater.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="btnLater.Text" xml:space="preserve">
+    <value>Remind Me &amp;Later</value>
+  </data>
+  <data name="&gt;&gt;btnLater.Name" xml:space="preserve">
+    <value>btnLater</value>
+  </data>
+  <data name="&gt;&gt;btnLater.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnLater.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnLater.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="panel1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkReleaseNotes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkReleaseNotes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 117</value>
+  </data>
+  <data name="linkReleaseNotes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="linkReleaseNotes.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="linkReleaseNotes.Text" xml:space="preserve">
+    <value>Release Notes</value>
+  </data>
+  <data name="&gt;&gt;linkReleaseNotes.Name" xml:space="preserve">
+    <value>linkReleaseNotes</value>
+  </data>
+  <data name="&gt;&gt;linkReleaseNotes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkReleaseNotes.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;linkReleaseNotes.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelDetailAutomatic.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDetailAutomatic.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 81</value>
+  </data>
+  <data name="labelDetailAutomatic.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 13</value>
+  </data>
+  <data name="labelDetailAutomatic.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="labelDetailAutomatic.Text" xml:space="preserve">
+    <value>Automatic upgrade is available.</value>
+  </data>
+  <data name="labelDetailAutomatic.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;labelDetailAutomatic.Name" xml:space="preserve">
+    <value>labelDetailAutomatic</value>
+  </data>
+  <data name="&gt;&gt;labelDetailAutomatic.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDetailAutomatic.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;labelDetailAutomatic.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelDirections.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDirections.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 149</value>
+  </data>
+  <data name="labelDirections.Size" type="System.Drawing.Size, System.Drawing">
+    <value>230, 13</value>
+  </data>
+  <data name="labelDirections.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelDirections.Text" xml:space="preserve">
+    <value>Click the Install Now button to begin upgrading.</value>
+  </data>
+  <data name="&gt;&gt;labelDirections.Name" xml:space="preserve">
+    <value>labelDirections</value>
+  </data>
+  <data name="&gt;&gt;labelDirections.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDirections.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;labelDirections.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelDetail.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDetail.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 50</value>
+  </data>
+  <data name="labelDetail.Size" type="System.Drawing.Size, System.Drawing">
+    <value>202, 13</value>
+  </data>
+  <data name="labelDetail.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelDetail.Text" xml:space="preserve">
+    <value>Manual installation is required to upgrade.</value>
+  </data>
+  <data name="&gt;&gt;labelDetail.Name" xml:space="preserve">
+    <value>labelDetail</value>
+  </data>
+  <data name="&gt;&gt;labelDetail.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDetail.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;labelDetail.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelRelease.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelRelease.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 12pt</value>
+  </data>
+  <data name="labelRelease.Location" type="System.Drawing.Point, System.Drawing">
+    <value>129, 13</value>
+  </data>
+  <data name="labelRelease.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 20</value>
+  </data>
+  <data name="labelRelease.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelRelease.Text" xml:space="preserve">
+    <value>{0} {1} has been released!</value>
+  </data>
+  <data name="&gt;&gt;labelRelease.Name" xml:space="preserve">
+    <value>labelRelease</value>
+  </data>
+  <data name="&gt;&gt;labelRelease.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelRelease.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;labelRelease.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="pictureSkyline.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 13</value>
+  </data>
+  <data name="pictureSkyline.Size" type="System.Drawing.Size, System.Drawing">
+    <value>111, 149</value>
+  </data>
+  <data name="pictureSkyline.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
+    <value>StretchImage</value>
+  </data>
+  <data name="pictureSkyline.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;pictureSkyline.Name" xml:space="preserve">
+    <value>pictureSkyline</value>
+  </data>
+  <data name="&gt;&gt;pictureSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;pictureSkyline.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;pictureSkyline.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>1, 0</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>410, 175</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="btnInstall.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnInstall.Location" type="System.Drawing.Point, System.Drawing">
+    <value>324, 193</value>
+  </data>
+  <data name="btnInstall.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnInstall.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="btnInstall.Text" xml:space="preserve">
+    <value>Install &amp;Now</value>
+  </data>
+  <data name="&gt;&gt;btnInstall.Name" xml:space="preserve">
+    <value>btnInstall</value>
+  </data>
+  <data name="&gt;&gt;btnInstall.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnInstall.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnInstall.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbAtStartup.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAtStartup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 197</value>
+  </data>
+  <data name="cbAtStartup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 17</value>
+  </data>
+  <data name="cbAtStartup.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="cbAtStartup.Text" xml:space="preserve">
+    <value>Check for updates at start-up</value>
+  </data>
+  <data name="&gt;&gt;cbAtStartup.Name" xml:space="preserve">
+    <value>cbAtStartup</value>
+  </data>
+  <data name="&gt;&gt;cbAtStartup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAtStartup.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;cbAtStartup.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -141,247 +414,7 @@
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>UpgradeDlg</value>
   </data>
-  <data name="&gt;&gt;btnInstall.Name" xml:space="preserve">
-    <value>btnInstall</value>
-  </data>
-  <data name="&gt;&gt;btnInstall.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnInstall.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;btnLater.Name" xml:space="preserve">
-    <value>btnLater</value>
-  </data>
-  <data name="&gt;&gt;btnLater.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnLater.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;cbAtStartup.Name" xml:space="preserve">
-    <value>cbAtStartup</value>
-  </data>
-  <data name="&gt;&gt;cbAtStartup.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbAtStartup.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;labelDetail.Name" xml:space="preserve">
-    <value>labelDetail</value>
-  </data>
-  <data name="&gt;&gt;labelDetail.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;labelDetail.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.Name" xml:space="preserve">
-    <value>labelDetailAutomatic</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;labelDetailAutomatic.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;labelDirections.Name" xml:space="preserve">
-    <value>labelDirections</value>
-  </data>
-  <data name="&gt;&gt;labelDirections.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;labelDirections.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;labelRelease.Name" xml:space="preserve">
-    <value>labelRelease</value>
-  </data>
-  <data name="&gt;&gt;labelRelease.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;labelRelease.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;linkReleaseNotes.Name" xml:space="preserve">
-    <value>linkReleaseNotes</value>
-  </data>
-  <data name="&gt;&gt;linkReleaseNotes.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;linkReleaseNotes.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;pictureSkyline.Name" xml:space="preserve">
-    <value>pictureSkyline</value>
-  </data>
-  <data name="&gt;&gt;pictureSkyline.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;pictureSkyline.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="btnInstall.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnInstall.Location" type="System.Drawing.Point, System.Drawing">
-    <value>324, 193</value>
-  </data>
-  <data name="btnInstall.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnInstall.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="btnInstall.Text" xml:space="preserve">
-    <value>Install &amp;Now</value>
-  </data>
-  <data name="btnLater.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnLater.Location" type="System.Drawing.Point, System.Drawing">
-    <value>217, 193</value>
-  </data>
-  <data name="btnLater.Size" type="System.Drawing.Size, System.Drawing">
-    <value>101, 23</value>
-  </data>
-  <data name="btnLater.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="btnLater.Text" xml:space="preserve">
-    <value>Remind Me &amp;Later</value>
-  </data>
-  <data name="cbAtStartup.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbAtStartup.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 197</value>
-  </data>
-  <data name="cbAtStartup.Size" type="System.Drawing.Size, System.Drawing">
-    <value>163, 17</value>
-  </data>
-  <data name="cbAtStartup.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="cbAtStartup.Text" xml:space="preserve">
-    <value>Check for updates at start-up</value>
-  </data>
-  <data name="labelDetail.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDetail.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 50</value>
-  </data>
-  <data name="labelDetail.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 13</value>
-  </data>
-  <data name="labelDetail.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="labelDetail.Text" xml:space="preserve">
-    <value>Manual installation is required to upgrade.</value>
-  </data>
-  <data name="labelDetailAutomatic.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDetailAutomatic.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 81</value>
-  </data>
-  <data name="labelDetailAutomatic.Size" type="System.Drawing.Size, System.Drawing">
-    <value>154, 13</value>
-  </data>
-  <data name="labelDetailAutomatic.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="labelDetailAutomatic.Text" xml:space="preserve">
-    <value>Automatic upgrade is available.</value>
-  </data>
-  <data name="labelDetailAutomatic.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="labelDirections.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelDirections.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 149</value>
-  </data>
-  <data name="labelDirections.Size" type="System.Drawing.Size, System.Drawing">
-    <value>230, 13</value>
-  </data>
-  <data name="labelDirections.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="labelDirections.Text" xml:space="preserve">
-    <value>Click the Install Now button to begin upgrading.</value>
-  </data>
-  <data name="labelRelease.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelRelease.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 12pt</value>
-  </data>
-  <data name="labelRelease.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 13</value>
-  </data>
-  <data name="labelRelease.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 20</value>
-  </data>
-  <data name="labelRelease.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="labelRelease.Text" xml:space="preserve">
-    <value>{0} {1} has been released!</value>
-  </data>
-  <data name="linkReleaseNotes.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="linkReleaseNotes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>129, 117</value>
-  </data>
-  <data name="linkReleaseNotes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>77, 13</value>
-  </data>
-  <data name="linkReleaseNotes.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="linkReleaseNotes.Text" xml:space="preserve">
-    <value>Release Notes</value>
-  </data>
-  <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="panel1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>1, 0</value>
-  </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>410, 175</value>
-  </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="pictureSkyline.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 13</value>
-  </data>
-  <data name="pictureSkyline.Size" type="System.Drawing.Size, System.Drawing">
-    <value>111, 149</value>
-  </data>
-  <data name="pictureSkyline.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
-    <value>StretchImage</value>
-  </data>
-  <data name="pictureSkyline.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
