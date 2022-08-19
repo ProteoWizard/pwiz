@@ -111,7 +111,7 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
 
-            this._specificFileFilter = specificFileFilter;
+            _specificFileFilter = specificFileFilter;
         }
 
         public new DialogResult ShowDialog(IWin32Window owner)
@@ -248,7 +248,42 @@ namespace pwiz.Skyline.FileUI
         private SourceInfo getSourceInfo(DirectoryInfo dirInfo)
         {
             // Filter for only raw files that are missing. To prevent user confusion
-            if (_specificFileFilter != null && dirInfo.Name.Contains(".raw") && !_specificFileFilter.Contains(dirInfo.Name))
+            bool validInclude = false;
+            var subFiles = Directory.GetFiles(dirInfo.FullName, "*.*", SearchOption.AllDirectories);
+            var subDirectories = Directory.GetDirectories(dirInfo.FullName, "*.*", SearchOption.AllDirectories);
+
+
+            // Convert file paths to file names
+            var subFileNames = subFiles.Select(Path.GetFileName).ToList();
+            var subDirectoryNames = subDirectories.Select(Path.GetFileName).ToList();
+
+            foreach (var missingFiles in _specificFileFilter)
+            {
+                if (subFileNames.Contains(missingFiles))
+                {
+                    validInclude = true;
+                    break;
+                }
+            }
+
+            // Convert directory paths into directory names
+            foreach (var missingFiles in _specificFileFilter)
+            {
+                if (subDirectoryNames.Contains(missingFiles))
+                {
+                    validInclude = true;
+                    break;
+                }
+            }
+
+            // Check if the file/directory is itself a missing file
+            if (_specificFileFilter.Contains(dirInfo.Name))
+            {
+                validInclude = true;
+            }
+
+            // Do not include folders not containing missing files
+            if (_specificFileFilter != null && !validInclude) 
             {
                 return null;
             }

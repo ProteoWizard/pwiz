@@ -347,7 +347,7 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public void findResultsFolder_Click(object sender, EventArgs e)
+        public void FindResultsFolder_Click(object sender, EventArgs e)
         {
             LocateMissingFilesFromFolder();
         }
