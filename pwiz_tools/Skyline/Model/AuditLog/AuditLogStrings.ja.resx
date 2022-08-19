@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,307 +105,74 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AuditLogForm_AuditLogForm_Undo_Redo" xml:space="preserve">
-    <value>やり直しを元に戻す</value>
+  <data name="accept_peptides" xml:space="preserve">
+    <value>{0}個のペプチドが許可されました</value>
   </data>
-  <data name="AuditLogForm_AuditLogForm_Summary" xml:space="preserve">
-    <value>概要</value>
+  <data name="accepted_peptide" xml:space="preserve">
+    <value>ペプチド{0}が許可されました</value>
   </data>
-  <data name="AuditLogForm_AuditLogForm_All_Info" xml:space="preserve">
-    <value>すべての情報</value>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Clear_log" xml:space="preserve">
-    <value>ログをクリア</value>
-  </data>
-  <data name="AuditLogForm__clearLogButton_Click_Clear_audit_log" xml:space="preserve">
-    <value>監査ログをクリア</value>
-  </data>
-  <data name="Missing" xml:space="preserve">
-    <value>見つかりません</value>
-  </data>
-  <data name="changed" xml:space="preserve">
-    <value>{0}が変更されました</value>
-  </data>
-  <data name="added_to" xml:space="preserve">
-    <value>{0}：{1}が追加されました</value>
-  </data>
-  <data name="removed_from" xml:space="preserve">
-    <value>{0}：{1}が削除されました</value>
-  </data>
-  <data name="changed_to" xml:space="preserve">
-    <value>{0}が{1}に変更されました</value>
-  </data>
-  <data name="TabSeparator" xml:space="preserve">
-    <value>－</value>
-    <comment>Used in audit log to separate UI tabs</comment>
-  </data>
-  <data name="PropertySeparator" xml:space="preserve">
-    <value>&gt;</value>
-    <comment>Used in audit log to separate properties</comment>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Enable_audit_logging" xml:space="preserve">
-    <value>監査ログ記録を有効</value>
-  </data>
-  <data name="AuditLogRow_Reason_Changed_audit_log_reason" xml:space="preserve">
-    <value>監査ログの理由が変更されました</value>
-  </data>
-  <data name="log_unlogged_changes" xml:space="preserve">
-    <value>{0}件の変更がログ記録されていません</value>
-  </data>
-  <data name="log_cleared" xml:space="preserve">
-    <value>{0}件の変更がクリアされました</value>
-  </data>
-  <data name="log_enabled" xml:space="preserve">
-    <value>監査ログ記録が有効になりました</value>
-  </data>
-  <data name="log_disabled" xml:space="preserve">
-    <value>監査ログ記録が無効になりました</value>
-  </data>
-  <data name="contains" xml:space="preserve">
-    <value>{0}：{1}が含まれています</value>
-  </data>
-  <data name="changed_from_to" xml:space="preserve">
-    <value>{0}は{1}から{2}に変更されました</value>
-  </data>
-  <data name="is_" xml:space="preserve">
-    <value>{0}は{1}です</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_Undo_Redo" xml:space="preserve">
-    <value>やり直しを元に戻す</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_Summary" xml:space="preserve">
-    <value>概要</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_All_Info" xml:space="preserve">
-    <value>すべての情報</value>
-  </data>
-  <data name="LogMessage_LocalizeValue_True" xml:space="preserve">
-    <value>真</value>
-  </data>
-  <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
-    <value>偽</value>
-  </data>
-  <data name="removed_protein" xml:space="preserve">
-    <value>タンパク質{0}が削除されました</value>
-  </data>
-  <data name="removed_peptide_from_protein" xml:space="preserve">
-    <value>ペプチド{0}がタンパク質{1}から削除されました</value>
-  </data>
-  <data name="removed_empty_peptides" xml:space="preserve">
-    <value>{0}個の空欄のペプチドが削除されました</value>
-  </data>
-  <data name="removed_duplicate_peptides" xml:space="preserve">
-    <value>{0}個の重複ペプチドが削除されました</value>
-  </data>
-  <data name="removed_repeated_peptides" xml:space="preserve">
-    <value>{0}個の反復ペプチドが削除されました</value>
-  </data>
-  <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
-    <value>タンパク質{3}のペプチド{2}のトランジショングループ{1}からトランジション{0}が削除されました</value>
-  </data>
-  <data name="removed_transition_group_from_peptide_from_protein" xml:space="preserve">
-    <value>タンパク質{2}のペプチド{1}からトランジショングループ{0}が削除されました</value>
-  </data>
-  <data name="deleted_targets" xml:space="preserve">
-    <value>{0}個のターゲットが削除されました</value>
-  </data>
-  <data name="picked_children" xml:space="preserve">
-    <value>{1}に対する{0}のプロダクトイオンが選択されました</value>
-  </data>
-  <data name="inserted_data" xml:space="preserve">
-    <value>ペプチド/タンパク質が挿入されました</value>
-  </data>
-  <data name="edited_note" xml:space="preserve">
-    <value>{0}のメモが編集されました</value>
-  </data>
-  <data name="set_standard_type" xml:space="preserve">
-    <value>{0}の標準タイプが設定されました</value>
-  </data>
-  <data name="None" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="SkylineWindow_SetStandardType__0__peptides" xml:space="preserve">
-    <value>{0}個のペプチド</value>
-  </data>
-  <data name="SkylineWindow_EditNote__0__targets" xml:space="preserve">
-    <value>{0}個のターゲット</value>
-  </data>
-  <data name="modified" xml:space="preserve">
-    <value>{0}が修飾されました</value>
-  </data>
-  <data name="ExplicitMod_AuditLogText__0__at_index__1_" xml:space="preserve">
-    <value>インデックス{1}の{0}</value>
-  </data>
-  <data name="pasted_targets" xml:space="preserve">
-    <value>ターゲットが貼り付けられました</value>
-  </data>
-  <data name="set_to_in_document_grid" xml:space="preserve">
-    <value>{1}の{0}が{2}に設定されました</value>
-  </data>
-  <data name="pasted_document_grid" xml:space="preserve">
-    <value>ドキュメントグリッドに{0}個の値が貼り付けられました</value>
-  </data>
-  <data name="renamed_proteins" xml:space="preserve">
-    <value>{0}個のタンパク質の名前が変更されました</value>
-  </data>
-  <data name="inserted_peptides" xml:space="preserve">
-    <value>{0}個のペプチドが挿入されました</value>
-  </data>
-  <data name="inserted_proteins" xml:space="preserve">
-    <value>{0}個のタンパク質が挿入されました</value>
-  </data>
-  <data name="inserted_transitions" xml:space="preserve">
-    <value>{0}のトランジションが挿入されました</value>
+  <data name="accepted_protein" xml:space="preserve">
+    <value>タンパク質{0}が許可されました</value>
   </data>
   <data name="accepted_proteins" xml:space="preserve">
     <value>{0}個のタンパク質が許可されました</value>
   </data>
-  <data name="accept_peptides" xml:space="preserve">
-    <value>{0}個のペプチドが許可されました</value>
-  </data>
-  <data name="sort_protein_accession" xml:space="preserve">
-    <value>タンパク質のアクセッション別に並べ替えられました</value>
-  </data>
-  <data name="sort_protein_gene" xml:space="preserve">
-    <value>タンパク質の遺伝子別に並べ替えられました</value>
-  </data>
-  <data name="sort_protein_name" xml:space="preserve">
-    <value>タンパク質の名前別に並べ替えられました</value>
-  </data>
-  <data name="sort_protein_preferred_name" xml:space="preserve">
-    <value>タンパク質の推奨名別に並べ替えられました</value>
-  </data>
-  <data name="False" xml:space="preserve">
-    <value>偽</value>
-  </data>
-  <data name="True" xml:space="preserve">
-    <value>真</value>
-  </data>
-  <data name="added_peptide_decoys" xml:space="preserve">
-    <value>{1}メソッドを用いて{0}個のペプチドデコイが追加されました</value>
-  </data>
-  <data name="refined_targets" xml:space="preserve">
-    <value>ターゲットを定義し直しました</value>
-  </data>
-  <data name="removed_missing_results" xml:space="preserve">
-    <value>欠損している結果が削除されました</value>
-  </data>
-  <data name="renamed_single_protein" xml:space="preserve">
-    <value>タンパク質の名前が{0}から{1}に変更されました</value>
-  </data>
-  <data name="set_standard_type_peptides" xml:space="preserve">
-    <value>{0}個のペプチドの標準タイプが設定されました</value>
-  </data>
-  <data name="imported_results" xml:space="preserve">
-    <value>{0}個のファイルから結果がインポートされました</value>
-  </data>
-  <data name="imported_peak_boundaries" xml:space="preserve">
-    <value>「{0}」からピーク境界がインポートされました</value>
-  </data>
-  <data name="removed_unrecognized_charge_state" xml:space="preserve">
-    <value>認識できない荷電状態{0}が削除されました</value>
-  </data>
-  <data name="removed_unrecognized_file" xml:space="preserve">
-    <value>認識できないファイル{0}が削除されました</value>
-  </data>
-  <data name="removed_unrecognized_peptide" xml:space="preserve">
-    <value>認識されないペプチド{0}が削除されました</value>
-  </data>
-  <data name="UnrecognizedChargeStates" xml:space="preserve">
-    <value>荷電状態が認識できません</value>
-  </data>
-  <data name="UnrecognizedFiles" xml:space="preserve">
-    <value>ファイルが認識できません</value>
-  </data>
-  <data name="UnrecognizedPeptides" xml:space="preserve">
-    <value>ペプチドが認識できません</value>
-  </data>
-  <data name="imported_fasta" xml:space="preserve">
-    <value>「{0}」からFASTAがインポートされました</value>
-  </data>
-  <data name="kept_empty_proteins" xml:space="preserve">
-    <value>{0}個の空欄のタンパク質が保持されました</value>
-  </data>
-  <data name="removed_empty_proteins" xml:space="preserve">
-    <value>{0}個の空欄のタンパク質が削除されました</value>
-  </data>
-  <data name="imported_assay_library_from_file" xml:space="preserve">
-    <value>「{0}」からアッセイライブラリがインポートされました</value>
-  </data>
-  <data name="imported_transition_list_from_file" xml:space="preserve">
-    <value>「{0}」からトランジションリストがインポートされました</value>
-  </data>
-  <data name="imported_spectral_library_intensities" xml:space="preserve">
-    <value>スペクトルライブラリの強度がインポートされました</value>
-  </data>
-  <data name="imported_doc" xml:space="preserve">
-    <value>ドキュメント「{0}」がインポートされました</value>
-  </data>
-  <data name="imported_annotations" xml:space="preserve">
-    <value>「{0}」から注釈がインポートされました</value>
-  </data>
-  <data name="set_excluded_standard" xml:space="preserve">
-    <value>校正曲線からペプチド{0}の繰り返し測定{1}を除外しています</value>
-  </data>
-  <data name="set_included_standard" xml:space="preserve">
-    <value>校正曲線にペプチド{0}の繰り返し測定{1}を含めています</value>
-  </data>
-  <data name="canceled_import" xml:space="preserve">
-    <value>インポートがキャンセルされました</value>
-  </data>
-  <data name="removed_below_cutoffs" xml:space="preserve">
-    <value>{1}のグループ比較でカットオフを下回る{0}個のノードが削除されました</value>
-  </data>
-  <data name="excluded_peptides" xml:space="preserve">
-    <value>{0}個のペプチド(ユニークペプチド...)が除外されました</value>
-  </data>
-  <data name="added_spectral_library" xml:space="preserve">
-    <value>スペクトルライブラリ「{0}」が追加されました</value>
-  </data>
-  <data name="Empty" xml:space="preserve">
-    <value>空</value>
-  </data>
-  <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>分子プリカーサー{0}が追加されました</value>
-  </data>
-  <data name="added_small_molecule" xml:space="preserve">
-    <value>分子{0}が追加されました</value>
-  </data>
-  <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>分子トランジション{0}が追加されました</value>
-  </data>
-  <data name="added_irt_standard_peptides" xml:space="preserve">
-    <value>iRT標準ペプチドが追加されました</value>
-  </data>
-  <data name="renamed_node" xml:space="preserve">
-    <value>[ターゲット]ウィンドウでノード{0}の名前が{1}に変更されました</value>
+  <data name="added_all_peptides_from_library" xml:space="preserve">
+    <value>ライブラリ「{1}」からすべて（{0}個）のペプチドが追加されました</value>
   </data>
   <data name="added_empty_peptide_group" xml:space="preserve">
     <value>[ターゲット]ウィンドウで空欄のペプチドグループ{0}が追加されました</value>
   </data>
+  <data name="added_irt_standard_peptides" xml:space="preserve">
+    <value>iRT標準ペプチドが追加されました</value>
+  </data>
   <data name="added_new_peptide_group" xml:space="preserve">
     <value>[ターゲット]ウィンドウでペプチドグループ{0}が追加されました</value>
+  </data>
+  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループ{0}が追加されました</value>
+  </data>
+  <data name="added_peptide_decoy" xml:space="preserve">
+    <value>{1}メソッドを用いて{0}個のペプチドデコイが追加されました</value>
+  </data>
+  <data name="added_peptide_decoys" xml:space="preserve">
+    <value>{1}メソッドを用いて{0}個のペプチドデコイが追加されました</value>
+  </data>
+  <data name="added_peptide_from_library" xml:space="preserve">
+    <value>ライブラリ「{1}」からペプチド{0}が追加されました</value>
   </data>
   <data name="added_peptides_to_peptide_group" xml:space="preserve">
     <value>[ターゲット]ウィンドウでペプチドグループ{0}にペプチドが追加されました</value>
   </data>
-  <data name="drag_and_dropped_nodes" xml:space="preserve">
-    <value>{0}個のノードが{1}にドラッグアンドドロップされました</value>
+  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループ{0}にペプチドが追加されました</value>
   </data>
-  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>{0}個の分子トランジションが貼り付けられました</value>
+  <data name="added_small_molecule" xml:space="preserve">
+    <value>分子{0}が追加されました</value>
+  </data>
+  <data name="added_small_molecule_precursor" xml:space="preserve">
+    <value>分子プリカーサー{0}が追加されました</value>
+  </data>
+  <data name="added_small_molecule_transition" xml:space="preserve">
+    <value>分子トランジション{0}が追加されました</value>
+  </data>
+  <data name="added_spectral_library" xml:space="preserve">
+    <value>スペクトルライブラリ「{0}」が追加されました</value>
+  </data>
+  <data name="added_to" xml:space="preserve">
+    <value>{0}：{1}が追加されました</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>ピーク{0}がすべてに適用されました</value>
@@ -413,17 +180,74 @@
   <data name="applied_peak_subsequent" xml:space="preserve">
     <value>ピーク{0}が後に適用されました</value>
   </data>
-  <data name="removed_peak_from" xml:space="preserve">
-    <value>繰り返し測定「{1}」にある{0}からピークが削除されました</value>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>以下のドキュメントの監査ログを読み込み中にエラーが発生しました：{0}。</value>
   </data>
-  <data name="removed_peaks" xml:space="preserve">
-    <value>{1}個のノードから{0}個のピークが削除されました。</value>
+  <data name="AuditLogForm__clearLogButton_Click_Clear_audit_log" xml:space="preserve">
+    <value>監査ログをクリア</value>
   </data>
-  <data name="removed_all_peaks_from" xml:space="preserve">
-    <value>繰り返し測定「{1}」にある{0}からすべてのピークが削除されました</value>
+  <data name="AuditLogForm_AuditLogForm_All_Info" xml:space="preserve">
+    <value>すべての情報</value>
   </data>
-  <data name="picked_peak" xml:space="preserve">
-    <value>{2}で「{1}」にあるピーク{0}が選択されました </value>
+  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
+    <value>監査ログ</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Clear_log" xml:space="preserve">
+    <value>ログをクリア</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Enable_audit_logging" xml:space="preserve">
+    <value>監査ログ記録を有効</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Summary" xml:space="preserve">
+    <value>概要</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Undo_Redo" xml:space="preserve">
+    <value>やり直しを元に戻す</value>
+  </data>
+  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
+    <value>これにより、ドキュメントが保存されると監査ログがクリアされ、永久に消去されます。続行しますか？</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_All_Info" xml:space="preserve">
+    <value>すべての情報</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_Summary" xml:space="preserve">
+    <value>概要</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_Undo_Redo" xml:space="preserve">
+    <value>やり直しを元に戻す</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>監査ログを読み取り中に例外が発生しました。
+
+監査ログファイルの削除、名前の変更や移動によってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
+
+ご参考までに、監査ログの場所はここです：「{0}」</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>次の監査ログエントリが変更されています：
+
+</value>
+  </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>監査ログが破損しています。監査ログエントリのタイムスタンプとインデックスの値が正しい順序である必要があります。エントリ番号{0}のタイムスタンプ{1:G}はエントリ番号{2}のタイムスタンプ{3:G} の前に発生します。</value>
+  </data>
+  <data name="AuditLogRow_Reason_Changed_audit_log_reason" xml:space="preserve">
+    <value>監査ログの理由が変更されました</value>
+  </data>
+  <data name="canceled_import" xml:space="preserve">
+    <value>インポートがキャンセルされました</value>
+  </data>
+  <data name="changed" xml:space="preserve">
+    <value>{0}が変更されました</value>
+  </data>
+  <data name="changed_from_to" xml:space="preserve">
+    <value>{0}は{1}から{2}に変更されました</value>
+  </data>
+  <data name="changed_peak_bounds" xml:space="preserve">
+    <value>ピーク境界が変更されました</value>
+  </data>
+  <data name="changed_peak_bounds_of" xml:space="preserve">
+    <value>{0}のピーク境界が変更されました</value>
   </data>
   <data name="changed_peak_end" xml:space="preserve">
     <value>「{1}」にあるピーク{0}の終了時間が{2}から{3}に変更されました</value>
@@ -437,110 +261,126 @@
   <data name="changed_peak_start_all" xml:space="preserve">
     <value>「{1}」にある{0}の全ピークの開始時間が{2}から{3}に変更されました</value>
   </data>
-  <data name="changed_peak_bounds" xml:space="preserve">
-    <value>ピーク境界が変更されました</value>
+  <data name="changed_quantitative" xml:space="preserve">
+    <value>{0}で定量イオンを変更しました</value>
   </data>
-  <data name="removed_peptides_above_cutoff" xml:space="preserve">
-    <value>{1}%のピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
-  </data>
-  <data name="removed_rt_outliers" xml:space="preserve">
-    <value>{0}個のRT異常値が削除されました</value>
-  </data>
-  <data name="added_all_peptides_from_library" xml:space="preserve">
-    <value>ライブラリ「{1}」からすべて（{0}個）のペプチドが追加されました</value>
-  </data>
-  <data name="added_peptide_from_library" xml:space="preserve">
-    <value>ライブラリ「{1}」からペプチド{0}が追加されました</value>
-  </data>
-  <data name="matched_modifications_of_library" xml:space="preserve">
-    <value>ライブラリ「{0}」の修飾部分が一致しました</value>
-  </data>
-  <data name="reintegrated_peaks" xml:space="preserve">
-    <value>「{0}」を使用してピークが再積分されました</value>
-  </data>
-  <data name="imported_peptide_search" xml:space="preserve">
-    <value>ペプチド検索がインポートされました</value>
-  </data>
-  <data name="fill_down_document_grid" xml:space="preserve">
-    <value>ドキュメントグリッドで{0}個の値がフィルダウンされました</value>
-  </data>
-  <data name="cleared_document_grid" xml:space="preserve">
-    <value>ドキュメントグリッドで{0}個のセルがクリアされました</value>
+  <data name="changed_to" xml:space="preserve">
+    <value>{0}が{1}に変更されました</value>
   </data>
   <data name="cleared_cell_in_document_grid" xml:space="preserve">
     <value>ドキュメントグリッドで{1}の{0}がクリアされました</value>
   </data>
-  <data name="managed_results" xml:space="preserve">
-    <value>結果が管理されました</value>
+  <data name="cleared_document_grid" xml:space="preserve">
+    <value>ドキュメントグリッドで{0}個のセルがクリアされました</value>
   </data>
-  <data name="upgraded_background_proteome" xml:space="preserve">
-    <value>バックグラウンドプロテオーム「{0}」がアップグレードされました</value>
+  <data name="cleared_document_grid_single" xml:space="preserve">
+    <value>ドキュメントグリッド内の{0}の値がクリアされました</value>
   </data>
-  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループ{0}が追加されました</value>
-  </data>
-  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>[ターゲット]ウィンドウでバックグラウンドプロテオームからペプチドグループ{0}にペプチドが追加されました</value>
-  </data>
-  <data name="imported_assay_library" xml:space="preserve">
-    <value>クリップボードからアッセイライブラリがインポートされました</value>
-  </data>
-  <data name="imported_transition_list" xml:space="preserve">
-    <value>クリップボードからトランジションリストがインポートされました</value>
-  </data>
-  <data name="log_error" xml:space="preserve">
-    <value>タイプ{0}の例外が発生しました</value>
-  </data>
-  <data name="log_error_old_msg" xml:space="preserve">
-    <value>操作「{1}」を実行中に、タイプ{0}の例外が発生しました</value>
-  </data>
-  <data name="empty_single_arg" xml:space="preserve">
-    <value>{0}</value>
+  <data name="contains" xml:space="preserve">
+    <value>{0}：{1}が含まれています</value>
   </data>
   <data name="deleted_target" xml:space="preserve">
     <value>ターゲット{0}が削除されました</value>
   </data>
-  <data name="imported_docs" xml:space="preserve">
-    <value>{0}個のドキュメントがインポートされました</value>
-  </data>
-  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
-    <value>ログエントリ作成中にエラーが発生しました。それでもドキュメントは正常に変更されました。</value>
-  </data>
-  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
-    <value>ログエントリ作成中にエラーが発生しました。それでも操作「{0}」は成功しました。</value>
-  </data>
-  <data name="removed_all" xml:space="preserve">
-    <value>{0}：すべてが削除されました</value>
-  </data>
-  <data name="removed_all_libraries" xml:space="preserve">
-    <value>すべてのライブラリ実行が削除されました</value>
-  </data>
-  <data name="removed_all_replicates" xml:space="preserve">
-    <value>すべての繰り返し測定が削除されました</value>
-  </data>
-  <data name="removed_library_run" xml:space="preserve">
-    <value>ライブラリ実行「{0}」が削除されました</value>
-  </data>
-  <data name="removed_replicate" xml:space="preserve">
-    <value>繰り返し測定{0}が削除されました</value>
-  </data>
-  <data name="accepted_peptide" xml:space="preserve">
-    <value>ペプチド{0}が許可されました</value>
-  </data>
-  <data name="accepted_protein" xml:space="preserve">
-    <value>タンパク質{0}が許可されました</value>
+  <data name="deleted_targets" xml:space="preserve">
+    <value>{0}個のターゲットが削除されました</value>
   </data>
   <data name="drag_and_dropped_node" xml:space="preserve">
     <value>{0}が{1}にドラッグアンドドロップされました</value>
   </data>
+  <data name="drag_and_dropped_nodes" xml:space="preserve">
+    <value>{0}個のノードが{1}にドラッグアンドドロップされました</value>
+  </data>
+  <data name="edited_ion_mobility_library" xml:space="preserve">
+    <value>移動度ライブラリ{0}（{1}）を編集しました</value>
+    <comment>{0} is library name, {1} is library file location</comment>
+  </data>
+  <data name="edited_note" xml:space="preserve">
+    <value>{0}のメモが編集されました</value>
+  </data>
+  <data name="Empty" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="empty_single_arg" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="excluded_peptide" xml:space="preserve">
+    <value>{0}個のペプチド(ユニークペプチド...)が除外されました</value>
+  </data>
+  <data name="excluded_peptides" xml:space="preserve">
+    <value>{0}個のペプチド(ユニークペプチド...)が除外されました</value>
+  </data>
+  <data name="ExplicitMod_AuditLogText__0__at_index__1_" xml:space="preserve">
+    <value>インデックス{1}の{0}</value>
+  </data>
+  <data name="False" xml:space="preserve">
+    <value>偽</value>
+  </data>
+  <data name="fill_down_document_grid" xml:space="preserve">
+    <value>ドキュメントグリッドで{0}個の値がフィルダウンされました</value>
+  </data>
+  <data name="fill_down_document_grid_single" xml:space="preserve">
+    <value>ドキュメントグリッドにある{0}の値がフィルダウンされました</value>
+  </data>
+  <data name="imported_annotations" xml:space="preserve">
+    <value>「{0}」から注釈がインポートされました</value>
+  </data>
+  <data name="imported_assay_library" xml:space="preserve">
+    <value>クリップボードからアッセイライブラリがインポートされました</value>
+  </data>
+  <data name="imported_assay_library_from_file" xml:space="preserve">
+    <value>「{0}」からアッセイライブラリがインポートされました</value>
+  </data>
+  <data name="imported_doc" xml:space="preserve">
+    <value>ドキュメント「{0}」がインポートされました</value>
+  </data>
+  <data name="imported_docs" xml:space="preserve">
+    <value>{0}個のドキュメントがインポートされました</value>
+  </data>
+  <data name="imported_fasta" xml:space="preserve">
+    <value>「{0}」からFASTAがインポートされました</value>
+  </data>
+  <data name="imported_fasta_paste" xml:space="preserve">
+    <value>クリップボードからFASTAがインポートされました</value>
+  </data>
+  <data name="imported_peak_boundaries" xml:space="preserve">
+    <value>「{0}」からピーク境界がインポートされました</value>
+  </data>
+  <data name="imported_peptide_list" xml:space="preserve">
+    <value>クリップボードからペプチドリストがインポートされました</value>
+  </data>
+  <data name="imported_peptide_search" xml:space="preserve">
+    <value>ペプチド検索がインポートされました</value>
+  </data>
   <data name="imported_result" xml:space="preserve">
     <value>「{0}」から結果がインポートされました</value>
+  </data>
+  <data name="imported_results" xml:space="preserve">
+    <value>{0}個のファイルから結果がインポートされました</value>
+  </data>
+  <data name="imported_spectral_library_intensities" xml:space="preserve">
+    <value>スペクトルライブラリの強度がインポートされました</value>
+  </data>
+  <data name="imported_transition_list" xml:space="preserve">
+    <value>クリップボードからトランジションリストがインポートされました</value>
+  </data>
+  <data name="imported_transition_list_from_file" xml:space="preserve">
+    <value>「{0}」からトランジションリストがインポートされました</value>
+  </data>
+  <data name="inserted_data" xml:space="preserve">
+    <value>ペプチド/タンパク質が挿入されました</value>
   </data>
   <data name="inserted_peptide" xml:space="preserve">
     <value>ペプチド{0}が挿入されました</value>
   </data>
+  <data name="inserted_peptides" xml:space="preserve">
+    <value>{0}個のペプチドが挿入されました</value>
+  </data>
   <data name="inserted_protein" xml:space="preserve">
     <value>タンパク質{0}が挿入されました</value>
+  </data>
+  <data name="inserted_proteins" xml:space="preserve">
+    <value>{0}個のタンパク質が挿入されました</value>
   </data>
   <data name="inserted_proteins_fasta" xml:space="preserve">
     <value>FASTAから{0}個のタンパク質が挿入されました</value>
@@ -548,126 +388,286 @@
   <data name="inserted_transition" xml:space="preserve">
     <value>{0}にトランジションが挿入されました</value>
   </data>
+  <data name="inserted_transitions" xml:space="preserve">
+    <value>{0}のトランジションが挿入されました</value>
+  </data>
+  <data name="is_" xml:space="preserve">
+    <value>{0}は{1}です</value>
+  </data>
   <data name="kept_empty_protein" xml:space="preserve">
     <value>{0}個の空欄のタンパク質が保持されました</value>
   </data>
-  <data name="removed_empty_protein" xml:space="preserve">
-    <value>{0}個の空欄のタンパク質が削除されました</value>
+  <data name="kept_empty_proteins" xml:space="preserve">
+    <value>{0}個の空欄のタンパク質が保持されました</value>
+  </data>
+  <data name="log_cleared" xml:space="preserve">
+    <value>{0}件の変更がクリアされました</value>
   </data>
   <data name="log_cleared_single" xml:space="preserve">
     <value>{0}件の変更がクリアされました</value>
   </data>
+  <data name="log_disabled" xml:space="preserve">
+    <value>監査ログ記録が無効になりました</value>
+  </data>
+  <data name="log_enabled" xml:space="preserve">
+    <value>監査ログ記録が有効になりました</value>
+  </data>
+  <data name="log_error" xml:space="preserve">
+    <value>タイプ{0}の例外が発生しました</value>
+  </data>
+  <data name="log_error_old_msg" xml:space="preserve">
+    <value>操作「{1}」を実行中に、タイプ{0}の例外が発生しました</value>
+  </data>
   <data name="log_unlogged_change" xml:space="preserve">
     <value>{0}件の変更はログ記録されていません</value>
   </data>
-  <data name="cleared_document_grid_single" xml:space="preserve">
-    <value>ドキュメントグリッド内の{0}の値がクリアされました</value>
+  <data name="log_unlogged_changes" xml:space="preserve">
+    <value>{0}件の変更がログ記録されていません</value>
   </data>
-  <data name="pasted_document_grid_single" xml:space="preserve">
-    <value>{0}の値がドキュメントグリッドに貼り付けられました</value>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
+    <value>ログエントリ作成中にエラーが発生しました。それでも操作「{0}」は成功しました。</value>
   </data>
-  <data name="fill_down_document_grid_single" xml:space="preserve">
-    <value>ドキュメントグリッドにある{0}の値がフィルダウンされました</value>
-  </data>
-  <data name="added_peptide_decoy" xml:space="preserve">
-    <value>{1}メソッドを用いて{0}個のペプチドデコイが追加されました</value>
-  </data>
-  <data name="picked_child" xml:space="preserve">
-    <value>{1}のプロダクトイオン{0}が選択されました</value>
-  </data>
-  <data name="removed_rt_outlier" xml:space="preserve">
-    <value>{0}個のRT異常値が削除されました</value>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
-    <value>監査ログ</value>
-  </data>
-  <data name="imported_fasta_paste" xml:space="preserve">
-    <value>クリップボードからFASTAがインポートされました</value>
-  </data>
-  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>{0}個の分子トランジションが貼り付けられました</value>
-  </data>
-  <data name="removed_empty_peptide" xml:space="preserve">
-    <value>{0}個の空欄のペプチドが削除されました</value>
-  </data>
-  <data name="removed_duplicate_peptide" xml:space="preserve">
-    <value>{0}個の重複ペプチドが削除されました</value>
-  </data>
-  <data name="removed_repeated_peptide" xml:space="preserve">
-    <value>{0}個の反復ペプチドが削除されました</value>
-  </data>
-  <data name="removed_single_below_cutoffs" xml:space="preserve">
-    <value>{1}グループ比較にあるカットオフを下回る{0}個のノードが削除されました</value>
-  </data>
-  <data name="removed_peptide_above_cutoff" xml:space="preserve">
-    <value>{1}%のピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
+    <value>ログエントリ作成中にエラーが発生しました。それでもドキュメントは正常に変更されました。</value>
   </data>
   <data name="LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_" xml:space="preserve">
     <value>位置{2}にある{0}残基{1}</value>
   </data>
-  <data name="imported_peptide_list" xml:space="preserve">
-    <value>クリップボードからペプチドリストがインポートされました</value>
+  <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
+    <value>偽</value>
   </data>
-  <data name="excluded_peptide" xml:space="preserve">
-    <value>{0}個のペプチド(ユニークペプチド...)が除外されました</value>
+  <data name="LogMessage_LocalizeValue_True" xml:space="preserve">
+    <value>真</value>
   </data>
-  <data name="renamed_replicate" xml:space="preserve">
-    <value>繰り返し測定{0}の名前が{1}に変更されました</value>
+  <data name="managed_results" xml:space="preserve">
+    <value>結果が管理されました</value>
   </data>
-  <data name="changed_peak_bounds_of" xml:space="preserve">
-    <value>{0}のピーク境界が変更されました</value>
+  <data name="matched_modifications_of_library" xml:space="preserve">
+    <value>ライブラリ「{0}」の修飾部分が一致しました</value>
   </data>
-  <data name="undocumented_change" xml:space="preserve">
-    <value>ドキュメントがSkyline外で変更されました</value>
+  <data name="Missing" xml:space="preserve">
+    <value>見つかりません</value>
   </data>
-  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
-    <value>監査ログが現在のドキュメントに一致しません。ドキュメントで行われた変更を説明するログエントリを追加しますか？</value>
+  <data name="modified" xml:space="preserve">
+    <value>{0}が修飾されました</value>
   </data>
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>ドキュメントがSkyline外で変更されました
 ：{0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>監査ログが破損しています。監査ログエントリのタイムスタンプとインデックスの値が正しい順序である必要があります。エントリ番号{0}のタイムスタンプ{1:G}はエントリ番号{2}のタイムスタンプ{3:G} の前に発生します。</value>
+  <data name="None" xml:space="preserve">
+    <value>なし</value>
   </data>
-  <data name="test_only" xml:space="preserve">
-    <value>{0}</value>
+  <data name="pasted_document_grid" xml:space="preserve">
+    <value>ドキュメントグリッドに{0}個の値が貼り付けられました</value>
   </data>
-  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
-    <value>これにより、ドキュメントが保存されると監査ログがクリアされ、永久に消去されます。続行しますか？</value>
+  <data name="pasted_document_grid_single" xml:space="preserve">
+    <value>{0}の値がドキュメントグリッドに貼り付けられました</value>
   </data>
-  <data name="start_log_existing_doc" xml:space="preserve">
-    <value>既存ドキュメントの監査ログの開始</value>
+  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
+    <value>{0}個の分子トランジションが貼り付けられました</value>
   </data>
-  <data name="edited_ion_mobility_library" xml:space="preserve">
-    <value>移動度ライブラリ{0}（{1}）を編集しました</value>
-    <comment>{0} is library name, {1} is library file location</comment>
+  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
+    <value>{0}個の分子トランジションが貼り付けられました</value>
   </data>
-  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
-    <value>次の監査ログエントリが変更されています：
-
-</value>
+  <data name="pasted_targets" xml:space="preserve">
+    <value>ターゲットが貼り付けられました</value>
   </data>
-  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
-    <value>監査ログを読み取り中に例外が発生しました。
-
-監査ログファイルの削除、名前の変更や移動によってこのエラーが発生しなくなります。またはSkylineチームに監査ログを送信することも可能で、チームはファイルの手動修正を試みます。
-
-ご参考までに、監査ログの場所はここです：「{0}」</value>
-  </data>
-  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
-    <value>以下のドキュメントの監査ログを読み込み中にエラーが発生しました：{0}。</value>
-  </data>
-  <data name="changed_quantitative" xml:space="preserve">
-    <value>{0}で定量イオンを変更しました</value>
-  </data>
-  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
-    <value>{0}個のトランジション</value>
+  <data name="permuted_isotope_label_complete">
+    <value>同位体修飾「{0}」の完全置換を追加</value>
   </data>
   <data name="permuted_isotope_label_simple">
     <value>同位体修飾「{0}」の単純置換を追加</value>
   </data>
-  <data name="permuted_isotope_label_complete">
-    <value>同位体修飾「{0}」の完全置換を追加</value>
+  <data name="picked_child" xml:space="preserve">
+    <value>{1}のプロダクトイオン{0}が選択されました</value>
+  </data>
+  <data name="picked_children" xml:space="preserve">
+    <value>{1}に対する{0}のプロダクトイオンが選択されました</value>
+  </data>
+  <data name="picked_peak" xml:space="preserve">
+    <value>{2}で「{1}」にあるピーク{0}が選択されました </value>
+  </data>
+  <data name="PropertySeparator" xml:space="preserve">
+    <value>&gt;</value>
+    <comment>Used in audit log to separate properties</comment>
+  </data>
+  <data name="refined_targets" xml:space="preserve">
+    <value>ターゲットを定義し直しました</value>
+  </data>
+  <data name="reintegrated_peaks" xml:space="preserve">
+    <value>「{0}」を使用してピークが再積分されました</value>
+  </data>
+  <data name="removed_all" xml:space="preserve">
+    <value>{0}：すべてが削除されました</value>
+  </data>
+  <data name="removed_all_libraries" xml:space="preserve">
+    <value>すべてのライブラリ実行が削除されました</value>
+  </data>
+  <data name="removed_all_peaks_from" xml:space="preserve">
+    <value>繰り返し測定「{1}」にある{0}からすべてのピークが削除されました</value>
+  </data>
+  <data name="removed_all_replicates" xml:space="preserve">
+    <value>すべての繰り返し測定が削除されました</value>
+  </data>
+  <data name="removed_below_cutoffs" xml:space="preserve">
+    <value>{1}のグループ比較でカットオフを下回る{0}個のノードが削除されました</value>
+  </data>
+  <data name="removed_duplicate_peptide" xml:space="preserve">
+    <value>{0}個の重複ペプチドが削除されました</value>
+  </data>
+  <data name="removed_duplicate_peptides" xml:space="preserve">
+    <value>{0}個の重複ペプチドが削除されました</value>
+  </data>
+  <data name="removed_empty_peptide" xml:space="preserve">
+    <value>{0}個の空欄のペプチドが削除されました</value>
+  </data>
+  <data name="removed_empty_peptides" xml:space="preserve">
+    <value>{0}個の空欄のペプチドが削除されました</value>
+  </data>
+  <data name="removed_empty_protein" xml:space="preserve">
+    <value>{0}個の空欄のタンパク質が削除されました</value>
+  </data>
+  <data name="removed_empty_proteins" xml:space="preserve">
+    <value>{0}個の空欄のタンパク質が削除されました</value>
+  </data>
+  <data name="removed_from" xml:space="preserve">
+    <value>{0}：{1}が削除されました</value>
+  </data>
+  <data name="removed_library_run" xml:space="preserve">
+    <value>ライブラリ実行「{0}」が削除されました</value>
+  </data>
+  <data name="removed_missing_results" xml:space="preserve">
+    <value>欠損している結果が削除されました</value>
+  </data>
+  <data name="removed_peak_from" xml:space="preserve">
+    <value>繰り返し測定「{1}」にある{0}からピークが削除されました</value>
+  </data>
+  <data name="removed_peaks" xml:space="preserve">
+    <value>{1}個のノードから{0}個のピークが削除されました。</value>
+  </data>
+  <data name="removed_peptide_above_cutoff" xml:space="preserve">
+    <value>{1}%のピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
+  </data>
+  <data name="removed_peptide_from_protein" xml:space="preserve">
+    <value>ペプチド{0}がタンパク質{1}から削除されました</value>
+  </data>
+  <data name="removed_peptides_above_cutoff" xml:space="preserve">
+    <value>{1}%のピーク面積cvカットオフを上回る{0}個のペプチドが削除されました</value>
+  </data>
+  <data name="removed_protein" xml:space="preserve">
+    <value>タンパク質{0}が削除されました</value>
+  </data>
+  <data name="removed_repeated_peptide" xml:space="preserve">
+    <value>{0}個の反復ペプチドが削除されました</value>
+  </data>
+  <data name="removed_repeated_peptides" xml:space="preserve">
+    <value>{0}個の反復ペプチドが削除されました</value>
+  </data>
+  <data name="removed_replicate" xml:space="preserve">
+    <value>繰り返し測定{0}が削除されました</value>
+  </data>
+  <data name="removed_rt_outlier" xml:space="preserve">
+    <value>{0}個のRT異常値が削除されました</value>
+  </data>
+  <data name="removed_rt_outliers" xml:space="preserve">
+    <value>{0}個のRT異常値が削除されました</value>
+  </data>
+  <data name="removed_single_below_cutoffs" xml:space="preserve">
+    <value>{1}グループ比較にあるカットオフを下回る{0}個のノードが削除されました</value>
+  </data>
+  <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
+    <value>タンパク質{3}のペプチド{2}のトランジショングループ{1}からトランジション{0}が削除されました</value>
+  </data>
+  <data name="removed_transition_group_from_peptide_from_protein" xml:space="preserve">
+    <value>タンパク質{2}のペプチド{1}からトランジショングループ{0}が削除されました</value>
+  </data>
+  <data name="removed_unrecognized_charge_state" xml:space="preserve">
+    <value>認識できない荷電状態{0}が削除されました</value>
+  </data>
+  <data name="removed_unrecognized_file" xml:space="preserve">
+    <value>認識できないファイル{0}が削除されました</value>
+  </data>
+  <data name="removed_unrecognized_peptide" xml:space="preserve">
+    <value>認識されないペプチド{0}が削除されました</value>
+  </data>
+  <data name="renamed_node" xml:space="preserve">
+    <value>[ターゲット]ウィンドウでノード{0}の名前が{1}に変更されました</value>
+  </data>
+  <data name="renamed_proteins" xml:space="preserve">
+    <value>{0}個のタンパク質の名前が変更されました</value>
+  </data>
+  <data name="renamed_replicate" xml:space="preserve">
+    <value>繰り返し測定{0}の名前が{1}に変更されました</value>
+  </data>
+  <data name="renamed_single_protein" xml:space="preserve">
+    <value>タンパク質の名前が{0}から{1}に変更されました</value>
+  </data>
+  <data name="set_excluded_standard" xml:space="preserve">
+    <value>校正曲線からペプチド{0}の繰り返し測定{1}を除外しています</value>
+  </data>
+  <data name="set_included_standard" xml:space="preserve">
+    <value>校正曲線にペプチド{0}の繰り返し測定{1}を含めています</value>
+  </data>
+  <data name="set_standard_type" xml:space="preserve">
+    <value>{0}の標準タイプが設定されました</value>
+  </data>
+  <data name="set_standard_type_peptides" xml:space="preserve">
+    <value>{0}個のペプチドの標準タイプが設定されました</value>
+  </data>
+  <data name="set_to_in_document_grid" xml:space="preserve">
+    <value>{1}の{0}が{2}に設定されました</value>
+  </data>
+  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
+    <value>監査ログが現在のドキュメントに一致しません。ドキュメントで行われた変更を説明するログエントリを追加しますか？</value>
+  </data>
+  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
+    <value>{0}個のトランジション</value>
+  </data>
+  <data name="SkylineWindow_EditNote__0__targets" xml:space="preserve">
+    <value>{0}個のターゲット</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType__0__peptides" xml:space="preserve">
+    <value>{0}個のペプチド</value>
+  </data>
+  <data name="sort_protein_accession" xml:space="preserve">
+    <value>タンパク質のアクセッション別に並べ替えられました</value>
+  </data>
+  <data name="sort_protein_gene" xml:space="preserve">
+    <value>タンパク質の遺伝子別に並べ替えられました</value>
+  </data>
+  <data name="sort_protein_name" xml:space="preserve">
+    <value>タンパク質の名前別に並べ替えられました</value>
+  </data>
+  <data name="sort_protein_preferred_name" xml:space="preserve">
+    <value>タンパク質の推奨名別に並べ替えられました</value>
+  </data>
+  <data name="start_log_existing_doc" xml:space="preserve">
+    <value>既存ドキュメントの監査ログの開始</value>
+  </data>
+  <data name="TabSeparator" xml:space="preserve">
+    <value>－</value>
+    <comment>Used in audit log to separate UI tabs</comment>
+  </data>
+  <data name="test_only" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="True" xml:space="preserve">
+    <value>真</value>
+  </data>
+  <data name="undocumented_change" xml:space="preserve">
+    <value>ドキュメントがSkyline外で変更されました</value>
+  </data>
+  <data name="UnrecognizedChargeStates" xml:space="preserve">
+    <value>荷電状態が認識できません</value>
+  </data>
+  <data name="UnrecognizedFiles" xml:space="preserve">
+    <value>ファイルが認識できません</value>
+  </data>
+  <data name="UnrecognizedPeptides" xml:space="preserve">
+    <value>ペプチドが認識できません</value>
+  </data>
+  <data name="upgraded_background_proteome" xml:space="preserve">
+    <value>バックグラウンドプロテオーム「{0}」がアップグレードされました</value>
   </data>
 </root>

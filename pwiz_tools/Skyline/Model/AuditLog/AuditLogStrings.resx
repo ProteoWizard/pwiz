@@ -105,307 +105,74 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AuditLogForm_AuditLogForm_Undo_Redo" xml:space="preserve">
-    <value>Undo Redo</value>
+  <data name="accept_peptides" xml:space="preserve">
+    <value>Accepted {0} peptides</value>
   </data>
-  <data name="AuditLogForm_AuditLogForm_Summary" xml:space="preserve">
-    <value>Summary</value>
+  <data name="accepted_peptide" xml:space="preserve">
+    <value>Accepted peptide {0}</value>
   </data>
-  <data name="AuditLogForm_AuditLogForm_All_Info" xml:space="preserve">
-    <value>All Info</value>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Clear_log" xml:space="preserve">
-    <value>Clear log</value>
-  </data>
-  <data name="AuditLogForm__clearLogButton_Click_Clear_audit_log" xml:space="preserve">
-    <value>Clear audit log</value>
-  </data>
-  <data name="Missing" xml:space="preserve">
-    <value>Missing</value>
-  </data>
-  <data name="changed" xml:space="preserve">
-    <value>{0} changed</value>
-  </data>
-  <data name="added_to" xml:space="preserve">
-    <value>{0} : {1} was added</value>
-  </data>
-  <data name="removed_from" xml:space="preserve">
-    <value>{0} : {1} was removed</value>
-  </data>
-  <data name="changed_to" xml:space="preserve">
-    <value>{0} changed to {1}</value>
-  </data>
-  <data name="TabSeparator" xml:space="preserve">
-    <value> -- </value>
-    <comment>Used in audit log to separate UI tabs</comment>
-  </data>
-  <data name="PropertySeparator" xml:space="preserve">
-    <value> &gt; </value>
-    <comment>Used in audit log to separate properties</comment>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Enable_audit_logging" xml:space="preserve">
-    <value>Enable audit logging</value>
-  </data>
-  <data name="AuditLogRow_Reason_Changed_audit_log_reason" xml:space="preserve">
-    <value>Changed audit log reason</value>
-  </data>
-  <data name="log_unlogged_changes" xml:space="preserve">
-    <value>{0} unlogged changes</value>
-  </data>
-  <data name="log_cleared" xml:space="preserve">
-    <value>{0} changes cleared</value>
-  </data>
-  <data name="log_enabled" xml:space="preserve">
-    <value>Audit logging has been enabled</value>
-  </data>
-  <data name="log_disabled" xml:space="preserve">
-    <value>Audit logging has been disabled</value>
-  </data>
-  <data name="contains" xml:space="preserve">
-    <value>{0} : contains {1}</value>
-  </data>
-  <data name="changed_from_to" xml:space="preserve">
-    <value>{0} changed from {1} to {2}</value>
-  </data>
-  <data name="is_" xml:space="preserve">
-    <value>{0} is {1}</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_Undo_Redo" xml:space="preserve">
-    <value>Undo Redo</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_Summary" xml:space="preserve">
-    <value>Summary</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_All_Info" xml:space="preserve">
-    <value>All Info</value>
-  </data>
-  <data name="LogMessage_LocalizeValue_True" xml:space="preserve">
-    <value>True</value>
-  </data>
-  <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
-    <value>False</value>
-  </data>
-  <data name="removed_protein" xml:space="preserve">
-    <value>Removed protein {0}</value>
-  </data>
-  <data name="removed_peptide_from_protein" xml:space="preserve">
-    <value>Removed peptide {0} from protein {1}</value>
-  </data>
-  <data name="removed_empty_peptides" xml:space="preserve">
-    <value>Removed {0} empty peptides</value>
-  </data>
-  <data name="removed_duplicate_peptides" xml:space="preserve">
-    <value>Removed {0} duplicate peptides</value>
-  </data>
-  <data name="removed_repeated_peptides" xml:space="preserve">
-    <value>Removed {0} repeated peptides</value>
-  </data>
-  <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
-    <value>Removed transition {0} from transition group {1} from peptide {2} from protein {3}</value>
-  </data>
-  <data name="removed_transition_group_from_peptide_from_protein" xml:space="preserve">
-    <value>Removed transition group {0} from peptide {1} from protein {2}</value>
-  </data>
-  <data name="deleted_targets" xml:space="preserve">
-    <value>Deleted {0} targets</value>
-  </data>
-  <data name="picked_children" xml:space="preserve">
-    <value>Picked {0} children for {1}</value>
-  </data>
-  <data name="inserted_data" xml:space="preserve">
-    <value>Inserted Peptides/Proteins</value>
-  </data>
-  <data name="edited_note" xml:space="preserve">
-    <value>Edited note of {0}</value>
-  </data>
-  <data name="set_standard_type" xml:space="preserve">
-    <value>Set standard type for {0}</value>
-  </data>
-  <data name="None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="SkylineWindow_SetStandardType__0__peptides" xml:space="preserve">
-    <value>{0} peptides</value>
-  </data>
-  <data name="SkylineWindow_EditNote__0__targets" xml:space="preserve">
-    <value>{0} targets</value>
-  </data>
-  <data name="modified" xml:space="preserve">
-    <value>Modified {0}</value>
-  </data>
-  <data name="ExplicitMod_AuditLogText__0__at_index__1_" xml:space="preserve">
-    <value>{0} at index {1}</value>
-  </data>
-  <data name="pasted_targets" xml:space="preserve">
-    <value>Pasted targets</value>
-  </data>
-  <data name="set_to_in_document_grid" xml:space="preserve">
-    <value>Set {0} of {1} to {2}</value>
-  </data>
-  <data name="pasted_document_grid" xml:space="preserve">
-    <value>Pasted {0} values into the document grid</value>
-  </data>
-  <data name="renamed_proteins" xml:space="preserve">
-    <value>Renamed {0} proteins</value>
-  </data>
-  <data name="inserted_peptides" xml:space="preserve">
-    <value>Inserted {0} peptides</value>
-  </data>
-  <data name="inserted_proteins" xml:space="preserve">
-    <value>Inserted {0} proteins</value>
-  </data>
-  <data name="inserted_transitions" xml:space="preserve">
-    <value>Inserted {0} transitions</value>
+  <data name="accepted_protein" xml:space="preserve">
+    <value>Accepted protein {0}</value>
   </data>
   <data name="accepted_proteins" xml:space="preserve">
     <value>Accepted {0} proteins</value>
   </data>
-  <data name="accept_peptides" xml:space="preserve">
-    <value>Accepted {0} peptides</value>
-  </data>
-  <data name="sort_protein_accession" xml:space="preserve">
-    <value>Sorted by protein accession</value>
-  </data>
-  <data name="sort_protein_gene" xml:space="preserve">
-    <value>Sorted by protein gene</value>
-  </data>
-  <data name="sort_protein_name" xml:space="preserve">
-    <value>Sorted by protein name</value>
-  </data>
-  <data name="sort_protein_preferred_name" xml:space="preserve">
-    <value>Sorted by protein preferred name</value>
-  </data>
-  <data name="False" xml:space="preserve">
-    <value>False</value>
-  </data>
-  <data name="True" xml:space="preserve">
-    <value>True</value>
-  </data>
-  <data name="added_peptide_decoys" xml:space="preserve">
-    <value>Added {0} peptide decoys using {1} method</value>
-  </data>
-  <data name="refined_targets" xml:space="preserve">
-    <value>Refined targets</value>
-  </data>
-  <data name="removed_missing_results" xml:space="preserve">
-    <value>Removed missing results</value>
-  </data>
-  <data name="renamed_single_protein" xml:space="preserve">
-    <value>Renamed protein {0} to {1}</value>
-  </data>
-  <data name="set_standard_type_peptides" xml:space="preserve">
-    <value>Set standard type for {0} peptides</value>
-  </data>
-  <data name="imported_results" xml:space="preserve">
-    <value>Imported results from {0} files</value>
-  </data>
-  <data name="imported_peak_boundaries" xml:space="preserve">
-    <value>Imported peak boundaries from "{0}"</value>
-  </data>
-  <data name="removed_unrecognized_charge_state" xml:space="preserve">
-    <value>Removed unrecognized charge state {0}</value>
-  </data>
-  <data name="removed_unrecognized_file" xml:space="preserve">
-    <value>Removed unrecognized file {0}</value>
-  </data>
-  <data name="removed_unrecognized_peptide" xml:space="preserve">
-    <value>Removed unrecognized peptide {0}</value>
-  </data>
-  <data name="UnrecognizedChargeStates" xml:space="preserve">
-    <value>Unrecognized charge states</value>
-  </data>
-  <data name="UnrecognizedFiles" xml:space="preserve">
-    <value>Unrecognized files</value>
-  </data>
-  <data name="UnrecognizedPeptides" xml:space="preserve">
-    <value>Unrecognized peptides</value>
-  </data>
-  <data name="imported_fasta" xml:space="preserve">
-    <value>Imported FASTA from "{0}"</value>
-  </data>
-  <data name="kept_empty_proteins" xml:space="preserve">
-    <value>Kept {0} empty proteins</value>
-  </data>
-  <data name="removed_empty_proteins" xml:space="preserve">
-    <value>Removed {0} empty proteins</value>
-  </data>
-  <data name="imported_assay_library_from_file" xml:space="preserve">
-    <value>Imported an assay library from "{0}"</value>
-  </data>
-  <data name="imported_transition_list_from_file" xml:space="preserve">
-    <value>Imported a transition list from "{0}"</value>
-  </data>
-  <data name="imported_spectral_library_intensities" xml:space="preserve">
-    <value>Imported spectral library intensities</value>
-  </data>
-  <data name="imported_doc" xml:space="preserve">
-    <value>Imported document "{0}"</value>
-  </data>
-  <data name="imported_annotations" xml:space="preserve">
-    <value>Imported annotations from "{0}"</value>
-  </data>
-  <data name="set_excluded_standard" xml:space="preserve">
-    <value>Excluding peptide {0} replicate {1} from calibration curve</value>
-  </data>
-  <data name="set_included_standard" xml:space="preserve">
-    <value>Including peptide {0} replicate {1} in calibration curve</value>
-  </data>
-  <data name="canceled_import" xml:space="preserve">
-    <value>Canceled import</value>
-  </data>
-  <data name="removed_below_cutoffs" xml:space="preserve">
-    <value>Removed {0} nodes below cutoffs in {1} group comparison</value>
-  </data>
-  <data name="excluded_peptides" xml:space="preserve">
-    <value>Excluded {0} peptides (Unique Peptides...)</value>
-  </data>
-  <data name="added_spectral_library" xml:space="preserve">
-    <value>Added spectral library "{0}"</value>
-  </data>
-  <data name="Empty" xml:space="preserve">
-    <value>Empty</value>
-  </data>
-  <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>Added molecule precursor {0}</value>
-  </data>
-  <data name="added_small_molecule" xml:space="preserve">
-    <value>Added molecule {0}</value>
-  </data>
-  <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>Added molecule transition {0}</value>
-  </data>
-  <data name="added_irt_standard_peptides" xml:space="preserve">
-    <value>Added iRT standard peptides</value>
-  </data>
-  <data name="renamed_node" xml:space="preserve">
-    <value>Renamed node {0} to {1} in the Targets window</value>
+  <data name="added_all_peptides_from_library" xml:space="preserve">
+    <value>Added all ({0}) peptides from the library "{1}"</value>
   </data>
   <data name="added_empty_peptide_group" xml:space="preserve">
     <value>Added empty peptide group {0} in the Targets window</value>
   </data>
+  <data name="added_irt_standard_peptides" xml:space="preserve">
+    <value>Added iRT standard peptides</value>
+  </data>
   <data name="added_new_peptide_group" xml:space="preserve">
     <value>Added peptide group {0} in the Targets window</value>
+  </data>
+  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>Added peptide group {0} from background proteome in the Targets window</value>
+  </data>
+  <data name="added_peptide_decoy" xml:space="preserve">
+    <value>Added {0} peptide decoy using {1} method</value>
+  </data>
+  <data name="added_peptide_decoys" xml:space="preserve">
+    <value>Added {0} peptide decoys using {1} method</value>
+  </data>
+  <data name="added_peptide_from_library" xml:space="preserve">
+    <value>Added peptide {0} from library "{1}"</value>
   </data>
   <data name="added_peptides_to_peptide_group" xml:space="preserve">
     <value>Added peptides to peptide group {0} in the Targets window</value>
   </data>
-  <data name="drag_and_dropped_nodes" xml:space="preserve">
-    <value>Drag and dropped {0} nodes to {1}</value>
+  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>Added peptides to peptide group {0} from background proteome in the Targets window</value>
   </data>
-  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>Pasted {0} molecule transitions</value>
+  <data name="added_small_molecule" xml:space="preserve">
+    <value>Added molecule {0}</value>
+  </data>
+  <data name="added_small_molecule_precursor" xml:space="preserve">
+    <value>Added molecule precursor {0}</value>
+  </data>
+  <data name="added_small_molecule_transition" xml:space="preserve">
+    <value>Added molecule transition {0}</value>
+  </data>
+  <data name="added_spectral_library" xml:space="preserve">
+    <value>Added spectral library "{0}"</value>
+  </data>
+  <data name="added_to" xml:space="preserve">
+    <value>{0} : {1} was added</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>Applied peak {0} to all</value>
@@ -413,17 +180,80 @@
   <data name="applied_peak_subsequent" xml:space="preserve">
     <value>Applied peak {0} to subsequent</value>
   </data>
-  <data name="removed_peak_from" xml:space="preserve">
-    <value>Removed peak from {0} in replicate "{1}"</value>
+  <data name="associated_peptides_with_protein_groups" xml:space="preserve">
+    <value>Associated peptides with protein groups</value>
   </data>
-  <data name="removed_peaks" xml:space="preserve">
-    <value>Removed {0} peaks from {1} nodes</value>
+  <data name="associated_peptides_with_proteins" xml:space="preserve">
+    <value>Associated peptides with proteins</value>
   </data>
-  <data name="removed_all_peaks_from" xml:space="preserve">
-    <value>Removed all peaks from {0} in replicate "{1}"</value>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>Error when loading document's audit log: {0}.</value>
   </data>
-  <data name="picked_peak" xml:space="preserve">
-    <value>Picked peak {0} in "{1}" at {2}</value>
+  <data name="AuditLogForm__clearLogButton_Click_Clear_audit_log" xml:space="preserve">
+    <value>Clear audit log</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_All_Info" xml:space="preserve">
+    <value>All Info</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
+    <value>Audit Log</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Clear_log" xml:space="preserve">
+    <value>Clear log</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Enable_audit_logging" xml:space="preserve">
+    <value>Enable audit logging</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Undo_Redo" xml:space="preserve">
+    <value>Undo Redo</value>
+  </data>
+  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
+    <value>This will clear the audit log and delete it permanently once the document gets saved. Do you want to proceed?</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_All_Info" xml:space="preserve">
+    <value>All Info</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_Summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_Undo_Redo" xml:space="preserve">
+    <value>Undo Redo</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>An exception occured while reading the audit log.
+
+Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
+
+For reference, the audit log is located here: "{0}"</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>The following audit log entries were modified:
+
+</value>
+  </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>Audit log is corrupted. Audit log entry time stamps and indices should be in order. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}.</value>
+  </data>
+  <data name="AuditLogRow_Reason_Changed_audit_log_reason" xml:space="preserve">
+    <value>Changed audit log reason</value>
+  </data>
+  <data name="canceled_import" xml:space="preserve">
+    <value>Canceled import</value>
+  </data>
+  <data name="changed" xml:space="preserve">
+    <value>{0} changed</value>
+  </data>
+  <data name="changed_from_to" xml:space="preserve">
+    <value>{0} changed from {1} to {2}</value>
+  </data>
+  <data name="changed_peak_bounds" xml:space="preserve">
+    <value>Changed peak bounds</value>
+  </data>
+  <data name="changed_peak_bounds_of" xml:space="preserve">
+    <value>Changed peak bounds of {0}</value>
   </data>
   <data name="changed_peak_end" xml:space="preserve">
     <value>Changed end time of peak {0} in "{1}" from {2} to {3}</value>
@@ -437,116 +267,126 @@
   <data name="changed_peak_start_all" xml:space="preserve">
     <value>Changed start time of all peaks of {0} in "{1}" from {2} to {3}</value>
   </data>
-  <data name="changed_peak_bounds" xml:space="preserve">
-    <value>Changed peak bounds</value>
+  <data name="changed_quantitative" xml:space="preserve">
+    <value>Changed quantitative on {0}</value>
   </data>
-  <data name="removed_peptides_above_cutoff" xml:space="preserve">
-    <value>Removed {0} peptides above {1}% peak area cv cutoff</value>
-  </data>
-  <data name="removed_rt_outliers" xml:space="preserve">
-    <value>Removed {0} RT outliers</value>
-  </data>
-  <data name="added_all_peptides_from_library" xml:space="preserve">
-    <value>Added all ({0}) peptides from the library "{1}"</value>
-  </data>
-  <data name="added_peptide_from_library" xml:space="preserve">
-    <value>Added peptide {0} from library "{1}"</value>
-  </data>
-  <data name="matched_modifications_of_library" xml:space="preserve">
-    <value>Matched modifications of library "{0}"</value>
-  </data>
-  <data name="reintegrated_peaks" xml:space="preserve">
-    <value>Reintegrated peaks using "{0}"</value>
-  </data>
-  <data name="imported_peptide_search" xml:space="preserve">
-    <value>Imported a peptide search</value>
-  </data>
-  <data name="fill_down_document_grid" xml:space="preserve">
-    <value>Filled down {0} values in the document grid</value>
-  </data>
-  <data name="cleared_document_grid" xml:space="preserve">
-    <value>Cleared {0} cells in document grid</value>
+  <data name="changed_to" xml:space="preserve">
+    <value>{0} changed to {1}</value>
   </data>
   <data name="cleared_cell_in_document_grid" xml:space="preserve">
     <value>Cleared {0} of {1} in document grid</value>
   </data>
-  <data name="managed_results" xml:space="preserve">
-    <value>Managed results</value>
+  <data name="cleared_document_grid" xml:space="preserve">
+    <value>Cleared {0} cells in document grid</value>
   </data>
-  <data name="upgraded_background_proteome" xml:space="preserve">
-    <value>Upgraded background proteome "{0}"</value>
+  <data name="cleared_document_grid_single" xml:space="preserve">
+    <value>Cleared {0} value in document grid</value>
   </data>
-  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>Added peptide group {0} from background proteome in the Targets window</value>
-  </data>
-  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>Added peptides to peptide group {0} from background proteome in the Targets window</value>
-  </data>
-  <data name="imported_assay_library" xml:space="preserve">
-    <value>Imported an assay library from the clipboard</value>
-  </data>
-  <data name="imported_transition_list" xml:space="preserve">
-    <value>Imported a transition list from the clipboard</value>
-  </data>
-  <data name="log_error" xml:space="preserve">
-    <value>An exception of type {0} was thrown</value>
-  </data>
-  <data name="log_error_old_msg" xml:space="preserve">
-    <value>An exception of type {0} was thrown while performing action "{1}"</value>
-  </data>
-  <data name="empty_single_arg" xml:space="preserve">
-    <value>{0}</value>
+  <data name="contains" xml:space="preserve">
+    <value>{0} : contains {1}</value>
   </data>
   <data name="deleted_target" xml:space="preserve">
     <value>Deleted target {0}</value>
   </data>
-  <data name="imported_docs" xml:space="preserve">
-    <value>Imported {0} documents</value>
-  </data>
-  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
-    <value>An error occured while creating a log entry. The document was still successfully modified</value>
-  </data>
-  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
-    <value>An error occured while creating a log entry. Action "{0}" was still successfull</value>
-  </data>
-  <data name="removed_all" xml:space="preserve">
-    <value>{0}: removed all</value>
-  </data>
-  <data name="removed_all_libraries" xml:space="preserve">
-    <value>Removed all library runs</value>
-  </data>
-  <data name="removed_all_replicates" xml:space="preserve">
-    <value>Removed all replicates</value>
-  </data>
-  <data name="removed_library_run" xml:space="preserve">
-    <value>Removed library run "{0}"</value>
-  </data>
-  <data name="removed_replicate" xml:space="preserve">
-    <value>Removed replicate {0}</value>
-  </data>
-  <data name="accepted_peptide" xml:space="preserve">
-    <value>Accepted peptide {0}</value>
-  </data>
-  <data name="accepted_protein" xml:space="preserve">
-    <value>Accepted protein {0}</value>
-  </data>
-  <data name="associated_peptides_with_proteins" xml:space="preserve">
-    <value>Associated peptides with proteins</value>
-  </data>
-  <data name="associated_peptides_with_protein_groups" xml:space="preserve">
-    <value>Associated peptides with protein groups</value>
+  <data name="deleted_targets" xml:space="preserve">
+    <value>Deleted {0} targets</value>
   </data>
   <data name="drag_and_dropped_node" xml:space="preserve">
     <value>Drag and dropped {0} to {1}</value>
   </data>
+  <data name="drag_and_dropped_nodes" xml:space="preserve">
+    <value>Drag and dropped {0} nodes to {1}</value>
+  </data>
+  <data name="edited_ion_mobility_library" xml:space="preserve">
+    <value>Edited ion mobility library {0} ({1})</value>
+    <comment>{0} is library name, {1} is library file location</comment>
+  </data>
+  <data name="edited_note" xml:space="preserve">
+    <value>Edited note of {0}</value>
+  </data>
+  <data name="Empty" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="empty_single_arg" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="excluded_peptide" xml:space="preserve">
+    <value>Excluded {0} peptide (Unique Peptides...)</value>
+  </data>
+  <data name="excluded_peptides" xml:space="preserve">
+    <value>Excluded {0} peptides (Unique Peptides...)</value>
+  </data>
+  <data name="ExplicitMod_AuditLogText__0__at_index__1_" xml:space="preserve">
+    <value>{0} at index {1}</value>
+  </data>
+  <data name="False" xml:space="preserve">
+    <value>False</value>
+  </data>
+  <data name="fill_down_document_grid" xml:space="preserve">
+    <value>Filled down {0} values in the document grid</value>
+  </data>
+  <data name="fill_down_document_grid_single" xml:space="preserve">
+    <value>Filled down {0} value in the document grid</value>
+  </data>
+  <data name="imported_annotations" xml:space="preserve">
+    <value>Imported annotations from "{0}"</value>
+  </data>
+  <data name="imported_assay_library" xml:space="preserve">
+    <value>Imported an assay library from the clipboard</value>
+  </data>
+  <data name="imported_assay_library_from_file" xml:space="preserve">
+    <value>Imported an assay library from "{0}"</value>
+  </data>
+  <data name="imported_doc" xml:space="preserve">
+    <value>Imported document "{0}"</value>
+  </data>
+  <data name="imported_docs" xml:space="preserve">
+    <value>Imported {0} documents</value>
+  </data>
+  <data name="imported_fasta" xml:space="preserve">
+    <value>Imported FASTA from "{0}"</value>
+  </data>
+  <data name="imported_fasta_paste" xml:space="preserve">
+    <value>Imported FASTA from clipboard</value>
+  </data>
+  <data name="imported_peak_boundaries" xml:space="preserve">
+    <value>Imported peak boundaries from "{0}"</value>
+  </data>
+  <data name="imported_peptide_list" xml:space="preserve">
+    <value>Imported a peptide list from the clipboard</value>
+  </data>
+  <data name="imported_peptide_search" xml:space="preserve">
+    <value>Imported a peptide search</value>
+  </data>
   <data name="imported_result" xml:space="preserve">
     <value>Imported results from "{0}"</value>
+  </data>
+  <data name="imported_results" xml:space="preserve">
+    <value>Imported results from {0} files</value>
+  </data>
+  <data name="imported_spectral_library_intensities" xml:space="preserve">
+    <value>Imported spectral library intensities</value>
+  </data>
+  <data name="imported_transition_list" xml:space="preserve">
+    <value>Imported a transition list from the clipboard</value>
+  </data>
+  <data name="imported_transition_list_from_file" xml:space="preserve">
+    <value>Imported a transition list from "{0}"</value>
+  </data>
+  <data name="inserted_data" xml:space="preserve">
+    <value>Inserted Peptides/Proteins</value>
   </data>
   <data name="inserted_peptide" xml:space="preserve">
     <value>Inserted peptide {0}</value>
   </data>
+  <data name="inserted_peptides" xml:space="preserve">
+    <value>Inserted {0} peptides</value>
+  </data>
   <data name="inserted_protein" xml:space="preserve">
     <value>Inserted protein {0}</value>
+  </data>
+  <data name="inserted_proteins" xml:space="preserve">
+    <value>Inserted {0} proteins</value>
   </data>
   <data name="inserted_proteins_fasta" xml:space="preserve">
     <value>Inserted {0} proteins from FASTA</value>
@@ -554,125 +394,285 @@
   <data name="inserted_transition" xml:space="preserve">
     <value>Inserted transition into {0}</value>
   </data>
+  <data name="inserted_transitions" xml:space="preserve">
+    <value>Inserted {0} transitions</value>
+  </data>
+  <data name="is_" xml:space="preserve">
+    <value>{0} is {1}</value>
+  </data>
   <data name="kept_empty_protein" xml:space="preserve">
     <value>Kept {0} empty protein</value>
   </data>
-  <data name="removed_empty_protein" xml:space="preserve">
-    <value>Removed {0} empty protein</value>
+  <data name="kept_empty_proteins" xml:space="preserve">
+    <value>Kept {0} empty proteins</value>
+  </data>
+  <data name="log_cleared" xml:space="preserve">
+    <value>{0} changes cleared</value>
   </data>
   <data name="log_cleared_single" xml:space="preserve">
     <value>{0} change cleared</value>
   </data>
+  <data name="log_disabled" xml:space="preserve">
+    <value>Audit logging has been disabled</value>
+  </data>
+  <data name="log_enabled" xml:space="preserve">
+    <value>Audit logging has been enabled</value>
+  </data>
+  <data name="log_error" xml:space="preserve">
+    <value>An exception of type {0} was thrown</value>
+  </data>
+  <data name="log_error_old_msg" xml:space="preserve">
+    <value>An exception of type {0} was thrown while performing action "{1}"</value>
+  </data>
   <data name="log_unlogged_change" xml:space="preserve">
     <value>{0} unlogged change</value>
   </data>
-  <data name="cleared_document_grid_single" xml:space="preserve">
-    <value>Cleared {0} value in document grid</value>
+  <data name="log_unlogged_changes" xml:space="preserve">
+    <value>{0} unlogged changes</value>
   </data>
-  <data name="pasted_document_grid_single" xml:space="preserve">
-    <value>Pasted {0} value into the document grid</value>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
+    <value>An error occured while creating a log entry. Action "{0}" was still successfull</value>
   </data>
-  <data name="fill_down_document_grid_single" xml:space="preserve">
-    <value>Filled down {0} value in the document grid</value>
-  </data>
-  <data name="added_peptide_decoy" xml:space="preserve">
-    <value>Added {0} peptide decoy using {1} method</value>
-  </data>
-  <data name="picked_child" xml:space="preserve">
-    <value>Picked child {0} for {1}</value>
-  </data>
-  <data name="removed_rt_outlier" xml:space="preserve">
-    <value>Removed {0} RT outlier</value>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
-    <value>Audit Log</value>
-  </data>
-  <data name="imported_fasta_paste" xml:space="preserve">
-    <value>Imported FASTA from clipboard</value>
-  </data>
-  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>Pasted {0} molecule transition</value>
-  </data>
-  <data name="removed_empty_peptide" xml:space="preserve">
-    <value>Removed {0} empty peptide</value>
-  </data>
-  <data name="removed_duplicate_peptide" xml:space="preserve">
-    <value>Removed {0} duplicate peptide</value>
-  </data>
-  <data name="removed_repeated_peptide" xml:space="preserve">
-    <value>Removed {0} repeated peptide</value>
-  </data>
-  <data name="removed_single_below_cutoffs" xml:space="preserve">
-    <value>Removed {0} node below cutoffs in {1} group comparison</value>
-  </data>
-  <data name="removed_peptide_above_cutoff" xml:space="preserve">
-    <value>Removed {0} peptide above {1}% peak area cv cutoff</value>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
+    <value>An error occured while creating a log entry. The document was still successfully modified</value>
   </data>
   <data name="LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_" xml:space="preserve">
     <value>{0} residue {1} at position {2}</value>
   </data>
-  <data name="imported_peptide_list" xml:space="preserve">
-    <value>Imported a peptide list from the clipboard</value>
+  <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
+    <value>False</value>
   </data>
-  <data name="excluded_peptide" xml:space="preserve">
-    <value>Excluded {0} peptide (Unique Peptides...)</value>
+  <data name="LogMessage_LocalizeValue_True" xml:space="preserve">
+    <value>True</value>
   </data>
-  <data name="renamed_replicate" xml:space="preserve">
-    <value>Renamed replicate {0} to {1}</value>
+  <data name="managed_results" xml:space="preserve">
+    <value>Managed results</value>
   </data>
-  <data name="changed_peak_bounds_of" xml:space="preserve">
-    <value>Changed peak bounds of {0}</value>
+  <data name="matched_modifications_of_library" xml:space="preserve">
+    <value>Matched modifications of library "{0}"</value>
   </data>
-  <data name="undocumented_change" xml:space="preserve">
-    <value>The document was modified outside of Skyline</value>
+  <data name="Missing" xml:space="preserve">
+    <value>Missing</value>
   </data>
-  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
-    <value>The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?</value>
+  <data name="modified" xml:space="preserve">
+    <value>Modified {0}</value>
   </data>
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>The document was modified outside of Skyline: {0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>Audit log is corrupted. Audit log entry time stamps and indices should be in order. Entry number {0} timestamp {1:G} occurs before entry number {2} timestamp {3:G}.</value>
+  <data name="None" xml:space="preserve">
+    <value>None</value>
   </data>
-  <data name="test_only" xml:space="preserve">
-    <value>{0}</value>
+  <data name="pasted_document_grid" xml:space="preserve">
+    <value>Pasted {0} values into the document grid</value>
   </data>
-  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
-    <value>This will clear the audit log and delete it permanently once the document gets saved. Do you want to proceed?</value>
+  <data name="pasted_document_grid_single" xml:space="preserve">
+    <value>Pasted {0} value into the document grid</value>
   </data>
-  <data name="start_log_existing_doc" xml:space="preserve">
-    <value>Start of audit log for already existing document</value>
+  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
+    <value>Pasted {0} molecule transition</value>
   </data>
-  <data name="edited_ion_mobility_library" xml:space="preserve">
-    <value>Edited ion mobility library {0} ({1})</value>
-    <comment>{0} is library name, {1} is library file location</comment>
+  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
+    <value>Pasted {0} molecule transitions</value>
   </data>
-  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
-    <value>The following audit log entries were modified:
-
-</value>
+  <data name="pasted_targets" xml:space="preserve">
+    <value>Pasted targets</value>
   </data>
-  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
-    <value>An exception occured while reading the audit log.
-
-Deleting, renaming or moving the audit log file will prevent this error from occuring. You can also send the audit log to the Skyline team to have them attempt to manually fix the file.
-
-For reference, the audit log is located here: "{0}"</value>
-  </data>
-  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
-    <value>Error when loading document's audit log: {0}.</value>
-  </data>
-  <data name="changed_quantitative" xml:space="preserve">
-    <value>Changed quantitative on {0}</value>
-  </data>
-  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
-    <value>{0} transitions</value>
+  <data name="permuted_isotope_label_complete" xml:space="preserve">
+    <value>Added complete permutations of isotope modification '{0}'</value>
   </data>
   <data name="permuted_isotope_label_simple" xml:space="preserve">
     <value>Added simple permutations of isotope modification '{0}'</value>
   </data>
-  <data name="permuted_isotope_label_complete" xml:space="preserve">
-    <value>Added complete permutations of isotope modification '{0}'</value>
+  <data name="picked_child" xml:space="preserve">
+    <value>Picked child {0} for {1}</value>
+  </data>
+  <data name="picked_children" xml:space="preserve">
+    <value>Picked {0} children for {1}</value>
+  </data>
+  <data name="picked_peak" xml:space="preserve">
+    <value>Picked peak {0} in "{1}" at {2}</value>
+  </data>
+  <data name="PropertySeparator" xml:space="preserve">
+    <value> &gt; </value>
+    <comment>Used in audit log to separate properties</comment>
+  </data>
+  <data name="refined_targets" xml:space="preserve">
+    <value>Refined targets</value>
+  </data>
+  <data name="reintegrated_peaks" xml:space="preserve">
+    <value>Reintegrated peaks using "{0}"</value>
+  </data>
+  <data name="removed_all" xml:space="preserve">
+    <value>{0}: removed all</value>
+  </data>
+  <data name="removed_all_libraries" xml:space="preserve">
+    <value>Removed all library runs</value>
+  </data>
+  <data name="removed_all_peaks_from" xml:space="preserve">
+    <value>Removed all peaks from {0} in replicate "{1}"</value>
+  </data>
+  <data name="removed_all_replicates" xml:space="preserve">
+    <value>Removed all replicates</value>
+  </data>
+  <data name="removed_below_cutoffs" xml:space="preserve">
+    <value>Removed {0} nodes below cutoffs in {1} group comparison</value>
+  </data>
+  <data name="removed_duplicate_peptide" xml:space="preserve">
+    <value>Removed {0} duplicate peptide</value>
+  </data>
+  <data name="removed_duplicate_peptides" xml:space="preserve">
+    <value>Removed {0} duplicate peptides</value>
+  </data>
+  <data name="removed_empty_peptide" xml:space="preserve">
+    <value>Removed {0} empty peptide</value>
+  </data>
+  <data name="removed_empty_peptides" xml:space="preserve">
+    <value>Removed {0} empty peptides</value>
+  </data>
+  <data name="removed_empty_protein" xml:space="preserve">
+    <value>Removed {0} empty protein</value>
+  </data>
+  <data name="removed_empty_proteins" xml:space="preserve">
+    <value>Removed {0} empty proteins</value>
+  </data>
+  <data name="removed_from" xml:space="preserve">
+    <value>{0} : {1} was removed</value>
+  </data>
+  <data name="removed_library_run" xml:space="preserve">
+    <value>Removed library run "{0}"</value>
+  </data>
+  <data name="removed_missing_results" xml:space="preserve">
+    <value>Removed missing results</value>
+  </data>
+  <data name="removed_peak_from" xml:space="preserve">
+    <value>Removed peak from {0} in replicate "{1}"</value>
+  </data>
+  <data name="removed_peaks" xml:space="preserve">
+    <value>Removed {0} peaks from {1} nodes</value>
+  </data>
+  <data name="removed_peptide_above_cutoff" xml:space="preserve">
+    <value>Removed {0} peptide above {1}% peak area cv cutoff</value>
+  </data>
+  <data name="removed_peptide_from_protein" xml:space="preserve">
+    <value>Removed peptide {0} from protein {1}</value>
+  </data>
+  <data name="removed_peptides_above_cutoff" xml:space="preserve">
+    <value>Removed {0} peptides above {1}% peak area cv cutoff</value>
+  </data>
+  <data name="removed_protein" xml:space="preserve">
+    <value>Removed protein {0}</value>
+  </data>
+  <data name="removed_repeated_peptide" xml:space="preserve">
+    <value>Removed {0} repeated peptide</value>
+  </data>
+  <data name="removed_repeated_peptides" xml:space="preserve">
+    <value>Removed {0} repeated peptides</value>
+  </data>
+  <data name="removed_replicate" xml:space="preserve">
+    <value>Removed replicate {0}</value>
+  </data>
+  <data name="removed_rt_outlier" xml:space="preserve">
+    <value>Removed {0} RT outlier</value>
+  </data>
+  <data name="removed_rt_outliers" xml:space="preserve">
+    <value>Removed {0} RT outliers</value>
+  </data>
+  <data name="removed_single_below_cutoffs" xml:space="preserve">
+    <value>Removed {0} node below cutoffs in {1} group comparison</value>
+  </data>
+  <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
+    <value>Removed transition {0} from transition group {1} from peptide {2} from protein {3}</value>
+  </data>
+  <data name="removed_transition_group_from_peptide_from_protein" xml:space="preserve">
+    <value>Removed transition group {0} from peptide {1} from protein {2}</value>
+  </data>
+  <data name="removed_unrecognized_charge_state" xml:space="preserve">
+    <value>Removed unrecognized charge state {0}</value>
+  </data>
+  <data name="removed_unrecognized_file" xml:space="preserve">
+    <value>Removed unrecognized file {0}</value>
+  </data>
+  <data name="removed_unrecognized_peptide" xml:space="preserve">
+    <value>Removed unrecognized peptide {0}</value>
+  </data>
+  <data name="renamed_node" xml:space="preserve">
+    <value>Renamed node {0} to {1} in the Targets window</value>
+  </data>
+  <data name="renamed_proteins" xml:space="preserve">
+    <value>Renamed {0} proteins</value>
+  </data>
+  <data name="renamed_replicate" xml:space="preserve">
+    <value>Renamed replicate {0} to {1}</value>
+  </data>
+  <data name="renamed_single_protein" xml:space="preserve">
+    <value>Renamed protein {0} to {1}</value>
+  </data>
+  <data name="set_excluded_standard" xml:space="preserve">
+    <value>Excluding peptide {0} replicate {1} from calibration curve</value>
+  </data>
+  <data name="set_included_standard" xml:space="preserve">
+    <value>Including peptide {0} replicate {1} in calibration curve</value>
+  </data>
+  <data name="set_standard_type" xml:space="preserve">
+    <value>Set standard type for {0}</value>
+  </data>
+  <data name="set_standard_type_peptides" xml:space="preserve">
+    <value>Set standard type for {0} peptides</value>
+  </data>
+  <data name="set_to_in_document_grid" xml:space="preserve">
+    <value>Set {0} of {1} to {2}</value>
+  </data>
+  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
+    <value>The audit log does not match the current document. Would you like to add a log entry describing the changes made to the document?</value>
+  </data>
+  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
+    <value>{0} transitions</value>
+  </data>
+  <data name="SkylineWindow_EditNote__0__targets" xml:space="preserve">
+    <value>{0} targets</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType__0__peptides" xml:space="preserve">
+    <value>{0} peptides</value>
+  </data>
+  <data name="sort_protein_accession" xml:space="preserve">
+    <value>Sorted by protein accession</value>
+  </data>
+  <data name="sort_protein_gene" xml:space="preserve">
+    <value>Sorted by protein gene</value>
+  </data>
+  <data name="sort_protein_name" xml:space="preserve">
+    <value>Sorted by protein name</value>
+  </data>
+  <data name="sort_protein_preferred_name" xml:space="preserve">
+    <value>Sorted by protein preferred name</value>
+  </data>
+  <data name="start_log_existing_doc" xml:space="preserve">
+    <value>Start of audit log for already existing document</value>
+  </data>
+  <data name="TabSeparator" xml:space="preserve">
+    <value> -- </value>
+    <comment>Used in audit log to separate UI tabs</comment>
+  </data>
+  <data name="test_only" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="True" xml:space="preserve">
+    <value>True</value>
+  </data>
+  <data name="undocumented_change" xml:space="preserve">
+    <value>The document was modified outside of Skyline</value>
+  </data>
+  <data name="UnrecognizedChargeStates" xml:space="preserve">
+    <value>Unrecognized charge states</value>
+  </data>
+  <data name="UnrecognizedFiles" xml:space="preserve">
+    <value>Unrecognized files</value>
+  </data>
+  <data name="UnrecognizedPeptides" xml:space="preserve">
+    <value>Unrecognized peptides</value>
+  </data>
+  <data name="upgraded_background_proteome" xml:space="preserve">
+    <value>Upgraded background proteome "{0}"</value>
   </data>
 </root>

@@ -102,22 +102,22 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ExampleToolUI_VerifyArguments_Text_Box_must_be_filled" xml:space="preserve">
-    <value>Text Box must be filled</value>
-  </data>
   <data name="ExampleToolUI_VerifyArguments_If_option_1_is_selected_the_check_box_must_be_checked" xml:space="preserve">
     <value>If option 1 is selected the check box must be checked</value>
+  </data>
+  <data name="ExampleToolUI_VerifyArguments_Text_Box_must_be_filled" xml:space="preserve">
+    <value>Text Box must be filled</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,14 +105,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -156,14 +156,14 @@
   <data name="AttributeGroupId">
     <value>属性グループID</value>
   </data>
+  <data name="AuditLogDetailRowId">
+    <value>詳細ID</value>
+  </data>
   <data name="AuditLogRow">
     <value>監査ログ行</value>
   </data>
   <data name="AuditLogRowId">
     <value>エントリID</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>詳細ID</value>
   </data>
   <data name="AutoSelectMolecules">
     <value>分子を自動選択</value>
@@ -252,10 +252,10 @@
   <data name="Coeluting">
     <value>共溶出</value>
   </data>
-  <data name="CollisionCrossSection">
+  <data name="CollisionalCrossSection">
     <value>衝突断面積</value>
   </data>
-  <data name="CollisionalCrossSection">
+  <data name="CollisionCrossSection">
     <value>衝突断面積</value>
   </data>
   <data name="CollisionEnergy">
@@ -306,14 +306,23 @@
   <data name="CvTotalAreaRatio">
     <value>Cv総面積比</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>ピーク全体でのサイクルタイム</value>
+  </data>
   <data name="DeclusteringPotential">
     <value>デクラスタリングポテンシャル</value>
   </data>
   <data name="DecoyMzShift">
     <value>デコイMzシフト</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>自由度</value>
+  </data>
   <data name="DetailReason">
     <value>詳しい理由</value>
+  </data>
+  <data name="Details">
+    <value>詳細</value>
   </data>
   <data name="DetectionQValue">
     <value>検知Q値</value>
@@ -321,17 +330,11 @@
   <data name="DetectionZScore">
     <value>検知Zスコア</value>
   </data>
-  <data name="DegreesOfFreedom">
-    <value>自由度</value>
-  </data>
-  <data name="Details">
-    <value>詳細</value>
+  <data name="DriftTimeFragment">
+    <value>ドリフト時間断片</value>
   </data>
   <data name="DriftTimeMS1">
     <value>ドリフト時間MS1</value>
-  </data>
-  <data name="DriftTimeFragment">
-    <value>ドリフト時間断片</value>
   </data>
   <data name="DriftTimeWindow">
     <value>ドリフト時間ウィンドウ</value>
@@ -354,6 +357,9 @@
   <data name="ExplicitAnalyteConcentration">
     <value>表示されたアナライト濃度</value>
   </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明示的衝突断面積</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
     <value>明示的衝突エネルギー</value>
   </data>
@@ -368,9 +374,6 @@
   </data>
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>明示的ドリフト時間高エネルギーオフセットミリ秒</value>
-  </data>
-  <data name="ExplicitCollisionalCrossSection">
-    <value>明示的衝突断面積</value>
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明示的ドリフト時間ミリ秒</value>
@@ -453,11 +456,14 @@
   <data name="Identified">
     <value>同定済み</value>
   </data>
+  <data name="InChI">
+    <value>InChI</value>
+  </data>
   <data name="InChiKey">
     <value>InChiKey</value>
   </data>
-  <data name="InChI">
-    <value>InChI</value>
+  <data name="InstrumentSerialNumber" xml:space="preserve">
+    <value>装置のシリアル番号</value>
   </data>
   <data name="Intensities">
     <value>強度</value>
@@ -498,14 +504,14 @@
   <data name="IonMobilityMS1">
     <value>イオン移動度のMS1</value>
   </data>
+  <data name="IonMobilityUnits">
+    <value>イオン移動度の単位</value>
+  </data>
   <data name="IonMobilityValue">
     <value>イオン移動度値</value>
   </data>
   <data name="IonMobilityWindow">
     <value>イオン移動度ウィンドウ</value>
-  </data>
-  <data name="IonMobilityUnits">
-    <value>イオン移動度の単位</value>
   </data>
   <data name="IonName">
     <value>イオン名</value>
@@ -543,14 +549,14 @@
   <data name="LibraryDotProduct">
     <value>ライブラリ内積</value>
   </data>
-  <data name="LibraryIonMobilityHighEnergyOffset">
-    <value>ライブラリイオン移動度高エネルギーオフセット</value>
-  </data>
   <data name="LibraryIntensity">
     <value>ライブラリ強度</value>
   </data>
   <data name="LibraryIonMobility">
     <value>ライブラリイオン移動度</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>ライブラリイオン移動度高エネルギーオフセット</value>
   </data>
   <data name="LibraryIonMobilityUnits">
     <value>ライブラリイオン移動度単位</value>
@@ -630,12 +636,6 @@
   <data name="MaxRetentionTime">
     <value>最大保持時間</value>
   </data>
-  <data name="Median">
-    <value>中央値</value>
-  </data>
-  <data name="MedianDetectionQValue" xml:space="preserve">
-    <value>検出Q値の中央値</value>
-  </data>
   <data name="Mean">
     <value>平均</value>
   </data>
@@ -671,6 +671,12 @@
   </data>
   <data name="MeanTotalAreaRatio">
     <value>平均総面積比</value>
+  </data>
+  <data name="Median">
+    <value>中央値</value>
+  </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>検出Q値の中央値</value>
   </data>
   <data name="Min">
     <value>最小</value>
@@ -720,26 +726,17 @@
   <data name="Molecule">
     <value>分子</value>
   </data>
-  <data name="MoleculeListAbundance">
-    <value>分子リスト存在量</value>
-  </data>
-  <data name="MoleculeListLocator">
-    <value>分子リストロケーター</value>
-  </data>
-  <data name="MoleculeListResult">
-    <value>分子リスト結果</value>
-  </data>
-  <data name="MoleculeListResults">
-    <value>分子リスト結果</value>
-  </data>
-  <data name="MoleculeName">
-    <value>分子名</value>
-  </data>
   <data name="MoleculeFormula">
     <value>分子式</value>
   </data>
   <data name="MoleculeList">
     <value>分子リスト</value>
+  </data>
+  <data name="MoleculeListAbundance">
+    <value>分子リスト存在量</value>
+  </data>
+  <data name="MoleculeListLocator">
+    <value>分子リストロケーター</value>
   </data>
   <data name="MoleculeListName">
     <value>分子リスト名</value>
@@ -747,11 +744,20 @@
   <data name="MoleculeListNote">
     <value>分子リストメモ</value>
   </data>
+  <data name="MoleculeListResult">
+    <value>分子リスト結果</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>分子リスト結果</value>
+  </data>
   <data name="MoleculeLists">
     <value>分子リスト</value>
   </data>
   <data name="MoleculeLocator">
     <value>分子ロケーター</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名</value>
   </data>
   <data name="MoleculeNote">
     <value>分子メモ</value>
@@ -873,9 +879,6 @@
   <data name="PointsAcrossPeak">
     <value>ピーク全体でのポイント数</value>
   </data>
-  <data name="CycleTimeAcrossPeak">
-    <value>ピーク全体でのサイクルタイム</value>
-  </data>
   <data name="Precursor">
     <value>プリカーサー</value>
   </data>
@@ -897,11 +900,11 @@
   <data name="PrecursorExplicitCollisionEnergy">
     <value>表示されたプリカーサー衝突エネルギー</value>
   </data>
-  <data name="PrecursorIonName">
-    <value>プリカーサーイオン名</value>
-  </data>
   <data name="PrecursorIonFormula">
     <value>プリカーサーイオン式</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>プリカーサーイオン名</value>
   </data>
   <data name="PrecursorLocator">
     <value>プリカーサーロケーター</value>
@@ -1089,11 +1092,11 @@
   <data name="ReplicateCount">
     <value>繰り返し測定数</value>
   </data>
-  <data name="ReplicateGroup">
-    <value>繰り返し測定グループ</value>
-  </data>
   <data name="ReplicateErrorMessage">
     <value>繰り返し測定エラーメッセージ</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>繰り返し測定グループ</value>
   </data>
   <data name="ReplicateIndex">
     <value>繰り返し測定インデックス</value>
@@ -1119,14 +1122,14 @@
   <data name="ReplicateRSquared">
     <value>繰り返し測定平方根</value>
   </data>
+  <data name="Replicates">
+    <value>繰り返し測定</value>
+  </data>
   <data name="ReplicateSampleIdentity">
     <value>繰り返し測定サンプルID</value>
   </data>
   <data name="ReplicateSlope">
     <value>繰り返し測定勾配</value>
-  </data>
-  <data name="Replicates">
-    <value>繰り返し測定</value>
   </data>
   <data name="ReplicateTurningPoint">
     <value>繰り返し測定転回点</value>
@@ -1148,6 +1151,9 @@
   </data>
   <data name="SampleDilutionFactor">
     <value>試料希釈倍数</value>
+  </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>試料ID</value>
   </data>
   <data name="SampleName">
     <value>試料名</value>
@@ -1224,9 +1230,6 @@
   <data name="TicArea">
     <value>総イオン電流領域</value>
   </data>
-  <data name="TotalArea">
-    <value>総面積</value>
-  </data>
   <data name="Time">
     <value>時間</value>
   </data>
@@ -1235,6 +1238,9 @@
   </data>
   <data name="TimeStamp">
     <value>タイムスタンプ</value>
+  </data>
+  <data name="TotalArea">
+    <value>総面積</value>
   </data>
   <data name="TotalAreaFragment">
     <value>総面積断片</value>
@@ -1257,11 +1263,11 @@
   <data name="TotalBackgroundMs1">
     <value>総バックグラウンドMS1</value>
   </data>
-  <data name="TransitionCount">
-    <value>トランジション数</value>
-  </data>
   <data name="Transition">
     <value>トランジション</value>
+  </data>
+  <data name="TransitionCount">
+    <value>トランジション数</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>トランジション同位体デコイ</value>
@@ -1322,11 +1328,5 @@
   </data>
   <data name="UTCTime">
     <value>UTC時刻</value>
-  </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>試料ID</value>
-  </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>装置のシリアル番号</value>
   </data>
 </root>

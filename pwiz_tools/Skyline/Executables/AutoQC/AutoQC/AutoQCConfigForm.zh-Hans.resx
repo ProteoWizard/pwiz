@@ -105,139 +105,19 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="labelConfigName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>59, 13</value>
-  </data>
-  <data name="labelConfigName.Text" xml:space="preserve">
-    <value>配置名称</value>
-  </data>
-  <data name="checkBoxRemoveResults.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 17</value>
-  </data>
-  <data name="checkBoxRemoveResults.Text" xml:space="preserve">
-    <value>删除结果</value>
-  </data>
-  <data name="labelQcFilePattern.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 13</value>
-  </data>
-  <data name="labelQcFilePattern.Text" xml:space="preserve">
-    <value>模式：</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>73, 13</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>文件过滤器：</value>
-  </data>
-  <data name="includeSubfoldersCb.Size" type="System.Drawing.Size, System.Drawing">
-    <value>95, 17</value>
-  </data>
-  <data name="includeSubfoldersCb.Text" xml:space="preserve">
-    <value>包括子文件夹</value>
-  </data>
-  <data name="labelMinutes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>31, 13</value>
-  </data>
-  <data name="labelMinutes.Text" xml:space="preserve">
-    <value>分钟</value>
-  </data>
-  <data name="labelAquisitionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>85, 13</value>
-  </data>
-  <data name="labelAquisitionTime.Text" xml:space="preserve">
-    <value>预期获取时间：</value>
-  </data>
-  <data name="labelDays.Size" type="System.Drawing.Size, System.Drawing">
-    <value>19, 13</value>
-  </data>
-  <data name="labelDays.Text" xml:space="preserve">
-    <value>天</value>
-  </data>
-  <data name="labelAccumulationTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 241</value>
-  </data>
-  <data name="labelAccumulationTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>85, 13</value>
-  </data>
-  <data name="labelAccumulationTimeWindow.Text" xml:space="preserve">
-    <value>结果时间窗口：</value>
-  </data>
-  <data name="labelInstrumentType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 13</value>
-  </data>
-  <data name="labelInstrumentType.Text" xml:space="preserve">
-    <value>仪器类型：</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 15</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>Skyline文件路径：</value>
-  </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 15</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>要观看的文件夹：</value>
-  </data>
-  <data name="tabSettings.Text" xml:space="preserve">
-    <value>设定值</value>
-  </data>
-  <data name="cbPublishToPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>110, 17</value>
-  </data>
-  <data name="cbPublishToPanorama.Text" xml:space="preserve">
-    <value>发布到Panorama</value>
-  </data>
-  <data name="labelPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>232, 13</value>
-  </data>
-  <data name="labelPanoramaFolder.Text" xml:space="preserve">
-    <value>Panorama上的文件夹（例如/ MacCoss / QC）：</value>
-  </data>
-  <data name="lblPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 13</value>
-  </data>
-  <data name="lblPanoramaUrl.Text" xml:space="preserve">
-    <value>网址（例如https://panoramaweb.org/）：</value>
-  </data>
-  <data name="lblPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 13</value>
-  </data>
-  <data name="lblPanoramaPasswd.Text" xml:space="preserve">
-    <value>密码：</value>
-  </data>
-  <data name="lblPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
-    <value>61, 13</value>
-  </data>
-  <data name="lblPanoramaEmail.Text" xml:space="preserve">
-    <value>电子邮件：</value>
-  </data>
-  <data name="tabPanoramaSettings.Text" xml:space="preserve">
-    <value>Panorama设置</value>
-  </data>
-  <data name="btnOkConfig.Text" xml:space="preserve">
-    <value>好</value>
-  </data>
-  <data name="btnCancelConfig.Text" xml:space="preserve">
-    <value>取消</value>
-  </data>
-  <data name="btnSaveConfig.Text" xml:space="preserve">
-    <value>保存</value>
-  </data>
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAEBAAAAAAIABoBAAARgAAACAgAAAAACAAqBAAAK4EAAAwMAAAAAAgAKglAABWFQAAQEAAAAAA
@@ -775,5 +655,125 @@
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
 </value>
+  </data>
+  <data name="btnCancelConfig.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="btnOkConfig.Text" xml:space="preserve">
+    <value>好</value>
+  </data>
+  <data name="btnSaveConfig.Text" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="cbPublishToPanorama.Size" type="System.Drawing.Size, System.Drawing">
+    <value>110, 17</value>
+  </data>
+  <data name="cbPublishToPanorama.Text" xml:space="preserve">
+    <value>发布到Panorama</value>
+  </data>
+  <data name="checkBoxRemoveResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 17</value>
+  </data>
+  <data name="checkBoxRemoveResults.Text" xml:space="preserve">
+    <value>删除结果</value>
+  </data>
+  <data name="includeSubfoldersCb.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 17</value>
+  </data>
+  <data name="includeSubfoldersCb.Text" xml:space="preserve">
+    <value>包括子文件夹</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 15</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Skyline文件路径：</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>94, 15</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>要观看的文件夹：</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>文件过滤器：</value>
+  </data>
+  <data name="labelAccumulationTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>190, 241</value>
+  </data>
+  <data name="labelAccumulationTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>85, 13</value>
+  </data>
+  <data name="labelAccumulationTimeWindow.Text" xml:space="preserve">
+    <value>结果时间窗口：</value>
+  </data>
+  <data name="labelAquisitionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>85, 13</value>
+  </data>
+  <data name="labelAquisitionTime.Text" xml:space="preserve">
+    <value>预期获取时间：</value>
+  </data>
+  <data name="labelConfigName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>59, 13</value>
+  </data>
+  <data name="labelConfigName.Text" xml:space="preserve">
+    <value>配置名称</value>
+  </data>
+  <data name="labelDays.Size" type="System.Drawing.Size, System.Drawing">
+    <value>19, 13</value>
+  </data>
+  <data name="labelDays.Text" xml:space="preserve">
+    <value>天</value>
+  </data>
+  <data name="labelInstrumentType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="labelInstrumentType.Text" xml:space="preserve">
+    <value>仪器类型：</value>
+  </data>
+  <data name="labelMinutes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 13</value>
+  </data>
+  <data name="labelMinutes.Text" xml:space="preserve">
+    <value>分钟</value>
+  </data>
+  <data name="labelPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
+    <value>232, 13</value>
+  </data>
+  <data name="labelPanoramaFolder.Text" xml:space="preserve">
+    <value>Panorama上的文件夹（例如/ MacCoss / QC）：</value>
+  </data>
+  <data name="labelQcFilePattern.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 13</value>
+  </data>
+  <data name="labelQcFilePattern.Text" xml:space="preserve">
+    <value>模式：</value>
+  </data>
+  <data name="lblPanoramaEmail.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 13</value>
+  </data>
+  <data name="lblPanoramaEmail.Text" xml:space="preserve">
+    <value>电子邮件：</value>
+  </data>
+  <data name="lblPanoramaPasswd.Size" type="System.Drawing.Size, System.Drawing">
+    <value>37, 13</value>
+  </data>
+  <data name="lblPanoramaPasswd.Text" xml:space="preserve">
+    <value>密码：</value>
+  </data>
+  <data name="lblPanoramaUrl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>199, 13</value>
+  </data>
+  <data name="lblPanoramaUrl.Text" xml:space="preserve">
+    <value>网址（例如https://panoramaweb.org/）：</value>
+  </data>
+  <data name="tabPanoramaSettings.Text" xml:space="preserve">
+    <value>Panorama设置</value>
+  </data>
+  <data name="tabSettings.Text" xml:space="preserve">
+    <value>设定值</value>
   </data>
 </root>

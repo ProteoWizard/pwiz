@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,35 +105,23 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DIA_SWATH_Caption" xml:space="preserve">
-    <value>DIA/SWATH 数据分析</value>
+  <data name="AbsoluteQuant_Caption" xml:space="preserve">
+    <value>绝对定量</value>
   </data>
-  <data name="DIA_SWATH_Description" xml:space="preserve">
-    <value>根据 Navarro、Nature Biotech 2016 基准测试文献，使用为指示说明而创建的三物种混合数据集，亲身体验如何处理从 Q Exactive 或 TripleTOF 仪器中获得的非数据依赖采集 (DIA) 数据。使用面向 DIA 的“导入肽段搜索”向导从 DDA 数据构建谱图库，其中自动 iRT 校准用于保留时间校准，mProphet 学习的模型用于肽段峰值检测。运用丰富的 Skyline 摘要图评估数据质量，摘要图中包含保留时间、峰面积、质量准确度和 CV。 最后进行群组比较，并自行评估数据捕获每个物种预期比率的效果。</value>
-  </data>
-  <data name="DIA_PASEF_Caption" xml:space="preserve">
-    <value>diaPASEF 数据分析</value>
-  </data>
-  <data name="DIA_PASEF_Description" xml:space="preserve">
-    <value>您将获得使用非数据依赖采集 (DIA) 平行累积串行碎裂 (PASEF) 数据的实际经验，该数据采集自 Bruker timsTOF 仪器，使用根据 Navarro Nature Biotech 2016 基准论文创建的 3 个生物体混合数据集为指导。您将通过适用于 DIA 的导入肽段搜索向导，从 ddaPASEF 数据建立谱图库，数据中包含自动 iRT 校准保留时间以及面向肽段峰检测的 mProphet 学习模型。您还将使用丰富的 Skyline 摘要图集评估数据质量，其中包括保留时间、峰面积、质量精度和 CV。最后进行分组比较，并对数据对每种生物体的预期比率的数据采集程度自行做出评估。</value>
-  </data>
-  <data name="IMSFiltering_Caption" xml:space="preserve">
-    <value>离子迁移谱图过滤</value>
-  </data>
-  <data name="IMSFiltering_Description" xml:space="preserve">
-    <value>亲身体验如何使用 Skyline 处理 IMS-TOF 数据。训练掺入酵母中的 BSA 的漂移时间预测器，观察离子迁移分离如何改善复杂数据中色谱图提取的选择性。了解如何在 Skyline 中处理离子迁移数据，探索支持 IMS 功能的质谱仪产生的 3D（质荷比、IMS、强度）谱图。</value>
+  <data name="AbsoluteQuant_Description" xml:space="preserve">
+    <value>亲身体验如何使用 Skyline 校准的定量来评估实验中肽段的绝对分子量。</value>
   </data>
   <data name="AuditLog_Caption" xml:space="preserve">
     <value>审计记录</value>
@@ -141,35 +129,11 @@
   <data name="AuditLog_Description" xml:space="preserve">
     <value>亲身体验如何在 Skyline 中进行审计日志记录处理。了解如何生成全面审计记录的 Skyline 文档，帮助其他人再现您的研究，也帮助您记住自己进行过的工作，这样有助于您撰写方法部分以供出版。了解如何使用“审核日志”网格视图（“文档网格”的扩展），来浏览记录的更改并注明更改原因。本例使用校准实验来显示设置更改、数据导入、整合调整以及从校准曲线中排除点的记录。最后，您要将文档上传到 Panorama，了解如何通过可浏览的 Web 界面获取审核日志以供审核。</value>
   </data>
-  <data name="DIA_Description" xml:space="preserve">
-    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 分离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
-  </data>
-  <data name="TargetedMSMS_Description" xml:space="preserve">
-    <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和敏感性差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
-  </data>
-  <data name="TargetedMSMS_Caption" xml:space="preserve">
-    <value>靶向 MS/MS (PRM)</value>
-  </data>
-  <data name="iRT_Caption" xml:space="preserve">
-    <value>iRT 保留时间预测</value>
-  </data>
   <data name="CustomReports_Caption" xml:space="preserve">
     <value>自定义即时报告(&amp;L)</value>
   </data>
-  <data name="iRT_Description" xml:space="preserve">
-    <value>获得关于 iRT 的实际经验，iRT 是在库中保存校准的、实际测量的肽段保留时间，以便将来用于针对预定采集和峰值身份验证的保留时间预测中。在本教程中，您将校准自己的 iRT 计算器，并且还将了解到更多关于 Biognosys 针对 iRT 包中的肽段标准提出的 iRT-C18 校准内容。您将从 SRM 数据中校准新的 iRT 值，SRM 数据是在发现实验中从 MS1 扫描过滤的谱图库和色谱图峰值。同时，您还将了解到如何重新校准这些 iRT 值，以在具有新梯度和新色谱柱上进行预定 SRM 采集。您将看到基于 iRT 的更准确保留时间预测将如何在您的色谱图峰值身份验证中为您提供更高的可信度。</value>
-  </data>
-  <data name="MethodRefine_Caption" xml:space="preserve">
-    <value>靶向方法调整</value>
-  </data>
-  <data name="PeakPicking_Description" xml:space="preserve">
-    <value>了解在 Skyline 中创建和测试高级模型以匹配目标肽段与色谱峰的更多信息。在 Skyline 2.5 版中，现在支持使用 mProphet 半监督学习算法创建各个峰值得分的线性组合。在本教程中，您将了解如何生成诱饵肽段和离子对信号，创建和评估 mProphet 评分模型，并针对 SRM 和 DIA/SWATH 数据将其应用于 Skyline 色谱峰值拣选。您将了解 mProphet 分配的 q 值（基于 FDR 调整的 p 值），以及如何将其与选择的峰值关联起来，并导出到自定义报告中。</value>
-  </data>
-  <data name="MS1Filtering_Caption" xml:space="preserve">
-    <value>MS1 全扫描过滤</value>
-  </data>
-  <data name="MS1Filtering_Description" xml:space="preserve">
-    <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从发现数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
+  <data name="CustomReports_Description" xml:space="preserve">
+    <value>亲身体验如何借助 Skyline 自定义实时报告的强大功能，来查看、编辑和导出 Skyline 文档中各种各样的值。这些报告非常适合于在 Excel 中使用，或是与采用 R、Matlab、Java、C++ 和其他语言编写的自定义代码结合使用，以便在使用 Skyline 处理仪器输出后进行深度统计分析。另外，还要学习使用 Skyline 结果网格视图访问这些值，并在 Skyline 中检查数据时添加自定义注释。按照本教程可大大增加使用 Skyline 完成的实验范围。</value>
   </data>
   <data name="DDASearch_Caption" xml:space="preserve">
     <value>用于 MS1 过滤的 DDA 搜索</value>
@@ -177,94 +141,130 @@
   <data name="DDSearch_Description" xml:space="preserve">
     <value>您将获得启动 DDA 质谱仪文件、使用 MS Amanda 运行肽段搜索、根据搜索结果建立谱图库以及最终从 DDA 文件中的 MS1 谱图提取色谱图进行定量分析的实际经验。在本教程中，您将使用 Skyline 肽段搜索向导来搜索从人类全细胞裂解物中采集的 3 个 DDA 数据文件，其中加入了稳定同位素标记蛋白质的 Sigma Alrich UPS1 标准混合物。</value>
   </data>
-  <data name="PeakPicking_Caption" xml:space="preserve">
-    <value>高级峰值拣选模型</value>
+  <data name="DIA_Caption" xml:space="preserve">
+    <value>非数据依赖采集</value>
   </data>
-  <data name="CustomReports_Description" xml:space="preserve">
-    <value>亲身体验如何借助 Skyline 自定义实时报告的强大功能，来查看、编辑和导出 Skyline 文档中各种各样的值。这些报告非常适合于在 Excel 中使用，或是与采用 R、Matlab、Java、C++ 和其他语言编写的自定义代码结合使用，以便在使用 Skyline 处理仪器输出后进行深度统计分析。另外，还要学习使用 Skyline 结果网格视图访问这些值，并在 Skyline 中检查数据时添加自定义注释。按照本教程可大大增加使用 Skyline 完成的实验范围。</value>
+  <data name="DIA_Description" xml:space="preserve">
+    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 分离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
   </data>
-  <data name="MethodEdit_Caption" xml:space="preserve">
-    <value>靶向方法编辑</value>
+  <data name="DIA_PASEF_Caption" xml:space="preserve">
+    <value>diaPASEF 数据分析</value>
   </data>
-  <data name="LibraryExplorer_Caption" xml:space="preserve">
-    <value>谱图库浏览器</value>
+  <data name="DIA_PASEF_Description" xml:space="preserve">
+    <value>您将获得使用非数据依赖采集 (DIA) 平行累积串行碎裂 (PASEF) 数据的实际经验，该数据采集自 Bruker timsTOF 仪器，使用根据 Navarro Nature Biotech 2016 基准论文创建的 3 个生物体混合数据集为指导。您将通过适用于 DIA 的导入肽段搜索向导，从 ddaPASEF 数据建立谱图库，数据中包含自动 iRT 校准保留时间以及面向肽段峰检测的 mProphet 学习模型。您还将使用丰富的 Skyline 摘要图集评估数据质量，其中包括保留时间、峰面积、质量精度和 CV。最后进行分组比较，并对数据对每种生物体的预期比率的数据采集程度自行做出评估。</value>
   </data>
-  <data name="GroupedStudy_Description" xml:space="preserve">
-    <value>学习如何使用 Skyline 有效地处理多次重复测定研究数据。您将使用已调整为可检测到的初始目标集，再进一步调整该组集，用以研究 14 只大鼠血浆样本中健康对象和患病对象之间的丰度差异证据。在此过程中，您将学习如何使用强大的 Skyline 交互显示器来快速研究和理解数据异常。您也将体验到在 Skyline 版本 3.1 中引入的 Skyline 群组比较框架。</value>
+  <data name="DIA_SWATH_Caption" xml:space="preserve">
+    <value>DIA/SWATH 数据分析</value>
   </data>
-  <data name="MethodRefine_Description" xml:space="preserve">
-    <value>从一组广泛的 SRM 测量，仪器数据导入和文档调整开始获得实际经验。从需要 2000 多个离子对和 39 次注射的未调整文档开始，在 Thermo TSQ 上进行非预定测量。了解如何将全部 39 次注射导入单一的重复测定。使用疏水性到保留时间的回归和 ms/ms 谱图库峰值强度相关性，以改进测量峰的可信度。使用 Skyline 调整对话，以针对最高置信度峰值删除最佳离子对之外的全部离子对。逐步调试预定计划，从而将文档缩减成可以在单次注射中测量的离子对列表。导入并查看单一注射方法中的多个重复测定。</value>
-  </data>
-  <data name="OptimizeCE_Caption" xml:space="preserve">
-    <value>碰撞能量优化</value>
-  </data>
-  <data name="LibraryExplorer_Description" xml:space="preserve">
-    <value>亲身体验如何使用 Skyline 谱图库浏览器。了解使用包含 15N 标记肽段和磷酸化肽段的 MS/MS 谱图库对同位素标记和子离子中性丢失进行处理的更多信息。使用库浏览器可加速从Shotgun 蛋白组学研究到靶向蛋白组研究的方法建立。</value>
+  <data name="DIA_SWATH_Description" xml:space="preserve">
+    <value>根据 Navarro、Nature Biotech 2016 基准测试文献，使用为指示说明而创建的三物种混合数据集，亲身体验如何处理从 Q Exactive 或 TripleTOF 仪器中获得的非数据依赖采集 (DIA) 数据。使用面向 DIA 的“导入肽段搜索”向导从 DDA 数据构建谱图库，其中自动 iRT 校准用于保留时间校准，mProphet 学习的模型用于肽段峰值检测。运用丰富的 Skyline 摘要图评估数据质量，摘要图中包含保留时间、峰面积、质量准确度和 CV。 最后进行群组比较，并自行评估数据捕获每个物种预期比率的效果。</value>
   </data>
   <data name="ExistingQuant_Caption" xml:space="preserve">
     <value>现有和定量实验</value>
   </data>
-  <data name="MethodEdit_Description" xml:space="preserve">
-    <value>获得针对定向蛋白质组实验创建 Skyline 文档的实际经验。在本教程中，您将从 pepXML ，mzXML和由FASTA格式文件创建得到的一个背景蛋白质组中创建一个 MS/MS 谱图库。您将这些内容与全球蛋白质组机构中的公共 MS/MS 谱图库相结合，以指导创建针对选定的酵母蛋白质、肽段和子离子的全新 Skyline 文档。从此文档中，您将导出一个可以在 AB 4000 Q Trap 上运行的离子对列表。</value>
-  </data>
   <data name="ExistingQuant_Description" xml:space="preserve">
     <value>从已发布的离子对和 SRM 质谱仪实验开始，获得处理定量实验和同位素标记的参考肽段之亲身体验。了解利用若干种可用的峰面积和保留时间汇总图方法进行分析您在 Skyline 中的数据。</value>
-  </data>
-  <data name="AbsoluteQuant_Description" xml:space="preserve">
-    <value>亲身体验如何使用 Skyline 校准的定量来评估实验中肽段的绝对分子量。</value>
-  </data>
-  <data name="OptimizeCE_Description" xml:space="preserve">
-    <value>亲身体验如何使用 Skyline 处理凭经验测量的最佳碰撞能量 (CE) 值。在本教程中，您将为包含 30 个肽段母离子的文档创建预定的碰撞能量优化离子对列表。使用 Thermo TSQ Vantage 提供的 RAW 文件重新计算用于计算该仪器碰撞能量的线性方程式。您还将导出一个离子对列表，其中包含针对每个离子对进行了单独优化的碰撞能量值。</value>
-  </data>
-  <data name="AbsoluteQuant_Caption" xml:space="preserve">
-    <value>绝对定量</value>
-  </data>
-  <data name="SmallMolecule_Description" xml:space="preserve">
-    <value>了解如何使用 Skyline 靶向非蛋白质组学离子。您将导入在代谢组学实验中使用的分子离子对列表，并将从 Waters Xevo TQS 导入 14 次运行。开始学习如何将 Skyline 界面的强大功能应用于非蛋白质组学实验。</value>
   </data>
   <data name="GroupedStudy_Caption" xml:space="preserve">
     <value>分组研究数据处理</value>
   </data>
-  <data name="SmallMolecule_Caption" xml:space="preserve">
-    <value>小分子标靶</value>
-  </data>
-  <data name="DIA_Caption" xml:space="preserve">
-    <value>非数据依赖采集</value>
-  </data>
-  <data name="Section_Introductory" xml:space="preserve">
-    <value>引导</value>
-  </data>
-  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
-    <value>全扫描采集数据</value>
-  </data>
-  <data name="Section_Small_Molecules" xml:space="preserve">
-    <value>小分子</value>
-  </data>
-  <data name="SmallMoleculeMethodDevCEOpt_Caption" xml:space="preserve">
-    <value>小分子方法开发和碰撞能量优化</value>
-  </data>
-  <data name="SmallMoleculeQuantification_Caption" xml:space="preserve">
-    <value>小分子定量</value>
+  <data name="GroupedStudy_Description" xml:space="preserve">
+    <value>学习如何使用 Skyline 有效地处理多次重复测定研究数据。您将使用已调整为可检测到的初始目标集，再进一步调整该组集，用以研究 14 只大鼠血浆样本中健康对象和患病对象之间的丰度差异证据。在此过程中，您将学习如何使用强大的 Skyline 交互显示器来快速研究和理解数据异常。您也将体验到在 Skyline 版本 3.1 中引入的 Skyline 群组比较框架。</value>
   </data>
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>高分辨率代谢组学</value>
   </data>
-  <data name="SmallMolLibraries_Caption" xml:space="preserve">
-    <value>小分子 IMS 库</value>
+  <data name="HiResMetabolomics_Description" xml:space="preserve">
+    <value>针对指定为母离子化学式和加合物的分子，了解如何创建以此类分子为靶向的 Skyline 文档。导入在 Q Exactive Orbitrap 质谱仪上为一组血浆样品收集的多个重复测定的数据集，查看最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>
+  </data>
+  <data name="IMSFiltering_Caption" xml:space="preserve">
+    <value>离子迁移谱图过滤</value>
+  </data>
+  <data name="IMSFiltering_Description" xml:space="preserve">
+    <value>亲身体验如何使用 Skyline 处理 IMS-TOF 数据。训练掺入酵母中的 BSA 的漂移时间预测器，观察离子迁移分离如何改善复杂数据中色谱图提取的选择性。了解如何在 Skyline 中处理离子迁移数据，探索支持 IMS 功能的质谱仪产生的 3D（质荷比、IMS、强度）谱图。</value>
+  </data>
+  <data name="iRT_Caption" xml:space="preserve">
+    <value>iRT 保留时间预测</value>
+  </data>
+  <data name="iRT_Description" xml:space="preserve">
+    <value>获得关于 iRT 的实际经验，iRT 是在库中保存校准的、实际测量的肽段保留时间，以便将来用于针对预定采集和峰值身份验证的保留时间预测中。在本教程中，您将校准自己的 iRT 计算器，并且还将了解到更多关于 Biognosys 针对 iRT 包中的肽段标准提出的 iRT-C18 校准内容。您将从 SRM 数据中校准新的 iRT 值，SRM 数据是在发现实验中从 MS1 扫描过滤的谱图库和色谱图峰值。同时，您还将了解到如何重新校准这些 iRT 值，以在具有新梯度和新色谱柱上进行预定 SRM 采集。您将看到基于 iRT 的更准确保留时间预测将如何在您的色谱图峰值身份验证中为您提供更高的可信度。</value>
+  </data>
+  <data name="LibraryExplorer_Caption" xml:space="preserve">
+    <value>谱图库浏览器</value>
+  </data>
+  <data name="LibraryExplorer_Description" xml:space="preserve">
+    <value>亲身体验如何使用 Skyline 谱图库浏览器。了解使用包含 15N 标记肽段和磷酸化肽段的 MS/MS 谱图库对同位素标记和子离子中性丢失进行处理的更多信息。使用库浏览器可加速从Shotgun 蛋白组学研究到靶向蛋白组研究的方法建立。</value>
+  </data>
+  <data name="MethodEdit_Caption" xml:space="preserve">
+    <value>靶向方法编辑</value>
+  </data>
+  <data name="MethodEdit_Description" xml:space="preserve">
+    <value>获得针对定向蛋白质组实验创建 Skyline 文档的实际经验。在本教程中，您将从 pepXML ，mzXML和由FASTA格式文件创建得到的一个背景蛋白质组中创建一个 MS/MS 谱图库。您将这些内容与全球蛋白质组机构中的公共 MS/MS 谱图库相结合，以指导创建针对选定的酵母蛋白质、肽段和子离子的全新 Skyline 文档。从此文档中，您将导出一个可以在 AB 4000 Q Trap 上运行的离子对列表。</value>
+  </data>
+  <data name="MethodRefine_Caption" xml:space="preserve">
+    <value>靶向方法调整</value>
+  </data>
+  <data name="MethodRefine_Description" xml:space="preserve">
+    <value>从一组广泛的 SRM 测量，仪器数据导入和文档调整开始获得实际经验。从需要 2000 多个离子对和 39 次注射的未调整文档开始，在 Thermo TSQ 上进行非预定测量。了解如何将全部 39 次注射导入单一的重复测定。使用疏水性到保留时间的回归和 ms/ms 谱图库峰值强度相关性，以改进测量峰的可信度。使用 Skyline 调整对话，以针对最高置信度峰值删除最佳离子对之外的全部离子对。逐步调试预定计划，从而将文档缩减成可以在单次注射中测量的离子对列表。导入并查看单一注射方法中的多个重复测定。</value>
+  </data>
+  <data name="MS1Filtering_Caption" xml:space="preserve">
+    <value>MS1 全扫描过滤</value>
+  </data>
+  <data name="MS1Filtering_Description" xml:space="preserve">
+    <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从发现数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
+  </data>
+  <data name="OptimizeCE_Caption" xml:space="preserve">
+    <value>碰撞能量优化</value>
+  </data>
+  <data name="OptimizeCE_Description" xml:space="preserve">
+    <value>亲身体验如何使用 Skyline 处理凭经验测量的最佳碰撞能量 (CE) 值。在本教程中，您将为包含 30 个肽段母离子的文档创建预定的碰撞能量优化离子对列表。使用 Thermo TSQ Vantage 提供的 RAW 文件重新计算用于计算该仪器碰撞能量的线性方程式。您还将导出一个离子对列表，其中包含针对每个离子对进行了单独优化的碰撞能量值。</value>
+  </data>
+  <data name="PeakPicking_Caption" xml:space="preserve">
+    <value>高级峰值拣选模型</value>
+  </data>
+  <data name="PeakPicking_Description" xml:space="preserve">
+    <value>了解在 Skyline 中创建和测试高级模型以匹配目标肽段与色谱峰的更多信息。在 Skyline 2.5 版中，现在支持使用 mProphet 半监督学习算法创建各个峰值得分的线性组合。在本教程中，您将了解如何生成诱饵肽段和离子对信号，创建和评估 mProphet 评分模型，并针对 SRM 和 DIA/SWATH 数据将其应用于 Skyline 色谱峰值拣选。您将了解 mProphet 分配的 q 值（基于 FDR 调整的 p 值），以及如何将其与选择的峰值关联起来，并导出到自定义报告中。</value>
   </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>高级主题</value>
   </data>
+  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>全扫描采集数据</value>
+  </data>
+  <data name="Section_Introductory" xml:space="preserve">
+    <value>引导</value>
+  </data>
+  <data name="Section_Small_Molecules" xml:space="preserve">
+    <value>小分子</value>
+  </data>
+  <data name="SmallMolecule_Caption" xml:space="preserve">
+    <value>小分子标靶</value>
+  </data>
+  <data name="SmallMolecule_Description" xml:space="preserve">
+    <value>了解如何使用 Skyline 靶向非蛋白质组学离子。您将导入在代谢组学实验中使用的分子离子对列表，并将从 Waters Xevo TQS 导入 14 次运行。开始学习如何将 Skyline 界面的强大功能应用于非蛋白质组学实验。</value>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_Caption" xml:space="preserve">
+    <value>小分子方法开发和碰撞能量优化</value>
+  </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
     <value>针对仅指定为母离子质荷比、子离子质荷比以及碰撞能量值的同位素标记分子，了解如何从文献引用创建以此类分子为靶向的 Skyline 文档。使用从 Sciex 三重四极杆获取的初始碰撞能量值，从 Waters Xevo TQ-S 导入多个重复测定的数据集，对分子执行保留时间预定和碰撞能量优化。了解最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>
+  </data>
+  <data name="SmallMoleculeQuantification_Caption" xml:space="preserve">
+    <value>小分子定量</value>
   </data>
   <data name="SmallMoleculeQuantification_Description" xml:space="preserve">
     <value>针对指定为母离子化学式和加合物以及子离子质荷比值的分子，了解如何创建以此类分子为靶向的 Skyline 文档。导入在三重四极杆上使用 LC-MS/MS 收集的多个重复测定的数据集，查看最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>
   </data>
-  <data name="HiResMetabolomics_Description" xml:space="preserve">
-    <value>针对指定为母离子化学式和加合物的分子，了解如何创建以此类分子为靶向的 Skyline 文档。导入在 Q Exactive Orbitrap 质谱仪上为一组血浆样品收集的多个重复测定的数据集，查看最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>小分子 IMS 库</value>
   </data>
   <data name="SmallMolLibraries_Description" xml:space="preserve">
     <value>了解如何使用谱图库和离子迁移过滤来分析复杂的离子迁移谱图-质谱 (IMS-MS) 小分子数据。探索包含质荷比、保留时间、片段和离子迁移信息的谱图库，了解如何使用每个分子的 CCS 值来提高母离子和碎片提取离子色谱图的选择性。</value>
+  </data>
+  <data name="TargetedMSMS_Caption" xml:space="preserve">
+    <value>靶向 MS/MS (PRM)</value>
+  </data>
+  <data name="TargetedMSMS_Description" xml:space="preserve">
+    <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和敏感性差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
   </data>
 </root>

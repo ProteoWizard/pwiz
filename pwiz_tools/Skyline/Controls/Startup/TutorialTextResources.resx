@@ -105,35 +105,23 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DIA_SWATH_Caption" xml:space="preserve">
-    <value>Analysis of DIA/SWATH Data</value>
+  <data name="AbsoluteQuant_Caption" xml:space="preserve">
+    <value>Absolute Quantification</value>
   </data>
-  <data name="DIA_SWATH_Description" xml:space="preserve">
-    <value>Get hands-on experience working with a data independent acquisition (DIA) data, from either a Q Exactive or a TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from DDA data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collection of Skyline summary plots including Retention Times, Peak Areas, Mass Accuracy, and CVs. Finally, perform a group comparison and make your own assessment of how well the data capture the expected ratios for each organism.</value>
-  </data>
-  <data name="DIA_PASEF_Caption" xml:space="preserve">
-    <value>Analysis of diaPASEF Data</value>
-  </data>
-  <data name="DIA_PASEF_Description" xml:space="preserve">
-    <value>Get hands-on experience working with a data independent acquisition (DIA) parallel accumulation serial fragmentation (PASEF) data, from a Bruker timsTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from ddaPASEF data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collection of Skyline summary plots including Retention Times, Peak Areas, Mass Accuracy, and CVs. Finally, perform a group comparison and make your own assessment of how well the data capture the expected ratios for each organism.</value>
-  </data>
-  <data name="IMSFiltering_Caption" xml:space="preserve">
-    <value>Ion Mobility Spectrum Filtering</value>
-  </data>
-  <data name="IMSFiltering_Description" xml:space="preserve">
-    <value>Get hands-on experience using Skyline to work IMS-TOF data. Train a drift-time predictor for BSA spiked into yeast, and see how ion mobility separation improves the selectivity of chromagram extraction in complex data. Learn how to work with ion mobility data in Skyline and explore the 3D (m/z, IMS, intensity) spectra produced by IMS-enabled mass spectrometers.</value>
+  <data name="AbsoluteQuant_Description" xml:space="preserve">
+    <value>Get hands-on experience using Skyline calibrated quantification to estimate the absolute molecular quantities of peptides in your experiments.</value>
   </data>
   <data name="AuditLog_Caption" xml:space="preserve">
     <value>Audit Logging</value>
@@ -141,35 +129,11 @@
   <data name="AuditLog_Description" xml:space="preserve">
     <value>Get hands-on experience working with audit logging in Skyline. Learn how to produce fully audit logged Skyline documents to help others reproduce your research, and you to remember what you did, helpting with the writing of your methods sections for publication. Learn how to work with the Audit Log grid view, an extension of the Document Grid to explore logged changes and provide reasons for the changes you make. This example uses a calibration experiment to show logging of settings changes, data import, integration adjustments, and exclusion of points from a calibration curve. Finally, you will upload your document to Panorama and see how the audit log is captured for review through a browsable web interface.</value>
   </data>
-  <data name="DIA_Description" xml:space="preserve">
-    <value>Get hands-on experience working with data independent acquisition (DIA) data, using a workflow that utilizes DIA and DDA runs acquired on the same instrument in series. Define and export a DIA isolation scheme. Build a spectral library from DDA data acquired before the DIA runs for the experiment. Choose peptides and transitions for a target set of proteins based on the spectral library. Import and analyze related DIA runs in Skyline to master a simple workflow for beginning to work with DIA.</value>
-  </data>
-  <data name="TargetedMSMS_Description" xml:space="preserve">
-    <value>Get hands-on experience working with targeted MS/MS (also referred to as parallel reaction monitoring - PRM) data acquired on a low resolution Thermo LTQ and a high resolution Agilent 6520 Q-TOF. Gain new understanding of the selectivity and sensitivity differences between peptide quantification using precursor and fragment ions measured on low and high resolution instruments. Discover new ways to work with and understand your own mass spectrometry data using the rich feature set provided by Skyline for working with chromatography-based quantitative proteomics.</value>
-  </data>
-  <data name="TargetedMSMS_Caption" xml:space="preserve">
-    <value>Targeted MS/MS (PRM)</value>
-  </data>
-  <data name="iRT_Caption" xml:space="preserve">
-    <value>iRT Retention Time Prediction</value>
-  </data>
   <data name="CustomReports_Caption" xml:space="preserve">
     <value>Custom &amp; Live Reports</value>
   </data>
-  <data name="iRT_Description" xml:space="preserve">
-    <value>Get hands-on experience with iRT, a technique for storing calibrated, empirically measured peptide retention times in a library for future use in retention time prediction for scheduled acquisition and peak identity validation. In this tutorial, you will calibrate your own iRT calculator and also learn more about the iRT-C18 calibration proposed by Biognosys for the peptide standards in their iRT-Kit. You will calibrate new iRT values from SRM data, a spectral library and chromatogram peaks filtered from MS1 scans in a discovery experiment. And, you will learn how to recalibrate these iRT values to schedule SRM acquisition on a new column with a new gradient. You will see how more accurate retention time prediction based on iRT can give you higher confidence in your chromatogram peak identity validation.</value>
-  </data>
-  <data name="MethodRefine_Caption" xml:space="preserve">
-    <value>Targeted Method Refinement</value>
-  </data>
-  <data name="PeakPicking_Description" xml:space="preserve">
-    <value>Learn more about creating and testing advanced models for matching target peptides with chromatogram peaks in Skyline. With the 2.5 release, Skyline now supports creating linear combinations of individual peak scores using the mProphet semi-supervised learning algorithm.  In this tutorial, you will learn to generate decoy peptides and transitions, create and assess mProphet scoring models, and apply them to Skyline chromatogram peak picking, both for SRM and DIA/SWATH data.  You will learn about mProphet assigned q values (adjusted p values, based on FDR) and how you can associate them with your picked peaks and export them in a custom report.</value>
-  </data>
-  <data name="MS1Filtering_Caption" xml:space="preserve">
-    <value>MS1 Full-Scan Filtering</value>
-  </data>
-  <data name="MS1Filtering_Description" xml:space="preserve">
-    <value>Get hands-on experience creating a Skyline document to measure quantitative differences in peptide expression using the MS1 scans from your data dependent acquisition (DDA) experiments. In this tutorial, you will generate a spectral library from a discovery data set, set up a Skyline document for MS1 filtering, import raw mass spectrometer data to extract precursor ion chromatograms from MS1 scans, with peak picking guided by MS/MS peptide identifications, and further process the resulting quantitative data in Skyline. If you are interested in label-free quantitative analysis of discovery data sets, this tutorial will give you a new tool set for your investigation.</value>
+  <data name="CustomReports_Description" xml:space="preserve">
+    <value>Get hands-on experience working with the power of Skyline custom Live Reports to view, edit and export a wide range of values from your Skyline documents. These reports are perfect for use in Excel or with custom code written in R, Matlab, Java, C++ and other languages for doing deep statistical analysis after processing your instrument output with Skyline. Also learn to use the Skyline Results Grid view to gain access to these values and to add custom annotations while inspecting your data in Skyline. Follow this tutorial to greatly increase the scope of experiments you can achieve with Skyline. </value>
   </data>
   <data name="DDASearch_Caption" xml:space="preserve">
     <value>DDA Search for MS1 Filtering</value>
@@ -177,94 +141,130 @@
   <data name="DDSearch_Description" xml:space="preserve">
     <value>Get hands-on experience starting DDA mass spectometer files, running a peptide search with MS Amanda, building a spectral library from the search results and finally extracting chromatograms for quantitative analysis from the MS1 spectra in the DDA files. In this tutorial, you will use the Skyline Peptide Search wizard to search 3 DDA data files acquired from a human whole cell lysate with the Sigma Alrich UPS1 standard mix of stable isotope labeled proteins spiked in. You will set up Skyline to extract the precursor isotope chromatograms for all detected peptides from the MS1 spectra in the data files, and you will begin to inspect the results in Skyline.</value>
   </data>
-  <data name="PeakPicking_Caption" xml:space="preserve">
-    <value>Advanced Peak Picking Models</value>
+  <data name="DIA_Caption" xml:space="preserve">
+    <value>Data Independent Acquisition</value>
   </data>
-  <data name="CustomReports_Description" xml:space="preserve">
-    <value>Get hands-on experience working with the power of Skyline custom Live Reports to view, edit and export a wide range of values from your Skyline documents. These reports are perfect for use in Excel or with custom code written in R, Matlab, Java, C++ and other languages for doing deep statistical analysis after processing your instrument output with Skyline. Also learn to use the Skyline Results Grid view to gain access to these values and to add custom annotations while inspecting your data in Skyline. Follow this tutorial to greatly increase the scope of experiments you can achieve with Skyline. </value>
+  <data name="DIA_Description" xml:space="preserve">
+    <value>Get hands-on experience working with data independent acquisition (DIA) data, using a workflow that utilizes DIA and DDA runs acquired on the same instrument in series. Define and export a DIA isolation scheme. Build a spectral library from DDA data acquired before the DIA runs for the experiment. Choose peptides and transitions for a target set of proteins based on the spectral library. Import and analyze related DIA runs in Skyline to master a simple workflow for beginning to work with DIA.</value>
   </data>
-  <data name="MethodEdit_Caption" xml:space="preserve">
-    <value>Targeted Method Editing</value>
+  <data name="DIA_PASEF_Caption" xml:space="preserve">
+    <value>Analysis of diaPASEF Data</value>
   </data>
-  <data name="LibraryExplorer_Caption" xml:space="preserve">
-    <value>Spectral Library Explorer</value>
+  <data name="DIA_PASEF_Description" xml:space="preserve">
+    <value>Get hands-on experience working with a data independent acquisition (DIA) parallel accumulation serial fragmentation (PASEF) data, from a Bruker timsTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from ddaPASEF data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collection of Skyline summary plots including Retention Times, Peak Areas, Mass Accuracy, and CVs. Finally, perform a group comparison and make your own assessment of how well the data capture the expected ratios for each organism.</value>
   </data>
-  <data name="GroupedStudy_Description" xml:space="preserve">
-    <value>Learn how to process multi-replicate study date effectively with Skyline. You will take an initial set of targets already refined as detectable and further refine this set for evidence of differential abundance between healthy and diseased subjects a study of plasma from 14 rats. In the process you will learn to use the powerful Skyline interactive displays to quickly investigate and understand data anomalies. You will also gain experience with the Skyline Group Comparison framework.</value>
+  <data name="DIA_SWATH_Caption" xml:space="preserve">
+    <value>Analysis of DIA/SWATH Data</value>
   </data>
-  <data name="MethodRefine_Description" xml:space="preserve">
-    <value>Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the best transitions for the highest confidence peaks. Step through the scheduling process to reduce the document to a transition list that can be measured in a single injection. Import and view multiple replicates of the single-injection method.</value>
-  </data>
-  <data name="OptimizeCE_Caption" xml:space="preserve">
-    <value>Collision Energy Optimization</value>
-  </data>
-  <data name="LibraryExplorer_Description" xml:space="preserve">
-    <value>Get hands-on experience working with the Skyline Spectral Library Explorer. Learn more about working with isotope labels and product ion neutral losses using MS/MS spectral libraries containing 15N labeled and phosphorylated peptides. Use the Library Explorer to accelerate the transition between shotgun discovery experiments and targeted investigation.</value>
+  <data name="DIA_SWATH_Description" xml:space="preserve">
+    <value>Get hands-on experience working with a data independent acquisition (DIA) data, from either a Q Exactive or a TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from DDA data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collection of Skyline summary plots including Retention Times, Peak Areas, Mass Accuracy, and CVs. Finally, perform a group comparison and make your own assessment of how well the data capture the expected ratios for each organism.</value>
   </data>
   <data name="ExistingQuant_Caption" xml:space="preserve">
     <value>Existing &amp; Quantitative Experiments</value>
   </data>
-  <data name="MethodEdit_Description" xml:space="preserve">
-    <value>Get hands-on experience creating a Skyline document for a targeted proteomics experiment. In this tutorial, you will create a MS/MS spectral library from pepXML and mzXML and a background proteome file from a FASTA format file. You will combine these with a public MS/MS spectral library from the Global Proteome Machine to guide creation of a new Skyline document targeting selected yeast proteins, peptides and product ions. From this document, you will export a transition list, ready to run on a AB 4000 Q Trap.</value>
-  </data>
   <data name="ExistingQuant_Description" xml:space="preserve">
     <value>Get hands-on experience working with quantitative experiments and isotope labeled reference peptides, by starting with experiments with published transition lists and SRM mass spectrometer data. Learn effective ways of analyzing your data in Skyline using several of the available peak area and retention time summary charts.</value>
-  </data>
-  <data name="AbsoluteQuant_Description" xml:space="preserve">
-    <value>Get hands-on experience using Skyline calibrated quantification to estimate the absolute molecular quantities of peptides in your experiments.</value>
-  </data>
-  <data name="OptimizeCE_Description" xml:space="preserve">
-    <value>Get hands-on experience using Skyline to work with empirically measured optimal collision energy (CE) values. In this tutorial, you will create scheduled CE optimization transitions lists for a document with 30 peptide precursors. Using supplied RAW files from a Thermo TSQ Vantage, you will recalculate the linear equation used to calculate CE for that instrument. You will also export a transition list with CE values optimized separately for each transition.</value>
-  </data>
-  <data name="AbsoluteQuant_Caption" xml:space="preserve">
-    <value>Absolute Quantification</value>
-  </data>
-  <data name="SmallMolecule_Description" xml:space="preserve">
-    <value>Learn how to target non-proteomic ions with Skyline. You will import a molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for non-proteomic experiments.</value>
   </data>
   <data name="GroupedStudy_Caption" xml:space="preserve">
     <value>Grouped Study Data Processing</value>
   </data>
-  <data name="SmallMolecule_Caption" xml:space="preserve">
-    <value>Small Molecule Targets</value>
-  </data>
-  <data name="DIA_Caption" xml:space="preserve">
-    <value>Data Independent Acquisition</value>
-  </data>
-  <data name="Section_Introductory" xml:space="preserve">
-    <value>Introductory</value>
-  </data>
-  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
-    <value>Full-Scan Acquisition Data</value>
-  </data>
-  <data name="Section_Small_Molecules" xml:space="preserve">
-    <value>Small Molecules</value>
-  </data>
-  <data name="SmallMoleculeMethodDevCEOpt_Caption" xml:space="preserve">
-    <value>Small Molecule Method Development and CE Optimization</value>
-  </data>
-  <data name="SmallMoleculeQuantification_Caption" xml:space="preserve">
-    <value>Small Molecule Quantification</value>
+  <data name="GroupedStudy_Description" xml:space="preserve">
+    <value>Learn how to process multi-replicate study date effectively with Skyline. You will take an initial set of targets already refined as detectable and further refine this set for evidence of differential abundance between healthy and diseased subjects a study of plasma from 14 rats. In the process you will learn to use the powerful Skyline interactive displays to quickly investigate and understand data anomalies. You will also gain experience with the Skyline Group Comparison framework.</value>
   </data>
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>Hi-Res Metabolomics</value>
   </data>
-  <data name="SmallMolLibraries_Caption" xml:space="preserve">
-    <value>Small Molecule IMS Libraries</value>
+  <data name="HiResMetabolomics_Description" xml:space="preserve">
+    <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to non-proteomic molecule data. </value>
+  </data>
+  <data name="IMSFiltering_Caption" xml:space="preserve">
+    <value>Ion Mobility Spectrum Filtering</value>
+  </data>
+  <data name="IMSFiltering_Description" xml:space="preserve">
+    <value>Get hands-on experience using Skyline to work IMS-TOF data. Train a drift-time predictor for BSA spiked into yeast, and see how ion mobility separation improves the selectivity of chromagram extraction in complex data. Learn how to work with ion mobility data in Skyline and explore the 3D (m/z, IMS, intensity) spectra produced by IMS-enabled mass spectrometers.</value>
+  </data>
+  <data name="iRT_Caption" xml:space="preserve">
+    <value>iRT Retention Time Prediction</value>
+  </data>
+  <data name="iRT_Description" xml:space="preserve">
+    <value>Get hands-on experience with iRT, a technique for storing calibrated, empirically measured peptide retention times in a library for future use in retention time prediction for scheduled acquisition and peak identity validation. In this tutorial, you will calibrate your own iRT calculator and also learn more about the iRT-C18 calibration proposed by Biognosys for the peptide standards in their iRT-Kit. You will calibrate new iRT values from SRM data, a spectral library and chromatogram peaks filtered from MS1 scans in a discovery experiment. And, you will learn how to recalibrate these iRT values to schedule SRM acquisition on a new column with a new gradient. You will see how more accurate retention time prediction based on iRT can give you higher confidence in your chromatogram peak identity validation.</value>
+  </data>
+  <data name="LibraryExplorer_Caption" xml:space="preserve">
+    <value>Spectral Library Explorer</value>
+  </data>
+  <data name="LibraryExplorer_Description" xml:space="preserve">
+    <value>Get hands-on experience working with the Skyline Spectral Library Explorer. Learn more about working with isotope labels and product ion neutral losses using MS/MS spectral libraries containing 15N labeled and phosphorylated peptides. Use the Library Explorer to accelerate the transition between shotgun discovery experiments and targeted investigation.</value>
+  </data>
+  <data name="MethodEdit_Caption" xml:space="preserve">
+    <value>Targeted Method Editing</value>
+  </data>
+  <data name="MethodEdit_Description" xml:space="preserve">
+    <value>Get hands-on experience creating a Skyline document for a targeted proteomics experiment. In this tutorial, you will create a MS/MS spectral library from pepXML and mzXML and a background proteome file from a FASTA format file. You will combine these with a public MS/MS spectral library from the Global Proteome Machine to guide creation of a new Skyline document targeting selected yeast proteins, peptides and product ions. From this document, you will export a transition list, ready to run on a AB 4000 Q Trap.</value>
+  </data>
+  <data name="MethodRefine_Caption" xml:space="preserve">
+    <value>Targeted Method Refinement</value>
+  </data>
+  <data name="MethodRefine_Description" xml:space="preserve">
+    <value>Get hands-on experience starting with a broad set of SRM measurements, importing instrument data, and refining the document. Start with an unrefined document requiring over 2000 transitions and 39 injections to measure unscheduled on a Thermo TSQ. Learn how to import all 39 injections into a single replicate. Use a hydrophobicity to retention time regression and ms/ms spectral library peak intensity correlation to improve confidence in measured peaks. Use the Skyline refinement dialog to remove all but the best transitions for the highest confidence peaks. Step through the scheduling process to reduce the document to a transition list that can be measured in a single injection. Import and view multiple replicates of the single-injection method.</value>
+  </data>
+  <data name="MS1Filtering_Caption" xml:space="preserve">
+    <value>MS1 Full-Scan Filtering</value>
+  </data>
+  <data name="MS1Filtering_Description" xml:space="preserve">
+    <value>Get hands-on experience creating a Skyline document to measure quantitative differences in peptide expression using the MS1 scans from your data dependent acquisition (DDA) experiments. In this tutorial, you will generate a spectral library from a discovery data set, set up a Skyline document for MS1 filtering, import raw mass spectrometer data to extract precursor ion chromatograms from MS1 scans, with peak picking guided by MS/MS peptide identifications, and further process the resulting quantitative data in Skyline. If you are interested in label-free quantitative analysis of discovery data sets, this tutorial will give you a new tool set for your investigation.</value>
+  </data>
+  <data name="OptimizeCE_Caption" xml:space="preserve">
+    <value>Collision Energy Optimization</value>
+  </data>
+  <data name="OptimizeCE_Description" xml:space="preserve">
+    <value>Get hands-on experience using Skyline to work with empirically measured optimal collision energy (CE) values. In this tutorial, you will create scheduled CE optimization transitions lists for a document with 30 peptide precursors. Using supplied RAW files from a Thermo TSQ Vantage, you will recalculate the linear equation used to calculate CE for that instrument. You will also export a transition list with CE values optimized separately for each transition.</value>
+  </data>
+  <data name="PeakPicking_Caption" xml:space="preserve">
+    <value>Advanced Peak Picking Models</value>
+  </data>
+  <data name="PeakPicking_Description" xml:space="preserve">
+    <value>Learn more about creating and testing advanced models for matching target peptides with chromatogram peaks in Skyline. With the 2.5 release, Skyline now supports creating linear combinations of individual peak scores using the mProphet semi-supervised learning algorithm.  In this tutorial, you will learn to generate decoy peptides and transitions, create and assess mProphet scoring models, and apply them to Skyline chromatogram peak picking, both for SRM and DIA/SWATH data.  You will learn about mProphet assigned q values (adjusted p values, based on FDR) and how you can associate them with your picked peaks and export them in a custom report.</value>
   </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>Advanced Topics</value>
   </data>
+  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>Full-Scan Acquisition Data</value>
+  </data>
+  <data name="Section_Introductory" xml:space="preserve">
+    <value>Introductory</value>
+  </data>
+  <data name="Section_Small_Molecules" xml:space="preserve">
+    <value>Small Molecules</value>
+  </data>
+  <data name="SmallMolecule_Caption" xml:space="preserve">
+    <value>Small Molecule Targets</value>
+  </data>
+  <data name="SmallMolecule_Description" xml:space="preserve">
+    <value>Learn how to target non-proteomic ions with Skyline. You will import a molecule transition list used in a metabolomics experiment and import 14 runs from a Waters Xevo TQS. Start learning how to apply the power of the Skyline interface for non-proteomic experiments.</value>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_Caption" xml:space="preserve">
+    <value>Small Molecule Method Development and CE Optimization</value>
+  </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
     <value>Learn how how to create a Skyline document that targets stable isotope labeled molecules from a literature citation, specified as only precursor m/z, product ion m/z, and collision energy values. Perform retention time scheduling and collision energy optimization for molecules by importing a multi-replicate data set from a Waters Xevo TQ-S using initial CE values from a Sciex triple quad. Learn how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
+  </data>
+  <data name="SmallMoleculeQuantification_Caption" xml:space="preserve">
+    <value>Small Molecule Quantification</value>
   </data>
   <data name="SmallMoleculeQuantification_Description" xml:space="preserve">
     <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts, and product ion m/z values. Import a multi-replicate data set collected using LC-MS/MS on a triple quadulpole, and see how many existing Skyline features created initially for targeted proteomics use can now be applied to non-proteomic molecule data.</value>
   </data>
-  <data name="HiResMetabolomics_Description" xml:space="preserve">
-    <value>Learn how to create a Skyline document that targets molecules specified as precursor ion chemical formulas and adducts. Import a multi-replicate data set collected on a Q Exactive Orbitrap mass spectrometer for a set of plasma samples, and see how many existing Skyline features created initially for targeted proteomics use can be applied to non-proteomic molecule data. </value>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>Small Molecule IMS Libraries</value>
   </data>
   <data name="SmallMolLibraries_Description" xml:space="preserve">
     <value>Learn how to use spectral libraries and ion mobility filtering for analysis of complex ion mobility spectrometry-mass spectrometry (IMS-MS) small molecule data. Explore a spectral library containing m/z, retention time, fragmentation, and ion mobility information, and learn how the CCS values for each molecule are used to increase the selectivity of precursor and fragment extracted ion chromatograms.</value>
+  </data>
+  <data name="TargetedMSMS_Caption" xml:space="preserve">
+    <value>Targeted MS/MS (PRM)</value>
+  </data>
+  <data name="TargetedMSMS_Description" xml:space="preserve">
+    <value>Get hands-on experience working with targeted MS/MS (also referred to as parallel reaction monitoring - PRM) data acquired on a low resolution Thermo LTQ and a high resolution Agilent 6520 Q-TOF. Gain new understanding of the selectivity and sensitivity differences between peptide quantification using precursor and fragment ions measured on low and high resolution instruments. Discover new ways to work with and understand your own mass spectrometry data using the rich feature set provided by Skyline for working with chromatography-based quantitative proteomics.</value>
   </data>
 </root>

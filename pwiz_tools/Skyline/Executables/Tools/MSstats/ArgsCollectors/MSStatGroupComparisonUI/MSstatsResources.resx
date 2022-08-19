@@ -105,35 +105,29 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="SampleSizeUi_OkDialog_The_upper_desired_fold_change_must_be_greater_than_lower_desired_fold_change_" xml:space="preserve">
-    <value>The upper desired fold change must be greater than lower desired fold change.</value>
+  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_Equalize_Medians" xml:space="preserve">
+    <value>Equalize medians</value>
   </data>
-  <data name="SampleSizeUi_OkDialog_Negative_values_are_not_valid_" xml:space="preserve">
-    <value>Negative values are not valid.</value>
+  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_Global_Standards" xml:space="preserve">
+    <value>Relative to global standards</value>
   </data>
-  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_upper_desired_fold_change_" xml:space="preserve">
-    <value>Please enter a value for the upper desired fold change.</value>
+  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_None" xml:space="preserve">
+    <value>None</value>
   </data>
-  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_lower_desired_fold_change_" xml:space="preserve">
-    <value>Please enter a value for the lower desired fold change.</value>
-  </data>
-  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_FDR_" xml:space="preserve">
-    <value>Please enter a value for FDR.</value>
-  </data>
-  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_Power_" xml:space="preserve">
-    <value>Please enter a value for Power.</value>
+  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_Quantile" xml:space="preserve">
+    <value>Quantile</value>
   </data>
   <data name="GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_" xml:space="preserve">
     <value>Please enter a name for this comparison.</value>
@@ -141,31 +135,37 @@
   <data name="GroupComparisonUi_OkDialog_Please_select_at_least_one_comparison_group_" xml:space="preserve">
     <value>Please select at least one comparison group.</value>
   </data>
+  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
+    <value>Unable to find a column named '{0}'</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_Negative_values_are_not_valid_" xml:space="preserve">
+    <value>Negative values are not valid.</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_FDR_" xml:space="preserve">
+    <value>Please enter a value for FDR.</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_Power_" xml:space="preserve">
+    <value>Please enter a value for Power.</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_lower_desired_fold_change_" xml:space="preserve">
+    <value>Please enter a value for the lower desired fold change.</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_upper_desired_fold_change_" xml:space="preserve">
+    <value>Please enter a value for the upper desired fold change.</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_The_upper_desired_fold_change_must_be_greater_than_lower_desired_fold_change_" xml:space="preserve">
+    <value>The upper desired fold change must be greater than lower desired fold change.</value>
+  </data>
   <data name="SampleSizeUi_ValidateNumber_The_number___0___is_not_valid_" xml:space="preserve">
     <value>The number '{0}' is not valid.</value>
   </data>
   <data name="SummaryMethod_Linear_Linear_model" xml:space="preserve">
     <value>Linear model</value>
   </data>
-  <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
-    <value>Tukey's median polish</value>
-  </data>
   <data name="SummaryMethod_Skyline_Skyline" xml:space="preserve">
     <value>Skyline</value>
   </data>
-  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
-    <value>Unable to find a column named '{0}'</value>
-  </data>
-  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_Equalize_Medians" xml:space="preserve">
-    <value>Equalize medians</value>
-  </data>
-  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_Quantile" xml:space="preserve">
-    <value>Quantile</value>
-  </data>
-  <data name="ArgsCollectorForm_GetNormalizationOptionLabels_Global_Standards" xml:space="preserve">
-    <value>Relative to global standards</value>
+  <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
+    <value>Tukey's median polish</value>
   </data>
 </root>

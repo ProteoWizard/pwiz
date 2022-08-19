@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,182 +105,200 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="textIonMobility.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>396, 568</value>
   </data>
-  <data name="textIonMobility.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 189</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="textIonMobility.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 20</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>EditCustomMoleculeDlg</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="textIonMobility.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
   </data>
-  <data name="textIonMobility.ToolTip" xml:space="preserve">
-    <value>ライブラリイオン移動度値を無効にする</value>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
-    <value>textIonMobility</value>
-  </data>
-  <data name="&gt;&gt;textIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textIonMobility.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textIonMobility.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="textIonMobilityHighEnergyOffset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textIonMobilityHighEnergyOffset.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 286</value>
-  </data>
-  <data name="textIonMobilityHighEnergyOffset.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 20</value>
-  </data>
-  <data name="textIonMobilityHighEnergyOffset.TabIndex" type="System.Int32, mscorlib">
-    <value>21</value>
-  </data>
-  <data name="textIonMobilityHighEnergyOffset.ToolTip" xml:space="preserve">
-    <value>ドリフト後断片化に運動エネルギーが追加されたために、僅かに速くなったイオンの飛行を補正するために小さな値（通常、負の数）がプロダクトイオンに適用されました。</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Name" xml:space="preserve">
-    <value>textIonMobilityHighEnergyOffset</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 47</value>
-  </data>
-  <data name="textRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textRetentionTime.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textRetentionTime.ToolTip" xml:space="preserve">
-    <value>予測された保持時間の値の上書きする</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
-    <value>textRetentionTime</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="textRetentionTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 47</value>
-  </data>
-  <data name="textRetentionTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textRetentionTimeWindow.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="textRetentionTimeWindow.ToolTip" xml:space="preserve">
-    <value>この値は詳細な保持時間の値がある場合のみ有用です。</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTimeWindow.Name" xml:space="preserve">
-    <value>textRetentionTimeWindow</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTimeWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTimeWindow.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTimeWindow.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
-  <data name="textCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 98</value>
-  </data>
-  <data name="textCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>予測された、ライブラリ、またはプリカーサー当たりの明示的なCE値を上書きする</value>
+  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
+    <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
-    <value>textCollisionEnergy</value>
+  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="&gt;&gt;textCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
-  <data name="&gt;&gt;textCollisionEnergy.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboBoxIonMobilityUnits.Name" xml:space="preserve">
+    <value>comboBoxIonMobilityUnits</value>
+  </data>
+  <data name="&gt;&gt;comboBoxIonMobilityUnits.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
-  <data name="&gt;&gt;textCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>17</value>
+  <data name="&gt;&gt;comboBoxIonMobilityUnits.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
-  <data name="labelSLens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="&gt;&gt;comboIsotopeLabelType.Name" xml:space="preserve">
+    <value>comboIsotopeLabelType</value>
   </data>
-  <data name="labelSLens.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;comboIsotopeLabelType.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="labelSLens.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="&gt;&gt;comboIsotopeLabelType.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="labelSLens.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 123</value>
+  <data name="&gt;&gt;groupBoxOptionalValues.Name" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
   </data>
-  <data name="labelSLens.Size" type="System.Drawing.Size, System.Drawing">
-    <value>57, 17</value>
+  <data name="&gt;&gt;groupBoxOptionalValues.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="labelSLens.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;groupBoxOptionalValues.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <data name="labelSLens.Text" xml:space="preserve">
-    <value>S-レンズ(&amp;S)：</value>
+  <data name="&gt;&gt;labelCCS.Name" xml:space="preserve">
+    <value>labelCCS</value>
   </data>
-  <data name="labelSLens.ToolTip" xml:space="preserve">
-    <value>ThermoのS-レンズ値</value>
+  <data name="&gt;&gt;labelCCS.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelCCS.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
+    <value>labelCharge</value>
+  </data>
+  <data name="&gt;&gt;labelCharge.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelCharge.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.Name" xml:space="preserve">
+    <value>labelCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;labelConeVoltage.Name" xml:space="preserve">
+    <value>labelConeVoltage</value>
+  </data>
+  <data name="&gt;&gt;labelConeVoltage.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelConeVoltage.ZOrder" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="&gt;&gt;labelDeclusteringPotential.Name" xml:space="preserve">
+    <value>labelDeclusteringPotential</value>
+  </data>
+  <data name="&gt;&gt;labelDeclusteringPotential.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelDeclusteringPotential.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobility.Name" xml:space="preserve">
+    <value>labelIonMobility</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobility.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobility.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Name" xml:space="preserve">
+    <value>labelIonMobilityHighEnergyOffset</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityUnits.Name" xml:space="preserve">
+    <value>labelIonMobilityUnits</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityUnits.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelIonMobilityUnits.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;labelIsotopeLabelType.Name" xml:space="preserve">
+    <value>labelIsotopeLabelType</value>
+  </data>
+  <data name="&gt;&gt;labelIsotopeLabelType.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelIsotopeLabelType.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Name" xml:space="preserve">
+    <value>labelPrecursorCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.Name" xml:space="preserve">
+    <value>labelRetentionTime</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTime.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.Name" xml:space="preserve">
+    <value>labelRetentionTimeWindow</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;labelRetentionTimeWindow.ZOrder" xml:space="preserve">
+    <value>15</value>
   </data>
   <data name="&gt;&gt;labelSLens.Name" xml:space="preserve">
     <value>labelSLens</value>
-  </data>
-  <data name="&gt;&gt;labelSLens.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSLens.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -288,32 +306,263 @@
   <data name="&gt;&gt;labelSLens.ZOrder" xml:space="preserve">
     <value>18</value>
   </data>
-  <data name="textSLens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
+  <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
+    <value>textBoxCCS</value>
   </data>
-  <data name="textSLens.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 143</value>
+  <data name="&gt;&gt;textBoxCCS.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
   </data>
-  <data name="textSLens.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
+  <data name="&gt;&gt;textBoxCCS.ZOrder" xml:space="preserve">
+    <value>5</value>
   </data>
-  <data name="textSLens.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Name" xml:space="preserve">
+    <value>textBoxPrecursorCollisionEnergy</value>
   </data>
-  <data name="textSLens.ToolTip" xml:space="preserve">
-    <value>予測された、またはライブラリのS-レンズの値を上書きする</value>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
+    <value>textCharge</value>
+  </data>
+  <data name="&gt;&gt;textCharge.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textCharge.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
+    <value>textCollisionEnergy</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textCollisionEnergy.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;textConeVoltage.Name" xml:space="preserve">
+    <value>textConeVoltage</value>
+  </data>
+  <data name="&gt;&gt;textConeVoltage.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textConeVoltage.ZOrder" xml:space="preserve">
+    <value>21</value>
+  </data>
+  <data name="&gt;&gt;textDeclusteringPotential.Name" xml:space="preserve">
+    <value>textDeclusteringPotential</value>
+  </data>
+  <data name="&gt;&gt;textDeclusteringPotential.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textDeclusteringPotential.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
+    <value>textIonMobility</value>
+  </data>
+  <data name="&gt;&gt;textIonMobility.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textIonMobility.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Name" xml:space="preserve">
+    <value>textIonMobilityHighEnergyOffset</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+    <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
+    <value>textRetentionTime</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.Name" xml:space="preserve">
+    <value>textRetentionTimeWindow</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.Parent" xml:space="preserve">
+    <value>groupBoxOptionalValues</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTimeWindow.ZOrder" xml:space="preserve">
+    <value>14</value>
   </data>
   <data name="&gt;&gt;textSLens.Name" xml:space="preserve">
     <value>textSLens</value>
-  </data>
-  <data name="&gt;&gt;textSLens.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSLens.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
   <data name="&gt;&gt;textSLens.ZOrder" xml:space="preserve">
     <value>19</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>306, 41</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnOK.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
+    <value>306, 12</value>
+  </data>
+  <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnOK.Text" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="comboBoxIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="comboBoxIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 234</value>
+  </data>
+  <data name="comboBoxIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>150, 21</value>
+  </data>
+  <data name="comboBoxIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="comboIsotopeLabelType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>188, 210</value>
+  </data>
+  <data name="comboIsotopeLabelType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 24</value>
+  </data>
+  <data name="comboIsotopeLabelType.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="groupBoxOptionalValues.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 250</value>
+  </data>
+  <data name="groupBoxOptionalValues.Size" type="System.Drawing.Size, System.Drawing">
+    <value>366, 312</value>
+  </data>
+  <data name="groupBoxOptionalValues.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="groupBoxOptionalValues.Text" xml:space="preserve">
+    <value>指定された値（オプション）</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 9</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 17</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>名前(&amp;N)：</value>
+  </data>
+  <data name="labelCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelCCS.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCCS.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCCS.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 169</value>
+  </data>
+  <data name="labelCCS.Size" type="System.Drawing.Size, System.Drawing">
+    <value>204, 17</value>
+  </data>
+  <data name="labelCCS.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="labelCCS.Text" xml:space="preserve">
+    <value>衝突断面積（sqA）：(&amp;T)</value>
+  </data>
+  <data name="labelCharge.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCharge.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCharge.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 190</value>
+  </data>
+  <data name="labelCharge.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 17</value>
+  </data>
+  <data name="labelCharge.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelCharge.Text" xml:space="preserve">
+    <value>電荷(&amp;H)：</value>
+  </data>
+  <data name="labelCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelCollisionEnergy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 78</value>
+  </data>
+  <data name="labelCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 17</value>
+  </data>
+  <data name="labelCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="labelCollisionEnergy.Text" xml:space="preserve">
+    <value>衝突エネルギー(&amp;E)：</value>
   </data>
   <data name="labelConeVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -339,357 +588,6 @@
   <data name="labelConeVoltage.ToolTip" xml:space="preserve">
     <value>Watersのコーン電圧値</value>
   </data>
-  <data name="&gt;&gt;labelConeVoltage.Name" xml:space="preserve">
-    <value>labelConeVoltage</value>
-  </data>
-  <data name="&gt;&gt;labelConeVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelConeVoltage.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelConeVoltage.ZOrder" xml:space="preserve">
-    <value>20</value>
-  </data>
-  <data name="textConeVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textConeVoltage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 143</value>
-  </data>
-  <data name="textConeVoltage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textConeVoltage.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="textConeVoltage.ToolTip" xml:space="preserve">
-    <value>予測された、またはライブラリのコーン電圧の値を上書きする</value>
-  </data>
-  <data name="&gt;&gt;textConeVoltage.Name" xml:space="preserve">
-    <value>textConeVoltage</value>
-  </data>
-  <data name="&gt;&gt;textConeVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textConeVoltage.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textConeVoltage.ZOrder" xml:space="preserve">
-    <value>21</value>
-  </data>
-  <data name="textDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textDeclusteringPotential.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 98</value>
-  </data>
-  <data name="textDeclusteringPotential.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textDeclusteringPotential.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="textDeclusteringPotential.ToolTip" xml:space="preserve">
-    <value>予測された、またはライブラリのDPの値を上書きする</value>
-  </data>
-  <data name="&gt;&gt;textDeclusteringPotential.Name" xml:space="preserve">
-    <value>textDeclusteringPotential</value>
-  </data>
-  <data name="&gt;&gt;textDeclusteringPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textDeclusteringPotential.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textDeclusteringPotential.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="textCharge.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 210</value>
-  </data>
-  <data name="textCharge.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 22</value>
-  </data>
-  <data name="textCharge.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="textCharge.ToolTip" xml:space="preserve">
-    <value>式中の付加イオンの表記（例：「[M+2K-H]」）を使って電荷を指定することもできます</value>
-  </data>
-  <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
-    <value>textCharge</value>
-  </data>
-  <data name="&gt;&gt;textCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCharge.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textCharge.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 29</value>
-  </data>
-  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 22</value>
-  </data>
-  <data name="textName.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="textName.ToolTip" xml:space="preserve">
-    <value>デフォルト名は、イオン式から付加イオンの表記を除いたものです</value>
-  </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
-    <value>textName</value>
-  </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="textBoxCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textBoxCCS.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 189</value>
-  </data>
-  <data name="textBoxCCS.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 22</value>
-  </data>
-  <data name="textBoxCCS.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="textBoxCCS.ToolTip" xml:space="preserve">
-    <value>ライブラリの衝突断面積値を無効にする</value>
-  </data>
-  <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
-    <value>textBoxCCS</value>
-  </data>
-  <data name="&gt;&gt;textBoxCCS.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBoxCCS.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textBoxCCS.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="textBoxPrecursorCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="textBoxPrecursorCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>173, 234</value>
-  </data>
-  <data name="textBoxPrecursorCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>135, 20</value>
-  </data>
-  <data name="textBoxPrecursorCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="textBoxPrecursorCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>予測された、またはライブラリの衝突エネルギー値を上書きすると、それ自体がトランジションレベルで表示された値で上書きされることがあります。</value>
-  </data>
-  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Name" xml:space="preserve">
-    <value>textBoxPrecursorCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnOK.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>306, 12</value>
-  </data>
-  <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="btnOK.Text" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
-    <value>btnOK</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>306, 41</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>キャンセル</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>170, 214</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>83, 13</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="labelPrecursorCollisionEnergy.Text" xml:space="preserve">
-    <value>衝突エネルギー(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Name" xml:space="preserve">
-    <value>labelPrecursorCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelPrecursorCollisionEnergy.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="comboBoxIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="comboBoxIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 234</value>
-  </data>
-  <data name="comboBoxIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>150, 21</value>
-  </data>
-  <data name="comboBoxIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="&gt;&gt;comboBoxIonMobilityUnits.Name" xml:space="preserve">
-    <value>comboBoxIonMobilityUnits</value>
-  </data>
-  <data name="&gt;&gt;comboBoxIonMobilityUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboBoxIonMobilityUnits.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;comboBoxIonMobilityUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="labelIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelIonMobilityUnits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelIonMobilityUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 214</value>
-  </data>
-  <data name="labelIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>87, 13</value>
-  </data>
-  <data name="labelIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="labelIonMobilityUnits.Text" xml:space="preserve">
-    <value>イオン移動度の単位(&amp;U)：</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityUnits.Name" xml:space="preserve">
-    <value>labelIonMobilityUnits</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityUnits.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityUnits.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="labelCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelCCS.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelCCS.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelCCS.Location" type="System.Drawing.Point, System.Drawing">
-    <value>170, 169</value>
-  </data>
-  <data name="labelCCS.Size" type="System.Drawing.Size, System.Drawing">
-    <value>204, 17</value>
-  </data>
-  <data name="labelCCS.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="labelCCS.Text" xml:space="preserve">
-    <value>衝突断面積（sqA）：(&amp;T)</value>
-  </data>
-  <data name="&gt;&gt;labelCCS.Name" xml:space="preserve">
-    <value>labelCCS</value>
-  </data>
-  <data name="&gt;&gt;labelCCS.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCCS.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelCCS.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="labelDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -710,18 +608,6 @@
   </data>
   <data name="labelDeclusteringPotential.Text" xml:space="preserve">
     <value>デクラスタリングポテンシャル(&amp;P)：</value>
-  </data>
-  <data name="&gt;&gt;labelDeclusteringPotential.Name" xml:space="preserve">
-    <value>labelDeclusteringPotential</value>
-  </data>
-  <data name="&gt;&gt;labelDeclusteringPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelDeclusteringPotential.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelDeclusteringPotential.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <data name="labelIonMobility.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
@@ -744,18 +630,6 @@
   <data name="labelIonMobility.Text" xml:space="preserve">
     <value>イオン移動度(&amp;I)：</value>
   </data>
-  <data name="&gt;&gt;labelIonMobility.Name" xml:space="preserve">
-    <value>labelIonMobility</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobility.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobility.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
   <data name="labelIonMobilityHighEnergyOffset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -777,194 +651,26 @@
   <data name="labelIonMobilityHighEnergyOffset.Text" xml:space="preserve">
     <value>イオン移動度の高エネルギーオフセット(&amp;O)：</value>
   </data>
-  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Name" xml:space="preserve">
-    <value>labelIonMobilityHighEnergyOffset</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="labelRetentionTime.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelRetentionTime.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 27</value>
-  </data>
-  <data name="labelRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>103, 17</value>
-  </data>
-  <data name="labelRetentionTime.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="labelRetentionTime.Text" xml:space="preserve">
-    <value>保持時間(&amp;R)：</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.Name" xml:space="preserve">
-    <value>labelRetentionTime</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTime.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="labelRetentionTimeWindow.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelRetentionTimeWindow.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelRetentionTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>170, 27</value>
-  </data>
-  <data name="labelRetentionTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
-  </data>
-  <data name="labelRetentionTimeWindow.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="labelRetentionTimeWindow.Text" xml:space="preserve">
-    <value>保持時間ウィンドウ(&amp;W)：</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTimeWindow.Name" xml:space="preserve">
-    <value>labelRetentionTimeWindow</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTimeWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTimeWindow.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTimeWindow.ZOrder" xml:space="preserve">
-    <value>15</value>
-  </data>
-  <data name="labelCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="labelIonMobilityUnits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <data name="labelCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelIonMobilityUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="labelCollisionEnergy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="labelIonMobilityUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="labelCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 78</value>
+  <data name="labelIonMobilityUnits.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 214</value>
   </data>
-  <data name="labelCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 17</value>
+  <data name="labelIonMobilityUnits.Size" type="System.Drawing.Size, System.Drawing">
+    <value>87, 13</value>
   </data>
-  <data name="labelCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="labelCollisionEnergy.Text" xml:space="preserve">
-    <value>衝突エネルギー(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Name" xml:space="preserve">
-    <value>labelCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Parent" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;labelCollisionEnergy.ZOrder" xml:space="preserve">
+  <data name="labelIonMobilityUnits.TabIndex" type="System.Int32, mscorlib">
     <value>16</value>
   </data>
-  <data name="groupBoxOptionalValues.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 250</value>
-  </data>
-  <data name="groupBoxOptionalValues.Size" type="System.Drawing.Size, System.Drawing">
-    <value>366, 312</value>
-  </data>
-  <data name="groupBoxOptionalValues.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="groupBoxOptionalValues.Text" xml:space="preserve">
-    <value>指定された値（オプション）</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Name" xml:space="preserve">
-    <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="labelCharge.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelCharge.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelCharge.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 190</value>
-  </data>
-  <data name="labelCharge.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 17</value>
-  </data>
-  <data name="labelCharge.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="labelCharge.Text" xml:space="preserve">
-    <value>電荷(&amp;H)：</value>
-  </data>
-  <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
-    <value>labelCharge</value>
-  </data>
-  <data name="&gt;&gt;labelCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCharge.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelCharge.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 9</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 17</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>名前(&amp;N)：</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>8</value>
+  <data name="labelIonMobilityUnits.Text" xml:space="preserve">
+    <value>イオン移動度の単位(&amp;U)：</value>
   </data>
   <data name="labelIsotopeLabelType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -984,58 +690,253 @@
   <data name="labelIsotopeLabelType.Text" xml:space="preserve">
     <value>同位体標識タイプ(&amp;A)：</value>
   </data>
-  <data name="&gt;&gt;labelIsotopeLabelType.Name" xml:space="preserve">
-    <value>labelIsotopeLabelType</value>
+  <data name="labelPrecursorCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
-  <data name="&gt;&gt;labelIsotopeLabelType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="labelPrecursorCollisionEnergy.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;labelIsotopeLabelType.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="labelPrecursorCollisionEnergy.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="&gt;&gt;labelIsotopeLabelType.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="labelPrecursorCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 214</value>
   </data>
-  <data name="comboIsotopeLabelType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>188, 210</value>
+  <data name="labelPrecursorCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>83, 13</value>
   </data>
-  <data name="comboIsotopeLabelType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 24</value>
+  <data name="labelPrecursorCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
   </data>
-  <data name="comboIsotopeLabelType.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+  <data name="labelPrecursorCollisionEnergy.Text" xml:space="preserve">
+    <value>衝突エネルギー(&amp;E)：</value>
   </data>
-  <data name="&gt;&gt;comboIsotopeLabelType.Name" xml:space="preserve">
-    <value>comboIsotopeLabelType</value>
+  <data name="labelRetentionTime.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;comboIsotopeLabelType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="labelRetentionTime.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="&gt;&gt;comboIsotopeLabelType.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="labelRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 27</value>
   </data>
-  <data name="&gt;&gt;comboIsotopeLabelType.ZOrder" xml:space="preserve">
+  <data name="labelRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 17</value>
+  </data>
+  <data name="labelRetentionTime.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <data name="labelRetentionTime.Text" xml:space="preserve">
+    <value>保持時間(&amp;R)：</value>
+  </data>
+  <data name="labelRetentionTimeWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </metadata>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>396, 568</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <data name="labelRetentionTimeWindow.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
+  <data name="labelRetentionTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 27</value>
   </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="labelRetentionTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>152, 17</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>EditCustomMoleculeDlg</value>
+  <data name="labelRetentionTimeWindow.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="labelRetentionTimeWindow.Text" xml:space="preserve">
+    <value>保持時間ウィンドウ(&amp;W)：</value>
+  </data>
+  <data name="labelSLens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelSLens.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelSLens.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelSLens.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 123</value>
+  </data>
+  <data name="labelSLens.Size" type="System.Drawing.Size, System.Drawing">
+    <value>57, 17</value>
+  </data>
+  <data name="labelSLens.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="labelSLens.Text" xml:space="preserve">
+    <value>S-レンズ(&amp;S)：</value>
+  </data>
+  <data name="labelSLens.ToolTip" xml:space="preserve">
+    <value>ThermoのS-レンズ値</value>
+  </data>
+  <data name="textBoxCCS.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textBoxCCS.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 189</value>
+  </data>
+  <data name="textBoxCCS.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textBoxCCS.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="textBoxCCS.ToolTip" xml:space="preserve">
+    <value>ライブラリの衝突断面積値を無効にする</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 234</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 20</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="textBoxPrecursorCollisionEnergy.ToolTip" xml:space="preserve">
+    <value>予測された、またはライブラリの衝突エネルギー値を上書きすると、それ自体がトランジションレベルで表示された値で上書きされることがあります。</value>
+  </data>
+  <data name="textCharge.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 210</value>
+  </data>
+  <data name="textCharge.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 22</value>
+  </data>
+  <data name="textCharge.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="textCharge.ToolTip" xml:space="preserve">
+    <value>式中の付加イオンの表記（例：「[M+2K-H]」）を使って電荷を指定することもできます</value>
+  </data>
+  <data name="textCollisionEnergy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textCollisionEnergy.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 98</value>
+  </data>
+  <data name="textCollisionEnergy.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textCollisionEnergy.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textCollisionEnergy.ToolTip" xml:space="preserve">
+    <value>予測された、ライブラリ、またはプリカーサー当たりの明示的なCE値を上書きする</value>
+  </data>
+  <data name="textConeVoltage.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textConeVoltage.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 143</value>
+  </data>
+  <data name="textConeVoltage.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textConeVoltage.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="textConeVoltage.ToolTip" xml:space="preserve">
+    <value>予測された、またはライブラリのコーン電圧の値を上書きする</value>
+  </data>
+  <data name="textDeclusteringPotential.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textDeclusteringPotential.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 98</value>
+  </data>
+  <data name="textDeclusteringPotential.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textDeclusteringPotential.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="textDeclusteringPotential.ToolTip" xml:space="preserve">
+    <value>予測された、またはライブラリのDPの値を上書きする</value>
+  </data>
+  <data name="textIonMobility.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textIonMobility.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 189</value>
+  </data>
+  <data name="textIonMobility.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 20</value>
+  </data>
+  <data name="textIonMobility.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="textIonMobility.ToolTip" xml:space="preserve">
+    <value>ライブラリイオン移動度値を無効にする</value>
+  </data>
+  <data name="textIonMobilityHighEnergyOffset.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textIonMobilityHighEnergyOffset.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 286</value>
+  </data>
+  <data name="textIonMobilityHighEnergyOffset.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 20</value>
+  </data>
+  <data name="textIonMobilityHighEnergyOffset.TabIndex" type="System.Int32, mscorlib">
+    <value>21</value>
+  </data>
+  <data name="textIonMobilityHighEnergyOffset.ToolTip" xml:space="preserve">
+    <value>ドリフト後断片化に運動エネルギーが追加されたために、僅かに速くなったイオンの飛行を補正するために小さな値（通常、負の数）がプロダクトイオンに適用されました。</value>
+  </data>
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 29</value>
+  </data>
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 22</value>
+  </data>
+  <data name="textName.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>デフォルト名は、イオン式から付加イオンの表記を除いたものです</value>
+  </data>
+  <data name="textRetentionTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 47</value>
+  </data>
+  <data name="textRetentionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textRetentionTime.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textRetentionTime.ToolTip" xml:space="preserve">
+    <value>予測された保持時間の値の上書きする</value>
+  </data>
+  <data name="textRetentionTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
+    <value>173, 47</value>
+  </data>
+  <data name="textRetentionTimeWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textRetentionTimeWindow.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="textRetentionTimeWindow.ToolTip" xml:space="preserve">
+    <value>この値は詳細な保持時間の値がある場合のみ有用です。</value>
+  </data>
+  <data name="textSLens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="textSLens.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 143</value>
+  </data>
+  <data name="textSLens.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 22</value>
+  </data>
+  <data name="textSLens.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="textSLens.ToolTip" xml:space="preserve">
+    <value>予測された、またはライブラリのS-レンズの値を上書きする</value>
   </data>
 </root>

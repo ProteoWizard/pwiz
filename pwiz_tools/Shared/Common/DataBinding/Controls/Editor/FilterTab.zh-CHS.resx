@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,30 +105,132 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="splitContainerFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="splitContainerFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colFilterColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colFilterOperand.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colFilterOperation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="toolStripFilter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>881, 307</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>FilterTab</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTreeFilter.Name" xml:space="preserve">
+    <value>availableFieldsTreeFilter</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTreeFilter.Parent" xml:space="preserve">
+    <value>splitContainerFilter.Panel1</value>
+  </data>
+  <data name="&gt;&gt;availableFieldsTreeFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnAddFilter.Name" xml:space="preserve">
+    <value>btnAddFilter</value>
+  </data>
+  <data name="&gt;&gt;btnAddFilter.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;btnAddFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
+    <value>btnDeleteFilter</value>
+  </data>
+  <data name="&gt;&gt;colFilterColumn.Name" xml:space="preserve">
+    <value>colFilterColumn</value>
+  </data>
+  <data name="&gt;&gt;colFilterOperand.Name" xml:space="preserve">
+    <value>colFilterOperand</value>
+  </data>
+  <data name="&gt;&gt;colFilterOperation.Name" xml:space="preserve">
+    <value>colFilterOperation</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewFilter.Name" xml:space="preserve">
+    <value>dataGridViewFilter</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewFilter.Parent" xml:space="preserve">
+    <value>splitContainerFilter.Panel2</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>splitContainerFilter.Panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Name" xml:space="preserve">
+    <value>splitContainerFilter</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Panel1.Name" xml:space="preserve">
+    <value>splitContainerFilter.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Panel1.Parent" xml:space="preserve">
+    <value>splitContainerFilter</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Panel2.Name" xml:space="preserve">
+    <value>splitContainerFilter.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Panel2.Parent" xml:space="preserve">
+    <value>splitContainerFilter</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;splitContainerFilter.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;toolStripFilter.Name" xml:space="preserve">
+    <value>toolStripFilter</value>
+  </data>
+  <data name="&gt;&gt;toolStripFilter.Parent" xml:space="preserve">
+    <value>splitContainerFilter.Panel2</value>
+  </data>
+  <data name="&gt;&gt;toolStripFilter.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="availableFieldsTreeFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="availableFieldsTreeFilter.ImageIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -142,18 +244,6 @@
     <value>314, 307</value>
   </data>
   <data name="availableFieldsTreeFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.Name" xml:space="preserve">
-    <value>availableFieldsTreeFilter</value>
-  </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.Type" xml:space="preserve">
-    <value>pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.Parent" xml:space="preserve">
-    <value>splitContainerFilter.Panel1</value>
-  </data>
-  <data name="&gt;&gt;availableFieldsTreeFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="btnAddFilter.AutoSize" type="System.Boolean, mscorlib">
@@ -174,16 +264,34 @@
   <data name="btnAddFilter.Text" xml:space="preserve">
     <value>添加 &gt;&gt;</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.Name" xml:space="preserve">
-    <value>btnAddFilter</value>
+  <data name="btnDeleteFilter.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="btnDeleteFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 20</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.Parent" xml:space="preserve">
-    <value>panel1</value>
+  <data name="btnDeleteFilter.Text" xml:space="preserve">
+    <value>删除</value>
   </data>
-  <data name="&gt;&gt;btnAddFilter.ZOrder" xml:space="preserve">
+  <data name="colFilterColumn.HeaderText" xml:space="preserve">
+    <value>列</value>
+  </data>
+  <data name="colFilterOperand.HeaderText" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="colFilterOperation.HeaderText" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="dataGridViewFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="dataGridViewFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="dataGridViewFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>475, 307</value>
+  </data>
+  <data name="dataGridViewFilter.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -198,86 +306,23 @@
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
-    <value>splitContainerFilter.Panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.Name" xml:space="preserve">
-    <value>splitContainerFilter.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.Parent" xml:space="preserve">
-    <value>splitContainerFilter</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel1.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="colFilterColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colFilterColumn.HeaderText" xml:space="preserve">
-    <value>列</value>
-  </data>
-  <metadata name="colFilterOperation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colFilterOperation.HeaderText" xml:space="preserve">
-    <value>操作</value>
-  </data>
-  <metadata name="colFilterOperand.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="colFilterOperand.HeaderText" xml:space="preserve">
-    <value>值</value>
-  </data>
-  <data name="dataGridViewFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="splitContainerFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="dataGridViewFilter.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="splitContainerFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="dataGridViewFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>475, 307</value>
+  <data name="splitContainerFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>881, 307</value>
   </data>
-  <data name="dataGridViewFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="splitContainerFilter.SplitterDistance" type="System.Int32, mscorlib">
+    <value>370</value>
   </data>
-  <data name="&gt;&gt;dataGridViewFilter.Name" xml:space="preserve">
-    <value>dataGridViewFilter</value>
+  <data name="splitContainerFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
-  <data name="&gt;&gt;dataGridViewFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewFilter.Parent" xml:space="preserve">
-    <value>splitContainerFilter.Panel2</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewFilter.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="toolStripFilter.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="toolStripFilter.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
-  </data>
-  <data name="btnDeleteFilter.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="btnDeleteFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
-  </data>
-  <data name="btnDeleteFilter.Text" xml:space="preserve">
-    <value>删除</value>
   </data>
   <data name="toolStripFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>475, 0</value>
@@ -290,89 +335,5 @@
   </data>
   <data name="toolStripFilter.Text" xml:space="preserve">
     <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStripFilter.Name" xml:space="preserve">
-    <value>toolStripFilter</value>
-  </data>
-  <data name="&gt;&gt;toolStripFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStripFilter.Parent" xml:space="preserve">
-    <value>splitContainerFilter.Panel2</value>
-  </data>
-  <data name="&gt;&gt;toolStripFilter.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.Name" xml:space="preserve">
-    <value>splitContainerFilter.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.Parent" xml:space="preserve">
-    <value>splitContainerFilter</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Panel2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="splitContainerFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>881, 307</value>
-  </data>
-  <data name="splitContainerFilter.SplitterDistance" type="System.Int32, mscorlib">
-    <value>370</value>
-  </data>
-  <data name="splitContainerFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Name" xml:space="preserve">
-    <value>splitContainerFilter</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;splitContainerFilter.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>881, 307</value>
-  </data>
-  <data name="&gt;&gt;colFilterColumn.Name" xml:space="preserve">
-    <value>colFilterColumn</value>
-  </data>
-  <data name="&gt;&gt;colFilterColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colFilterOperation.Name" xml:space="preserve">
-    <value>colFilterOperation</value>
-  </data>
-  <data name="&gt;&gt;colFilterOperation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;colFilterOperand.Name" xml:space="preserve">
-    <value>colFilterOperand</value>
-  </data>
-  <data name="&gt;&gt;colFilterOperand.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Name" xml:space="preserve">
-    <value>btnDeleteFilter</value>
-  </data>
-  <data name="&gt;&gt;btnDeleteFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>FilterTab</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Common.DataBinding.Controls.Editor.ViewEditorWidget, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

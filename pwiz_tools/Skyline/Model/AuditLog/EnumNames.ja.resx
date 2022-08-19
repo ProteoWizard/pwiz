@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,14 +105,14 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
-  </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -128,6 +128,75 @@
   </data>
   <data name="AnnotationType_value_list" xml:space="preserve">
     <value>値のリスト</value>
+  </data>
+  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
+  <data name="AreaCVMsLevel_products" xml:space="preserve">
+    <value>プロダクト</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
+    <value>グローバル標準</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
+    <value>中央値</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
+    <value>比率</value>
+  </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>総イオン電流</value>
+  </data>
+  <data name="AreaCVTransitions_all" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="AreaCVTransitions_best" xml:space="preserve">
+    <value>最良</value>
+  </data>
+  <data name="AreaCVTransitions_count" xml:space="preserve">
+    <value>数</value>
+  </data>
+  <data name="BilinearFit_bilinear" xml:space="preserve">
+    <value>双線形</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>チェビシェフ</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>ユークリッド</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>シティブロック</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>ピアソン</value>
+  </data>
+  <data name="CountImpl_Count" xml:space="preserve">
+    <value>数</value>
+  </data>
+  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
+    <value>1個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
+    <value>2個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
+    <value>3個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
+    <value>4個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
+    <value>5個のイオン</value>
+  </data>
+  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
+    <value>6個のイオン</value>
+  </data>
+  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
+    <value>補償電圧(V)</value>
   </data>
   <data name="eIonMobilityUnits_drift_time_msec" xml:space="preserve">
     <value>ドリフト時間(ms)</value>
@@ -152,6 +221,12 @@
   </data>
   <data name="FullScanAcquisitionMethod_None" xml:space="preserve">
     <value>なし</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
+    <value>PRM</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
+    <value>SureQuant</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
     <value>ターゲット（旧）</value>
@@ -183,6 +258,21 @@
   <data name="FullScanPrecursorIsotopes_Percent" xml:space="preserve">
     <value>パーセント</value>
   </data>
+  <data name="GraphFontSize_10" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="GraphFontSize_12" xml:space="preserve">
+    <value>普通</value>
+  </data>
+  <data name="GraphFontSize_14" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="GraphFontSize_16" xml:space="preserve">
+    <value>極大</value>
+  </data>
+  <data name="GraphFontSize_8" xml:space="preserve">
+    <value>極小</value>
+  </data>
   <data name="ImportResultsSimultaneousFileOptions_many" xml:space="preserve">
     <value>多く</value>
   </data>
@@ -191,6 +281,45 @@
   </data>
   <data name="ImportResultsSimultaneousFileOptions_several" xml:space="preserve">
     <value>いくつか</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA生データ (ライブラリの検索と構築)</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA生データ (ライブラリのデコンボリューション、検索、構築)</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>検索結果 (ライブラリを直接構築)</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
+    <value>固定幅</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
+    <value>線形範囲</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
+    <value>分解能</value>
+  </data>
+  <data name="IrtRegressionType_linear" xml:space="preserve">
+    <value>線形</value>
+  </data>
+  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
+    <value>対数</value>
+  </data>
+  <data name="IrtRegressionType_lowess" xml:space="preserve">
+    <value>ローカル加重回帰</value>
   </data>
   <data name="IsolationWidthType_fixed_width" xml:space="preserve">
     <value>固定</value>
@@ -203,6 +332,27 @@
   </data>
   <data name="IsolationWidthType_results_with_margin" xml:space="preserve">
     <value>マージンを有する結果</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
+    <value>最後のイオン</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
+    <value>最後のイオン - 1</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
+    <value>最後のイオン - 2</value>
+  </data>
+  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
+    <value>最後のイオン - 3</value>
+  </data>
+  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
+    <value>対数空間の線形</value>
+  </data>
+  <data name="ListSortDirection_Ascending" xml:space="preserve">
+    <value>昇順</value>
+  </data>
+  <data name="ListSortDirection_Descending" xml:space="preserve">
+    <value>降順</value>
   </data>
   <data name="LodCalculation_blank_plus_2_sd" xml:space="preserve">
     <value>ブランク ＋2 * SD</value>
@@ -231,20 +381,38 @@
   <data name="MassType_Monoisotopic" xml:space="preserve">
     <value>モノアイソトピック</value>
   </data>
-  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
-    <value>中央値を均一化</value>
+  <data name="ModTerminus_C" xml:space="preserve">
+    <value>C</value>
   </data>
-  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
-    <value>グローバル標準に対する比率</value>
+  <data name="ModTerminus_N" xml:space="preserve">
+    <value>N</value>
   </data>
-  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
-    <value>なし</value>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) - 1</value>
   </data>
-  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
-    <value>分位値</value>
+  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) - 2</value>
   </data>
-  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
-    <value>総イオン電流</value>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) + 1</value>
+  </data>
+  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
+    <value>(m/z &gt; プリカーサー) + 2</value>
+  </data>
+  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
+    <value>m/z &gt;プリカーサー</value>
+  </data>
+  <data name="NumericAggregate_Cv" xml:space="preserve">
+    <value>変動係数</value>
+  </data>
+  <data name="NumericAggregate_Mean" xml:space="preserve">
+    <value>平均</value>
+  </data>
+  <data name="NumericAggregate_StdDev" xml:space="preserve">
+    <value>標準偏差</value>
+  </data>
+  <data name="NumericAggregate_Sum" xml:space="preserve">
+    <value>合計</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>なし</value>
@@ -254,6 +422,18 @@
   </data>
   <data name="OptimizedMethodType_Transition" xml:space="preserve">
     <value>トランジション</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
+    <value>イオン1</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
+    <value>イオン2</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
+    <value>イオン3</value>
+  </data>
+  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
+    <value>イオン4</value>
   </data>
   <data name="PeptidePick_both" xml:space="preserve">
     <value>ライブラリとフィルタ</value>
@@ -266,6 +446,18 @@
   </data>
   <data name="PeptidePick_library" xml:space="preserve">
     <value>ライブラリ</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
+    <value>遺伝子</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
+    <value>種</value>
   </data>
   <data name="PointSize_large" xml:space="preserve">
     <value>大</value>
@@ -306,23 +498,23 @@
   <data name="PointSymbol_XCross" xml:space="preserve">
     <value>X字型</value>
   </data>
-  <data name="BilinearFit_bilinear" xml:space="preserve">
-    <value>双線形</value>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
   </data>
-  <data name="SimpleRegressionFit_linear" xml:space="preserve">
-    <value>線形</value>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
   </data>
-  <data name="LinearInLogSpace_linear_in_log_space" xml:space="preserve">
-    <value>対数空間の線形</value>
-  </data>
-  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
-    <value>ゼロまで線形</value>
-  </data>
-  <data name="SimpleRegressionFit_none" xml:space="preserve">
+  <data name="Protocol_none" xml:space="preserve">
     <value>なし</value>
   </data>
   <data name="QuadraticFit_quadratic" xml:space="preserve">
     <value>二次</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
+    <value>Heavyに対する比率</value>
+  </data>
+  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
+    <value>Lightに対する比率</value>
   </data>
   <data name="RegressionWeighting_1_over_x" xml:space="preserve">
     <value>1 / x</value>
@@ -341,6 +533,69 @@
   </data>
   <data name="RetentionTimeFilterType_scheduling_windows" xml:space="preserve">
     <value>予測された保持時間内のスキャンのみを使用する</value>
+  </data>
+  <data name="SampleType_blank" xml:space="preserve">
+    <value>ブランク</value>
+  </data>
+  <data name="SampleType_double_blank" xml:space="preserve">
+    <value>ダブルブランク</value>
+  </data>
+  <data name="SampleType_qc" xml:space="preserve">
+    <value>QC</value>
+  </data>
+  <data name="SampleType_solvent" xml:space="preserve">
+    <value>溶媒</value>
+  </data>
+  <data name="SampleType_standard" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="SampleType_unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="SearchEngine_MSAmanda" xml:space="preserve">
+    <value>MS Amanda</value>
+  </data>
+  <data name="SearchEngine_MSFragger" xml:space="preserve">
+    <value>MSFragger</value>
+  </data>
+  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
+    <value>MS-GF+</value>
+  </data>
+  <data name="SelectOne_Max" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="SelectOne_Min" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="SequenceTerminus_C" xml:space="preserve">
+    <value>C</value>
+  </data>
+  <data name="SequenceTerminus_N" xml:space="preserve">
+    <value>N</value>
+  </data>
+  <data name="SimpleRegressionFit_linear" xml:space="preserve">
+    <value>線形</value>
+  </data>
+  <data name="SimpleRegressionFit_linear_through_zero" xml:space="preserve">
+    <value>ゼロまで線形</value>
+  </data>
+  <data name="SimpleRegressionFit_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="SingletonNormalizationMethod_equalize_medians" xml:space="preserve">
+    <value>中央値を均一化</value>
+  </data>
+  <data name="SingletonNormalizationMethod_global_standards" xml:space="preserve">
+    <value>グローバル標準に対する比率</value>
+  </data>
+  <data name="SingletonNormalizationMethod_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
+    <value>分位値</value>
+  </data>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>総イオン電流</value>
   </data>
   <data name="String1FullScanMassAnalyzerType_centroided" xml:space="preserve">
     <value>セントロイド化</value>
@@ -363,6 +618,12 @@
   <data name="TransitionLibraryPick_filter" xml:space="preserve">
     <value>フィルタされたプロダクトイオンから</value>
   </data>
+  <data name="TransitionLibraryPick_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="ViewGroup_" xml:space="preserve">
+    <value>組込みビュー</value>
+  </data>
   <data name="Workflow_dda" xml:space="preserve">
     <value>MS1フィルタを用いたDDA</value>
   </data>
@@ -371,266 +632,5 @@
   </data>
   <data name="Workflow_prm" xml:space="preserve">
     <value>PRM</value>
-  </data>
-  <data name="TransitionLibraryPick_none" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="eIonMobilityUnits_compensation_V" xml:space="preserve">
-    <value>補償電圧(V)</value>
-  </data>
-  <data name="ModTerminus_C" xml:space="preserve">
-    <value>C</value>
-  </data>
-  <data name="ModTerminus_N" xml:space="preserve">
-    <value>N</value>
-  </data>
-  <data name="SequenceTerminus_C" xml:space="preserve">
-    <value>C</value>
-  </data>
-  <data name="SequenceTerminus_N" xml:space="preserve">
-    <value>N</value>
-  </data>
-  <data name="SampleType_blank" xml:space="preserve">
-    <value>ブランク</value>
-  </data>
-  <data name="SampleType_double_blank" xml:space="preserve">
-    <value>ダブルブランク</value>
-  </data>
-  <data name="SampleType_qc" xml:space="preserve">
-    <value>QC</value>
-  </data>
-  <data name="SampleType_solvent" xml:space="preserve">
-    <value>溶媒</value>
-  </data>
-  <data name="SampleType_standard" xml:space="preserve">
-    <value>標準</value>
-  </data>
-  <data name="SampleType_unknown" xml:space="preserve">
-    <value>不明</value>
-  </data>
-  <data name="GraphFontSize_10" xml:space="preserve">
-    <value>小</value>
-  </data>
-  <data name="GraphFontSize_12" xml:space="preserve">
-    <value>普通</value>
-  </data>
-  <data name="GraphFontSize_14" xml:space="preserve">
-    <value>大</value>
-  </data>
-  <data name="GraphFontSize_16" xml:space="preserve">
-    <value>極大</value>
-  </data>
-  <data name="GraphFontSize_8" xml:space="preserve">
-    <value>極小</value>
-  </data>
-  <data name="RatioToLabel_ratio_to_heavy" xml:space="preserve">
-    <value>Heavyに対する比率</value>
-  </data>
-  <data name="RatioToLabel_ratio_to_light" xml:space="preserve">
-    <value>Lightに対する比率</value>
-  </data>
-  <data name="ListSortDirection_Ascending" xml:space="preserve">
-    <value>昇順</value>
-  </data>
-  <data name="ListSortDirection_Descending" xml:space="preserve">
-    <value>降順</value>
-  </data>
-  <data name="CountImpl_Count" xml:space="preserve">
-    <value>数</value>
-  </data>
-  <data name="NumericAggregate_Cv" xml:space="preserve">
-    <value>変動係数</value>
-  </data>
-  <data name="NumericAggregate_Mean" xml:space="preserve">
-    <value>平均</value>
-  </data>
-  <data name="NumericAggregate_StdDev" xml:space="preserve">
-    <value>標準偏差</value>
-  </data>
-  <data name="NumericAggregate_Sum" xml:space="preserve">
-    <value>合計</value>
-  </data>
-  <data name="SelectOne_Max" xml:space="preserve">
-    <value>最大</value>
-  </data>
-  <data name="SelectOne_Min" xml:space="preserve">
-    <value>最小</value>
-  </data>
-  <data name="ViewGroup_" xml:space="preserve">
-    <value>組込みビュー</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_1" xml:space="preserve">
-    <value>イオン1</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_2" xml:space="preserve">
-    <value>イオン2</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_3" xml:space="preserve">
-    <value>イオン3</value>
-  </data>
-  <data name="OrdinalFragmentFinder_ion_4" xml:space="preserve">
-    <value>イオン4</value>
-  </data>
-  <data name="DeltaFragmentFinder_1_ion" xml:space="preserve">
-    <value>1個のイオン</value>
-  </data>
-  <data name="DeltaFragmentFinder_2_ions" xml:space="preserve">
-    <value>2個のイオン</value>
-  </data>
-  <data name="DeltaFragmentFinder_3_ions" xml:space="preserve">
-    <value>3個のイオン</value>
-  </data>
-  <data name="DeltaFragmentFinder_4_ions" xml:space="preserve">
-    <value>4個のイオン</value>
-  </data>
-  <data name="DeltaFragmentFinder_5_ions" xml:space="preserve">
-    <value>5個のイオン</value>
-  </data>
-  <data name="DeltaFragmentFinder_6_ions" xml:space="preserve">
-    <value>6個のイオン</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion" xml:space="preserve">
-    <value>最後のイオン</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__1" xml:space="preserve">
-    <value>最後のイオン - 1</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__2" xml:space="preserve">
-    <value>最後のイオン - 2</value>
-  </data>
-  <data name="LastFragmentFinder_last_ion__minus__3" xml:space="preserve">
-    <value>最後のイオン - 3</value>
-  </data>
-  <data name="MzFragmentFinder_m_z__gt__precursor" xml:space="preserve">
-    <value>m/z &gt;プリカーサー</value>
-  </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___minus__1" xml:space="preserve">
-    <value>(m/z &gt; プリカーサー) - 1</value>
-  </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___minus__2" xml:space="preserve">
-    <value>(m/z &gt; プリカーサー) - 2</value>
-  </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___plus__1" xml:space="preserve">
-    <value>(m/z &gt; プリカーサー) + 1</value>
-  </data>
-  <data name="MzFragmentFinder__m_z__gt__precursor___plus__2" xml:space="preserve">
-    <value>(m/z &gt; プリカーサー) + 2</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_none" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_protein" xml:space="preserve">
-    <value>タンパク質</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_gene" xml:space="preserve">
-    <value>遺伝子</value>
-  </data>
-  <data name="PeptideUniquenessConstraint_species" xml:space="preserve">
-    <value>種</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_global_standards" xml:space="preserve">
-    <value>グローバル標準</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_medians" xml:space="preserve">
-    <value>中央値</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_none" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
-    <value>比率</value>
-  </data>
-  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
-    <value>総イオン電流</value>
-  </data>
-  <data name="AreaCVMsLevel_precursors" xml:space="preserve">
-    <value>プリカーサー</value>
-  </data>
-  <data name="AreaCVMsLevel_products" xml:space="preserve">
-    <value>プロダクト</value>
-  </data>
-  <data name="AreaCVTransitions_all" xml:space="preserve">
-    <value>すべて</value>
-  </data>
-  <data name="AreaCVTransitions_best" xml:space="preserve">
-    <value>最良</value>
-  </data>
-  <data name="AreaCVTransitions_count" xml:space="preserve">
-    <value>数</value>
-  </data>
-  <data name="IrtRegressionType_linear" xml:space="preserve">
-    <value>線形</value>
-  </data>
-  <data name="IrtRegressionType_lowess" xml:space="preserve">
-    <value>ローカル加重回帰</value>
-  </data>
-  <data name="IrtRegressionType_logarithmic" xml:space="preserve">
-    <value>対数</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_linear_range" xml:space="preserve">
-    <value>線形範囲</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_resolving_power" xml:space="preserve">
-    <value>分解能</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_fixed_width" xml:space="preserve">
-    <value>固定幅</value>
-  </data>
-  <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
-    <value>チェビシェフ</value>
-  </data>
-  <data name="ClusterMetricType_manhattan" xml:space="preserve">
-    <value>シティブロック</value>
-  </data>
-  <data name="ClusterMetricType_pearson" xml:space="preserve">
-    <value>ピアソン</value>
-  </data>
-  <data name="ClusterMetricType_euclidean" xml:space="preserve">
-    <value>ユークリッド</value>
-  </data>
-  <data name="InputFile_dda_raw" xml:space="preserve">
-    <value>DDA生データ (ライブラリの検索と構築)</value>
-  </data>
-  <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA生データ (ライブラリのデコンボリューション、検索、構築)</value>
-  </data>
-  <data name="InputFile_search_result" xml:space="preserve">
-    <value>検索結果 (ライブラリを直接構築)</value>
-  </data>
-  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
-    <value>Orbitrap LTQ</value>
-  </data>
-  <data name="InstrumentPreset_QExactive" xml:space="preserve">
-    <value>Q Exactive</value>
-  </data>
-  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
-    <value>TripleTOF</value>
-  </data>
-  <data name="Protocol_dia_umpire" xml:space="preserve">
-    <value>DIA-Umpire</value>
-  </data>
-  <data name="Protocol_msconvert" xml:space="preserve">
-    <value>MSConvert</value>
-  </data>
-  <data name="Protocol_none" xml:space="preserve">
-    <value>なし</value>
-  </data>
-  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
-    <value>SureQuant</value>
-  </data>
-  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
-    <value>PRM</value>
-  </data>
-  <data name="SearchEngine_MSAmanda" xml:space="preserve">
-    <value>MS Amanda</value>
-  </data>
-  <data name="SearchEngine_MSFragger" xml:space="preserve">
-    <value>MSFragger</value>
-  </data>
-  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
-    <value>MS-GF+</value>
   </data>
 </root>

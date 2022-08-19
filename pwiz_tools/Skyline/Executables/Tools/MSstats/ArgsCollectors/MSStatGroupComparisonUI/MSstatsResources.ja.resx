@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,29 +105,29 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="SampleSizeUi_OkDialog_The_upper_desired_fold_change_must_be_greater_than_lower_desired_fold_change_" xml:space="preserve">
-    <value>所望する上位の倍率変化は、所望する下位の倍率変化よりも大きくなければなりません。</value>
+  <data name="GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_" xml:space="preserve">
+    <value>この比較に対し名前を入力してください。</value>
+  </data>
+  <data name="GroupComparisonUi_OkDialog_Please_select_at_least_one_comparison_group_" xml:space="preserve">
+    <value>最低1つの比較グループを選択してください。</value>
+  </data>
+  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
+    <value>'{0}'という名の列が見つかりません</value>
   </data>
   <data name="SampleSizeUi_OkDialog_Negative_values_are_not_valid_" xml:space="preserve">
     <value>負の値は有効ではありません。</value>
-  </data>
-  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_upper_desired_fold_change_" xml:space="preserve">
-    <value>所望する上位の倍率変化に対し値を入力してください。</value>
-  </data>
-  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_lower_desired_fold_change_" xml:space="preserve">
-    <value>所望する下位の倍率変化に対し値を入力してください。</value>
   </data>
   <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_FDR_" xml:space="preserve">
     <value>FDRに対し値を入力してください。</value>
@@ -135,11 +135,14 @@
   <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_Power_" xml:space="preserve">
     <value>Powerに対し値を入力してください。</value>
   </data>
-  <data name="GroupComparisonUi_OkDialog_Please_enter_a_name_for_this_comparison_" xml:space="preserve">
-    <value>この比較に対し名前を入力してください。</value>
+  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_lower_desired_fold_change_" xml:space="preserve">
+    <value>所望する下位の倍率変化に対し値を入力してください。</value>
   </data>
-  <data name="GroupComparisonUi_OkDialog_Please_select_at_least_one_comparison_group_" xml:space="preserve">
-    <value>最低1つの比較グループを選択してください。</value>
+  <data name="SampleSizeUi_OkDialog_Please_enter_a_value_for_the_upper_desired_fold_change_" xml:space="preserve">
+    <value>所望する上位の倍率変化に対し値を入力してください。</value>
+  </data>
+  <data name="SampleSizeUi_OkDialog_The_upper_desired_fold_change_must_be_greater_than_lower_desired_fold_change_" xml:space="preserve">
+    <value>所望する上位の倍率変化は、所望する下位の倍率変化よりも大きくなければなりません。</value>
   </data>
   <data name="SampleSizeUi_ValidateNumber_The_number___0___is_not_valid_" xml:space="preserve">
     <value>数値「{0}」は有効ではありません。</value>
@@ -147,13 +150,10 @@
   <data name="SummaryMethod_Linear_Linear_model" xml:space="preserve">
     <value>線形モデル</value>
   </data>
-  <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
-    <value>Tukeyの中央値分散分析</value>
-  </data>
   <data name="SummaryMethod_Skyline_Skyline" xml:space="preserve">
     <value>Skyline</value>
   </data>
-  <data name="MSstatsGroupComparisonCollector_CollectArgs_Unable_to_find_a_column_named___0__" xml:space="preserve">
-    <value>'{0}'という名の列が見つかりません</value>
+  <data name="SummaryMethod_Tmp_Tukey_s_median_polish" xml:space="preserve">
+    <value>Tukeyの中央値分散分析</value>
   </data>
 </root>

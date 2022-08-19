@@ -105,38 +105,80 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_" xml:space="preserve">
-    <value>Elapsed time: {0}</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Above" xml:space="preserve">
+    <value>Above</value>
   </data>
-  <data name="VolcanoPlot_VolcanoPlot_One_Over_Adjusted_P_value" xml:space="preserve">
-    <value>1/Adjusted P-value</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
+    <value>Above right cutoff</value>
   </data>
-  <data name="VolcanoPlot_VolcanoPlot_Fold_Change" xml:space="preserve">
-    <value>Fold Change</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
+    <value>Below</value>
   </data>
-  <data name="VolcanoPlot_VolcanoPlot_Volcano_Plot" xml:space="preserve">
-    <value>Volcano Plot</value>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
+    <value>Below left cutoff</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
+    <value>Molecular Formula</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
+    <value>Molecule List Name</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
+    <value>Peptide Modified Sequence</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
+    <value>Peptide Molecule Name</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence" xml:space="preserve">
+    <value>Peptide Sequence</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Accession" xml:space="preserve">
+    <value>Protein Accession</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Gene" xml:space="preserve">
+    <value>Protein Gene</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Name" xml:space="preserve">
+    <value>Protein Name</value>
+  </data>
+  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name" xml:space="preserve">
+    <value>Protein Preferred Name</value>
   </data>
   <data name="EditGroupComparisonDlg_btnOK_Click_There_is_already_a_group_comparison_named__0__" xml:space="preserve">
     <value>There is already a group comparison named {0}.</value>
   </data>
-  <data name="SummarizationMethod_REGRESSION_Regression" xml:space="preserve">
-    <value>Regression</value>
+  <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
+    <value>-Log10(P Value)</value>
   </data>
-  <data name="SummarizationMethod_AVERAGING_Averaging" xml:space="preserve">
-    <value>Averaging</value>
+  <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
+    <value>Log2(Fold Change)</value>
+  </data>
+  <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
+    <value>Bar Graph</value>
+  </data>
+  <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
+    <value>Log 2 Fold Change</value>
+  </data>
+  <data name="FoldChangeBarGraph_UpdateGraph_Peptide" xml:space="preserve">
+    <value>Peptide</value>
+  </data>
+  <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
+    <value>Protein</value>
   </data>
   <data name="FoldChangeDetails_UpdateUi_Details_for_protein__0_" xml:space="preserve">
     <value>Details for protein {0}</value>
@@ -144,53 +186,53 @@
   <data name="FoldChangeDetails_UpdateUi_Select_a_protein_to_see_details_for_that_calculation_" xml:space="preserve">
     <value>Select a protein to see details for that calculation.</value>
   </data>
-  <data name="GroupComparisonWindow_timer_Tick_Group_Comparison" xml:space="preserve">
-    <value>Group Comparison</value>
-  </data>
-  <data name="GroupComparisonWindow_timer_Tick_Group_Comparision" xml:space="preserve">
-    <value>Group Comparision</value>
-  </data>
-  <data name="GroupComparisonSettingsForm_GroupComparisonDef_Change_Group_Comparison" xml:space="preserve">
-    <value>Change Group Comparison</value>
-  </data>
-  <data name="GroupComparisonDefList_Title_Define_Group_Comparisons" xml:space="preserve">
-    <value>Define Group Comparisons</value>
-  </data>
-  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
-    <value>Group Comparisons</value>
-  </data>
-  <data name="FoldChangeBarGraph_UpdateGraph_Protein" xml:space="preserve">
-    <value>Protein</value>
-  </data>
-  <data name="FoldChangeBarGraph_UpdateGraph_Peptide" xml:space="preserve">
-    <value>Peptide</value>
-  </data>
-  <data name="FoldChangeBarGraph_UpdateGraph_Log_2_Fold_Change" xml:space="preserve">
-    <value>Log 2 Fold Change</value>
+  <data name="FoldChangeForm_GetTitle_New_Group_Comparison" xml:space="preserve">
+    <value>New Group Comparison</value>
   </data>
   <data name="FoldChangeGrid_GetTitle_Grid" xml:space="preserve">
     <value>Grid</value>
   </data>
-  <data name="FoldChangeForm_GetTitle_New_Group_Comparison" xml:space="preserve">
-    <value>New Group Comparison</value>
+  <data name="FoldChangeOptionsUi_UpdateSettings_Elapsed_time___0_" xml:space="preserve">
+    <value>Elapsed time: {0}</value>
   </data>
-  <data name="NormalizationMethod_NONE_None" xml:space="preserve">
-    <value>None</value>
+  <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
+    <value>Fold Change</value>
   </data>
-  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians" xml:space="preserve">
-    <value>Equalize Medians</value>
+  <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
+    <value>P Value</value>
   </data>
-  <data name="NormalizationMethod_QUANTILE_Quantile" xml:space="preserve">
-    <value>Quantile</value>
+  <data name="FoldChangeRowTipProvider_RenderTip_Peptide" xml:space="preserve">
+    <value>Peptide</value>
   </data>
-  <data name="NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards" xml:space="preserve">
-    <value>Ratio to Global Standards</value>
+  <data name="FoldChangeRowTipProvider_RenderTip_Protein" xml:space="preserve">
+    <value>Protein</value>
   </data>
-  <data name="NormalizationMethod_FromName_Ratio_to__0_" xml:space="preserve">
-    <value>Ratio to {0}</value>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
+    <value>Formatting...</value>
   </data>
-  <data name="GroupComparisonViewContext_Delete_No_rows_are_selected" xml:space="preserve">
-    <value>No rows are selected.</value>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties___" xml:space="preserve">
+    <value>Properties...</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
+    <value>Remove Below Cutoffs</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_GetTitle_Volcano_Plot" xml:space="preserve">
+    <value>Volcano Plot</value>
+  </data>
+  <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
+    <value>Remove peptides below cutoffs</value>
+  </data>
+  <data name="GroupComparisonDefList_Label_Group_Comparisons" xml:space="preserve">
+    <value>Group Comparisons</value>
+  </data>
+  <data name="GroupComparisonDefList_Title_Define_Group_Comparisons" xml:space="preserve">
+    <value>Define Group Comparisons</value>
+  </data>
+  <data name="GroupComparisonSettingsForm_GroupComparisonDef_Change_Group_Comparison" xml:space="preserve">
+    <value>Change Group Comparison</value>
   </data>
   <data name="GroupComparisonViewContext_Delete_Are_you_sure_you_want_to_delete_the_peptide__0_" xml:space="preserve">
     <value>Are you sure you want to delete the peptide {0}?</value>
@@ -209,86 +251,71 @@
   <data name="GroupComparisonViewContext_Delete_Delete_items" xml:space="preserve">
     <value>Delete items</value>
   </data>
+  <data name="GroupComparisonViewContext_Delete_No_rows_are_selected" xml:space="preserve">
+    <value>No rows are selected.</value>
+  </data>
+  <data name="GroupComparisonWindow_timer_Tick_Group_Comparision" xml:space="preserve">
+    <value>Group Comparision</value>
+  </data>
+  <data name="GroupComparisonWindow_timer_Tick_Group_Comparison" xml:space="preserve">
+    <value>Group Comparison</value>
+  </data>
+  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians" xml:space="preserve">
+    <value>Equalize Medians</value>
+  </data>
+  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
+	  <value>Median Normalized {0}</value>
+      <comment>Example: Median Normalized Peak Area</comment>
+  </data>
+  <data name="NormalizationMethod_FromName_Ratio_to__0_" xml:space="preserve">
+    <value>Ratio to {0}</value>
+  </data>
+  <data name="NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards" xml:space="preserve">
+    <value>{0} Ratio to Global Standards</value>
+    <comment>Example: Peak Area Ratio to Global Standards</comment>
+  </data>
+  <data name="NormalizationMethod_GLOBAL_STANDARDS_Ratio_to_Global_Standards" xml:space="preserve">
+    <value>Ratio to Global Standards</value>
+  </data>
+  <data name="NormalizationMethod_NONE_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="NormalizationMethod_QUANTILE_Quantile" xml:space="preserve">
+    <value>Quantile</value>
+  </data>
+  <data name="NormalizationMethod_TIC_TIC_Normalized__0_" xml:space="preserve">
+    <value>TIC Normalized {0}</value>
+    <comment>Example: TIC Normalized Peak Area</comment>
+  </data>
+  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
+    <value>Total Ion Current</value>
+  </data>
+  <data name="SummarizationMethod_AVERAGING_Averaging" xml:space="preserve">
+    <value>Averaging</value>
+  </data>
   <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
     <value>Sum of transition areas</value>
   </data>
   <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
     <value>Tukey's Median Polish</value>
   </data>
-  <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
-    <value>Bar Graph</value>
+  <data name="SummarizationMethod_REGRESSION_Regression" xml:space="preserve">
+    <value>Regression</value>
   </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Selection" xml:space="preserve">
-    <value>Selection</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_GetTitle_Volcano_Plot" xml:space="preserve">
-    <value>Volcano Plot</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_Peptide" xml:space="preserve">
-    <value>Peptide</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_Protein" xml:space="preserve">
-    <value>Protein</value>
-  </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_Fold_Change" xml:space="preserve">
+  <data name="VolcanoPlot_VolcanoPlot_Fold_Change" xml:space="preserve">
     <value>Fold Change</value>
   </data>
-  <data name="FoldChangeRowTipProvider_RenderTip_P_Value" xml:space="preserve">
-    <value>P Value</value>
+  <data name="VolcanoPlot_VolcanoPlot_One_Over_Adjusted_P_value" xml:space="preserve">
+    <value>1/Adjusted P-value</value>
   </data>
-  <data name="FoldChange_Log2_Fold_Change_" xml:space="preserve">
-    <value>Log2(Fold Change)</value>
+  <data name="VolcanoPlot_VolcanoPlot_Volcano_Plot" xml:space="preserve">
+    <value>Volcano Plot</value>
   </data>
-  <data name="FoldChange__Log10_P_Value_" xml:space="preserve">
-    <value>-Log10(P Value)</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
+    <value>Circle</value>
   </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Properties___" xml:space="preserve">
-    <value>Properties...</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Remove_Below_Cutoffs" xml:space="preserve">
-    <value>Remove Below Cutoffs</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_RemoveBelowCutoffs_Remove_peptides_below_cutoffs" xml:space="preserve">
-    <value>Remove peptides below cutoffs</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Name" xml:space="preserve">
-    <value>Protein Name</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Accession" xml:space="preserve">
-    <value>Protein Accession</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Preferred_Name" xml:space="preserve">
-    <value>Protein Preferred Name</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Protein_Gene" xml:space="preserve">
-    <value>Protein Gene</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Molecule_Name" xml:space="preserve">
-    <value>Peptide Molecule Name</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Below_left_cutoff" xml:space="preserve">
-    <value>Below left cutoff</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Above_right_cutoff" xml:space="preserve">
-    <value>Above right cutoff</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Below" xml:space="preserve">
-    <value>Below</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Above" xml:space="preserve">
-    <value>Above</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Modified_Sequence" xml:space="preserve">
-    <value>Peptide Modified Sequence</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Peptide_Sequence" xml:space="preserve">
-    <value>Peptide Sequence</value>
-  </data>
-  <data name="FoldChangeVolcanoPlot_BuildContextMenu_Formatting___" xml:space="preserve">
-    <value>Formatting...</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
+    <value>Diamond</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Expression" xml:space="preserve">
     <value>Expression</value>
@@ -296,44 +323,32 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Labeled" xml:space="preserve">
     <value>Labeled</value>
   </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecula_Formula" xml:space="preserve">
-    <value>Molecular Formula</value>
-  </data>
-  <data name="CreateMatchExpression_PopulateComboBoxes_Molecule_List_Name" xml:space="preserve">
-    <value>Molecule List Name</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
-    <value>Size</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol" xml:space="preserve">
-    <value>Symbol</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small" xml:space="preserve">
-    <value>X-Small</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Small" xml:space="preserve">
-    <value>Small</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Large" xml:space="preserve">
+    <value>Large</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Normal" xml:space="preserve">
     <value>Normal</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Large" xml:space="preserve">
-    <value>Large</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
+    <value>Plus</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Large" xml:space="preserve">
-    <value>X-Large</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Small" xml:space="preserve">
+    <value>Small</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Square" xml:space="preserve">
     <value>Square</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Diamond" xml:space="preserve">
-    <value>Diamond</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
+    <value>Star</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Symbol" xml:space="preserve">
+    <value>Symbol</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Triangle" xml:space="preserve">
     <value>Triangle</value>
-  </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Circle" xml:space="preserve">
-    <value>Circle</value>
   </data>
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_TriangleDown" xml:space="preserve">
     <value>Triangle Down</value>
@@ -341,25 +356,10 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Cross" xml:space="preserve">
     <value>X Cross</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Plus" xml:space="preserve">
-    <value>Plus</value>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Large" xml:space="preserve">
+    <value>X-Large</value>
   </data>
-  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
-    <value>Star</value>
-  </data>
-  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
-    <value>Total Ion Current</value>
-  </data>
-  <data name="NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards" xml:space="preserve">
-    <value>{0} Ratio to Global Standards</value>
-    <comment>Example: Peak Area Ratio to Global Standards</comment>
-  </data>
-  <data name="NormalizationMethod_TIC_TIC_Normalized__0_" xml:space="preserve">
-    <value>TIC Normalized {0}</value>
-    <comment>Example: TIC Normalized Peak Area</comment>
-  </data>
-  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
-	  <value>Median Normalized {0}</value>
-      <comment>Example: Median Normalized Peak Area</comment>
+  <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small" xml:space="preserve">
+    <value>X-Small</value>
   </data>
 </root>

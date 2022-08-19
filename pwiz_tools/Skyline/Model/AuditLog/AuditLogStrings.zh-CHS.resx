@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,307 +105,74 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AuditLogForm_AuditLogForm_Undo_Redo" xml:space="preserve">
-    <value>撤销恢复</value>
+  <data name="accept_peptides" xml:space="preserve">
+    <value>已接受的 {0} 肽段</value>
   </data>
-  <data name="AuditLogForm_AuditLogForm_Summary" xml:space="preserve">
-    <value>总结</value>
+  <data name="accepted_peptide" xml:space="preserve">
+    <value>已接受的蛋白质 {0}</value>
   </data>
-  <data name="AuditLogForm_AuditLogForm_All_Info" xml:space="preserve">
-    <value>所有信息</value>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Clear_log" xml:space="preserve">
-    <value>清除日志</value>
-  </data>
-  <data name="AuditLogForm__clearLogButton_Click_Clear_audit_log" xml:space="preserve">
-    <value>清除审计日志</value>
-  </data>
-  <data name="Missing" xml:space="preserve">
-    <value>缺失</value>
-  </data>
-  <data name="changed" xml:space="preserve">
-    <value>{0} 已更改</value>
-  </data>
-  <data name="added_to" xml:space="preserve">
-    <value>{0} : {1} 已添加</value>
-  </data>
-  <data name="removed_from" xml:space="preserve">
-    <value>{0} : {1} 已删除</value>
-  </data>
-  <data name="changed_to" xml:space="preserve">
-    <value>{0} 已更改为 {1}</value>
-  </data>
-  <data name="TabSeparator" xml:space="preserve">
-    <value> -- </value>
-    <comment>Used in audit log to separate UI tabs</comment>
-  </data>
-  <data name="PropertySeparator" xml:space="preserve">
-    <value> &gt; </value>
-    <comment>Used in audit log to separate properties</comment>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Enable_audit_logging" xml:space="preserve">
-    <value>启用审计记录</value>
-  </data>
-  <data name="AuditLogRow_Reason_Changed_audit_log_reason" xml:space="preserve">
-    <value>已更改审计日志原因</value>
-  </data>
-  <data name="log_unlogged_changes" xml:space="preserve">
-    <value>{0} 未记录的变化</value>
-  </data>
-  <data name="log_cleared" xml:space="preserve">
-    <value>{0} 更改已清除</value>
-  </data>
-  <data name="log_enabled" xml:space="preserve">
-    <value>已启用审计记录</value>
-  </data>
-  <data name="log_disabled" xml:space="preserve">
-    <value>已禁用审计记录</value>
-  </data>
-  <data name="contains" xml:space="preserve">
-    <value>{0} : 包含 {1}</value>
-  </data>
-  <data name="changed_from_to" xml:space="preserve">
-    <value>{0} 从 {1} 更改到 {2}</value>
-  </data>
-  <data name="is_" xml:space="preserve">
-    <value>{0} 是 {1}</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_Undo_Redo" xml:space="preserve">
-    <value>撤销恢复</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_Summary" xml:space="preserve">
-    <value>总结</value>
-  </data>
-  <data name="AuditLogForm_MakeAuditLogForm_All_Info" xml:space="preserve">
-    <value>所有信息</value>
-  </data>
-  <data name="LogMessage_LocalizeValue_True" xml:space="preserve">
-    <value>真</value>
-  </data>
-  <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
-    <value>假</value>
-  </data>
-  <data name="removed_protein" xml:space="preserve">
-    <value>已删除蛋白质 {0}</value>
-  </data>
-  <data name="removed_peptide_from_protein" xml:space="preserve">
-    <value>已从蛋白质 {1} 中删除肽段{0}</value>
-  </data>
-  <data name="removed_empty_peptides" xml:space="preserve">
-    <value>已删除 {0} 空肽段</value>
-  </data>
-  <data name="removed_duplicate_peptides" xml:space="preserve">
-    <value>已删除 {0} 重复肽段</value>
-  </data>
-  <data name="removed_repeated_peptides" xml:space="preserve">
-    <value>已删除 {0} 重复的肽段</value>
-  </data>
-  <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
-    <value>已从蛋白质 {3} 的肽段 {2} 的离子对组 {1}中删除离子对 {0}</value>
-  </data>
-  <data name="removed_transition_group_from_peptide_from_protein" xml:space="preserve">
-    <value>已从蛋白质 {2} 的肽段 {1} 中删除离子对组 {0}</value>
-  </data>
-  <data name="deleted_targets" xml:space="preserve">
-    <value>已删除 {0} 目标</value>
-  </data>
-  <data name="picked_children" xml:space="preserve">
-    <value>已为 {1} 选择 {0} 子离子</value>
-  </data>
-  <data name="inserted_data" xml:space="preserve">
-    <value>已插入肽段/蛋白质</value>
-  </data>
-  <data name="edited_note" xml:space="preserve">
-    <value>已编辑 {0} 的注释</value>
-  </data>
-  <data name="set_standard_type" xml:space="preserve">
-    <value>设定 {0} 的标准类型</value>
-  </data>
-  <data name="None" xml:space="preserve">
-    <value>无</value>
-  </data>
-  <data name="SkylineWindow_SetStandardType__0__peptides" xml:space="preserve">
-    <value>{0} 个肽段</value>
-  </data>
-  <data name="SkylineWindow_EditNote__0__targets" xml:space="preserve">
-    <value>{0} 目标</value>
-  </data>
-  <data name="modified" xml:space="preserve">
-    <value>已修饰 {0}</value>
-  </data>
-  <data name="ExplicitMod_AuditLogText__0__at_index__1_" xml:space="preserve">
-    <value>{0} 在指数 {1}</value>
-  </data>
-  <data name="pasted_targets" xml:space="preserve">
-    <value>已粘贴目标</value>
-  </data>
-  <data name="set_to_in_document_grid" xml:space="preserve">
-    <value>将 {1} 的 {0} 设定为 {2}</value>
-  </data>
-  <data name="pasted_document_grid" xml:space="preserve">
-    <value>已将 {0} 值粘贴到文档网格</value>
-  </data>
-  <data name="renamed_proteins" xml:space="preserve">
-    <value>已重新命名 {0} 蛋白质</value>
-  </data>
-  <data name="inserted_peptides" xml:space="preserve">
-    <value>已插入 {0} 肽段</value>
-  </data>
-  <data name="inserted_proteins" xml:space="preserve">
-    <value>已插入 {0} 蛋白质</value>
-  </data>
-  <data name="inserted_transitions" xml:space="preserve">
-    <value>已插入 {0} 离子对</value>
+  <data name="accepted_protein" xml:space="preserve">
+    <value>已接受的蛋白质 {0}</value>
   </data>
   <data name="accepted_proteins" xml:space="preserve">
     <value>已接受的 {0} 蛋白质</value>
   </data>
-  <data name="accept_peptides" xml:space="preserve">
-    <value>已接受的 {0} 肽段</value>
-  </data>
-  <data name="sort_protein_accession" xml:space="preserve">
-    <value>按蛋白质检索号分类</value>
-  </data>
-  <data name="sort_protein_gene" xml:space="preserve">
-    <value>按蛋白质基因分类</value>
-  </data>
-  <data name="sort_protein_name" xml:space="preserve">
-    <value>按蛋白质名称分类</value>
-  </data>
-  <data name="sort_protein_preferred_name" xml:space="preserve">
-    <value>按蛋白质首选名称分类</value>
-  </data>
-  <data name="False" xml:space="preserve">
-    <value>假</value>
-  </data>
-  <data name="True" xml:space="preserve">
-    <value>真</value>
-  </data>
-  <data name="added_peptide_decoys" xml:space="preserve">
-    <value>使用 {1} 方法添加了 {0} 肽段诱饵</value>
-  </data>
-  <data name="refined_targets" xml:space="preserve">
-    <value>已调整目标</value>
-  </data>
-  <data name="removed_missing_results" xml:space="preserve">
-    <value>已删除缺失结果</value>
-  </data>
-  <data name="renamed_single_protein" xml:space="preserve">
-    <value>已将蛋白质从 {0} 重新命名为 {1}</value>
-  </data>
-  <data name="set_standard_type_peptides" xml:space="preserve">
-    <value>设定 {0} 肽段的标准类型</value>
-  </data>
-  <data name="imported_results" xml:space="preserve">
-    <value>已从 {0} 文件导入结果</value>
-  </data>
-  <data name="imported_peak_boundaries" xml:space="preserve">
-    <value>已从“{0}”导入峰值边界</value>
-  </data>
-  <data name="removed_unrecognized_charge_state" xml:space="preserve">
-    <value>已删除未识别的价态 {0}</value>
-  </data>
-  <data name="removed_unrecognized_file" xml:space="preserve">
-    <value>已删除未识别的文件 {0}</value>
-  </data>
-  <data name="removed_unrecognized_peptide" xml:space="preserve">
-    <value>已删除未识别的肽段 {0}</value>
-  </data>
-  <data name="UnrecognizedChargeStates" xml:space="preserve">
-    <value>未识别的价态</value>
-  </data>
-  <data name="UnrecognizedFiles" xml:space="preserve">
-    <value>未识别的文件</value>
-  </data>
-  <data name="UnrecognizedPeptides" xml:space="preserve">
-    <value>未识别的肽段</value>
-  </data>
-  <data name="imported_fasta" xml:space="preserve">
-    <value>已从“{0}”导入 FASTA</value>
-  </data>
-  <data name="kept_empty_proteins" xml:space="preserve">
-    <value>保留 {0} 空蛋白质</value>
-  </data>
-  <data name="removed_empty_proteins" xml:space="preserve">
-    <value>已删除 {0} 空蛋白质</value>
-  </data>
-  <data name="imported_assay_library_from_file" xml:space="preserve">
-    <value>已从“{0}”导入分析库</value>
-  </data>
-  <data name="imported_transition_list_from_file" xml:space="preserve">
-    <value>已从“{0}”导入离子对列表</value>
-  </data>
-  <data name="imported_spectral_library_intensities" xml:space="preserve">
-    <value>已导入谱图库强度</value>
-  </data>
-  <data name="imported_doc" xml:space="preserve">
-    <value>已导入文档“{0}”</value>
-  </data>
-  <data name="imported_annotations" xml:space="preserve">
-    <value>已从“{0}”导入注释</value>
-  </data>
-  <data name="set_excluded_standard" xml:space="preserve">
-    <value>从校准曲线中排除肽段 {0} 重复测定 {1}</value>
-  </data>
-  <data name="set_included_standard" xml:space="preserve">
-    <value>在校准曲线中包含肽段 {0} 重复测定 {1}</value>
-  </data>
-  <data name="canceled_import" xml:space="preserve">
-    <value>已取消导入</value>
-  </data>
-  <data name="removed_below_cutoffs" xml:space="preserve">
-    <value>已在 {1} 群组比较中删除截止值以下的 {0} 节点</value>
-  </data>
-  <data name="excluded_peptides" xml:space="preserve">
-    <value>已排除 {0} 肽段（序列特异的肽段...）</value>
-  </data>
-  <data name="added_spectral_library" xml:space="preserve">
-    <value>已添加谱图库“{0}”</value>
-  </data>
-  <data name="Empty" xml:space="preserve">
-    <value>空</value>
-  </data>
-  <data name="added_small_molecule_precursor" xml:space="preserve">
-    <value>已添加分子母离子 {0}</value>
-  </data>
-  <data name="added_small_molecule" xml:space="preserve">
-    <value>已添加分子 {0}</value>
-  </data>
-  <data name="added_small_molecule_transition" xml:space="preserve">
-    <value>已添加分子离子对 {0}</value>
-  </data>
-  <data name="added_irt_standard_peptides" xml:space="preserve">
-    <value>已添加 iRT 标准肽段</value>
-  </data>
-  <data name="renamed_node" xml:space="preserve">
-    <value>已在目标窗口将节点从 {0} 重新命名为 {1}</value>
+  <data name="added_all_peptides_from_library" xml:space="preserve">
+    <value>从库“{1}”中添加所有的 ({0}) 肽段</value>
   </data>
   <data name="added_empty_peptide_group" xml:space="preserve">
     <value>已在目标窗口添加空肽段群组 {0}</value>
   </data>
+  <data name="added_irt_standard_peptides" xml:space="preserve">
+    <value>已添加 iRT 标准肽段</value>
+  </data>
   <data name="added_new_peptide_group" xml:space="preserve">
     <value>已在目标窗口添加肽段群组 {0}</value>
+  </data>
+  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>已在目标窗口添加背景蛋白质组中的肽段群组 {0}</value>
+  </data>
+  <data name="added_peptide_decoy" xml:space="preserve">
+    <value>已使用 {1} 方法添加 {0} 肽段诱饵</value>
+  </data>
+  <data name="added_peptide_decoys" xml:space="preserve">
+    <value>使用 {1} 方法添加了 {0} 肽段诱饵</value>
+  </data>
+  <data name="added_peptide_from_library" xml:space="preserve">
+    <value>已添加库“{1}”的肽段 {0}</value>
   </data>
   <data name="added_peptides_to_peptide_group" xml:space="preserve">
     <value>已在目标窗口将肽段添加到肽段群组 {0}</value>
   </data>
-  <data name="drag_and_dropped_nodes" xml:space="preserve">
-    <value>将 {0} 节点拖放至 {1}</value>
+  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
+    <value>已在目标窗口将肽段添加到背景蛋白质组中的肽段群组 {0}</value>
   </data>
-  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
-    <value>已粘贴 {0} 分子离子对</value>
+  <data name="added_small_molecule" xml:space="preserve">
+    <value>已添加分子 {0}</value>
+  </data>
+  <data name="added_small_molecule_precursor" xml:space="preserve">
+    <value>已添加分子母离子 {0}</value>
+  </data>
+  <data name="added_small_molecule_transition" xml:space="preserve">
+    <value>已添加分子离子对 {0}</value>
+  </data>
+  <data name="added_spectral_library" xml:space="preserve">
+    <value>已添加谱图库“{0}”</value>
+  </data>
+  <data name="added_to" xml:space="preserve">
+    <value>{0} : {1} 已添加</value>
   </data>
   <data name="applied_peak_all" xml:space="preserve">
     <value>应用所有峰值{0}</value>
@@ -413,17 +180,74 @@
   <data name="applied_peak_subsequent" xml:space="preserve">
     <value>应用峰值{0}到后续</value>
   </data>
-  <data name="removed_peak_from" xml:space="preserve">
-    <value>从复制“{1}”中删除了{0}的峰值</value>
+  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
+    <value>导入文档审计日记时出错：{0}.</value>
   </data>
-  <data name="removed_peaks" xml:space="preserve">
-    <value>已从 {1} 个节点中删除 {0} 个峰</value>
+  <data name="AuditLogForm__clearLogButton_Click_Clear_audit_log" xml:space="preserve">
+    <value>清除审计日志</value>
   </data>
-  <data name="removed_all_peaks_from" xml:space="preserve">
-    <value>已在重复测定“{1}”中从 {0} 删除所有峰</value>
+  <data name="AuditLogForm_AuditLogForm_All_Info" xml:space="preserve">
+    <value>所有信息</value>
   </data>
-  <data name="picked_peak" xml:space="preserve">
-    <value>已在 {2} 拣选“{1}”中的峰 {0}</value>
+  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
+    <value>审计日志</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Clear_log" xml:space="preserve">
+    <value>清除日志</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Enable_audit_logging" xml:space="preserve">
+    <value>启用审计记录</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Summary" xml:space="preserve">
+    <value>总结</value>
+  </data>
+  <data name="AuditLogForm_AuditLogForm_Undo_Redo" xml:space="preserve">
+    <value>撤销恢复</value>
+  </data>
+  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
+    <value>这将清除审计日志，并在文档保存后永久删除此日志。您是否想要继续？</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_All_Info" xml:space="preserve">
+    <value>所有信息</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_Summary" xml:space="preserve">
+    <value>总结</value>
+  </data>
+  <data name="AuditLogForm_MakeAuditLogForm_Undo_Redo" xml:space="preserve">
+    <value>撤销恢复</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
+    <value>读取审计日志时发生异常。
+
+删除、重命名或移动审计日志文件将防止发生此错误。您还可以将审计日志发送到 Skyline 团队，使其尝试手动修复文件。
+
+作为参考，审计日志位于：“{0}”</value>
+  </data>
+  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
+    <value>以下审计日志条目已被修改：
+
+</value>
+  </data>
+  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
+    <value>审计日志已损坏。审计日志条目时间戳和索引应有序。条目编号 {0} 时间标记 {1:G} 在条目编号之前发生 {2} 时间标记 {3:G}。</value>
+  </data>
+  <data name="AuditLogRow_Reason_Changed_audit_log_reason" xml:space="preserve">
+    <value>已更改审计日志原因</value>
+  </data>
+  <data name="canceled_import" xml:space="preserve">
+    <value>已取消导入</value>
+  </data>
+  <data name="changed" xml:space="preserve">
+    <value>{0} 已更改</value>
+  </data>
+  <data name="changed_from_to" xml:space="preserve">
+    <value>{0} 从 {1} 更改到 {2}</value>
+  </data>
+  <data name="changed_peak_bounds" xml:space="preserve">
+    <value>已更改峰界限</value>
+  </data>
+  <data name="changed_peak_bounds_of" xml:space="preserve">
+    <value>已更改 {0} 的峰界限</value>
   </data>
   <data name="changed_peak_end" xml:space="preserve">
     <value>已将“{1}”中的峰 {0} 结束时间从 {2} 更改到 {3}</value>
@@ -437,110 +261,126 @@
   <data name="changed_peak_start_all" xml:space="preserve">
     <value>已将“{1}”中的 {0} 所有峰的开始时间从 {2} 更改到 {3}</value>
   </data>
-  <data name="changed_peak_bounds" xml:space="preserve">
-    <value>已更改峰界限</value>
+  <data name="changed_quantitative" xml:space="preserve">
+    <value>已更改{0} 定量</value>
   </data>
-  <data name="removed_peptides_above_cutoff" xml:space="preserve">
-    <value>已删除 {0} 峰面积变异系数高于 {1}% 截止值的肽段</value>
-  </data>
-  <data name="removed_rt_outliers" xml:space="preserve">
-    <value>已删除 {0} RT 异常值</value>
-  </data>
-  <data name="added_all_peptides_from_library" xml:space="preserve">
-    <value>从库“{1}”中添加所有的 ({0}) 肽段</value>
-  </data>
-  <data name="added_peptide_from_library" xml:space="preserve">
-    <value>已添加库“{1}”的肽段 {0}</value>
-  </data>
-  <data name="matched_modifications_of_library" xml:space="preserve">
-    <value>已匹配库“{0}”的修饰</value>
-  </data>
-  <data name="reintegrated_peaks" xml:space="preserve">
-    <value>已使用“{0}”重新合并峰</value>
-  </data>
-  <data name="imported_peptide_search" xml:space="preserve">
-    <value>已导入肽段搜索</value>
-  </data>
-  <data name="fill_down_document_grid" xml:space="preserve">
-    <value>已在文档网格向下填充 {0} 值</value>
-  </data>
-  <data name="cleared_document_grid" xml:space="preserve">
-    <value>已清除文档网格中的 {0} 单元格</value>
+  <data name="changed_to" xml:space="preserve">
+    <value>{0} 已更改为 {1}</value>
   </data>
   <data name="cleared_cell_in_document_grid" xml:space="preserve">
     <value>已清除文档网格中 {1} 中的 {0}</value>
   </data>
-  <data name="managed_results" xml:space="preserve">
-    <value>已管理结果</value>
+  <data name="cleared_document_grid" xml:space="preserve">
+    <value>已清除文档网格中的 {0} 单元格</value>
   </data>
-  <data name="upgraded_background_proteome" xml:space="preserve">
-    <value>已升级背景蛋白质组“{0}”</value>
+  <data name="cleared_document_grid_single" xml:space="preserve">
+    <value>已清除文档网格中的 {0} 值</value>
   </data>
-  <data name="added_new_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>已在目标窗口添加背景蛋白质组中的肽段群组 {0}</value>
-  </data>
-  <data name="added_peptides_to_peptide_group_from_background_proteome" xml:space="preserve">
-    <value>已在目标窗口将肽段添加到背景蛋白质组中的肽段群组 {0}</value>
-  </data>
-  <data name="imported_assay_library" xml:space="preserve">
-    <value>已从剪切板导入分析库</value>
-  </data>
-  <data name="imported_transition_list" xml:space="preserve">
-    <value>已从剪切板导入离子对列表</value>
-  </data>
-  <data name="log_error" xml:space="preserve">
-    <value>一个类型 {0} 的异常被抛出</value>
-  </data>
-  <data name="log_error_old_msg" xml:space="preserve">
-    <value>一个类型 {0} 异常在执行操作“{1}”时被抛出</value>
-  </data>
-  <data name="empty_single_arg" xml:space="preserve">
-    <value>{0}</value>
+  <data name="contains" xml:space="preserve">
+    <value>{0} : 包含 {1}</value>
   </data>
   <data name="deleted_target" xml:space="preserve">
     <value>已删除目标 {0}</value>
   </data>
-  <data name="imported_docs" xml:space="preserve">
-    <value>已导入 {0} 文档</value>
-  </data>
-  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
-    <value>在创建日志条目时出现一个错误。该文档仍然成功修改</value>
-  </data>
-  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
-    <value>在创建日志条目时出现一个错误。操作“{0}”仍然成功</value>
-  </data>
-  <data name="removed_all" xml:space="preserve">
-    <value>{0}: 已删除所有</value>
-  </data>
-  <data name="removed_all_libraries" xml:space="preserve">
-    <value>已删除所有库运行</value>
-  </data>
-  <data name="removed_all_replicates" xml:space="preserve">
-    <value>已删除所有重复测定</value>
-  </data>
-  <data name="removed_library_run" xml:space="preserve">
-    <value>已删除库运行“{0}”</value>
-  </data>
-  <data name="removed_replicate" xml:space="preserve">
-    <value>已接受的肽段 {0}</value>
-  </data>
-  <data name="accepted_peptide" xml:space="preserve">
-    <value>已接受的蛋白质 {0}</value>
-  </data>
-  <data name="accepted_protein" xml:space="preserve">
-    <value>已接受的蛋白质 {0}</value>
+  <data name="deleted_targets" xml:space="preserve">
+    <value>已删除 {0} 目标</value>
   </data>
   <data name="drag_and_dropped_node" xml:space="preserve">
     <value>将 {0} 拖放到 {1}</value>
   </data>
+  <data name="drag_and_dropped_nodes" xml:space="preserve">
+    <value>将 {0} 节点拖放至 {1}</value>
+  </data>
+  <data name="edited_ion_mobility_library" xml:space="preserve">
+    <value>已编辑离子迁移库 {0} ({1})</value>
+    <comment>{0} is library name, {1} is library file location</comment>
+  </data>
+  <data name="edited_note" xml:space="preserve">
+    <value>已编辑 {0} 的注释</value>
+  </data>
+  <data name="Empty" xml:space="preserve">
+    <value>空</value>
+  </data>
+  <data name="empty_single_arg" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="excluded_peptide" xml:space="preserve">
+    <value>已排除 {0} 肽段（序列特异的肽段...）</value>
+  </data>
+  <data name="excluded_peptides" xml:space="preserve">
+    <value>已排除 {0} 肽段（序列特异的肽段...）</value>
+  </data>
+  <data name="ExplicitMod_AuditLogText__0__at_index__1_" xml:space="preserve">
+    <value>{0} 在指数 {1}</value>
+  </data>
+  <data name="False" xml:space="preserve">
+    <value>假</value>
+  </data>
+  <data name="fill_down_document_grid" xml:space="preserve">
+    <value>已在文档网格向下填充 {0} 值</value>
+  </data>
+  <data name="fill_down_document_grid_single" xml:space="preserve">
+    <value>已在文档网格向下填充 {0} 值</value>
+  </data>
+  <data name="imported_annotations" xml:space="preserve">
+    <value>已从“{0}”导入注释</value>
+  </data>
+  <data name="imported_assay_library" xml:space="preserve">
+    <value>已从剪切板导入分析库</value>
+  </data>
+  <data name="imported_assay_library_from_file" xml:space="preserve">
+    <value>已从“{0}”导入分析库</value>
+  </data>
+  <data name="imported_doc" xml:space="preserve">
+    <value>已导入文档“{0}”</value>
+  </data>
+  <data name="imported_docs" xml:space="preserve">
+    <value>已导入 {0} 文档</value>
+  </data>
+  <data name="imported_fasta" xml:space="preserve">
+    <value>已从“{0}”导入 FASTA</value>
+  </data>
+  <data name="imported_fasta_paste" xml:space="preserve">
+    <value>已从剪切板导入 FASTA</value>
+  </data>
+  <data name="imported_peak_boundaries" xml:space="preserve">
+    <value>已从“{0}”导入峰值边界</value>
+  </data>
+  <data name="imported_peptide_list" xml:space="preserve">
+    <value>已从剪切板导入肽段列表</value>
+  </data>
+  <data name="imported_peptide_search" xml:space="preserve">
+    <value>已导入肽段搜索</value>
+  </data>
   <data name="imported_result" xml:space="preserve">
     <value>已从“{0}”导入结果</value>
+  </data>
+  <data name="imported_results" xml:space="preserve">
+    <value>已从 {0} 文件导入结果</value>
+  </data>
+  <data name="imported_spectral_library_intensities" xml:space="preserve">
+    <value>已导入谱图库强度</value>
+  </data>
+  <data name="imported_transition_list" xml:space="preserve">
+    <value>已从剪切板导入离子对列表</value>
+  </data>
+  <data name="imported_transition_list_from_file" xml:space="preserve">
+    <value>已从“{0}”导入离子对列表</value>
+  </data>
+  <data name="inserted_data" xml:space="preserve">
+    <value>已插入肽段/蛋白质</value>
   </data>
   <data name="inserted_peptide" xml:space="preserve">
     <value>已插入肽段 {0}</value>
   </data>
+  <data name="inserted_peptides" xml:space="preserve">
+    <value>已插入 {0} 肽段</value>
+  </data>
   <data name="inserted_protein" xml:space="preserve">
     <value>已插入蛋白质 {0}</value>
+  </data>
+  <data name="inserted_proteins" xml:space="preserve">
+    <value>已插入 {0} 蛋白质</value>
   </data>
   <data name="inserted_proteins_fasta" xml:space="preserve">
     <value>已从 FASTA 插入 {0} 蛋白质</value>
@@ -548,125 +388,285 @@
   <data name="inserted_transition" xml:space="preserve">
     <value>已将离子对插入 {0}</value>
   </data>
+  <data name="inserted_transitions" xml:space="preserve">
+    <value>已插入 {0} 离子对</value>
+  </data>
+  <data name="is_" xml:space="preserve">
+    <value>{0} 是 {1}</value>
+  </data>
   <data name="kept_empty_protein" xml:space="preserve">
     <value>保留 {0} 空蛋白质</value>
   </data>
-  <data name="removed_empty_protein" xml:space="preserve">
-    <value>已删除 {0} 空蛋白质</value>
+  <data name="kept_empty_proteins" xml:space="preserve">
+    <value>保留 {0} 空蛋白质</value>
+  </data>
+  <data name="log_cleared" xml:space="preserve">
+    <value>{0} 更改已清除</value>
   </data>
   <data name="log_cleared_single" xml:space="preserve">
     <value>{0} 更改已清除</value>
   </data>
+  <data name="log_disabled" xml:space="preserve">
+    <value>已禁用审计记录</value>
+  </data>
+  <data name="log_enabled" xml:space="preserve">
+    <value>已启用审计记录</value>
+  </data>
+  <data name="log_error" xml:space="preserve">
+    <value>一个类型 {0} 的异常被抛出</value>
+  </data>
+  <data name="log_error_old_msg" xml:space="preserve">
+    <value>一个类型 {0} 异常在执行操作“{1}”时被抛出</value>
+  </data>
   <data name="log_unlogged_change" xml:space="preserve">
     <value>{0} 未记录的变化</value>
   </data>
-  <data name="cleared_document_grid_single" xml:space="preserve">
-    <value>已清除文档网格中的 {0} 值</value>
+  <data name="log_unlogged_changes" xml:space="preserve">
+    <value>{0} 未记录的变化</value>
   </data>
-  <data name="pasted_document_grid_single" xml:space="preserve">
-    <value>已将 {0} 值粘贴到文档网格</value>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__Action___0___was_still_successfull" xml:space="preserve">
+    <value>在创建日志条目时出现一个错误。操作“{0}”仍然成功</value>
   </data>
-  <data name="fill_down_document_grid_single" xml:space="preserve">
-    <value>已在文档网格向下填充 {0} 值</value>
-  </data>
-  <data name="added_peptide_decoy" xml:space="preserve">
-    <value>已使用 {1} 方法添加 {0} 肽段诱饵</value>
-  </data>
-  <data name="picked_child" xml:space="preserve">
-    <value>已为 {1} 选择子离子 {0}</value>
-  </data>
-  <data name="removed_rt_outlier" xml:space="preserve">
-    <value>已删除 {0} RT 异常值</value>
-  </data>
-  <data name="AuditLogForm_AuditLogForm_Audit_Log" xml:space="preserve">
-    <value>审计日志</value>
-  </data>
-  <data name="imported_fasta_paste" xml:space="preserve">
-    <value>已从剪切板导入 FASTA</value>
-  </data>
-  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
-    <value>已粘贴 {0} 分子离子对</value>
-  </data>
-  <data name="removed_empty_peptide" xml:space="preserve">
-    <value>删除了{0}空肽段</value>
-  </data>
-  <data name="removed_duplicate_peptide" xml:space="preserve">
-    <value>已删除 {0} 重复肽段</value>
-  </data>
-  <data name="removed_repeated_peptide" xml:space="preserve">
-    <value>已删除 {0} 重复的肽段</value>
-  </data>
-  <data name="removed_single_below_cutoffs" xml:space="preserve">
-    <value>已在 {1} 群组比较中删除截止值以下的 {0} 节点</value>
-  </data>
-  <data name="removed_peptide_above_cutoff" xml:space="preserve">
-    <value>已删除 {1}% 峰面积 cv 截止值以上的 {0} 肽段</value>
+  <data name="LogException_Message_An_error_occured_while_creating_a_log_entry__The_document_was_still_successfully_modified" xml:space="preserve">
+    <value>在创建日志条目时出现一个错误。该文档仍然成功修改</value>
   </data>
   <data name="LoggableExplicitMod_AuditLogText__0__residue__1__at_position__2_" xml:space="preserve">
     <value>在位置 {2} 有 {0} 残留 {1}</value>
   </data>
-  <data name="imported_peptide_list" xml:space="preserve">
-    <value>已从剪切板导入肽段列表</value>
+  <data name="LogMessage_LocalizeValue_False" xml:space="preserve">
+    <value>假</value>
   </data>
-  <data name="excluded_peptide" xml:space="preserve">
-    <value>已排除 {0} 肽段（序列特异的肽段...）</value>
+  <data name="LogMessage_LocalizeValue_True" xml:space="preserve">
+    <value>真</value>
   </data>
-  <data name="renamed_replicate" xml:space="preserve">
-    <value>已将重复测定从 {0} 重新命名为 {1}</value>
+  <data name="managed_results" xml:space="preserve">
+    <value>已管理结果</value>
   </data>
-  <data name="changed_peak_bounds_of" xml:space="preserve">
-    <value>已更改 {0} 的峰界限</value>
+  <data name="matched_modifications_of_library" xml:space="preserve">
+    <value>已匹配库“{0}”的修饰</value>
   </data>
-  <data name="undocumented_change" xml:space="preserve">
-    <value>该文档在 Skyline 之外进行了修改</value>
+  <data name="Missing" xml:space="preserve">
+    <value>缺失</value>
   </data>
-  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
-    <value>审计日志与当前文档不匹配。是否要添加描述对文档所做更改的日志条目？</value>
+  <data name="modified" xml:space="preserve">
+    <value>已修饰 {0}</value>
   </data>
   <data name="modified_outside_of_skyline" xml:space="preserve">
     <value>该文档在 Skyline 之外进行了修改：{0}</value>
   </data>
-  <data name="AuditLogList_Validate_Audit_log_is_corrupted__Audit_log_entry_time_stamps_and_indices_should_be_decreasing" xml:space="preserve">
-    <value>审计日志已损坏。审计日志条目时间戳和索引应有序。条目编号 {0} 时间标记 {1:G} 在条目编号之前发生 {2} 时间标记 {3:G}。</value>
+  <data name="None" xml:space="preserve">
+    <value>无</value>
   </data>
-  <data name="test_only" xml:space="preserve">
-    <value>{0}</value>
+  <data name="pasted_document_grid" xml:space="preserve">
+    <value>已将 {0} 值粘贴到文档网格</value>
   </data>
-  <data name="AuditLogForm_EnableAuditLogging_This_will_clear_the_audit_log_and_delete_it_permanently_once_the_document_gets_saved__Do_you_want_to_proceed_" xml:space="preserve">
-    <value>这将清除审计日志，并在文档保存后永久删除此日志。您是否想要继续？</value>
+  <data name="pasted_document_grid_single" xml:space="preserve">
+    <value>已将 {0} 值粘贴到文档网格</value>
   </data>
-  <data name="start_log_existing_doc" xml:space="preserve">
-    <value>现有文档的审计日志开始</value>
+  <data name="pasted_single_small_molecule_transition" xml:space="preserve">
+    <value>已粘贴 {0} 分子离子对</value>
   </data>
-  <data name="edited_ion_mobility_library" xml:space="preserve">
-    <value>已编辑离子迁移库 {0} ({1})</value>
-    <comment>{0} is library name, {1} is library file location</comment>
+  <data name="pasted_small_molecule_transition_list" xml:space="preserve">
+    <value>已粘贴 {0} 分子离子对</value>
   </data>
-  <data name="AuditLogList_ReadFromFile_The_following_audit_log_entries_were_modified" xml:space="preserve">
-    <value>以下审计日志条目已被修改：
-
-</value>
+  <data name="pasted_targets" xml:space="preserve">
+    <value>已粘贴目标</value>
   </data>
-  <data name="AuditLogList_ReadFromFile_An_exception_occured_while_reading_the_audit_log" xml:space="preserve">
-    <value>读取审计日志时发生异常。
-
-删除、重命名或移动审计日志文件将防止发生此错误。您还可以将审计日志发送到 Skyline 团队，使其尝试手动修复文件。
-
-作为参考，审计日志位于：“{0}”</value>
-  </data>
-  <data name="AuditLogException_Error_when_loading_document_audit_log__0" xml:space="preserve">
-    <value>导入文档审计日记时出错：{0}.</value>
-  </data>
-  <data name="changed_quantitative" xml:space="preserve">
-    <value>已更改{0} 定量</value>
-  </data>
-  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
-    <value>{0} 个离子对</value>
+  <data name="permuted_isotope_label_complete">
+    <value>已添加同位素修饰 '{0}' 的完整排列</value>
   </data>
   <data name="permuted_isotope_label_simple">
     <value>已添加同位素修饰 '{0}' 的简单排列</value>
   </data>
-  <data name="permuted_isotope_label_complete">
-    <value>已添加同位素修饰 '{0}' 的完整排列</value>
+  <data name="picked_child" xml:space="preserve">
+    <value>已为 {1} 选择子离子 {0}</value>
+  </data>
+  <data name="picked_children" xml:space="preserve">
+    <value>已为 {1} 选择 {0} 子离子</value>
+  </data>
+  <data name="picked_peak" xml:space="preserve">
+    <value>已在 {2} 拣选“{1}”中的峰 {0}</value>
+  </data>
+  <data name="PropertySeparator" xml:space="preserve">
+    <value> &gt; </value>
+    <comment>Used in audit log to separate properties</comment>
+  </data>
+  <data name="refined_targets" xml:space="preserve">
+    <value>已调整目标</value>
+  </data>
+  <data name="reintegrated_peaks" xml:space="preserve">
+    <value>已使用“{0}”重新合并峰</value>
+  </data>
+  <data name="removed_all" xml:space="preserve">
+    <value>{0}: 已删除所有</value>
+  </data>
+  <data name="removed_all_libraries" xml:space="preserve">
+    <value>已删除所有库运行</value>
+  </data>
+  <data name="removed_all_peaks_from" xml:space="preserve">
+    <value>已在重复测定“{1}”中从 {0} 删除所有峰</value>
+  </data>
+  <data name="removed_all_replicates" xml:space="preserve">
+    <value>已删除所有重复测定</value>
+  </data>
+  <data name="removed_below_cutoffs" xml:space="preserve">
+    <value>已在 {1} 群组比较中删除截止值以下的 {0} 节点</value>
+  </data>
+  <data name="removed_duplicate_peptide" xml:space="preserve">
+    <value>已删除 {0} 重复肽段</value>
+  </data>
+  <data name="removed_duplicate_peptides" xml:space="preserve">
+    <value>已删除 {0} 重复肽段</value>
+  </data>
+  <data name="removed_empty_peptide" xml:space="preserve">
+    <value>删除了{0}空肽段</value>
+  </data>
+  <data name="removed_empty_peptides" xml:space="preserve">
+    <value>已删除 {0} 空肽段</value>
+  </data>
+  <data name="removed_empty_protein" xml:space="preserve">
+    <value>已删除 {0} 空蛋白质</value>
+  </data>
+  <data name="removed_empty_proteins" xml:space="preserve">
+    <value>已删除 {0} 空蛋白质</value>
+  </data>
+  <data name="removed_from" xml:space="preserve">
+    <value>{0} : {1} 已删除</value>
+  </data>
+  <data name="removed_library_run" xml:space="preserve">
+    <value>已删除库运行“{0}”</value>
+  </data>
+  <data name="removed_missing_results" xml:space="preserve">
+    <value>已删除缺失结果</value>
+  </data>
+  <data name="removed_peak_from" xml:space="preserve">
+    <value>从复制“{1}”中删除了{0}的峰值</value>
+  </data>
+  <data name="removed_peaks" xml:space="preserve">
+    <value>已从 {1} 个节点中删除 {0} 个峰</value>
+  </data>
+  <data name="removed_peptide_above_cutoff" xml:space="preserve">
+    <value>已删除 {1}% 峰面积 cv 截止值以上的 {0} 肽段</value>
+  </data>
+  <data name="removed_peptide_from_protein" xml:space="preserve">
+    <value>已从蛋白质 {1} 中删除肽段{0}</value>
+  </data>
+  <data name="removed_peptides_above_cutoff" xml:space="preserve">
+    <value>已删除 {0} 峰面积变异系数高于 {1}% 截止值的肽段</value>
+  </data>
+  <data name="removed_protein" xml:space="preserve">
+    <value>已删除蛋白质 {0}</value>
+  </data>
+  <data name="removed_repeated_peptide" xml:space="preserve">
+    <value>已删除 {0} 重复的肽段</value>
+  </data>
+  <data name="removed_repeated_peptides" xml:space="preserve">
+    <value>已删除 {0} 重复的肽段</value>
+  </data>
+  <data name="removed_replicate" xml:space="preserve">
+    <value>已接受的肽段 {0}</value>
+  </data>
+  <data name="removed_rt_outlier" xml:space="preserve">
+    <value>已删除 {0} RT 异常值</value>
+  </data>
+  <data name="removed_rt_outliers" xml:space="preserve">
+    <value>已删除 {0} RT 异常值</value>
+  </data>
+  <data name="removed_single_below_cutoffs" xml:space="preserve">
+    <value>已在 {1} 群组比较中删除截止值以下的 {0} 节点</value>
+  </data>
+  <data name="removed_transition_from_transition_group_from_peptide_from_protein" xml:space="preserve">
+    <value>已从蛋白质 {3} 的肽段 {2} 的离子对组 {1}中删除离子对 {0}</value>
+  </data>
+  <data name="removed_transition_group_from_peptide_from_protein" xml:space="preserve">
+    <value>已从蛋白质 {2} 的肽段 {1} 中删除离子对组 {0}</value>
+  </data>
+  <data name="removed_unrecognized_charge_state" xml:space="preserve">
+    <value>已删除未识别的价态 {0}</value>
+  </data>
+  <data name="removed_unrecognized_file" xml:space="preserve">
+    <value>已删除未识别的文件 {0}</value>
+  </data>
+  <data name="removed_unrecognized_peptide" xml:space="preserve">
+    <value>已删除未识别的肽段 {0}</value>
+  </data>
+  <data name="renamed_node" xml:space="preserve">
+    <value>已在目标窗口将节点从 {0} 重新命名为 {1}</value>
+  </data>
+  <data name="renamed_proteins" xml:space="preserve">
+    <value>已重新命名 {0} 蛋白质</value>
+  </data>
+  <data name="renamed_replicate" xml:space="preserve">
+    <value>已将重复测定从 {0} 重新命名为 {1}</value>
+  </data>
+  <data name="renamed_single_protein" xml:space="preserve">
+    <value>已将蛋白质从 {0} 重新命名为 {1}</value>
+  </data>
+  <data name="set_excluded_standard" xml:space="preserve">
+    <value>从校准曲线中排除肽段 {0} 重复测定 {1}</value>
+  </data>
+  <data name="set_included_standard" xml:space="preserve">
+    <value>在校准曲线中包含肽段 {0} 重复测定 {1}</value>
+  </data>
+  <data name="set_standard_type" xml:space="preserve">
+    <value>设定 {0} 的标准类型</value>
+  </data>
+  <data name="set_standard_type_peptides" xml:space="preserve">
+    <value>设定 {0} 肽段的标准类型</value>
+  </data>
+  <data name="set_to_in_document_grid" xml:space="preserve">
+    <value>将 {1} 的 {0} 设定为 {2}</value>
+  </data>
+  <data name="SkylineWindow_AskForLogEntry_The_audit_log_does_not_match_the_current_document__Would_you_like_to_add_a_log_entry_describing_the_changes_made_to_the_document_" xml:space="preserve">
+    <value>审计日志与当前文档不匹配。是否要添加描述对文档所做更改的日志条目？</value>
+  </data>
+  <data name="SkylineWindow_ChangeQuantitative_0_transitions" xml:space="preserve">
+    <value>{0} 个离子对</value>
+  </data>
+  <data name="SkylineWindow_EditNote__0__targets" xml:space="preserve">
+    <value>{0} 目标</value>
+  </data>
+  <data name="SkylineWindow_SetStandardType__0__peptides" xml:space="preserve">
+    <value>{0} 个肽段</value>
+  </data>
+  <data name="sort_protein_accession" xml:space="preserve">
+    <value>按蛋白质检索号分类</value>
+  </data>
+  <data name="sort_protein_gene" xml:space="preserve">
+    <value>按蛋白质基因分类</value>
+  </data>
+  <data name="sort_protein_name" xml:space="preserve">
+    <value>按蛋白质名称分类</value>
+  </data>
+  <data name="sort_protein_preferred_name" xml:space="preserve">
+    <value>按蛋白质首选名称分类</value>
+  </data>
+  <data name="start_log_existing_doc" xml:space="preserve">
+    <value>现有文档的审计日志开始</value>
+  </data>
+  <data name="TabSeparator" xml:space="preserve">
+    <value> -- </value>
+    <comment>Used in audit log to separate UI tabs</comment>
+  </data>
+  <data name="test_only" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="True" xml:space="preserve">
+    <value>真</value>
+  </data>
+  <data name="undocumented_change" xml:space="preserve">
+    <value>该文档在 Skyline 之外进行了修改</value>
+  </data>
+  <data name="UnrecognizedChargeStates" xml:space="preserve">
+    <value>未识别的价态</value>
+  </data>
+  <data name="UnrecognizedFiles" xml:space="preserve">
+    <value>未识别的文件</value>
+  </data>
+  <data name="UnrecognizedPeptides" xml:space="preserve">
+    <value>未识别的肽段</value>
+  </data>
+  <data name="upgraded_background_proteome" xml:space="preserve">
+    <value>已升级背景蛋白质组“{0}”</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,281 +105,53 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="lookInImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>275, 17</value>
+  </metadata>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="listView.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
+  <metadata name="navToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="SourceName.Text" xml:space="preserve">
-    <value>名前</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>582, 390</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="SourceName.Width" type="System.Int32, mscorlib">
-    <value>-1</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="FileType.Text" xml:space="preserve">
-    <value>タイプ</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>オープンデータソース</value>
   </data>
-  <data name="FileType.Width" type="System.Int32, mscorlib">
-    <value>120</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>OpenDataSourceDialog</value>
   </data>
-  <data name="SourceSize.Text" xml:space="preserve">
-    <value>サイズ</value>
-  </data>
-  <data name="DateModified.Text" xml:space="preserve">
-    <value>変更日</value>
-  </data>
-  <data name="DateModified.Width" type="System.Int32, mscorlib">
-    <value>120</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="listView.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 45</value>
-  </data>
-  <data name="listView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>452, 280</value>
-  </data>
-  <data name="listView.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;listView.Name" xml:space="preserve">
-    <value>listView</value>
-  </data>
-  <data name="&gt;&gt;listView.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listView.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;listView.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="lookInComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="lookInComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 12</value>
-  </data>
-  <data name="lookInComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>251, 21</value>
-  </data>
-  <data name="lookInComboBox.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;lookInComboBox.Name" xml:space="preserve">
-    <value>lookInComboBox</value>
-  </data>
-  <data name="&gt;&gt;lookInComboBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lookInComboBox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lookInComboBox.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="labelLookIn.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelLookIn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>67, 15</value>
-  </data>
-  <data name="labelLookIn.Size" type="System.Drawing.Size, System.Drawing">
-    <value>45, 13</value>
-  </data>
-  <data name="labelLookIn.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="labelLookIn.Text" xml:space="preserve">
-    <value>調べる(&amp;I)：</value>
-  </data>
-  <data name="&gt;&gt;labelLookIn.Name" xml:space="preserve">
-    <value>labelLookIn</value>
-  </data>
-  <data name="&gt;&gt;labelLookIn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelLookIn.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelLookIn.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="sourcePathTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="sourcePathTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 331</value>
-  </data>
-  <data name="sourcePathTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>290, 20</value>
-  </data>
-  <data name="sourcePathTextBox.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;sourcePathTextBox.Name" xml:space="preserve">
-    <value>sourcePathTextBox</value>
-  </data>
-  <data name="&gt;&gt;sourcePathTextBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;sourcePathTextBox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;sourcePathTextBox.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="labelSourcePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="labelSourcePath.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelSourcePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 335</value>
-  </data>
-  <data name="labelSourcePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>73, 13</value>
-  </data>
-  <data name="labelSourcePath.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="labelSourcePath.Text" xml:space="preserve">
-    <value>ソース名(&amp;N)：</value>
-  </data>
-  <data name="labelSourcePath.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="&gt;&gt;labelSourcePath.Name" xml:space="preserve">
-    <value>labelSourcePath</value>
-  </data>
-  <data name="&gt;&gt;labelSourcePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelSourcePath.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelSourcePath.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="sourceTypeComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left, Right</value>
-  </data>
-  <data name="sourceTypeComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>208, 357</value>
-  </data>
-  <data name="sourceTypeComboBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>290, 21</value>
-  </data>
-  <data name="sourceTypeComboBox.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="&gt;&gt;sourceTypeComboBox.Name" xml:space="preserve">
-    <value>sourceTypeComboBox</value>
-  </data>
-  <data name="&gt;&gt;sourceTypeComboBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;sourceTypeComboBox.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;sourceTypeComboBox.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>118, 361</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>ソースの種類(&amp;T)：</value>
-  </data>
-  <data name="label1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="openButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="openButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>504, 331</value>
-  </data>
-  <data name="openButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 20</value>
-  </data>
-  <data name="openButton.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="openButton.Text" xml:space="preserve">
-    <value>開く(&amp;O)</value>
-  </data>
-  <data name="&gt;&gt;openButton.Name" xml:space="preserve">
-    <value>openButton</value>
-  </data>
-  <data name="&gt;&gt;openButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;openButton.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;openButton.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="cancelButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="cancelButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>504, 357</value>
-  </data>
-  <data name="cancelButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>66, 21</value>
-  </data>
-  <data name="cancelButton.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="cancelButton.Text" xml:space="preserve">
-    <value>キャンセル</value>
+  <data name="&gt;&gt;backButton.Name" xml:space="preserve">
+    <value>backButton</value>
   </data>
   <data name="&gt;&gt;cancelButton.Name" xml:space="preserve">
     <value>cancelButton</value>
-  </data>
-  <data name="&gt;&gt;cancelButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cancelButton.Parent" xml:space="preserve">
     <value>$this</value>
@@ -387,14 +159,173 @@
   <data name="&gt;&gt;cancelButton.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="navToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <data name="navToolStrip.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
+  <data name="&gt;&gt;DateModified.Name" xml:space="preserve">
+    <value>DateModified</value>
   </data>
-  <data name="navToolStrip.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>None</value>
+  <data name="&gt;&gt;desktopButton.Name" xml:space="preserve">
+    <value>desktopButton</value>
+  </data>
+  <data name="&gt;&gt;desktopButton.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;desktopButton.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;detailsToolStripMenuItem.Name" xml:space="preserve">
+    <value>detailsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;FileType.Name" xml:space="preserve">
+    <value>FileType</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;label1.Name" xml:space="preserve">
+    <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;labelLookIn.Name" xml:space="preserve">
+    <value>labelLookIn</value>
+  </data>
+  <data name="&gt;&gt;labelLookIn.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelLookIn.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;labelSourcePath.Name" xml:space="preserve">
+    <value>labelSourcePath</value>
+  </data>
+  <data name="&gt;&gt;labelSourcePath.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelSourcePath.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;listToolStripMenuItem.Name" xml:space="preserve">
+    <value>listToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;listView.Name" xml:space="preserve">
+    <value>listView</value>
+  </data>
+  <data name="&gt;&gt;listView.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;listView.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;lookInComboBox.Name" xml:space="preserve">
+    <value>lookInComboBox</value>
+  </data>
+  <data name="&gt;&gt;lookInComboBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lookInComboBox.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;lookInImageList.Name" xml:space="preserve">
+    <value>lookInImageList</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;myComputerButton.Name" xml:space="preserve">
+    <value>myComputerButton</value>
+  </data>
+  <data name="&gt;&gt;myComputerButton.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;myComputerButton.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;myDocumentsButton.Name" xml:space="preserve">
+    <value>myDocumentsButton</value>
+  </data>
+  <data name="&gt;&gt;myDocumentsButton.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;myDocumentsButton.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Name" xml:space="preserve">
+    <value>navToolStrip</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;openButton.Name" xml:space="preserve">
+    <value>openButton</value>
+  </data>
+  <data name="&gt;&gt;openButton.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;openButton.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;recentDocumentsButton.Name" xml:space="preserve">
+    <value>recentDocumentsButton</value>
+  </data>
+  <data name="&gt;&gt;recentDocumentsButton.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;recentDocumentsButton.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;remoteAccountsButton.Name" xml:space="preserve">
+    <value>remoteAccountsButton</value>
+  </data>
+  <data name="&gt;&gt;remoteAccountsButton.Parent" xml:space="preserve">
+    <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;remoteAccountsButton.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;SourceName.Name" xml:space="preserve">
+    <value>SourceName</value>
+  </data>
+  <data name="&gt;&gt;sourcePathTextBox.Name" xml:space="preserve">
+    <value>sourcePathTextBox</value>
+  </data>
+  <data name="&gt;&gt;sourcePathTextBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;sourcePathTextBox.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;SourceSize.Name" xml:space="preserve">
+    <value>SourceSize</value>
+  </data>
+  <data name="&gt;&gt;sourceTypeComboBox.Name" xml:space="preserve">
+    <value>sourceTypeComboBox</value>
+  </data>
+  <data name="&gt;&gt;sourceTypeComboBox.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;sourceTypeComboBox.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;tilesToolStripMenuItem.Name" xml:space="preserve">
+    <value>tilesToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;upOneLevelButton.Name" xml:space="preserve">
+    <value>upOneLevelButton</value>
+  </data>
+  <data name="&gt;&gt;viewsDropDownButton.Name" xml:space="preserve">
+    <value>viewsDropDownButton</value>
   </data>
   <data name="backButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -427,44 +358,53 @@
   <data name="backButton.ToolTipText" xml:space="preserve">
     <value>前のディレクトリに戻る</value>
   </data>
-  <data name="upOneLevelButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH7SURBVDhPlZFtSJNRGIY3KLI0YjGUWmswKIlGERi1EMkU
-        JAhDgiTqR2GiPyIKKpstbIhFNNwPCxoYWfRBzPBHQhbLPshZMbSBRrrJwuItxmAwHCSMrs579gG5jfSG
-        G14Oz32d89yv5n+ydu0h/bl0FbUtY93t1ZReXEuH58rSQKb2jWzoW0PFMwO1z82Uu/RsvWxZHKSptxm9
-        s1iG97/aRON7Cy3+CirvmSg6vTw/ZGZgJxlrW7SU2Fags6+k5qlZhk8FrBgvGOWZ6nQsJTUUnXKTnB8n
-        lvBmQarLnXoZPj+9j4KFqoP8GQXcaQ8LB4R9lNpLZLjj+wF2Owp0IAG/H8F8zz9Wz3e1F8vwua911Luq
-        sy9LR1OSgMgtkj/sxCdPoryrJfyyUqx1l2pnFV2RQxwZtuLyXhOvihN83ZoHELzO7FANsbBHDP0UnpIr
-        mB1ldM8dY/ON9YSVAeLKA4Kf7uQCkhOdzPrOilC/cKqLcPQq22+aOD6ylxM928TlTwh5D+b2oAIibxpJ
-        RN6KIWfWjv468RcM7HAYiH27RCJsY3rElR+geBtg7gP86sxad2YVDd1bUAJNRH31zAwuKC8jCfhoA6UP
-        Qm3E/UcFsIoXvTr8bi3j941MDB7O3T0jFaA2/uVhmQx8fmxhcqi5cGChVIDq0JhncYGsNJq/Di+X1pfI
-        nRQAAAAASUVORK5CYII=
-</value>
+  <data name="cancelButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
   </data>
-  <data name="upOneLevelButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
+  <data name="cancelButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>504, 357</value>
   </data>
-  <data name="upOneLevelButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 22</value>
+  <data name="cancelButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>66, 21</value>
   </data>
-  <data name="upOneLevelButton.Text" xml:space="preserve">
-    <value>上へ</value>
+  <data name="cancelButton.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
   </data>
-  <data name="upOneLevelButton.ToolTipText" xml:space="preserve">
-    <value>1つ上のレベルに移動</value>
+  <data name="cancelButton.Text" xml:space="preserve">
+    <value>キャンセル</value>
   </data>
-  <data name="tilesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 22</value>
+  <data name="DateModified.Text" xml:space="preserve">
+    <value>変更日</value>
   </data>
-  <data name="tilesToolStripMenuItem.Text" xml:space="preserve">
-    <value>タイル</value>
+  <data name="DateModified.Width" type="System.Int32, mscorlib">
+    <value>120</value>
   </data>
-  <data name="listToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 22</value>
+  <data name="desktopButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
   </data>
-  <data name="listToolStripMenuItem.Text" xml:space="preserve">
-    <value>リスト</value>
+  <data name="desktopButton.ImageIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="desktopButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 173</value>
+  </data>
+  <data name="desktopButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 7, 3, 3</value>
+  </data>
+  <data name="desktopButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="desktopButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 73</value>
+  </data>
+  <data name="desktopButton.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="desktopButton.Text" xml:space="preserve">
+    <value>デスクトップ</value>
+  </data>
+  <data name="desktopButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
+    <value>ImageAboveText</value>
   </data>
   <data name="detailsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>109, 22</value>
@@ -472,64 +412,111 @@
   <data name="detailsToolStripMenuItem.Text" xml:space="preserve">
     <value>詳細</value>
   </data>
-  <data name="viewsDropDownButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAD0SURBVDhPrZHBCgFRFIbvXVvYeBSP4T3EysKKheeYnR0p
-        SVM2dkpJE4UUkowoUqRIkWP+w0GTiZGpr5m7+L577lz1tyeU7JBf7qpSOtYiHW/7Jpho3yI6apFOT/zj
-        eI/AhegrtkeijcNiR+8DhmExsg5kbAbfx7MjGZqxtz4DkLG7BPorj0C+aDLuNeTV/rnuLD0Cbg4n4nEh
-        4z1YE9VtosbsiwBkCYgsgdrUI0CpCAORzxw2GIgY23LODyqjDwHIrwHIzfkzYA49AqWyyeCegfw0yBg9
-        WzCZQu9NQK4KopxZdoZcHROPDjnXdQV+hQO/P0pdAfZPdx0FaFpDAAAAAElFTkSuQmCC
-</value>
+  <data name="FileType.Text" xml:space="preserve">
+    <value>タイプ</value>
   </data>
-  <data name="viewsDropDownButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
-    <value>Magenta</value>
-  </data>
-  <data name="viewsDropDownButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 22</value>
-  </data>
-  <data name="viewsDropDownButton.Text" xml:space="preserve">
-    <value>ビュー</value>
-  </data>
-  <data name="viewsDropDownButton.ToolTipText" xml:space="preserve">
-    <value>ビュー</value>
-  </data>
-  <data name="navToolStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>420, 9</value>
-  </data>
-  <data name="navToolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>78, 25</value>
-  </data>
-  <data name="navToolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="navToolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;navToolStrip.Name" xml:space="preserve">
-    <value>navToolStrip</value>
-  </data>
-  <data name="&gt;&gt;navToolStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;navToolStrip.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;navToolStrip.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="FileType.Width" type="System.Int32, mscorlib">
+    <value>120</value>
   </data>
   <data name="flowLayoutPanel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left</value>
   </data>
-  <data name="remoteAccountsButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
-    <value>Flat</value>
+  <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 45</value>
   </data>
-  <data name="remoteAccountsButton.ImageIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+  <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 333</value>
   </data>
-  <metadata name="lookInImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>275, 17</value>
-  </metadata>
+  <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="label1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>118, 361</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>ソースの種類(&amp;T)：</value>
+  </data>
+  <data name="label1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="labelLookIn.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelLookIn.Location" type="System.Drawing.Point, System.Drawing">
+    <value>67, 15</value>
+  </data>
+  <data name="labelLookIn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>45, 13</value>
+  </data>
+  <data name="labelLookIn.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelLookIn.Text" xml:space="preserve">
+    <value>調べる(&amp;I)：</value>
+  </data>
+  <data name="labelSourcePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="labelSourcePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelSourcePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>118, 335</value>
+  </data>
+  <data name="labelSourcePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 13</value>
+  </data>
+  <data name="labelSourcePath.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="labelSourcePath.Text" xml:space="preserve">
+    <value>ソース名(&amp;N)：</value>
+  </data>
+  <data name="labelSourcePath.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleRight</value>
+  </data>
+  <data name="listToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 22</value>
+  </data>
+  <data name="listToolStripMenuItem.Text" xml:space="preserve">
+    <value>リスト</value>
+  </data>
+  <data name="listView.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="listView.Location" type="System.Drawing.Point, System.Drawing">
+    <value>118, 45</value>
+  </data>
+  <data name="listView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>452, 280</value>
+  </data>
+  <data name="listView.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lookInComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="lookInComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>118, 12</value>
+  </data>
+  <data name="lookInComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>251, 21</value>
+  </data>
+  <data name="lookInComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
   <data name="lookInImageList.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
@@ -1442,38 +1429,92 @@
         AQ8B/wHwAQ8B/wH8AQABDwH/AgABfwP/AfgBHwH/AfgBHwL/AfABHwH/Cw==
 </value>
   </data>
-  <data name="remoteAccountsButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 7</value>
+  <data name="myComputerButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
   </data>
-  <data name="remoteAccountsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="myComputerButton.ImageIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="myComputerButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 339</value>
+  </data>
+  <data name="myComputerButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 7, 3, 3</value>
   </data>
-  <data name="remoteAccountsButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="myComputerButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
   </data>
-  <data name="remoteAccountsButton.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="myComputerButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>92, 73</value>
   </data>
-  <data name="remoteAccountsButton.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="myComputerButton.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="remoteAccountsButton.Text" xml:space="preserve">
-    <value>リモートアカウント</value>
+  <data name="myComputerButton.Text" xml:space="preserve">
+    <value>マイコンピュータ</value>
   </data>
-  <data name="remoteAccountsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
+  <data name="myComputerButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
   </data>
-  <data name="&gt;&gt;remoteAccountsButton.Name" xml:space="preserve">
-    <value>remoteAccountsButton</value>
+  <data name="myDocumentsButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+    <value>Flat</value>
   </data>
-  <data name="&gt;&gt;remoteAccountsButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="myDocumentsButton.ImageIndex" type="System.Int32, mscorlib">
+    <value>2</value>
   </data>
-  <data name="&gt;&gt;remoteAccountsButton.Parent" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
+  <data name="myDocumentsButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 256</value>
   </data>
-  <data name="&gt;&gt;remoteAccountsButton.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="myDocumentsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 7, 3, 3</value>
+  </data>
+  <data name="myDocumentsButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
+  </data>
+  <data name="myDocumentsButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 73</value>
+  </data>
+  <data name="myDocumentsButton.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="myDocumentsButton.Text" xml:space="preserve">
+    <value>マイドキュメント</value>
+  </data>
+  <data name="myDocumentsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
+    <value>ImageAboveText</value>
+  </data>
+  <data name="navToolStrip.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="navToolStrip.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>None</value>
+  </data>
+  <data name="navToolStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>420, 9</value>
+  </data>
+  <data name="navToolStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>78, 25</value>
+  </data>
+  <data name="navToolStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="navToolStrip.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="openButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="openButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>504, 331</value>
+  </data>
+  <data name="openButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>66, 20</value>
+  </data>
+  <data name="openButton.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="openButton.Text" xml:space="preserve">
+    <value>開く(&amp;O)</value>
   </data>
   <data name="recentDocumentsButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
@@ -1505,247 +1546,119 @@
   <data name="recentDocumentsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
   </data>
-  <data name="&gt;&gt;recentDocumentsButton.Name" xml:space="preserve">
-    <value>recentDocumentsButton</value>
-  </data>
-  <data name="&gt;&gt;recentDocumentsButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;recentDocumentsButton.Parent" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;recentDocumentsButton.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="desktopButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
+  <data name="remoteAccountsButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
   </data>
-  <data name="desktopButton.ImageIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="desktopButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 173</value>
-  </data>
-  <data name="desktopButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 7, 3, 3</value>
-  </data>
-  <data name="desktopButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>1, 1, 1, 1</value>
-  </data>
-  <data name="desktopButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
-  </data>
-  <data name="desktopButton.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="desktopButton.Text" xml:space="preserve">
-    <value>デスクトップ</value>
-  </data>
-  <data name="desktopButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
-    <value>ImageAboveText</value>
-  </data>
-  <data name="&gt;&gt;desktopButton.Name" xml:space="preserve">
-    <value>desktopButton</value>
-  </data>
-  <data name="&gt;&gt;desktopButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;desktopButton.Parent" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;desktopButton.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="myDocumentsButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
-    <value>Flat</value>
-  </data>
-  <data name="myDocumentsButton.ImageIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="myDocumentsButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 256</value>
-  </data>
-  <data name="myDocumentsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 7, 3, 3</value>
-  </data>
-  <data name="myDocumentsButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>1, 1, 1, 1</value>
-  </data>
-  <data name="myDocumentsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
-  </data>
-  <data name="myDocumentsButton.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="myDocumentsButton.Text" xml:space="preserve">
-    <value>マイドキュメント</value>
-  </data>
-  <data name="myDocumentsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
-    <value>ImageAboveText</value>
-  </data>
-  <data name="&gt;&gt;myDocumentsButton.Name" xml:space="preserve">
-    <value>myDocumentsButton</value>
-  </data>
-  <data name="&gt;&gt;myDocumentsButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;myDocumentsButton.Parent" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;myDocumentsButton.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="myComputerButton.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
-    <value>Flat</value>
-  </data>
-  <data name="myComputerButton.ImageIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="myComputerButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 339</value>
-  </data>
-  <data name="myComputerButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 7, 3, 3</value>
-  </data>
-  <data name="myComputerButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>1, 1, 1, 1</value>
-  </data>
-  <data name="myComputerButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>92, 73</value>
-  </data>
-  <data name="myComputerButton.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="myComputerButton.Text" xml:space="preserve">
-    <value>マイコンピュータ</value>
-  </data>
-  <data name="myComputerButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
-    <value>ImageAboveText</value>
-  </data>
-  <data name="&gt;&gt;myComputerButton.Name" xml:space="preserve">
-    <value>myComputerButton</value>
-  </data>
-  <data name="&gt;&gt;myComputerButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;myComputerButton.Parent" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;myComputerButton.ZOrder" xml:space="preserve">
+  <data name="remoteAccountsButton.ImageIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 45</value>
+  <data name="remoteAccountsButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 7</value>
   </data>
-  <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 333</value>
+  <data name="remoteAccountsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 7, 3, 3</value>
   </data>
-  <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
+  <data name="remoteAccountsButton.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>1, 1, 1, 1</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
-    <value>flowLayoutPanel1</value>
+  <data name="remoteAccountsButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 73</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
+  <data name="remoteAccountsButton.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+  <data name="remoteAccountsButton.Text" xml:space="preserve">
+    <value>リモートアカウント</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>582, 390</value>
+  <data name="remoteAccountsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
+    <value>ImageAboveText</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <data name="SourceName.Text" xml:space="preserve">
+    <value>名前</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>オープンデータソース</value>
+  <data name="SourceName.Width" type="System.Int32, mscorlib">
+    <value>-1</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
+  <data name="sourcePathTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+  <data name="sourcePathTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 331</value>
   </data>
-  <data name="&gt;&gt;SourceName.Name" xml:space="preserve">
-    <value>SourceName</value>
+  <data name="sourcePathTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>290, 20</value>
   </data>
-  <data name="&gt;&gt;SourceName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="sourcePathTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
-  <data name="&gt;&gt;FileType.Name" xml:space="preserve">
-    <value>FileType</value>
+  <data name="SourceSize.Text" xml:space="preserve">
+    <value>サイズ</value>
   </data>
-  <data name="&gt;&gt;FileType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="sourceTypeComboBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;SourceSize.Name" xml:space="preserve">
-    <value>SourceSize</value>
+  <data name="sourceTypeComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>208, 357</value>
   </data>
-  <data name="&gt;&gt;SourceSize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="sourceTypeComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>290, 21</value>
   </data>
-  <data name="&gt;&gt;DateModified.Name" xml:space="preserve">
-    <value>DateModified</value>
+  <data name="sourceTypeComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
   </data>
-  <data name="&gt;&gt;DateModified.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="tilesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 22</value>
   </data>
-  <data name="&gt;&gt;backButton.Name" xml:space="preserve">
-    <value>backButton</value>
+  <data name="tilesToolStripMenuItem.Text" xml:space="preserve">
+    <value>タイル</value>
   </data>
-  <data name="&gt;&gt;backButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="upOneLevelButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAH7SURBVDhPlZFtSJNRGIY3KLI0YjGUWmswKIlGERi1EMkU
+        JAhDgiTqR2GiPyIKKpstbIhFNNwPCxoYWfRBzPBHQhbLPshZMbSBRrrJwuItxmAwHCSMrs579gG5jfSG
+        G14Oz32d89yv5n+ydu0h/bl0FbUtY93t1ZReXEuH58rSQKb2jWzoW0PFMwO1z82Uu/RsvWxZHKSptxm9
+        s1iG97/aRON7Cy3+CirvmSg6vTw/ZGZgJxlrW7SU2Fags6+k5qlZhk8FrBgvGOWZ6nQsJTUUnXKTnB8n
+        lvBmQarLnXoZPj+9j4KFqoP8GQXcaQ8LB4R9lNpLZLjj+wF2Owp0IAG/H8F8zz9Wz3e1F8vwua911Luq
+        sy9LR1OSgMgtkj/sxCdPoryrJfyyUqx1l2pnFV2RQxwZtuLyXhOvihN83ZoHELzO7FANsbBHDP0UnpIr
+        mB1ldM8dY/ON9YSVAeLKA4Kf7uQCkhOdzPrOilC/cKqLcPQq22+aOD6ylxM928TlTwh5D+b2oAIibxpJ
+        RN6KIWfWjv468RcM7HAYiH27RCJsY3rElR+geBtg7gP86sxad2YVDd1bUAJNRH31zAwuKC8jCfhoA6UP
+        Qm3E/UcFsIoXvTr8bi3j941MDB7O3T0jFaA2/uVhmQx8fmxhcqi5cGChVIDq0JhncYGsNJq/Di+X1pfI
+        nRQAAAAASUVORK5CYII=
+</value>
   </data>
-  <data name="&gt;&gt;upOneLevelButton.Name" xml:space="preserve">
-    <value>upOneLevelButton</value>
+  <data name="upOneLevelButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="&gt;&gt;upOneLevelButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="upOneLevelButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
   </data>
-  <data name="&gt;&gt;viewsDropDownButton.Name" xml:space="preserve">
-    <value>viewsDropDownButton</value>
+  <data name="upOneLevelButton.Text" xml:space="preserve">
+    <value>上へ</value>
   </data>
-  <data name="&gt;&gt;viewsDropDownButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="upOneLevelButton.ToolTipText" xml:space="preserve">
+    <value>1つ上のレベルに移動</value>
   </data>
-  <data name="&gt;&gt;tilesToolStripMenuItem.Name" xml:space="preserve">
-    <value>tilesToolStripMenuItem</value>
+  <data name="viewsDropDownButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAD0SURBVDhPrZHBCgFRFIbvXVvYeBSP4T3EysKKheeYnR0p
+        SVM2dkpJE4UUkowoUqRIkWP+w0GTiZGpr5m7+L577lz1tyeU7JBf7qpSOtYiHW/7Jpho3yI6apFOT/zj
+        eI/AhegrtkeijcNiR+8DhmExsg5kbAbfx7MjGZqxtz4DkLG7BPorj0C+aDLuNeTV/rnuLD0Cbg4n4nEh
+        4z1YE9VtosbsiwBkCYgsgdrUI0CpCAORzxw2GIgY23LODyqjDwHIrwHIzfkzYA49AqWyyeCegfw0yBg9
+        WzCZQu9NQK4KopxZdoZcHROPDjnXdQV+hQO/P0pdAfZPdx0FaFpDAAAAAElFTkSuQmCC
+</value>
   </data>
-  <data name="&gt;&gt;tilesToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="viewsDropDownButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
   </data>
-  <data name="&gt;&gt;listToolStripMenuItem.Name" xml:space="preserve">
-    <value>listToolStripMenuItem</value>
+  <data name="viewsDropDownButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>29, 22</value>
   </data>
-  <data name="&gt;&gt;listToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="viewsDropDownButton.Text" xml:space="preserve">
+    <value>ビュー</value>
   </data>
-  <data name="&gt;&gt;detailsToolStripMenuItem.Name" xml:space="preserve">
-    <value>detailsToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;detailsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lookInImageList.Name" xml:space="preserve">
-    <value>lookInImageList</value>
-  </data>
-  <data name="&gt;&gt;lookInImageList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>OpenDataSourceDialog</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+  <data name="viewsDropDownButton.ToolTipText" xml:space="preserve">
+    <value>ビュー</value>
   </data>
 </root>

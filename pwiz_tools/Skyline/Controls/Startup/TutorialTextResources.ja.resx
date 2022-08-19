@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,35 +105,23 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DIA_SWATH_Caption" xml:space="preserve">
-    <value>DIA/SWATHデータの分析</value>
+  <data name="AbsoluteQuant_Caption" xml:space="preserve">
+    <value>絶対定量</value>
   </data>
-  <data name="DIA_SWATH_Description" xml:space="preserve">
-    <value>Q ExactiveまたはTripleTOF装置のいずれかから、データに非依存性取得（DIA）データを使った作業で実務経験を積みます。ベンチマークとなっているNavarroの論文（Nature Biotech 2016）に基づいて作成された3種の生物種の混合データセットを使用します。 DIAにペプチド検索のインポートウィザードを使用して、保持時間校正には自動iRT校正のあるDDAデータから、またペプチドピーク検出にはmProphet学習モデルからスペクトルライブラリを構築します。保持時間、ピーク面積、質量精度、CVなど、Skylineサマリープロットの豊富な収集データを使用してデータ品質を評価します。最後に、グループ比較を実施し、データが各生物種に期待される比率をどの程度よくとらえているかを自分で評価します。</value>
-  </data>
-  <data name="DIA_PASEF_Caption" xml:space="preserve">
-    <value>diaPASEFデータの分析</value>
-  </data>
-  <data name="DIA_PASEF_Description" xml:space="preserve">
-    <value>Bruker timsTOF装置から、データ非依存性取得（DIA）PASEFデータを使った作業で実務経験を積みます。ベンチマークとなっているNavarroの論文（Nature Biotech 2016）に基づいて作成された3種の生物種の混合データセットを使用します。 DIAにペプチド検索のインポートウィザードを使用して、保持時間校正には自動iRT校正のあるddaPASEFデータから、またペプチドピーク検出にはmProphet学習モデルからスペクトルライブラリを構築します。保持時間、ピーク面積、質量精度、CVなど、Skylineサマリープロットの豊富な収集データを使用してデータ品質を評価します。最後に、グループ比較を実施し、データが各生物種に期待される比率をどの程度よくとらえているかを自分で評価します。</value>
-  </data>
-  <data name="IMSFiltering_Caption" xml:space="preserve">
-    <value>イオン移動度スペクトルフィルタ</value>
-  </data>
-  <data name="IMSFiltering_Description" xml:space="preserve">
-    <value>Skylineを使用してIMS-TOFデータを取り扱う実務経験を積みます。酵母サンプルにスパイクされたBSAのドリフト時間予測をトレーニングし、イオン移動度分離によって複雑なデータにおけるクロマトグラム抽出の選択性がどのように改善するかを見てみます。Skylineでのイオン移動度データを使った作業の仕方を学び、IMSが有効になった質量分析計が出力する3Dスペクトル（m/z、IMS、強度）を調べます。</value>
+  <data name="AbsoluteQuant_Description" xml:space="preserve">
+    <value>Skylineの校正済み定量化を使用して実務経験を積み、実験中のペプチドの絶対分子量を推定します。</value>
   </data>
   <data name="AuditLog_Caption" xml:space="preserve">
     <value>監査ログ記録</value>
@@ -141,35 +129,11 @@
   <data name="AuditLog_Description" xml:space="preserve">
     <value>Skylineでの監査ログ記録を使った作業の実務経験を積みます。完全に監査ログ記録されたSkylineドキュメントの作成方法を学び、他の人があなたの研究を再現したり、自分が行ったことを思い出せるようにします。これによって論文作成時にメソッドの執筆がしやすくなります。ドキュメントグリッドの延長である監査ロググリッド表示を使った作業方法を学び、ログ記録された変更を調べて変更を実施する理由を提供します。この例では、校正実験を使用して設定変更、データのインポート、積分調整、校正曲線からの点の除外のログ記録を示します。最後にドキュメントをPanoramaにアップロードし、参照可能なウェブインターフェースを使って監査ログがどのようにキャプチャされているかを確認します。</value>
   </data>
-  <data name="DIA_Description" xml:space="preserve">
-    <value>データ非依存性取得（DIA）データを利用する実務経験を積み、シリーズ内の同一装置上で取得したDIAおよびDDA実行を活用するワークフローを使用します。DIA単離スキームを定義しエクスポートします。実験のDIA実行の前に取得したDDAデータからスペクトルライブラリを構築します。そのスペクトルライブラリに基づき、タンパク質のターゲットセットのペプチドとトランジションを選択します。関連DIA実行をSkyline内にインポートし分析して、DIAによる作業の開始するためのシンプルなワークフローをマスターします。</value>
-  </data>
-  <data name="TargetedMSMS_Description" xml:space="preserve">
-    <value>低分解能Thermo LTQ、高分解能Agilent 6520 Q-TOFで取得されるターゲットMS/MS（並列反応モニタリング-PRMとも呼ばれる）データを用いて、実務作業経験を積みます。プリカーサーを使用するペプチドの定量化と低/高分解能装置で測定される断片イオンの選択度や感度の差異について新しい理解を深めます。クロマトグラフィーベースの定量的プロテオミクス作業用にSkylineが提供する豊富な一連の機能を使用して新しい作業方法を発見し、自分の質量分析データを理解します。</value>
-  </data>
-  <data name="TargetedMSMS_Caption" xml:space="preserve">
-    <value>ターゲットMS/MS (PRM)</value>
-  </data>
-  <data name="iRT_Caption" xml:space="preserve">
-    <value>iRT保持時間予測</value>
-  </data>
   <data name="CustomReports_Caption" xml:space="preserve">
     <value>カスタムおよびライブレポート</value>
   </data>
-  <data name="iRT_Description" xml:space="preserve">
-    <value>スケジュール済みの取得やピーク強度検証に対し、保持時間予測に将来使用するためライブラリ内にある校正済みの実験的に測定されたペプチド保持時間の保存テクニックをiRTを使用して実務経験を積みます。このチュートリアルでは、自分のiRTカルキュレータを校正し、さらにiRTキットのペプチド標準に対し、Biognosysが提案するiRT-C18校正について学びます。SRMデータ、探索実験のMS1スキャンからフィルタされたスペクトルライブラリやクロマトグラムピークから新しいiRT値を校正します。また、新しいグラジエントを用いて新しい列でSRM取得をスケジュールするために、これらのiRTの再校正方法も学びます。クロマトグラムピーク強度検証においてさらに信頼性を高めるiRTに基づき、より正確な保持時間予測を確認できます。</value>
-  </data>
-  <data name="MethodRefine_Caption" xml:space="preserve">
-    <value>ターゲットメソッドの最適化</value>
-  </data>
-  <data name="PeakPicking_Description" xml:space="preserve">
-    <value>Skylineにてターゲットペプチドをクロマトグラムピークと一致させる高度モデルの作成やテストについて詳しく学びます。2.5リリースでは、SkylineがmProphetの半教師あり学習アルゴリズムを使用して各ピークスコアの線形結合の作成をサポートするようになりました。このチュートリアルでは、SRMおよびDIA/SWATHデータの両方に対して、デコイペプチドおよびトランジションの生成、mProphetスコアモデルの作成と評価、またそのモデルのSkylineクロマトグラムピーク選択への適用を学びます。また、mProphetが割り当てたQ値（FDRに基づいて調整されたP値）、それを選択したピークにどのように関連付けることができるか、またそれをどのようにカスタムレポートでエクスポートできるかを学習します。</value>
-  </data>
-  <data name="MS1Filtering_Caption" xml:space="preserve">
-    <value>MS1フルスキャンフィルタ</value>
-  </data>
-  <data name="MS1Filtering_Description" xml:space="preserve">
-    <value>データ依存取得 (DDA) 実験からMS1スキャンを使用するペプチド式で定量的差異を測定するためにSkylineドキュメント作成の実務経験を積みます。このチュートリアルでは、探索データセットからのスペクトルライブラリの生成、MS1フィルタ用のSkylineドキュメントの設定、MS/MSペプチド同定により導かれるピーク選択を用いたMS1スキャンからプリカーサ－イオンクロマトグラムを抽出するための質量分析計生データのインポート、さらにSkylineでの結果定量的データの処理を行ないます。探索データセットのラベルフリーの定量的分析に興味がある場合、このチュートリアルが検査用の新しいツールセットを提供します。</value>
+  <data name="CustomReports_Description" xml:space="preserve">
+    <value>Skylineカスタムライブレポートを使ってSkylineドキュメントからの幅広い値を表示し、編集し、エクスポートする実務経験を積みます。これらのレポートは、ExcelやR、Matlab、Java、C++や他の言語で記述されたカスタムコードで使用し、装置の出力をSkylineで処理した後に詳細な統計的分析を行うのに最適です。また、Skyline結果グリッド表示を使用してこれらの値にアクセスし、Skylineでデータを検査しながらカスタム注釈を追加する方法も学びます。本チュートリアルを進め、Skylineで達成可能な実験範囲を大きく広げましょう。</value>
   </data>
   <data name="DDASearch_Caption" xml:space="preserve">
     <value>MS1フィルタリングに対するDDA検索</value>
@@ -177,94 +141,130 @@
   <data name="DDSearch_Description" xml:space="preserve">
     <value>DDA質量分析計ファイルを開始してMS Amandaでペプチド検索を実行し、検索結果からスペクトルライブラリを構築し、最後にクロマトグラムを抽出してDDAファイルのMS1スペクトルから定量分析を行って実務経験を積みます。本チュートリアルでは、Skylineペプチド検索ウィザードを使用して、安定同位体標識タンパク質が急増したSigma Aldrich UPS1標準混合液を使ったヒト全細胞溶解液から取得した3つのDDAデータファイルを検索します。データファイル中のMS1スペクトルから検出されたすべてのペプチドに対するプリカーサー同位体クロマトグラムを抽出するようにSkylineをセットアップし、Skylineでその結果の検査を開始します。</value>
   </data>
-  <data name="PeakPicking_Caption" xml:space="preserve">
-    <value>高度なピーク選択モデル</value>
+  <data name="DIA_Caption" xml:space="preserve">
+    <value>データ非依存性取得</value>
   </data>
-  <data name="CustomReports_Description" xml:space="preserve">
-    <value>Skylineカスタムライブレポートを使ってSkylineドキュメントからの幅広い値を表示し、編集し、エクスポートする実務経験を積みます。これらのレポートは、ExcelやR、Matlab、Java、C++や他の言語で記述されたカスタムコードで使用し、装置の出力をSkylineで処理した後に詳細な統計的分析を行うのに最適です。また、Skyline結果グリッド表示を使用してこれらの値にアクセスし、Skylineでデータを検査しながらカスタム注釈を追加する方法も学びます。本チュートリアルを進め、Skylineで達成可能な実験範囲を大きく広げましょう。</value>
+  <data name="DIA_Description" xml:space="preserve">
+    <value>データ非依存性取得（DIA）データを利用する実務経験を積み、シリーズ内の同一装置上で取得したDIAおよびDDA実行を活用するワークフローを使用します。DIA単離スキームを定義しエクスポートします。実験のDIA実行の前に取得したDDAデータからスペクトルライブラリを構築します。そのスペクトルライブラリに基づき、タンパク質のターゲットセットのペプチドとトランジションを選択します。関連DIA実行をSkyline内にインポートし分析して、DIAによる作業の開始するためのシンプルなワークフローをマスターします。</value>
   </data>
-  <data name="MethodEdit_Caption" xml:space="preserve">
-    <value>ターゲットメソッドの編集</value>
+  <data name="DIA_PASEF_Caption" xml:space="preserve">
+    <value>diaPASEFデータの分析</value>
   </data>
-  <data name="LibraryExplorer_Caption" xml:space="preserve">
-    <value>スペクトルライブラリエクスプローラー</value>
+  <data name="DIA_PASEF_Description" xml:space="preserve">
+    <value>Bruker timsTOF装置から、データ非依存性取得（DIA）PASEFデータを使った作業で実務経験を積みます。ベンチマークとなっているNavarroの論文（Nature Biotech 2016）に基づいて作成された3種の生物種の混合データセットを使用します。 DIAにペプチド検索のインポートウィザードを使用して、保持時間校正には自動iRT校正のあるddaPASEFデータから、またペプチドピーク検出にはmProphet学習モデルからスペクトルライブラリを構築します。保持時間、ピーク面積、質量精度、CVなど、Skylineサマリープロットの豊富な収集データを使用してデータ品質を評価します。最後に、グループ比較を実施し、データが各生物種に期待される比率をどの程度よくとらえているかを自分で評価します。</value>
   </data>
-  <data name="GroupedStudy_Description" xml:space="preserve">
-    <value>複数の繰り返し測定試験日をSkylineで効果的に処理する方法について学びます。すでに検知可能に最適化されているターゲットの初期セットを、14ラットの血漿研究からの健常被験体および罹患被験体との間の差分存在量の証拠があるか、さらに最適化します。この処理で、パワフルなSkylineインタラクティブ表示を利用して、データの異常を素早く調べ理解する方法を学びます。また、Skylineバージョン3.1で導入されたSkylineグループ比較フレームワークに慣れていただきます。</value>
+  <data name="DIA_SWATH_Caption" xml:space="preserve">
+    <value>DIA/SWATHデータの分析</value>
   </data>
-  <data name="MethodRefine_Description" xml:space="preserve">
-    <value>SRM測定の広範なセットを用いた開始、装置データのインポート、ドキュメントのリファインにおいて実務経験を積みます。2000以上のトランジションやThermo TSQでスケジュールなしで測定される39のインジェクションが必要とされているリファインなしドキュメントから開始します。全39のインジェクションを単一繰り返し測定にインポートする方法を学びます。保持時間回帰やMS/MSスペクトルライブラリピーク強度相関に対し疎水性を使用し、測定ピークの信頼度を向上させます。Skyline最適化ダイアログを使用し、最も信頼性の高いピークに対する最良のトランジション以外すべてを削除します。スケジュール処理を通じ、ドキュメントをシングルインジェクションで測定可能なトランジションリストへと減らします。シングルインジェクションメソッドの複数の繰り返し測定のインポートと表示を行ないます。</value>
-  </data>
-  <data name="OptimizeCE_Caption" xml:space="preserve">
-    <value>衝突エネルギーの最適化</value>
-  </data>
-  <data name="LibraryExplorer_Description" xml:space="preserve">
-    <value>Skylineスペクトルライブラリエクスプローラーを使って実務経験を積みます。15N標識のリン酸化ペプチドを含むMS/MSスペクトルライブラリを使って同位体標識やプロダクトイオンニュートラルロスを使った作業について学びましょう。また、ライブラリエクスプローラーを使用してショットガン探索実験とターゲット分析との間の移行を加速します。</value>
+  <data name="DIA_SWATH_Description" xml:space="preserve">
+    <value>Q ExactiveまたはTripleTOF装置のいずれかから、データに非依存性取得（DIA）データを使った作業で実務経験を積みます。ベンチマークとなっているNavarroの論文（Nature Biotech 2016）に基づいて作成された3種の生物種の混合データセットを使用します。 DIAにペプチド検索のインポートウィザードを使用して、保持時間校正には自動iRT校正のあるDDAデータから、またペプチドピーク検出にはmProphet学習モデルからスペクトルライブラリを構築します。保持時間、ピーク面積、質量精度、CVなど、Skylineサマリープロットの豊富な収集データを使用してデータ品質を評価します。最後に、グループ比較を実施し、データが各生物種に期待される比率をどの程度よくとらえているかを自分で評価します。</value>
   </data>
   <data name="ExistingQuant_Caption" xml:space="preserve">
     <value>既存&amp;定量的実験</value>
   </data>
-  <data name="MethodEdit_Description" xml:space="preserve">
-    <value>ターゲットプロテオミクス実験用Skylineドキュメント作成の実務経験を積みます。このチュートリアルでは、pepXML、mzXMLからはMS/MSスペクトルライブラリ、FASTA形式ファイルからはバックグラウンドプロテオームファイルを作成します。これらとGlobal Proteome Machineからの公開MS/MSスペクトルライブラリを組み合わせ、選択された酵母タンパク質、ペプチド、プロダクトイオンをターゲットとする新しいSkylineドキュメントの作成を導きます。このドキュメントから、トランジションリストをエクスポートし、AB 4000 Q Trapでの実行の準備を行ないます。</value>
-  </data>
   <data name="ExistingQuant_Description" xml:space="preserve">
     <value>定量的実験や同位体標識参照ペプチドを用い、公開トランジションリストやSRM質量分析計データを使用して実験を始めることにより実務作業経験を積みます。ピーク領域や保持時間概要チャートをいくつか使用し、Skylineでの効果的なデータ分析方法を学びます。</value>
-  </data>
-  <data name="AbsoluteQuant_Description" xml:space="preserve">
-    <value>Skylineの校正済み定量化を使用して実務経験を積み、実験中のペプチドの絶対分子量を推定します。</value>
-  </data>
-  <data name="OptimizeCE_Description" xml:space="preserve">
-    <value>Skylineを使用して実務経験を積み、実験的に測定された最適衝突エネルギー（CE）値を使って作業します。このチュートリアルでは、30個のペプチドプリカーサーのあるドキュメントに対し、スケジュールされたCE最適化トランジションリストを作成します。Thermo TSQ Vantageから得られるRAWファイルを使用して、この装置のCEの計算に使用される一次方程式を再計算します。また、各トランジションに対して個別に最適化されたCE値を使ってトランジションリストをエクスポートします。</value>
-  </data>
-  <data name="AbsoluteQuant_Caption" xml:space="preserve">
-    <value>絶対定量</value>
-  </data>
-  <data name="SmallMolecule_Description" xml:space="preserve">
-    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。メタボロミクス実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
   </data>
   <data name="GroupedStudy_Caption" xml:space="preserve">
     <value>グループに分けた試験データの処理</value>
   </data>
-  <data name="SmallMolecule_Caption" xml:space="preserve">
-    <value>低分子ターゲット</value>
-  </data>
-  <data name="DIA_Caption" xml:space="preserve">
-    <value>データ非依存性取得</value>
-  </data>
-  <data name="Section_Introductory" xml:space="preserve">
-    <value>はじめに</value>
-  </data>
-  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
-    <value>フルスキャン取得データ</value>
-  </data>
-  <data name="Section_Small_Molecules" xml:space="preserve">
-    <value>低分子</value>
-  </data>
-  <data name="SmallMoleculeMethodDevCEOpt_Caption" xml:space="preserve">
-    <value>小分子メソッド開発とCE最適化</value>
-  </data>
-  <data name="SmallMoleculeQuantification_Caption" xml:space="preserve">
-    <value>小分子定量</value>
+  <data name="GroupedStudy_Description" xml:space="preserve">
+    <value>複数の繰り返し測定試験日をSkylineで効果的に処理する方法について学びます。すでに検知可能に最適化されているターゲットの初期セットを、14ラットの血漿研究からの健常被験体および罹患被験体との間の差分存在量の証拠があるか、さらに最適化します。この処理で、パワフルなSkylineインタラクティブ表示を利用して、データの異常を素早く調べ理解する方法を学びます。また、Skylineバージョン3.1で導入されたSkylineグループ比較フレームワークに慣れていただきます。</value>
   </data>
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>高分解能メタボロミクス</value>
   </data>
-  <data name="SmallMolLibraries_Caption" xml:space="preserve">
-    <value>小分子IMSライブラリ</value>
+  <data name="HiResMetabolomics_Description" xml:space="preserve">
+    <value>プリカーサーイオン化学式や付加物として指定される分子をターゲットとするSkylineドキュメントの作成方法を学びます。血漿試料セットに対してQ Exactive Orbitrap質量分析計で収集された複数の繰り返し測定データセットをインポートし、元々ターゲットプロテオミクス解析を目的に作成された多数の既存のSkyline機能がどのように非プロテオミクス分子データに適用できるかを学習します。</value>
+  </data>
+  <data name="IMSFiltering_Caption" xml:space="preserve">
+    <value>イオン移動度スペクトルフィルタ</value>
+  </data>
+  <data name="IMSFiltering_Description" xml:space="preserve">
+    <value>Skylineを使用してIMS-TOFデータを取り扱う実務経験を積みます。酵母サンプルにスパイクされたBSAのドリフト時間予測をトレーニングし、イオン移動度分離によって複雑なデータにおけるクロマトグラム抽出の選択性がどのように改善するかを見てみます。Skylineでのイオン移動度データを使った作業の仕方を学び、IMSが有効になった質量分析計が出力する3Dスペクトル（m/z、IMS、強度）を調べます。</value>
+  </data>
+  <data name="iRT_Caption" xml:space="preserve">
+    <value>iRT保持時間予測</value>
+  </data>
+  <data name="iRT_Description" xml:space="preserve">
+    <value>スケジュール済みの取得やピーク強度検証に対し、保持時間予測に将来使用するためライブラリ内にある校正済みの実験的に測定されたペプチド保持時間の保存テクニックをiRTを使用して実務経験を積みます。このチュートリアルでは、自分のiRTカルキュレータを校正し、さらにiRTキットのペプチド標準に対し、Biognosysが提案するiRT-C18校正について学びます。SRMデータ、探索実験のMS1スキャンからフィルタされたスペクトルライブラリやクロマトグラムピークから新しいiRT値を校正します。また、新しいグラジエントを用いて新しい列でSRM取得をスケジュールするために、これらのiRTの再校正方法も学びます。クロマトグラムピーク強度検証においてさらに信頼性を高めるiRTに基づき、より正確な保持時間予測を確認できます。</value>
+  </data>
+  <data name="LibraryExplorer_Caption" xml:space="preserve">
+    <value>スペクトルライブラリエクスプローラー</value>
+  </data>
+  <data name="LibraryExplorer_Description" xml:space="preserve">
+    <value>Skylineスペクトルライブラリエクスプローラーを使って実務経験を積みます。15N標識のリン酸化ペプチドを含むMS/MSスペクトルライブラリを使って同位体標識やプロダクトイオンニュートラルロスを使った作業について学びましょう。また、ライブラリエクスプローラーを使用してショットガン探索実験とターゲット分析との間の移行を加速します。</value>
+  </data>
+  <data name="MethodEdit_Caption" xml:space="preserve">
+    <value>ターゲットメソッドの編集</value>
+  </data>
+  <data name="MethodEdit_Description" xml:space="preserve">
+    <value>ターゲットプロテオミクス実験用Skylineドキュメント作成の実務経験を積みます。このチュートリアルでは、pepXML、mzXMLからはMS/MSスペクトルライブラリ、FASTA形式ファイルからはバックグラウンドプロテオームファイルを作成します。これらとGlobal Proteome Machineからの公開MS/MSスペクトルライブラリを組み合わせ、選択された酵母タンパク質、ペプチド、プロダクトイオンをターゲットとする新しいSkylineドキュメントの作成を導きます。このドキュメントから、トランジションリストをエクスポートし、AB 4000 Q Trapでの実行の準備を行ないます。</value>
+  </data>
+  <data name="MethodRefine_Caption" xml:space="preserve">
+    <value>ターゲットメソッドの最適化</value>
+  </data>
+  <data name="MethodRefine_Description" xml:space="preserve">
+    <value>SRM測定の広範なセットを用いた開始、装置データのインポート、ドキュメントのリファインにおいて実務経験を積みます。2000以上のトランジションやThermo TSQでスケジュールなしで測定される39のインジェクションが必要とされているリファインなしドキュメントから開始します。全39のインジェクションを単一繰り返し測定にインポートする方法を学びます。保持時間回帰やMS/MSスペクトルライブラリピーク強度相関に対し疎水性を使用し、測定ピークの信頼度を向上させます。Skyline最適化ダイアログを使用し、最も信頼性の高いピークに対する最良のトランジション以外すべてを削除します。スケジュール処理を通じ、ドキュメントをシングルインジェクションで測定可能なトランジションリストへと減らします。シングルインジェクションメソッドの複数の繰り返し測定のインポートと表示を行ないます。</value>
+  </data>
+  <data name="MS1Filtering_Caption" xml:space="preserve">
+    <value>MS1フルスキャンフィルタ</value>
+  </data>
+  <data name="MS1Filtering_Description" xml:space="preserve">
+    <value>データ依存取得 (DDA) 実験からMS1スキャンを使用するペプチド式で定量的差異を測定するためにSkylineドキュメント作成の実務経験を積みます。このチュートリアルでは、探索データセットからのスペクトルライブラリの生成、MS1フィルタ用のSkylineドキュメントの設定、MS/MSペプチド同定により導かれるピーク選択を用いたMS1スキャンからプリカーサ－イオンクロマトグラムを抽出するための質量分析計生データのインポート、さらにSkylineでの結果定量的データの処理を行ないます。探索データセットのラベルフリーの定量的分析に興味がある場合、このチュートリアルが検査用の新しいツールセットを提供します。</value>
+  </data>
+  <data name="OptimizeCE_Caption" xml:space="preserve">
+    <value>衝突エネルギーの最適化</value>
+  </data>
+  <data name="OptimizeCE_Description" xml:space="preserve">
+    <value>Skylineを使用して実務経験を積み、実験的に測定された最適衝突エネルギー（CE）値を使って作業します。このチュートリアルでは、30個のペプチドプリカーサーのあるドキュメントに対し、スケジュールされたCE最適化トランジションリストを作成します。Thermo TSQ Vantageから得られるRAWファイルを使用して、この装置のCEの計算に使用される一次方程式を再計算します。また、各トランジションに対して個別に最適化されたCE値を使ってトランジションリストをエクスポートします。</value>
+  </data>
+  <data name="PeakPicking_Caption" xml:space="preserve">
+    <value>高度なピーク選択モデル</value>
+  </data>
+  <data name="PeakPicking_Description" xml:space="preserve">
+    <value>Skylineにてターゲットペプチドをクロマトグラムピークと一致させる高度モデルの作成やテストについて詳しく学びます。2.5リリースでは、SkylineがmProphetの半教師あり学習アルゴリズムを使用して各ピークスコアの線形結合の作成をサポートするようになりました。このチュートリアルでは、SRMおよびDIA/SWATHデータの両方に対して、デコイペプチドおよびトランジションの生成、mProphetスコアモデルの作成と評価、またそのモデルのSkylineクロマトグラムピーク選択への適用を学びます。また、mProphetが割り当てたQ値（FDRに基づいて調整されたP値）、それを選択したピークにどのように関連付けることができるか、またそれをどのようにカスタムレポートでエクスポートできるかを学習します。</value>
   </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>詳細なトピック</value>
   </data>
+  <data name="Section_Full_Scan_Acquisition_Data" xml:space="preserve">
+    <value>フルスキャン取得データ</value>
+  </data>
+  <data name="Section_Introductory" xml:space="preserve">
+    <value>はじめに</value>
+  </data>
+  <data name="Section_Small_Molecules" xml:space="preserve">
+    <value>低分子</value>
+  </data>
+  <data name="SmallMolecule_Caption" xml:space="preserve">
+    <value>低分子ターゲット</value>
+  </data>
+  <data name="SmallMolecule_Description" xml:space="preserve">
+    <value>Skylineを利用して非プロテオミクスイオンをターゲットする方法を学びます。メタボロミクス実験で使用される分子トランジションリストをインポートし、Waters Xevo TQSからの14回の実行をインポートします。非プロテオミクス実験に、Skylineインターフェイスのパワーを利用する方法を学び始めましょう。</value>
+  </data>
+  <data name="SmallMoleculeMethodDevCEOpt_Caption" xml:space="preserve">
+    <value>小分子メソッド開発とCE最適化</value>
+  </data>
   <data name="SmallMoleculeMethodDevCEOpt_Description" xml:space="preserve">
     <value>文献の引用から、プリカーサーm/z、プロダクトイオンm/z、衝突エネルギー値のみ指定されている安定同位体標識分子をターゲットとするSkylineドキュメントを作成する方法を学びます。Waters Xevo TQ-Sで分析した複数の繰り返し測定データセットをインポートし、Sciex三連四重極計の初期CE値を使用して分子の保持時間スケジュールと衝突エネルギー最適化を実施します。また、元々ターゲットプロテオミクスの使用を目的に作成された多数の既存のSkyline機能が、非プロテオミクス分子データにどのように適用できるかを学習します。</value>
+  </data>
+  <data name="SmallMoleculeQuantification_Caption" xml:space="preserve">
+    <value>小分子定量</value>
   </data>
   <data name="SmallMoleculeQuantification_Description" xml:space="preserve">
     <value>プリカーサーイオン化学式および付加物、プロダクトイオンm/z値として指定される分子をターゲットとするSkylineドキュメントの作成方法を学びます。三連四重極計LC-MS/MSで収集された複数の繰り返し測定データセットをインポートし、元々ターゲットプロテオミクス使用を目的に作成された既存の多数のSkyline機能が非プロテオミクス分子データにどのように適用できるかを学習します。</value>
   </data>
-  <data name="HiResMetabolomics_Description" xml:space="preserve">
-    <value>プリカーサーイオン化学式や付加物として指定される分子をターゲットとするSkylineドキュメントの作成方法を学びます。血漿試料セットに対してQ Exactive Orbitrap質量分析計で収集された複数の繰り返し測定データセットをインポートし、元々ターゲットプロテオミクス解析を目的に作成された多数の既存のSkyline機能がどのように非プロテオミクス分子データに適用できるかを学習します。</value>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>小分子IMSライブラリ</value>
   </data>
   <data name="SmallMolLibraries_Description" xml:space="preserve">
     <value>複雑なイオン移動度分光分析-質量分析(IMS-MS)小分子データを分析するためのスペクトルライブラリやイオン移動度フィルタリングの使用方法を学びます。m/z、保持時間、断片化、イオン移動度情報を含むスペクトルライブラリを調べ、各分子のCCS値をどのように使用してプリカーサーやフラグメント抽出イオンクロマトグラムの選択性を向上させるかを学びます。</value>
+  </data>
+  <data name="TargetedMSMS_Caption" xml:space="preserve">
+    <value>ターゲットMS/MS (PRM)</value>
+  </data>
+  <data name="TargetedMSMS_Description" xml:space="preserve">
+    <value>低分解能Thermo LTQ、高分解能Agilent 6520 Q-TOFで取得されるターゲットMS/MS（並列反応モニタリング-PRMとも呼ばれる）データを用いて、実務作業経験を積みます。プリカーサーを使用するペプチドの定量化と低/高分解能装置で測定される断片イオンの選択度や感度の差異について新しい理解を深めます。クロマトグラフィーベースの定量的プロテオミクス作業用にSkylineが提供する豊富な一連の機能を使用して新しい作業方法を発見し、自分の質量分析データを理解します。</value>
   </data>
 </root>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -105,95 +105,89 @@
       </xsd:complexType>
     </xsd:element>
   </xsd:schema>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
     <value>2.0</value>
   </resheader>
-  <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </resheader>
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 23</value>
-  </data>
-  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>267, 20</value>
-  </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="textName.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
-  <data name="textName.ToolTip" xml:space="preserve">
-    <value>Skylineがこのライブラリを参照するために使用する名前</value>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="&gt;&gt;textName.Name" xml:space="preserve">
-    <value>textName</value>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>395, 430</value>
   </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
+    <value>CenterParent</value>
   </data>
-  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
-    <value>panelProperties</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>ライブラリを構築</value>
   </data>
-  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
-    <value>5</value>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>BuildLibraryDlg</value>
   </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;actionLabel.Name" xml:space="preserve">
+    <value>actionLabel</value>
   </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 7</value>
+  <data name="&gt;&gt;actionLabel.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
   </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>38, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;actionLabel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>名前(&amp;N)：</value>
+  <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
+    <value>btnAddDirectory</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
+  <data name="&gt;&gt;btnAddDirectory.Parent" xml:space="preserve">
+    <value>panelFiles</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>308, 395</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;btnAddDirectory.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>キャンセル</value>
+  <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
+    <value>btnAddFile</value>
+  </data>
+  <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
+    <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
+    <value>btnAddPaths</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.Parent" xml:space="preserve">
+    <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;btnAddPaths.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
+    <value>btnBrowse</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -201,26 +195,8 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
-    <value>227, 395</value>
-  </data>
-  <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnNext.Text" xml:space="preserve">
-    <value>次へ(&amp;N) &gt;</value>
-  </data>
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
-  </data>
-  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
     <value>$this</value>
@@ -228,117 +204,62 @@
   <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
+  <data name="&gt;&gt;btnPrevious.Name" xml:space="preserve">
+    <value>btnPrevious</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 69</value>
+  <data name="&gt;&gt;btnPrevious.Parent" xml:space="preserve">
+    <value>$this</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 13</value>
+  <data name="&gt;&gt;btnPrevious.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+  <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
+    <value>cbFilter</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
+    <value>cbIncludeAmbiguousMatches</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>出力先のパス(&amp;O)：</value>
+  <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
+    <value>cbKeepRedundant</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
+  <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="textPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+  <data name="&gt;&gt;cbSelect.Name" xml:space="preserve">
+    <value>cbSelect</value>
   </data>
-  <data name="textPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 85</value>
+  <data name="&gt;&gt;cbSelect.Parent" xml:space="preserve">
+    <value>panelFiles</value>
   </data>
-  <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>267, 20</value>
+  <data name="&gt;&gt;cbSelect.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
-  <data name="textPath.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
+    <value>ceCombo</value>
   </data>
-  <data name="textPath.ToolTip" xml:space="preserve">
-    <value>最終的な非重複ライブラリを作成する
-ディスク上の場所</value>
-  </data>
-  <data name="&gt;&gt;textPath.Name" xml:space="preserve">
-    <value>textPath</value>
-  </data>
-  <data name="&gt;&gt;textPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="iRTPeptidesLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="iRTPeptidesLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 132</value>
-  </data>
-  <data name="iRTPeptidesLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>114, 13</value>
-  </data>
-  <data name="iRTPeptidesLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="iRTPeptidesLabel.Text" xml:space="preserve">
-    <value>iRT標準ペプチド(&amp;I)：</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
-    <value>iRTPeptidesLabel</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
+  <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
   </data>
-  <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="ceLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 69</value>
-  </data>
-  <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 13</value>
-  </data>
-  <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="ceLabel.Text" xml:space="preserve">
-    <value>&amp;NCE(&amp;N)：</value>
-  </data>
-  <data name="ceLabel.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
-  </data>
-  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
@@ -346,29 +267,179 @@
   <data name="&gt;&gt;ceLabel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 85</value>
+  <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
+    <value>comboAction</value>
   </data>
-  <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 21</value>
+  <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
   </data>
-  <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
+  <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
-  <data name="ceCombo.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
+  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
+    <value>comboStandards</value>
   </data>
-  <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
-    <value>ceCombo</value>
-  </data>
-  <data name="&gt;&gt;ceCombo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
+  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
   </data>
-  <data name="&gt;&gt;ceCombo.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
+    <value>dataSourceFilesRadioButton</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
+    <value>helpTip</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
+    <value>iRTPeptidesLabel</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;label6.Name" xml:space="preserve">
+    <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;listInputFiles.Name" xml:space="preserve">
+    <value>listInputFiles</value>
+  </data>
+  <data name="&gt;&gt;listInputFiles.Parent" xml:space="preserve">
+    <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;listInputFiles.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;panelFiles.Name" xml:space="preserve">
+    <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;panelFiles.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelFiles.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;panelFilesPrositProperties.Name" xml:space="preserve">
+    <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesPrositProperties.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesPrositProperties.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.Name" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
+    <value>prositDataSourceRadioButton</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.Name" xml:space="preserve">
+    <value>prositInfoSettingsBtn</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.Parent" xml:space="preserve">
+    <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
+    <value>textCutoff</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
+    <value>panelFilesProps</value>
+  </data>
+  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textName.Name" xml:space="preserve">
+    <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;textName.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textPath.Name" xml:space="preserve">
+    <value>textPath</value>
+  </data>
+  <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
+    <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;textPath.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="actionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -388,50 +459,138 @@
   <data name="actionLabel.Text" xml:space="preserve">
     <value>操作(&amp;A)：</value>
   </data>
-  <data name="&gt;&gt;actionLabel.Name" xml:space="preserve">
-    <value>actionLabel</value>
+  <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
   </data>
-  <data name="&gt;&gt;actionLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 67</value>
   </data>
-  <data name="&gt;&gt;actionLabel.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
+  <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 23</value>
   </data>
-  <data name="&gt;&gt;actionLabel.ZOrder" xml:space="preserve">
-    <value>0</value>
+  <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
   </data>
-  <data name="comboAction.Enabled" type="System.Boolean, mscorlib">
+  <data name="btnAddDirectory.Text" xml:space="preserve">
+    <value>ディレクトリを追加(&amp;D)...</value>
+  </data>
+  <data name="btnAddDirectory.ToolTip" xml:space="preserve">
+    <value>ルートディレクトリ下で見つかった容認可能なスペクトルファイルをすべて追加します。
+ライブラリに追加したくないファイルは、チェックボックスをオフにします。</value>
+  </data>
+  <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 38</value>
+  </data>
+  <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 23</value>
+  </data>
+  <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnAddFile.Text" xml:space="preserve">
+    <value>ファイルを追加(&amp;F)...</value>
+  </data>
+  <data name="btnAddFile.ToolTip" xml:space="preserve">
+    <value>単一ディレクトリから1つ以上のファイルを追加します。</value>
+  </data>
+  <data name="btnAddPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
+    <value>261, 96</value>
+  </data>
+  <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 23</value>
+  </data>
+  <data name="btnAddPaths.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnAddPaths.Text" xml:space="preserve">
+    <value>パスを追加(&amp;P)...</value>
+  </data>
+  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
+    <value>306, 83</value>
+  </data>
+  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="btnBrowse.Text" xml:space="preserve">
+    <value>参照(&amp;B)...</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>308, 395</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="btnNext.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
+    <value>227, 395</value>
+  </data>
+  <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnNext.Text" xml:space="preserve">
+    <value>次へ(&amp;N) &gt;</value>
+  </data>
+  <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Right</value>
+  </data>
+  <data name="btnPrevious.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="comboAction.Items" xml:space="preserve">
-    <value>作成</value>
+  <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing">
+    <value>146, 395</value>
   </data>
-  <data name="comboAction.Items1" xml:space="preserve">
-    <value>追加</value>
+  <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
   </data>
-  <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 23</value>
-  </data>
-  <data name="comboAction.Size" type="System.Drawing.Size, System.Drawing">
-    <value>121, 21</value>
-  </data>
-  <data name="comboAction.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="comboAction.ToolTip" xml:space="preserve">
-    <value>以前に冗長ライブラリデータを保存してある場合、新しいライブラリを作成するか既存のライブラリに追加するかを選択します。</value>
-  </data>
-  <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
-    <value>comboAction</value>
-  </data>
-  <data name="&gt;&gt;comboAction.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;comboAction.ZOrder" xml:space="preserve">
+  <data name="btnPrevious.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="btnPrevious.Text" xml:space="preserve">
+    <value>&lt; 前へ(&amp;P)</value>
+  </data>
+  <data name="cbFilter.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbFilter.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbFilter.Location" type="System.Drawing.Point, System.Drawing">
+    <value>146, 69</value>
+  </data>
+  <data name="cbFilter.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 17</value>
+  </data>
+  <data name="cbFilter.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="cbFilter.Text" xml:space="preserve">
+    <value>ドキュメント内のペプチドをフィルタリング(&amp;F)</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -450,18 +609,6 @@
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
     <value>曖昧な一致を含める(&amp;M)</value>
-  </data>
-  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
-    <value>cbIncludeAmbiguousMatches</value>
-  </data>
-  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;cbIncludeAmbiguousMatches.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="cbKeepRedundant.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -484,378 +631,6 @@
   <data name="cbKeepRedundant.ToolTip" xml:space="preserve">
     <value>今後、さらにスペクトルを追加する冗長ライブラリのコピーを保持する場合は選択します。</value>
   </data>
-  <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
-    <value>cbKeepRedundant</value>
-  </data>
-  <data name="&gt;&gt;cbKeepRedundant.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;cbKeepRedundant.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="cbFilter.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbFilter.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>146, 69</value>
-  </data>
-  <data name="cbFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 17</value>
-  </data>
-  <data name="cbFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="cbFilter.Text" xml:space="preserve">
-    <value>ドキュメント内のペプチドをフィルタリング(&amp;F)</value>
-  </data>
-  <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
-    <value>cbFilter</value>
-  </data>
-  <data name="&gt;&gt;cbFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;cbFilter.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 86</value>
-  </data>
-  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="textCutoff.ToolTip" xml:space="preserve">
-    <value>ライブラリに含める結果のスペクトルに対するカットオフのために使用される1.0 - 0までのスコア（1.0が最も高確率と考えられる）。
-TPP pepXMLでは、この値は最小ペプチドProphet確率です。
-Mascotでは、この値は1 - 最大確率です。
-SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
-    <value>textCutoff</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;textCutoff.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 70</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>70, 13</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>カットオフスコア(&amp;C)：</value>
-  </data>
-  <data name="&gt;&gt;label6.Name" xml:space="preserve">
-    <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="panelFilesProps.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="panelFilesProps.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
-  <data name="panelFilesProps.Size" type="System.Drawing.Size, System.Drawing">
-    <value>366, 129</value>
-  </data>
-  <data name="panelFilesProps.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
-    <value>panelFilesProps</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
-  </data>
-  <data name="&gt;&gt;panelFilesProps.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 148</value>
-  </data>
-  <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
-    <value>267, 21</value>
-  </data>
-  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
-    <value>comboStandards</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
-  </data>
-  <data name="&gt;&gt;comboStandards.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="panelFilesPrositProperties.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 196</value>
-  </data>
-  <data name="panelFilesPrositProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>366, 178</value>
-  </data>
-  <data name="panelFilesPrositProperties.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.Name" xml:space="preserve">
-    <value>panelFilesPrositProperties</value>
-  </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;panelFilesPrositProperties.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="prositInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="prositInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>190, 44</value>
-  </data>
-  <data name="prositInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
-    <value>68, 13</value>
-  </data>
-  <data name="prositInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="prositInfoSettingsBtn.Text" xml:space="preserve">
-    <value>情報/設定</value>
-  </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.Name" xml:space="preserve">
-    <value>prositInfoSettingsBtn</value>
-  </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;prositInfoSettingsBtn.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="prositDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="prositDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="prositDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 42</value>
-  </data>
-  <data name="prositDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>51, 17</value>
-  </data>
-  <data name="prositDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="prositDataSourceRadioButton.Text" xml:space="preserve">
-    <value>Prosit</value>
-  </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
-    <value>prositDataSourceRadioButton</value>
-  </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;prositDataSourceRadioButton.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 19</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 17</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
-    <value>ファイル</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
-    <value>dataSourceFilesRadioButton</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;dataSourceFilesRadioButton.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 122</value>
-  </data>
-  <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>264, 68</value>
-  </data>
-  <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="dataSourceGroupBox.Text" xml:space="preserve">
-    <value>データソース</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;dataSourceGroupBox.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="btnBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>306, 83</value>
-  </data>
-  <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnBrowse.Text" xml:space="preserve">
-    <value>参照(&amp;B)...</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
-    <value>btnBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
-    <value>2, 2</value>
-  </data>
-  <data name="panelProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>390, 387</value>
-  </data>
-  <data name="panelProperties.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;panelProperties.Name" xml:space="preserve">
-    <value>panelProperties</value>
-  </data>
-  <data name="&gt;&gt;panelProperties.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelProperties.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelProperties.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="panelFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>2, 2</value>
-  </data>
-  <data name="panelFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>390, 387</value>
-  </data>
-  <data name="panelFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
-  </data>
-  <data name="panelFiles.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;panelFiles.Name" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;panelFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;panelFiles.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;panelFiles.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="btnAddPaths.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 96</value>
-  </data>
-  <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
-    <value>125, 23</value>
-  </data>
-  <data name="btnAddPaths.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="btnAddPaths.Text" xml:space="preserve">
-    <value>パスを追加(&amp;P)...</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
-    <value>btnAddPaths</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;btnAddPaths.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="cbSelect.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -877,17 +652,155 @@ SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
   <data name="cbSelect.Text" xml:space="preserve">
     <value>すべて選択/選択解除(&amp;S)</value>
   </data>
-  <data name="&gt;&gt;cbSelect.Name" xml:space="preserve">
-    <value>cbSelect</value>
+  <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 85</value>
   </data>
-  <data name="&gt;&gt;cbSelect.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 21</value>
   </data>
-  <data name="&gt;&gt;cbSelect.Parent" xml:space="preserve">
-    <value>panelFiles</value>
+  <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
   </data>
-  <data name="&gt;&gt;cbSelect.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="ceCombo.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="ceLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="ceLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 69</value>
+  </data>
+  <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="ceLabel.Text" xml:space="preserve">
+    <value>&amp;NCE(&amp;N)：</value>
+  </data>
+  <data name="ceLabel.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="comboAction.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="comboAction.Items" xml:space="preserve">
+    <value>作成</value>
+  </data>
+  <data name="comboAction.Items1" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 23</value>
+  </data>
+  <data name="comboAction.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 21</value>
+  </data>
+  <data name="comboAction.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="comboAction.ToolTip" xml:space="preserve">
+    <value>以前に冗長ライブラリデータを保存してある場合、新しいライブラリを作成するか既存のライブラリに追加するかを選択します。</value>
+  </data>
+  <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 148</value>
+  </data>
+  <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
+    <value>267, 21</value>
+  </data>
+  <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 19</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>46, 17</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 122</value>
+  </data>
+  <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>264, 68</value>
+  </data>
+  <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="dataSourceGroupBox.Text" xml:space="preserve">
+    <value>データソース</value>
+  </data>
+  <data name="iRTPeptidesLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="iRTPeptidesLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 132</value>
+  </data>
+  <data name="iRTPeptidesLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>114, 13</value>
+  </data>
+  <data name="iRTPeptidesLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="iRTPeptidesLabel.Text" xml:space="preserve">
+    <value>iRT標準ペプチド(&amp;I)：</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 69</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>67, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>出力先のパス(&amp;O)：</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 7</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>38, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>名前(&amp;N)：</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 70</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>カットオフスコア(&amp;C)：</value>
   </data>
   <data name="label7.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -903,79 +816,6 @@ SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>入力ファイル(&amp;I)：</value>
-  </data>
-  <data name="&gt;&gt;label7.Name" xml:space="preserve">
-    <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="btnAddDirectory.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 67</value>
-  </data>
-  <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>125, 23</value>
-  </data>
-  <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="btnAddDirectory.Text" xml:space="preserve">
-    <value>ディレクトリを追加(&amp;D)...</value>
-  </data>
-  <data name="btnAddDirectory.ToolTip" xml:space="preserve">
-    <value>ルートディレクトリ下で見つかった容認可能なスペクトルファイルをすべて追加します。
-ライブラリに追加したくないファイルは、チェックボックスをオフにします。</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
-    <value>btnAddDirectory</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;btnAddDirectory.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="btnAddFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>261, 38</value>
-  </data>
-  <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>125, 23</value>
-  </data>
-  <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnAddFile.Text" xml:space="preserve">
-    <value>ファイルを追加(&amp;F)...</value>
-  </data>
-  <data name="btnAddFile.ToolTip" xml:space="preserve">
-    <value>単一ディレクトリから1つ以上のファイルを追加します。</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
-    <value>btnAddFile</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
-    <value>panelFiles</value>
-  </data>
-  <data name="&gt;&gt;btnAddFile.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="listInputFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -993,73 +833,128 @@ SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
     <value>チェックボックスがオンのファイル中のスペクトルで、スコアカットオフ値を満たすものが、
 重複ライブラリに追加され、そこから最終的な非重複ライブラリが構築されます。</value>
   </data>
-  <data name="&gt;&gt;listInputFiles.Name" xml:space="preserve">
-    <value>listInputFiles</value>
+  <data name="panelFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="&gt;&gt;listInputFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="panelFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 2</value>
   </data>
-  <data name="&gt;&gt;listInputFiles.Parent" xml:space="preserve">
-    <value>panelFiles</value>
+  <data name="panelFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>390, 387</value>
   </data>
-  <data name="&gt;&gt;listInputFiles.ZOrder" xml:space="preserve">
-    <value>5</value>
+  <data name="panelFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
   </data>
-  <data name="btnPrevious.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Right</value>
-  </data>
-  <data name="btnPrevious.Enabled" type="System.Boolean, mscorlib">
+  <data name="panelFiles.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing">
-    <value>146, 395</value>
+  <data name="panelFilesProps.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
   </data>
-  <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
+  <data name="panelFilesProps.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
-  <data name="btnPrevious.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+  <data name="panelFilesProps.Size" type="System.Drawing.Size, System.Drawing">
+    <value>366, 129</value>
   </data>
-  <data name="btnPrevious.Text" xml:space="preserve">
-    <value>&lt; 前へ(&amp;P)</value>
+  <data name="panelFilesProps.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
   </data>
-  <data name="&gt;&gt;btnPrevious.Name" xml:space="preserve">
-    <value>btnPrevious</value>
+  <data name="panelFilesPrositProperties.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 196</value>
   </data>
-  <data name="&gt;&gt;btnPrevious.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="panelFilesPrositProperties.Size" type="System.Drawing.Size, System.Drawing">
+    <value>366, 178</value>
   </data>
-  <data name="&gt;&gt;btnPrevious.Parent" xml:space="preserve">
-    <value>$this</value>
+  <data name="panelFilesPrositProperties.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
   </data>
-  <data name="&gt;&gt;btnPrevious.ZOrder" xml:space="preserve">
+  <data name="panelProperties.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="panelProperties.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 2</value>
+  </data>
+  <data name="panelProperties.Size" type="System.Drawing.Size, System.Drawing">
+    <value>390, 387</value>
+  </data>
+  <data name="panelProperties.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <data name="prositDataSourceRadioButton.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>395, 430</value>
+  <data name="prositDataSourceRadioButton.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
-  <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
-    <value>CenterParent</value>
+  <data name="prositDataSourceRadioButton.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 42</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>ライブラリを構築</value>
+  <data name="prositDataSourceRadioButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 17</value>
   </data>
-  <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
-    <value>helpTip</value>
+  <data name="prositDataSourceRadioButton.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="prositDataSourceRadioButton.Text" xml:space="preserve">
+    <value>Prosit</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>BuildLibraryDlg</value>
+  <data name="prositInfoSettingsBtn.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="prositInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
+    <value>190, 44</value>
+  </data>
+  <data name="prositInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 13</value>
+  </data>
+  <data name="prositInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="prositInfoSettingsBtn.Text" xml:space="preserve">
+    <value>情報/設定</value>
+  </data>
+  <data name="textCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 86</value>
+  </data>
+  <data name="textCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="textCutoff.ToolTip" xml:space="preserve">
+    <value>ライブラリに含める結果のスペクトルに対するカットオフのために使用される1.0 - 0までのスコア（1.0が最も高確率と考えられる）。
+TPP pepXMLでは、この値は最小ペプチドProphet確率です。
+Mascotでは、この値は1 - 最大確率です。
+SEQUEST SQTでは、この値は1 - 最大FDRです。</value>
+  </data>
+  <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 23</value>
+  </data>
+  <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
+    <value>267, 20</value>
+  </data>
+  <data name="textName.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textName.ToolTip" xml:space="preserve">
+    <value>Skylineがこのライブラリを参照するために使用する名前</value>
+  </data>
+  <data name="textPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 85</value>
+  </data>
+  <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>267, 20</value>
+  </data>
+  <data name="textPath.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="textPath.ToolTip" xml:space="preserve">
+    <value>最終的な非重複ライブラリを作成する
+ディスク上の場所</value>
   </data>
 </root>
