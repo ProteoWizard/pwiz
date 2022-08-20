@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -45,11 +46,11 @@ namespace pwiz.Skyline.EditUI
 
         private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)");
 
-        private readonly List<ComboBox> _listComboStatic = new List<ComboBox>();
+        private readonly List<LiteDropDownList> _listComboStatic = new List<LiteDropDownList>();
         private readonly List<int> _listSelectedIndexStatic = new List<int>();
         private readonly List<Label> _listLabelAA = new List<Label>();
         private readonly List<IsotopeLabelType> _listLabelTypeHeavy = new List<IsotopeLabelType>();
-        private readonly List<List<ComboBox>> _listListComboHeavy = new List<List<ComboBox>>();
+        private readonly List<List<LiteDropDownList>> _listListComboHeavy = new List<List<LiteDropDownList>>();
         private readonly List<List<int>> _listListSelectedIndexHeavy = new List<List<int>>();
         private readonly List<Button> _listEditLinkButtons = new List<Button>();
 
@@ -93,9 +94,9 @@ namespace pwiz.Skyline.EditUI
             }
 
             SuspendLayout();
-            ComboBox comboStaticLast = null;
+            LiteDropDownList comboStaticLast = null;
             Button btnEditLinkLast = null;
-            List<ComboBox> listComboHeavyLast = null;
+            List<LiteDropDownList> listComboHeavyLast = null;
             List<Label> listLabelHeavyLast = null;
             Label labelAALast = null;
             var seq = nodePeptide.Peptide.Target.Sequence;
@@ -117,14 +118,14 @@ namespace pwiz.Skyline.EditUI
                     {
                         if (listComboHeavyLast == null)
                         {
-                            listComboHeavyLast = new List<ComboBox> { comboHeavy1_1 };
+                            listComboHeavyLast = new List<LiteDropDownList> { comboHeavy1_1 };
                             listLabelHeavyLast = new List<Label> { labelHeavy1 };
                             labelHeavy1.Text = GetIsotopeLabelText(labelType);
                         }
                         else
                         {
                             var comboHeavyLast = listComboHeavyLast[listComboHeavyLast.Count - 1];
-                            panelMain.Controls.Add(comboHeavyLast = new ComboBox
+                            panelMain.Controls.Add(comboHeavyLast = new LiteDropDownList
                             {
                                 Name = GetHeavyName(row, labelType.SortOrder),
                                 Left = comboHeavyLast.Right + HSPACE,
@@ -160,7 +161,7 @@ namespace pwiz.Skyline.EditUI
                         Size = labelAA1.Size,
                         TabIndex = labelAALast.TabIndex + controlsPerRow
                     });
-                    panelMain.Controls.Add(comboStaticLast = new ComboBox
+                    panelMain.Controls.Add(comboStaticLast = new LiteDropDownList
                     {
                         Name = GetStaticName(row),
                         Left = comboStaticLast.Left,
@@ -182,7 +183,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         int col = labelType.SortOrder - 1;
                         var comboHeavyLast = listComboHeavyLast[col];
-                        panelMain.Controls.Add(comboHeavyLast = new ComboBox
+                        panelMain.Controls.Add(comboHeavyLast = new LiteDropDownList
                         {
                             Name = GetHeavyName(row, labelType.SortOrder),
                             Left = comboHeavyLast.Left,
@@ -211,7 +212,7 @@ namespace pwiz.Skyline.EditUI
                         while (_listListComboHeavy.Count <= j)
                         {
                             _listListSelectedIndexHeavy.Add(new List<int>());
-                            _listListComboHeavy.Add(new List<ComboBox>());
+                            _listListComboHeavy.Add(new List<LiteDropDownList>());
                         }
                         var comboHeavyLast = listComboHeavyLast[j];
                         var labelType = _listLabelTypeHeavy[j];
@@ -286,7 +287,7 @@ namespace pwiz.Skyline.EditUI
 
         public void SetModification(int indexAA, IsotopeLabelType type, string modification)
         {
-            ComboBox combo;
+            LiteDropDownList combo;
             if (type.IsLight)
                 combo = _listComboStatic[indexAA];
             else
@@ -298,7 +299,8 @@ namespace pwiz.Skyline.EditUI
         }
 
         public void AddNewModification(int indexAA, IsotopeLabelType type)
-        {   ComboBox combo;
+        {
+            LiteDropDownList combo;
             if (type.IsLight)
                 combo = _listComboStatic[indexAA];
             else
@@ -314,9 +316,7 @@ namespace pwiz.Skyline.EditUI
 
         private void InitModificationCombo(IsotopeLabelType type, int indexAA)
         {
-            ComboBox combo = GetComboBox(type, indexAA);
-            combo.DropDownStyle = ComboBoxStyle.DropDownList;
-            combo.FormattingEnabled = true;
+            var combo = GetComboBox(type, indexAA);
             int iSelected = UpdateComboItems(type, indexAA, false);
             // Add event handler before changing selection, so that the handler will fire
             combo.SelectedIndexChanged += comboMod_SelectedIndexChangedEvent;
@@ -324,12 +324,12 @@ namespace pwiz.Skyline.EditUI
             combo.SelectedIndex = iSelected;
         }
 
-        public ComboBox GetComboBox(IsotopeLabelType labelType, int indexAA)
+        public LiteDropDownList GetComboBox(IsotopeLabelType labelType, int indexAA)
         {
             return GetComboBoxList(labelType)[indexAA];
         }
 
-        public IList<ComboBox> GetComboBoxList(IsotopeLabelType labelType)
+        public IList<LiteDropDownList> GetComboBoxList(IsotopeLabelType labelType)
         {
             if (labelType.IsLight)
             {
@@ -382,13 +382,11 @@ namespace pwiz.Skyline.EditUI
             }
 
             List<string> listItems = new List<string> {string.Empty};
-            bool hasModOptions = false;
             foreach (StaticMod mod in listSettingsMods)
             {
                 if (!mod.IsApplicableMod(seq, indexAA) && !mod.IsApplicableCrosslink(seq, indexAA))
                     continue;
                 listItems.Add(mod.Name);
-                hasModOptions = true;
 
                 // If the peptide is explicitly modified, then the explicit modifications
                 // indicate the combo selections.
@@ -422,9 +420,6 @@ namespace pwiz.Skyline.EditUI
             {
                 combo.Items.Clear();
                 listItems.ForEach(item => combo.Items.Add(item));
-                // If not just the blank, add and edit items, make sure the drop-down is wide enough
-                if (hasModOptions)
-                    ComboHelper.AutoSizeDropDown(combo);
             }
             if (select)
                 combo.SelectedIndex = iSelected;
@@ -432,7 +427,7 @@ namespace pwiz.Skyline.EditUI
             return iSelected;
         }
 
-        private static bool EqualsItems(ComboBox combo, IList<string> listItems)
+        private static bool EqualsItems(LiteDropDownList combo, IList<string> listItems)
         {
             int count = combo.Items.Count;
             if (count != listItems.Count)
@@ -445,19 +440,19 @@ namespace pwiz.Skyline.EditUI
             return true;
         }
 
-        private static bool AddItemSelected(ComboBox combo)
+        private static bool AddItemSelected(LiteDropDownList combo)
         {
             var selectedItem = combo.SelectedItem;
             return (selectedItem != null && Resources.SettingsListComboDriver_Add == selectedItem.ToString());
         }
 
-        private static bool EditCurrentSelected(ComboBox combo)
+        private static bool EditCurrentSelected(LiteDropDownList combo)
         {
             var selectedItem = combo.SelectedItem;
             return (selectedItem != null && Resources.SettingsListComboDriver_Edit_current == combo.SelectedItem.ToString());
         }
 
-        private static bool EditListSelected(ComboBox combo)
+        private static bool EditListSelected(LiteDropDownList combo)
         {
             var selectedItem = combo.SelectedItem;
             return (selectedItem != null && Resources.SettingsListComboDriver_Edit_list == combo.SelectedItem.ToString());
@@ -495,7 +490,7 @@ namespace pwiz.Skyline.EditUI
 
         public void comboMod_SelectedIndexChangedEvent(object sender, EventArgs e)
         {
-            ComboBox combo = (ComboBox) sender;
+            var combo = (LiteDropDownList) sender;
             int indexAA;
             IsotopeLabelType labelType;
             if (combo.Name.StartsWith(PREFIX_HEAVY_NAME))
@@ -643,7 +638,7 @@ namespace pwiz.Skyline.EditUI
             var listCombo = GetComboBoxList(labelType);
             for (int i = 0; i < listCombo.Count; i++)
             {
-                ComboBox combo = listCombo[i];
+                LiteDropDownList combo = listCombo[i];
                 // Reset the combo to its current value, unless a different value was specified
                 object selectedItemDesired = (i == indexAA ? selectedItem : combo.SelectedItem);
                 UpdateComboItems(labelType, i, false);
@@ -675,7 +670,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private static IList<ExplicitMod> GetExplicitMods(IList<ComboBox> mods, 
+        private static IList<ExplicitMod> GetExplicitMods(IList<LiteDropDownList> mods, 
             MappedList<string, StaticMod> listSettingsMods)
         {
             List<ExplicitMod> listMods = new List<ExplicitMod>();
