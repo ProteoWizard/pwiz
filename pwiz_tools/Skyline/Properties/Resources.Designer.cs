@@ -24335,6 +24335,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Properties_Button {
+            get {
+                object obj = ResourceManager.GetObject("Properties_Button", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Property: .
         /// </summary>
         public static string Property_DisambiguationPrefix_Property__ {
