@@ -9,8 +9,8 @@ Summary   : 已添加谱图库“DIA-QE-tutorial”
 All Info  :
 已添加谱图库“DIA-QE-tutorial”
 建立谱图库 > 截止值 是 "0.95"
-建立谱图库 > 搜索文件 : 包含 { File = "collinsb_X1803_171-A-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }
-建立谱图库 > 搜索文件 : 包含 { File = "collinsb_X1803_172-B-diaumpire.mzid.gz", Score type = "q-value", Score threshold = "0.05" }
+建立谱图库 > 搜索文件 : 包含 { 文件 = "collinsb_X1803_171-A-diaumpire.mzid.gz", 得分类型 = "q 值", 得分阈值 = "0.05" }
+建立谱图库 > 搜索文件 : 包含 { 文件 = "collinsb_X1803_172-B-diaumpire.mzid.gz", 得分类型 = "q 值", 得分阈值 = "0.05" }
 建立谱图库 > iRT 标准肽段 是 "Biognosys-11 (iRT-C18)"
 建立谱图库 > 包含不明确匹配项 是 真
 建立谱图库 > 文档肽段筛选器 是 假
@@ -20,14 +20,14 @@ Extra Info: 截止值 = "0.95",
 搜索文件 = 
 [
     {
-        File = "collinsb_X1803_171-A-diaumpire.mzid.gz",
-        Score type = "q-value",
-        Score threshold = "0.05"
+        文件 = "collinsb_X1803_171-A-diaumpire.mzid.gz",
+        得分类型 = "q 值",
+        得分阈值 = "0.05"
     },
     {
-        File = "collinsb_X1803_172-B-diaumpire.mzid.gz",
-        Score type = "q-value",
-        Score threshold = "0.05"
+        文件 = "collinsb_X1803_172-B-diaumpire.mzid.gz",
+        得分类型 = "q 值",
+        得分阈值 = "0.05"
     }
 ],
 iRT 标准肽段 = "Biognosys-11 (iRT-C18)",
@@ -52,16 +52,16 @@ All Info  :
 导入肽段搜索 > 导入 FASTA > 诱饵生成方法 是 "随机序列"
 导入肽段搜索 > 导入 FASTA > 每个目标的诱饵数目 是 "1"
 导入肽段搜索 > 导入 FASTA > 自动训练 mProphet 模型 是 真
-导入肽段搜索 > Associate Proteins > Group proteins 是 假
-导入肽段搜索 > Associate Proteins > Find minimal protein list 是 假
-导入肽段搜索 > Associate Proteins > Remove subset proteins 是 假
-导入肽段搜索 > Associate Proteins > Shared peptides option 是 "Duplicated between proteins"
-导入肽段搜索 > Associate Proteins > Min peptides per protein 是 "1"
-导入肽段搜索 > Associate Proteins > Proteins mapped 是 "9"
-导入肽段搜索 > Associate Proteins > Peptides mapped 是 "81"
-导入肽段搜索 > Associate Proteins > Proteins unmapped 是 "24709"
-导入肽段搜索 > Associate Proteins > Protein targets 是 "9"
-导入肽段搜索 > Associate Proteins > Peptide targets 是 "82"
+导入肽段搜索 > 关联蛋白质 > 蛋白质分组 是 假
+导入肽段搜索 > 关联蛋白质 > 查找最小蛋白质列表 是 假
+导入肽段搜索 > 关联蛋白质 > 删除子集蛋白质 是 假
+导入肽段搜索 > 关联蛋白质 > 共享的肽段选项 是 "蛋白质之间重复"
+导入肽段搜索 > 关联蛋白质 > 每个蛋白质的最少肽段数 是 "1"
+导入肽段搜索 > 关联蛋白质 > 映射的蛋白质 是 "9"
+导入肽段搜索 > 关联蛋白质 > 映射的肽段 是 "81"
+导入肽段搜索 > 关联蛋白质 > 蛋白质取消映射 是 "24709"
+导入肽段搜索 > 关联蛋白质 > 蛋白质目标 是 "9"
+导入肽段搜索 > 关联蛋白质 > 肽段目标 是 "82"
 导入肽段搜索 > DDA 搜索设置 > 母离子耐受性 是 10ppm
 导入肽段搜索 > DDA 搜索设置 > 片段耐受性 是 20ppm
 导入肽段搜索 > DDA 搜索设置 > 每个肽段的最大可变修饰数 是 "3"
@@ -96,18 +96,18 @@ Extra Info: 提取色谱图 =
     每个目标的诱饵数目 = "1",
     自动训练 mProphet 模型 = 真
 },
-Associate Proteins = 
+关联蛋白质 = 
 {
-    Group proteins = 假,
-    Find minimal protein list = 假,
-    Remove subset proteins = 假,
-    Shared peptides option = "Duplicated between proteins",
-    Min peptides per protein = "1",
-    Proteins mapped = "9",
-    Peptides mapped = "81",
-    Proteins unmapped = "24709",
-    Protein targets = "9",
-    Peptide targets = "82"
+    蛋白质分组 = 假,
+    查找最小蛋白质列表 = 假,
+    删除子集蛋白质 = 假,
+    共享的肽段选项 = "蛋白质之间重复",
+    每个蛋白质的最少肽段数 = "1",
+    映射的蛋白质 = "9",
+    映射的肽段 = "81",
+    蛋白质取消映射 = "24709",
+    蛋白质目标 = "9",
+    肽段目标 = "82"
 },
 DDA 搜索设置 = 
 {
