@@ -196,7 +196,7 @@
     <value>9</value>
   </data>
   <data name="buttonCheckForErrors.Text" xml:space="preserve">
-    <value>检查错误</value>
+    <value>检查错误(&amp;E)</value>
   </data>
   <data name="&gt;&gt;buttonCheckForErrors.Name" xml:space="preserve">
     <value>buttonCheckForErrors</value>
@@ -325,7 +325,7 @@
     <value>10</value>
   </data>
   <data name="CheckShowUnusedColumns.Text" xml:space="preserve">
-    <value>显示未使用的列</value>
+    <value>显示未使用的列(&amp;S)</value>
   </data>
   <data name="&gt;&gt;CheckShowUnusedColumns.Name" xml:space="preserve">
     <value>CheckShowUnusedColumns</value>
@@ -418,7 +418,7 @@
     <value>13</value>
   </data>
   <data name="checkBoxAssociateProteins.Text" xml:space="preserve">
-    <value>关联蛋白质</value>
+    <value>关联蛋白质(&amp;A)</value>
   </data>
   <data name="&gt;&gt;checkBoxAssociateProteins.Name" xml:space="preserve">
     <value>checkBoxAssociateProteins</value>

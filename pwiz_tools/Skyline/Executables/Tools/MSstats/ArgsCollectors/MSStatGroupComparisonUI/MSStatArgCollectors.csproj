@@ -86,6 +86,9 @@
     <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CommonOptionsControl.ja.resx">
+      <DependentUpon>CommonOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CommonOptionsControl.resx">
       <DependentUpon>CommonOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
