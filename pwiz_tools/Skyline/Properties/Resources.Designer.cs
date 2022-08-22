@@ -27406,6 +27406,61 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All relevant files are present.
+        /// </summary>
+        public static string ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select the folder containing the missing files.
+        /// </summary>
+        public static string ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_contai" +
+                        "ning_the_missing_files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} files will be included..
+        /// </summary>
+        public static string ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  Missing {0} file(s)..
+        /// </summary>
+        public static string ShareResultsFilesDlg_UpdateLabel__Missing__0__file_s__ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_UpdateLabel__Missing__0__file_s__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All {0} files will be included..
+        /// </summary>
+        public static string ShareResultsFilesDlg_UpdateLabel_All__0__files_will_be_included_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_UpdateLabel_All__0__files_will_be_included_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None of the {0} files will be included..
+        /// </summary>
+        public static string ShareResultsFilesDlg_UpdateLabel_None_of_the__0__files_will_be_included_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_UpdateLabel_None_of_the__0__files_will_be_included_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current saved file ({0}).
         /// </summary>
         public static string ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__ {
