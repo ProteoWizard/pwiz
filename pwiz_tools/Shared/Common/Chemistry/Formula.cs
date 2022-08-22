@@ -391,16 +391,6 @@ namespace pwiz.Common.Chemistry
             return result.ToString();
         }
 
-        public T PositivePart()
-        {
-            if (Values.All(v => v > 0))
-            {
-                return (T) this;
-            }
-
-            return new T { Dictionary = new ImmutableSortedList<string, int>(this.Where(kvp => kvp.Value > 0)) };
-        }
-
         public static T Sum(IEnumerable<T> items)
         {
             var dictionary = new Dictionary<string, int>();

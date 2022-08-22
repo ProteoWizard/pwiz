@@ -741,8 +741,7 @@ namespace pwiz.Skyline.Util
             var l = Molecule.Parse(left.Trim());
             var r = Molecule.Parse(right.Trim());
             var d = l.Difference(r);
-
-            if (d.Values.All(count => count == 0))
+            if (d.Values.Any(count => count < 0) || d.Values.All(count => count == 0))
             {
                 return NonProteomicProtonatedFromCharge(charge); // No difference in formulas, try straight protonation
             }
@@ -754,7 +753,7 @@ namespace pwiz.Skyline.Util
                 d = d.SetElementCount(BioMassCalc.H, Math.Max(0, nH - charge));
             }
 
-            var adductFormula = d.PositivePart().ToString();
+            var adductFormula = d.ToString();
 
             if (string.IsNullOrEmpty(adductFormula))
             {
