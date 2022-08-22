@@ -11923,4 +11923,7 @@ If you do not have the original file, you may build the library with embedded sp
 	  <value>({0} Da)</value>
 	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
   </data>
+  <data name="ShareResultsFilesDlg_UpdateLabel_All__0__files_will_be_included_" xml:space="preserve">
+    <value>All {0} files will be included.</value>
+  </data>
 </root>

@@ -45,9 +45,13 @@ namespace pwiz.Skyline.FileUI
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
-
-        private readonly List<string> _specificFileFilter; // Specific files which are filtered out
-
+        private readonly List<string> _specificFileFilter; // Specific files to look for
+        
+        /// <summary>
+        /// File picker which is aware of mass spec "files" that are really directories
+        /// </summary>
+        /// <param name="remoteAccounts">For UNIFI</param>
+        /// <param name="specificFileFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
         public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, List<string> specificFileFilter = null)
         {
             InitializeComponent();
@@ -247,46 +251,6 @@ namespace pwiz.Skyline.FileUI
 
         private SourceInfo getSourceInfo(DirectoryInfo dirInfo)
         {
-            // Filter for only raw files that are missing. To prevent user confusion
-            bool validInclude = false;
-            var subFiles = Directory.GetFiles(dirInfo.FullName, "*.*", SearchOption.AllDirectories);
-            var subDirectories = Directory.GetDirectories(dirInfo.FullName, "*.*", SearchOption.AllDirectories);
-
-
-            // Convert file paths to file names
-            var subFileNames = subFiles.Select(Path.GetFileName).ToList();
-            var subDirectoryNames = subDirectories.Select(Path.GetFileName).ToList();
-
-            foreach (var missingFiles in _specificFileFilter)
-            {
-                if (subFileNames.Contains(missingFiles))
-                {
-                    validInclude = true;
-                    break;
-                }
-            }
-
-            // Convert directory paths into directory names
-            foreach (var missingFiles in _specificFileFilter)
-            {
-                if (subDirectoryNames.Contains(missingFiles))
-                {
-                    validInclude = true;
-                    break;
-                }
-            }
-
-            // Check if the file/directory is itself a missing file
-            if (_specificFileFilter.Contains(dirInfo.Name))
-            {
-                validInclude = true;
-            }
-
-            // Do not include folders not containing missing files
-            if (_specificFileFilter != null && !validInclude) 
-            {
-                return null;
-            }
 
             string type = DataSourceUtil.GetSourceType(dirInfo);
             SourceInfo sourceInfo = new SourceInfo(new MsDataFilePath(dirInfo.FullName))
@@ -528,6 +492,17 @@ namespace pwiz.Skyline.FileUI
                             // Always show folders
                             sourceInfo.isFolder)
                 {
+                    // Filter for only specifically named data sources (as when called from Skyline File>Share)
+                    if (_specificFileFilter != null && !sourceInfo.isFolder)
+                    {
+                        if (!_specificFileFilter.Any(specificFile =>
+                                specificFile.Equals(sourceInfo.MsDataFileUri.GetFileName(),
+                                    StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            continue;
+                        }
+                    }
+
                     ListViewItem item = new ListViewItem(sourceInfo.ToArray(), (int) sourceInfo.imageIndex)
                     {
                         Tag = sourceInfo,

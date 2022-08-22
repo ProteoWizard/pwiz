@@ -139,8 +139,8 @@ namespace pwiz.Skyline.Alerts
         {
             var checkedItems = (from object checkedItem in checkedListBox.Items
                 select checkedListBox.CheckedItems.Contains(checkedItem)
-                    ? new CheckedListBoxItems(checkedItem.ToString(), true)
-                    : new CheckedListBoxItems(checkedItem.ToString(), false)).ToList();
+                    ? new CheckedListBoxItem(checkedItem.ToString(), true)
+                    : new CheckedListBoxItem(checkedItem.ToString(), false)).ToList();
 
             // Add all missing auxiliary files to list
             var missingItems = (from object missingItem in missingListBox.Items select missingItem.ToString()).ToList();
@@ -157,8 +157,7 @@ namespace pwiz.Skyline.Alerts
         {
             // Add auxiliary file data
             UpdateAuxFiles();
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
         }
 
 
@@ -236,20 +235,20 @@ namespace pwiz.Skyline.Alerts
             int missingCount = missingListBox.Items.Count;
             if (checkCount == total) // All files are selected
             {
-                fileIncludingLabel = $"All {total} files will be included.";
+                fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel_All__0__files_will_be_included_, total);
             }
             else if (checkedListBox.CheckedItems.Count == 0) // No items are selected
             {
-                fileIncludingLabel = $"None of the {total} files will be included.";
+                fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel_None_of_the__0__files_will_be_included_, total);
             }
             else
             {
-                fileIncludingLabel = $"{checkCount} out of {total} files will be included."; // Some number of elements are selected
+                fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_, checkCount, total); // Some number of elements are selected
             }
             
             if (missingCount != 0)
             {
-                fileIncludingLabel += $" Missing {missingCount} file(s).";
+                fileIncludingLabel += string.Format(Resources.ShareResultsFilesDlg_UpdateLabel__Missing__0__file_s__, missingCount);
 
             }
             return fileIncludingLabel;
@@ -316,7 +315,7 @@ namespace pwiz.Skyline.Alerts
             else
             {
                 // Message informing the user of the fact there are no longer any missing files and thus no need to search for more
-                MessageBox.Show($"All relevant files are present");
+                MessageBox.Show(Resources.ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present);
             }
             checkedStatus.Text = UpdateLabel(); // Update the label after potential changes
         }
@@ -371,7 +370,7 @@ namespace pwiz.Skyline.Alerts
             // Set the initial directory to the current working directory if present
             searchFolderDialog.SelectedPath = initialDir;
 
-            searchFolderDialog.Description = $"Please select the folder containing the missing files"; // Description
+            searchFolderDialog.Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files; // Description
 
             if (searchFolderDialog.ShowDialog() == DialogResult.OK)
             {
@@ -424,10 +423,10 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public class AuxiliaryFiles
         {
-            public List<CheckedListBoxItems> _checkBoxFiles;
+            public List<CheckedListBoxItem> _checkBoxFiles;
             public List<string> _missingCheckBoxFiles;
 
-            public AuxiliaryFiles(List<CheckedListBoxItems> checkedFiles, List<string> missingFiles)
+            public AuxiliaryFiles(List<CheckedListBoxItem> checkedFiles, List<string> missingFiles)
             {
                 _checkBoxFiles = checkedFiles;
                 _missingCheckBoxFiles = missingFiles;
@@ -437,12 +436,12 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Checked list box information
         /// </summary>
-        public class CheckedListBoxItems
+        public class CheckedListBoxItem
         {
             public string Filename { get; }
             public bool CheckedState { get; }
 
-            public CheckedListBoxItems(string filename, bool checkedState)
+            public CheckedListBoxItem(string filename, bool checkedState)
             {
                 Filename = filename;
                 CheckedState = checkedState;
