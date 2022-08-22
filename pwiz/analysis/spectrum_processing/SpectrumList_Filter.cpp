@@ -214,7 +214,11 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_ScanNumberSet::SpectrumList_FilterPre
 
 PWIZ_API_DECL tribool SpectrumList_FilterPredicate_ScanNumberSet::accept(const SpectrumIdentity& spectrumIdentity) const
 {
-    int scanNumber = id::valueAs<int>(spectrumIdentity.id, "scan");
+    int scanNumber = 0;
+    if (bal::starts_with(spectrumIdentity.id, "scan="))
+        scanNumber = id::valueAs<int>(spectrumIdentity.id, "scan");
+    else if (bal::starts_with(spectrumIdentity.id, "index=")) 
+        scanNumber = id::valueAs<int>(spectrumIdentity.id, "index");
     if (scanNumberSet_.hasUpperBound(scanNumber)) eos_ = true;
     bool result = scanNumberSet_.contains(scanNumber);
     return result;
@@ -511,7 +515,8 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ActivationType:
 //
 
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(const set<CVID> cvFilterItems_)
+PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(const set<CVID> cvFilterItems_, const util::IntegerSet& msLevelSet)
+    : msLevelSet(msLevelSet)
 {
     BOOST_FOREACH(const CVID cvid, cvFilterItems_)
     {
@@ -528,6 +533,19 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPred
 
 PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_AnalyzerType::accept(const msdata::Spectrum& spectrum) const
 {
+    if (!spectrum.hasCVParamChild(MS_spectrum_type))
+        return boost::logic::indeterminate;
+
+    if (!spectrum.hasCVParamChild(MS_mass_spectrum))
+        return true;
+
+    // if filter does not pertain to this ms level, 
+    int msLevel = spectrum.cvParamValueOrDefault<int>(MS_ms_level, 0);
+    if (msLevel == 0)
+        return boost::logic::indeterminate;
+    if (!msLevelSet.contains(msLevel))
+        return true;
+
     bool res = false;
     Scan dummy;
     const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];

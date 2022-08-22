@@ -73,7 +73,14 @@ namespace pwiz.SkylineTestUtil
         {
             var documentFile = TestFilesDir.GetTestPath(documentPath);
             WaitForCondition(() => File.Exists(documentFile));
-            RunUI(() => SkylineWindow.OpenFile(documentFile));
+            if (documentPath.EndsWith(@".zip", true, CultureInfo.InvariantCulture))
+            {
+                RunUI(() => SkylineWindow.OpenSharedFile(documentFile));
+            }
+            else
+            {
+                RunUI(() => SkylineWindow.OpenFile(documentFile));
+            }
             WaitForDocumentLoaded();
         }
 

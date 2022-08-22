@@ -172,6 +172,7 @@
     <Compile Include="PerfPeakViewConvert.cs" />
     <Compile Include="PerfThermoFAIMSTest.cs" />
     <Compile Include="PerfThermoNegativeFAIMSTest.cs" />
+    <Compile Include="PerfThermoSureQuantFAIMSTest.cs" />
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="PerfWatersSonarTest.cs" />

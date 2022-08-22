@@ -752,7 +752,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
                     var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore);
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
-                        new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), BiblioSpecScoreType.GenericQValue, qValue));
+                        new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), ScoreType.GenericQValue, qValue));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
