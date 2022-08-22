@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Util
             }
             AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
             Composition = new ImmutableDictionary<string, int>(composition);
-            var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(composition));
+            var resultMol = Molecule.FromDict(composition);
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidOperationException(
@@ -760,13 +760,17 @@ namespace pwiz.Skyline.Util
             {
                 return NonProteomicProtonatedFromCharge(charge); // The entire formula difference was protonation
             }
-            var sign = adductFormula.StartsWith(@"-") ? string.Empty : @"+";
+
+            if (!adductFormula.StartsWith(@"-"))
+            {
+                adductFormula = @"+" + adductFormula;
+            }
             // Emit something like [M-C4+H3] or [M+Cl-H]
             if (Math.Abs(charge) > 1)
             {
-                return new Adduct(string.Format(@"[M{0}{1}{2:+#;-#}H]", sign, adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
+                return new Adduct(string.Format(@"[M{0}{1:+#;-#}H]", adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
             }
-            return new Adduct(string.Format(@"[M{0}{1}{2}H]", sign, adductFormula, charge>0?@"+":@"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
+            return new Adduct(string.Format(@"[M{0}{1}H]", adductFormula, charge>0?@"+":@"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
         }
 
         /// <summary>
