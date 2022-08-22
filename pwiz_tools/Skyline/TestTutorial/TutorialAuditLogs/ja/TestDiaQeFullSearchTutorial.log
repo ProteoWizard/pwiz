@@ -9,9 +9,9 @@ Summary   : スペクトルライブラリ「DIA-QE-tutorial」が追加され�
 All Info  :
 スペクトルライブラリ「DIA-QE-tutorial」が追加されました
 スペクトルライブラリを構築>カットオフスコアは"0.95"です
-スペクトルライブラリを構築>ファイルを検索：{ File = "interact.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0.95" }が含まれています
+スペクトルライブラリを構築>ファイルを検索：{ ファイル = "interact.pep.xml", スコアタイプ = "PeptideProphet信頼度", スコアの閾値 = "0.95" }が含まれています
 スペクトルライブラリを構築>iRT標準ペプチドは"Biognosys-11 (iRT-C18)"です
-スペクトルライブラリを構築>曖昧な一致を含めるは偽です
+スペクトルライブラリを構築>あいまい一致を含むは偽です
 スペクトルライブラリを構築>ドキュメント内のペプチドをフィルタリングは偽です
 スペクトルライブラリを構築>ワークフローは"DIA"です
 スペクトルライブラリを構築>入力ファイルタイプは"検索結果 (ライブラリを直接構築)"です
@@ -19,13 +19,13 @@ Extra Info: カットオフスコア = "0.95",
 ファイルを検索 = 
 [
     {
-        File = "interact.pep.xml",
-        Score type = "PeptideProphet confidence",
-        Score threshold = "0.95"
+        ファイル = "interact.pep.xml",
+        スコアタイプ = "PeptideProphet信頼度",
+        スコアの閾値 = "0.95"
     }
 ],
 iRT標準ペプチド = "Biognosys-11 (iRT-C18)",
-曖昧な一致を含める = 偽,
+あいまい一致を含む = 偽,
 ドキュメント内のペプチドをフィルタリング = 偽,
 ワークフロー = "DIA",
 入力ファイルタイプ = "検索結果 (ライブラリを直接構築)"
@@ -80,16 +80,16 @@ All Info  :
 ペプチド検索のインポート>FASTAをインポート>デコイ生成法は"シークエンスのシャッフル"です
 ペプチド検索のインポート>FASTAをインポート>ターゲット毎のデコイは"1"です
 ペプチド検索のインポート>FASTAをインポート>mProphetのモデルを自動的にトレーニングするは真です
-ペプチド検索のインポート>Associate Proteins>Group proteinsは偽です
-ペプチド検索のインポート>Associate Proteins>Find minimal protein listは偽です
-ペプチド検索のインポート>Associate Proteins>Remove subset proteinsは偽です
-ペプチド検索のインポート>Associate Proteins>Shared peptides optionは"Removed (peptides must be unique to a single protein)"です
-ペプチド検索のインポート>Associate Proteins>Min peptides per proteinは"2"です
-ペプチド検索のインポート>Associate Proteins>Proteins mappedは"3991"です
-ペプチド検索のインポート>Associate Proteins>Peptides mappedは"13439"です
-ペプチド検索のインポート>Associate Proteins>Proteins unmappedは"57113"です
-ペプチド検索のインポート>Associate Proteins>Protein targetsは"2037"です
-ペプチド検索のインポート>Associate Proteins>Peptide targetsは"10980"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質をグループ化は偽です
+ペプチド検索のインポート>タンパク質の関連付け>最小タンパク質リストを検索は偽です
+ペプチド検索のインポート>タンパク質の関連付け>サブセットのタンパク質を削除は偽です
+ペプチド検索のインポート>タンパク質の関連付け>共有ペプチドオプションは"削除済み (ペプチドは特定のタンパク質に固有の必要がある)"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質あたりの最小ペプチドは"2"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みタンパク質は"3991"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みペプチドは"13439"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ解除されたタンパク質は"57113"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質のターゲットは"2037"です
+ペプチド検索のインポート>タンパク質の関連付け>ペプチドのターゲットは"10980"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -232,18 +232,18 @@ FASTAをインポート =
     ターゲット毎のデコイ = "1",
     mProphetのモデルを自動的にトレーニングする = 真
 },
-Associate Proteins = 
+タンパク質の関連付け = 
 {
-    Group proteins = 偽,
-    Find minimal protein list = 偽,
-    Remove subset proteins = 偽,
-    Shared peptides option = "Removed (peptides must be unique to a single protein)",
-    Min peptides per protein = "2",
-    Proteins mapped = "3991",
-    Peptides mapped = "13439",
-    Proteins unmapped = "57113",
-    Protein targets = "2037",
-    Peptide targets = "10980"
+    タンパク質をグループ化 = 偽,
+    最小タンパク質リストを検索 = 偽,
+    サブセットのタンパク質を削除 = 偽,
+    共有ペプチドオプション = "削除済み (ペプチドは特定のタンパク質に固有の必要がある)",
+    タンパク質あたりの最小ペプチド = "2",
+    マップ済みタンパク質 = "3991",
+    マップ済みペプチド = "13439",
+    マップ解除されたタンパク質 = "57113",
+    タンパク質のターゲット = "2037",
+    ペプチドのターゲット = "10980"
 }
 
 Undo Redo : 注釈が変更されました

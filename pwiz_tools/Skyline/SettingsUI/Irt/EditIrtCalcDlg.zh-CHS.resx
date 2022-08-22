@@ -259,7 +259,7 @@
     <value>9</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>iRT 标准(&amp;i)：</value>
+    <value>iRT 标准(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -394,7 +394,7 @@
     <value>3</value>
   </data>
   <data name="label4.Text" xml:space="preserve">
-    <value>其他 iRT 值(&amp;O)：</value>
+    <value>其他 iRT 值(&amp;V)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -511,7 +511,7 @@
     <value>1</value>
   </data>
   <data name="btnPeptides.Text" xml:space="preserve">
-    <value>选择标准…</value>
+    <value>选择标准(&amp;T)…</value>
   </data>
   <data name="btnPeptides.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -766,7 +766,7 @@
     <value>8</value>
   </data>
   <data name="cbRedundant.Text" xml:space="preserve">
-    <value>存储冗余的 iRT 值</value>
+    <value>存储冗余的 iRT 值(&amp;S)</value>
   </data>
   <data name="&gt;&gt;cbRedundant.Name" xml:space="preserve">
     <value>cbRedundant</value>
