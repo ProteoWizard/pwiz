@@ -445,7 +445,6 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
-            this.panel2.Controls.Add(this.labelRT);
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
             // 
@@ -454,6 +453,7 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
             this.tableLayoutPanel2.Controls.Add(this.labelFilename, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this.comboRedundantSpectra, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.labelRT, 2, 0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
             // labelFilename
