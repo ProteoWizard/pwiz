@@ -2566,6 +2566,12 @@ namespace pwiz.Skyline.SettingsUI
             private string LibraryName { get { return _library.Name; } }
             private TransitionGroup TransitionGroup { get; set; }
 
+            protected override bool IsProteomic()
+            {
+                return TransitionGroup.IsProteomic;
+            }
+
+
             public ViewLibSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo, TransitionGroup group, Library lib, LibKey key)
                 : base(spectrumInfo)
             {

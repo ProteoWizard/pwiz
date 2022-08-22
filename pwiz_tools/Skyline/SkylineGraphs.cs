@@ -889,6 +889,10 @@ namespace pwiz.Skyline
         {
             _graphSpectrumSettings.ShowPrecursorIon = show;
         }
+        public void ShowSpecialIons(bool show)
+        {
+            _graphSpectrumSettings.ShowSpecialIons = show;
+        }
         public void ShowCharge1(bool show)
         {
             _graphSpectrumSettings.ShowCharge1 = show;
@@ -957,9 +961,14 @@ namespace pwiz.Skyline
             ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
         }
 
+        private void specialionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSpecialIons(!_graphSpectrumSettings.ShowSpecialIons);
+        }
+        
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
         {
-            if(ListMzScaleCopyables().Count() < 2)
+            if (ListMzScaleCopyables().Count() < 2)
                 return;
             Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
             if (!Settings.Default.SyncMZScale)
@@ -983,10 +992,10 @@ namespace pwiz.Skyline
             SynchMzScaleToolStripMenuItemClick();
         }
 
-        //Testing support
-        public void SynchMzScale(IMzScalePlot source)
+        // Testing support
+        public void SynchMzScale(IMzScalePlot source, bool setSynchMz = true)
         {
-            synchMzScaleToolStripMenuItem.Checked = true;
+            synchMzScaleToolStripMenuItem.Checked = setSynchMz;
             SynchMzScaleToolStripMenuItemClick(source);
         }
 
@@ -1105,6 +1114,8 @@ namespace pwiz.Skyline
                 if (isProteomic)
                 {
                     menuStrip.Items.Insert(iInsert++, ionTypesContextMenuItem);
+                    specialionsContextMenuItem.Checked = set.ShowSpecialIons;
+                    menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
                 }
                 else
                 {
