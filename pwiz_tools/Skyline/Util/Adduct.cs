@@ -754,23 +754,19 @@ namespace pwiz.Skyline.Util
                 d = d.SetElementCount(BioMassCalc.H, Math.Max(0, nH - charge));
             }
 
-            var adductFormula = d.ToString();
+            var adductFormula = d.PositivePart().ToString();
 
             if (string.IsNullOrEmpty(adductFormula))
             {
                 return NonProteomicProtonatedFromCharge(charge); // The entire formula difference was protonation
             }
-
-            if (!adductFormula.StartsWith(@"-"))
-            {
-                adductFormula = @"+" + adductFormula;
-            }
+            var sign = adductFormula.StartsWith(@"-") ? string.Empty : @"+";
             // Emit something like [M-C4+H3] or [M+Cl-H]
             if (Math.Abs(charge) > 1)
             {
-                return new Adduct(string.Format(@"[M{0}{1:+#;-#}H]", adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
+                return new Adduct(string.Format(@"[M{0}{1}{2:+#;-#}H]", sign, adductFormula, charge), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
             }
-            return new Adduct(string.Format(@"[M{0}{1}H]", adductFormula, charge>0?@"+":@"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
+            return new Adduct(string.Format(@"[M{0}{1}{2}H]", sign, adductFormula, charge>0?@"+":@"-"), ADDUCT_TYPE.non_proteomic) { AdductCharge = charge };
         }
 
         /// <summary>
