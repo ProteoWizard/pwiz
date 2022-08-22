@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
-using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
 {
