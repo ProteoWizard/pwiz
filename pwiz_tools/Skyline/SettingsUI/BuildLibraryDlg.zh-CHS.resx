@@ -217,7 +217,7 @@
     <value>2</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
-    <value>下一步(&amp;N) &gt;</value>
+    <value>下一步(&amp;X) &gt;</value>
   </data>
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
@@ -332,7 +332,7 @@
     <value>16</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>&amp;NCE:</value>
+    <value>N&amp;CE:</value>
   </data>
   <data name="ceLabel.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -518,7 +518,7 @@
     <value>18</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
-    <value>文档肽筛选器(&amp;F)</value>
+    <value>文档肽筛选器(&amp;D)</value>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
@@ -641,7 +641,7 @@
     <value>1</value>
   </data>
   <data name="prositDataSourceRadioButton.Text" xml:space="preserve">
-    <value>Prosit</value>
+    <value>Pro&amp;sit</value>
   </data>
   <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
     <value>prositDataSourceRadioButton</value>
@@ -668,7 +668,7 @@
     <value>0</value>
   </data>
   <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
-    <value>文件</value>
+    <value>文件(&amp;F)</value>
   </data>
   <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
     <value>dataSourceFilesRadioButton</value>
@@ -794,7 +794,7 @@
     <value>4</value>
   </data>
   <data name="btnAddPaths.Text" xml:space="preserve">
-    <value>添加路径(&amp;P)…</value>
+    <value>添加路径(&amp;H)…</value>
   </data>
   <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
     <value>btnAddPaths</value>
