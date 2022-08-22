@@ -3274,6 +3274,17 @@ namespace pwiz.Skyline.Properties {
         }
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowSpecialIons {
+            get {
+                return ((bool)(this["ShowSpecialIons"]));
+            }
+            set {
+                this["ShowSpecialIons"] = value;
+            }
+        }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string LastProteinAssociationFastaFilepath {
             get {

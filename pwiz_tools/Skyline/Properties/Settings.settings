@@ -818,6 +818,9 @@
     <Setting Name="ShowLosses" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="ShowSpecialIons" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="LastProteinAssociationFastaFilepath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
