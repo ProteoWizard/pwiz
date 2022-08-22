@@ -265,7 +265,7 @@ PWIZ_API_DECL SpectrumList_ScanSummer::SpectrumList_ScanSummer(const SpectrumLis
                 precursorMap.push_back(precursorGroupPtr());
                 continue;
             }
-            double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
+            double rTime = s->scanList.scans[0].cvParam(MS_scan_start_time).valueAs<double>();
             double ionMobility = s->scanList.scans[0].cvParamValueOrDefault(MS_inverse_reduced_ion_mobility, 0.0);
 
             if (precursorList.empty()) // set some parameters

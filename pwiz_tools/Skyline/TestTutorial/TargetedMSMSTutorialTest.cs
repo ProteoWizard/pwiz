@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -85,7 +86,8 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
 
-            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
+            if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
+                SkipSmallMoleculeTestVersions())
             {
                 return;
             }
@@ -340,6 +342,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed)); // So peptide import wizard still works
             }
+
             Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
 
             //p. 15 Import Full-Scan Data
@@ -489,6 +492,7 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported", 20);
             TestRedundantComboBox();
+            TestPropertySheet();
 
             ValidatePeakRanks(1, 176, true);
 
@@ -1037,12 +1041,16 @@ namespace pwiz.SkylineTestTutorial
                     dlg.SelectedIndex = 4;
                 });
                 Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
+                Assert.AreEqual(1, dlg.RedundantComboBox.Items.Count);
+                // This simulates the user clicking on or showing the drop down for the combobox, which populates the combobox
+                RunUI(dlg.UpdateRedundantComboItems);
                 // Checks that for this peptide, there are 11 different spectra available in the dropdown
+                WaitForConditionUI(() => dlg.IsComboBoxUpdated);
                 Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
-                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 0);
+                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
                 // Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
                 Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
-                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
+                RunUI(() => dlg.RedundantComboBox.SelectedIndex = 2);
                 Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
                 var fileSet = new HashSet<String>();
                 var RTSet = new HashSet<String>();
@@ -1070,6 +1078,113 @@ namespace pwiz.SkylineTestTutorial
                 }
             }
             RunUI(() => dlg.Close());
+        }
+
+        /// <summary>
+        /// Tests the property sheet on the ViewLibraryDlg property sheet to confirm it shows up and displays accurate information
+        /// </summary>
+        private void TestPropertySheet()
+        {
+            var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            WaitForConditionUI(() => dlg.IsUpdateComplete);
+            var isSmallMolecules = dlg.PeptideDisplayCount < 11;
+            var graphExtension = dlg.GraphExtensionControl;
+            Assert.IsFalse(graphExtension.PropertiesVisible);
+            ToolStripButton propertiesButton = null;
+            // Check the pressing the properties button on the toolstrip displays the property sheet
+            RunUI(() =>
+            {
+                var toolStrip = (ToolStrip)dlg.Controls.Find("toolStrip1", true)[0];
+                propertiesButton = (ToolStripButton)toolStrip.Items.Find("propertiesButton", true)[0];
+                Assert.IsNotNull(propertiesButton);
+                Assert.IsFalse(propertiesButton.Checked);
+                propertiesButton.PerformClick();
+            });
+            WaitForConditionUI(() => graphExtension.PropertiesVisible);
+            RunUI(() => Assert.IsTrue(propertiesButton.Checked));
+
+            var propertyGrid = graphExtension.PropertiesSheet;
+            Assert.IsNotNull(propertyGrid);
+
+            // Checks the number of properties displayed is the expected number
+            int expectedPropCount = isSmallMolecules ? 7 : 10;
+            RunUI(() =>
+            {
+                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
+                ValidatePropertyCount(expectedPropCount, propertyGrid);
+            });
+            // Checks that the property sheet updates upon switching peptides
+            RunUI(() =>
+            {
+                dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
+                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
+                ValidatePropertyCount(expectedPropCount, propertyGrid);
+                ValidateSpectrumCount(401, propertyGrid);
+            });
+            Assert.IsTrue(graphExtension.PropertiesVisible);
+            Assert.IsTrue(propertiesButton.Checked);
+            // Checks that the property sheet displays nothing when no peptide is selected
+            RunUI(() =>
+            {
+                dlg.FilterString = "b";
+                Assert.AreEqual(0, GetProperties(propertyGrid).Count);
+                dlg.FilterString = "";
+            });
+            if (!isSmallMolecules)
+            {
+                // Checks the property sheet updates when switching in the redundant combobox to viewing a redundant peptide
+                RunUI(() =>
+                {
+                    ValidateSpecId("488", propertyGrid);
+                    RunUI(dlg.UpdateRedundantComboItems);
+                    WaitForConditionUI(() => dlg.IsComboBoxUpdated);
+                    dlg.RedundantComboBox.SelectedIndex = 1;
+                    ValidateSpecId("19208", propertyGrid);
+                });
+                RunUI(() =>
+                {
+                    // Tests that the score displayed on the graph matches the score displayed in the property sheet
+                    dlg.SelectedIndex = 4;
+                    ValidateScoresMatch(0.001, propertyGrid, dlg);
+                    RunUI(dlg.UpdateRedundantComboItems);
+                    WaitForConditionUI(() => dlg.IsComboBoxUpdated);
+                    dlg.RedundantComboBox.SelectedIndex = 1;
+                    ValidateScoresMatch(0.004, propertyGrid, dlg);
+                });
+            }
+            RunUI(() => propertiesButton.PerformClick());
+            Assert.IsFalse(graphExtension.PropertiesVisible);
+            Assert.IsFalse(propertiesButton.Checked);
+            RunUI(() => dlg.Close());
+        }
+
+        private static PropertyDescriptorCollection GetProperties(PropertyGrid propertyGrid)
+        {
+            return ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
+        }
+
+        private static void ValidatePropertyCount(int expectedPropCount, PropertyGrid pg)
+        {
+            Assert.AreEqual(expectedPropCount, GetProperties(pg).Count);
+        }
+
+        private static void ValidateSpectrumCount(int expectedSpectrumCount, PropertyGrid pg)
+        {
+            var spectrumCount = GetProperties(pg).Find("SpectrumCount", true).GetValue(pg.SelectedObject);
+            Assert.AreEqual(expectedSpectrumCount, spectrumCount);
+        }
+
+        private static void ValidateSpecId(string expectedId, PropertyGrid pg)
+        {
+            var specId = GetProperties(pg).Find("SpecIdInFile", true).GetValue(pg.SelectedObject);
+            Assert.AreEqual(expectedId, specId);
+        }
+
+        private static void ValidateScoresMatch(double expectedScore, PropertyGrid pg, ViewLibraryDlg dlg)
+        {
+            var score = GetProperties(pg).Find("Score", true).GetValue(pg.SelectedObject);
+            Assert.AreEqual(expectedScore.ToString(CultureInfo.CurrentCulture), score?.ToString());
+            Assert.AreEqual(expectedScore, dlg.GraphItem.SpectrumInfo.Score);
         }
     }
 }

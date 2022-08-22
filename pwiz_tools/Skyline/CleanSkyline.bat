@@ -42,6 +42,8 @@ IF EXIST ..\Shared\MSGraph\obj rmdir /s /q ..\Shared\MSGraph\obj
 IF EXIST ..\Shared\Crawdad\obj rmdir /s /q ..\Shared\Crawdad\obj
 IF EXIST ProtocolBuffers\tmp rmdir /s /q ProtocolBuffers\tmp
 IF EXIST ProtocolBuffers\GeneratedCode\*.cs del /q ProtocolBuffers\GeneratedCode\*.cs
+IF EXIST Test\ProtocolBuffers\tmp rmdir /s /q Test\ProtocolBuffers\tmp
+IF EXIST Test\ProtocolBuffers\GeneratedCode\*.cs del /q Test\ProtocolBuffers\GeneratedCode\*.cs
 IF EXIST TestSettings_x64.testsettings del /q TestSettings_x64.testsettings
 IF EXIST TestSettings_x86.testsettings del /q TestSettings_x86.testsettings
 IF EXIST Executables\Installer\FileList64.txt del /q Executables\Installer\FileList64.txt

@@ -4049,7 +4049,7 @@ namespace pwiz.Skyline.Model
 //            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
 //                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
 
-            var compound = GetCompound(nodePep, nodeTranGroup);
+            var compound = FormatMods(GetCompound(nodePep, nodeTranGroup));
             compound += '.';
             compound += nodeTranGroup.PrecursorAdduct.AsFormulaOrInt();
 
@@ -4124,6 +4124,16 @@ namespace pwiz.Skyline.Model
                 writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
             writer.WriteLine();
+        }
+
+        /// <summary>
+        /// Hack to replace modification brackets with parentheses.
+        /// MassLynx or VerifyESkylineLibrary.dll has some problem with multiple sets of brackets that causes
+        /// an incomplete method to be generated. Transitions get limited to only 5.
+        /// </summary>
+        public static string FormatMods(string modSeq)
+        {
+            return modSeq.Replace('[', '(').Replace(']', ')');
         }
     }
 
@@ -4292,7 +4302,8 @@ namespace pwiz.Skyline.Model
             writer.Write(199);
             writer.Write(FieldSeparator);
             // compound name
-            writer.WriteDsvField(TextUtil.SpaceSeparate(nodePepGroup.Name, nodePep.ModifiedSequenceDisplay), FieldSeparator);
+            var compoundName = TextUtil.SpaceSeparate(nodePepGroup.Name, WatersMassListExporter.FormatMods(nodePep.ModifiedSequenceDisplay));
+            writer.WriteDsvField(compoundName, FieldSeparator);
         }
 
         protected void GetCEValues(double mz, out double trapStart, out double trapEnd, out double? transferStart, out double? transferEnd)
@@ -4566,39 +4577,45 @@ namespace pwiz.Skyline.Model
                     stdinBuilder.Append(pair.Value);
                 }
 
-                // Resharper disable LocalizableElement
-                argv.AddRange(new[] { "-s", "-m", "\"" + templateName + "\"" });  // Read from stdin, multi-file format
-                // Resharper restore LocalizableElement
-
-                string dirWork = Path.GetDirectoryName(fileName);
-                var psiExporter = new ProcessStartInfo(exeName)
+                string dirWork = Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory;
+                using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, Path.GetRandomFileName())))
                 {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    // Common directory includes the directory separator
-                    WorkingDirectory = dirWork ?? string.Empty,
-                    Arguments = string.Join(@" ", argv.ToArray()), 
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true
-                };
+                    var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
+                    File.WriteAllText(transitionsFile, stdinBuilder.ToString());
 
-                IProgressStatus status;
-                if (dictTranLists.Count == 1)
-                    status = new ProgressStatus(string.Format(Resources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
-                else
-                {
-                    status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
-                    status = status.ChangeSegments(0, dictTranLists.Count);
-                }
-                progressMonitor?.UpdateProgress(status);
+                    // Resharper disable LocalizableElement
+                    argv.AddRange(new[] { "-m", templateName.Quote(), transitionsFile.Quote() });  // Read from stdin, multi-file format
+                    // Resharper restore LocalizableElement
 
-                psiExporter.RunProcess(stdinBuilder.ToString(), @"MESSAGE: ", progressMonitor, ref status); 
+                    var psiExporter = new ProcessStartInfo(exeName)
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        // Common directory includes the directory separator
+                        WorkingDirectory = dirWork,
+                        Arguments = string.Join(@" ", argv.ToArray()),
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        RedirectStandardInput = true
+                    };
 
-                if (!status.IsError && !status.IsCanceled)
-                {
-                    foreach (var fs in listFileSavers)
-                        fs.Commit();
+                    IProgressStatus status;
+                    if (dictTranLists.Count == 1)
+                        status = new ProgressStatus(string.Format(Resources.MethodExporter_ExportMethod_Exporting_method__0__, methodName));
+                    else
+                    {
+                        status = new ProgressStatus(Resources.MethodExporter_ExportMethod_Exporting_methods);
+                        status = status.ChangeSegments(0, dictTranLists.Count);
+                    }
+                    progressMonitor?.UpdateProgress(status);
+
+                    psiExporter.RunProcess(null, @"MESSAGE: ", progressMonitor, ref status);
+
+                    if (!status.IsError && !status.IsCanceled)
+                    {
+                        foreach (var fs in listFileSavers)
+                            fs.Commit();
+                    }
                 }
             }
             finally
