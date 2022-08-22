@@ -696,6 +696,12 @@ PWIZ_API_DECL void parse(std::istream& is, Handler& handler);
 } // namespace SAXParser
 
 
+/// Thrown by xml_root_element if the file or string is not XML
+class xml_root_error : public std::runtime_error
+{
+    public: xml_root_error(const std::string& what) : std::runtime_error(what) {}
+};
+
 /// Returns the root element from an XML buffer;
 /// throws runtime_error if no element is found.
 PWIZ_API_DECL std::string xml_root_element(const std::string& fileheader);

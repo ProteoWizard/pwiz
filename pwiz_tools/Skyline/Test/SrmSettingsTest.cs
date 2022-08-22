@@ -1172,7 +1172,8 @@ namespace pwiz.SkylineTest
 
             const string proteinAssociationMinPeptidesErrorSerialized = "<protein_association min_peptides_per_protein=\"-1\" />";
             AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationMinPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
-                "The value -1 for Min peptides per protein is not valid: it must be greater than or equal to 0.");
+                string.Format(Resources.ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__, -1,
+                    PropertyNames.ParsimonySettings_MinPeptidesPerProtein, 0));
 
             const string proteinAssociationSharedPeptidesErrorSerialized = "<protein_association shared_peptides=\"SomethingIsWrong\" />";
             AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(

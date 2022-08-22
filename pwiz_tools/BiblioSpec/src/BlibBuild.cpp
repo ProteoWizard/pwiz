@@ -78,23 +78,18 @@ private:
     int file_;
 };
 
-static void WriteErrorLines(string s)
-{
+static void WriteErrorLines(string s, ostream& out = std::cout) {
     istringstream iss(s);
-    char buffer[4096];
-    while(iss)
-    {
-        iss.getline(buffer, sizeof(buffer));
-        cerr << "ERROR: " << buffer << endl;
+    string line;
+    while (std::getline(iss, line)) {
+        out << "ERROR: " << line << endl;
     }
 }
 
-static void WriteScoreTypesLine(string file, vector<PSM_SCORE_TYPE> scoreTypes) {
-    for (size_t i = 0; i < scoreTypes.size(); i++) {
-        cout << "SCORETYPE" << '\t'
-             << file << '\t'
-             << scoreTypeToString(scoreTypes[i])
-             << '\t' << scoreTypeToProbabilityTypeString(scoreTypes[i])
+static void WriteScoreTypes(vector<PSM_SCORE_TYPE> scoreTypes) {
+    for (vector<PSM_SCORE_TYPE>::const_iterator i = scoreTypes.begin(); i != scoreTypes.end(); i++) {
+        cout << scoreTypeToString(*i)
+             << '\t' << scoreTypeToProbabilityTypeString(*i)
              << std::endl;
     }
 }
@@ -142,17 +137,24 @@ int main(int argc, char* argv[])
         const ProgressIndicator* progress_cptr = &progress; // read-only pointer
 
         bool success = true;
-        string failureMessage;
+        bool foundExpectedError = false;
 
         // process each .sqt, .pepxml, .idpXML, .xtan.xml, .dat, .blib file
-        for (int i = 0; i < (int)inFiles.size(); i++) {
+        for (size_t i = 0; i < inFiles.size(); i++) {
+            string result_file = inFiles.at(i);
+            vector<string> errors;
+
             try {
-                string result_file = inFiles.at(i);
                 builder.setCurFile(i);
 
                 if (!builder.isScoreLookupMode()) {
                     Verbosity::comment(V_STATUS, "Reading results from %s.", result_file.c_str());
                     progress.increment();
+                } else {
+                    if (i > 0) {
+                        cout << endl;
+                    }
+                    cout << result_file << endl;
                 }
 
                 std::shared_ptr<BuildParser> reader;
@@ -174,6 +176,15 @@ int main(int argc, char* argv[])
                     reader = std::make_shared<TandemNativeParser>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, ".group.xml")) {
                     reader = std::make_shared<ProteinPilotReader>(builder, result_file.c_str(), progress_cptr);
+                } else if (has_extension(result_file, ".group")) {
+                    // Allow getting score type of .group files.
+                    if (!builder.isScoreLookupMode()) {
+                        Verbosity::error(".group files must be converted to .group.xml files "
+                                         "(e.g. with group2xml or GroupFileExtractor) before building a library.");
+                        throw "Failed to parse " + result_file;
+                    }
+                    WriteScoreTypes(ProteinPilotReader::getScoreTypesHelper());
+                    continue;
                 } else if (has_extension(result_file, "pride.xml")) {
                     reader = std::make_shared<PrideXmlReader>(builder, result_file.c_str(), progress_cptr);
                 } else if (has_extension(result_file, "msms.txt")) {
@@ -203,56 +214,49 @@ int main(int argc, char* argv[])
                 }
 
                 if (builder.isScoreLookupMode()) {
-                    vector<PSM_SCORE_TYPE> scoreTypes;
                     try {
-                        scoreTypes = reader->getScoreTypes();
+                        WriteScoreTypes(reader->getScoreTypes());
                     } catch (...) {
-                        WriteScoreTypesLine(result_file, vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE));
+                        WriteScoreTypes(vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE));
                         throw; // rethrow
                     }
-                    WriteScoreTypesLine(result_file, scoreTypes);
                 } else if (!reader->parseFile()) {
                     // in the unlikely event a reader returns false instead of throwing an error
                     throw "Failed to parse " + result_file;
                 }
             } catch (BlibException& e) {
-                failureMessage = e.what();
-                WriteErrorLines(e.what());
+                errors.push_back(e.what());
                 if (!e.hasFilename()) {
-                    cerr << "ERROR: reading file " << inFiles.at(i) << endl;
+                    errors.push_back("reading file " + result_file);
                 }
-                success = false;
             } catch (std::exception& e) {
-                failureMessage = e.what();
-                WriteErrorLines(e.what());
-                cerr << "ERROR: reading file " << inFiles.at(i) << endl;
-                success = false;
+                errors.push_back(e.what());
+                errors.push_back("reading file " + result_file);
             } catch (string s) { // in case a throwParseError is not caught
-                failureMessage = s;
-                cerr << "ERROR: " << s << endl;
-                cerr << "ERROR: reading file " << inFiles.at(i) << endl;
-                success = false;
+                errors.push_back(s);
+                errors.push_back("reading file " + result_file);
             } catch (const char *str) {
-                failureMessage = str;
-                cerr << "ERROR: " << str << endl;
-                cerr << "ERROR: reading file " << inFiles.at(i) << endl;
-                success = false;
+                errors.push_back(str);
+                errors.push_back("reading file " + result_file);
             } catch (...) {
-                failureMessage = "Unknown ERROR";
-                cerr << "ERROR: Unknown error reading file " << inFiles.at(i) << endl;
-                success = false;
+                errors.push_back("Unknown ERROR");
+                errors.push_back("Unknown error reading file " + result_file);
+            }
+
+            for (vector<string>::const_iterator error = errors.begin(); error != errors.end(); error++) {
+                WriteErrorLines(*error, !builder.isScoreLookupMode() ? std::cerr : std::cout);
+
+                if (!foundExpectedError && !expectedError.empty() && error->find(expectedError) != string::npos) {
+                    foundExpectedError = true;
+                }
+            }
+
+            if (!builder.isScoreLookupMode()) { // always have score lookup have zero exit code
+                success = (success && errors.empty()) || foundExpectedError;
             }
         }
 
-        if (builder.isScoreLookupMode()) {
-            Verbosity::close_logfile();
-            return !success;
-        }
-
-        if (!success) {
-            if (!expectedError.empty() && failureMessage.find(expectedError) != string::npos)
-                success = true; // We actually expected a failure, this is a negative test
-            // try saving the library
+        if (foundExpectedError) {
             builder.undoActiveTransaction();
         } else if (!expectedError.empty()) {
             // We expected to catch a failure
@@ -260,15 +264,17 @@ int main(int argc, char* argv[])
             success = false;
         }
 
-        // check that library contains spectra
-        if (builder.is_empty()) {
-            builder.abort_current_library();
-            if (success) {
-                Verbosity::error("No spectra were found for the new library.");
+        if (!builder.isScoreLookupMode()) {
+            // check that library contains spectra
+            if (builder.is_empty()) {
+                builder.abort_current_library();
+                if (success) {
+                    Verbosity::error("No spectra were found for the new library.");
+                }
+            } else {
+                builder.collapseSources();
+                builder.commit();
             }
-        } else {
-            builder.collapseSources();
-            builder.commit();
         }
 
         Verbosity::close_logfile();

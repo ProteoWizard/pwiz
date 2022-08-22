@@ -351,5 +351,24 @@ namespace pwiz.Skyline.Util
 
         public virtual string DetailedMessage { get { return null; } }
 
+        public static Control GetFocused(Control.ControlCollection controls)
+        {
+            foreach (Control c in controls)
+            {
+                if (c.Focused)
+                {
+                    // Return the focused control
+                    return c;
+                }
+                if (c.ContainsFocus)
+                {
+                    // If the focus is contained inside a control's children
+                    // return the child
+                    return GetFocused(c.Controls);
+                }
+            }
+            // No control on the form has focus
+            return null;
+        }
     }
 }

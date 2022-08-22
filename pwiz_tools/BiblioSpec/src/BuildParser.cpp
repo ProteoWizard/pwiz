@@ -92,6 +92,7 @@ void BuildParser::setSpecFileName(
     curSpecFileName_.clear();
 
     string fileroot = specfileroot;
+    Verbosity::debug("checking for basename: %s", fileroot);
     do {
         // try the location of the result file, then all dirs in the list
         for(int i=-1; i<(int)directories.size(); i++) {
@@ -204,9 +205,7 @@ string BuildParser::filesNotFoundMessage(
     if (extensions.empty())
         throw BlibException(false, "empty extensions list for filesNotFoundMessage");
 
-    string extString = extensions.at(0);
-    for (const auto& ext : extensions)
-        extString += ", " + ext;
+    string extString = boost::algorithm::join(extensions, ", ");
 
     string filesPlural = "file";
     string namesPlural = "name";

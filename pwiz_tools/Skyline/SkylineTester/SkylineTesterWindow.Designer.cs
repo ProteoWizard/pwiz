@@ -1246,6 +1246,7 @@ namespace SkylineTester
             "Test",
             "Quality",
             "Demo",
+            "Screenshots",
             "Covershot"});
             this.runMode.Location = new System.Drawing.Point(276, 553);
             this.runMode.Name = "runMode";

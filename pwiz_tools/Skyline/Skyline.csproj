@@ -644,6 +644,15 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\MsGraphExtension.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
+      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
     <Compile Include="Model\Lib\LibraryKey.cs" />
@@ -3931,6 +3940,10 @@
       <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx" />
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
