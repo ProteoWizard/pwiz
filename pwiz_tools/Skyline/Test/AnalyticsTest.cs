@@ -28,7 +28,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void SendGa4AnalyticsHitTest()
         {
-            Assert.AreEqual("{\n  \"validationMessages\": [ ]\n}\n", Program.SendGa4AnalyticsHit(true));
+            Assert.AreEqual(204, Program.SendGa4AnalyticsHit(true));
         }
     }
 }
