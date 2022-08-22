@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -461,7 +462,9 @@ namespace pwiz.Skyline.Model.Lib
             copies,
             numPeaks,
             score,
-            scoreType
+            scoreType,
+            SpecIDinFile,
+            retentionTime
         }
 
         private enum RefSpectraPeaks
@@ -539,6 +542,12 @@ namespace pwiz.Skyline.Model.Lib
             id,
             fileName,
             idFileName
+        }
+
+        private enum ScoreTypes
+        {
+            scoreType,
+            probabilityType
         }
 
         // Cache struct layouts
@@ -1974,6 +1983,137 @@ namespace pwiz.Skyline.Model.Lib
         private bool HasRedundantModificationsTable()
         {
             return SqliteOperations.TableExists(_sqliteConnectionRedundant.Connection, @"Modifications");
+        }
+
+        private bool HasScoreTypesTable(SQLiteConnection connection)
+        {
+            if (!SqliteOperations.TableExists(connection, @"ScoreTypes"))
+            {
+                return false;
+            }
+
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = @"SELECT count(*) FROM [ScoreTypes]";
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int rows = reader.GetInt32(0);
+                        return rows > 0;
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        private bool HasSourceFilesTable(SQLiteConnection connection)
+        {
+            return SqliteOperations.TableExists(connection, @"SpectrumSourceFiles");
+        }
+
+        private bool HasFileIdColumn(SQLiteConnection connection)
+        {
+            return SqliteOperations.ColumnExists(connection, @"RefSpectra", @"fileID");
+        }
+
+        public class BiblioSpecSheetInfo
+        {
+            [CanBeNull] public string SpecIdInFile { get; set; }
+            [CanBeNull] public string IDFileName { get; set; }
+
+            [CanBeNull] public string FileName { get; set; }
+
+            public int Count { get; set; }
+
+            [CanBeNull] public double? Score { get; set; }
+
+            [CanBeNull] public string ScoreType { get; set; }
+        }
+
+        public BiblioSpecSheetInfo GetRedundantSheetInfo(int redundantId)
+        {
+            return GetSheetInfo(redundantId, false);
+        }
+
+        public BiblioSpecSheetInfo GetBestSheetInfo(LibKey key)
+        {
+            int i = FindEntry(key);
+            if (i == -1)
+                return null;
+            var info = _libraryEntries[i];
+            return GetSheetInfo(info.Id, true);
+        }
+        
+        /// <summary>
+        /// Gets data on a spectrum to populate the Property Sheet in ViewLibraryDlg
+        /// </summary>
+        /// <param name="id">The RefSpectraID of the spectrum</param>
+        /// <param name="isBest">Whether to search the redundant or non-redundant library</param>
+        /// <returns></returns>
+        public BiblioSpecSheetInfo GetSheetInfo(long id, bool isBest)
+        {
+            var connection = isBest ? _sqliteConnection.Connection : _sqliteConnectionRedundant.Connection;
+            var hasScores = HasScoreTypesTable(connection);
+            var hasFiles = HasSourceFilesTable(connection) && HasFileIdColumn(connection);
+            using (SQLiteCommand select = new SQLiteCommand(connection))
+            {
+                if (hasScores)
+                {
+                    // Resolves issue with RefSpectra and ScoreTypes table both having a column named scoreType
+                    select.CommandText = @"SELECT u.SpecIDinFile, u.retentionTime, u.score, u.copies, q.*";
+                    select.CommandText += hasFiles ? @", s.* " : @" ";
+                }
+                else
+                {
+                    select.CommandText = @"SELECT * ";
+                }
+
+                select.CommandText += @"FROM [RefSpectra] as u ";
+
+                if (hasFiles)
+                    select.CommandText += @"INNER JOIN [SpectrumSourceFiles] as s ON u.[FileID] = s.[id] ";
+
+                if (hasScores)
+                    select.CommandText += @"INNER JOIN [ScoreTypes] as q ON u.[scoreType] = q.[id] ";
+
+                select.CommandText += @"WHERE u.[id] = ?";
+
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, id));
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    var iSpecIdInFile = reader.GetOrdinal(RefSpectra.SpecIDinFile);
+                    var iIdFileName = reader.GetOrdinal(SpectrumSourceFiles.idFileName);
+                    var iFileName = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                    var iCopies = reader.GetOrdinal(RefSpectra.copies);
+                    var iScore = reader.GetOrdinal(RefSpectra.score);
+                    var iScoreType = reader.GetOrdinal(ScoreTypes.scoreType);
+                    var iProbabilityType = reader.GetOrdinal(ScoreTypes.probabilityType);
+                    var sheetInfo = new BiblioSpecSheetInfo();
+                    if (reader.Read())
+                    {
+                        sheetInfo.SpecIdInFile = reader.IsDBNull(iSpecIdInFile) ? null : reader.GetString(iSpecIdInFile);
+                        sheetInfo.Count = reader.GetInt32(iCopies);
+                        if (hasFiles)
+                        {
+                            sheetInfo.IDFileName = reader.IsDBNull(iIdFileName) ? null : reader.GetString(iIdFileName);
+                            sheetInfo.FileName = reader.IsDBNull(iFileName) ? null : reader.GetString(iFileName);
+                        }
+                        if (hasScores)
+                        {
+                            sheetInfo.Score = reader.IsDBNull(iScore) ? (double?)null : reader.GetDouble(iScore);
+                            var scoreType = reader.IsDBNull(iScoreType) ? null : reader.GetString(iScoreType);
+                            var probabilityType = reader.IsDBNull(iProbabilityType) ? null : reader.GetString(iProbabilityType);
+                            sheetInfo.ScoreType = new ScoreType(scoreType, probabilityType).ToString();
+                        }
+                        return sheetInfo;
+                    }
+                    // Should never reach here, as there should always be an sql entry matching the query
+                    return null;
+                }
+            }
         }
 
         public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)

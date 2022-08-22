@@ -287,8 +287,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, peptideCount);
                 Assert.AreEqual(1, precursorCount);
                 Assert.AreEqual(3, transitionCount);
+                emptyProteinsDlg.CancelDialog();
             });
-            emptyProteinsDlg.CancelDialog();
 
             // Set empty protein discard notice to appear if there are > 5, and retry finishing the wizard.
             using (new EmptyProteinGroupSetter(5))
@@ -630,7 +630,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             //RunUI(() => peptidesPerProteinDlg.KeepAll = true);
-            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
+            WaitForConditionUI(() => peptidesPerProteinDlg.IsOkEnabled);
             // The AllChromatogramsGraph will immediately show an error because the file being imported is bogus.
             var importResultsDlg = ShowDialog<AllChromatogramsGraph>(peptidesPerProteinDlg.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);

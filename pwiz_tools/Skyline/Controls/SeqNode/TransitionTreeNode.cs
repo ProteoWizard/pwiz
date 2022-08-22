@@ -155,6 +155,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 ratio = (float?)displaySettings.NormalizedValueCalculator.GetTransitionValue(displaySettings.NormalizationMethod,
                     displaySettings.NodePep, nodeTran,
+                    displaySettings.ResultsIndex,
                     nodeTran.GetChromInfoEntry(displaySettings.ResultsIndex));
             }
             if (!ratio.HasValue)

@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     public class QuantificationResult : Immutable, IComparable
     {
         [Format(Formats.GLOBAL_STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? NormalizedArea{ get; private set; }
+        public double? NormalizedArea { get; private set; }
 
         public QuantificationResult ChangeNormalizedArea(double? intensity)
         {

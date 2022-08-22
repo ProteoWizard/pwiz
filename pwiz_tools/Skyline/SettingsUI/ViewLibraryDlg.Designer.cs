@@ -52,7 +52,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.graphControl = new pwiz.MSGraph.MSGraphControl();
+            this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.MsGraphExtension();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnAIons = new System.Windows.Forms.ToolStripButton();
             this.btnBIons = new System.Windows.Forms.ToolStripButton();
@@ -65,13 +65,17 @@ namespace pwiz.Skyline.SettingsUI
             this.charge1Button = new System.Windows.Forms.ToolStripButton();
             this.charge2Button = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.propertiesButton = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.copyMetafileButton = new System.Windows.Forms.ToolStripButton();
             this.btnCopy = new System.Windows.Forms.ToolStripButton();
             this.btnSave = new System.Windows.Forms.ToolStripButton();
             this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.labelFilename = new System.Windows.Forms.Label();
+            this.comboRedundantSpectra = new System.Windows.Forms.ComboBox();
+            this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -121,6 +125,7 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
             this.ViewLibraryPanel.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.SuspendLayout();
@@ -285,29 +290,15 @@ namespace pwiz.Skyline.SettingsUI
             // GraphPanel
             // 
             this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.GraphPanel.Controls.Add(this.graphControl);
+            this.GraphPanel.Controls.Add(this.msGraphExtension1);
             this.GraphPanel.Controls.Add(this.toolStrip1);
             resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
             // 
-            // graphControl
+            // msGraphExtension1
             // 
-            resources.ApplyResources(this.graphControl, "graphControl");
-            this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphControl.IsEnableVPan = false;
-            this.graphControl.IsEnableVZoom = false;
-            this.graphControl.IsShowCopyMessage = false;
-            this.graphControl.IsZoomOnMouseCenter = true;
-            this.graphControl.Name = "graphControl";
-            this.graphControl.ScrollGrace = 0D;
-            this.graphControl.ScrollMaxX = 0D;
-            this.graphControl.ScrollMaxY = 0D;
-            this.graphControl.ScrollMaxY2 = 0D;
-            this.graphControl.ScrollMinX = 0D;
-            this.graphControl.ScrollMinY = 0D;
-            this.graphControl.ScrollMinY2 = 0D;
-            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            resources.ApplyResources(this.msGraphExtension1, "msGraphExtension1");
+            this.msGraphExtension1.Name = "msGraphExtension1";
             // 
             // toolStrip1
             // 
@@ -325,6 +316,8 @@ namespace pwiz.Skyline.SettingsUI
             this.charge1Button,
             this.charge2Button,
             this.toolStripSeparator2,
+            this.propertiesButton,
+            this.toolStripSeparator3,
             this.copyMetafileButton,
             this.btnCopy,
             this.btnSave,
@@ -337,7 +330,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnAIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_A;
             resources.ApplyResources(this.btnAIons, "btnAIons");
             this.btnAIons.Name = "btnAIons";
-            this.btnAIons.Click += new System.EventHandler(this.aionsContextMenuItem_Click);
             // 
             // btnBIons
             // 
@@ -345,7 +337,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_B;
             resources.ApplyResources(this.btnBIons, "btnBIons");
             this.btnBIons.Name = "btnBIons";
-            this.btnBIons.Click += new System.EventHandler(this.bionsContextMenuItem_Click);
             // 
             // btnCIons
             // 
@@ -353,7 +344,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_C;
             resources.ApplyResources(this.btnCIons, "btnCIons");
             this.btnCIons.Name = "btnCIons";
-            this.btnCIons.Click += new System.EventHandler(this.cionsContextMenuItem_Click);
             // 
             // btnXIons
             // 
@@ -361,7 +351,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnXIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_X;
             resources.ApplyResources(this.btnXIons, "btnXIons");
             this.btnXIons.Name = "btnXIons";
-            this.btnXIons.Click += new System.EventHandler(this.xionsContextMenuItem_Click);
             // 
             // btnYIons
             // 
@@ -369,7 +358,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnYIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Y;
             resources.ApplyResources(this.btnYIons, "btnYIons");
             this.btnYIons.Name = "btnYIons";
-            this.btnYIons.Click += new System.EventHandler(this.yionsContextMenuItem_Click);
             // 
             // btnZIons
             // 
@@ -377,7 +365,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnZIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Z;
             resources.ApplyResources(this.btnZIons, "btnZIons");
             this.btnZIons.Name = "btnZIons";
-            this.btnZIons.Click += new System.EventHandler(this.zionsContextMenuItem_Click);
             // 
             // btnFragmentIons
             // 
@@ -385,7 +372,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnFragmentIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_fragments;
             resources.ApplyResources(this.btnFragmentIons, "btnFragmentIons");
             this.btnFragmentIons.Name = "btnFragmentIons";
-            this.btnFragmentIons.Click += new System.EventHandler(this.fragmentionsContextMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -398,7 +384,6 @@ namespace pwiz.Skyline.SettingsUI
             this.charge1Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_1;
             resources.ApplyResources(this.charge1Button, "charge1Button");
             this.charge1Button.Name = "charge1Button";
-            this.charge1Button.Click += new System.EventHandler(this.charge1ContextMenuItem_Click);
             // 
             // charge2Button
             // 
@@ -406,12 +391,24 @@ namespace pwiz.Skyline.SettingsUI
             this.charge2Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_2;
             resources.ApplyResources(this.charge2Button, "charge2Button");
             this.charge2Button.Name = "charge2Button";
-            this.charge2Button.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
+            // 
+            // propertiesButton
+            // 
+            this.propertiesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.propertiesButton.Image = global::pwiz.Skyline.Properties.Resources.Properties_Button;
+            resources.ApplyResources(this.propertiesButton, "propertiesButton");
+            this.propertiesButton.Name = "propertiesButton";
+            this.propertiesButton.Click += new System.EventHandler(this.propertiesMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            resources.ApplyResources(this.toolStripSeparator3, "toolStripSeparator3");
             // 
             // copyMetafileButton
             // 
@@ -419,7 +416,6 @@ namespace pwiz.Skyline.SettingsUI
             this.copyMetafileButton.Image = global::pwiz.Skyline.Properties.Resources.Copy;
             resources.ApplyResources(this.copyMetafileButton, "copyMetafileButton");
             this.copyMetafileButton.Name = "copyMetafileButton";
-            this.copyMetafileButton.Click += new System.EventHandler(this.copyMetafileButton_Click);
             // 
             // btnCopy
             // 
@@ -427,7 +423,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy_Bitmap;
             resources.ApplyResources(this.btnCopy, "btnCopy");
             this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // btnSave
             // 
@@ -435,7 +430,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave.Image = global::pwiz.Skyline.Properties.Resources.Save;
             resources.ApplyResources(this.btnSave, "btnSave");
             this.btnSave.Name = "btnSave";
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnPrint
             // 
@@ -443,12 +437,11 @@ namespace pwiz.Skyline.SettingsUI
             this.btnPrint.Image = global::pwiz.Skyline.Properties.Resources.Print;
             resources.ApplyResources(this.btnPrint, "btnPrint");
             this.btnPrint.Name = "btnPrint";
-            this.btnPrint.Click += new System.EventHandler(this.btnPrint_Click);
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.tableLayoutPanel2);
             this.panel2.Controls.Add(this.cbAssociateProteins);
-            this.panel2.Controls.Add(this.labelFilename);
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
@@ -456,17 +449,34 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
             // 
+            // tableLayoutPanel2
+            // 
+            resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
+            this.tableLayoutPanel2.Controls.Add(this.labelFilename, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.comboRedundantSpectra, 1, 0);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            // 
+            // labelFilename
+            // 
+            resources.ApplyResources(this.labelFilename, "labelFilename");
+            this.labelFilename.Name = "labelFilename";
+            // 
+            // comboRedundantSpectra
+            // 
+            resources.ApplyResources(this.comboRedundantSpectra, "comboRedundantSpectra");
+            this.comboRedundantSpectra.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRedundantSpectra.DropDownWidth = 200;
+            this.comboRedundantSpectra.Name = "comboRedundantSpectra";
+            this.comboRedundantSpectra.SelectedIndexChanged += new System.EventHandler(this.redundantSpectrum_Changed);
+            this.comboRedundantSpectra.Click += new System.EventHandler(this.redundantSpectrum_InsertComboItems);
+            this.comboRedundantSpectra.Enter += new System.EventHandler(this.redundantSpectrum_InsertComboItems);
+            // 
             // cbAssociateProteins
             // 
             resources.ApplyResources(this.cbAssociateProteins, "cbAssociateProteins");
             this.cbAssociateProteins.Name = "cbAssociateProteins";
             this.modeUIHandler.SetUIMode(this.cbAssociateProteins, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.cbAssociateProteins.UseVisualStyleBackColor = true;
-            // 
-            // labelFilename
-            // 
-            resources.ApplyResources(this.labelFilename, "labelFilename");
-            this.labelFilename.Name = "labelFilename";
             // 
             // btnAdd
             // 
@@ -755,6 +765,8 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStrip1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.tableLayoutPanel2.PerformLayout();
             this.ViewLibraryPanel.ResumeLayout(false);
             this.contextMenuSpectrum.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -781,7 +793,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Panel GraphPanel;
-        private pwiz.MSGraph.MSGraphControl graphControl;
         private System.Windows.Forms.ContextMenuStrip contextMenuSpectrum;
         private System.Windows.Forms.ToolStripMenuItem aionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bionsContextMenuItem;
@@ -802,21 +813,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator15;
         private System.Windows.Forms.ToolStripMenuItem zoomSpectrumContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator27;
-        private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.ToolStripButton btnAIons;
-        private System.Windows.Forms.ToolStripButton btnBIons;
-        private System.Windows.Forms.ToolStripButton btnCIons;
-        private System.Windows.Forms.ToolStripButton btnXIons;
-        private System.Windows.Forms.ToolStripButton btnYIons;
-        private System.Windows.Forms.ToolStripButton btnZIons;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripButton charge1Button;
-        private System.Windows.Forms.ToolStripButton charge2Button;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripButton copyMetafileButton;
-        private System.Windows.Forms.ToolStripButton btnCopy;
-        private System.Windows.Forms.ToolStripButton btnSave;
-        private System.Windows.Forms.ToolStripButton btnPrint;
         private System.Windows.Forms.CheckBox cbShowModMasses;
         private System.Windows.Forms.ToolStripMenuItem ionMzValuesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem observedMzValuesContextMenuItem;
@@ -828,16 +824,36 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge3ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge4ContextMenuItem;
-        private System.Windows.Forms.Label labelFilename;
         private System.Windows.Forms.Label labelRT;
         private System.Windows.Forms.Button btnLibDetails;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.ToolStripMenuItem showChromatogramsContextMenuItem;
         private System.Windows.Forms.Label MoleculeLabel;
-        private System.Windows.Forms.ToolStripButton btnFragmentIons;
         private System.Windows.Forms.ToolStripMenuItem scoreContextMenuItem;
         private System.Windows.Forms.Label filterLabel;
         private System.Windows.Forms.Label byLabel;
         private System.Windows.Forms.ComboBox comboFilterCategory;
+        private MsGraphExtension msGraphExtension1;
+        private System.Windows.Forms.ToolStripButton propertiesButton;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Label labelFilename;
+        private System.Windows.Forms.ComboBox comboRedundantSpectra;
+        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStripButton btnAIons;
+        private System.Windows.Forms.ToolStripButton btnBIons;
+        private System.Windows.Forms.ToolStripButton btnCIons;
+        private System.Windows.Forms.ToolStripButton btnXIons;
+        private System.Windows.Forms.ToolStripButton btnYIons;
+        private System.Windows.Forms.ToolStripButton btnZIons;
+        private System.Windows.Forms.ToolStripButton btnFragmentIons;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripButton charge1Button;
+        private System.Windows.Forms.ToolStripButton charge2Button;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton copyMetafileButton;
+        private System.Windows.Forms.ToolStripButton btnCopy;
+        private System.Windows.Forms.ToolStripButton btnSave;
+        private System.Windows.Forms.ToolStripButton btnPrint;
     }
 }

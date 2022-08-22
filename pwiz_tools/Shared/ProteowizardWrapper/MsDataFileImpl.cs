@@ -1780,7 +1780,7 @@ namespace pwiz.ProteowizardWrapper
 
         public override string ToString() // For debugging convenience, not user-facing
         {
-            return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime}";
+            return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime} im={MinIonMobility??_ionMobility?.Mobility}:{MaxIonMobility??_ionMobility?.Mobility}";
         }
     }
 

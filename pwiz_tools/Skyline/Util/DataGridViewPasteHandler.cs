@@ -120,6 +120,7 @@ namespace pwiz.Skyline.Util
             }
             bool resultsGridSynchSelectionOld = Settings.Default.ResultsGridSynchSelection;
             bool enabledOld = DataGridView.Enabled;
+            bool focusedOld = DataGridView.Focused;
             try
             {
                 Settings.Default.ResultsGridSynchSelection = false;
@@ -150,6 +151,10 @@ namespace pwiz.Skyline.Util
             finally
             {
                 DataGridView.Enabled = enabledOld;
+                if (focusedOld && !DataGridView.Focused)
+                {
+                    DataGridView.Focus();
+                }
                 Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 skylineDataSchema.RollbackBatchModifyDocument();
             }

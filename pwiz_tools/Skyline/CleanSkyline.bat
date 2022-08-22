@@ -18,6 +18,7 @@ IF EXIST EULA.MSFileReader del /q EULA.MSFileReader
 IF EXIST Interop.EDAL.SxS.manifest del /q Interop.EDAL.SxS.manifest
 IF EXIST MassLynxRaw.dll del /q MassLynxRaw.dll
 IF EXIST Skyline.sln.cache del /q Skyline.sln.cache
+IF EXIST Model\Prosit\Config\PrositConfig.xml del /q Model\Prosit\Config\PrositConfig.xml
 IF EXIST Test\bin rmdir /s /q Test\bin
 IF EXIST Test\obj rmdir /s /q Test\obj
 IF EXIST TestA\bin rmdir /s /q TestA\bin
@@ -41,6 +42,8 @@ IF EXIST ..\Shared\MSGraph\obj rmdir /s /q ..\Shared\MSGraph\obj
 IF EXIST ..\Shared\Crawdad\obj rmdir /s /q ..\Shared\Crawdad\obj
 IF EXIST ProtocolBuffers\tmp rmdir /s /q ProtocolBuffers\tmp
 IF EXIST ProtocolBuffers\GeneratedCode\*.cs del /q ProtocolBuffers\GeneratedCode\*.cs
+IF EXIST Test\ProtocolBuffers\tmp rmdir /s /q Test\ProtocolBuffers\tmp
+IF EXIST Test\ProtocolBuffers\GeneratedCode\*.cs del /q Test\ProtocolBuffers\GeneratedCode\*.cs
 IF EXIST TestSettings_x64.testsettings del /q TestSettings_x64.testsettings
 IF EXIST TestSettings_x86.testsettings del /q TestSettings_x86.testsettings
 IF EXIST Executables\Installer\FileList64.txt del /q Executables\Installer\FileList64.txt
