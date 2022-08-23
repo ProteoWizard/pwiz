@@ -1486,18 +1486,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string StackTraceListVersion {
-            get {
-                return ((string)(this["StackTraceListVersion"]));
-            }
-            set {
-                this["StackTraceListVersion"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         public global::System.Collections.Specialized.StringCollection CustomFinders {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["CustomFinders"]));
@@ -3272,6 +3260,19 @@ namespace pwiz.Skyline.Properties {
                 this["ShowZHHIons"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ShowLosses {
+            get {
+                return ((string)(this["ShowLosses"]));
+            }
+            set {
+                this["ShowLosses"] = value;
+            }
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -3283,6 +3284,7 @@ namespace pwiz.Skyline.Properties {
                 this["ShowSpecialIons"] = value;
             }
         }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
@@ -3290,21 +3292,11 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ((string)(this["LastProteinAssociationFastaFilepath"]));
             }
-
             set {
                 this["LastProteinAssociationFastaFilepath"] = value;
             }
         }
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ShowLosses {
-            get {
-                return ((string)(this["ShowLosses"]));    		}
-            set {
-                this["ShowLosses"] = value;
-            }
-        }		
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -3326,6 +3318,54 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ExportCEPredictorName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryPropertiesVisible {
+            get {
+                return ((bool)(this["ViewLibraryPropertiesVisible"]));
+            }
+            set {
+                this["ViewLibraryPropertiesVisible"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryPropertiesSorted {
+            get {
+                return ((bool)(this["ViewLibraryPropertiesSorted"]));
+            }
+            set {
+                this["ViewLibraryPropertiesSorted"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ViewLibrarySplitMainDist {
+            get {
+                return ((int)(this["ViewLibrarySplitMainDist"]));
+            }
+            set {
+                this["ViewLibrarySplitMainDist"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ViewLibrarySplitPropsDist {
+            get {
+                return ((int)(this["ViewLibrarySplitPropsDist"]));
+            }
+            set {
+                this["ViewLibrarySplitPropsDist"] = value;
             }
         }
     }

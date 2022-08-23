@@ -75,11 +75,11 @@ namespace pwiz.Skyline.SettingsUI
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.labelFilename = new System.Windows.Forms.Label();
             this.comboRedundantSpectra = new System.Windows.Forms.ComboBox();
+            this.labelRT = new System.Windows.Forms.Label();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.labelRT = new System.Windows.Forms.Label();
             this.ViewLibraryPanel = new System.Windows.Forms.Panel();
             this.LibraryLabel = new System.Windows.Forms.Label();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -471,6 +471,11 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRedundantSpectra.Click += new System.EventHandler(this.redundantSpectrum_InsertComboItems);
             this.comboRedundantSpectra.Enter += new System.EventHandler(this.redundantSpectrum_InsertComboItems);
             // 
+            // labelRT
+            // 
+            resources.ApplyResources(this.labelRT, "labelRT");
+            this.labelRT.Name = "labelRT";
+            // 
             // cbAssociateProteins
             // 
             resources.ApplyResources(this.cbAssociateProteins, "cbAssociateProteins");
@@ -499,11 +504,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
-            // labelRT
-            // 
-            resources.ApplyResources(this.labelRT, "labelRT");
-            this.labelRT.Name = "labelRT";
             // 
             // ViewLibraryPanel
             // 
