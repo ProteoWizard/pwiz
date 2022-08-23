@@ -725,9 +725,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     switch (scoreType.ProbabilityType)
                     {
-                        case BiblioSpecScoreType.EnumProbabilityType.probability_correct:
+                        case ScoreType.EnumProbabilityType.probability_correct:
                             return scoreType.ValidRange.Min;
-                        case BiblioSpecScoreType.EnumProbabilityType.probability_incorrect:
+                        case ScoreType.EnumProbabilityType.probability_incorrect:
                             return scoreType.ValidRange.Max;
                         default:
                             return null;
