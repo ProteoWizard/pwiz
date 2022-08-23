@@ -1718,6 +1718,12 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return Set.ShowPrecursorIon; }
             set { ActAndUpdate(() => Set.ShowPrecursorIon = value); }
         }
+        public bool ShowSpecialIons
+        {
+            get { return Set.ShowSpecialIons; }
+            set { ActAndUpdate(() => Set.ShowSpecialIons = value); }
+        }
+
 
         public bool ShowCharge1
         {
@@ -1780,6 +1786,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddItem(types, IonType.a, Set.ShowAIons);
                 // FUTURE: Add custom ions when LibraryRankedSpectrumInfo can support them
                 AddItem(types, IonType.precursor, Set.ShowPrecursorIon);
+                AddItem(types, IonType.custom, Set.ShowSpecialIons);
             }
             else
             {

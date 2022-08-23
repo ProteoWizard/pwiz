@@ -59,6 +59,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PropertyDescriptor basePropertyDescriptor;
         public bool ReadOnly = true;
         private static string _descriptionPrefix = @"Description_";
+        private static string _categoryPrefix = @"Category_";
         private ResourceManager _resourceManager = MsGraphExtensionResx.ResourceManager;
 
         public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor) : base(basePropertyDescriptor)
@@ -90,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return _resourceManager.GetString(_descriptionPrefix + basePropertyDescriptor.Name) ?? String.Empty;
+                return _resourceManager.GetString(_descriptionPrefix + basePropertyDescriptor.Name) ?? string.Empty;
             }
         }
         
@@ -100,7 +101,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (basePropertyDescriptor.Category != null)
                 {
-                    return _resourceManager.GetString(basePropertyDescriptor.Category);
+                    return _resourceManager.GetString(_categoryPrefix + basePropertyDescriptor.Category) ?? string.Empty;
                 }
 
                 return null;
