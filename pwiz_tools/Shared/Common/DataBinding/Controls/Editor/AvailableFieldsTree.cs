@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.Properties;
 
 namespace pwiz.Common.DataBinding.Controls.Editor
@@ -37,6 +38,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private ICollection<PropertyPath> _checkedColumns = new PropertyPath[0];
         private IViewEditor _viewEditor;
         private bool _showHiddenFields;
+        private bool _alphabetical;
         private static readonly Image[] ImagelistImages =
         {
             Resources.DataColumn,
@@ -82,6 +84,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 {
                     return;
                 }
+                var treeState = GetTreeState();
                 _rootColumn = value;
                 Nodes.Clear();
                 if (_rootColumn.DataSchema.IsRootTypeSelectable(_rootColumn.PropertyType))
@@ -111,6 +114,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                         Nodes[0].Expand();
                     }
                 }
+                RestoreTreeState(treeState);
             }
         }
 
@@ -141,6 +145,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void ViewEditorOnViewChange(object sender, EventArgs e)
         {
+            Alphabetical = ViewEditor.Alphabetical;
             ShowHiddenFields = ViewEditor.ShowHiddenFields;
         }
 
@@ -162,12 +167,33 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        [DefaultValue(false)]
+        public bool Alphabetical
+        {
+            get
+            {
+                return _alphabetical;
+            }
+            set
+            {
+                if (Alphabetical == value)
+                {
+                    return;
+                }
+
+                _alphabetical = value;
+                RebuildNodeTree();
+            }
+        }
+
         private void RebuildNodeTree()
         {
+            var treeState = GetTreeState();
             Nodes.Clear();
             var rootColumnOld = _rootColumn;
             _rootColumn = null;
             RootColumn = rootColumnOld;
+            RestoreTreeState(treeState);
         }
 
         /// <summary>
@@ -370,12 +396,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public IEnumerable<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
         {
-            IEnumerable<ColumnDescriptor> allChildren = ListAllChildren(parent);
-            if (ShowHiddenFields)
+            IEnumerable<ColumnDescriptor> children = ListAllChildren(parent);
+            if (!ShowHiddenFields)
             {
-                return allChildren;
+                children = children.Where(child => !IsAdvanced(child, parent) && !IsObsolete(child));
             }
-            return allChildren.Where(child => !IsAdvanced(child, parent) && !IsObsolete(child));
+
+            if (Alphabetical)
+            {
+                children = children.OrderBy(columnDescriptor =>
+                    columnDescriptor.GetColumnCaption(ColumnCaptionType.localized), StringComparer.CurrentCultureIgnoreCase);
+            }
+            return children;
         }
 
         private IList<ColumnDescriptor> ListAllChildren(ColumnDescriptor parent)
@@ -541,6 +573,52 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             public ColumnDescriptor TreeColumn { get; private set;}
             public ColumnDescriptor ValueColumn { get; private set; }
+        }
+
+        private TreeState GetTreeState()
+        {
+            PropertyPath selectedPath = null;
+            if (SelectedNode != null)
+            {
+                selectedPath = GetTreeColumn(SelectedNode).PropertyPath;
+            }
+
+            return new TreeState(selectedPath, GetExpandedPaths(Nodes));
+        }
+
+        private void RestoreTreeState(TreeState treeState)
+        {
+            foreach (var path in treeState.ExpandedPaths)
+            {
+                FindTreeNode(path, true)?.Expand();
+            }
+
+            if (treeState.SelectedPath != null)
+            {
+                var node = FindTreeNode(treeState.SelectedPath, true);
+                if (node != null)
+                {
+                    SelectedNode = node;
+                }
+            }
+        }
+
+        private IEnumerable<PropertyPath> GetExpandedPaths(TreeNodeCollection treeNodeCollection)
+        {
+            return treeNodeCollection.OfType<TreeNode>().Where(node => node.IsExpanded).SelectMany(node =>
+                GetExpandedPaths(node.Nodes).Prepend(GetTreeColumn(node).PropertyPath));
+        }
+
+        private class TreeState
+        {
+            public TreeState(PropertyPath selectedPath, IEnumerable<PropertyPath> expandedPaths)
+            {
+                SelectedPath = selectedPath;
+                ExpandedPaths = ImmutableList.ValueOf(expandedPaths);
+            }
+
+            public PropertyPath SelectedPath { get; }
+            public ImmutableList<PropertyPath> ExpandedPaths { get; }
         }
     }
 }
