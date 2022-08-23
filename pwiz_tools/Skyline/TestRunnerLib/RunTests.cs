@@ -45,6 +45,7 @@ namespace TestRunnerLib
         public readonly MethodInfo TestInitialize;
         public readonly MethodInfo TestCleanup;
         public readonly bool IsPerfTest;
+        public readonly bool IsAuditLogTest;
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
 
@@ -56,6 +57,20 @@ namespace TestRunnerLib
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
+
+            var auditLogProp = testClass.GetProperty("AuditLogCompareLogs");
+            if (auditLogProp != null)
+            {
+                var testObj = Activator.CreateInstance(testClass);
+                SetTestContext?.Invoke(testObj, new object[]
+                {
+                    new TestRunnerContext
+                    {
+                        Properties = { ["TestName"] = testMethod.Name }
+                    }
+                });
+                IsAuditLogTest = (bool)auditLogProp.GetValue(testObj);
+            }
 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
