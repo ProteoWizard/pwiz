@@ -163,6 +163,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
