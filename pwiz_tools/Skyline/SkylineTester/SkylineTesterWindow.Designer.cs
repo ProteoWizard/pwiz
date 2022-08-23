@@ -139,9 +139,9 @@ namespace SkylineTester
             this.runLoops = new System.Windows.Forms.RadioButton();
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
+            this.testSet = new System.Windows.Forms.ComboBox();
             this.runMode = new System.Windows.Forms.ComboBox();
             this.label21 = new System.Windows.Forms.Label();
-            this.showTutorialsOnly = new System.Windows.Forms.CheckBox();
             this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
@@ -1232,9 +1232,9 @@ namespace SkylineTester
             this.testsGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.testsGroup.Controls.Add(this.testSet);
             this.testsGroup.Controls.Add(this.runMode);
             this.testsGroup.Controls.Add(this.label21);
-            this.testsGroup.Controls.Add(this.showTutorialsOnly);
             this.testsGroup.Controls.Add(this.testsTree);
             this.testsGroup.Controls.Add(this.skipCheckedTests);
             this.testsGroup.Controls.Add(this.runCheckedTests);
@@ -1246,6 +1246,20 @@ namespace SkylineTester
             this.testsGroup.TabIndex = 4;
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
+            // 
+            // testSet
+            // 
+            this.testSet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.testSet.FormattingEnabled = true;
+            this.testSet.Items.AddRange(new object[] {
+            "All tests",
+            "Tutorial tests",
+            "Audit log tests"});
+            this.testSet.Location = new System.Drawing.Point(274, 1);
+            this.testSet.Name = "testSet";
+            this.testSet.Size = new System.Drawing.Size(121, 21);
+            this.testSet.TabIndex = 34;
+            this.testSet.SelectedValueChanged += new System.EventHandler(this.comboTestSet_SelectedValueChanged);
             // 
             // runMode
             // 
@@ -1271,19 +1285,6 @@ namespace SkylineTester
             this.label21.Size = new System.Drawing.Size(37, 13);
             this.label21.TabIndex = 35;
             this.label21.Text = "Mode:";
-            // 
-            // showTutorialsOnly
-            // 
-            this.showTutorialsOnly.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.showTutorialsOnly.AutoSize = true;
-            this.showTutorialsOnly.Location = new System.Drawing.Point(307, 1);
-            this.showTutorialsOnly.Name = "showTutorialsOnly";
-            this.showTutorialsOnly.Size = new System.Drawing.Size(88, 17);
-            this.showTutorialsOnly.TabIndex = 34;
-            this.showTutorialsOnly.Text = "Tutorials only";
-            this.showTutorialsOnly.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.showTutorialsOnly.UseVisualStyleBackColor = true;
-            this.showTutorialsOnly.CheckedChanged += new System.EventHandler(this.showTutorialsOnly_CheckedChanged);
             // 
             // testsTree
             // 
@@ -3605,5 +3606,6 @@ namespace SkylineTester
         private RadioButton runParallel;
         private Label label22;
         private RadioButton runSerial;
+        private ComboBox testSet;
     }
 }
