@@ -192,6 +192,8 @@ namespace pwiz.Skyline.SettingsUI
                 Location = location;
                 ForceOnScreen();
             }
+            if (Settings.Default.ViewLibrarySplitMainDist > 0)
+                splitMain.SplitterDistance = Settings.Default.ViewLibrarySplitMainDist;
 
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
@@ -345,6 +347,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             Settings.Default.ViewLibraryLocation = Location;
             Settings.Default.ViewLibrarySize = Size;
+            Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
+            Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
+            if (msGraphExtension1.PropertiesVisible)
+                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
+            Settings.Default.ViewLibraryPropertiesSorted =
+                msGraphExtension1.PropertiesSheet.PropertySort == PropertySort.Alphabetical;
 
             base.OnClosing(e);
         }
@@ -365,6 +373,14 @@ namespace pwiz.Skyline.SettingsUI
             UpdateListPeptide(0);
             textPeptide.Select();
             UpdateUI();
+            RestoreProperties();
+        }
+
+        private void RestoreProperties()
+        {
+            ShowProperties(Settings.Default.ViewLibraryPropertiesVisible);
+            if (Settings.Default.ViewLibraryPropertiesSorted)
+                GraphExtensionControl.PropertiesSheet.PropertySort = PropertySort.Alphabetical;
         }
 
         /// <summary>
@@ -887,7 +903,6 @@ namespace pwiz.Skyline.SettingsUI
                             // Generates the object that will go into the property sheet
                             var newProperties = new SpectrumProperties
                             {
-                                FileName = spectrumInfo.FileName,
                                 LibraryName = spectrumInfo.Name,
                                 PrecursorMz = CalcMz(pepInfo, _matcher).ToString(Formats.Mz),
                                 Score = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
@@ -896,6 +911,7 @@ namespace pwiz.Skyline.SettingsUI
                                 CCS = baseCCS,
                                 IonMobility = baseIM
                             };
+                            newProperties.SetFileName(spectrumInfo.FileName);
                             if (_selectedLibrary is BiblioSpecLiteLibrary)
                             {
                                 newProperties = GetBiblioSpecAdditionalInfo(spectrumInfo, index, newProperties);
@@ -1079,7 +1095,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 newProperties.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
                 newProperties.IdFileName = biblioAdditionalInfo.IDFileName;
-                newProperties.FileName = biblioAdditionalInfo.FileName;
+                newProperties.SetFileName(biblioAdditionalInfo.FileName);
                 newProperties.Score = biblioAdditionalInfo.Score;
                 newProperties.ScoreType = biblioAdditionalInfo.ScoreType;
             }
@@ -1580,8 +1596,17 @@ namespace pwiz.Skyline.SettingsUI
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-            propertiesButton.Checked = !propertiesButton.Checked;
+            ShowProperties(!propertiesButton.Checked);
+        }
+
+        public void ShowProperties(bool show)
+        {
+            if (!show && msGraphExtension1.PropertiesVisible)
+                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
+            propertiesButton.Checked = show;
             msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
+            if (show && Settings.Default.ViewLibrarySplitPropsDist > 0)
+                msGraphExtension1.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -3027,28 +3052,30 @@ namespace pwiz.Skyline.SettingsUI
 
         public class SpectrumProperties : GlobalizedObject
         {
-            [Category("Peptide Info")] public string PrecursorMz { get; set; }
+            [Category("FileInfo")] public string IdFileName { get; set; }
+            [Category("FileInfo")] public string FileName { get; set; }
+            [Category("FileInfo")] public string FilePath { get; set; }
+            [Category("FileInfo")] public string LibraryName { get; set; }
+            [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
+            [Category("PrecursorInfo")] public int? Charge { get; set; }
+            [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
+            [Category("AcquisitionInfo")] public string CCS { get; set; }
+            [Category("AcquisitionInfo")] public string IonMobility { get; set; }
+            [Category("AcquisitionInfo")] public string SpecIdInFile { get; set; }
+            [Category("MatchInfo")] public double? Score { get; set; }
+            [Category("MatchInfo")] public string ScoreType { get; set; }
+            [Category("MatchInfo")] public int? SpectrumCount { get; set; }
 
-            [Category("File Info")] public string IdFileName { get; set; }
-
-            [Category("File Info")] public string FileName { get; set; }
-            [Category("File Info")] public string LibraryName { get; set; }
-
-            [Category("Peptide Info")] public string SpecIdInFile { get; set; }
-
-            [Category("Peptide Info")] public string RetentionTime { get; set; }
-
-            [Category("Peptide Info")] public int? Charge { get; set; }
-
-            [Category("Peptide Info")] public int? SpectrumCount { get; set; }
-
-            [Category("Small Molecule Info")] public string IonMobility { get; set; }
-
-            [Category("Small Molecule Info")] public string CCS { get; set; }
-
-            [Category("Score")] public double? Score { get; set; }
-
-            [Category("Score")] public string ScoreType { get; set; }
+            public void SetFileName(string fileName)
+            {
+                if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
+                    FileName = fileName;
+                else
+                {
+                    FilePath = fileName;
+                    FileName = Path.GetFileName(fileName);
+                }
+            }
         }
     }
 }

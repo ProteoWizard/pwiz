@@ -159,9 +159,6 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
   </data>
-  <data name="File Info" xml:space="preserve">
-    <value>File Info</value>
-  </data>
   <data name="FileName" xml:space="preserve">
     <value>File Name</value>
   </data>
@@ -173,9 +170,6 @@
   </data>
   <data name="LibraryName" xml:space="preserve">
     <value>Library Name</value>
-  </data>
-  <data name="Peptide Info" xml:space="preserve">
-    <value>Peptide Info</value>
   </data>
   <data name="PrecursorMz" xml:space="preserve">
     <value>Precursor m/z</value>
@@ -189,13 +183,25 @@
   <data name="ScoreType" xml:space="preserve">
     <value>Score Type</value>
   </data>
-  <data name="Small Molecule Info" xml:space="preserve">
-    <value>Small Molecule Info</value>
-  </data>
   <data name="SpecIdInFile" xml:space="preserve">
     <value>Spectrum Id in File</value>
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>Spectrum Count</value>
+  </data>
+  <data name="Category_PrecursorInfo" xml:space="preserve">
+    <value>Precursor</value>
+  </data>
+  <data name="Category_AcquisitionInfo" xml:space="preserve">
+    <value>Measured</value>
+  </data>
+  <data name="Category_FileInfo" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Category_MatchInfo" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="FilePath" xml:space="preserve">
+    <value>File Path</value>
   </data>
 </root>

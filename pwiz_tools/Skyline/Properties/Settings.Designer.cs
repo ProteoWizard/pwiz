@@ -3332,5 +3332,53 @@ namespace pwiz.Skyline.Properties {
                 this["AlphabeticalReportEditor"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryPropertiesVisible {
+            get {
+                return ((bool)(this["ViewLibraryPropertiesVisible"]));
+            }
+            set {
+                this["ViewLibraryPropertiesVisible"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryPropertiesSorted {
+            get {
+                return ((bool)(this["ViewLibraryPropertiesSorted"]));
+            }
+            set {
+                this["ViewLibraryPropertiesSorted"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ViewLibrarySplitMainDist {
+            get {
+                return ((int)(this["ViewLibrarySplitMainDist"]));
+            }
+            set {
+                this["ViewLibrarySplitMainDist"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ViewLibrarySplitPropsDist {
+            get {
+                return ((int)(this["ViewLibrarySplitPropsDist"]));
+            }
+            set {
+                this["ViewLibrarySplitPropsDist"] = value;
+            }
+        }
     }
 }
