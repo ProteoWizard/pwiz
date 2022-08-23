@@ -3943,7 +3943,9 @@
     <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx" />
+    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
