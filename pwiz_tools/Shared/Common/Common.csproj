@@ -523,6 +523,7 @@
     <EmbeddedResource Include="Resources\DropImageNoBackground.png" />
     <Content Include="Resources\HiddenColumns.bmp" />
     <Content Include="Resources\Cluster.bmp" />
+    <None Include="Resources\Alphabetical.bmp" />
     <Content Include="Resources\UnknownUiMode.png" />
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
     <Content Include="Resources\agg_mean.bmp" />
