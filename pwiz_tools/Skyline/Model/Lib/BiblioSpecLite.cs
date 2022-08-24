@@ -138,6 +138,9 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private bool _anyExplicitPeakBounds;
 
+        private int _retentionTimesPsmCount = -1;
+        private readonly object _retentionTimesPsmCountLock = new object();
+
         public static string GetLibraryCachePath(string libraryPath)
         {
             return Path.ChangeExtension(libraryPath, EXT_CACHE);
@@ -1956,26 +1959,27 @@ namespace pwiz.Skyline.Model.Lib
         /// </returns> 
         private int RetentionTimesPsmCount()
         {
-            // No redundant spectra before schema version 1
-            if (SchemaVersion == 0)
-                return 0;
-
-            if (!SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes"))
+            lock (_retentionTimesPsmCountLock)
             {
-                // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
-                return 0;
-            }
+                if (_retentionTimesPsmCount >= 0)
+                    return _retentionTimesPsmCount;
 
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-            {
-                select.CommandText = @"SELECT count(*) FROM [RetentionTimes]";
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                // No redundant spectra before schema version 1 and version 1 does not have RetentionTimes table for redundant libraries.
+                if (SchemaVersion == 0 || !SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes"))
                 {
-                        if (!reader.Read())
-                        throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
-                    int rows = reader.GetInt32(0);
-                    return rows;
+                    _retentionTimesPsmCount = 0;
+                    return _retentionTimesPsmCount;
+                }
+
+                using (var select = new SQLiteCommand(_sqliteConnection.Connection) {CommandText = @"SELECT count(*) FROM [RetentionTimes]" })
+                using (var reader = select.ExecuteReader())
+                {
+                    if (!reader.Read())
+                        throw new InvalidDataException(string.Format(
+                            Resources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__,
+                            FilePath));
+                    _retentionTimesPsmCount = reader.GetInt32(0);
+                    return _retentionTimesPsmCount;
                 }
             }
         }
