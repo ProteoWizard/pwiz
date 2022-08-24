@@ -1087,6 +1087,7 @@ namespace pwiz.SkylineTestTutorial
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             WaitForConditionUI(() => dlg.IsUpdateComplete);
+            // Consider(nicksh): I don't think "isSmallMolecules" ever ends up being true
             var isSmallMolecules = dlg.PeptideDisplayCount < 11;
             var graphExtension = dlg.GraphExtensionControl;
             Assert.IsFalse(graphExtension.PropertiesVisible);
@@ -1107,7 +1108,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(propertyGrid);
 
             // Checks the number of properties displayed is the expected number
-            int expectedPropCount = isSmallMolecules ? 7 : 10;
+            int expectedPropCount = isSmallMolecules ? 7 : 11;
             RunUI(() =>
             {
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
