@@ -162,6 +162,7 @@ PWIZ_API_DECL bool SpectrumList_PeakPicker::supportsVendorPeakPicking(const std:
                                                + ReaderPtr(new Reader_Bruker_BAF)
                                                + ReaderPtr(new Reader_Bruker_YEP)
                                                + ReaderPtr(new Reader_Bruker_TDF)
+                                               + ReaderPtr(new Reader_Bruker_TSF)
                                                + ReaderPtr(new Reader_Shimadzu)
                                                + ReaderPtr(new Reader_Thermo)
                                                + ReaderPtr(new Reader_Waters);
