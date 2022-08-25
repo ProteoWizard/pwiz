@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _updateManager = new UpdateManager(this);
 
             // ReSharper disable once PossibleNullReferenceException
-            comboPrecursor.ComboBox.DisplayMember = @"DisplayString";
+            comboPrecursor.ComboBox.DisplayMember = nameof(Precursor.DisplayString);
 
             if (DocumentUI != null)
                 ZoomSpectrumToSettings();
