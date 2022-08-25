@@ -18,6 +18,9 @@
  */
 // ReSharper disable LocalizableElement
 //TODO: Disabled strings so build will pass, Nick will be localizing this file.
+
+using System.Globalization;
+
 namespace pwiz.Common.DataBinding
 {
     /// <summary>
@@ -26,7 +29,7 @@ namespace pwiz.Common.DataBinding
     public interface IDataFormat
     {
         string FileFilter { get; }
-        DsvWriter GetDsvWriter();
+        char Separator { get; }
     }
 
     public static class DataFormats
@@ -43,13 +46,8 @@ namespace pwiz.Common.DataBinding
                 FileFilter = fileFilter;
             }
 
-            char Separator { get; set; }
+            public char Separator { get; }
             public string FileFilter { get; private set; }
-
-            public DsvWriter GetDsvWriter()
-            {
-                return new DsvWriter(Separator);
-            }
         }
     }
 }

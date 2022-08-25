@@ -236,7 +236,8 @@ namespace pwiz.Common.DataBinding
                         return;
                     }
                     var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dataFormat.GetDsvWriter());
+                    var dsvWriter = CreateDsvWriter(dataFormat.Separator, bindingListSource.ColumnFormats);
+                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dsvWriter.Separator);
                     SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 }
             }
@@ -247,9 +248,19 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
-            DsvWriter dsvWriter)
+        public virtual DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
         {
+            return new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, DataSchema.DataSchemaLocalizer.Language,
+                separator)
+            {
+                ColumnFormats = columnFormats
+            };
+        }
+
+        public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
+            char separator)
+        {
+            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             SafeWriteToFile(owner, filename, stream =>
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
@@ -288,8 +299,8 @@ namespace pwiz.Common.DataBinding
                 StringWriter tsvWriter = new StringWriter();
                 if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
                 {
-                    WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.GetDsvWriter());
-                        progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
+                    WriteData(progressMonitor, tsvWriter, bindingListSource, CreateDsvWriter(DataFormats.TSV.Separator, bindingListSource.ColumnFormats));
+                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                 }))
                 {
                     return;

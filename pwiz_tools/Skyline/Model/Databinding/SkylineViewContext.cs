@@ -266,14 +266,20 @@ namespace pwiz.Skyline.Model.Databinding
             return ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT);
         }
 
-        public DsvWriter GetDsvWriter(char separator)
+        public override DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
         {
-            DsvWriter dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, DataSchema.DataSchemaLocalizer.Language, separator);
+            var dsvWriter = base.CreateDsvWriter(separator, columnFormats);
             if (IsInvariantLanguage())
             {
                 dsvWriter.NumberFormatOverride = Formats.RoundTrip;
             }
+
             return dsvWriter;
+        }
+
+        public DsvWriter GetDsvWriter(char separator)
+        {
+            return CreateDsvWriter(separator, null);
         }
 
         public DsvWriter GetCsvWriter()
