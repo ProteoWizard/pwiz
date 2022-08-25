@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -924,6 +925,23 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             return true;
+        }
+
+        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
+        {
+            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec);
+            viewEditor.Alphabetical = Settings.Default.AlphabeticalReportEditor;
+            viewEditor.Closed += ViewEditorClosed;
+            return viewEditor;
+        }
+
+        private void ViewEditorClosed(object sender, EventArgs eventArgs)
+        {
+            var viewEditor = sender as ViewEditor;
+            if (viewEditor?.DialogResult == DialogResult.OK)
+            {
+                Settings.Default.AlphabeticalReportEditor = viewEditor.Alphabetical;
+            }
         }
     }
 }

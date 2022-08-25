@@ -1402,6 +1402,30 @@ namespace pwiz.Skyline.Controls.Graphs
             get => _msDataFileScanHelper;
         }
 
+        public IEnumerable<string> IonLabels
+        {
+            get
+            {
+                if (toolStripButtonShowAnnotations.Checked && Program.SkylineOffscreen)
+                {
+                    var annotationCurves = GraphPane.CurveList.FindAll(c => c is StickItem && c.Tag is SpectrumGraphItem);
+                    if (annotationCurves.Any())
+                    {
+                        var graphItem = annotationCurves.First().Tag as SpectrumGraphItem;
+                        return graphItem?.IonLabels;
+                    }
+                    else
+                        return null;
+                }
+                else
+                {
+                    return GraphPane.GraphObjList.OfType<TextObj>()
+                        .ToList().FindAll(txt => txt.Location.X >= XAxisMin && txt.Location.X <= XAxisMax)      //select only annotations visible in the current window)
+                        .Select(label => label.Text).ToHashSet();
+                }
+            }
+        }
+
         #endregion Test support
 
         private void showScanNumberToolStripMenuItem_Click(object sender, EventArgs e)

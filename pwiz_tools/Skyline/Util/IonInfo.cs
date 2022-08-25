@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
@@ -186,7 +185,7 @@ namespace pwiz.Skyline.Util
         public static Molecule ApplyAdductToFormula(string formula, Adduct adduct)
         {
             var resultDict = ApplyAdductToMoleculeAsDictionary(formula, adduct);
-            var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(resultDict));
+            var resultMol = Molecule.FromDict(resultDict);
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__, resultMol.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), formula + adduct));

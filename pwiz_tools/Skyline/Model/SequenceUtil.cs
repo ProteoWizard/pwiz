@@ -1371,7 +1371,7 @@ namespace pwiz.Skyline.Model
 
         public static Molecule GetAminoAcidFormula(char aa)
         {
-            return Molecule.FromDict(ImmutableSortedList.FromValues(AMINO_FORMULAS[aa]));
+            return Molecule.FromDict(AMINO_FORMULAS[aa]);
         }
 
         public static string GetHeavyFormula(char aa, LabelAtoms labelAtoms)

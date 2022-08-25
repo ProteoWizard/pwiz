@@ -246,6 +246,9 @@
   <data name="_import_optimizing" xml:space="preserve">
     <value>表示正在导入的数据包含用于检测最优碰撞能量或去簇电压的额外离子对。</value>
   </data>
+  <data name="_import_peak_boundaries" xml:space="preserve">
+    <value>从逗号或制表符分隔的文件中读取峰边界</value>
+  </data>
   <data name="_import_process_count" xml:space="preserve">
     <value>将为单个文件导入运行的子进程数量，之后主进程将汇集各个文件的结果。在适当的条件下，这可以在 24 核 NUMA 服务器上带来 10 倍的性能提升，而在 i7 处理器上也可以带来 3-4 倍的性能提升。务必使用您的系统进行测试。</value>
   </data>
@@ -737,7 +740,7 @@ Waters</value>
     <value>将删除峰面积 CV 高于截止值的所有目标母离子。</value>
   </data>
   <data name="_refine_cv_global_normalize" xml:space="preserve">
-    <value>CV 计算中使用的面积按规定进行归一化。（默认没有归一化）</value>
+    <value>CV 计算中使用的面积按规定进行标准化。（默认没有标准化）</value>
   </data>
   <data name="_refine_cv_reference_normalize" xml:space="preserve">
     <value>CV 计算中使用的面积被归一化为一种参考类型，如“重型”。</value>

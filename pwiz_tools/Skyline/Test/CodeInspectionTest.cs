@@ -338,6 +338,52 @@ namespace pwiz.SkylineTest
             }
         }
 
+        // Looking for uses of Form where we should really be using FormEx
+        private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
+        {
+            var bareForms = new HashSet<Type>();
+
+            // List of classes which actually do inherit directly from Form
+            var acceptableDirectUsesOfFormClass = new[]
+            {
+                typeof(FormEx),
+                typeof(CommonFormEx),
+                typeof(DockableFormEx),
+                typeof(PauseAndContinueForm),
+            };
+
+            try
+            {
+
+                var assembly = Assembly.GetAssembly(typeof(FormEx));
+                var types = assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Form)) && 
+                                                           !acceptableDirectUsesOfFormClass.Any(t.IsSubclassOf) &&
+                                                           !acceptableDirectUsesOfFormClass.Any(t.Equals) &&
+                                                           t.FullName != null && !t.FullName.StartsWith("System"));
+                foreach (var type in types)
+                {
+                    bareForms.Add(type);
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine("Error in FindIllegalForms");
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                Console.WriteLine(errMessage);
+                throw new Exception(errMessage.ToString(), ex);
+            }
+
+            results.AddRange(bareForms.Select(bareForm => $@"Error: class {bareForm.FullName} illegally inherits directly from Form instead of FormEx. Using FormEx ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is intentional, add ""typeof({bareForm.Name})"" to the variable ""acceptableDirectUsesOfFormClass"" in method ""FindIllegalForms"" in CodeInspectionTest.cs"));
+        }
+
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
             Type[] directParentTypes) // Types directly referenced in addition to their derived types
         {
@@ -448,6 +494,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            // Looking for uses of Form where we should really be using FormEx
+            FindIllegalForms(results);
 
             // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
             InspectConsistentErrorMessages(results);

@@ -43,6 +43,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolButtonFind = new System.Windows.Forms.ToolStripButton();
+            this.toolButtonAlphabetical = new System.Windows.Forms.ToolStripButton();
             this.toolButtonShowHiddenColumns = new System.Windows.Forms.ToolStripButton();
             this.helpToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.uiModeDropdown = new System.Windows.Forms.ToolStripDropDownButton();
@@ -117,6 +118,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.toolButtonRedo,
             this.toolStripSeparator1,
             this.toolButtonFind,
+            this.toolButtonAlphabetical,
             this.toolButtonShowHiddenColumns,
             this.helpToolStripButton,
             this.uiModeDropdown});
@@ -148,6 +150,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             resources.ApplyResources(this.toolButtonFind, "toolButtonFind");
             this.toolButtonFind.Name = "toolButtonFind";
             this.toolButtonFind.Click += new System.EventHandler(this.toolButtonFind_Click);
+            // 
+            // toolButtonAlphabetical
+            // 
+            this.toolButtonAlphabetical.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            resources.ApplyResources(this.toolButtonAlphabetical, "toolButtonAlphabetical");
+            this.toolButtonAlphabetical.Name = "toolButtonAlphabetical";
+            this.toolButtonAlphabetical.Click += new System.EventHandler(this.toolButtonAlphabetical_Click);
             // 
             // toolButtonShowHiddenColumns
             // 
@@ -256,5 +265,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ToolStripDropDownButton uiModeDropdown;
         private System.Windows.Forms.ToolStripButton toolButtonShowHiddenColumns;
+        private System.Windows.Forms.ToolStripButton toolButtonAlphabetical;
     }
 }
