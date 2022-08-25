@@ -238,6 +238,11 @@ namespace pwiz.Skyline.Model.Databinding
             return finished;
         }
 
+        protected override void SetClipboardText(Control owner, string text)
+        {
+            ClipboardHelper.SetClipboardText(owner, text);
+        }
+
         public bool Export(Control owner, ViewInfo viewInfo)
         {
             using (var saveFileDialog = new SaveFileDialog
@@ -258,7 +263,7 @@ namespace pwiz.Skyline.Model.Databinding
                     ? TextUtil.SEPARATOR_TSV
                     : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
-                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, GetDsvWriter(separator));
+                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, separator);
             }
         }
 
@@ -283,12 +288,7 @@ namespace pwiz.Skyline.Model.Databinding
             return CreateDsvWriter(separator, null);
         }
 
-        public DsvWriter GetCsvWriter()
-        {
-            return GetDsvWriter(TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider));
-        }
-
-        public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, DsvWriter dsvWriter)
+        public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, char separator)
         {
             try
             {
@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.Databinding
                             progressMonitor.UpdateProgress(status);
                             using (var writer = new StreamWriter(stream))
                             {
-                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, dsvWriter);
+                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, separator);
                                 writer.Close();
                             }
                             if (success)
@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
-            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, char separator)
         {
             ViewLayout viewLayout = null;
             if (viewInfo.ViewGroup != null)
@@ -342,19 +342,19 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
 
-            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, dsvWriter);
+            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, separator);
         }
 
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, DsvWriter dsvWriter)
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
-            progressMonitor = progressMonitor ?? new SilentProgressMonitor();
+            progressMonitor ??= new SilentProgressMonitor(cancellationToken);
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                     .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, dsvWriter);
+                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
                 if (progressMonitor.IsCanceled)
                     return false;
 

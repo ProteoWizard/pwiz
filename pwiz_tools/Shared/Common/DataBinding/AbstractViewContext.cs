@@ -188,14 +188,15 @@ namespace pwiz.Common.DataBinding
         public Icon ApplicationIcon { get; protected set; }
 
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
-            BindingListSource bindingListSource, DsvWriter dsvWriter)
+            BindingListSource bindingListSource, char separator)
         {
             IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);
+            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, separator);
         }
 
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
+        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, char separator)
         {
+            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             dsvWriter.WriteHeaderRow(writer, properties);
@@ -236,8 +237,7 @@ namespace pwiz.Common.DataBinding
                         return;
                     }
                     var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                    var dsvWriter = CreateDsvWriter(dataFormat.Separator, bindingListSource.ColumnFormats);
-                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dsvWriter.Separator);
+                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dataFormat.Separator);
                     SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 }
             }
@@ -267,7 +267,7 @@ namespace pwiz.Common.DataBinding
                 bool finished = false;
                 RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
                 {
-                    WriteData(progressMonitor, writer, bindingListSource, dsvWriter);
+                    WriteData(progressMonitor, writer, bindingListSource, separator);
                     finished = !progressMonitor.IsCanceled;
                 });
                 if (finished)
@@ -298,16 +298,15 @@ namespace pwiz.Common.DataBinding
             {
                 StringWriter tsvWriter = new StringWriter();
                 if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
-                {
-                    WriteData(progressMonitor, tsvWriter, bindingListSource, CreateDsvWriter(DataFormats.TSV.Separator, bindingListSource.ColumnFormats));
-                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
-                }))
+                    {
+                        WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.Separator);
+                        progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
+                    }))
                 {
                     return;
                 }
-                DataObject dataObject = new DataObject();
-                dataObject.SetText(tsvWriter.ToString());
-                Clipboard.SetDataObject(dataObject);
+
+                SetClipboardText(owner, tsvWriter.ToString());
             }
             catch (Exception exception)
             {
@@ -315,6 +314,13 @@ namespace pwiz.Common.DataBinding
                     Resources.AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ + exception.Message, 
                     MessageBoxButtons.OK);
             }
+        }
+
+        protected virtual void SetClipboardText(Control owner, string text)
+        {
+            DataObject dataObject = new DataObject();
+            dataObject.SetText(text);
+            Clipboard.SetDataObject(dataObject);
         }
 
         protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
