@@ -1249,6 +1249,7 @@ namespace SkylineTester
             // 
             // testSet
             // 
+            this.testSet.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.testSet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.testSet.FormattingEnabled = true;
             this.testSet.Items.AddRange(new object[] {
