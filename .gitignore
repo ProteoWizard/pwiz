@@ -390,6 +390,8 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
 /pwiz_aux/msrc/utility/vendor_api/Agilent/x64/
 /pwiz_aux/msrc/utility/vendor_api/Agilent/x86/
+/pwiz_aux/msrc/utility/vendor_api/Bruker/BAF2SQL-README.txt
+/pwiz_aux/msrc/utility/vendor_api/Bruker/BAF2SQL-THIRD-PARTY-LICENSE-README.txt
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x64/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x86/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h

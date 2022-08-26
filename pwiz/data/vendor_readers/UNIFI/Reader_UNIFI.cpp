@@ -116,9 +116,9 @@ void fillInMetadata(const string& sampleResultUrl, MSData& msd, const UnifiDataP
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
     SpectrumList_UNIFI* sl = dynamic_cast<SpectrumList_UNIFI*>(msd.run.spectrumListPtr.get());
-    //ChromatogramList_UNIFI* cl = dynamic_cast<ChromatogramList_UNIFI*>(msd.run.chromatogramListPtr.get());
+    ChromatogramList_UNIFI* cl = dynamic_cast<ChromatogramList_UNIFI*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
-    //if (cl) cl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
 
     msd.fileDescription.fileContent.set(MS_MS1_spectrum);
     msd.fileDescription.fileContent.set(MS_MSn_spectrum);

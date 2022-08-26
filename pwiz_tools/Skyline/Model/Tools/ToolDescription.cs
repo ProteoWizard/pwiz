@@ -881,7 +881,7 @@ namespace pwiz.Skyline.Model.Tools
                     reportTitle));
             progressMonitor.UpdateProgress(status);
             if (!viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewInfo, writer,
-                viewContext.GetCsvWriter()))
+                    TextUtil.SEPARATOR_CSV))
             {
                 throw new OperationCanceledException();
             }

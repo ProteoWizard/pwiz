@@ -860,21 +860,33 @@ namespace pwiz.Skyline.Model
             // If the peptide has explicit modifications, and the modifications have
             // changed, see if any of the explicit modifications have changed
             var explicitMods = ExplicitMods;
-            if (HasExplicitMods &&
-                !diff.IsUnexplainedExplicitModificationAllowed &&
+            var sourceKey = SourceKey;
+            if (!diff.IsUnexplainedExplicitModificationAllowed &&
                 diff.SettingsOld != null &&
                 !ReferenceEquals(settingsNew.PeptideSettings.Modifications,
-                                 diff.SettingsOld.PeptideSettings.Modifications))
+                    diff.SettingsOld.PeptideSettings.Modifications))
             {
-                explicitMods = ExplicitMods.ChangeGlobalMods(settingsNew);
-                if (explicitMods == null || !ArrayUtil.ReferencesEqual(explicitMods.GetHeavyModifications().ToArray(),
-                                                                       ExplicitMods.GetHeavyModifications().ToArray()))
+                if (!ExplicitMods.IsNullOrEmpty(ExplicitMods))
                 {
-                    diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);                    
+                    explicitMods = ExplicitMods.ChangeGlobalMods(settingsNew);
+                    if (explicitMods == null || !ArrayUtil.ReferencesEqual(explicitMods.GetHeavyModifications().ToArray(),
+                            ExplicitMods.GetHeavyModifications().ToArray()))
+                    {
+                        diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);
+                    }
+                    else if (!ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications))
+                    {
+                        diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
+                    }
                 }
-                else if (!ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications))
+
+                if (sourceKey?.ExplicitMods != null)
                 {
-                    diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
+                    var sourceKeyExplicitMods = sourceKey.ExplicitMods.ChangeGlobalMods(settingsNew);
+                    if (!ReferenceEquals(sourceKeyExplicitMods, sourceKey.ExplicitMods))
+                    {
+                        sourceKey = new ModifiedSequenceMods(sourceKey.ModifiedSequence, sourceKeyExplicitMods);
+                    }
                 }
             }
 
@@ -882,6 +894,8 @@ namespace pwiz.Skyline.Model
             PeptideDocNode nodeResult = this;
             if (!ReferenceEquals(explicitMods, ExplicitMods))
                 nodeResult = nodeResult.ChangeExplicitMods(explicitMods);
+            if (!ReferenceEquals(sourceKey, SourceKey))
+                nodeResult = nodeResult.ChangeSourceKey(sourceKey);
             nodeResult = nodeResult.UpdateModifiedSequence(settingsNew);
 
             if (diff.DiffPeptideProps)
