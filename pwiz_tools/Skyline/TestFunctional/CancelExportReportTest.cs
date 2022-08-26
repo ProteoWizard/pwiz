@@ -21,7 +21,6 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;

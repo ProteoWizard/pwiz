@@ -211,6 +211,13 @@ namespace pwiz.Skyline.Model.Databinding
             Settings.Default.ExportDirectory = value;
         }
 
+        protected override IEnumerable<TabularFileFormat> ListAvailableExportFormats()
+        {
+            yield return new TabularFileFormat(TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider),
+                TextUtil.FILTER_CSV);
+            yield return new TabularFileFormat('\t', TextUtil.FILTER_TSV);
+        }
+
         public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
         {
             return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));

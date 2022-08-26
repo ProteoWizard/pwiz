@@ -219,11 +219,22 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        /// <summary>
+        /// Returns the list of options to show in the Save File dialog which comes up when the user exports a report.
+        /// </summary>
+        protected virtual IEnumerable<TabularFileFormat> ListAvailableExportFormats()
+        {
+            // These strings do not need to be localized, since they are only seen if this method has not been overridden.
+            // SkylineViewContext overrides this method and uses the appropriately localized strings.
+            yield return new TabularFileFormat(',', @"Comma Separated Values(*.csv)|*.csv");
+            yield return new TabularFileFormat('\t', @"Tab Separated Values(*.tsv)|*.tsv");
+        }
+
         public void Export(Control owner, BindingListSource bindingListSource)
         {
             try
             {
-                var dataFormats = new[] {DataFormats.CSV, DataFormats.TSV};
+                var dataFormats = ListAvailableExportFormats().ToArray();
                 string fileFilter = string.Join(@"|", dataFormats.Select(format => format.FileFilter).ToArray());
                 using (var saveFileDialog = new SaveFileDialog
                 {
@@ -299,7 +310,7 @@ namespace pwiz.Common.DataBinding
                 StringWriter tsvWriter = new StringWriter();
                 if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
                     {
-                        WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.Separator);
+                        WriteData(progressMonitor, tsvWriter, bindingListSource, '\t');
                         progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                     }))
                 {

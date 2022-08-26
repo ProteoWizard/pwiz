@@ -283,7 +283,7 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\DataFormat.cs" />
+    <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
