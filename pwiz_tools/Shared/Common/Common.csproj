@@ -364,7 +364,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.ja.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.zh-CHS.resx">
       <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.ja.resx">

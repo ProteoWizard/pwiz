@@ -56,8 +56,7 @@ namespace pwiz.SkylineTestFunctional
                     buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast";
                     buildBackgroundProteomeDlg.OkDialog();
                 });
-            RunUI(peptideSettingsUI.OkDialog);
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForBackgroundProteomeLoaderCompleted(); // Allow protDB file to populate protein metadata first
 
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);
@@ -116,9 +115,9 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(allErrorText.Contains((506.7821).ToString(LocalizationHelper.CurrentCulture)),
                     string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
                         (506.7821).ToString(LocalizationHelper.CurrentCulture), errDlg.ErrorList));
-                errDlg.CancelDialog();
             });
-            RunUI(windowDlg.CancelDialog);
+            OkDialog(errDlg, errDlg.CancelDialog);
+            OkDialog(windowDlg, windowDlg.CancelDialog);
 
             // Test modification matching
             IList<TypedModifications> heavyMod = new[]
@@ -144,8 +143,7 @@ namespace pwiz.SkylineTestFunctional
             var noErrDlg = ShowDialog<MessageDlg>(associateProteinsDlg.OkDialog);
             Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
             OkDialog(noErrDlg, noErrDlg.OkDialog);
-            RunUI(() => windowDlg2.CancelDialog());
-            WaitForClosedForm(windowDlg2);
+            OkDialog(windowDlg2, windowDlg2.CancelDialog);
         }
 
         private static void PastePeptides(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter, 

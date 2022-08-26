@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
+using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -39,7 +40,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class BuildLibraryDlg : FormEx
+    public partial class BuildLibraryDlg : FormEx, IMultipleViewProvider
     {
         public BuildLibraryGridView Grid { get; }
         public static readonly string[] RESULTS_EXTS =
@@ -68,6 +69,16 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
             BiblioSpecLiteBuilder.EXT_SPECLIB,
+        };
+
+        public enum Pages { properties, files }
+
+        public class PropertiesPage : IFormView { }
+        public class FilesPage : IFormView { }
+
+        private static readonly IFormView[] TAB_PAGES =
+        {
+            new PropertiesPage(), new FilesPage(),
         };
 
         private readonly MessageBoxHelper _helper;
@@ -781,6 +792,14 @@ namespace pwiz.Skyline.SettingsUI
         private void prositInfoSettingsBtn_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Prosit);
+        }
+
+        public IFormView ShowingFormView
+        {
+            get
+            {
+                return TAB_PAGES[(int)(panelFiles.Visible ? Pages.files : Pages.properties)];
+            }
         }
     }
 }

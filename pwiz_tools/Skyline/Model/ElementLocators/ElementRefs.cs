@@ -72,6 +72,10 @@ namespace pwiz.Skyline.Model.ElementLocators
                 try
                 {
                     parentNode = (DocNodeParent)Document.FindNode(parentIdentityPath);
+                    if (parentNode == null)
+                    {
+                        return null;
+                    }
                 }
                 catch (IdentityNotFoundException)
                 {
