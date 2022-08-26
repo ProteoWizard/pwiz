@@ -188,14 +188,15 @@ namespace pwiz.Common.DataBinding
         public Icon ApplicationIcon { get; protected set; }
 
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
-            BindingListSource bindingListSource, DsvWriter dsvWriter)
+            BindingListSource bindingListSource, char separator)
         {
             IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, dsvWriter);
+            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, separator);
         }
 
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, DsvWriter dsvWriter)
+        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, char separator)
         {
+            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             dsvWriter.WriteHeaderRow(writer, properties);
@@ -218,11 +219,22 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        /// <summary>
+        /// Returns the list of options to show in the Save File dialog which comes up when the user exports a report.
+        /// </summary>
+        protected virtual IEnumerable<TabularFileFormat> ListAvailableExportFormats()
+        {
+            // These strings do not need to be localized, since they are only seen if this method has not been overridden.
+            // SkylineViewContext overrides this method and uses the appropriately localized strings.
+            yield return new TabularFileFormat(',', @"Comma Separated Values(*.csv)|*.csv");
+            yield return new TabularFileFormat('\t', @"Tab Separated Values(*.tsv)|*.tsv");
+        }
+
         public void Export(Control owner, BindingListSource bindingListSource)
         {
             try
             {
-                var dataFormats = new[] {DataFormats.CSV, DataFormats.TSV};
+                var dataFormats = ListAvailableExportFormats().ToArray();
                 string fileFilter = string.Join(@"|", dataFormats.Select(format => format.FileFilter).ToArray());
                 using (var saveFileDialog = new SaveFileDialog
                 {
@@ -236,7 +248,7 @@ namespace pwiz.Common.DataBinding
                         return;
                     }
                     var dataFormat = dataFormats[saveFileDialog.FilterIndex - 1];
-                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dataFormat.GetDsvWriter());
+                    ExportToFile(owner, bindingListSource, saveFileDialog.FileName, dataFormat.Separator);
                     SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
                 }
             }
@@ -247,16 +259,26 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
-            DsvWriter dsvWriter)
+        public virtual DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
         {
+            return new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, DataSchema.DataSchemaLocalizer.Language,
+                separator)
+            {
+                ColumnFormats = columnFormats
+            };
+        }
+
+        public void ExportToFile(Control owner, BindingListSource bindingListSource, String filename,
+            char separator)
+        {
+            var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             SafeWriteToFile(owner, filename, stream =>
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
                 bool finished = false;
                 RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
                 {
-                    WriteData(progressMonitor, writer, bindingListSource, dsvWriter);
+                    WriteData(progressMonitor, writer, bindingListSource, separator);
                     finished = !progressMonitor.IsCanceled;
                 });
                 if (finished)
@@ -287,16 +309,15 @@ namespace pwiz.Common.DataBinding
             {
                 StringWriter tsvWriter = new StringWriter();
                 if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
-                {
-                    WriteData(progressMonitor, tsvWriter, bindingListSource, DataFormats.TSV.GetDsvWriter());
+                    {
+                        WriteData(progressMonitor, tsvWriter, bindingListSource, '\t');
                         progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
-                }))
+                    }))
                 {
                     return;
                 }
-                DataObject dataObject = new DataObject();
-                dataObject.SetText(tsvWriter.ToString());
-                Clipboard.SetDataObject(dataObject);
+
+                SetClipboardText(owner, tsvWriter.ToString());
             }
             catch (Exception exception)
             {
@@ -304,6 +325,13 @@ namespace pwiz.Common.DataBinding
                     Resources.AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ + exception.Message, 
                     MessageBoxButtons.OK);
             }
+        }
+
+        protected virtual void SetClipboardText(Control owner, string text)
+        {
+            DataObject dataObject = new DataObject();
+            dataObject.SetText(text);
+            Clipboard.SetDataObject(dataObject);
         }
 
         protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
