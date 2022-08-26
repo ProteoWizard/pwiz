@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<!-- 
+  <!-- 
 		Microsoft ResX Schema
 
 		Version 1.3
@@ -58,8 +58,7 @@
 			: using a System.ComponentModel.TypeConverter
 			: and then encoded with base64 encoding.
 	-->
-	
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
 		<xsd:element name="root" msdata:IsDataSet="true">
 			<xsd:complexType>
 				<xsd:choice maxOccurs="unbounded">
@@ -86,19 +85,18 @@
 			</xsd:complexType>
 		</xsd:element>
 	</xsd:schema>
-	<resheader name="resmimetype">
+  <resheader name="resmimetype">
 		<value>text/microsoft-resx</value>
 	</resheader>
-	<resheader name="version">
+  <resheader name="version">
 		<value>1.3</value>
 	</resheader>
-	<resheader name="reader">
+  <resheader name="reader">
 		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-	<resheader name="writer">
+  <resheader name="writer">
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
-
   <data name="AbsFoldChange">
     <value>Absolute value of the fold change</value>
   </data>
@@ -108,15 +106,18 @@
   <data name="Abundance">
     <value>The value for this replicate which was used to calculate the fold change. The number depends on the normalization method, and whether the fold change is being calculated at the protein or peptide level.</value>
   </data>
-  <data name="AdjustedPValue">
-    <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
-  </data>
   <data name="Accuracy">
     <value>Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)</value>
   </data>
   <data name="AcquiredTime">
     <value>Last time and date at which the mass spectrometer began acquiring this
 replicate data. Or #N/A if the file was imported with a version older than 1.1.</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>Detailed description of the change</value>
   </data>
   <data name="AnalyteConcentration">
     <value>Known quantity of analyte that was spiked into the external or quality control standard.</value>
@@ -203,7 +204,7 @@ maximum intensity for the precursor.</value>
   </data>
   <data name="CalculatedConcentration">
     <value>The concentration of the analyte is calculated by either:
-    1. Using the calibration curve (if the Peptide Settings > Quantification has a Regression Fit specified)
+    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
     2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration</value>
   </data>
   <data name="CalibrationCurve">
@@ -243,21 +244,18 @@ maximum intensity for the precursor.</value>
     <value>Type of scans from which the chromatogram was extracted: one of "fragment", "sim", "ms1", or "unknown"</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
-  <data name="CollisionCrossSection">
-    <value>The collision cross section of the precursor</value>
-  </data>
-  <data name="CollisionalCrossSection">
-    <value>A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</value>
+  <data name="CleavageAa">
+    <value>Specific amino acid residue in the peptide after (C-terminal of) which the
+peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
   </data>
   <data name="Coeluting">
     <value>True if this transition's peak has similar apex and extents as the other transitions within the peak group.</value>
   </data>
-  <data name="ConfidenceLevel">
-    <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
+  <data name="CollisionalCrossSection">
+    <value>A measure of ion mobility, in square angstroms, which is typically converted to appropriate units (eg drift time, inverseK0) and used in extracting chromatograms from ion mobility mass spectra.</value>
   </data>
-  <data name="CleavageAa">
-    <value>Specific amino acid residue in the peptide after (C-terminal of) which the
-peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
+  <data name="CollisionCrossSection">
+    <value>The collision cross section of the precursor</value>
   </data>
   <data name="CollisionEnergy">
     <value>Collision Energy for the precursor ion according to instrument/vendor
@@ -265,6 +263,9 @@ specific default collision energy equation within Skyline</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>Value to multiply the replicate's "analyte concentration" by in order to get the specific concentration of the specific peptide or molecule.</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
   </data>
   <data name="CountTruncated">
     <value>The number of transitions for a precursor that integrate a peak with a
@@ -310,8 +311,8 @@ values.</value>
   <data name="CvTotalAreaRatio">
     <value>Coefficient of variation (CV) of the precursor TotalAreaRatio values</value>
   </data>
-  <data name="DegreesOfFreedom">
-    <value>Number of degrees of freedom which was used to calculate the confidence interval of the T-test.</value>
+  <data name="CycleTimeAcrossPeak">
+    <value>Cycle time (in seconds) across the integrated peak.</value>
   </data>
   <data name="DeclusteringPotential">
     <value>Declustering Potential for the precursor ion according to
@@ -320,6 +321,9 @@ instrument/vendor specific default declustering potential equation within Skylin
   <data name="DecoyMzShift">
     <value>Shift in m/z applied to the precursor to create
 the decoy m/z</value>
+  </data>
+  <data name="DegreesOfFreedom">
+    <value>Number of degrees of freedom which was used to calculate the confidence interval of the T-test.</value>
   </data>
   <data name="DetailReason">
     <value>Detailed reason the user gave for making the change</value>
@@ -349,11 +353,11 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="EndTime">
     <value>Retention time at the ending integration boundary for the transition peak.</value>
   </data>
-  <data name="EstimatedValue">
-    <value>Slope of the linear regression.</value>
-  </data>
   <data name="ErrorMessage">
     <value>Text of the error message, if any, which occurred while trying to calculate this value.</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>Slope of the linear regression.</value>
   </data>
   <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
@@ -363,11 +367,11 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
 If the Explicit Analyte Concentration is not specified then the concentration of the analyte is assumed 
 to be the Analyte Concentration from the Replicate times the Concentration Multiplier of the Peptide or Molecule.</value>
   </data>
-  <data name="ExplicitCollisionEnergy">
-    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</value>
-  </data>
   <data name="ExplicitCollisionalCrossSection">
     <value>The exact desired collisional cross section (in square angstroms) to be converted to ion mobility and used in extracting chromatograms from ion mobility mass spectra, overriding all model values. </value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>The exact desired collision energy to be used in SRM methods or transitions lists for a target, overriding all model or optimization library or per-precursor explicit values.</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>The exact desired compensation voltage (ion mobility filter) to be used in SRM methods or transitions lists for a target, overriding all model or optimization library values.</value>
@@ -384,6 +388,10 @@ to be the Analyte Concentration from the Replicate times the Concentration Multi
   <data name="ExplicitDriftTimeMsec">
     <value>The exact desired drift time (in milliseconds) to be used in extracting chromatograms from ion mobility mass spectra, overriding all model values.</value>
   </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>Value to use when calculating "ratio to global standards". 
+    Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</value>
+  </data>
   <data name="ExplicitIonMobility">
     <value>The ion mobility value of the center of the filter window used when extracting chromatograms</value>
   </data>
@@ -392,10 +400,6 @@ to be the Analyte Concentration from the Replicate times the Concentration Multi
   </data>
   <data name="ExplicitIonMobilityUnits">
     <value>The units of the Explicit Ion Mobility values.</value>
-  </data>
-  <data name="ExplicitGlobalStandardArea">
-    <value>Value to use when calculating "ratio to global standards". 
-    Use this when you want to normalize peak areas in a particular replicate by dividing by a value that you calculated outside of Skyline.</value>
   </data>
   <data name="ExplicitRetentionTime">
     <value>The exact predicted retention time (in minutes) to be used for a target, overriding all other methods of prediction.</value>
@@ -456,12 +460,12 @@ which the peptide was cleaved upon fragmentation. (e.g. 8, 10, 7, etc.)</value>
   <data name="FwhmDegenerate">
     <value>Fwhm Degenerate</value>
   </data>
+  <data name="Group">
+    <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
+  </data>
   <data name="Height">
     <value>The maximum intensity of the points between the transition peak integration
 boundaries.</value>
-  </data>
-  <data name="Group">
-    <value>Value of the replicate annotation of the replicates that were compared to the control group.</value>
   </data>
   <data name="HMDB" xml:space="preserve">
     <value>Standardized molecular identifier</value>
@@ -570,18 +574,6 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   <data name="LibraryCollisionCrossSection">
     <value>The collision cross section for the precursor from the ion mobility library</value>
   </data>
-  <data name="LibraryIonMobility">
-    <value>The ion mobility information for the precursor from the ion mobility library</value>
-  </data>
-  <data name="LibraryIonMobilityHighEnergyOffset">
-    <value>The high energy offset for the precursor from the ion mobility library</value>
-  </data>
-  <data name="LibraryIonMobilityUnits">
-    <value>The units of the Library Ion Mobility Value</value>
-  </data>
-  <data name="LibraryIonMobilityValue">
-    <value>The ion mobility of the precursor from the ion mobility library</value>
-  </data>
   <data name="LibraryDotProduct">
     <value>The dot-product between the individual transition peak areas
 of the precursor and the intensities of the matching ion peaks in the matched MS/MS
@@ -594,6 +586,18 @@ present.</value>
   <data name="LibraryIntensity">
     <value>The MS/MS peak intensity corresponding to the transition product
 ion in the matching library spectrum.</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>The ion mobility information for the precursor from the ion mobility library</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>The high energy offset for the precursor from the ion mobility library</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>The units of the Library Ion Mobility Value</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>The ion mobility of the precursor from the ion mobility library</value>
   </data>
   <data name="LibraryName">
     <value>The name of a MS/MS spectral library, if a MS/MS spectral library
@@ -678,15 +682,6 @@ precursor.</value>
   <data name="MaxRetentionTime">
     <value>Maximum of the transition RetentionTime values.</value>
   </data>
-  <data name="Median">
-    <value>Median</value>
-  </data>
-  <data name="MedianPeakArea">
-    <value>The median transition peak area of transition results in the particular result file.
-This median peak area is used when the normalization method is "Equalize Medians".
-If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor's label type is an internal standard.
-If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas.</value>
-  </data>
   <data name="Mean">
     <value>Mean</value>
   </data>
@@ -723,8 +718,17 @@ If there are no internal standard peak areas, then the median transition peak ar
   <data name="MeanTotalAreaRatio">
     <value> Mean of the precursor TotalAreaRatio values.</value>
   </data>
+  <data name="Median">
+    <value>Median</value>
+  </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>A  median of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
+  </data>
+  <data name="MedianPeakArea">
+    <value>The median transition peak area of transition results in the particular result file.
+This median peak area is used when the normalization method is "Equalize Medians".
+If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor's label type is an internal standard.
+If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas.</value>
   </data>
   <data name="Min">
     <value>Min</value>
@@ -732,14 +736,14 @@ If there are no internal standard peak areas, then the median transition peak ar
   <data name="MinBestRetentionTime">
     <value>Minimum of the precursor BestRetentionTime values</value>
   </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
+  </data>
   <data name="MinFoldChange">
     <value>The lower bound of the confidence interval of the fold change.</value>
   </data>
   <data name="MinRetentionTime">
     <value>Minimum of the transition RetentionTime values.</value>
-  </data>
-  <data name="MinDetectionQValue" xml:space="preserve">
-    <value>A  minimum of the false discovery rate (FDR) score assigned to each chosen target peak after applying a mProphet model.</value>
   </data>
   <data name="MinStartTime">
     <value>Minimum StartTime of all transitions for a precursor. Unless manually
@@ -783,6 +787,9 @@ modified on disk</value>
   <data name="MoleculeFormula">
     <value>An atomic chemical formula for the neutral, unlabeled molecule to be measured in a mass spectrometer.</value>
   </data>
+  <data name="MoleculeList">
+    <value>A grouping of molecules in a Skyline document.</value>
+  </data>
   <data name="MoleculeListAbundance">
     <value>A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
 The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
@@ -797,9 +804,6 @@ The Molecule List Abundance will be blank if any transitions have missing values
   </data>
   <data name="MoleculeListNote">
     <value>A free text note associated with the molecule list.</value>
-  </data>
-  <data name="MoleculeList">
-    <value>A grouping of molecules in a Skyline document.</value>
   </data>
   <data name="MoleculeListResult">
     <value>Molecule List Result</value>
@@ -823,9 +827,6 @@ The Molecule List Abundance will be blank if any transitions have missing values
   <data name="MoleculePeakFoundRatio">
     <value>Molecule Peak Found Ratio</value>
   </data>
-  <data name="MonoisotopicMasses">
-    <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
-  </data>
   <data name="MoleculeResult">
     <value>Molecule Result</value>
   </data>
@@ -842,6 +843,9 @@ The Molecule List Abundance will be blank if any transitions have missing values
   <data name="Molecules">
     <value>The molecules in a Molecule List.</value>
   </data>
+  <data name="MonoisotopicMasses">
+    <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
+  </data>
   <data name="MsLevel">
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
@@ -857,7 +861,7 @@ The default normalization method is specified on the Quantification tab of the P
   </data>
   <data name="NormalizedArea">
     <value>Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
-    Settings > Peptide Settings > Quantification</value>
+    Settings &gt; Peptide Settings &gt; Quantification</value>
   </data>
   <data name="NumberOfPoints">
     <value>The number of points in the chromatogram.</value>
@@ -967,9 +971,6 @@ Edit menu</value>
   <data name="PointsAcrossPeak">
     <value>Number of chromatogram points between the start and end time of the integrated peak.</value>
   </data>
-  <data name="CycleTimeAcrossPeak">
-    <value>Cycle time (in seconds) across the integrated peak.</value>
-  </data>
   <data name="Precursor">
     <value>Precursor</value>
   </data>
@@ -1003,19 +1004,19 @@ Edit menu</value>
     <value>Unique identifier of the precursor within the document. This will begin with "Precursor:" and usually ends with the precursor's label type followed by its adduct.</value>
     <comment>Do not translate "Precursor:"</comment>
   </data>
+  <data name="PrecursorMz">
+    <value>The mass to charge ratio (m/z) of the precursor ion.</value>
+  </data>
   <data name="PrecursorNeutralFormula">
     <value>The formula of the precursor ion. This is deprecated and "PrecursorIonFomula" should be used instead.</value>
+  </data>
+  <data name="PrecursorNeutralMass">
+    <value>Neutral mass of the precursor in Daltons</value>
   </data>
   <data name="PrecursorNormalizedArea">
     <value>The normalized area of the Precursor Result.
 This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
 If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.</value>
-  </data>
-  <data name="PrecursorMz">
-    <value>The mass to charge ratio (m/z) of the precursor ion.</value>
-  </data>
-  <data name="PrecursorNeutralMass">
-    <value>Neutral mass of the precursor in Daltons</value>
   </data>
   <data name="PrecursorNote">
     <value>A free text note associated with a precursor by clicking Edit Note on
@@ -1024,7 +1025,7 @@ the Edit menu</value>
   <data name="PrecursorPeakFoundRatio">
     <value>The ratio of transitions for which a peak was measured to the
 total number of transitions in the peptide. Peak indicators in the peptide tree view
-correspond to green = 1.0 (all transitions integrated), orange >= 0.5, red &lt; 0.5.</value>
+correspond to green = 1.0 (all transitions integrated), orange &gt;= 0.5, red &lt; 0.5.</value>
   </data>
   <data name="PrecursorQuantification">
     <value>Values related to using the isotopolog response curve to quantify the precursor result.</value>
@@ -1060,6 +1061,9 @@ SSRCalc 3.0 is available), or #N/A if no retention time regression has been assi
   <data name="PreviousAa">
     <value>Previous Aa</value>
   </data>
+  <data name="ProductAdduct">
+    <value>The adduct applied to the product ion.</value>
+  </data>
   <data name="ProductCharge">
     <value>Charge (z) of the product ion.</value>
   </data>
@@ -1067,17 +1071,14 @@ SSRCalc 3.0 is available), or #N/A if no retention time regression has been assi
     <value>Shift in m/z applied to the product ion to create
 the decoy m/z.</value>
   </data>
-  <data name="ProductAdduct">
-    <value>The adduct applied to the product ion.</value>
-  </data>
   <data name="ProductIonFormula">
     <value>The formula of the product ion.</value>
   </data>
-  <data name="ProductNeutralFormula">
-    <value>The formula of the product ion. This is deprecated, and "ProductIonFormula" should be used instead.</value>
-  </data>
   <data name="ProductMz">
     <value>The mass to charge ratio (m/z) of the product ion.</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>The formula of the product ion. This is deprecated, and "ProductIonFormula" should be used instead.</value>
   </data>
   <data name="ProductNeutralMass">
     <value>Neutral mass of the product ion peptide fragment in Daltons.</value>
@@ -1213,14 +1214,11 @@ If the Precursor Concentration is specified on any of the Precursors in this Pep
   <data name="ReplicateCount">
     <value>Number of replicates that had valid intensities and contributed to the result.</value>
   </data>
-  <data name="ReplicateGroup">
-    <value>The cohort to which the Replicate Abundance belongs</value>
-  </data>
-  <data name="ReplicateSampleIdentity">
-    <value>The biological replicate for the Replicate Abundance</value>
-  </data>
   <data name="ReplicateErrorMessage">
     <value>Text of the error message, if any, which occurred while trying to fit the Replicate Calibration Curve</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>The cohort to which the Replicate Abundance belongs</value>
   </data>
   <data name="ReplicateIndex">
     <value>Replicate Index</value>
@@ -1247,11 +1245,14 @@ If the Precursor Concentration is specified on any of the Precursors in this Pep
   <data name="ReplicateRSquared">
     <value>The coefficient of determination on the Replicate Calibration Curve</value>
   </data>
-  <data name="ReplicateSlope">
-    <value>The slope of the Replicate Calibration Curve</value>
-  </data>
   <data name="Replicates">
     <value>Replicates</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>The biological replicate for the Replicate Abundance</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>The slope of the Replicate Calibration Curve</value>
   </data>
   <data name="ReplicateTurningPoint">
     <value>The bilinear turning point on the Replicate Calibration Curve</value>
@@ -1279,12 +1280,12 @@ retention score calculator, if one is used (e.g. SSRCalc or iRT score)
     <value>The amount by which the sample was diluted before being analyzed. 
 External standards typically have a dilution factor of 1, and unknown samples may have been diluted by a factor greater than 1 in order to bring them into the quantifiable range for the instrument.</value>
   </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>A free text identifier for referring to a sample (which may be shared among multiple files). Read from the "sample id" attribute in an imported result file</value>
+  </data>
   <data name="SampleName">
     <value>The sample name, if the data was imported from a multi-sample WIFF
 file, or the file name again for other file types.</value>
-  </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>A free text identifier for referring to a sample (which may be shared among multiple files). Read from the "sample id" attribute in an imported result file</value>
   </data>
   <data name="SampleType">
     <value>Type of the sample.  One of the following: 
@@ -1356,6 +1357,9 @@ file, or the file name again for other file types.</value>
   <data name="StdevTotalAreaRatio">
     <value>Standard deviation of the precursor TotalAreaNormalized
 values.</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>Description of the change</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>The average of the Qualitative Ion Ratio values across all of the external standard replicates that have not been excluded from calibration.</value>
@@ -1487,11 +1491,5 @@ higher than the other extent.</value>
   </data>
   <data name="WeightedScore">
     <value>The product of the feature score and the feature weight</value>
-  </data>
-  <data name="SummaryMessage">
-    <value>Description of the change</value>
-  </data>
-  <data name="AllInfoMessage">
-    <value>Detailed description of the change</value>
   </data>
 </root>
