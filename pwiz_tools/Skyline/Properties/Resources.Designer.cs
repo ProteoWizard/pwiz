@@ -3152,41 +3152,50 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error getting score type for this file..
+        ///   Looks up a localized string similar to Score type not found..
         /// </summary>
-        public static string BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_ {
+        public static string BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_ {
             get {
-                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
-        /// </summary>
-        public static string BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probab" +
-                        "ility_that_identification_is_incorrect__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
-        /// </summary>
-        public static string BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probab" +
-                        "ility_that_identification_is_correct__", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Score threshold &apos;{0}&apos; is invalid (must be a decimal value between {1} and {2})..
         /// </summary>
-        public static string BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___ {
+        public static string BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___ {
             get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be" +
-                        "_a_decimal_value_between__1__and__2___", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_d" +
+                        "ecimal_value_between__1__and__2___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting score type for this file..
+        /// </summary>
+        public static string BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
+        /// </summary>
+        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_" +
+                        "that_identification_is_incorrect__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
+        /// </summary>
+        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
+            get {
+                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_" +
+                        "that_identification_is_correct__", resourceCulture);
             }
         }
         
@@ -24322,6 +24331,16 @@ namespace pwiz.Skyline.Properties {
         public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {
             get {
                 return ResourceManager.GetString("ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Properties_Button {
+            get {
+                object obj = ResourceManager.GetObject("Properties_Button", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

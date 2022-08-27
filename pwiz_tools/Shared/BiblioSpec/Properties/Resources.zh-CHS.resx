@@ -107,4 +107,61 @@
   <data name="LibraryBuildActionExtension_GetEnum_The_string___0___does_not_match_an_enum_value" xml:space="preserve">
     <value>字符串“{0}”不匹配枚举值</value>
   </data>
+	<data name="BiblioSpecScoreType_DisplayName_Percolator_q_value" xml:space="preserve">
+		<value>Percolator q 值</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_PeptideProphet_confidence" xml:space="preserve">
+		<value>PeptideProphet 置信度</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Spectrum_Mill" xml:space="preserve">
+		<value>Spectrum Mill</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_IDPicker_FDR" xml:space="preserve">
+		<value>IDPicker FDR</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Mascot_expectation" xml:space="preserve">
+		<value>Mascot 预期</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_X__Tandem_expectation" xml:space="preserve">
+		<value>X! Tandem 预期</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_ProteinPilot_confidence" xml:space="preserve">
+		<value>ProteinPilot 置信度</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Scaffold_confidence" xml:space="preserve">
+		<value>Scaffold 置信度</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Waters_MSE_peptide_score" xml:space="preserve">
+		<value>Waters MSE 肽段得分</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_OMSSA_expectation" xml:space="preserve">
+		<value>OMSSA 预期</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_ProteinProspector_expectation" xml:space="preserve">
+		<value>ProteinProspector 预期</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_q_value" xml:space="preserve">
+		<value>q 值</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_MaxQuant_PEP" xml:space="preserve">
+		<value>MaxQuant PEP</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Morpheus_q_value" xml:space="preserve">
+		<value>Morpheus q 值</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_MSGF__q_value" xml:space="preserve">
+		<value>MSGF+ q 值</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_PEAKS_confidence" xml:space="preserve">
+		<value>峰值置信度</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_Byonic_PEP" xml:space="preserve">
+		<value>Byonic PEP</value>
+	</data>
+	<data name="BiblioSpecScoreType_DisplayName_PeptideShaker_confidence" xml:space="preserve">
+		<value>PeptideShaker 置信度</value>
+	</data>
+	<data name="BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_" xml:space="preserve">
+	  <value>得分类型的数量不等于网格中的行数。</value>
+  </data>
 </root>

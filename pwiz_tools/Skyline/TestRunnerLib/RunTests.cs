@@ -45,6 +45,7 @@ namespace TestRunnerLib
         public readonly MethodInfo TestInitialize;
         public readonly MethodInfo TestCleanup;
         public readonly bool IsPerfTest;
+        public readonly bool IsAuditLogTest;
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
 
@@ -56,6 +57,20 @@ namespace TestRunnerLib
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
+
+            var auditLogProp = testClass.GetProperty("AuditLogCompareLogs");
+            if (auditLogProp != null)
+            {
+                var testObj = Activator.CreateInstance(testClass);
+                SetTestContext?.Invoke(testObj, new object[]
+                {
+                    new TestRunnerContext
+                    {
+                        Properties = { ["TestName"] = testMethod.Name }
+                    }
+                });
+                IsAuditLogTest = (bool)auditLogProp.GetValue(testObj);
+            }
 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
@@ -863,9 +878,9 @@ namespace TestRunnerLib
                 if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
                     if (!DerivesFromAbstractUnitTest(type))
-// ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
-// ReSharper restore LocalizableElement
+                    {
+                        Console.WriteLine($@"ERROR: {type.Name} does not derive from AbstractUnitTest!"); 
+                    }
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
                     var methods = type.GetMethods();
@@ -909,5 +924,65 @@ namespace TestRunnerLib
             return GetAttribute(info, attributeName) != null;
         }
 
+        public static string RunCommand(string command, string args, string message, bool useShellExecute = false, bool elevated = false)
+        {
+            var psi = new ProcessStartInfo(command, args)
+            {
+                RedirectStandardOutput = !useShellExecute,
+                RedirectStandardError = !useShellExecute,
+                UseShellExecute = useShellExecute,
+                CreateNoWindow = !useShellExecute
+            };
+            if (elevated)
+                psi.Verb = "runas";
+
+            var p = Process.Start(psi);
+
+            var output = new StringBuilder();
+
+            if (!useShellExecute)
+            {
+                var reader = new ProcessStreamReader(p);
+                string line;
+                while (!(line = reader.ReadLine()).IsNullOrEmpty())
+                    output.AppendLine(line);
+            }
+
+            p?.WaitForExit();
+            if (p == null || p.ExitCode != 0)
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output});");
+             
+            return output.ToString();
+        }
+
+        public const string DOCKER_IMAGE_NAME = "chambm/always_up_runner";
+
+        public const string IS_DOCKER_RUNNING_MESSAGE = "Is Docker Desktop installed and is the daemon running? " +
+                                                        GETTING_PARALLEL_TESTING_WORKING;
+
+        public const string GETTING_PARALLEL_TESTING_WORKING =
+            "See the Skyline developer site to get parallel testing working with Skyline: " +
+            "https://skyline.ms/wiki/home/development/page.view?name=Running%20tests%20in%20parallel%20with%20Docker";
+
+        public static string ALWAYS_UP_RUNNER_REPO => Path.Combine(PathEx.GetDownloadsPath(), @"AlwaysUpRunner-master");
+        public static string ALWAYS_UP_SERVICE_EXE => Path.Combine(ALWAYS_UP_RUNNER_REPO, @"AlwaysUpService.exe");
+
+        public static IEnumerable<string> GetDockerWorkerNames()
+        {
+            string dockerPsOutput = RunCommand("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"", IS_DOCKER_RUNNING_MESSAGE);
+            foreach(var dockerWorkerName in dockerPsOutput.Split(new [] { Environment.NewLine }, StringSplitOptions.None))
+                yield return dockerWorkerName;
+        }
+
+        public static void SendDockerKill(string workerNames = null)
+        {
+            workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            Console.WriteLine(@"Sending docker kill command to all workers.");
+            var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
+            psi.CreateNoWindow = true;
+            psi.UseShellExecute = false;
+            Process.Start(psi);
+        }
     }
 }
