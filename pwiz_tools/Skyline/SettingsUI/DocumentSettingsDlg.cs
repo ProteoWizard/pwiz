@@ -136,7 +136,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditGroupComparisonList()
         {
-            _groupComparisonsListBoxDriver.EditList(DocumentContainer);
+            _groupComparisonsListBoxDriver.EditList(GetDocumentForEditor());
         }
 
         private void btnOK_Click(object sender, System.EventArgs e)
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditMetadataRuleList()
         {
-            _metadataRuleSetsListBoxDriver.EditList(DocumentContainer);
+            _metadataRuleSetsListBoxDriver.EditList(GetDocumentForEditor());
         }
 
         public bool ValidateMetadataRules()
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddMetadataRule()
         {
-            using (var editDlg = new MetadataRuleSetEditor(DocumentContainer, new MetadataRuleSet(typeof(ResultFile)),
+            using (var editDlg = new MetadataRuleSetEditor(GetDocumentForEditor(), new MetadataRuleSet(typeof(ResultFile)),
                 Settings.Default.MetadataRuleSets))
             {
                 if (editDlg.ShowDialog(this) == DialogResult.OK)
@@ -318,15 +318,25 @@ namespace pwiz.Skyline.SettingsUI
             EditMetadataRuleList();
         }
 
-        public class DlgDocumentContainer : DocumentContainerWrapper
+        /// <summary>
+        /// Returns a document whose data settings have all of the annotations from the Settings.Default,
+        /// so that users can define rules or group comparisons which use annotations that have not yet
+        /// been added to the document.
+        /// </summary>
+        public SrmDocument GetDocumentForEditor()
         {
-            public DlgDocumentContainer(IDocumentContainer documentContainer, DocumentSettingsDlg documentSettingsDlg) :
-                base(documentContainer)
+            var document = DocumentContainer.Document;
+            var annotationDefs = new XmlMappedList<string, AnnotationDef>();
+            annotationDefs.AddRange(document.Settings.DataSettings.AnnotationDefs);
+            annotationDefs.AddRange(Settings.Default.AnnotationDefList);
+            if (!annotationDefs.SequenceEqual(document.Settings.DataSettings.AnnotationDefs))
             {
-                DocumentSettingsDlg = documentSettingsDlg;
+                document = document.ChangeSettingsNoDiff(
+                    document.Settings.ChangeDataSettings(
+                        document.Settings.DataSettings.ChangeAnnotationDefs(annotationDefs)));
             }
 
-            public DocumentSettingsDlg DocumentSettingsDlg { get; }
+            return document;
         }
     }
 }
