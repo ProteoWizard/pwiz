@@ -573,6 +573,7 @@
     <Compile Include="Model\DocSettings\MetadataExtraction\MetadataExtractor.cs" />
     <Compile Include="Model\DocSettings\MetadataExtraction\MetadataRuleSet.cs" />
     <Compile Include="Model\DocSettings\MetadataExtraction\ExtractedMetadataResult.cs" />
+    <Compile Include="Model\DocumentContainerWrapper.cs" />
     <Compile Include="Model\ElementLocators\ExportAnnotations\TextColumnWrapper.cs" />
     <Compile Include="Model\ElementLocators\AuditLogRef.cs" />
     <Compile Include="Model\DocSettings\TransitionIonMobilityFiltering.cs" />

@@ -317,5 +317,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             EditMetadataRuleList();
         }
+
+        public class DlgDocumentContainer : DocumentContainerWrapper
+        {
+            public DlgDocumentContainer(IDocumentContainer documentContainer, DocumentSettingsDlg documentSettingsDlg) :
+                base(documentContainer)
+            {
+                DocumentSettingsDlg = documentSettingsDlg;
+            }
+
+            public DocumentSettingsDlg DocumentSettingsDlg { get; }
+        }
     }
 }
