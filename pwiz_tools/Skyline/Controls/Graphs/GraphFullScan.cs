@@ -1008,6 +1008,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             graphControl.Refresh();
         }
+
+        public void SetIntensityScale(double maxIntensity)
+        {
+            GraphPane.YAxis.Scale.MaxAuto = false;
+            GraphPane.YAxis.Scale.Max = maxIntensity;
+            GraphPane.AxisChange();
+        }
+
         public MzRange Range
         {
             get { return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max); }

@@ -2186,18 +2186,6 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;cbLibraryPick.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <data name="&gt;&gt;label13.Name" xml:space="preserve">
-    <value>label13</value>
-  </data>
-  <data name="&gt;&gt;label13.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label13.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="tabLibrary.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -2229,22 +2217,22 @@ selection must be done by manual document editing.</value>
     <value>True</value>
   </data>
   <data name="label23.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
+    <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label23.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="label23.Location" type="System.Drawing.Point, System.Drawing">
-    <value>160, 44</value>
+    <value>152, 23</value>
   </data>
   <data name="label23.Size" type="System.Drawing.Size, System.Drawing">
-    <value>34, 13</value>
+    <value>83, 13</value>
   </data>
   <data name="label23.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="label23.Text" xml:space="preserve">
-    <value>&amp;Units:</value>
+    <value>Tolerance u&amp;nits:</value>
   </data>
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
@@ -2265,7 +2253,7 @@ selection must be done by manual document editing.</value>
     <value>ppm</value>
   </data>
   <data name="comboToleranceUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>200, 40</value>
+    <value>155, 41</value>
   </data>
   <data name="comboToleranceUnits.Size" type="System.Drawing.Size, System.Drawing">
     <value>73, 21</value>
@@ -2658,7 +2646,7 @@ peak intensity ranking</value>
     <value>7</value>
   </data>
   <data name="textTolerance.Location" type="System.Drawing.Point, System.Drawing">
-    <value>66, 41</value>
+    <value>21, 41</value>
   </data>
   <data name="textTolerance.Size" type="System.Drawing.Size, System.Drawing">
     <value>67, 20</value>
@@ -2712,36 +2700,6 @@ whenever peptides are matched to library spectrum.</value>
   </data>
   <data name="&gt;&gt;cbLibraryPick.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <data name="label13.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label13.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
-  </data>
-  <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
-    <value>23, 46</value>
-  </data>
-  <data name="label13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>37, 13</value>
-  </data>
-  <data name="label13.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label13.Text" xml:space="preserve">
-    <value>Value:</value>
-  </data>
-  <data name="&gt;&gt;label13.Name" xml:space="preserve">
-    <value>label13</value>
-  </data>
-  <data name="&gt;&gt;label13.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label13.Parent" xml:space="preserve">
-    <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
-    <value>6</value>
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
     <value>cbxTriggeredAcquisition</value>

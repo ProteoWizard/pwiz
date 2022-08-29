@@ -151,7 +151,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided));
             OkDialog(noVendorCentroidedMessage, noVendorCentroidedMessage.OkDialog);
 
-            //Check the annotation functionality if we run in onscreen mode
             SetShowAnnotations(true);
             TestAnnotations(new []{ y4Annotated });
             RunUI(() => SkylineWindow.SetShowMassError(true));
@@ -191,6 +190,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum, false)); // Sync from the library match to the full scan viewer
             //annotations are not shown in the offscreen mode
             TestSpecialIonsAnnotations();
+            TestIonMatchToleranceUnitSetting();
         }
 
         private static void ClickFullScan(double x, double y)
@@ -298,6 +298,39 @@ namespace pwiz.SkylineTestFunctional
             //check that the special ion annotation shows in both library and full scan viewers
             TestAnnotations(new [] {"Reporter_Test+"});
             TestLibraryMatchAnnotations(new[] { "Reporter_Test+" });
+            Settings.Default.ShowSpecialIons = false;
+        }
+
+        private void TestIonMatchToleranceUnitSetting()
+        {
+            RunUI(() => {
+                SkylineWindow.ShowBIons(true);
+                SkylineWindow.ShowCIons(true);
+            });
+
+            SetZoom(false);
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
+            WaitForGraphs();
+            Assert.AreEqual(20, SkylineWindow.GraphFullScan.IonLabels.Count());
+
+            RunUI(() =>
+            {
+                var settings = SkylineWindow.DocumentUI.Settings;
+                var newLibs = settings.TransitionSettings.Libraries.ChangeIonMatchToleranceUnit(MzTolerance.Units.ppm)
+                    .ChangeIonMatchTolerance(10.0);
+                var newSettings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeLibraries(newLibs));
+                SkylineWindow.ModifyDocument("Set test settings",
+                    doc => doc.ChangeSettings(newSettings));
+            });
+            WaitForDocumentLoaded();
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
+            RunUI(() =>
+            {
+                SkylineWindow.GraphFullScan.SetMzScale(new MzRange(100, 600));
+                SkylineWindow.GraphFullScan.SetIntensityScale(400);
+            });
+            WaitForGraphs();
+            var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
         }
     }
 }
