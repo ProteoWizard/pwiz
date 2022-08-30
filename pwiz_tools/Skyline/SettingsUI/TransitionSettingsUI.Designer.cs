@@ -95,6 +95,8 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.label16 = new System.Windows.Forms.Label();
+            this.comboMzMatchToleranceUnit = new System.Windows.Forms.ComboBox();
             this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
             this.textMaxInclusions = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
@@ -617,6 +619,8 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.label16);
+            this.tabInstrument.Controls.Add(this.comboMzMatchToleranceUnit);
             this.tabInstrument.Controls.Add(this.cbxTriggeredAcquisition);
             this.tabInstrument.Controls.Add(this.textMaxInclusions);
             this.tabInstrument.Controls.Add(this.label21);
@@ -641,6 +645,17 @@
             resources.ApplyResources(this.tabInstrument, "tabInstrument");
             this.tabInstrument.Name = "tabInstrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
+            // 
+            // label16
+            // 
+            resources.ApplyResources(this.label16, "label16");
+            this.label16.Name = "label16";
+            // 
+            // comboMzMatchToleranceUnit
+            // 
+            this.comboMzMatchToleranceUnit.FormattingEnabled = true;
+            resources.ApplyResources(this.comboMzMatchToleranceUnit, "comboMzMatchToleranceUnit");
+            this.comboMzMatchToleranceUnit.Name = "comboMzMatchToleranceUnit";
             // 
             // cbxTriggeredAcquisition
             // 
@@ -927,5 +942,7 @@
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox textMinIonCount;
         private System.Windows.Forms.CheckBox cbxTriggeredAcquisition;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.ComboBox comboMzMatchToleranceUnit;
     }
 }

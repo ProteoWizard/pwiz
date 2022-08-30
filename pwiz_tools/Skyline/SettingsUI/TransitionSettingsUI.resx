@@ -2659,6 +2659,30 @@ whenever peptides are matched to library spectrum.</value>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <data name="&gt;&gt;label16.Name" xml:space="preserve">
+    <value>label16</value>
+  </data>
+  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.Name" xml:space="preserve">
+    <value>comboMzMatchToleranceUnit</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
     <value>cbxTriggeredAcquisition</value>
   </data>
@@ -2669,7 +2693,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
@@ -2681,7 +2705,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;label21.Name" xml:space="preserve">
     <value>label21</value>
@@ -2693,7 +2717,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;label30.Name" xml:space="preserve">
     <value>label30</value>
@@ -2705,7 +2729,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;label31.Name" xml:space="preserve">
     <value>label31</value>
@@ -2717,7 +2741,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;label33.Name" xml:space="preserve">
     <value>label33</value>
@@ -2729,7 +2753,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;label34.Name" xml:space="preserve">
     <value>label34</value>
@@ -2741,7 +2765,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
     <value>textMaxTime</value>
@@ -2753,7 +2777,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
     <value>textMinTime</value>
@@ -2765,7 +2789,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;label26.Name" xml:space="preserve">
     <value>label26</value>
@@ -2777,7 +2801,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;label25.Name" xml:space="preserve">
     <value>label25</value>
@@ -2789,7 +2813,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="&gt;&gt;label24.Name" xml:space="preserve">
     <value>label24</value>
@@ -2801,7 +2825,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
     <value>cbDynamicMinimum</value>
@@ -2813,7 +2837,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
@@ -2825,7 +2849,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -2837,7 +2861,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>16</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
     <value>textMzMatchTolerance</value>
@@ -2849,7 +2873,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>17</value>
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
     <value>lblMethodMatchTolerance</value>
@@ -2861,7 +2885,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>18</value>
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
@@ -2873,7 +2897,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>19</value>
   </data>
   <data name="&gt;&gt;label11.Name" xml:space="preserve">
     <value>label11</value>
@@ -2885,7 +2909,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>20</value>
   </data>
   <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
     <value>textMaxMz</value>
@@ -2897,7 +2921,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>21</value>
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>
@@ -2909,7 +2933,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>22</value>
   </data>
   <data name="tabInstrument.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2934,6 +2958,54 @@ whenever peptides are matched to library spectrum.</value>
   </data>
   <data name="&gt;&gt;tabInstrument.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+    <value>187, 108</value>
+  </data>
+  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 13</value>
+  </data>
+  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+    <value>22</value>
+  </data>
+  <data name="label16.Text" xml:space="preserve">
+    <value>Tolerance &amp;Unit:</value>
+  </data>
+  <data name="&gt;&gt;label16.Name" xml:space="preserve">
+    <value>label16</value>
+  </data>
+  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboMzMatchToleranceUnit.Location" type="System.Drawing.Point, System.Drawing">
+    <value>189, 123</value>
+  </data>
+  <data name="comboMzMatchToleranceUnit.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 21</value>
+  </data>
+  <data name="comboMzMatchToleranceUnit.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.Name" xml:space="preserve">
+    <value>comboMzMatchToleranceUnit</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.Parent" xml:space="preserve">
+    <value>tabInstrument</value>
+  </data>
+  <data name="&gt;&gt;comboMzMatchToleranceUnit.ZOrder" xml:space="preserve">
+    <value>1</value>
   </data>
   <data name="cbxTriggeredAcquisition.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2964,7 +3036,7 @@ Peaks will be truncated to not overlap with these gaps and background subtractio
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="textMaxInclusions.Location" type="System.Drawing.Point, System.Drawing">
     <value>189, 185</value>
@@ -2989,7 +3061,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="label21.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3016,7 +3088,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label21.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="label30.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3043,7 +3115,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label30.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="label31.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3070,7 +3142,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label31.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="label33.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3097,7 +3169,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label33.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="label34.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3124,7 +3196,7 @@ instrument during multiplexed scanning.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label34.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="textMaxTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 249</value>
@@ -3150,7 +3222,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxTime.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="textMinTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 249</value>
@@ -3176,7 +3248,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMinTime.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>10</value>
   </data>
   <data name="label26.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3206,7 +3278,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label26.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>11</value>
   </data>
   <data name="label25.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3236,7 +3308,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label25.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>12</value>
   </data>
   <data name="label24.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3266,7 +3338,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label24.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>13</value>
   </data>
   <data name="cbDynamicMinimum.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3278,7 +3350,7 @@ that might be used on uninteresting parts of the gradient.</value>
     <value>146, 17</value>
   </data>
   <data name="cbDynamicMinimum.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="cbDynamicMinimum.Text" xml:space="preserve">
     <value>&amp;Dynamic min product m/z</value>
@@ -3298,7 +3370,7 @@ provided by Thermo-Scientific for LTQ instruments</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>14</value>
   </data>
   <data name="textMaxTrans.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 185</value>
@@ -3323,7 +3395,7 @@ instrument in a single injection or blank if no maximum applies</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>15</value>
   </data>
   <data name="label17.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3350,7 +3422,7 @@ instrument in a single injection or blank if no maximum applies</value>
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>16</value>
   </data>
   <data name="textMzMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 124</value>
@@ -3376,7 +3448,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>17</value>
   </data>
   <data name="lblMethodMatchTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3385,13 +3457,13 @@ with predicted transition m/z values.
     <value>24, 108</value>
   </data>
   <data name="lblMethodMatchTolerance.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 13</value>
+    <value>125, 13</value>
   </data>
   <data name="lblMethodMatchTolerance.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
   <data name="lblMethodMatchTolerance.Text" xml:space="preserve">
-    <value>Method match &amp;tolerance m/z:</value>
+    <value>Method match &amp;tolerance:</value>
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
     <value>lblMethodMatchTolerance</value>
@@ -3403,7 +3475,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>18</value>
   </data>
   <data name="label10.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3430,7 +3502,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>19</value>
   </data>
   <data name="label11.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -3457,7 +3529,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;label11.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>20</value>
   </data>
   <data name="textMaxMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>190, 38</value>
@@ -3466,7 +3538,7 @@ with predicted transition m/z values.
     <value>68, 20</value>
   </data>
   <data name="textMaxMz.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="textMaxMz.ToolTip" xml:space="preserve">
     <value>Maximum measurable m/z value for the target instrument</value>
@@ -3481,7 +3553,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMaxMz.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>21</value>
   </data>
   <data name="textMinMz.Location" type="System.Drawing.Point, System.Drawing">
     <value>27, 38</value>
@@ -3505,7 +3577,7 @@ with predicted transition m/z values.
     <value>tabInstrument</value>
   </data>
   <data name="&gt;&gt;textMinMz.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>22</value>
   </data>
   <data name="tabFullScan.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -3538,7 +3610,7 @@ with predicted transition m/z values.
     <value>ionMobilityFilteringControl</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=22.1.9.235, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -3583,7 +3655,7 @@ with predicted transition m/z values.
     <value>ionMobilityFilteringControl</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=22.1.9.235, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -3640,7 +3712,7 @@ with predicted transition m/z values.
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.1.9.235, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -3652,6 +3724,6 @@ with predicted transition m/z values.
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.1.9.235, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
