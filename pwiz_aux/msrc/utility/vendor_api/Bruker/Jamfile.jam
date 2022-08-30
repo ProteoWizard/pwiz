@@ -161,6 +161,7 @@ if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
             CompassData.cpp
             Baf2Sql.cpp
             TimsData.cpp
+            TsfData.cpp
             $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
         : # requirements
 
