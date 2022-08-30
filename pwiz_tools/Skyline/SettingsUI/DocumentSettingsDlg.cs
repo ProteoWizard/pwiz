@@ -1,3 +1,21 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2015 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -136,7 +154,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditGroupComparisonList()
         {
-            _groupComparisonsListBoxDriver.EditList(GetDocumentForEditor());
+            _groupComparisonsListBoxDriver.EditList(DocumentContainer);
         }
 
         private void btnOK_Click(object sender, System.EventArgs e)
@@ -320,8 +338,10 @@ namespace pwiz.Skyline.SettingsUI
 
         /// <summary>
         /// Returns a document whose data settings have all of the annotations from the Settings.Default,
-        /// so that users can define rules or group comparisons which use annotations that have not yet
-        /// been added to the document.
+        /// so that users can define rules which use annotations that have not yet
+        /// been added to the document (this unfortunately cannot be used with the Group Comparison editor because
+        /// the Group Comparison Preview really wants to interact with the SkylineWindow and give the user the full
+        /// experience of a Document Grid).
         /// </summary>
         public SrmDocument GetDocumentForEditor()
         {
