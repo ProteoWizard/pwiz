@@ -26,11 +26,25 @@
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 
+struct IsTSF : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+        return bfs::exists(bfs::path(rawpath) / "analysis.tsf");
+    }
+};
+
 struct IsDirectory : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return bfs::is_directory(rawpath) && !bal::icontains(rawpath, "diapasef"); // don't want default mzML conversion of diaPASEF, too big
+        return (bfs::is_directory(rawpath) && !bal::icontains(rawpath, "diapasef")) // don't want default mzML conversion of diaPASEF, too big
+#ifdef _WIN64
+            || IsTSF()(rawpath)
+#else
+            && !IsTSF()(rawpath)
+#endif
+        ;
     }
 };
 
@@ -38,7 +52,21 @@ struct IsTDF : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return bfs::exists(bfs::path(rawpath) / "analysis.tdf") && !bal::icontains(rawpath, "diapasef"); // don't want default TDF treatment for diaPASEF, too big
+        // don't want default TDF treatment for diaPASEF, too big
+        return (bfs::exists(bfs::path(rawpath) / "analysis.tdf") && !bal::icontains(rawpath, "diapasef"));
+    }
+};
+
+struct IsTXF : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+        // don't want default TDF treatment for diaPASEF, too big
+        return IsTDF()(rawpath)
+#ifdef _WIN64
+            || IsTSF()(rawpath)
+#endif
+            ;
     }
 };
 
@@ -85,12 +113,29 @@ int main(int argc, char* argv[])
         newConfig.indexRange = make_pair(0, 0);
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile("Hela_QC_PASEF_Slot1-first-6-frames.d"), newConfig);
 
+        requireUnicodeSupport = true;
+
+        // test profile data with full TSF file
+#ifdef _WIN64
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTSF(), config);
+#else
+        if (testAcceptOnly)
+            pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTSF(), config, false);
+        else
+            unit_assert_throws_what(pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTSF(), config, false),
+                std::runtime_error,
+                "[CompassData::create] Bruker API does not support reading TSF data in 32-bit builds; use a 64-bit build");
+#endif
+
+        // the rest of the TXF tests should have peakPicking on for smaller files
+        config.peakPicking = true;
+
         config.doublePrecision = true;
         config.preferOnlyMsLevel = 1;
-        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTXF(), config);
 
         config.preferOnlyMsLevel = 2;
-        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTDF(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsTXF(), config);
 
         config.allowMsMsWithoutPrecursor = false;
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsPASEF(), config);
