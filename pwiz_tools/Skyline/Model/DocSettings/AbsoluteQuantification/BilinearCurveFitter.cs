@@ -105,10 +105,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
                 {
                     var area = p.GetY(concentrationValues[iConcentration]);
-                    if (double.IsNaN(area) || double.IsInfinity(area))
-                    {
-                        Trace.TraceWarning("Invalid area {0}", area);
-                    }
                     areaGrid[iConcentration].Push(area);
                 }
 

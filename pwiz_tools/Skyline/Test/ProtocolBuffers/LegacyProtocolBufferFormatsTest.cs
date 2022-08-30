@@ -20,6 +20,7 @@ using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.SkylineTest.ProtocolBuffers.GeneratedCode;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.ProtocolBuffers
 {
@@ -29,7 +30,7 @@ namespace pwiz.SkylineTest.ProtocolBuffers
     /// we used to use.
     /// </summary>
     [TestClass]
-    public class LegacyProtocolBufferFormatsTest
+    public class LegacyProtocolBufferFormatsTest : AbstractUnitTest
     {
         [TestMethod]
         public void TestAlternateProtocolBufferFormats()

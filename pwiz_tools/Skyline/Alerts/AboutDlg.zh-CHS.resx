@@ -214,7 +214,7 @@
     <value>4</value>
   </data>
   <data name="labelSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline（ 64 比特版本：开发者版本） 19.0.0.000 (abc123456)</value>
+    <value>Skyline（ 64 位：开发者版本）22.0.0.000 (abc123456)</value>
   </data>
   <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
     <value>labelSoftwareVersion</value>
@@ -464,7 +464,7 @@ https://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>版权所有 ©2008-2021 华盛顿大学，保留所有权利
+    <value>版权所有 ©2008-2022 华盛顿大学，保留所有权利
 
 MacCoss 实验室, 基因组科学系, 华盛顿大学
 
