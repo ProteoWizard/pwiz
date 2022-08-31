@@ -11829,7 +11829,4 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
       <value>Score type not found.</value>
   </data>
-  <data name="GraphSpectrum_DoUpdate_Loading___" xml:space="preserve">
-      <value>Loading...</value>
-  </data>
 </root>

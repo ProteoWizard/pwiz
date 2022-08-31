@@ -380,6 +380,8 @@ namespace pwiz.Skyline.Model.Lib
             get { return BiblioSpecLiteSpec.GetRedundantName(FilePath); }
         }
 
+        public bool HasRedundantConnection => _sqliteConnectionRedundant != null;
+
         public override IPooledStream ReadStream
         {
             get { return _sqliteConnection; }
@@ -404,8 +406,7 @@ namespace pwiz.Skyline.Model.Lib
                 _sqliteConnection = new PooledSqliteConnection(pool, FilePath);
                 if (File.Exists(FilePathRedundant))
                 {
-                    if (_sqliteConnectionRedundant != null)
-                        _sqliteConnectionRedundant.CloseStream();
+                    _sqliteConnectionRedundant?.CloseStream();
                     _sqliteConnectionRedundant = new PooledSqliteConnection(pool, FilePathRedundant);
                 }
             }
@@ -1343,7 +1344,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
         {
-            if (_sqliteConnectionRedundant == null)
+            if (!HasRedundantConnection)
                 throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist, FilePathRedundant));
 
             try

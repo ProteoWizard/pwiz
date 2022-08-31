@@ -15388,15 +15388,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading....
-        /// </summary>
-        public static string GraphSpectrum_DoUpdate_Loading___ {
-            get {
-                return ResourceManager.GetString("GraphSpectrum_DoUpdate_Loading___", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0}{1} ppm.
         /// </summary>
         public static string GraphSpectrum_MassErrorFormat_ppm {

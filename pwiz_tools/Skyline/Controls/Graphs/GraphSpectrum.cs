@@ -1011,30 +1011,16 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly GraphSpectrum _parent;
             private readonly Timer _timer;
 
-            private readonly object _precursorsLock;
             public ImmutableList<Precursor> Precursors { get; private set; }
-            private bool _spectraLoaded;
-            public bool SpectraLoaded
-            {
-                get
-                {
-                    lock (_precursorsLock)
-                    {
-                        return _spectraLoaded;
-                    }
-                }
-            }
 
             private TreeNodeMS _treeNode;
             private SrmSettings _settings;
-            private BackgroundWorker _loadSpectraWorker;
 
             public UpdateManager(GraphSpectrum parent)
             {
                 _parent = parent;
                 _timer = new Timer { Interval = 100 };
                 _timer.Tick += DoUpdate;
-                _precursorsLock = new object();
             }
 
             public bool IsUpdating => _timer.Tag != null;
@@ -1091,129 +1077,283 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private void UpdatePrecursors(ICollection<Precursor> precursors, TreeNodeMS treeNode, SrmSettings settings)
             {
-                lock (_precursorsLock)
-                {
-                    Precursors = precursors != null && precursors.Count > 0 ? ImmutableList<Precursor>.ValueOf(precursors) : null;
-                    _spectraLoaded = false;
-                }
+                Precursors = precursors != null && precursors.Count > 0 ? ImmutableList<Precursor>.ValueOf(precursors) : null;
                 _treeNode = treeNode;
                 _settings = settings;
-            }
 
-            public void LoadSpectra()
-            {
-                if (SpectraLoaded)
-                    return;
+                var helper = new SpectrumHelper(settings, precursors);
 
-                // Cancel existing load operation
-                _loadSpectraWorker?.CancelAsync();
-
-                _loadSpectraWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
-                var loadFor = Precursors;
-                _loadSpectraWorker.DoWork += (obj, e) => LoadSpectraBackground(_loadSpectraWorker, e, _settings, loadFor);
-                _loadSpectraWorker.RunWorkerCompleted += (obj, e) =>
+                while (helper.Next())
                 {
-                    if (e.Cancelled)
-                        return;
-
-                    lock (_precursorsLock)
+                    foreach (var lib in settings.PeptideSettings.Libraries.Libraries)
                     {
-                        if (!ReferenceEquals(Precursors, loadFor))
-                            return;
+                        var blib = lib as BiblioSpecLiteLibrary;
+                        var isBlib = blib != null;
 
-                        _spectraLoaded = true;
+                        if (!isBlib)
+                        {
+                            helper.Add(lib.GetSpectra(helper.LibKey, helper.LabelType, LibraryRedundancy.best)
+                                .Select(info => new SpectrumDisplayInfo(info, helper.DocNode)));
+                        }
+                        else
+                        {
+                            if (lib.Contains(helper.LibKey))
+                            {
+                                helper.Add(new SpectrumDisplayInfo(helper.MakeLazyLoader(lib), helper.DocNode));
+                            }
+                        }
+
+                        if (!helper.GetRedundant || (isBlib && !blib.HasRedundantConnection))
+                            continue;
+
+                        if (!isBlib)
+                        {
+                            helper.AddRedundant(lib.GetSpectra(helper.LibKey, helper.LabelType, LibraryRedundancy.all));
+                        }
+                        else
+                        {
+                            foreach (var path in lib.LibraryFiles.FilePaths.Select(MsDataFileUri.Parse))
+                            {
+                                if (helper.TryGetMatchingFile(path, out var match) &&
+                                    lib.TryGetRetentionTimes(helper.LibKey, path, out var rts))
+                                {
+                                    foreach (var rt in rts)
+                                        helper.AddRedundant(match, helper.MakeLazyLoader(lib, rt), rt);
+                                }
+                            }
+                        }
                     }
-
-                    // Re-run UI update now that spectra have been loaded
-                    _parent.DoUpdate();
-                };
-                _loadSpectraWorker.RunWorkerAsync();
+                }
             }
 
-            private static void LoadSpectraBackground(BackgroundWorker worker, CancelEventArgs e, SrmSettings settings, ImmutableList<Precursor> precursors)
+            private class SpectrumHelper
             {
-                foreach (var p in precursors)
-                {
-                    if (worker.CancellationPending)
-                        break;
-
-                    p.Spectra.Clear();
-                    p.Spectra.AddRange(settings
-                        .GetBestSpectra(p.LookupTarget, p.DocNode.PrecursorAdduct, p.LookupMods)
-                        .Select(s => new SpectrumDisplayInfo(s, p.DocNode)));
-                }
+                private SrmSettings Settings { get; }
 
                 // Showing redundant spectra is only supported for full-scan filtering when
                 // the document has results files imported.
-                if ((settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary) && settings.HasResults)
+                public bool GetRedundant => Settings != null && Settings.HasResults &&
+                                            (Settings.TransitionSettings.FullScan.IsEnabled ||
+                                             Settings.PeptideSettings.Libraries.HasMidasLibrary);
+
+                private ICollection<Precursor> Precursors { get; }
+                private int PrecursorIndex { get; set; }
+                private Precursor Precursor { get; set; }
+                public TransitionGroupDocNode DocNode => Precursor?.DocNode;
+                public IsotopeLabelType LabelType => DocNode?.LabelType;
+
+                public LibKey LibKey { get; private set; }
+
+                private Dictionary<MsDataFileUri, ChromSetFileMatch> MatchedFiles { get; }
+                private List<SpectrumDisplayInfo> SpectraRedundant { get; }
+                private Dictionary<string, HashSet<MsDataFileUri>> ReplicateFiles { get; }
+
+                public SpectrumHelper(SrmSettings settings, ICollection<Precursor> precursors)
                 {
-                    try
+                    Settings = settings;
+
+                    Precursors = precursors ?? Array.Empty<Precursor>();
+                    PrecursorIndex = -1;
+
+                    MatchedFiles = new Dictionary<MsDataFileUri, ChromSetFileMatch>();
+                    SpectraRedundant = new List<SpectrumDisplayInfo>();
+                    ReplicateFiles = new Dictionary<string, HashSet<MsDataFileUri>>();
+                }
+
+                public bool Next()
+                {
+                    ProcessRedundantSpectra();
+
+                    PrecursorIndex++;
+                    if (PrecursorIndex >= Precursors.Count)
+                        return false;
+
+                    Precursor = Precursors.ElementAt(PrecursorIndex);
+
+                    LibKey = new LibKey(
+                        Settings.GetModifiedSequence(Precursor.LookupTarget, LabelType, Precursor.LookupMods),
+                        Precursor.DocNode.PrecursorAdduct);
+                    SpectraRedundant.Clear();
+                    ReplicateFiles.Clear();
+                    return true;
+                }
+
+                public bool TryGetMatchingFile(MsDataFileUri file, out ChromSetFileMatch fileMatch)
+                {
+                    if (!MatchedFiles.TryGetValue(file, out fileMatch))
                     {
-                        foreach (var precursor in precursors)
+                        fileMatch = Settings.MeasuredResults.FindMatchingMSDataFile(file);
+                        MatchedFiles.Add(file, fileMatch);
+                    }
+                    return fileMatch != null;
+                }
+
+                public SpectrumInfoLazyLib MakeLazyLoader(Library lib, double? rt = null)
+                {
+                    return new SpectrumInfoLazyLib(lib, LibKey, LabelType, rt);
+                }
+
+                public void Add(IEnumerable<SpectrumDisplayInfo> infos)
+                {
+                    Precursor.Spectra.AddRange(infos);
+                }
+
+                public void Add(SpectrumDisplayInfo info)
+                {
+                    Precursor.Spectra.Add(info);
+                }
+
+                public void AddRedundant(IEnumerable<SpectrumInfoLibrary> infos)
+                {
+                    foreach (var info in infos)
+                    {
+                        if (TryGetMatchingFile(MsDataFileUri.Parse(info.FilePath), out var match))
+                            AddRedundant(match, info, info.RetentionTime);
+                    }
+                }
+
+                public void AddRedundant(ChromSetFileMatch fileMatch, SpectrumInfo info, double? rt)
+                {
+                    var replicateName = fileMatch.Chromatograms.Name;
+                    if (!ReplicateFiles.TryGetValue(replicateName, out var setFiles))
+                    {
+                        setFiles = new HashSet<MsDataFileUri>();
+                        ReplicateFiles.Add(replicateName, setFiles);
+                    }
+                    setFiles.Add(fileMatch.FilePath);
+                    SpectraRedundant.Add(new SpectrumDisplayInfo(info, Precursor.DocNode,
+                        replicateName, fileMatch.FilePath, fileMatch.FileOrder,
+                        rt, false));
+                }
+
+                private void ProcessRedundantSpectra()
+                {
+                    if (!SpectraRedundant.Any())
+                        return;
+
+                    foreach (var spectrum in SpectraRedundant)
+                    {
+                        var replicateName = spectrum.ReplicateName;
+
+                        // Determine if replicate name is sufficient to uniquely identify the file
+                        if (replicateName != null && ReplicateFiles[replicateName].Count <= 1)
+                            spectrum.IsReplicateUnique = true;
+
+                        // Update best spectrum
+                        if (spectrum.IsBest)
                         {
-                            if (worker.CancellationPending)
-                                break;
-
-                            var spectraRedundant = new List<SpectrumDisplayInfo>();
-                            var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-                            foreach (var spectrumInfo in settings.GetRedundantSpectra(precursor.Peptide,
-                                         precursor.LookupTarget, precursor.DocNode.PrecursorAdduct,
-                                         precursor.DocNode.LabelType, precursor.LookupMods))
+                            var iBest = Precursor.Spectra.IndexOf(s =>
+                                Equals(s.Name, spectrum.Name) &&
+                                Equals(s.LabelType, spectrum.LabelType));
+                            if (iBest != -1)
                             {
-                                if (worker.CancellationPending)
-                                    break;
-
-                                var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(spectrumInfo.FilePath));
-                                if (matchingFile == null)
-                                    continue;
-
-                                var replicateName = matchingFile.Chromatograms.Name;
-                                spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo, precursor.DocNode,
-                                    replicateName, matchingFile.FilePath, matchingFile.FileOrder,
-                                    spectrumInfo.RetentionTime, false));
-
-                                // Include the best spectrum twice, once displayed in the normal
-                                // way and once displayed with its replicate and retention time.
-                                if (spectrumInfo.IsBest)
-                                {
-                                    var iBest = precursor.Spectra.IndexOf(s =>
-                                        Equals(s.Name, spectrumInfo.Name) &&
-                                        Equals(s.LabelType, spectrumInfo.LabelType));
-                                    if (iBest != -1)
-                                    {
-                                        precursor.Spectra[iBest] = new SpectrumDisplayInfo(
-                                            precursor.Spectra[iBest].SpectrumInfo, precursor.DocNode,
-                                            replicateName,
-                                            matchingFile.FilePath, 0, spectrumInfo.RetentionTime, true);
-                                    }
-                                }
-
-                                if (!dictReplicateNameFiles.TryGetValue(replicateName, out var setFiles))
-                                {
-                                    setFiles = new HashSet<string>();
-                                    dictReplicateNameFiles.Add(replicateName, setFiles);
-                                }
-
-                                setFiles.Add(spectrumInfo.FilePath);
+                                Precursor.Spectra[iBest] = new SpectrumDisplayInfo(Precursor.Spectra[iBest].SpectrumInfo, Precursor.DocNode,
+                                    replicateName, spectrum.FilePath, 0, spectrum.RetentionTime, true);
                             }
-
-                            // Determine if replicate name is sufficient to uniquely identify the file
-                            foreach (var spectrumInfo in spectraRedundant)
-                            {
-                                var replicateName = spectrumInfo.ReplicateName;
-                                if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
-                                    spectrumInfo.IsReplicateUnique = true;
-                            }
-                            spectraRedundant.Sort();
-                            precursor.Spectra.AddRange(spectraRedundant);
                         }
                     }
-                    catch (Exception)
+                    
+                    SpectraRedundant.Sort();
+                    Add(SpectraRedundant);
+                }
+
+                public class SpectrumInfoLazyLib : SpectrumInfo
+                {
+                    private Library Library { get; }
+                    private LibKey LibKey { get; }
+                    private double? RetentionTime { get; }
+
+                    private bool IsLoaded { get; set; }
+
+                    public SpectrumInfoLazyLib(Library lib, LibKey libKey,
+                        IsotopeLabelType labelType, double? rt) : base(labelType, !rt.HasValue)
                     {
-                        // ignored
+                        Library = lib;
+                        LibKey = libKey;
+                        RetentionTime = rt;
+                        IsLoaded = false;
                     }
 
-                    e.Cancel = worker.CancellationPending;
+                    private void RequireLoaded()
+                    {
+                        if (IsLoaded)
+                            return;
+
+                        var spectra = Library.GetSpectra(LibKey, LabelType,
+                            IsBest ? LibraryRedundancy.best : LibraryRedundancy.all).ToArray();
+
+                        var match = spectra.FirstOrDefault();
+                        if (RetentionTime.HasValue)
+                        {
+                            var closest = double.MaxValue;
+                            foreach (var spectrum in spectra.Where(s => s.RetentionTime.HasValue))
+                            {
+                                var diff = Math.Abs(RetentionTime.Value - spectrum.RetentionTime.Value);
+                                if (diff < closest)
+                                {
+                                    closest = diff;
+                                    match = spectrum;
+                                }
+                            }
+
+                            if (closest >= 0.1)
+                                match = null;
+                        }
+
+                        IsLoaded = true;
+                        _spectrumPeaksInfo = match?.SpectrumPeaksInfo;
+                        _chromatogramData = match?.ChromatogramData;
+                    }
+
+                    private bool Equals(SpectrumInfoLazyLib other)
+                    {
+                        return Equals(Library, other.Library) &&
+                               Equals(LibKey, other.LibKey) &&
+                               Equals(RetentionTime, other.RetentionTime) &&
+                               base.Equals(other);
+                    }
+
+                    public override bool Equals(object obj)
+                    {
+                        if (ReferenceEquals(null, obj)) return false;
+                        if (ReferenceEquals(this, obj)) return true;
+                        if (obj.GetType() != GetType()) return false;
+                        return Equals((SpectrumInfoLazyLib)obj);
+                    }
+
+                    public override int GetHashCode()
+                    {
+                        unchecked
+                        {
+                            var hashCode = base.GetHashCode();
+                            hashCode = (hashCode * 397) ^ Library.GetHashCode();
+                            hashCode = (hashCode * 397) ^ LibKey.GetHashCode();
+                            hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
+                            return hashCode;
+                        }
+                    }
+
+                    public override string Name => Library.Name;
+
+                    private SpectrumPeaksInfo _spectrumPeaksInfo;
+                    public override SpectrumPeaksInfo SpectrumPeaksInfo
+                    {
+                        get
+                        {
+                            RequireLoaded();
+                            return _spectrumPeaksInfo;
+                        }
+                    }
+
+                    private LibraryChromGroup _chromatogramData;
+                    public override LibraryChromGroup ChromatogramData
+                    {
+                        get
+                        {
+                            RequireLoaded();
+                            return _chromatogramData;
+                        }
+                    }
                 }
             }
 
@@ -1278,14 +1418,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         var loadFromLib = libraries.HasLibraries && libraries.IsLoaded && (!usingProsit || Settings.Default.LibMatchMirror);
                         if (loadFromLib)
                         {
-                            if (!_updateManager.SpectraLoaded)
-                            {
-                                ClearGraphPane();
-                                _graphHelper.SetErrorGraphItem(new ExceptionMSGraphItem(new Exception(Resources.GraphSpectrum_DoUpdate_Loading___)));
-                                _updateManager.LoadSpectra();
-                                return;
-                            }
-
                             // For a mirrored spectrum, make sure the isotope label types between library and Prosit match
                             if (usingProsit && Settings.Default.LibMatchMirror && prositEx == null)
                                 PrositSpectrum = UpdatePrositPrediction(selection, SelectedPrecursor?.DocNode.LabelType, out prositEx);
