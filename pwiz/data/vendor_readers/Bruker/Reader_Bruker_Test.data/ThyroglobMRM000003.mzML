@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="ThyroglobMRM000003" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,12 +9,12 @@
       <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
     </fileContent>
     <sourceFileList count="2">
-      <sourceFile id="ThyroglobMRM000003.d_x005c_Analysis.tdf" name="Analysis.tdf" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\ThyroglobMRM000003.d">
+      <sourceFile id="ThyroglobMRM000003.d_x005c_Analysis.tdf" name="Analysis.tdf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\ThyroglobMRM000003.d">
         <cvParam cvRef="MS" accession="MS:1002818" name="Bruker TDF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1002817" name="Bruker TDF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9b34ec0a0cd9c76b67b2d8dffe6da677a2aa2b5d"/>
       </sourceFile>
-      <sourceFile id="ThyroglobMRM000003.d_x005c_Analysis.tdf_bin" name="Analysis.tdf_bin" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\ThyroglobMRM000003.d">
+      <sourceFile id="ThyroglobMRM000003.d_x005c_Analysis.tdf_bin" name="Analysis.tdf_bin" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\ThyroglobMRM000003.d">
         <cvParam cvRef="MS" accession="MS:1002818" name="Bruker TDF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1002817" name="Bruker TDF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a8d2e3ca9139ccd0b1fcdd34f10a575206b5c4fb"/>
@@ -23,18 +23,18 @@
   </fileDescription>
   <referenceableParamGroupList count="1">
     <referenceableParamGroup id="CommonInstrumentParams">
-      <cvParam cvRef="MS" accession="MS:1000122" name="Bruker Daltonics instrument model" value=""/>
+      <cvParam cvRef="MS" accession="MS:1003123" name="Bruker Daltonics timsTOF series" value=""/>
     </referenceableParamGroup>
   </referenceableParamGroupList>
   <softwareList count="3">
-    <software id="TIMS_SDK" version="2.3.101.131-791">
+    <software id="TIMS_SDK" version="2.21.104.32">
       <cvParam cvRef="MS" accession="MS:1000692" name="Bruker software" value=""/>
       <userParam name="software name" value="TIMS SDK"/>
     </software>
     <software id="micrOTOFcontrol" version="5.0.71.422-9346-vc110">
       <cvParam cvRef="MS" accession="MS:1000726" name="micrOTOFcontrol" value=""/>
     </software>
-    <software id="pwiz_Reader_Bruker" version="3.0.20071">
+    <software id="pwiz_Reader_Bruker" version="3.0.22236">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>

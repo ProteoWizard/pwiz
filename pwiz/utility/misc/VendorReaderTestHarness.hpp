@@ -102,7 +102,8 @@ TestResult testReader(const pwiz::msdata::Reader& reader,
                       const std::vector<std::string>& args,
                       bool testAcceptOnly, bool requireUnicodeSupport,
                       const TestPathPredicate& isPathTestable,
-                      const ReaderTestConfig& config = ReaderTestConfig());
+                      const ReaderTestConfig& config = ReaderTestConfig(),
+                      bool catchReaderExceptions = true);
 
 
 } // namespace util
