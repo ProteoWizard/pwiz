@@ -1233,9 +1233,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else if (libraries.HasLibraries && libraries.IsLoaded || usingProsit)
                 {
-                    // Try to load a list of spectra matching the criteria for
-                    // the current node group.
-
                     // Need this to make sure we still update the toolbar if the prosit prediction throws
                     SpectrumDisplayInfo spectrum = null;
                     PrositSpectrum = null;
