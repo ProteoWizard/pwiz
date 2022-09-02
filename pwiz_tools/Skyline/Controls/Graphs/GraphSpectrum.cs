@@ -1062,14 +1062,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (selection.NodePepGroup != null)
                 {
                     if (selection.NodeTranGroup != null)
-                        precursors.Add(new Precursor(selection.SelectedTreeNode, selection.NodePep.Peptide,
-                            selection.NodePep.SourceUnmodifiedTarget, selection.NodePep.SourceExplicitMods, selection.NodeTranGroup));
+                    {
+                        if (selection.NodeTranGroup.HasLibInfo)
+                            precursors.Add(new Precursor(selection.SelectedTreeNode, selection.NodePep.Peptide,
+                                selection.NodePep.SourceUnmodifiedTarget, selection.NodePep.SourceExplicitMods, selection.NodeTranGroup));
+                    }
                     else
+                    {
                         precursors.AddRange((
                             from peptide in selection.NodePep != null ? new[] { selection.NodePep } : selection.NodePepGroup.Peptides
                             from precursor in peptide.TransitionGroups
-                            select new Precursor(selection.SelectedTreeNode, peptide.Peptide, peptide.SourceUnmodifiedTarget,
+                            where precursor.HasLibInfo
+                            select new Precursor(selection.SelectedTreeNode, peptide.Peptide,
+                                peptide.SourceUnmodifiedTarget,
                                 peptide.SourceExplicitMods, precursor)).Take(limit));
+                    }
                 }
 
                 UpdatePrecursors(precursors, selection.SelectedTreeNode, settings);
@@ -1087,39 +1094,31 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     foreach (var lib in settings.PeptideSettings.Libraries.Libraries)
                     {
-                        var blib = lib as BiblioSpecLiteLibrary;
-                        var isBlib = blib != null;
-
-                        if (!isBlib)
+                        foreach (var typedSeq in helper.TypedSequences())
                         {
-                            helper.Add(lib.GetSpectra(helper.LibKey, helper.LabelType, LibraryRedundancy.best)
-                                .Select(info => new SpectrumDisplayInfo(info, helper.DocNode)));
-                        }
-                        else
-                        {
-                            if (lib.Contains(helper.LibKey))
+                            var libKey = typedSeq.ModifiedSequence.GetLibKey(typedSeq.Adduct);
+                            if (lib.Contains(libKey))
                             {
-                                helper.Add(new SpectrumDisplayInfo(helper.MakeLazyLoader(lib), helper.DocNode));
+                                helper.Add(new SpectrumDisplayInfo(
+                                    new SpectrumHelper.SpectrumInfoLazy(lib, libKey, typedSeq.LabelType),
+                                    helper.DocNode));
                             }
                         }
 
-                        if (!helper.GetRedundant || (isBlib && !blib.HasRedundantConnection))
+                        if (!helper.GetRedundant || (lib is BiblioSpecLiteLibrary blib && !blib.HasRedundantConnection))
                             continue;
 
-                        if (!isBlib)
+                        var redundantLibKey = helper.RedundantLibKey();
+
+                        foreach (var path in lib.LibraryFiles.FilePaths.Select(MsDataFileUri.Parse))
                         {
-                            helper.AddRedundant(lib.GetSpectra(helper.LibKey, helper.LabelType, LibraryRedundancy.all));
-                        }
-                        else
-                        {
-                            foreach (var path in lib.LibraryFiles.FilePaths.Select(MsDataFileUri.Parse))
+                            if (helper.TryGetMatchingFile(path, out var match) &&
+                                lib.TryGetRetentionTimes(redundantLibKey, path, out var rts))
                             {
-                                if (helper.TryGetMatchingFile(path, out var match) &&
-                                    lib.TryGetRetentionTimes(helper.LibKey, path, out var rts))
-                                {
-                                    foreach (var rt in rts)
-                                        helper.AddRedundant(match, helper.MakeLazyLoader(lib, rt), rt);
-                                }
+                                foreach (var rt in rts)
+                                    helper.AddRedundant(match,
+                                        new SpectrumHelper.SpectrumInfoLazy(lib, redundantLibKey, helper.LabelType, path, rt),
+                                        rt);
                             }
                         }
                     }
@@ -1139,10 +1138,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 private ICollection<Precursor> Precursors { get; }
                 private int PrecursorIndex { get; set; }
                 private Precursor Precursor { get; set; }
+                private Target Target => Precursor?.LookupTarget;
+                private ExplicitMods Mods => Precursor?.LookupMods;
                 public TransitionGroupDocNode DocNode => Precursor?.DocNode;
+                private Adduct Adduct => DocNode?.PrecursorAdduct;
                 public IsotopeLabelType LabelType => DocNode?.LabelType;
-
-                public LibKey LibKey { get; private set; }
 
                 private Dictionary<MsDataFileUri, ChromSetFileMatch> MatchedFiles { get; }
                 private List<SpectrumDisplayInfo> SpectraRedundant { get; }
@@ -1170,12 +1170,29 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     Precursor = Precursors.ElementAt(PrecursorIndex);
 
-                    LibKey = new LibKey(
-                        Settings.GetModifiedSequence(Precursor.LookupTarget, LabelType, Precursor.LookupMods),
-                        Precursor.DocNode.PrecursorAdduct);
                     SpectraRedundant.Clear();
                     ReplicateFiles.Clear();
                     return true;
+                }
+
+                public IEnumerable<SrmSettings.TypedSequence> TypedSequences()
+                {
+                    return Settings.GetTypedSequences(Target, Mods, DocNode.PrecursorAdduct);
+                }
+
+                public LibKey RedundantLibKey()
+                {
+                    var pep = DocNode.Peptide;
+                    if (!pep.IsCustomMolecule)
+                    {
+                        var sequenceMod = Settings.GetModifiedSequence(Target, LabelType, Mods);
+                        return new LibKey(sequenceMod, Adduct);
+                    }
+
+                    // For small molecules, label is in the adduct
+                    var molecule = pep.CustomMolecule;
+                    return new LibKey(molecule.PrimaryEquivalenceKey,
+                        Settings.GetModifiedAdduct(Adduct, molecule.UnlabeledFormula, LabelType, Mods)); // TODO that should be a formula
                 }
 
                 public bool TryGetMatchingFile(MsDataFileUri file, out ChromSetFileMatch fileMatch)
@@ -1188,12 +1205,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return fileMatch != null;
                 }
 
-                public SpectrumInfoLazyLib MakeLazyLoader(Library lib, double? rt = null)
-                {
-                    return new SpectrumInfoLazyLib(lib, LibKey, LabelType, rt);
-                }
-
-                public void Add(IEnumerable<SpectrumDisplayInfo> infos)
+                private void Add(IEnumerable<SpectrumDisplayInfo> infos)
                 {
                     Precursor.Spectra.AddRange(infos);
                 }
@@ -1201,15 +1213,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 public void Add(SpectrumDisplayInfo info)
                 {
                     Precursor.Spectra.Add(info);
-                }
-
-                public void AddRedundant(IEnumerable<SpectrumInfoLibrary> infos)
-                {
-                    foreach (var info in infos)
-                    {
-                        if (TryGetMatchingFile(MsDataFileUri.Parse(info.FilePath), out var match))
-                            AddRedundant(match, info, info.RetentionTime);
-                    }
                 }
 
                 public void AddRedundant(ChromSetFileMatch fileMatch, SpectrumInfo info, double? rt)
@@ -1221,9 +1224,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         ReplicateFiles.Add(replicateName, setFiles);
                     }
                     setFiles.Add(fileMatch.FilePath);
-                    SpectraRedundant.Add(new SpectrumDisplayInfo(info, Precursor.DocNode,
-                        replicateName, fileMatch.FilePath, fileMatch.FileOrder,
-                        rt, false));
+                    SpectraRedundant.Add(new SpectrumDisplayInfo(info, DocNode, replicateName, fileMatch.FilePath,
+                        fileMatch.FileOrder, rt, false));
                 }
 
                 private void ProcessRedundantSpectra()
@@ -1247,8 +1249,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                 Equals(s.LabelType, spectrum.LabelType));
                             if (iBest != -1)
                             {
-                                Precursor.Spectra[iBest] = new SpectrumDisplayInfo(Precursor.Spectra[iBest].SpectrumInfo, Precursor.DocNode,
-                                    replicateName, spectrum.FilePath, 0, spectrum.RetentionTime, true);
+                                Precursor.Spectra[iBest] = new SpectrumDisplayInfo(
+                                    Precursor.Spectra[iBest].SpectrumInfo, DocNode, replicateName, spectrum.FilePath, 0,
+                                    spectrum.RetentionTime, true);
                             }
                         }
                     }
@@ -1257,19 +1260,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     Add(SpectraRedundant);
                 }
 
-                public class SpectrumInfoLazyLib : SpectrumInfo
+                public class SpectrumInfoLazy : SpectrumInfo
                 {
                     private Library Library { get; }
                     private LibKey LibKey { get; }
+                    private MsDataFileUri Path { get; }
                     private double? RetentionTime { get; }
 
                     private bool IsLoaded { get; set; }
 
-                    public SpectrumInfoLazyLib(Library lib, LibKey libKey,
-                        IsotopeLabelType labelType, double? rt) : base(labelType, !rt.HasValue)
+                    public SpectrumInfoLazy(Library lib, LibKey libKey, IsotopeLabelType labelType,
+                        MsDataFileUri path = null, double? rt = null) : base(labelType, !rt.HasValue)
                     {
                         Library = lib;
                         LibKey = libKey;
+                        Path = path;
                         RetentionTime = rt;
                         IsLoaded = false;
                     }
@@ -1281,6 +1286,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         var spectra = Library.GetSpectra(LibKey, LabelType,
                             IsBest ? LibraryRedundancy.best : LibraryRedundancy.all).ToArray();
+
+                        if (Path != null)
+                        {
+                            spectra = spectra.Where(s => Equals(Path.GetFilePath(), s.FilePath)).ToArray();
+                        }
 
                         var match = spectra.FirstOrDefault();
                         if (RetentionTime.HasValue)
@@ -1305,7 +1315,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         _chromatogramData = match?.ChromatogramData;
                     }
 
-                    private bool Equals(SpectrumInfoLazyLib other)
+                    private bool Equals(SpectrumInfoLazy other)
                     {
                         return Equals(Library, other.Library) &&
                                Equals(LibKey, other.LibKey) &&
@@ -1318,7 +1328,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (ReferenceEquals(null, obj)) return false;
                         if (ReferenceEquals(this, obj)) return true;
                         if (obj.GetType() != GetType()) return false;
-                        return Equals((SpectrumInfoLazyLib)obj);
+                        return Equals((SpectrumInfoLazy)obj);
                     }
 
                     public override int GetHashCode()

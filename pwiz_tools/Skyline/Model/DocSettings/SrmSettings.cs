@@ -1297,7 +1297,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return times.ToArray();
         }
 
-        private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
+        public IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
         {
             if (mods != null && mods.HasCrosslinks)
             {
@@ -1343,7 +1343,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        private struct TypedSequence
+        public struct TypedSequence
         {
             public TypedSequence(Target modifiedSequence, IsotopeLabelType labelType, Adduct adduct)
                 : this()
