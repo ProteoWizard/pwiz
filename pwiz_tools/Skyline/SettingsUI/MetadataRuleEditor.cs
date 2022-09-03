@@ -42,10 +42,10 @@ namespace pwiz.Skyline.SettingsUI
         private SkylineDataSchema _dataSchema;
         private MetadataExtractor _metadataExtractor;
 
-        public MetadataRuleEditor(IDocumentContainer documentContainer)
+        public MetadataRuleEditor(SrmDocument document)
         {
             InitializeComponent();
-            _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ResultFile));
             var viewContext =
                 new SkylineViewContext(rootColumn, new StaticRowSource(new ExtractedMetadataResultRow[0]));
