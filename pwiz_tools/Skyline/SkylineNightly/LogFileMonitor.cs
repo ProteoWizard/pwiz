@@ -35,7 +35,7 @@ namespace SkylineNightly
     /// been modified for a long period of time (indicating that a test is hanging) and are sent by
     /// posting to the sendEmailNotification action of the TestResults module.
     /// </summary>
-    public class LogFileMonitor
+    public class LogFileMonitor : IDisposable
     {
         private readonly string _oldLog;
         private readonly string _logDir;
@@ -77,14 +77,21 @@ namespace SkylineNightly
             _lastTest = null;
             _logChecker = new Timer(10000); // check log file every 10 seconds
             _logChecker.Elapsed += CheckLog;
+
+            Start();
         }
 
-        public void Start()
+        private void Start()
         {
             lock (_lock)
             {
                 _logChecker.Start();
             }
+        }
+
+        public void Dispose()
+        {
+            Stop();
         }
 
         public void Stop()
