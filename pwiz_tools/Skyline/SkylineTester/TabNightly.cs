@@ -311,6 +311,8 @@ namespace SkylineTester
 
             StartLog("Nightly", MainWindow.Summary.GetLogFile(MainWindow.NewNightlyRun));
 
+            InitNightlyListener();
+
             var revisionWorker = new BackgroundWorker();
             revisionWorker.DoWork += (s, a) =>
             {
@@ -380,13 +382,18 @@ namespace SkylineTester
             }
             MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
+            // NOTE: Be very careful what gets added after MainWindow.RunCommands gets called.
+            //       It may be running asynchronously with the commands being executed.
             MainWindow.RunCommands();
 
             if (_updateTimer != null)
                 _updateTimer.Start();
             if (_stopTimer != null)
                 _stopTimer.Start();
+        }
 
+        private void InitNightlyListener()
+        {
             // If this is a nightly run and there is no nightly listener already
             // create one
             if (MainWindow.NightlyExit.Checked && _nightlyListener == null)
@@ -396,14 +403,14 @@ namespace SkylineTester
                 // was causing SkylineTester to crash on some computers
                 try
                 {
-                    MainWindow.CommandShell.AddImmediate("\n# Adding nightly listener...");
+                    MainWindow.CommandShell.AddImmediate("# Adding nightly listener...");
                     _nightlyListener = new NightlyListener(_stopTimer);
-                    MainWindow.CommandShell.AddImmediate("\n# Added listener\n");
+                    MainWindow.CommandShell.AddImmediate("# Added listener");
                 }
                 catch (Exception e)
                 {
-                    MainWindow.CommandShell.AddImmediate("\n# Failed adding listener(" + e + ")" +
-                                                         "\n# Running disconnected from SkylineNightly\n");
+                    MainWindow.CommandShell.AddImmediate("# Failed adding listener(" + e + ")\n" +
+                                                         "# Running disconnected from SkylineNightly");
                 }
                 MainWindow.RefreshLogs();
             }
