@@ -396,7 +396,11 @@ namespace SkylineTester
         {
             // If this is a nightly run and there is no nightly listener already
             // create one
-            if (MainWindow.NightlyExit.Checked && _nightlyListener == null)
+            if (!MainWindow.NightlyExit.Checked)
+                MainWindow.CommandShell.AddImmediate("# Skipping nightly listener");
+            else if (_nightlyListener != null)
+                MainWindow.CommandShell.AddImmediate("# Nightly listener already exists");
+            else
             {
                 // With extra logging and exception handling because the unhandled exception
                 // "a registration already exists for net.pipe://localhost/Nightly/SetEndTime"
@@ -412,8 +416,8 @@ namespace SkylineTester
                     MainWindow.CommandShell.AddImmediate("# Failed adding listener(" + e + ")\n" +
                                                          "# Running disconnected from SkylineNightly");
                 }
-                MainWindow.RefreshLogs();
             }
+            MainWindow.RefreshLogs();
         }
 
         private int _architecture;
