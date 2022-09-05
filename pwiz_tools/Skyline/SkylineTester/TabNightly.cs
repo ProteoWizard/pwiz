@@ -387,7 +387,26 @@ namespace SkylineTester
             if (_stopTimer != null)
                 _stopTimer.Start();
 
-            _nightlyListener = new NightlyListener(_stopTimer);
+            // If this is a nightly run and there is no nightly listener already
+            // create one
+            if (MainWindow.NightlyExit.Checked && _nightlyListener == null)
+            {
+                // With extra logging and exception handling because the unhandled exception
+                // "a registration already exists for net.pipe://localhost/Nightly/SetEndTime"
+                // was causing SkylineTester to crash on some computers
+                try
+                {
+                    MainWindow.CommandShell.AddImmediate("\n# Adding nightly listener...");
+                    _nightlyListener = new NightlyListener(_stopTimer);
+                    MainWindow.CommandShell.AddImmediate("\n# Added listener\n");
+                }
+                catch (Exception e)
+                {
+                    MainWindow.CommandShell.AddImmediate("\n# Failed adding listener(" + e + ")" +
+                                                         "\n# Running disconnected from SkylineNightly\n");
+                }
+                MainWindow.RefreshLogs();
+            }
         }
 
         private int _architecture;
