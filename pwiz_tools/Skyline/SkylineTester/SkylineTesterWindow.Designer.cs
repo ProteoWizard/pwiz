@@ -3600,7 +3600,6 @@ namespace SkylineTester
         private CheckBox showChangedFiles;
         private ComboBox runMode;
         private Label label21;
-        private CheckBox showTutorialsOnly;
         private GroupBox parallelGroup;
         private NumericUpDown parallelWorkerCount;
         private RadioButton runParallel;
