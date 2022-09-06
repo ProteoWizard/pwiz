@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Management;
 
 namespace SkylineTester
@@ -61,7 +60,9 @@ namespace SkylineTester
             {
                 try
                 {
-                    _process.Kill();
+                    _process.CloseMainWindow();
+                    if (!_process.WaitForExit(500))
+                        _process.Kill();
                 }
                 catch
                 {
@@ -69,25 +70,20 @@ namespace SkylineTester
                 }
             }
 
-            private void KillChildren()
+            private void KillChildren(int? pid = null, List<Process> childProcesses = null)
             {
-                // Allow for multiple layers of git processes parented by each other
-                var dictParentIdToProcessList = new Dictionary<int, List<ProcessWithId>>();
-                var arrayNames = new[] {"git", "git-remote-https", "bjam", "bsdtar"};
-                foreach (var process in arrayNames.SelectMany(Process.GetProcessesByName))
+                bool isRoot = pid == null;
+                pid ??= Process.GetCurrentProcess().Id;
+                childProcesses ??= new List<Process>();
+
+                var searcher = new ManagementObjectSearcher
+                    ("Select * From Win32_Process Where ParentProcessID=" + pid.Value);
+                ManagementObjectCollection moc = searcher.Get();
+                foreach (ManagementObject mo in moc)
                 {
                     try
                     {
-                        var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
-                        mo.Get();
-                        int processParentId = Convert.ToInt32(mo["ParentProcessId"]);
-                        List<ProcessWithId> processList;
-                        if (!dictParentIdToProcessList.TryGetValue(processParentId, out processList))
-                        {
-                            processList = new List<ProcessWithId>();
-                            dictParentIdToProcessList.Add(processParentId, processList);
-                        }
-                        processList.Add(new ProcessWithId(process));
+                        KillChildren(Convert.ToInt32(mo["ProcessID"]), childProcesses);
                     }
                     catch
                     {
@@ -95,23 +91,28 @@ namespace SkylineTester
                     }
                 }
 
-                KillChildren(Id, dictParentIdToProcessList);
-            }
-
-            private static void KillChildren(int parentId, Dictionary<int, List<ProcessWithId>> dictParentIdToProcessList)
-            {
-                List<ProcessWithId> processList;
-                if (!dictParentIdToProcessList.TryGetValue(parentId, out processList))
-                    return;
-                foreach (var processWithId in processList)
+                if (isRoot)
                 {
-                    int id = processWithId.Id;
-                    if (id == 0)
-                        continue;
-
-                    // Kill children before killing the parent
-                    KillChildren(id, dictParentIdToProcessList);
-                    processWithId.Kill();
+                    foreach(var child in childProcesses)
+                        try
+                        {
+                            child.Kill();
+                        }
+                        catch
+                        {
+                            // Do nothing
+                        }
+                }
+                else
+                {
+                    try
+                    {
+                        childProcesses.Add(Process.GetProcessById(pid.Value));
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Process already exited.
+                    }
                 }
             }
         }

@@ -53,6 +53,7 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
         case Reader_Bruker_Format_U2: return "Bruker U2";
         case Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF";
         case Reader_Bruker_Format_TDF: return "Bruker TDF";
+        case Reader_Bruker_Format_TSF: return "Bruker TSF";
 
         case Reader_Bruker_Format_Unknown:
         default:
@@ -133,10 +134,11 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
             break;
 
         case Reader_Bruker_Format_TDF:
+        case Reader_Bruker_Format_TSF:
             apiSoftware->id = "TIMS_SDK";
             apiSoftware->set(MS_Bruker_software);
             apiSoftware->userParams.emplace_back("software name", "TIMS SDK");
-            apiSoftware->version = "2.3.101.131-791";
+            apiSoftware->version = "2.21.104.32";
             break;
 
         default:
@@ -217,13 +219,13 @@ void Reader_Bruker::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
 
-    if (findUnicodeBytes(filename) != filename.end())
-        throw ReaderFail("[Reader_Bruker::read()] Bruker API does not support Unicode in filepaths ('" + filename + "')");
-
     Reader_Bruker_Format format = Bruker::format(filename);
     if (format == Reader_Bruker_Format_Unknown)
         throw ReaderFail("[Reader_Bruker::read] Path given ('" + filename + "') is not a recognized Bruker format");
 
+    if ((format == Reader_Bruker_Format_YEP || format == Reader_Bruker_Format_FID) &&
+        findUnicodeBytes(filename) != filename.end())
+        throw ReaderFail("[Reader_Bruker::read()] Bruker API does not support Unicode in filepaths ('" + filename + "')");
 
     // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)
     bfs::path rootpath = filename;

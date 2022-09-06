@@ -166,7 +166,7 @@
     <value>4</value>
   </data>
   <data name="btnFindNext.Text" xml:space="preserve">
-    <value>&amp;Find Next</value>
+    <value>Find &amp;Next</value>
   </data>
   <data name="&gt;&gt;btnFindNext.Name" xml:space="preserve">
     <value>btnFindNext</value>
@@ -343,7 +343,7 @@
     <value>3</value>
   </data>
   <data name="cbCaseSensitive.Text" xml:space="preserve">
-    <value>Match Case</value>
+    <value>&amp;Match case</value>
   </data>
   <data name="&gt;&gt;cbCaseSensitive.Name" xml:space="preserve">
     <value>cbCaseSensitive</value>
@@ -430,7 +430,7 @@
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Also search for:</value>
+    <value>Also &amp;search for:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>

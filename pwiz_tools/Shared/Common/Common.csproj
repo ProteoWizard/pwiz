@@ -283,7 +283,7 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\DataFormat.cs" />
+    <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
@@ -364,7 +364,13 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.ja.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.zh-CHS.resx">
       <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.ja.resx">
@@ -523,6 +529,7 @@
     <EmbeddedResource Include="Resources\DropImageNoBackground.png" />
     <Content Include="Resources\HiddenColumns.bmp" />
     <Content Include="Resources\Cluster.bmp" />
+    <None Include="Resources\Alphabetical.bmp" />
     <Content Include="Resources\UnknownUiMode.png" />
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
     <Content Include="Resources\agg_mean.bmp" />

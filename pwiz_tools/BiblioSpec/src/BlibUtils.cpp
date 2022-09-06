@@ -141,9 +141,7 @@ const char* ionMobilityTypeToString(IONMOBILITY_TYPE ionMobilityType)
  */
 string getAbsoluteFilePath(string filename){
     bfs::path fullPath = bfs::system_complete(filename.c_str());
-    fullPath = fullPath.normalize();
-
-    return fullPath.string();
+    return fullPath.make_preferred().string();
 }
 
 /*

@@ -937,7 +937,7 @@
     <value>180, 22</value>
   </data>
   <data name="candidatePeaksToolStripMenuItem.Text" xml:space="preserve">
-    <value>Candidate Peaks</value>
+    <value>&amp;Candidate Peaks</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

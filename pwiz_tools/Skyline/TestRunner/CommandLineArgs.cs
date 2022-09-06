@@ -83,6 +83,12 @@ namespace TestRunner
             return _args[argName].Replace("\r", "").Replace("\n", "");
         }
 
+        public string ArgAsStringOrDefault(string argName, string default_ = null)
+        {
+            if (!HasArg(argName)) return default_;
+            return _args[argName].Replace("\r", "").Replace("\n", "");
+        }
+
         public long ArgAsLong(string argName)
         {
             return Convert.ToInt64(_args[argName]);
