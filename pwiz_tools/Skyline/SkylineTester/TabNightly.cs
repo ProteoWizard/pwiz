@@ -90,6 +90,7 @@ namespace SkylineTester
                 return false;
 
             // When run from SkylineNightly, don't overwrite the nightly scheduled task.  Just start the nightly run immediately.
+            LogTrace("TabNightly.Run");
             if (MainWindow.NightlyExit.Checked)
             {
                 RunUI(StartNightly, 500);
@@ -284,6 +285,8 @@ namespace SkylineTester
 
         private void StartNightly()
         {
+            LogTrace("StartNightly");
+
             _labels.Clear();
             _findTest.Clear();
 
@@ -392,10 +395,26 @@ namespace SkylineTester
                 _stopTimer.Start();
         }
 
+        private void LogTrace(string message)
+        {
+            var traceLogPath = Path.Combine(Path.GetDirectoryName(MainWindow.Summary.SummaryFile) ?? string.Empty, "Trace.log");
+            var stackTrace = new StackTrace(1, true);
+            var lines = new List<string>();
+            lines.Add(string.Format("[{0}] {1}",
+                DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.ffffff", CultureInfo.InvariantCulture),
+                message));
+            var frames = stackTrace.GetFrames();
+            if (frames == null || frames.Length == 0)
+                lines.Add("    !!no stack!!");
+            else
+                lines.AddRange(frames.Select(f => "    " + f.ToString().Trim()));
+            lines.Add(string.Empty);    // blank line
+            File.AppendAllLines(traceLogPath, lines);
+        }
+
         private void InitNightlyListener()
         {
-            var stackTrace = new StackTrace(1, true).ToString();
-            MainWindow.CommandShell.AddImmediate("# Initializing nightly listener (\n" + stackTrace + ")");
+            LogTrace("InitNightlyListener");
 
             // If this is a nightly run and there is no nightly listener already
             // create one
