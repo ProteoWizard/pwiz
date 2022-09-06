@@ -399,7 +399,11 @@ namespace SkylineTester
             if (!MainWindow.NightlyExit.Checked)
                 MainWindow.CommandShell.AddImmediate("# Skipping nightly listener");
             else if (_nightlyListener != null)
+            {
+                Debugger.Break();
+
                 MainWindow.CommandShell.AddImmediate("# Nightly listener already exists");
+            }
             else
             {
                 // With extra logging and exception handling because the unhandled exception
