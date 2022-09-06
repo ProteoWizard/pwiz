@@ -84,6 +84,8 @@ namespace SkylineTester
             MainWindow.NightlyThumbnail.ProcessId = 0;
         }
 
+        private bool _runningForNightly;    // To ensure only one run per instance for SkylineNightly
+
         public override bool Run()
         {
             if (!MainWindow.HasBuildPrerequisites)
@@ -93,6 +95,11 @@ namespace SkylineTester
             LogTrace("TabNightly.Run");
             if (MainWindow.NightlyExit.Checked)
             {
+                // Prevent anything from kicking off two nightly runs accidentally
+                // during SkylineNightly automated runs
+                if (_runningForNightly)
+                    return true;
+                _runningForNightly = true;
                 RunUI(StartNightly, 500);
                 return true;
             }
