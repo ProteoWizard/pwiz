@@ -394,16 +394,15 @@ namespace SkylineTester
 
         private void InitNightlyListener()
         {
+            var stackTrace = new StackTrace(1, true).ToString();
+            MainWindow.CommandShell.AddImmediate("# Initializing nightly listener (\n" + stackTrace + ")");
+
             // If this is a nightly run and there is no nightly listener already
             // create one
             if (!MainWindow.NightlyExit.Checked)
                 MainWindow.CommandShell.AddImmediate("# Skipping nightly listener");
             else if (_nightlyListener != null)
-            {
-                Debugger.Break();
-
                 MainWindow.CommandShell.AddImmediate("# Nightly listener already exists");
-            }
             else
             {
                 // With extra logging and exception handling because the unhandled exception
