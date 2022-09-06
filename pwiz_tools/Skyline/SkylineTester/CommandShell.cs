@@ -331,7 +331,10 @@ namespace SkylineTester
             }
             else
             {
-                _commands.Clear();
+                lock (_commands)
+                {
+                    _commands.Clear();
+                }
                 _doneAction(exitType == EXIT_TYPE.success);
             }
         } 
