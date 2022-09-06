@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Management;
 
 namespace SkylineTester
@@ -52,6 +53,32 @@ namespace SkylineTester
 
             public void KillAll()
             {
+                // kill named processes and their children that might not be children of the root
+                var dictParentIdToProcessList = new Dictionary<int, List<ProcessWithId>>();
+                var arrayNames = new[] { "git", "git-remote-https", "bjam", "bsdtar" };
+                foreach (var process in arrayNames.SelectMany(Process.GetProcessesByName))
+                {
+                    try
+                    {
+                        var mo = new ManagementObject("win32_process.handle='" + process.Id + "'");
+                        mo.Get();
+                        int processParentId = Convert.ToInt32(mo["ParentProcessId"]);
+                        List<ProcessWithId> processList;
+                        if (!dictParentIdToProcessList.TryGetValue(processParentId, out processList))
+                        {
+                            processList = new List<ProcessWithId>();
+                            dictParentIdToProcessList.Add(processParentId, processList);
+                        }
+
+                        processList.Add(new ProcessWithId(process));
+                    }
+                    catch
+                    {
+                        // Do nothing
+                    }
+                }
+                KillChildren(Id, dictParentIdToProcessList);
+
                 KillChildren();
                 Kill();
             }
@@ -113,6 +140,23 @@ namespace SkylineTester
                     {
                         // Process already exited.
                     }
+                }
+            }
+
+            private static void KillChildren(int parentId, Dictionary<int, List<ProcessWithId>> dictParentIdToProcessList)
+            {
+                List<ProcessWithId> processList;
+                if (!dictParentIdToProcessList.TryGetValue(parentId, out processList))
+                    return;
+                foreach (var processWithId in processList)
+                {
+                    int id = processWithId.Id;
+                    if (id == 0)
+                        continue;
+
+                    // Kill children before killing the parent
+                    KillChildren(id, dictParentIdToProcessList);
+                    processWithId.Kill();
                 }
             }
         }
