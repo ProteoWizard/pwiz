@@ -27,6 +27,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.Alerts
     /// are added to the selection of files the user can choose from in their selection. By default missing files
     /// are checked when discovered and added.
     /// </summary>
-    public partial class ShareResultsFilesDlg : Form
+    public partial class ShareResultsFilesDlg : ModeUIInvariantFormEx
     {
         private readonly SrmDocument _document; // Document of the current open project where files and potential locations are extracted
         public AuxiliaryFiles _auxiliaryFiles; // Previous file selection 
@@ -315,7 +316,7 @@ namespace pwiz.Skyline.Alerts
             else
             {
                 // Message informing the user of the fact there are no longer any missing files and thus no need to search for more
-                MessageBox.Show(Resources.ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present);
+                MessageDlg.Show(this, Resources.ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present);
             }
             checkedStatus.Text = UpdateLabel(); // Update the label after potential changes
         }
