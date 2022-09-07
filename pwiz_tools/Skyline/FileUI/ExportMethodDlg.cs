@@ -34,6 +34,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -902,13 +903,38 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                var missingIonMobility = BrukerTimsTofIsolationListExporter.GetMissingIonMobility(documentExport, _exportProperties);
-                if (missingIonMobility.Length > 0)
+                if (!BrukerTimsTofIsolationListExporter.CheckIonMobilities(documentExport, _exportProperties,
+                        templateName, out var missing, out var outOfRange, out var limitLower, out var limitUpper))
                 {
-                    MessageDlg.Show(this,
-                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
-                        Environment.NewLine + Environment.NewLine +
-                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    var message = new StringBuilder();
+                    if (missing.Length > 0)
+                    {
+                        message.AppendLine(
+                            Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_);
+                        message.AppendLine();
+                        message.Append(TextUtil.LineSeparate(missing.Select(k => k.ToString())));
+                    }
+
+                    if (outOfRange.Length > 0)
+                    {
+                        if (message.Length > 0)
+                        {
+                            message.AppendLine();
+                            message.AppendLine();
+                        }
+
+                        message.AppendFormat(
+                            Resources.ExportMethodDlg_OkDialog_All_targets_must_be_within_the_ion_mobility_range___0____1___specified_in_the_template_method__Update_the_template_method__or_update_ion_mobility_values_for_the_following_targets_ +
+                            Environment.NewLine,
+                            limitLower.GetValueOrDefault().ToString(Formats.IonMobility),
+                            limitUpper.GetValueOrDefault().ToString(Formats.IonMobility));
+                        message.AppendLine();
+                        message.Append(TextUtil.LineSeparate(outOfRange.Select(k =>
+                            string.Format(Resources.ExportMethodDlg_OkDialog__0_____1____2__, k.Item1,
+                                k.Item2.ToString(Formats.IonMobility), k.Item3.ToString(Formats.IonMobility)))));
+                    }
+
+                    MessageDlg.Show(this, message.ToString());
                     return;
                 }
             }

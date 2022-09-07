@@ -11829,4 +11829,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
       <value>Score type not found.</value>
   </data>
+  <data name="ExportMethodDlg_OkDialog__0_____1____2__" xml:space="preserve">
+      <value>{0} [{1}, {2}]</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_All_targets_must_be_within_the_ion_mobility_range___0____1___specified_in_the_template_method__Update_the_template_method__or_update_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+      <value>All targets must be within the ion mobility range [{0}, {1}] specified in the template method. Update the template method, or update ion mobility values for the following targets:</value>
+  </data>
 </root>

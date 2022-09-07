@@ -12947,11 +12947,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} [{1}, {2}].
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog__0_____1____2__ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog__0_____1____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A template file is required to export a method..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All targets must be within the ion mobility range [{0}, {1}] specified in the template method. Update the template method, or update ion mobility values for the following targets:.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_All_targets_must_be_within_the_ion_mobility_range___0____1___specified_in_the_template_method__Update_the_template_method__or_update_ion_mobility_values_for_the_following_targets_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_All_targets_must_be_within_the_ion_mobility_range___0___" +
+                        "_1___specified_in_the_template_method__Update_the_template_method__or_update_ion" +
+                        "_mobility_values_for_the_following_targets_", resourceCulture);
             }
         }
         
