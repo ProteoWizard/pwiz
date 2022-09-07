@@ -92,7 +92,6 @@ namespace SkylineTester
                 return false;
 
             // When run from SkylineNightly, don't overwrite the nightly scheduled task.  Just start the nightly run immediately.
-            LogTrace("TabNightly.Run");
             if (MainWindow.NightlyExit.Checked)
             {
                 // Prevent anything from kicking off two nightly runs accidentally
@@ -292,8 +291,6 @@ namespace SkylineTester
 
         private void StartNightly()
         {
-            LogTrace("StartNightly");
-
             _labels.Clear();
             _findTest.Clear();
 
@@ -402,7 +399,13 @@ namespace SkylineTester
                 _stopTimer.Start();
         }
 
-        private void LogTrace(string message)
+        /// <summary>
+        /// Helper function for adding diagnostics to understand issues with SkylineNightly runs.
+        /// Stack traces of callers get logged to "Traces.log" in the Log folder.
+        /// </summary>
+        /// <param name="message">A message that gets time-stamped and displayed as a header
+        /// for a logged stack trace</param>
+        public void LogTrace(string message)
         {
             var traceLogPath = Path.Combine(Path.GetDirectoryName(MainWindow.Summary.SummaryFile) ?? string.Empty, "Trace.log");
             var stackTrace = new StackTrace(1, true);
@@ -421,8 +424,6 @@ namespace SkylineTester
 
         private void InitNightlyListener()
         {
-            LogTrace("InitNightlyListener");
-
             // If this is a nightly run and there is no nightly listener already
             // create one
             if (!MainWindow.NightlyExit.Checked)
