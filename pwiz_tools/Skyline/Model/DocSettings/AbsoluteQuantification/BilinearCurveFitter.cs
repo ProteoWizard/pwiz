@@ -1,13 +1,9 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using EnvDTE;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
-using Statistics = pwiz.Skyline.Util.Statistics;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -56,7 +52,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var baselinePoints = points.Where(pt => pt.X <= xOffset).ToList();
 
             CalibrationCurve linearFit;
-            if (linearPoints.Count >= 2)
+            if (linearPoints.Select(pt=>pt.X).Distinct().Count() >= 2)
             {
                 linearFit = RegressionFit.LinearFit(linearPoints);
                 if (linearFit == null || !string.IsNullOrEmpty(linearFit.ErrorMessage))
@@ -70,7 +66,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 linearFit = new CalibrationCurve(RegressionFit.LINEAR).ChangeSlope(0).ChangeIntercept(0);
             }
 
-            var baselineStats = new Statistics(baselinePoints.Select(pt => pt.Y));
+            var baselineStats = new Util.Statistics(baselinePoints.Select(pt => pt.Y));
             var baselineHeight = baselineStats.Length == 0 ? 0 : baselineStats.Mean();
             double totalError = 0;
             foreach (var point in points)
