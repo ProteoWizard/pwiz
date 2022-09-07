@@ -67,8 +67,9 @@ namespace pwiz.SkylineTestFunctional
                 openDataSourceDlg.Open();
             });
             var importResultsSamplesDlg = WaitForOpenForm<ImportResultsSamplesDlg>();
+            var docBefore = SkylineWindow.Document;
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docBefore);
             Assert.AreEqual(1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the first two samples from "secondfile.wiff" into a replicate named "ReplicateTwo"
