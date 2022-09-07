@@ -78,7 +78,10 @@ namespace pwiz.Skyline.Model.Results
         public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream,
             FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores);
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores)
+            {
+                UncompressChromatograms = settings.UncompressChromatograms
+            };
             var statisticsCollector = new MinStatisticsCollector(this);
 
             var chromGroupHeaderToIndex = new Dictionary<long, int>(ChromGroupHeaderInfos.Count);
@@ -420,6 +423,13 @@ namespace pwiz.Skyline.Model.Results
             {
                 return ChangeProp(ImClone(this), im => im.CacheFormat = cacheFormat);
             }
+
+            public bool UncompressChromatograms { get; private set; }
+
+            public Settings ChangeUncompressChromatograms(bool uncompress)
+            {
+                return ChangeProp(ImClone(this), im => im.UncompressChromatograms = uncompress);
+            }
         }
 
         public class MinStatistics
@@ -682,7 +692,15 @@ namespace pwiz.Skyline.Model.Results
 
                 long location = _outputStream.Position;
                 int lenUncompressed = (int) pointsStream.Length;
-                byte[] pointsCompressed = pointsStream.ToArray().Compress(3);
+                byte[] pointsCompressed;
+                if (UncompressChromatograms)
+                {
+                    pointsCompressed = pointsStream.ToArray();
+                }
+                else
+                {
+                    pointsCompressed = pointsStream.ToArray().Compress(3);
+                }
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
                 int textIdIndex;
@@ -722,9 +740,34 @@ namespace pwiz.Skyline.Model.Results
                 _chromGroupHeaderInfos.Add(header);
             }
 
+            public bool UncompressChromatograms { get; set; }
+
             public void WriteEndOfFile()
             {
-                _originalCache.WriteScanIds(_outputStreamScans);
+                IList<ChromCachedFile> chromCachedFiles;
+                if (UncompressChromatograms)
+                {
+                    chromCachedFiles = new List<ChromCachedFile>();
+                    for (int fileIndex = 0; fileIndex < _originalCache.CachedFiles.Count; fileIndex++)
+                    {
+                        var chromCachedFile = _originalCache.CachedFiles[fileIndex];
+                        if (chromCachedFile.SizeScanIds == 0)
+                        {
+                            chromCachedFiles.Add(chromCachedFile);
+                            continue;
+                        }
+                        var msDataFileScanIds = _originalCache.LoadMSDataFileScanIds(fileIndex);
+                        long locationScanIds = _outputStreamScans.Position;
+                        var bytes = MsDataFileScanIds.ToBytes(msDataFileScanIds.GetAllSpectrumIds(), UncompressChromatograms);
+                        _outputStreamScans.Write(bytes, 0, bytes.Length);
+                        chromCachedFiles.Add(chromCachedFile.ResizeScanIds(locationScanIds, bytes.Length));
+                    }
+                }
+                else
+                {
+                    chromCachedFiles = _originalCache.CachedFiles;
+                    _originalCache.WriteScanIds(_outputStreamScans);
+                }
 
                 _chromGroupHeaderInfos.Sort();
                 ChromatogramCache.WriteStructs(_cacheFormat,
@@ -732,7 +775,7 @@ namespace pwiz.Skyline.Model.Results
                                                _outputStreamScans,
                                                _outputStreamPeaks,
                                                _outputStreamScores,
-                                               _originalCache.CachedFiles,
+                                               chromCachedFiles,
                                                _chromGroupHeaderInfos,
                                                _transitions,
                                                _textIdBytes,

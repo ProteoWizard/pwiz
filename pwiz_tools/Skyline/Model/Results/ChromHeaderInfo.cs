@@ -1640,7 +1640,16 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)
         {
-            return ChangeProp(ImClone(this), im => im.LocationScanIds = locationScanIds);
+            return ResizeScanIds(locationScanIds, SizeScanIds);
+        }
+
+        public ChromCachedFile ResizeScanIds(long locationScanIds, int sizeScanIds)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LocationScanIds = locationScanIds;
+                im.SizeScanIds = sizeScanIds;
+            });
         }
 
         public ChromCachedFile ChangeTicArea(float? ticArea)

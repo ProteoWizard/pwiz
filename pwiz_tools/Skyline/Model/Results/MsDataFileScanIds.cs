@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -50,7 +51,12 @@ namespace pwiz.Skyline.Model.Results
             return Encoding.UTF8.GetString(_idBytes, _startBytes[index], _lengths[index]);
         }
 
-        public static byte[] ToBytes(IEnumerable<string> scanIds)
+        public IEnumerable<string> GetAllSpectrumIds()
+        {
+            return Enumerable.Range(0, _startBytes.Length).Select(GetMsDataFileSpectrumId);
+        }
+
+        public static byte[] ToBytes(IEnumerable<string> scanIds, bool uncompressed)
         {
             var listStartBytes = new List<int>();
             var listLengths = new List<int>();
@@ -71,7 +77,15 @@ namespace pwiz.Skyline.Model.Results
             listEntryBytes.AddRange(PrimitiveArrays.ToBytes(listStartBytes.ToArray()));
             listEntryBytes.AddRange(PrimitiveArrays.ToBytes(listLengths.ToArray()));
             var entryBytes = listEntryBytes.ToArray();
-            var entryBytesCompressed = entryBytes.Compress();
+            byte[] entryBytesCompressed;
+            if (uncompressed)
+            {
+                entryBytesCompressed = entryBytes;
+            }
+            else
+            {
+                entryBytesCompressed = entryBytes.Compress();
+            }
             var scanIdBytes = listIdBytes.ToArray();
             var scanIdBytesCompressed = scanIdBytes.Compress();
 

@@ -132,6 +132,8 @@ namespace pwiz.Skyline.FileUI
                         tbxNoiseTimeRange.Enabled = false;
                         cbxLimitNoiseTime.Checked = false;
                     }
+
+                    cbxUncompressed.Checked = Settings.UncompressChromatograms;
                 }
                 finally
                 {
@@ -398,6 +400,18 @@ namespace pwiz.Skyline.FileUI
             set { cbxLimitNoiseTime.Checked = value; }
         }
 
+        public bool UncompressChromatograms
+        {
+            get
+            {
+                return cbxUncompressed.Checked;
+            }
+            set
+            {
+                cbxUncompressed.Checked = value;
+            }
+        }
+
         public double NoiseTimeRange
         {
             get { return double.Parse(tbxNoiseTimeRange.Text); }
@@ -424,6 +438,11 @@ namespace pwiz.Skyline.FileUI
             public string Name { get; set; }
             public FileSize Size { get; set; }
             public double? MinimizedSize { get; set; }
+        }
+
+        private void cbxUncompressed_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings = Settings.ChangeUncompressChromatograms(cbxUncompressed.Checked);
         }
     }
 }

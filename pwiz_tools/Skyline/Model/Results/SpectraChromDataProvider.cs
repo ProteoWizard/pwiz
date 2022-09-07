@@ -558,7 +558,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override byte[] MSDataFileScanIdBytes
         {
-            get { return MsDataFileScanIds.ToBytes(_scanIdList); }
+            get { return MsDataFileScanIds.ToBytes(_scanIdList, false); }
         }
 
         public override void SetRequestOrder(IList<IList<int>> chromatogramRequestOrder)
