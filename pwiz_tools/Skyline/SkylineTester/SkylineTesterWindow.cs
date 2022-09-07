@@ -190,6 +190,8 @@ namespace SkylineTester
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
 
+            testSet.SelectedIndex = 0;
+
             runMode.SelectedIndex = 0;
 
             InitLanguages(formsLanguage);
@@ -333,9 +335,14 @@ namespace SkylineTester
             _tabs[_previousTab].Enter();
             statusLabel.Text = "";
 
+            StartBackgroundLoadTestSet();
+        }
+
+        private void StartBackgroundLoadTestSet()
+        {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync(testSet.SelectedItem.ToString());
+            loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -1891,9 +1898,7 @@ namespace SkylineTester
 
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
-            var loader = new BackgroundWorker();
-            loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync(testSet.SelectedItem.ToString());
+            StartBackgroundLoadTestSet();
         }
 
         #endregion Control events
