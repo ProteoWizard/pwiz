@@ -29,15 +29,15 @@ namespace pwiz.Common.SystemUtil
         /// An empty cache which never stores anything in the cache.
         /// </summary>
         public static readonly ValueCache EMPTY = new ValueCache(null);
-        private readonly Dictionary<object, object> _dictionary;
+        private readonly HashSet<object> _cachedValues;
 
-        public ValueCache() : this(new Dictionary<object, object>())
+        public ValueCache() : this(new HashSet<object>())
         {
             
         }
-        private ValueCache(Dictionary<object, object> dictionary)
+        private ValueCache(HashSet<object> cachedValues)
         {
-            _dictionary = dictionary;
+            _cachedValues = cachedValues;
         }
 
         /// <summary>
@@ -46,12 +46,12 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public bool TryGetCachedValue<T>(ref T value)
         {
-            if (_dictionary == null || ReferenceEquals(value, null))
+            if (_cachedValues == null || ReferenceEquals(value, null))
             {
                 return true;
             }
             object objectFromCache;
-            if (_dictionary.TryGetValue(value, out objectFromCache))
+            if (_cachedValues.TryGetValue(value, out objectFromCache))
             {
                 value = (T) objectFromCache;
                 return true;
@@ -67,7 +67,7 @@ namespace pwiz.Common.SystemUtil
         {
             if (!TryGetCachedValue(ref value))
             {
-                _dictionary.Add(value, value);
+                _cachedValues.Add(value);
             }
             return value;
         }

@@ -163,6 +163,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
@@ -170,15 +171,23 @@
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="CrosslinkImsTest.cs" />
     <Compile Include="DdaPeakIntegrationTest.cs" />
     <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="DocumentGridExportTest.cs" />
+    <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
+    <Compile Include="LiteDropdownListTest.cs" />
+    <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
@@ -478,6 +487,7 @@
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
     <None Include="CrosslinkNeutralLossTest.zip" />
     <None Include="DdaPeakIntegrationTest.zip" />
@@ -492,6 +502,7 @@
     <None Include="DuplicateTransitionGroupTest.zip" />
     <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="EncyclopeDiaLibraryMatchTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitAnalyteConcentrationTest.zip" />

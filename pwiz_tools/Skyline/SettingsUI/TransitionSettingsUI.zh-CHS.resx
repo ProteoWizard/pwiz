@@ -1262,8 +1262,7 @@
     <value>5</value>
   </data>
   <data name="textPeptideIonTypes.ToolTip" xml:space="preserve">
-    <value>一列以逗号分隔用于计算可能子离子的子离子类型
-（a、b、c、x、y、z 和 p 用于母离子）</value>
+    <value>逗号分隔的子离子类型列表（a、b、c、x、y、z、z.、z'、p 用于母离子），用于计算潜在的子离子。z. 和 z' 表示 z+1 自由基离子和 z+2 离子。这些常用于 ExD 实验。另外，也可以使用 z* 和 z"。</value>
   </data>
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>

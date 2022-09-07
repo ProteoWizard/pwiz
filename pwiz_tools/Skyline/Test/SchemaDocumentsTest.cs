@@ -75,7 +75,7 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(currentXsdContents);
             if (explicitCurrentXsdContents != null)
             {
-                Assert.AreEqual(currentXsdContents, explicitCurrentXsdContents, 
+                AssertEx.NoDiff(explicitCurrentXsdContents,currentXsdContents,
                     string.Format("Expected resource files {0} and {1} to be identical - did you change the contents of Skyline_Current.xsd without incrementing the value of DocumentFormat.CURRENT?",
                         explicitCurrentResourceName, xsdCurrentResourceName));
             }

@@ -219,8 +219,14 @@
   <data name="CalibrationCurve">
     <value>校正曲線</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>候補ピークグループ</value>
+  </data>
   <data name="CAS">
     <value>CAS</value>
+  </data>
+  <data name="Chosen">
+    <value>選択済み</value>
   </data>
   <data name="Chromatogram">
     <value>クロマトグラム</value>
@@ -396,6 +402,9 @@
   <data name="ExplicitSLens">
     <value>指定されたSレンズ</value>
   </data>
+  <data name="Features">
+    <value>機能</value>
+  </data>
   <data name="FiguresOfMerit">
     <value>性能指数</value>
   </data>
@@ -458,6 +467,9 @@
   </data>
   <data name="InChI">
     <value>InChI</value>
+  </data>
+  <data name="InstrumentSerialNumber">
+    <value>装置のシリアル番号</value>
   </data>
   <data name="Intensities">
     <value>強度</value>
@@ -636,6 +648,9 @@
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>検出Q値の中央値</value>
   </data>
+  <data name="MedianPeakArea">
+    <value>ピーク面積の中央値</value>
+  </data>
   <data name="Mean">
     <value>平均</value>
   </data>
@@ -692,6 +707,9 @@
   </data>
   <data name="MissedCleavages">
     <value>ミス開裂</value>
+  </data>
+  <data name="ModelScore">
+    <value>モデルスコア</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>修飾された面積率</value>
@@ -783,6 +801,9 @@
   <data name="NextAa">
     <value>次のAa</value>
   </data>
+  <data name="NormalizationDivisor">
+    <value>正規化約数</value>
+  </data>
   <data name="NormalizationMethod">
     <value>正規化メソッド</value>
   </data>
@@ -804,11 +825,23 @@
   <data name="OptStep">
     <value>最適ステップ</value>
   </data>
+  <data name="PeakGroupEndTime">
+    <value>ピークグループ終了時刻</value>
+  </data>
+  <data name="PeakGroupStartTime">
+    <value>ピークグループ開始時刻</value>
+  </data>
+  <data name="PeakQValue">
+    <value>ピークのQ値</value>
+  </data>
   <data name="PeakRank">
     <value>ピークのランク</value>
   </data>
   <data name="PeakRankByLevel">
     <value>レベル別のピークのランク</value>
+  </data>
+  <data name="PeakScores">
+    <value>ピークスコア</value>
   </data>
   <data name="Peptide">
     <value>ペプチド</value>
@@ -1149,11 +1182,17 @@
   <data name="SampleDilutionFactor">
     <value>試料希釈倍数</value>
   </data>
+  <data name="SampleId">
+    <value>試料ID</value>
+  </data>
   <data name="SampleName">
     <value>試料名</value>
   </data>
   <data name="SampleType">
     <value>試料タイプ</value>
+  </data>
+  <data name="Score">
+    <value>スコア</value>
   </data>
   <data name="SkylineVersion">
     <value>Skylineバージョン</value>
@@ -1323,10 +1362,19 @@
   <data name="UTCTime">
     <value>UTC時刻</value>
   </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>試料ID</value>
+  <data name="Weight">
+    <value>加重</value>
   </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>装置のシリアル番号</value>
+  <data name="WeightedFeature">
+    <value>加重機能</value>
+  </data>
+  <data name="WeightedFeatures">
+    <value>加重機能</value>
+  </data>
+  <data name="WeightedScore">
+    <value>加重スコア</value>
+  </data>
+  <data name="PeakGroupRetentionTime" xml:space="preserve">
+    <value>ピークグループ保持時間</value>
   </data>
 </root>

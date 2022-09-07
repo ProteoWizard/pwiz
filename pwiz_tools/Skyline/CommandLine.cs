@@ -2720,7 +2720,7 @@ namespace pwiz.Skyline
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         viewContext.Export(CancellationToken.None, broker, ref status, viewInfo, writer,
-                            viewContext.GetDsvWriter(reportColSeparator));
+                            reportColSeparator);
                     }
 
                     broker.UpdateProgress(status.Complete());

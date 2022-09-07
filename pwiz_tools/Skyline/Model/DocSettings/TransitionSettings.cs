@@ -2480,7 +2480,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public RetentionTimeFilterType RetentionTimeFilterType { get; private set; }
         [Track]
         public double RetentionTimeFilterLength { get; private set; }
-
         public bool IsEnabled
         {
             get { return IsEnabledMs || IsEnabledMsMs; }

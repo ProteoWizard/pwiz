@@ -97,9 +97,14 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static readonly NormalizationMethod NONE
             = new SingletonNormalizationMethod(@"none", () => GroupComparisonStrings.NormalizationMethod_NONE_None, value=>value);
-        public static readonly NormalizationMethod EQUALIZE_MEDIANS 
-            = new SingletonNormalizationMethod(@"equalize_medians", 
-                () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians, value=>string.Format(GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_, value));
+
+        public static readonly NormalizationMethod EQUALIZE_MEDIANS
+            = new SingletonNormalizationMethod(@"equalize_medians",
+                () => GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Equalize_Medians,
+                value => string.Format(
+                    GroupComparisonStrings.NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_, value),
+                (settings, labelType) =>
+                    settings.PeptideSettings.Modifications.InternalStandardTypes.Contains(labelType));
 
         public static readonly NormalizationMethod GLOBAL_STANDARDS
             = new SingletonNormalizationMethod(@"global_standards",
@@ -168,6 +173,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             return result.AsReadOnly();
         }
 
+        /// <summary>
+        /// Returns true if the label type should not be shown (because the label type is used for normalization)
+        /// </summary>
+        public virtual bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+        {
+            return false;
+        }
+
         public class RatioToLabel : NormalizationMethod
         {
             private readonly IsotopeLabelType _isotopeLabelType;
@@ -220,6 +233,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 return settings.PeptideSettings.Modifications.HeavyModifications
                     .FirstOrDefault(mods => Matches(mods.LabelType))?.LabelType ?? _isotopeLabelType;
+            }
+
+            public override bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+            {
+                return Matches(labelType);
             }
         }
 
@@ -369,8 +387,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             private Func<string> _getNormalizeToCaptionFunc;
             private Func<string, string> _getAxisTitleFunc;
-            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc, Func<string, string> getAxisTitleFunc) : this(
-                name, getNormalizationMethodCaptionFunc, getNormalizationMethodCaptionFunc, getAxisTitleFunc)
+            private Func<SrmSettings, IsotopeLabelType, bool> _hideLabelFunc;
+            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc, Func<string, string> getAxisTitleFunc) 
+                : this(name, getNormalizationMethodCaptionFunc, getNormalizationMethodCaptionFunc, getAxisTitleFunc)
             {
 
             }
@@ -382,6 +401,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 _getAxisTitleFunc = getAxisTitleFunc;
             }
 
+            public SingletonNormalizationMethod(string name, Func<string> getNormalizationMethodCaptionFunc,
+                Func<string, string> getAxisTitleFunc, Func<SrmSettings, IsotopeLabelType, bool> hideLabelFunc)
+                : this(name, getNormalizationMethodCaptionFunc, getAxisTitleFunc)
+            {
+                _hideLabelFunc = hideLabelFunc;
+            }
+
             public override string NormalizeToCaption
             {
                 get { return _getNormalizeToCaptionFunc(); }
@@ -390,6 +416,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             public override string GetAxisTitle(string plottedValue)
             {
                 return _getAxisTitleFunc(plottedValue);
+            }
+
+            public override bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+            {
+                return _hideLabelFunc?.Invoke(settings, labelType) ?? false;
             }
         }
 

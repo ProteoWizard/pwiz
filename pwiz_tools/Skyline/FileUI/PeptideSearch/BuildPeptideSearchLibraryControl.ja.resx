@@ -448,7 +448,7 @@
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=21.2.1.441, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -472,7 +472,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>開始(&amp;M)：</value>
+    <value>開始位置(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -583,7 +583,7 @@
     <value>9</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>曖昧な一致を含める(&amp;I)</value>
+    <value>あいまい一致を含む(&amp;I)</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -679,7 +679,7 @@
     <value>2</value>
   </data>
   <data name="lblFileCaption.Text" xml:space="preserve">
-    <value>ファイルを検索(&amp;R)：</value>
+    <value>結果ファイル(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;lblFileCaption.Name" xml:space="preserve">
     <value>lblFileCaption</value>
@@ -835,16 +835,16 @@
     <value>0</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value>File</value>
+    <value>ファイル</value>
   </data>
   <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
-    <value>Score Type</value>
+    <value>スコアタイプ</value>
   </data>
   <data name="dataGridViewTextBoxColumn3.HeaderText" xml:space="preserve">
-    <value>Score Threshold</value>
+    <value>スコアの閾値</value>
   </data>
   <data name="dataGridViewTextBoxColumn4.HeaderText" xml:space="preserve">
-    <value>Score Threshold</value>
+    <value>スコアの閾値</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

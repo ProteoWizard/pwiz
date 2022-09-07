@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             foreach (var complexFragmentIon in complexFragmentIons)
             {
-                if (complexFragmentIon.IsEmpty)
+                if (!complexFragmentIon.IsConnected(PeptideStructure))
                 {
                     continue;
                 }

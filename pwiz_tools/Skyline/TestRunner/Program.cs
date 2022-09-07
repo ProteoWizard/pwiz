@@ -18,20 +18,31 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Ionic.Zip;
+using NetMQ;
+using NetMQ.Sockets;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
 //         build from Visual Studio after a full bjam build removes all of the Skyline project
 //         root files from the Skyline bin directory, leaving it un-runnable until a full
@@ -41,11 +52,17 @@ using pwiz.Common.Collections;
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
 
+
 namespace TestRunner
 {
     internal static class Program
     {
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestData.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
+
+        private static readonly string executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
+        private static readonly string[] qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
+
         private const int LeakTrailingDeltas = 7;   // Number of trailing deltas to average and check against thresholds below
         // CONSIDER: Ideally these thresholds would be zero, but memory and handle retention are not stable enough to support that
         //           The problem is that we don't reliably return to exactly the same state during EndTest and these numbers go both up and down
@@ -205,6 +222,21 @@ namespace TestRunner
             }
         }
 
+        static readonly string commandLineOptions =
+            "?;/?;-?;help;skylinetester;debug;results;" +
+            "test;skip;filter;form;" +
+            "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
+            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;workername;queuehost;workerport;alwaysupcltpassword;" +
+            "maxsecondspertest=-1;" +
+            "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
+            "quality=off;pass0=off;pass1=off;pass2=on;" +
+            "perftests=off;" +
+            "retrydatadownloads=off;" +
+            "runsmallmoleculeversions=off;" +
+            "recordauditlogs=off;" +
+            "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
+            "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;verbose=off;listonly;showheader=on";
+
         [STAThread, MethodImpl(MethodImplOptions.NoOptimization)]
         static int Main(string[] args)
         {
@@ -212,19 +244,6 @@ namespace TestRunner
             Application.ThreadException += ThreadExceptionEventHandler;
 
             // Parse command line args and initialize default values.
-            const string commandLineOptions =
-                "?;/?;-?;help;skylinetester;debug;results;" +
-                "test;skip;filter;form;" +
-                "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
-                "maxsecondspertest=-1;" +
-                "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
-                "quality=off;pass0=off;pass1=off;pass2=on;" +
-                "perftests=off;" +
-                "retrydatadownloads=off;" +
-                "runsmallmoleculeversions=off;" +
-                "recordauditlogs=off;" +
-                "clipboardcheck=off;profile=off;vendors=on;language=fr-FR,en-US;" +
-                "log=TestRunner.log;report=TestRunner.log;dmpdir=Minidumps;teamcitytestdecoration=off;verbose=off;listonly;showheader=on";
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
@@ -270,6 +289,12 @@ namespace TestRunner
             var log = new StreamWriter(logStream);
 
             bool allTestsPassed = true;
+
+            // run a client that listens for messages which tell the client to run a test, or quit
+            if (commandLineArgs.ArgAsString("parallelmode") == "client")
+            {
+                return ListenToTestQueue(log, commandLineArgs);
+            }
 
             try
             {
@@ -396,7 +421,569 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("wait"))
                 Console.ReadKey();
 
+            // delete per-process tools directory
+            if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")
+                DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
+
             return allTestsPassed ? 0 : 1;
+        }
+
+        // from https://stackoverflow.com/questions/13634868/get-the-default-gateway
+        public static IPAddress GetDefaultGateway()
+        {
+            return NetworkInterface
+                .GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == OperationalStatus.Up)
+                .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
+                .Select(g => g?.Address)
+                .Where(a => a != null)
+                .Where(a => a.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
+                // .Where(a => Array.FindIndex(a.GetAddressBytes(), b => b != 0) >= 0)
+                .FirstOrDefault();
+        }
+
+        private static int ListenToTestQueue(StreamWriter log, CommandLineArgs commandLineArgs)
+        {
+            bool allTestsPassed = true;
+            int CLIENT_WAIT_TIMEOUT = 10; // time to wait for a message from server before exiting, in seconds
+
+            string host;
+            if (commandLineArgs.HasArg("queuehost"))
+                host = commandLineArgs.ArgAsString("queuehost");
+            else
+                host = GetDefaultGateway()?.ToString() ?? "localhost";
+
+            string workerName = commandLineArgs.ArgAsString("workername") ?? throw new InvalidOperationException("parallelmode=client processes must have workername parameter set");
+            int workerPort = Convert.ToInt32(commandLineArgs.ArgAsString("workerport") ?? throw new InvalidOperationException("parallelmode=client processes must have workerport parameter set"));
+
+            using (var sender = new PushSocket($">tcp://{host}:{workerPort}"))
+            using (var receiver = new PullSocket())
+            using (var sender2 = new PushSocket())
+            using (var cts = new CancellationTokenSource())
+            {
+                var factory = new TaskFactory(cts.Token);
+
+                int heartbeatPort = 0;
+
+                // start heartbeat thread from server
+                factory.StartNew(() => {
+                    using (var heartbeatReceiver = new PushSocket())
+                    {
+                        Interlocked.Add(ref heartbeatPort, heartbeatReceiver.BindRandomPort("tcp://*"));
+
+                        while (!cts.IsCancellationRequested)
+                        {
+                            for (int attempts = 0; attempts < 3; ++attempts)
+                            {
+                                if (!heartbeatReceiver.TrySendFrameEmpty(TimeSpan.FromSeconds(15)))
+                                {
+                                    Console.Error.WriteLine("Server heartbeat could not be sent.");
+                                    if (attempts == 2)
+                                    {
+                                        cts.Cancel();
+                                        break;
+                                    }
+                                    continue;
+                                }
+                                break;
+                            }
+                            Thread.Sleep(3000);
+                        }
+                    }
+                }, TaskCreationOptions.LongRunning);
+
+                while(heartbeatPort == 0)
+                    Thread.Sleep(500);
+
+                int tasksPort = receiver.BindRandomPort("tcp://*"); // port for receiving tasks from server
+                int resultsPort = sender2.BindRandomPort("tcp://*"); // port for sending results to server
+
+                string ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList
+                    .First(a => a.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6).ToString();
+                string workerId = $"{workerName}/{ip}/{tasksPort}/{resultsPort}/{heartbeatPort}";
+                Console.WriteLine($"Sending worker name and IP: {workerId}");
+                sender.SendFrame(workerId);
+
+
+                receiver.ReceiveReady += (s, args) =>
+                {
+                    var msg = receiver.ReceiveFrameString();
+
+                    // first check for a quit message 
+                    if (msg == "TestRunnerQuit")
+                    {
+                        cts.Cancel();
+                        return;
+                    }
+
+                    string testName = msg.Split('/')[0];
+                    string testLanguage = msg.Split('/')[1];
+                    var cargs = new CommandLineArgs(new[] { "test=" + testName }, commandLineOptions);
+                    commandLineArgs.SetArg("language", testLanguage);
+                    var testList = LoadTestList(cargs);
+                    using (var testLogStream = new MemoryStream())
+                    using (var testLog = new StreamWriter(testLogStream, new UTF8Encoding(false)))
+                    {
+                        bool passed = RunTestPasses(testList, testList, commandLineArgs, testLog, 1, 1);
+                        allTestsPassed &= passed;
+                        log.Write(testLog);
+                        var resultBuffer = testLogStream.GetBuffer().Prepend(Convert.ToByte(passed));
+                        if (!sender2.TrySendFrame(TimeSpan.FromSeconds(CLIENT_WAIT_TIMEOUT), resultBuffer.ToArray(), (int) testLogStream.Length+1))
+                        {
+                            Console.Error.WriteLine($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
+                            cts.Cancel();
+                        }
+                    }
+
+                    //sender.SendFrame(passed.ToString());
+                };
+
+                Thread.Sleep(1000);
+
+                while (!cts.IsCancellationRequested)
+                {
+                    Console.WriteLine("Waiting for message");
+                    if (!sender2.TrySignalOK())
+                    {
+                        Thread.Sleep(2000);
+                        continue;
+                    }
+
+                    if (!receiver.Poll(TimeSpan.FromSeconds(CLIENT_WAIT_TIMEOUT)))
+                    {
+                        Console.Error.WriteLine($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
+                        cts.Cancel();
+                    }
+                }
+            }
+            return allTestsPassed ? 0 : 1;
+        }
+
+        private static long MinBytesPerNormalWorker => MemoryInfo.Gibibyte * 2;
+        private static long MinBytesPerBigWorker => MemoryInfo.Gibibyte * 6;
+        //static bool testRequeue = true;
+
+        private static string GetPasswordFromConsole()
+        {
+            ConsoleKey key;
+            string pass = string.Empty;
+            do
+            {
+                var keyInfo = Console.ReadKey(intercept: true);
+                key = keyInfo.Key;
+
+                if (key == ConsoleKey.Backspace && pass.Length > 0)
+                {
+                    Console.Write("\b \b");
+                    pass = pass.Substring(0, pass.Length - 1);
+                }
+                else if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    Console.Write("*");
+                    pass += keyInfo.KeyChar;
+                }
+            } while (key != ConsoleKey.Enter);
+
+            return pass;
+        }
+
+        private static void CheckDocker(CommandLineArgs commandLineArgs)
+        {
+            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f json", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+            var dockerVersionJson = JObject.Parse(dockerVersionOutput);
+            if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
+            {
+                Console.WriteLine("Switching Docker engine to Windows containers (this will stop any running containers)...");
+                RunTests.RunCommand($"{Environment.GetEnvironmentVariable("ProgramFiles")}\\Docker\\Docker\\DockerCli.exe",
+                    "-SwitchWindowsEngine",
+                    "Are Hyper-V and Container features enabled?");
+            }
+
+            //RunCommand("netsh", $"advfirewall firewall add rule name=\"TestRunner\" dir=in action=allow protocol=tcp program=\"{Assembly.GetExecutingAssembly().Location}\"", string.Empty, true, true);
+
+            var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+            if (!dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME))
+            {
+                Console.WriteLine($"'{RunTests.DOCKER_IMAGE_NAME}' is missing; building it now.");
+                var buildPath = RunTests.ALWAYS_UP_RUNNER_REPO;
+                if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
+                {
+                    using var tmpDir = new TemporaryDirectory();
+                    using var webClient = new WebClient();
+                    string tmpFile = Path.Combine(tmpDir.DirPath, "master.zip");
+                    webClient.DownloadFile("https://github.com/ProteoWizard/AlwaysUpRunner/archive/refs/heads/master.zip", tmpFile);
+
+                    using var alwaysUpRunnerCode = new ZipFile(tmpFile);
+                    alwaysUpRunnerCode.ExtractAll(Path.GetDirectoryName(buildPath)!, ExtractExistingFileAction.OverwriteSilently);
+
+                    Console.Write("Enter password to extract AlwaysUpCLT_licensed_binaries: ");
+                    var pass = commandLineArgs.ArgAsStringOrDefault("alwaysupcltpassword") ?? GetPasswordFromConsole();
+                    RunTests.RunCommand(Path.Combine(buildPath, "AlwaysUpCLT_licensed_binaries.exe"), $"-y \"-p{pass}\" \"-o{buildPath}\"", "Wrong password?");
+                }
+
+                var dockerBaseImage = Environment.OSVersion.Version.Build >= 22000
+                    ? string.Empty
+                    : "--build-arg BASE_WINDOWS_IMAGE=mcr.microsoft.com/windows:1809-amd64";
+                RunTests.RunCommand("docker", $"build {buildPath} -t {RunTests.DOCKER_IMAGE_NAME} {dockerBaseImage}", RunTests.IS_DOCKER_RUNNING_MESSAGE, true);
+            }
+        }
+
+        private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, StreamWriter log)
+        {
+            var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
+            string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
+            string dockerRunRedirect = string.Empty;
+            if (commandLineArgs.ArgAsBool("keepworkerlogs"))
+                dockerRunRedirect = $"> c:\\pwiz\\TestRunner-{workerName}-docker.log 2>1";
+
+            // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
+            var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log=c:\AlwaysUpCLT\TestRunner-{workerName}.log";
+            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
+                testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
+            testRunnerCmd += $" workerport={workerPort}";
+
+            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
+            Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
+            log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
+            workerNames = (workerNames ?? "") + $"{workerName} ";
+            var psi = new ProcessStartInfo("docker", dockerArgs);
+            psi.WindowStyle = ProcessWindowStyle.Minimized;
+            psi.CreateNoWindow = false;
+            psi.UseShellExecute = true;
+            var proc = Process.Start(psi);
+            if (proc?.WaitForExit(1000) ?? true)
+            {
+                Console.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
+                log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
+            }
+            return workerName;
+        }
+
+        private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, ConcurrentDictionary<string, bool> workerIsAlive, StreamWriter log)
+        {
+            string currentWorkerNames = workerNames;
+            string workerName = LaunchDockerWorker(i, commandLineArgs, ref currentWorkerNames, bigWorker, workerBytes, workerPort, log);
+            for (int attempt = 0; attempt< 10; ++attempt)
+            {
+                Thread.Sleep(3000);
+                if (workerIsAlive.ContainsKey(workerName))
+                {
+                    workerNames = currentWorkerNames;
+                    return;
+                }
+            }
+            throw new Exception($"Worker {workerName} did not connect.");
+        }
+
+        private class QueuedTestInfo
+        {
+            public QueuedTestInfo(TestInfo testInfo, string language, int loopCount = 0)
+            {
+                TestInfo = testInfo;
+                Language = language;
+                LoopCount = loopCount;
+            }
+            public TestInfo TestInfo { get; private set; }
+            public string Language { get; private set; }
+            public int LoopCount { get; private set; }
+
+            public void IncrementLoopCount()
+            {
+                ++LoopCount;
+            }
+        }
+
+        private static bool PushToTestQueue(List<TestInfo> testList, List<TestInfo> unfilteredTestList, CommandLineArgs commandLineArgs, StreamWriter log)
+        {
+            var cts = new CancellationTokenSource();
+            var factory = new TaskFactory(cts.Token);
+            var testQueue = new ConcurrentQueue<QueuedTestInfo>();
+            var nonParallelTestQueue = new ConcurrentQueue<QueuedTestInfo>();
+            var workerIsAlive = new ConcurrentDictionary<string, bool>();
+            var tasks = new List<Task>();
+            var timer = new Stopwatch();
+            int testsFailed = 0;
+            int testsResultsReturned = 0;
+            int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
+            int loop = (int) commandLineArgs.ArgAsLong("loop");
+            var languages = commandLineArgs.ArgAsString("language").Split(',');
+
+            if (commandLineArgs.ArgAsBool("buildcheck"))
+            {
+                loop = 1;
+                languages = new[] { "en" };
+            }
+
+            Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, loopCount) =>
+            {
+                testOutput = testOutput.Trim(' ', '\t', '\r', '\n');
+                testOutput = Regex.Replace(testOutput, @"\d+ failures", $"{testsFailed} failures");
+                testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {loopCount}.{testsResultsReturned} ", RegexOptions.Multiline);
+
+                Console.WriteLine(testOutput);
+                testLog.WriteLine(testOutput);
+            };
+
+            // add tests to the queue (at least once, multiple times if loop > 1)
+            for (int i = 0; i < Math.Max(1, loop); ++i)
+            {
+                foreach (var testInfo in testList)
+                {
+                    var queue = testInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue;
+                    foreach (var language in languages)
+                        queue.Enqueue(new QueuedTestInfo(testInfo, language, i));
+                }
+            }
+
+            // check docker daemon is working and build always_up_runner if necessary
+            CheckDocker(commandLineArgs);
+
+            // open socket that listens for workers to connect
+            using (var receiver = new PullSocket())
+            {
+                // get system-assigned port which will passed to workers with "workerport" parameter
+                int workerPort = receiver.BindRandomPort("tcp://*");
+
+                string workerNames = null;
+
+                // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
+                SetConsoleCtrlHandler(c =>
+                {
+                    RunTests.SendDockerKill(workerNames);
+                    Process.GetCurrentProcess().Kill();
+                    return true;
+                }, true);
+
+                if (workerCount > 0)
+                {
+                    long availableBytesForNormalWorkers = MemoryInfo.AvailableBytes - MinBytesPerBigWorker;
+
+                    int normalWorkerCount = workerCount - 1;
+                    long normalWorkerBytes = MinBytesPerNormalWorker * normalWorkerCount;
+                    long totalWorkerBytes = normalWorkerBytes + MinBytesPerBigWorker;
+                    if (availableBytesForNormalWorkers < normalWorkerBytes)
+                        throw new ArgumentException($"not enough free memory ({MemoryInfo.AvailableBytes / MemoryInfo.Mebibyte} MB) for {workerCount} workers: need at least {totalWorkerBytes / MemoryInfo.Mebibyte} MB");
+
+                    long perWorkerBytes = availableBytesForNormalWorkers / normalWorkerCount;
+
+                    factory.StartNew(() =>
+                    {
+                        bool waitForWorkerConnect = commandLineArgs.ArgAsBool("waitforworkers");
+                        if (waitForWorkerConnect)
+                        {
+                            for (int i = 0; i < normalWorkerCount; ++i)
+                            {
+                                int i2 = i;
+                                Helpers.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerIsAlive, log), 4, 3000);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < normalWorkerCount; ++i)
+                            {
+                                LaunchDockerWorker(i, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, log);
+                                Thread.Sleep(1000);
+                            }
+                        }
+                        //LaunchDockerWorker(normalWorkerCount, commandLineArgs, ref workerNames, true);
+                    });
+                }
+
+                // handle big tests on the server
+                tasks.Add(factory.StartNew(() => {
+                    while (!cts.IsCancellationRequested)
+                    {
+                        QueuedTestInfo testInfo = null;
+                        bool abort = cts.IsCancellationRequested;
+                        if (!abort)
+                        {
+                            nonParallelTestQueue.TryDequeue(out testInfo);
+                            if (testInfo == null)
+                                testQueue.TryDequeue(out testInfo);
+                        }
+
+                        if (abort || testInfo == null)
+                        {
+                            // server test thread will not return until all workers have finished in order to handle requeued tests
+                            if (workerIsAlive.Any(kvp => kvp.Value))
+                            {
+                                Thread.Sleep(1000);
+                                continue;
+                            }
+                            cts.Cancel();
+                            return;
+                        }
+
+                        string testName = testInfo.TestInfo.TestMethod.Name;
+                        try
+                        {
+                            // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
+                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log=serverWorker.log parallelmode=server_worker loop=1 language={testInfo.Language}";
+                            foreach (string a in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
+                                testRunnerCmd += $" {a}={commandLineArgs.ArgAsString(a)}";
+
+                            var psi = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, testRunnerCmd);
+                            psi.WindowStyle = ProcessWindowStyle.Hidden;
+                            //psi.UseShellExecute = true;
+                            psi.CreateNoWindow = true;
+                            var p = Process.Start(psi);
+                            if (p == null)
+                                throw new InvalidOperationException("failed to start server worker (required for NoParallelTesting tests)");
+                            p.PriorityClass = ProcessPriorityClass.BelowNormal;
+
+                            p.WaitForExit();
+
+                            bool testPassed = p.ExitCode == 0;
+                            if (!testPassed)
+                                Interlocked.Increment(ref testsFailed);
+                            var testOutput = File.ReadAllText("serverWorker.log");
+                            LogTestOutput(testOutput, log, testInfo.LoopCount);
+                            Interlocked.Increment(ref testsResultsReturned);
+                            Thread.Sleep(500); // wait a bit in case SkylineTester killed the server_worker TestRunner
+
+                            testInfo.IncrementLoopCount();
+                            if (loop == 0)
+                                (testInfo.TestInfo.DoNotRunInParallel ? nonParallelTestQueue : testQueue).Enqueue(testInfo);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine(e.ToString());
+                        }
+                    }
+                }, TaskCreationOptions.LongRunning));
+
+                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...\r\n",
+                    testList.Count,
+                    testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
+                    (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
+                    "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
+                    workerCount);
+
+                // main thread listens for workers to connect
+                while (!cts.IsCancellationRequested)
+                {
+                    // listen for workerName/IP/tasksPort/resultsPort/heartbeatPort string from a worker
+                    if (!receiver.TryReceiveFrameString(TimeSpan.FromSeconds(1), out var workerId))
+                    {
+                        continue;
+                    }
+
+                    string[] workerIdParts = workerId.Split('/');
+                    string workerName = workerIdParts[0];
+                    string workerIP = workerIdParts[1];
+                    string tasksPort = workerIdParts[2];
+                    string resultsPort = workerIdParts[3];
+                    string heartbeatPort = workerIdParts[4];
+                    bool isBigWorker = workerName.Contains("big_worker");
+
+                    Console.WriteLine($"Connection from worker {workerId}");
+                    tasks.Add(factory.StartNew(() => {
+                        using (var workerSender = new PushSocket($">tcp://{workerIP}:{tasksPort}"))
+                        using (var workerReceiver = new PullSocket($">tcp://{workerIP}:{resultsPort}"))
+                        {
+                            workerIsAlive[workerName] = true;
+
+                            while (!cts.IsCancellationRequested)
+                            {
+                                // listen for "ready" signal from worker
+                                if (!workerReceiver.TryReceiveSignal(TimeSpan.FromSeconds(3), out bool signal) && workerIsAlive[workerName])
+                                    continue;
+
+                                if (!workerIsAlive[workerName])
+                                    return;
+
+                                QueuedTestInfo testInfo = null;
+                                if (isBigWorker)
+                                    nonParallelTestQueue.TryDequeue(out testInfo);
+                                if (testInfo == null)
+                                    testQueue.TryDequeue(out testInfo);
+
+                                if (testInfo == null)
+                                {
+                                    // not done until all workers are done (in order to wait for possibled requeued tests)
+                                    //done = true;
+                                    workerSender.TrySendFrame("TestRunnerQuit");
+                                    workerIsAlive[workerName] = false;
+                                    return;
+                                }
+
+                                string testName = testInfo.TestInfo.TestMethod.Name;
+                                bool gotResult = false;
+                                try
+                                {
+                                    //Console.WriteLine(testInfo.TestMethod.Name);
+                                    if (!workerSender.TrySendFrame(TimeSpan.FromSeconds(5), testInfo.TestInfo.TestMethod.Name + "/" + testInfo.Language))
+                                        continue;
+                                    lock (timer) timer.Start();
+                                    byte[] result = null;
+                                    while (!workerReceiver.TryReceiveFrameBytes(TimeSpan.FromSeconds(5), out result) && workerIsAlive[workerName]) { }
+                                    if (result == null)
+                                        continue;
+                                    gotResult = true;
+                                    bool testPassed = Convert.ToBoolean(result[0]);
+                                    if (!testPassed)
+                                        Interlocked.Increment(ref testsFailed);
+                                    string testOutput = Encoding.UTF8.GetString(result, 1, result.Length - 1);
+                                    LogTestOutput(testOutput, log, testInfo.LoopCount);
+                                    Interlocked.Increment(ref testsResultsReturned);
+
+                                    testInfo.IncrementLoopCount();
+                                    if (loop == 0)
+                                        testQueue.Enqueue(testInfo);
+                                }
+                                finally
+                                {
+                                    if (/*testRequeue && testInfo.TestMethod.Name == "TestSwathIsolationLists" ||*/ !gotResult)
+                                    {
+                                        //if (testInfo.TestMethod.Name == "TestSwathIsolationLists")
+                                        //    testRequeue = false;
+                                        Console.Error.WriteLine($"No result for test {testInfo.TestInfo.TestMethod.Name}; requeuing...");
+                                        testQueue.Enqueue(testInfo);
+                                    }
+                                }
+                            }
+                        }
+                    }, TaskCreationOptions.LongRunning));
+
+                    // start heartbeat for worker
+                    factory.StartNew(() => {
+                        using (var workerHeartbeat = new PullSocket($">tcp://{workerIP}:{heartbeatPort}"))
+                        {
+                            var msg = new Msg();
+                            msg.InitEmpty();
+                            while (!cts.IsCancellationRequested)
+                            {
+                                if (!workerHeartbeat.TryReceive(ref msg, TimeSpan.FromSeconds(5)))
+                                {
+                                    workerIsAlive[workerName] = false;
+
+                                    if (testQueue.IsEmpty)
+                                        return;
+                                    Console.WriteLine($"Worker {workerName} stopped responding.");
+
+                                    if (workerCount > 0 && !cts.IsCancellationRequested && !workerIsAlive.Any(kvp => kvp.Value))
+                                    {
+                                        Console.WriteLine("No more workers alive: starting another worker.");
+                                        LaunchDockerWorker(workerIsAlive.Count + 1, commandLineArgs, ref workerNames, true, MinBytesPerBigWorker, workerPort, log);
+                                    }
+                                    return;
+                                }
+                                //Console.WriteLine($"Heartbeat from {workerIP}.");
+                                Thread.Sleep(3000);
+                            }
+                            workerIsAlive[workerName] = false;
+                        }
+                    }, TaskCreationOptions.LongRunning);
+                }
+
+                Console.WriteLine("Waiting for worker tasks to finish.");
+                foreach (var task in tasks)
+                    task.Wait();
+            }
+
+            Console.WriteLine($"Parallel server mode finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
+            return testsFailed == 0;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -471,7 +1058,9 @@ namespace TestRunner
             var dmpDir = commandLineArgs.ArgAsString("dmpdir");
             bool teamcityTestDecoration = commandLineArgs.ArgAsBool("teamcitytestdecoration");
             bool verbose = commandLineArgs.ArgAsBool("verbose");
-
+            string parallelMode = commandLineArgs.ArgAsString("parallelmode");
+            bool serverMode = parallelMode == "server";
+            bool clientMode = parallelMode == "client" || parallelMode == "server_worker";
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
             // If we haven't been told to run perf tests, remove any from the list
@@ -508,12 +1097,17 @@ namespace TestRunner
                 pauseSeconds = 0;
             }
 
+            if (serverMode)
+            {
+                return PushToTestQueue(testList, unfilteredTestList, commandLineArgs, log);
+            }
+
             var runTests = new RunTests(
                 demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
                 pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
-                results, log, verbose);
+                results, log, verbose, clientMode);
 
             using (new DebuggerListener(runTests))
             {
@@ -565,7 +1159,7 @@ namespace TestRunner
                 {
                     if (!randomOrder && formList.IsNullOrEmpty() && perftests)
                         runTests.Log("Perf tests will run last, for maximum overall test coverage.\r\n");
-                    runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
+                        runTests.Log("Running {0}{1} tests{2}{3}...\r\n",
                         testList.Count,
                         testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                         (loopCount <= 0) ? " forever" : (loopCount == 1) ? "" : " in " + loopCount + " loops",
@@ -582,9 +1176,6 @@ namespace TestRunner
                 if (showMatchingPages)
                     runTests.Skyline.Set("ShowMatchingPages", true);
 
-                var executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                var allLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
-                var qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
                 var removeList = new List<TestInfo>();
 
                 // Pass 0: Test an interesting collection of edge cases:
@@ -1117,7 +1708,7 @@ namespace TestRunner
                 {
                     var test = parts[1];
                     var failureType = parts[2];
-                   
+
                     if (failureType == "LEAKED")
                     {
                         var leakSize = double.Parse(parts[3]);
@@ -1136,7 +1727,7 @@ namespace TestRunner
                         crtLeakList.Add(new LeakingTest { TestName = test, LeakSize = leakSize });
                         continue;
                     }
-                    
+
                     error = "# " + test + " FAILED:\n";
                 }
             }
@@ -1280,6 +1871,19 @@ Here is a list of recognized arguments:
                                     the system clipboard.  If a test uses the clipboard,
                                     stress testing might be compromised on a computer
                                     which is running other processes simultaneously.
+
+    parallelmode=[off|server]       When set to server, TestRunner will launch Docker workers
+                                    to run the configured tests in parallel. Docker Desktop
+                                    must be installed and containers must be enabled in the
+                                    operating system. Ask Matt for the Getting Started guide.
+
+    workercount=[n]                 The number of parallel workers to run. One of the workers
+                                    will be on the host, so only workercount - 1 Docker
+                                    containers will be launched.
+
+    keepworkerlogs=[on|off]         Set keepworkerlogs=on to persist individual logs from each 
+                                    Docker worker. Useful for debugging issues related to running
+                                    tests inside a container.
 ");
         }
 
@@ -1327,6 +1931,19 @@ Here is a list of recognized arguments:
             }
         }
 
+
+        [DllImport("Kernel32")]
+        private static extern bool SetConsoleCtrlHandler(ConsoleCtrlEventHandler handler, bool add);
+        private delegate bool ConsoleCtrlEventHandler(CtrlType sig);
+
+        enum CtrlType
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT = 1,
+            CTRL_CLOSE_EVENT = 2,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT = 6
+        }
     }
 
     public class SystemSleep : IDisposable

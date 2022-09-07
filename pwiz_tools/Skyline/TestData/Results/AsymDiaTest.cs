@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestData.Results
                     var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
                     ratio = normalizedValueCalculator.GetTransitionGroupValue(
                         normalizedValueCalculator.GetFirstRatioNormalizationMethod(),
-                        docResults.Molecules.First(), nodeGroup, nodeGroup.Results[0][0]).Value;
+                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.Results[0][0]).Value;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(fixedRatio, ratio, 0.05);
@@ -231,7 +231,7 @@ namespace pwiz.SkylineTestData.Results
             var peptideDocNode = document.Molecules.First();
             var transitionGroupDocNode = peptideDocNode.TransitionGroups.First();
             return normalizedValueCalculator.GetTransitionGroupValue(normalizationMethod, peptideDocNode,
-                transitionGroupDocNode, transitionGroupDocNode.Results[0][0]);
+                transitionGroupDocNode, 0, transitionGroupDocNode.Results[0][0]);
         }
     }
 }

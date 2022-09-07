@@ -40,7 +40,6 @@ namespace pwiz.SkylineTestUtil
     /// This is the base class for every unit test in Skyline.  It enables logging
     /// and also provides quick information about the running time of the test.
     /// </summary>
-    [TestClass]
     [DeploymentItem("SkylineLog4Net.config")]
     public class AbstractUnitTest
     {

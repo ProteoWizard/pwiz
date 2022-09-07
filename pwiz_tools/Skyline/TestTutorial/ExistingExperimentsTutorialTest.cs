@@ -109,6 +109,9 @@ namespace pwiz.SkylineTestTutorial
 
         private void DoMrmerTest()
         {
+            if (!IsPauseForScreenShots)
+                AllowInternetAccess = false;    // Keep the background proteome from getting updated from the web
+
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
@@ -147,8 +150,10 @@ namespace pwiz.SkylineTestTutorial
             var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             var docBeforeTrans = WaitForDocumentChangeLoaded(docBeforePeptideSettings);
+            WaitForBackgroundProteomeLoaderCompleted();
 
             // Inserting a Transition List With Associated Proteins, p. 6
+            // using (new DocChangeLogger("ShowInsertTransitionListDlg"))
             using (new CheckDocumentState(24, 44, 88, 296))
             {
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
@@ -158,9 +163,13 @@ namespace pwiz.SkylineTestTutorial
                 string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
                 var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
                 WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for associate proteins to complete
+                Assert.IsTrue(colDlg.checkBoxAssociateProteins.Checked);
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
                 OkDialog(colDlg, colDlg.OkDialog);
             }
+
+            Assert.IsTrue(SkylineWindow.Document.Children.All(c => c.Id is FastaSequence),
+                string.Format("Found {0} proteins without FASTA information", SkylineWindow.Document.Children.Count(c => !(c.Id is FastaSequence))));
 
             RunUI(() =>
             {
@@ -281,7 +290,7 @@ namespace pwiz.SkylineTestTutorial
             var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
             var ratioActual = normalizedValueCalculator.GetTransitionGroupValue(
                 normalizedValueCalculator.GetFirstRatioNormalizationMethod(), precursorTreeNode.PepNode,
-                precursorTreeNode.DocNode, precursorTreeNode.DocNode.Results[0][0]);
+                precursorTreeNode.DocNode, 0, precursorTreeNode.DocNode.Results[0][0]);
             Assert.AreEqual(ratioExpected, ratioActual.Value, 0.005);
         }
 
@@ -292,7 +301,7 @@ namespace pwiz.SkylineTestTutorial
             var ratioActual = normalizedValueCalculator.GetTransitionValue(
                 normalizedValueCalculator.GetFirstRatioNormalizationMethod(), transitionTreeNode.PepNode,
                 transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
-                transitionTreeNode.DocNode.Results[0][0]);
+                0, transitionTreeNode.DocNode.Results[0][0]);
 
             if (ratioExpected.HasValue)
                 Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);
@@ -343,7 +352,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => messageDlg.Size = new Size(838, 192));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 20);
                 OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
-                RunUI(() => transitionSelectdgl.DialogResult = DialogResult.Cancel); // Cancel the import
+                OkDialog(transitionSelectdgl, transitionSelectdgl.CancelDialog); // Cancel the import
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);

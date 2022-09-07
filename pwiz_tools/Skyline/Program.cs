@@ -30,7 +30,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using Newtonsoft.Json;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -390,50 +390,46 @@ namespace pwiz.Skyline
             // ReSharper restore LocalizableElement
         }
 
-        internal static string SendGa4AnalyticsHit(bool useDebugUrl = false)
+        internal static int SendGa4AnalyticsHit(bool useDebugUrl = false)
         {
             // ReSharper disable LocalizableElement
-            const string measurementId = "G-CQG6T54XQR";
-            const string apiSecret = "8_Ci004BQSKdL1bEazPK3A"; // does this need to be kept secret somehow?
-            string debugModifier = useDebugUrl ? "debug/" : "";
-            string analyticsUrl = $"https://www.google-analytics.com/{debugModifier}mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
+            var clientId = Settings.Default.InstallationId;
+            if (clientId.IsNullOrEmpty())
+                clientId = "developer";
 
-            var postData = new Dictionary<string, object>();
-            postData["client_id"] = useDebugUrl ? "test" : Settings.Default.InstallationId;
-            var events = new List<Dictionary<string, object>>();
-            postData["events"] = events;
-            events.Add(new Dictionary<string, object>
-            {
-                { "name", "Instance" },
-                {
-                    "params", new Dictionary<string, string>
-                    {
-                        { "version", Install.Version + "-" + (Install.Is64Bit ? "64bit" : "32bit") },
-                        { "install_type", Install.Type.ToString() }
-                    }
-                }
-            });
-            var postDataString = JsonConvert.SerializeObject(postData);
+            var postData = "v=2"; // Version 
+            postData += "&tid=G-CQG6T54XQR"; // Tracking id
+            postData += "&gtm=2oe880"; // Google tag manager
+            postData += "&_p=312721869";// + clientId.GetHashCode(); // page hash?
+            postData += "&cid=" + clientId; // Anonymous Client Id
+            postData += "&ul=en-us"; // user language
+            postData += "&sr=2560x1370"; // screen resolution
+            postData += "&_z=ccd.v9B"; // unknown
+            postData += "&_s=1"; // unknown
+            postData += "&sid=" + clientId.GetHashCode(); // session id
+            //postData += "&sct=1"; // session count
+            //postData += "&seg=1"; // session engagement
+            postData += "&dl=" + Uri.EscapeDataString("https://skyline.ms/software/instance.html");
+            postData += "&dt=&en=page_view";
+            postData += "&ep.install_type=" + Install.Type;
+            postData += "&ep.version=" + Uri.EscapeDataString(Install.Version + (Install.Is64Bit ? "-64bit" : "-32bit"));
+            if (useDebugUrl)
+                postData += "&_dbg=true";
 
-            var data = Encoding.UTF8.GetBytes(postDataString);
-            var request = (HttpWebRequest) WebRequest.Create(analyticsUrl);
+            var request = (HttpWebRequest)WebRequest.Create("https://www.google-analytics.com/g/collect?" + postData);
             request.UserAgent = Install.GetUserAgentString();
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = data.Length;
-            using (Stream stream = request.GetRequestStream())
-            {
-                stream.Write(data, 0, data.Length);
-            }
+            request.ContentLength = 0;
 
-            var response = (HttpWebResponse) request.GetResponse();
+            var response = (HttpWebResponse)request.GetResponse();
             var responseStream = response.GetResponseStream();
             if (null != responseStream)
             {
-                return new StreamReader(responseStream).ReadToEnd();
+                new StreamReader(responseStream).ReadToEnd();
             }
 
-            return string.Empty;
+            return (int) response.StatusCode;
             // ReSharper restore LocalizableElement
         }
 

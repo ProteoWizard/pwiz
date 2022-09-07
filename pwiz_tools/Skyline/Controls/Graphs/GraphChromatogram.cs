@@ -2271,9 +2271,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                                   Target lookupSequence,
                                                   ExplicitMods lookupMods)
         {
+            bool fullScan = settings.TransitionSettings.FullScan.IsEnabled &&
+                            !chromGraphPrimary.Chromatogram.GroupInfo.CachedFile.IsSrm;
             // Set any MS/MS IDs on the first graph item also
-            if (settings.PeptideSettings.Libraries.IsLoaded &&
-                (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary))
+            if (settings.PeptideSettings.Libraries.IsLoaded && 
+                (fullScan || settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 var nodeGroupsArray = nodeGroups.ToArray();
                 var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
