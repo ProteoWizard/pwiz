@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model.Results
             if (_scanIdDictionary.TryGetValue(id, out int scanIndex))
             {
                 return scanIndex;
-        }
+            }
             scanIndex = _scanIdList.Count;
             _scanIdList.Add(id);
             _scanIdDictionary.Add(id, scanIndex);
