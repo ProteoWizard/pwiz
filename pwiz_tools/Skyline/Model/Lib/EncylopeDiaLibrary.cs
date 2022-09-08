@@ -254,8 +254,18 @@ namespace pwiz.Skyline.Model.Lib
                             double score = reader.GetDouble(3);
                             var qValue = scores.GetQValue(libKey, fileName) ??
                                          ExplicitPeakBounds.UNKNOWN_SCORE;
+                            double? rtInMinutes = null;
+                            if (!reader.IsDBNull(4))
+                            {
+                                double rtInSeconds = reader.GetDouble(4);
+                                // EncyclopeDIA version 2.0 uses "-1" to indicate that the chromatogram had no apex.
+                                if (rtInSeconds != -1.0)
+                                {
+                                    rtInMinutes = rtInSeconds / 60;
+                                }
+                            }
                             dataByFilename.Add(fileName, new ScoredFileData(score,
-                                new FileData(reader.GetDouble(4) / 60,
+                                new FileData(rtInMinutes,
                                     new ExplicitPeakBounds(reader.GetDouble(5) / 60, reader.GetDouble(6) / 60,
                                         qValue))));
                         }
