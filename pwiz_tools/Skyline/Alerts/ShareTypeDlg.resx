@@ -126,7 +126,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>281, 3</value>
+    <value>282, 3</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -157,7 +157,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnShare.Location" type="System.Drawing.Point, System.Drawing">
-    <value>200, 3</value>
+    <value>201, 3</value>
   </data>
   <data name="btnShare.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,10 +190,10 @@
     <value>5, 186</value>
   </data>
   <data name="panelButtonBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>359, 31</value>
+    <value>360, 31</value>
   </data>
   <data name="panelButtonBar.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;panelButtonBar.Name" xml:space="preserve">
     <value>panelButtonBar</value>
@@ -214,13 +214,13 @@
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="comboSkylineVersion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 160</value>
+    <value>8, 160</value>
   </data>
   <data name="comboSkylineVersion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>349, 21</value>
+    <value>350, 21</value>
   </data>
   <data name="comboSkylineVersion.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
@@ -248,7 +248,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>Microsoft Sans Serif, 8.25pt</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 144</value>
+    <value>8, 144</value>
   </data>
   <data name="label2.MaximumSize" type="System.Drawing.Size, System.Drawing">
     <value>380, 0</value>
@@ -257,7 +257,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>92, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>Skyline file format:
@@ -374,67 +374,67 @@ Note that not all data is preserved when saving as a previous version.</value>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="Btn_SelectFiles.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="btnSelectReplicateFiles.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="Btn_SelectFiles.Enabled" type="System.Boolean, mscorlib">
+  <data name="btnSelectReplicateFiles.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="Btn_SelectFiles.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnSelectReplicateFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>125, 3</value>
   </data>
-  <data name="Btn_SelectFiles.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnSelectReplicateFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 21</value>
   </data>
-  <data name="Btn_SelectFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+  <data name="btnSelectReplicateFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
-  <data name="Btn_SelectFiles.Text" xml:space="preserve">
+  <data name="btnSelectReplicateFiles.Text" xml:space="preserve">
     <value>Choose Files...</value>
   </data>
-  <data name="&gt;&gt;Btn_SelectFiles.Name" xml:space="preserve">
-    <value>Btn_SelectFiles</value>
+  <data name="&gt;&gt;btnSelectReplicateFiles.Name" xml:space="preserve">
+    <value>btnSelectReplicateFiles</value>
   </data>
-  <data name="&gt;&gt;Btn_SelectFiles.Type" xml:space="preserve">
+  <data name="&gt;&gt;btnSelectReplicateFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;Btn_SelectFiles.Parent" xml:space="preserve">
+  <data name="&gt;&gt;btnSelectReplicateFiles.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;Btn_SelectFiles.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;btnSelectReplicateFiles.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="CB_IncludeFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="cbIncludeReplicateFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="CB_IncludeFiles.AutoSize" type="System.Boolean, mscorlib">
+  <data name="cbIncludeReplicateFiles.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="CB_IncludeFiles.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="cbIncludeReplicateFiles.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
-  <data name="CB_IncludeFiles.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="cbIncludeReplicateFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>116, 21</value>
   </data>
-  <data name="CB_IncludeFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+  <data name="cbIncludeReplicateFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="CB_IncludeFiles.Text" xml:space="preserve">
+  <data name="cbIncludeReplicateFiles.Text" xml:space="preserve">
     <value>Include results files</value>
   </data>
-  <data name="CB_IncludeFiles.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+  <data name="cbIncludeReplicateFiles.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>BottomLeft</value>
   </data>
-  <data name="&gt;&gt;CB_IncludeFiles.Name" xml:space="preserve">
-    <value>CB_IncludeFiles</value>
+  <data name="&gt;&gt;cbIncludeReplicateFiles.Name" xml:space="preserve">
+    <value>cbIncludeReplicateFiles</value>
   </data>
-  <data name="&gt;&gt;CB_IncludeFiles.Type" xml:space="preserve">
+  <data name="&gt;&gt;cbIncludeReplicateFiles.Type" xml:space="preserve">
     <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;CB_IncludeFiles.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbIncludeReplicateFiles.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;CB_IncludeFiles.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;cbIncludeReplicateFiles.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
@@ -450,7 +450,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>222, 27</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
     <value>tableLayoutPanel1</value>
@@ -465,46 +465,43 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="Btn_SelectFiles" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="CB_IncludeFiles" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,54.95496,Percent,45.04504,Absolute,20" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="btnSelectReplicateFiles" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="cbIncludeReplicateFiles" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,54.95496,Percent,45.04504,Absolute,20" /&gt;&lt;Rows Styles="Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
-  <data name="lbl_fileStatus.AutoSize" type="System.Boolean, mscorlib">
+  <data name="labelFileStatus.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="lbl_fileStatus.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="labelFileStatus.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="lbl_fileStatus.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="labelFileStatus.Location" type="System.Drawing.Point, System.Drawing">
     <value>20, 118</value>
   </data>
-  <data name="lbl_fileStatus.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="labelFileStatus.Size" type="System.Drawing.Size, System.Drawing">
     <value>0, 13</value>
   </data>
-  <data name="lbl_fileStatus.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
+  <data name="labelFileStatus.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
   </data>
-  <data name="&gt;&gt;lbl_fileStatus.Name" xml:space="preserve">
-    <value>lbl_fileStatus</value>
+  <data name="&gt;&gt;labelFileStatus.Name" xml:space="preserve">
+    <value>labelFileStatus</value>
   </data>
-  <data name="&gt;&gt;lbl_fileStatus.Type" xml:space="preserve">
+  <data name="&gt;&gt;labelFileStatus.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;lbl_fileStatus.Parent" xml:space="preserve">
+  <data name="&gt;&gt;labelFileStatus.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;lbl_fileStatus.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;labelFileStatus.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>52</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>369, 222</value>
+    <value>370, 222</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>5, 5, 5, 5</value>
@@ -519,7 +516,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.551, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.1.9.250, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
@@ -531,6 +528,6 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>ShareTypeDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.551, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

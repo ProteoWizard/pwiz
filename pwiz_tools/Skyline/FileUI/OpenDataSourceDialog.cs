@@ -45,14 +45,14 @@ namespace pwiz.Skyline.FileUI
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
-        private readonly List<string> _specificFileFilter; // Specific files to look for
+        private readonly List<string> _specificDataSourceFilter; // Specific data sources to look for
         
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
         /// </summary>
         /// <param name="remoteAccounts">For UNIFI</param>
-        /// <param name="specificFileFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, List<string> specificFileFilter = null)
+        /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
+        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, List<string> specificDataSourceFilter = null)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
 
-            _specificFileFilter = specificFileFilter;
+            _specificDataSourceFilter = specificDataSourceFilter;
         }
 
         public new DialogResult ShowDialog(IWin32Window owner)
@@ -249,9 +249,8 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private SourceInfo getSourceInfo(DirectoryInfo dirInfo)
+        private SourceInfo getSourceInfo( DirectoryInfo dirInfo )
         {
-
             string type = DataSourceUtil.GetSourceType(dirInfo);
             SourceInfo sourceInfo = new SourceInfo(new MsDataFilePath(dirInfo.FullName))
             {
@@ -262,8 +261,8 @@ namespace pwiz.Skyline.FileUI
             };
 
             if(listView.View != View.Details ||
-               (sourceTypeComboBox.SelectedIndex > 0 &&
-                sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
+                    (sourceTypeComboBox.SelectedIndex > 0 &&
+                     sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                 return sourceInfo;
 
             if(sourceInfo.isFolder)
@@ -492,12 +491,12 @@ namespace pwiz.Skyline.FileUI
                             // Always show folders
                             sourceInfo.isFolder)
                 {
-                    // Filter for only specifically named data sources (as when called from Skyline File>Share)
-                    if (_specificFileFilter != null && !sourceInfo.isFolder)
+                    // Filter for specifically named data sources (as when called from Skyline File>Share)
+                    if (_specificDataSourceFilter != null && !sourceInfo.isFolder)
                     {
-                        if (!_specificFileFilter.Any(specificFile =>
-                                specificFile.Equals(sourceInfo.MsDataFileUri.GetFileName(),
-                                    StringComparison.CurrentCultureIgnoreCase)))
+                        var name = sourceInfo.MsDataFileUri.GetFileName();
+                        if (!_specificDataSourceFilter.Any(specificDataSource => specificDataSource.Equals(name,
+                                StringComparison.CurrentCultureIgnoreCase)))
                         {
                             continue;
                         }
@@ -1005,7 +1004,7 @@ namespace pwiz.Skyline.FileUI
             e.ItemWidth = x + indent + 16 + (int) e.Graphics.MeasureString( node.Text, lookInComboBox.Font ).Width;
         }
 
-        public void lookInComboBox_SelectionChangeCommitted( object sender, EventArgs e )
+        private void lookInComboBox_SelectionChangeCommitted( object sender, EventArgs e )
         {
             if( lookInComboBox.SelectedIndex < 0 )
                 lookInComboBox.SelectedIndex = 0;

@@ -80,8 +80,14 @@ namespace pwiz.Skyline.Alerts
 
                 foreach (var missingFile in _auxiliaryFiles._missingCheckBoxFiles)
                 {
-                    missingListBox.Items.Add(missingFile);
+                    listboxMissingFiles.Items.Add(missingFile);
                 }
+
+                // Don't bother the user with missing files stuff when there are no missing files
+                splitContainer1.Panel2.Visible = btnLocateFiles.Enabled = btnFindInFolder.Enabled = 
+                    listboxMissingFiles.Enabled = labelMissingFiles.Enabled =
+                        listboxMissingFiles.Items.Count > 0;
+                splitContainer1.Panel2Collapsed = !splitContainer1.Panel2.Visible;
                 return;
             }
             
@@ -115,7 +121,7 @@ namespace pwiz.Skyline.Alerts
                 var missingRepFiles = missingPaths.ToList(); // Convert to list. Prevents duplicates from being present
                 missingRepFiles.Sort(NaturalComparer.Compare);
 
-                missingListBox.Items.AddRange(missingRepFiles.ToArray()); //Add all elements present to 
+                listboxMissingFiles.Items.AddRange(missingRepFiles.ToArray()); //Add all elements present to 
             }
         }
 
@@ -144,7 +150,7 @@ namespace pwiz.Skyline.Alerts
                     : new CheckedListBoxItem(checkedItem.ToString(), false)).ToList();
 
             // Add all missing auxiliary files to list
-            var missingItems = (from object missingItem in missingListBox.Items select missingItem.ToString()).ToList();
+            var missingItems = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
 
             // Save auxiliary file selection 
             _auxiliaryFiles = new AuxiliaryFiles(checkedItems, missingItems); // Save users file selection
@@ -230,26 +236,15 @@ namespace pwiz.Skyline.Alerts
         ///
         public string UpdateLabel()
         {
-            string fileIncludingLabel; 
-            int total = checkedListBox.Items.Count + missingListBox.Items.Count; // Number of total files
-            int checkCount = checkedListBox.CheckedIndices.Count; // Number of elements currently checked in the checked list box
-            int missingCount = missingListBox.Items.Count;
-            if (checkCount == total) // All files are selected
-            {
-                fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel_All__0__files_will_be_included_, total);
-            }
-            else if (checkedListBox.CheckedItems.Count == 0) // No items are selected
-            {
-                fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel_None_of_the__0__files_will_be_included_, total);
-            }
-            else
-            {
-                fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_, checkCount, total); // Some number of elements are selected
-            }
-            
+            var total = checkedListBox.Items.Count + listboxMissingFiles.Items.Count; // Number of total files
+            var checkCount = checkedListBox.CheckedIndices.Count; // Number of elements currently checked in the checked list box
+            var missingCount = listboxMissingFiles.Items.Count;
+
+            var fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_, checkCount, total); // Some number of elements are selected
+
             if (missingCount != 0)
             {
-                fileIncludingLabel += string.Format(Resources.ShareResultsFilesDlg_UpdateLabel__Missing__0__file_s__, missingCount);
+                fileIncludingLabel += string.Format(Resources.ShareResultsFilesDlg_UpdateLabel___0__of__1__files_have_not_been_located_, missingCount, total);
 
             }
             return fileIncludingLabel;
@@ -264,10 +259,10 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void LocateMissingFiles()
         {
-            if (missingListBox.Items.Count > 0)
+            if (listboxMissingFiles.Items.Count > 0)
             {
                 // Get list of all files that are currently missing
-                var missingFiles = (from object missingItem in missingListBox.Items select missingItem.ToString()).ToList();
+                var missingFiles = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
 
                 using var openDataSource = new OpenDataSourceDialog(Settings.Default.RemoteAccountList, missingFiles);
                 // Find location of the current directory
@@ -293,7 +288,7 @@ namespace pwiz.Skyline.Alerts
                     foreach (var selectedFile in selectedFiles)
                     { 
                         // Check if the selected file is one of those missing
-                        if (missingListBox.Items.Contains(selectedFile))
+                        if (listboxMissingFiles.Items.Contains(selectedFile))
                         { 
                             // True file path to be checked against
                             var filePath = Path.Combine(currentDirectory.GetFilePath(), selectedFile);
@@ -302,7 +297,7 @@ namespace pwiz.Skyline.Alerts
                             if (ScanProvider.FileExists(filePath, currentDirectory))
                             {
                                 paths.Add(filePath); // Add confirmed path to map
-                                missingListBox.Items.Remove(selectedFile); // Removed found file from missing lis box
+                                listboxMissingFiles.Items.Remove(selectedFile); // Removed found file from missing lis box
                             }
                         }
                     }
@@ -357,6 +352,13 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void LocateMissingFilesFromFolder()
         {
+            if (listboxMissingFiles.Items.Count == 0)
+            {
+                // Message informing the user of the fact there are no longer any missing files and thus no need to search for more
+                MessageDlg.Show(this, Resources.ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present);
+                return;
+            }
+
             // Ask the user for the directory to search
             using var searchFolderDialog = new FolderBrowserDialog();
             searchFolderDialog.ShowNewFolderButton = false;
@@ -371,7 +373,7 @@ namespace pwiz.Skyline.Alerts
             // Set the initial directory to the current working directory if present
             searchFolderDialog.SelectedPath = initialDir;
 
-            searchFolderDialog.Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files; // Description
+            searchFolderDialog.Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_;
 
             if (searchFolderDialog.ShowDialog() == DialogResult.OK)
             {
@@ -408,11 +410,11 @@ namespace pwiz.Skyline.Alerts
             // Check if the folder contained any missing items
             foreach (var rawFiles in set)
             {
-                if (missingListBox.Items.Contains(Path.GetDirectoryName(rawFiles) != null) || missingListBox.Items.Contains(Path.GetFileName(rawFiles)))
+                if (listboxMissingFiles.Items.Contains(Path.GetDirectoryName(rawFiles) != null) || listboxMissingFiles.Items.Contains(Path.GetFileName(rawFiles)))
                 {
                     checkedListBox.Items.Add(rawFiles, true);
-                    missingListBox.Items.Remove(Path.GetDirectoryName(rawFiles) != null);
-                    missingListBox.Items.Remove(Path.GetFileName(rawFiles));
+                    listboxMissingFiles.Items.Remove(Path.GetDirectoryName(rawFiles) != null);
+                    listboxMissingFiles.Items.Remove(Path.GetFileName(rawFiles));
                 }
             }
             checkedStatus.Text = UpdateLabel();

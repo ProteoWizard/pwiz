@@ -2157,6 +2157,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
       <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
@@ -2617,7 +2618,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.resx">
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\SynchronizedIntegrationDlg.zh-CHS.resx">
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
@@ -2988,6 +2988,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ComparePeakPickingDlg.resx">
       <DependentUpon>ComparePeakPickingDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditNoteDlg.ja.resx">
       <DependentUpon>EditNoteDlg.cs</DependentUpon>
@@ -3612,7 +3613,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ChooseSchedulingReplicatesDlg.resx">
       <DependentUpon>ChooseSchedulingReplicatesDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\AddModificationsDlg.ja.resx">
       <DependentUpon>AddModificationsDlg.cs</DependentUpon>

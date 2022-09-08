@@ -70,13 +70,12 @@ namespace pwiz.Skyline.FileUI
             this.FileType,
             this.SourceSize,
             this.DateModified});
-            this.listView.HideSelection = false;
             this.listView.Name = "listView";
             this.listView.TileSize = new System.Drawing.Size(150, 35);
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.List;
             this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView_ColumnClick);
-            this.listView.ItemActivate += new System.EventHandler(this.lookInComboBox_SelectionChangeCommitted);
+            this.listView.ItemActivate += new System.EventHandler(this.listView_ItemActivate);
             this.listView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView_ItemSelectionChanged);
             this.listView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView_KeyDown);
             // 
@@ -319,13 +318,13 @@ namespace pwiz.Skyline.FileUI
         #endregion
 
         private System.Windows.Forms.ListView listView;
-        public System.Windows.Forms.ComboBox lookInComboBox;
+        private System.Windows.Forms.ComboBox lookInComboBox;
         private System.Windows.Forms.Label labelLookIn;
         private System.Windows.Forms.TextBox sourcePathTextBox;
         private System.Windows.Forms.Label labelSourcePath;
         private System.Windows.Forms.ComboBox sourceTypeComboBox;
         private System.Windows.Forms.Label label1;
-        public System.Windows.Forms.Button openButton;
+        private System.Windows.Forms.Button openButton;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.ColumnHeader SourceName;
         private System.Windows.Forms.ColumnHeader SourceSize;

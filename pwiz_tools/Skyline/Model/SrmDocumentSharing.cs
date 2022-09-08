@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Model
                     return;
                 }
                 _dictNameToPath.Add(fileName, path);
-                if (Directory.Exists(path))
+                if (Directory.Exists(path)) // Some mass spec data "files" are really directories
                 {
                     _zip.AddDirectory(path, Path.GetFileName(path));
                 }
