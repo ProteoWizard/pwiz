@@ -283,14 +283,14 @@ namespace pwiz.SkylineTestFunctional
 
             File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
 
-            void DoShareWithRawFiles(string elsewhere, bool testFolder = false)
+            void DoShareWithRawFiles(string directoryElsewhere, bool testFolder = false)
             {
-                string shareCompletePath = TestFilesDirs[1].GetTestPath($"{Path.GetFileName(elsewhere)}{testFolder}.zip");
+                string shareCompletePath = TestFilesDirs[1].GetTestPath($"{Path.GetFileName(directoryElsewhere)}{testFolder}.zip");
                 var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
                 RunUI(() => shareDlg.IncludeReplicateFiles = true); // Check box must be checked in order for files to be zipped
                 var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
                 RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
-                if (elsewhere != null)
+                if (directoryElsewhere != null)
                 {
                     
                     if (!testFolder)
@@ -299,14 +299,14 @@ namespace pwiz.SkylineTestFunctional
                         var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
                         RunUI(() =>
                         {
-                            fileFinderDlg.SelectFile(elsewhere); // Select sub folder
+                            fileFinderDlg.SelectFile(directoryElsewhere); // Select sub folder
                             fileFinderDlg.Open(); // Open folder
                             fileFinderDlg.SelectFile(S1_RAW); // Select file
                             fileFinderDlg.Open(); // Open file
                         });
                         OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
 
-                        replicatePickDlg.SearchDirectoryForMissingFiles(elsewhere);
+                        replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere);
 
                     }
                     else
@@ -314,7 +314,7 @@ namespace pwiz.SkylineTestFunctional
                         // Test folder selector
                         RunUI(() =>
                         {
-                            replicatePickDlg.SearchDirectoryForMissingFiles(elsewhere); // Exercise folder select
+                            replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere); // Exercise folder select
                         });
                     }
                 }
