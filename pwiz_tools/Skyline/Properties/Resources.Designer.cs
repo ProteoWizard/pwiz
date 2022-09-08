@@ -2653,6 +2653,27 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1} - {2}).
+        /// </summary>
+        public static string BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:.
+        /// </summary>
+        public static string BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_io" +
+                        "n_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a" +
+                        "_different_template_method__or_change_the_ion_mobility_values_for_the_following_" +
+                        "targets_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error copying template file..
         /// </summary>
         public static string BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_ {
@@ -12947,31 +12968,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} [{1}, {2}].
-        /// </summary>
-        public static string ExportMethodDlg_OkDialog__0_____1____2__ {
-            get {
-                return ResourceManager.GetString("ExportMethodDlg_OkDialog__0_____1____2__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to A template file is required to export a method..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to All targets must be within the ion mobility range [{0}, {1}] specified in the template method. Update the template method, or update ion mobility values for the following targets:.
-        /// </summary>
-        public static string ExportMethodDlg_OkDialog_All_targets_must_be_within_the_ion_mobility_range___0____1___specified_in_the_template_method__Update_the_template_method__or_update_ion_mobility_values_for_the_following_targets_ {
-            get {
-                return ResourceManager.GetString("ExportMethodDlg_OkDialog_All_targets_must_be_within_the_ion_mobility_range___0___" +
-                        "_1___specified_in_the_template_method__Update_the_template_method__or_update_ion" +
-                        "_mobility_values_for_the_following_targets_", resourceCulture);
             }
         }
         

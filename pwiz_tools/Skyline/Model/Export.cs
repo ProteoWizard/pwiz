@@ -34,6 +34,7 @@ using Microsoft.Win32;
 using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -3525,9 +3526,8 @@ namespace pwiz.Skyline.Model
             return target;
         }
 
-        public static bool CheckIonMobilities(SrmDocument document, ExportProperties exportProperties,
-            string templateName, out LibKey[] missing, out Tuple<LibKey, double, double>[] outOfRange,
-            out double? limitLower, out double? limitUpper)
+        public static string CheckIonMobilities(SrmDocument document, ExportProperties exportProperties,
+            string templateName)
         {
             var exporter = templateName == null
                 ? exportProperties.InitExporter(new BrukerTimsTofIsolationListExporter(document))
@@ -3541,15 +3541,42 @@ namespace pwiz.Skyline.Model
 
             exporter.InitExport(null, null);
 
-            missing = exporter.MissingIonMobility.ToArray();
-            outOfRange = exporter is BrukerTimsTofMethodExporter
+            var missing = exporter.MissingIonMobility.ToArray();
+            var outOfRange = exporter is BrukerTimsTofMethodExporter
                 ? exporter.IonMobilityOutsideLimits.ToArray()
                 : Array.Empty<Tuple<LibKey, double, double>>();
 
-            limitLower = exporter._oneOverK0LowerLimit;
-            limitUpper = exporter._oneOverK0UpperLimit;
+            if (missing.Length == 0 && outOfRange.Length == 0)
+                return null;
 
-            return missing.Length == 0 && outOfRange.Length == 0;
+            var errorLines = new List<string>();
+            if (missing.Length > 0)
+            {
+                errorLines.Add(
+                    Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_);
+                errorLines.Add(string.Empty);
+                errorLines.AddRange(missing.Select(k => k.ToString()));
+            }
+
+            if (outOfRange.Length > 0)
+            {
+                if (errorLines.Count > 0)
+                {
+                    errorLines.Add(string.Empty);
+                }
+
+                errorLines.Add(
+                    string.Format(
+                        Resources.BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_,
+                        exporter._oneOverK0LowerLimit.GetValueOrDefault().ToString(Formats.IonMobility),
+                        exporter._oneOverK0UpperLimit.ToString(Formats.IonMobility)));
+                errorLines.Add(string.Empty);
+                errorLines.AddRange(outOfRange.Select(k =>
+                    string.Format(Resources.BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__, k.Item1,
+                        k.Item2.ToString(Formats.IonMobility), k.Item3.ToString(Formats.IonMobility))));
+            }
+
+            return TextUtil.LineSeparate(errorLines);
         }
 
         public void ExportMethod(string fileName, IProgressMonitor progressMonitor)
