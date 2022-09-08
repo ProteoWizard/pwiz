@@ -726,22 +726,13 @@ namespace pwiz.Skyline.Model
                 // there should be only one loss
                 TransitionLosses firstLosses = null;
                 List<TransitionLosses> allLosses = null;
-                HashSet<Tuple<double, int>> allLossMassCharges = null;
+                HashSet<LossId> allLossMassCharges = null;
                 foreach (var losses in potentialLosses)
                 {
-                    double lossMass = CalcTransitionLossesMass(type, cleavageOffset, massType, losses, out var lossCharge);
-                    // The loss of the charge is only interesting to preserve separate from the mass in
-                    // the case of the precursor, because it has a fixed starting charge. Whereas, fragment
-                    // ions can lose charge during fragmentation no matter what the charge of the loss is,
-                    // and all charges down to charge 1 are allowed for fragments. So, it really is only
-                    // the mass of the loss that matters for fragment ions.
-                    if (type != IonType.precursor)
-                        lossCharge = 0;
-                    if (lossMass == 0 ||
-                        (firstLosses != null && firstLosses.Mass == lossMass &&
-                         firstLosses.TotalCharge == lossCharge) ||
-                        (allLossMassCharges != null &&
-                         allLossMassCharges.Contains(new Tuple<double, int>(lossMass, lossCharge))))
+                    var lossId = CalcTransitionLossesIds(type, cleavageOffset, massType, losses);
+                    if (lossId.Mass == 0 ||
+                        (firstLosses != null && Equals(GetLossId(type, firstLosses), lossId)) ||
+                        (allLossMassCharges != null && allLossMassCharges.Contains(lossId)))
                     {
                         continue;
                     }
@@ -754,15 +745,15 @@ namespace pwiz.Skyline.Model
                         else
                         {
                             allLosses = new List<TransitionLosses> { firstLosses };
-                            allLossMassCharges = new HashSet<Tuple<double, int>>();
-                            allLossMassCharges.Add(new Tuple<double, int>(firstLosses.Mass, firstLosses.TotalCharge));
+                            allLossMassCharges = new HashSet<LossId>();
+                            allLossMassCharges.Add(GetLossId(type, firstLosses));
                             firstLosses = null;
                         }
                     }
                     if (allLosses != null)
                         allLosses.Add(tranLosses);
                     if (allLossMassCharges != null)
-                        allLossMassCharges.Add(new Tuple<double, int>(tranLosses.Mass, tranLosses.TotalCharge));
+                        allLossMassCharges.Add(GetLossId(type, tranLosses));
                 }
 
                 // Handle the single losses case first
@@ -776,6 +767,54 @@ namespace pwiz.Skyline.Model
                         yield return tranLosses;
                 }
             }
+        }
+
+        private struct LossId
+        {
+            public double Mass;
+            public int Charge;
+
+            #region Equality members
+
+            public bool Equals(LossId other)
+            {
+                return Mass.Equals(other.Mass) && Charge == other.Charge;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is LossId other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Mass.GetHashCode() * 397) ^ Charge;
+                }
+            }
+
+            #endregion
+        }
+
+        private static LossId GetLossId(IonType type, TransitionLosses losses)
+        {
+            return GetLossId(type, losses.Mass, losses.TotalCharge);
+        }
+
+        private static LossId GetLossId(IonType type, double mass, int charge)
+        {
+            var lossId = new LossId { Mass = mass };
+
+            // The loss of the charge is only interesting to preserve separate from the mass in
+            // the case of the precursor, because it has a fixed starting charge. Whereas, fragment
+            // ions can lose charge during fragmentation no matter what the charge of the loss is,
+            // and all charges down to charge 1 are allowed for fragments. So, it really is only
+            // the mass of the loss that matters for fragment ions.
+            if (type == IonType.precursor)
+                lossId.Charge = charge;
+
+            return lossId;
         }
 
         /// <summary>
@@ -815,11 +854,11 @@ namespace pwiz.Skyline.Model
             return  new TransitionLosses(listLosses, massType);
         }
 
-        public static double CalcTransitionLossesMass(IonType type, int cleavageOffset,
-            MassType massType, IList<ExplicitLoss> losses, out int chargeLoss)
+        private static LossId CalcTransitionLossesIds(IonType type, int cleavageOffset,
+            MassType massType, IList<ExplicitLoss> losses)
         {
             double mass = 0;
-            chargeLoss = 0;
+            int chargeLoss = 0;
             for (int i = 0; i < losses.Count; i++)
             {
                 var loss = losses[i];
@@ -843,7 +882,7 @@ namespace pwiz.Skyline.Model
                 mass += loss.TransitionLoss.Mass;
                 chargeLoss += loss.TransitionLoss.Loss.Charge;
             }
-            return mass;
+            return GetLossId(type, mass, chargeLoss);
         }
 
         private static TransitionLosses GetCustomTransitionLosses(IEnumerable<ExplicitLoss> losses,MassType massType)
