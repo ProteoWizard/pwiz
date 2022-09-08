@@ -420,7 +420,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return ChangeProp(ImClone(this), im => im.CacheFormat = cacheFormat);
             }
-            }
+        }
 
         public class MinStatistics
         {
@@ -648,7 +648,7 @@ namespace pwiz.Skyline.Model.Results
                             .Interpolate(transitionChromSources);
                 }
 
-                timeIntensitiesGroup = MapTimeIntensitiesScanIndexes(_scanIdMaps[fileIndex],
+                timeIntensitiesGroup = RemapTimeIntensityGroupScanIds(_scanIdMaps[fileIndex],
                     timeIntensitiesGroup, transitionChromSources);
                 timeIntensitiesGroup.WriteToStream(pointsStream);
                 if (timeIntensitiesGroup is RawTimeIntensities)
@@ -728,7 +728,7 @@ namespace pwiz.Skyline.Model.Results
                 _chromGroupHeaderInfos.Add(header);
             }
 
-            public TimeIntensitiesGroup MapTimeIntensitiesScanIndexes(Dictionary<int, int> scanIndexMap,
+            private TimeIntensitiesGroup RemapTimeIntensityGroupScanIds(Dictionary<int, int> scanIdMap,
                 TimeIntensitiesGroup timeIntensitiesGroup, IList<ChromSource> chromSources)
             {
                 var newTimeIntensities = new List<TimeIntensities>();
@@ -739,7 +739,7 @@ namespace pwiz.Skyline.Model.Results
                         newTimeIntensities.Add(timeIntensities);
                         continue;
                     }
-                    var newScanIds = MapScanIndexes(scanIndexMap, timeIntensities.ScanIds);
+                    var newScanIds = RemapScanIds(scanIdMap, timeIntensities.ScanIds);
                     newTimeIntensities.Add(new TimeIntensities(timeIntensities.Times, timeIntensities.Intensities,
                         timeIntensities.MassErrors, newScanIds));
                 }
@@ -752,14 +752,14 @@ namespace pwiz.Skyline.Model.Results
                 return new InterpolatedTimeIntensities(newTimeIntensities, chromSources);
             }
 
-            private IEnumerable<int> MapScanIndexes(Dictionary<int, int> scanIndexMap, IEnumerable<int> scanIndexes)
+            private IEnumerable<int> RemapScanIds(Dictionary<int, int> scanIdMap, IEnumerable<int> scanIds)
             {
-                foreach (var oldScanIndex in scanIndexes)
+                foreach (var oldScanIndex in scanIds)
                 {
-                    if (!scanIndexMap.TryGetValue(oldScanIndex, out int newScanIndex))
+                    if (!scanIdMap.TryGetValue(oldScanIndex, out int newScanIndex))
                     {
-                        newScanIndex = scanIndexMap.Count;
-                        scanIndexMap.Add(oldScanIndex, newScanIndex);
+                        newScanIndex = scanIdMap.Count;
+                        scanIdMap.Add(oldScanIndex, newScanIndex);
                     }
                     yield return newScanIndex;
                 }
