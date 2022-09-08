@@ -78,10 +78,7 @@ namespace pwiz.Skyline.Model.Results
         public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream,
             FileStream outStreamScans = null, FileStream outStreamPeaks = null, FileStream outStreamScores = null)
         {
-            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores)
-            {
-                UncompressChromatograms = settings.UncompressChromatograms
-            };
+            var writer = outStream == null ? null : new Writer(ChromatogramCache, settings.CacheFormat, outStream, outStreamScans, outStreamPeaks, outStreamScores);
             var statisticsCollector = new MinStatisticsCollector(this);
 
             var chromGroupHeaderToIndex = new Dictionary<long, int>(ChromGroupHeaderInfos.Count);
@@ -423,14 +420,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return ChangeProp(ImClone(this), im => im.CacheFormat = cacheFormat);
             }
-
-            public bool UncompressChromatograms { get; private set; }
-
-            public Settings ChangeUncompressChromatograms(bool uncompress)
-            {
-                return ChangeProp(ImClone(this), im => im.UncompressChromatograms = uncompress);
             }
-        }
 
         public class MinStatistics
         {
@@ -614,7 +604,6 @@ namespace pwiz.Skyline.Model.Results
             private readonly List<byte> _textIdBytes = new List<byte>();
             private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
                 = new Dictionary<ImmutableList<byte>, int>();
-
             private List<Dictionary<int, int>> _scanIdMaps = new List<Dictionary<int, int>>();
             
             public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
@@ -699,15 +688,7 @@ namespace pwiz.Skyline.Model.Results
 
                 long location = _outputStream.Position;
                 int lenUncompressed = (int) pointsStream.Length;
-                byte[] pointsCompressed;
-                if (UncompressChromatograms)
-                {
-                    pointsCompressed = pointsStream.ToArray();
-                }
-                else
-                {
-                    pointsCompressed = pointsStream.ToArray().Compress(3);
-                }
+                byte[] pointsCompressed = pointsStream.ToArray().Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
                 int textIdIndex;
@@ -784,23 +765,25 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            public bool UncompressChromatograms { get; set; }
-
             public void WriteEndOfFile()
             {
                 IList<ChromCachedFile> chromCachedFiles = new List<ChromCachedFile>();
                 for (int fileIndex = 0; fileIndex < _originalCache.CachedFiles.Count; fileIndex++)
                 {
                     var chromCachedFile = _originalCache.CachedFiles[fileIndex];
+                    var scanIdMap = _scanIdMaps[fileIndex];
                     if (chromCachedFile.SizeScanIds == 0)
                     {
+                        Assume.AreEqual(0, scanIdMap.Count);
                         chromCachedFiles.Add(chromCachedFile);
                         continue;
                     }
-                    var originalMsDataFileScanIds = _originalCache.LoadMSDataFileScanIds(fileIndex).GetAllSpectrumIds().ToList();
+
+                    var originalMsDataFileScanIds =
+                        _originalCache.LoadMSDataFileScanIds(fileIndex).GetAllSpectrumIds().ToList();
                     var newScanIdsBytes = MsDataFileScanIds.ToBytes(
-                        _scanIdMaps[fileIndex].OrderBy(kvp => kvp.Value)
-                            .Select(kvp => originalMsDataFileScanIds[kvp.Key]), UncompressChromatograms);
+                        scanIdMap.OrderBy(kvp => kvp.Value)
+                            .Select(kvp => originalMsDataFileScanIds[kvp.Key]));
                     long locationScanIds = _outputStreamScans.Position;
                     _outputStreamScans.Write(newScanIdsBytes, 0, newScanIdsBytes.Length);
                     chromCachedFiles.Add(chromCachedFile.ResizeScanIds(locationScanIds, newScanIdsBytes.Length));

@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Results
             return Enumerable.Range(0, _startBytes.Length).Select(GetMsDataFileSpectrumId);
         }
 
-        public static byte[] ToBytes(IEnumerable<string> scanIds, bool uncompressed)
+        public static byte[] ToBytes(IEnumerable<string> scanIds)
         {
             var listStartBytes = new List<int>();
             var listLengths = new List<int>();
@@ -77,15 +77,7 @@ namespace pwiz.Skyline.Model.Results
             listEntryBytes.AddRange(PrimitiveArrays.ToBytes(listStartBytes.ToArray()));
             listEntryBytes.AddRange(PrimitiveArrays.ToBytes(listLengths.ToArray()));
             var entryBytes = listEntryBytes.ToArray();
-            byte[] entryBytesCompressed;
-            if (uncompressed)
-            {
-                entryBytesCompressed = entryBytes;
-            }
-            else
-            {
-                entryBytesCompressed = entryBytes.Compress();
-            }
+            var entryBytesCompressed = entryBytes.Compress();
             var scanIdBytes = listIdBytes.ToArray();
             var scanIdBytesCompressed = scanIdBytes.Compress();
 

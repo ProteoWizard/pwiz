@@ -117,11 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <metadata name="bindingSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
+    <value>17, 17</value>
   </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewSizes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -146,11 +143,11 @@
     <value>Minimized Size</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="dataGridViewSizes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 186</value>
+  <data name="dataGridViewSizes.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 170</value>
   </data>
-  <data name="dataGridViewSizes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 160</value>
+  <data name="dataGridViewSizes.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>438, 176</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewSizes.TabIndex" type="System.Int32, mscorlib">
@@ -160,21 +157,21 @@
     <value>dataGridViewSizes</value>
   </data>
   <data name="&gt;&gt;dataGridViewSizes.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewSizes.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;dataGridViewSizes.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="cbxDiscardUnmatchedChromatograms.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbxDiscardUnmatchedChromatograms.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="cbxDiscardUnmatchedChromatograms.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>12, 71</value>
   </data>
-  <data name="cbxDiscardUnmatchedChromatograms.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="cbxDiscardUnmatchedChromatograms.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>175, 17</value>
   </data>
   <data name="cbxDiscardUnmatchedChromatograms.TabIndex" type="System.Int32, mscorlib">
@@ -193,12 +190,12 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
-  <data name="tbxNoiseTimeRange.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="tbxNoiseTimeRange.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>99, 3</value>
   </data>
-  <data name="tbxNoiseTimeRange.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="tbxNoiseTimeRange.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>100, 20</value>
   </data>
   <data name="tbxNoiseTimeRange.TabIndex" type="System.Int32, mscorlib">
@@ -225,10 +222,10 @@
   <data name="cbxLimitNoiseTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbxLimitNoiseTime.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="cbxLimitNoiseTime.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>3, 3</value>
   </data>
-  <data name="cbxLimitNoiseTime.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="cbxLimitNoiseTime.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>90, 17</value>
   </data>
   <data name="cbxLimitNoiseTime.TabIndex" type="System.Int32, mscorlib">
@@ -255,10 +252,10 @@
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>371, 352</value>
   </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
@@ -277,15 +274,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="btnMinimize.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnMinimize.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnMinimize.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>130, 352</value>
   </data>
-  <data name="btnMinimize.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnMinimize.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>103, 23</value>
   </data>
   <data name="btnMinimize.TabIndex" type="System.Int32, mscorlib">
@@ -304,12 +301,12 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnMinimize.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>12, 9</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>437, 59</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
@@ -328,15 +325,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>205, 3</value>
   </data>
   <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 3, 3, 3</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>221, 17</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
@@ -363,10 +360,10 @@
   <data name="lblCurrentCacheFileSize.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="lblCurrentCacheFileSize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 146</value>
+  <data name="lblCurrentCacheFileSize.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>9, 123</value>
   </data>
-  <data name="lblCurrentCacheFileSize.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblCurrentCacheFileSize.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>209, 13</value>
   </data>
   <data name="lblCurrentCacheFileSize.TabIndex" type="System.Int32, mscorlib">
@@ -385,15 +382,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblCurrentCacheFileSize.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="lblSpaceSavings.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="lblSpaceSavings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 170</value>
+  <data name="lblSpaceSavings.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>12, 145</value>
   </data>
-  <data name="lblSpaceSavings.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblSpaceSavings.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>137, 13</value>
   </data>
   <data name="lblSpaceSavings.TabIndex" type="System.Int32, mscorlib">
@@ -412,15 +409,15 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblSpaceSavings.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="btnMinimizeAs.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="btnMinimizeAs.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="btnMinimizeAs.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>239, 352</value>
   </data>
-  <data name="btnMinimizeAs.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="btnMinimizeAs.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>126, 23</value>
   </data>
   <data name="btnMinimizeAs.TabIndex" type="System.Int32, mscorlib">
@@ -439,12 +436,12 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnMinimizeAs.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
-  <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="flowLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>9, 94</value>
   </data>
-  <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="flowLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>440, 26</value>
   </data>
   <data name="flowLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
@@ -460,39 +457,6 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="cbxUncompressed.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbxUncompressed.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 126</value>
-  </data>
-  <data name="cbxUncompressed.Size" type="System.Drawing.Size, System.Drawing">
-    <value>198, 17</value>
-  </data>
-  <data name="cbxUncompressed.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="cbxUncompressed.Text" xml:space="preserve">
-    <value>Store chromatograms uncompressed</value>
-  </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>292, 17</value>
-  </metadata>
-  <data name="cbxUncompressed.ToolTip" xml:space="preserve">
-    <value>Storing individually chromatograms uncompressed will result in a much larger .skyd file, but may result in a smaller .sky.zip file.</value>
-  </data>
-  <data name="&gt;&gt;cbxUncompressed.Name" xml:space="preserve">
-    <value>cbxUncompressed</value>
-  </data>
-  <data name="&gt;&gt;cbxUncompressed.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbxUncompressed.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;cbxUncompressed.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -509,12 +473,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Minimize Results</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
-    <value>modeUIHandler</value>
-  </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.546, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;bindingSource1.Name" xml:space="preserve">
     <value>bindingSource1</value>
@@ -540,16 +498,10 @@
   <data name="&gt;&gt;colMinimizedRatio.Type" xml:space="preserve">
     <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
-    <value>toolTip1</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MinimizeResultsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.546, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

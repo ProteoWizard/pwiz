@@ -41,7 +41,8 @@ namespace pwiz.Skyline.Model.Results
         private GlobalChromatogramExtractor _globalChromatogramExtractor;
         private IDemultiplexer _demultiplexer;
         private readonly IRetentionTimePredictor _retentionTimePredictor;
-        private ScanIdList _scanIdList = new ScanIdList();
+        private List<string> _scanIdList = new List<string>();
+        private Dictionary<string, int> _scanIdDictionary = new Dictionary<string, int>();
         private readonly bool _isProcessedScans;
         private double? _maxIonMobilityValue;
         private bool _isSingleMzMatch;
@@ -443,7 +444,14 @@ namespace pwiz.Skyline.Model.Results
 
         private int GetScanIdIndex(string id)
         {
-            return _scanIdList.GetScanIdIndex(id);
+            if (_scanIdDictionary.TryGetValue(id, out int scanIndex))
+            {
+                return scanIndex;
+        }
+            scanIndex = _scanIdList.Count;
+            _scanIdList.Add(id);
+            _scanIdDictionary.Add(id, scanIndex);
+            return scanIndex;
         }
 
         private void AddChromatograms(ChromDataCollectorSet chromMap)
@@ -550,7 +558,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override byte[] MSDataFileScanIdBytes
         {
-            get { return MsDataFileScanIds.ToBytes(_scanIdList, false); }
+            get { return MsDataFileScanIds.ToBytes(_scanIdList); }
         }
 
         public override void SetRequestOrder(IList<IList<int>> chromatogramRequestOrder)
