@@ -11829,7 +11829,16 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
       <value>Score type not found.</value>
   </data>
-  <data name="ShareResultsFilesDlg_UpdateLabel_All__0__files_will_be_included_" xml:space="preserve">
-    <value>All {0} files will be included.</value>
+  <data name="ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_" xml:space="preserve">
+    <value>{0} of {1} files will be included.</value>
+  </data>
+  <data name="ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present" xml:space="preserve">
+    <value>All relevant files are present</value>
+  </data>
+  <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
+	  <value>Please select the folder containing the missing files.</value>
+  </data>
+  <data name="ShareResultsFilesDlg_UpdateLabel___0__of__1__files_have_not_been_located_" xml:space="preserve">
+	  <value> {0} of {1} files have not been located.</value>
   </data>
 </root>

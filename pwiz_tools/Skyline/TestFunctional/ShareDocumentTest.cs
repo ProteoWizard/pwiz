@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -288,7 +287,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 string shareCompletePath = TestFilesDirs[1].GetTestPath($"{Path.GetFileName(elsewhere)}{testFolder}.zip");
                 var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
-                RunUI(() => shareDlg.CB_IncludeFiles.Checked = true); // Check box must be checked in order for files to be zipped
+                RunUI(() => shareDlg.IncludeReplicateFiles = true); // Check box must be checked in order for files to be zipped
                 var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
                 RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
                 if (elsewhere != null)
@@ -453,7 +452,6 @@ namespace pwiz.SkylineTestFunctional
         {
             var shareType = new ShareType(completeSharing, null);
             RunUI(() => SkylineWindow.ShareDocument(zipPath, shareType));
-
 
             bool extract = !completeSharing;
             string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",

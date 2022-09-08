@@ -193,13 +193,9 @@ namespace pwiz.Skyline.Model
                 try
                 {
                     if (ShareType.Complete)
-
                         ShareComplete(zip);
-
                     else
-
                         ShareMinimal(zip);
-
                 }
                 finally
                 {
@@ -571,7 +567,7 @@ namespace pwiz.Skyline.Model
                     return;
                 }
                 _dictNameToPath.Add(fileName, path);
-                if (Directory.Exists(path))
+                if (Directory.Exists(path)) // Some mass spec data "files" are really directories
                 {
                     _zip.AddDirectory(path, Path.GetFileName(path));
                 }
@@ -625,7 +621,6 @@ namespace pwiz.Skyline.Model
             Complete = complete;
             SkylineVersion = skylineVersion;
             AuxiliaryFiles = auxiliaryFiles;
-
         }
         public bool Complete { get; private set; }
 

@@ -24,8 +24,6 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -170,9 +168,6 @@ namespace pwiz.SkylineTestData.Results
                     // Verify that the .imsdb or .blib file goes out in the share zipfile
                     for (int complete = 0; complete <= 1; complete++)
                     {
-                       
-
-
                         var sharePath =
                             testFilesDir.GetTestPath(complete == 1 ? "share_complete.zip" : "share_minimized.zip");
                         var share = new SrmDocumentSharing(document, docPath, sharePath,

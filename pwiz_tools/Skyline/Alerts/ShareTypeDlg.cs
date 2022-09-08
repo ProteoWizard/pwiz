@@ -25,7 +25,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Linq;
 
-
 namespace pwiz.Skyline.Alerts
 {
     /// <summary>
@@ -34,9 +33,9 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class ShareTypeDlg : FormEx
     {
-        private readonly List<SkylineVersion> _skylineVersionOptions;
-        private readonly SrmDocument _document; // Global document from which replicate files and information can be extracted
-        private ShareResultsFilesDlg.AuxiliaryFiles _auxiliaryFiles; // All Auxiliary files
+        private List<SkylineVersion> _skylineVersionOptions;
+        private readonly SrmDocument _document; // Document from which replicate files and information can be extracted
+        private ShareResultsFilesDlg.AuxiliaryFiles _auxiliaryFiles; // Auxiliary files to be included (e.g. replicate files)
 
         public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
         {
@@ -47,6 +46,7 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
             _document = document;
+            cbIncludeReplicateFiles.Enabled = _document.Settings.HasResults; // Don't offer to include results files when there are none
 
             if (savedFileFormat.HasValue && maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0)
             {
@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Alerts
             Close();
         }
 
-        private void BtnShare_Click(object sender, EventArgs e)
+        private void btnShare_Click(object sender, EventArgs e)
         {
             OkDialog();
         }
@@ -120,6 +120,12 @@ namespace pwiz.Skyline.Alerts
 
         #region Functional testing support
 
+        public bool IncludeReplicateFiles
+        {
+            get { return cbIncludeReplicateFiles.Checked; }
+            set { cbIncludeReplicateFiles.Checked = value; }
+        }
+
         public IList<string> GetAvailableVersionItems()
         {
             return comboSkylineVersion.Items.OfType<string>().ToList();
@@ -127,7 +133,7 @@ namespace pwiz.Skyline.Alerts
 
         public void ShowSelectReplicatesDialog()
         {
-            Select_Rep_Files_Click(null, null);
+            btnSelectReplicateFiles_Click(null, null);
         }
 
         #endregion
@@ -137,15 +143,16 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Select_Rep_Files_Click(object sender, EventArgs e)
+        private void btnSelectReplicateFiles_Click(object sender, EventArgs e)
         {
-            using var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles);
-            var result = replicateSelectDlg.ShowDialog();
-            if (result == DialogResult.OK)
+            using (var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles))
             {
-                // Pass along any extra files the user may have selected
-                _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Pass auxiliary file information back
-                lbl_fileStatus.Text = replicateSelectDlg.UpdateLabel();
+                if (replicateSelectDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Pass along any extra files the user may have selected
+                    _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Pass auxiliary file information back
+                    labelFileStatus.Text = replicateSelectDlg.UpdateLabel();
+                }
             }
         }
 
@@ -158,15 +165,15 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CB_IncludeFiles_CheckedChanged(object sender, EventArgs e)
+        private void cbIncludeFiles_CheckedChanged(object sender, EventArgs e)
         {
             using var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles);
-            lbl_fileStatus.Text = replicateSelectDlg.UpdateLabel(); // Update label
+            labelFileStatus.Text = replicateSelectDlg.UpdateLabel(); // Update label
             replicateSelectDlg.OkDialog(); // Update file selection
             _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Update files
 
-            Btn_SelectFiles.Enabled = CB_IncludeFiles.Checked;
-            lbl_fileStatus.Visible = CB_IncludeFiles.Checked;
+            btnSelectReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked;
+            labelFileStatus.Visible = cbIncludeReplicateFiles.Checked;
         }
 
 
@@ -179,7 +186,7 @@ namespace pwiz.Skyline.Alerts
             var auxiliaryFiles = new List<string>(); 
 
             // Collect files to be selected
-            if (CB_IncludeFiles.Checked)
+            if (cbIncludeReplicateFiles.Checked)
             {
                 foreach (var checkedAuxFiles in _auxiliaryFiles._checkBoxFiles)
                 {
