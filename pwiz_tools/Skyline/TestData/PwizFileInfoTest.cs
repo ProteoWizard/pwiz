@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestData
     [TestClass]
     public class PwizFileInfoTest : AbstractUnitTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestInstrumentInfo()
         {
             if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentInfo)))

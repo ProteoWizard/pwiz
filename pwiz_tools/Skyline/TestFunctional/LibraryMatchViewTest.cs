@@ -94,7 +94,9 @@ namespace pwiz.SkylineTestFunctional
         private void CheckNode(SrmDocument.Level level, int i)
         {
             SelectNode(level, i);
+            WaitForDocumentLoaded();
             WaitForGraphs();
+            WaitForCondition(() => !SkylineWindow.GraphSpectrum.IsGraphUpdatePending);
             RunUI(() =>
             {
                 var selectedNode = SkylineWindow.SelectedNode;
