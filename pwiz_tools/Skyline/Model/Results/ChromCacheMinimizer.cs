@@ -615,6 +615,8 @@ namespace pwiz.Skyline.Model.Results
             private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
                 = new Dictionary<ImmutableList<byte>, int>();
 
+            private List<Dictionary<int, int>> _scanIdMaps = new List<Dictionary<int, int>>();
+            
             public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
             {
                 _originalCache = chromatogramCache;
@@ -624,6 +626,8 @@ namespace pwiz.Skyline.Model.Results
                 _outputStreamPeaks = outputStreamPeaks;
                 _outputStreamScores = outputStreamScores;
                 _scoreTypes = chromatogramCache.ScoreTypes;
+                _scanIdMaps.AddRange(chromatogramCache.CachedFiles.Select(file=>new Dictionary<int, int>()));
+                Assume.AreEqual(_scanIdMaps.Count, chromatogramCache.CachedFiles.Count);
             }
 
             public void WriteChromGroup(ChromatogramGroupInfo originalChromGroup, MinimizedChromGroup minimizedChromGroup)
@@ -654,6 +658,9 @@ namespace pwiz.Skyline.Model.Results
                     timeIntensitiesGroup = ((RawTimeIntensities) minimizedChromGroup.MinimizedTimeIntensitiesGroup)
                             .Interpolate(transitionChromSources);
                 }
+
+                timeIntensitiesGroup = MapTimeIntensitiesScanIndexes(_scanIdMaps[fileIndex],
+                    timeIntensitiesGroup, transitionChromSources);
                 timeIntensitiesGroup.WriteToStream(pointsStream);
                 if (timeIntensitiesGroup is RawTimeIntensities)
                 {
@@ -740,33 +747,63 @@ namespace pwiz.Skyline.Model.Results
                 _chromGroupHeaderInfos.Add(header);
             }
 
+            public TimeIntensitiesGroup MapTimeIntensitiesScanIndexes(Dictionary<int, int> scanIndexMap,
+                TimeIntensitiesGroup timeIntensitiesGroup, IList<ChromSource> chromSources)
+            {
+                var newTimeIntensities = new List<TimeIntensities>();
+                foreach (var timeIntensities in timeIntensitiesGroup.TransitionTimeIntensities)
+                {
+                    if (timeIntensities.ScanIds == null)
+                    {
+                        newTimeIntensities.Add(timeIntensities);
+                        continue;
+                    }
+                    var newScanIds = MapScanIndexes(scanIndexMap, timeIntensities.ScanIds);
+                    newTimeIntensities.Add(new TimeIntensities(timeIntensities.Times, timeIntensities.Intensities,
+                        timeIntensities.MassErrors, newScanIds));
+                }
+
+                if (timeIntensitiesGroup is RawTimeIntensities rawTimeIntensities)
+                {
+                    return new RawTimeIntensities(newTimeIntensities, rawTimeIntensities.InterpolationParams);
+                }
+
+                return new InterpolatedTimeIntensities(newTimeIntensities, chromSources);
+            }
+
+            private IEnumerable<int> MapScanIndexes(Dictionary<int, int> scanIndexMap, IEnumerable<int> scanIndexes)
+            {
+                foreach (var oldScanIndex in scanIndexes)
+                {
+                    if (!scanIndexMap.TryGetValue(oldScanIndex, out int newScanIndex))
+                    {
+                        newScanIndex = scanIndexMap.Count;
+                        scanIndexMap.Add(oldScanIndex, newScanIndex);
+                    }
+                    yield return newScanIndex;
+                }
+            }
+
             public bool UncompressChromatograms { get; set; }
 
             public void WriteEndOfFile()
             {
-                IList<ChromCachedFile> chromCachedFiles;
-                if (UncompressChromatograms)
+                IList<ChromCachedFile> chromCachedFiles = new List<ChromCachedFile>();
+                for (int fileIndex = 0; fileIndex < _originalCache.CachedFiles.Count; fileIndex++)
                 {
-                    chromCachedFiles = new List<ChromCachedFile>();
-                    for (int fileIndex = 0; fileIndex < _originalCache.CachedFiles.Count; fileIndex++)
+                    var chromCachedFile = _originalCache.CachedFiles[fileIndex];
+                    if (chromCachedFile.SizeScanIds == 0)
                     {
-                        var chromCachedFile = _originalCache.CachedFiles[fileIndex];
-                        if (chromCachedFile.SizeScanIds == 0)
-                        {
-                            chromCachedFiles.Add(chromCachedFile);
-                            continue;
-                        }
-                        var msDataFileScanIds = _originalCache.LoadMSDataFileScanIds(fileIndex);
-                        long locationScanIds = _outputStreamScans.Position;
-                        var bytes = MsDataFileScanIds.ToBytes(msDataFileScanIds.GetAllSpectrumIds(), UncompressChromatograms);
-                        _outputStreamScans.Write(bytes, 0, bytes.Length);
-                        chromCachedFiles.Add(chromCachedFile.ResizeScanIds(locationScanIds, bytes.Length));
+                        chromCachedFiles.Add(chromCachedFile);
+                        continue;
                     }
-                }
-                else
-                {
-                    chromCachedFiles = _originalCache.CachedFiles;
-                    _originalCache.WriteScanIds(_outputStreamScans);
+                    var originalMsDataFileScanIds = _originalCache.LoadMSDataFileScanIds(fileIndex).GetAllSpectrumIds().ToList();
+                    var newScanIdsBytes = MsDataFileScanIds.ToBytes(
+                        _scanIdMaps[fileIndex].OrderBy(kvp => kvp.Value)
+                            .Select(kvp => originalMsDataFileScanIds[kvp.Key]), UncompressChromatograms);
+                    long locationScanIds = _outputStreamScans.Position;
+                    _outputStreamScans.Write(newScanIdsBytes, 0, newScanIdsBytes.Length);
+                    chromCachedFiles.Add(chromCachedFile.ResizeScanIds(locationScanIds, newScanIdsBytes.Length));
                 }
 
                 _chromGroupHeaderInfos.Sort();
