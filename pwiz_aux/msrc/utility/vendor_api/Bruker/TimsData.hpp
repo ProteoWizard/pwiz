@@ -65,15 +65,6 @@ struct DiaPasefIsolationInfo
     int numScans;
 };
 
-enum class MsMsType
-{
-    MS1 = 0,
-    MRM = 2,
-    DDA_PASEF = 8,
-    DIA_PASEF = 9,
-    PRM_PASEF = 10
-};
-
 struct PWIZ_API_DECL TimsFrame
 {
 

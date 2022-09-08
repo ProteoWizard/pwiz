@@ -98,6 +98,13 @@ class PWIZ_API_DECL Reader_Bruker_TDF : public Reader_Bruker_Dummy
     virtual std::vector<std::string> getFileExtensions() const {return {".d", ".tdf"};}
 };
 
+class PWIZ_API_DECL Reader_Bruker_TSF : public Reader_Bruker_Dummy
+{
+    virtual const char* getType() const { return "Bruker TSF"; }
+    virtual CVID getCvType() const { return MS_Bruker_TDF_format; }
+    virtual std::vector<std::string> getFileExtensions() const {return {".d", ".tsf"};}
+};
+
 
 } // namespace msdata
 } // namespace pwiz

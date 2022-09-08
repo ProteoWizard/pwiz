@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="20percLaser_100fold_1_0_H6_MS" version="1.1.0">
+  <cvList count="2">
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
+  </cvList>
+  <fileDescription>
+    <fileContent>
+      <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+    </fileContent>
+    <sourceFileList count="2">
+      <sourceFile id="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf" name="Analysis.tsf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\20percLaser_100fold_1_0_H6_MS.d">
+        <cvParam cvRef="MS" accession="MS:1003283" name="Bruker TSF nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1003282" name="Bruker TSF format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="f2ef8f5dd73702385dec525d9af542f01f4dfc41"/>
+      </sourceFile>
+      <sourceFile id="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf_bin" name="Analysis.tsf_bin" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data\20percLaser_100fold_1_0_H6_MS.d">
+        <cvParam cvRef="MS" accession="MS:1003283" name="Bruker TSF nativeID format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1003282" name="Bruker TSF format" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="523917fb1b858272b4b98807f0f68eeacfe9e37d"/>
+      </sourceFile>
+    </sourceFileList>
+  </fileDescription>
+  <referenceableParamGroupList count="1">
+    <referenceableParamGroup id="CommonInstrumentParams">
+      <cvParam cvRef="MS" accession="MS:1003123" name="Bruker Daltonics timsTOF series" value=""/>
+    </referenceableParamGroup>
+  </referenceableParamGroupList>
+  <softwareList count="3">
+    <software id="TIMS_SDK" version="2.21.104.32">
+      <cvParam cvRef="MS" accession="MS:1000692" name="Bruker software" value=""/>
+      <userParam name="software name" value="TIMS SDK"/>
+    </software>
+    <software id="Compass" version="3.0.22">
+      <cvParam cvRef="MS" accession="MS:1000712" name="Compass" value=""/>
+    </software>
+    <software id="pwiz_Reader_Bruker" version="3.0.22236">
+      <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
+    </software>
+  </softwareList>
+  <instrumentConfigurationList count="1">
+    <instrumentConfiguration id="IC1">
+      <referenceableParamGroupRef ref="CommonInstrumentParams"/>
+      <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="1877407.00563"/>
+      <componentList count="5">
+        <source order="1">
+          <cvParam cvRef="MS" accession="MS:1000075" name="matrix-assisted laser desorption ionization" value=""/>
+        </source>
+        <analyzer order="2">
+          <cvParam cvRef="MS" accession="MS:1000081" name="quadrupole" value=""/>
+        </analyzer>
+        <analyzer order="3">
+          <cvParam cvRef="MS" accession="MS:1000084" name="time-of-flight" value=""/>
+        </analyzer>
+        <detector order="4">
+          <cvParam cvRef="MS" accession="MS:1000114" name="microchannel plate detector" value=""/>
+        </detector>
+        <detector order="5">
+          <cvParam cvRef="MS" accession="MS:1000116" name="photomultiplier" value=""/>
+        </detector>
+      </componentList>
+      <softwareRef ref="Compass"/>
+    </instrumentConfiguration>
+  </instrumentConfigurationList>
+  <dataProcessingList count="1">
+    <dataProcessing id="pwiz_Reader_Bruker_conversion">
+      <processingMethod order="0" softwareRef="pwiz_Reader_Bruker">
+        <cvParam cvRef="MS" accession="MS:1000544" name="Conversion to mzML" value=""/>
+      </processingMethod>
+      <processingMethod order="1" softwareRef="pwiz_Reader_Bruker">
+        <cvParam cvRef="MS" accession="MS:1000035" name="peak picking" value=""/>
+        <userParam name="Bruker/Agilent/CompassXtract peak picking"/>
+      </processingMethod>
+    </dataProcessing>
+  </dataProcessingList>
+  <run id="_x0032_0percLaser_100fold_1_0_H6_MS" defaultInstrumentConfigurationRef="IC1" startTimeStamp="2022-07-29T13:16:09Z" defaultSourceFileRef="_x0032_0percLaser_100fold_1_0_H6_MS.d_x005c_Analysis.tsf">
+    <spectrumList count="1" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
+      <spectrum index="0" id="frame=1" spotID="chip=0 spot=H6" defaultArrayLength="338">
+        <cvParam cvRef="MS" accession="MS:1000511" name="ms level" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1000579" name="MS1 spectrum" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000505" name="base peak intensity" value="27622.0"/>
+        <cvParam cvRef="MS" accession="MS:1000285" name="total ion current" value="2.26376e05"/>
+        <cvParam cvRef="MS" accession="MS:1000127" name="centroid spectrum" value=""/>
+        <scanList count="1">
+          <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
+          <scan>
+            <scanWindowList count="1">
+              <scanWindow>
+                <cvParam cvRef="MS" accession="MS:1000501" name="scan window lower limit" value="150.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+                <cvParam cvRef="MS" accession="MS:1000500" name="scan window upper limit" value="2500.0" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+              </scanWindow>
+            </scanWindowList>
+          </scan>
+        </scanList>
+        <binaryDataArrayList count="2">
+          <binaryDataArray encodedLength="3392">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <binary>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</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="1064">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxdlr1PVEEUxV9JyZ8wpYUFJeUUlsRQ+Ae8gCIrAuviB4IfAyJqgvFF1OBH4iQSpbDYRkPU4oWKcgtjotXEWFgYs4UFdir3d9bM2+Zk3ty59865597Zovj3O+0PYfym4ciqYTxpWAunDWVfn8n3i0uGv54YDp83TFOGOzcOMYx9tnV12dYrta1L/Djsvz0mr3Pstw3DVJ5HxX4EC+zcAmvyjFfIhziR7yka/njD+o7hHt/7i4ZDtwxHruZ5BOXH9+KsYc/yCL+/2Hp+z3B12/D7M8O6ZXjkHvGX8QffJTyOXCce9+teNGxjLz4c+YYNw3HsVQ8/abj5zvAEebg1/LAfZnL7BJ9pzjDOY3+K/Ja4j3TC+ZLz3Q7n4dHN5ef67Ed43VolfkOHacLw6FvDsUfYEffne/yvGH7dzs8d8D2SV0EeJfrfCeQFr576xFnDUfYjfLalO3hw1CGgg5J7fdhizbk+8SJ2Dj2W8CZ9Km6pfiOOn83jJfYD8Tz62EDHgftWxFed1Q/SvfpMfDntiy/Wnjqpvq65rzmhvgYr+Vf8Vm6nuAX+a/iRjiN+++3cn2vl96nU//A1dB8/3L9Wvpz7+JDz9E1Cl6qDoy6v8VNq/nQa+VOXSHzVL6DPqPuS1yg6CLP5d/VBZH3wPN/XnGmvsyb/feoYqb/mtO4pHR1Dj7t38XONOE9zv046457D8F3Dh+aBdBCYCx6/iXv3NL/Jf5o5UJBnSZyk/sHfbeaiY36Lx9R4LwY67ORxZC9dik/VX/M7SpfT+b54Uz6D74t5vrKTbvTu+eU8Dy89vjKsNg272KmPNfdio6+kZ9/Qkew0l8d5j3ln/xJu+Oml4doD7Jfy+znxJl41j9TX4k354V/zS3NB/SA/6v8u70yAv9313G+P+TqoI/wef5H7TfSh5q/e0TST36dUv6gvpVvy0vzRu678u+Qh/srG/47BXGvoQ/Vtw6vmrSfuPrrvX8CP+Gny2ojj6XfpoGzoSe+A7iv9KC/VX/rRHPALeVydFy+D/tI52Ulvk/lac93rXdT3CbCh6/Tfzx9TX420</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </spectrum>
+    </spectrumList>
+    <chromatogramList count="2" defaultDataProcessingRef="pwiz_Reader_Bruker_conversion">
+      <chromatogram index="0" id="TIC" defaultArrayLength="1">
+        <cvParam cvRef="MS" accession="MS:1000235" name="total ion current chromatogram" value=""/>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="16">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJxjYIAAAAAIAAE=</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="24">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYGBgcFjE7QgAA0UBLw==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="1" encodedLength="16">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZIAAAAAQAAI=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+      <chromatogram index="1" id="BPC" defaultArrayLength="1">
+        <cvParam cvRef="MS" accession="MS:1000628" name="basepeak chromatogram" value=""/>
+        <binaryDataArrayList count="3">
+          <binaryDataArray encodedLength="16">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000595" name="time array" value="" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+            <binary>eJxjYIAAAAAIAAE=</binary>
+          </binaryDataArray>
+          <binaryDataArray encodedLength="24">
+            <cvParam cvRef="MS" accession="MS:1000523" name="64-bit float" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
+            <binary>eJxjYGBgaPh5ywEABucClA==</binary>
+          </binaryDataArray>
+          <binaryDataArray arrayLength="1" encodedLength="16">
+            <cvParam cvRef="MS" accession="MS:1000522" name="64-bit integer" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
+            <binary>eJxjZIAAAAAQAAI=</binary>
+          </binaryDataArray>
+        </binaryDataArrayList>
+      </chromatogram>
+    </chromatogramList>
+  </run>
+</mzML>

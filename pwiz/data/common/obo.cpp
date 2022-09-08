@@ -320,6 +320,10 @@ void parseStanza(istream& is, OBO& obo)
     {
         Term term = parseTerm(is);
 
+        // ignore UO terms in MS obo
+        if (bal::iends_with(obo.filename, "psi-ms.obo") && term.prefix == "UO")
+            return;
+
         // validate prefix
         if (obo.prefixes.empty())
         {

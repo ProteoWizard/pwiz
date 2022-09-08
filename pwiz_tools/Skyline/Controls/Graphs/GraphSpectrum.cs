@@ -1079,6 +1079,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
 
+                // TODO: Only allow single precursors until the spectra loading performance issue is resolved.
+                if (precursors.Count > 1)
+                    precursors.Clear();
+
                 UpdatePrecursors(precursors, selection.SelectedTreeNode, settings);
             }
 
@@ -1413,10 +1417,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Try to load a list of spectra matching the criteria for
                     // the current node group.
                     UpdateToolbar();
-
-                    // Need this to make sure we still update the toolbar if the prosit prediction throws
-                    SpectrumDisplayInfo spectrum = null;
-                    PrositSpectrum = null;
 
                     if (usingProsit && !Settings.Default.LibMatchMirror && prositEx == null)
                     {
