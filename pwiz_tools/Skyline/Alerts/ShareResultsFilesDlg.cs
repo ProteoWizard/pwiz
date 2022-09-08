@@ -84,10 +84,10 @@ namespace pwiz.Skyline.Alerts
                 }
 
                 // Don't bother the user with missing files stuff when there are no missing files
-                splitContainer1.Panel2.Visible = btnLocateFiles.Enabled = btnFindInFolder.Enabled = 
+                btnLocateFiles.Enabled = btnFindInFolder.Enabled = 
                     listboxMissingFiles.Enabled = labelMissingFiles.Enabled =
                         listboxMissingFiles.Items.Count > 0;
-                splitContainer1.Panel2Collapsed = !splitContainer1.Panel2.Visible;
+                splitContainer1.Panel2Collapsed = listboxMissingFiles.Items.Count == 0;
                 return;
             }
             
