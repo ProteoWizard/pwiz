@@ -861,6 +861,9 @@ namespace pwiz.Skyline.Util
         {
             if (Equals(newCharge, AdductCharge))
                 return this;
+            // If it is proteomic, simply create a new proteomic adduct with the new charge.
+            if (IsProteomic)
+                return FromChargeProtonated(newCharge);
 
             if (AdductCharge == 0)
             {

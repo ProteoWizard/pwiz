@@ -726,14 +726,20 @@ namespace pwiz.Skyline.Model
                 // there should be only one loss
                 TransitionLosses firstLosses = null;
                 List<TransitionLosses> allLosses = null;
-                HashSet<double> allLossMasses = null;
+                HashSet<Tuple<double, int>> allLossMassCharges = null;
                 foreach (var losses in potentialLosses)
                 {
-                    double lossMass = CalcTransitionLossesMass(type, cleavageOffset, massType, losses);
+                    double lossMass = CalcTransitionLossesMass(type, cleavageOffset, massType, losses, out var lossCharge);
+                    if (type != IonType.precursor)
+                        lossCharge = 0; // Only precursors care about the loss charge
                     if (lossMass == 0 ||
-                            (firstLosses != null && firstLosses.Mass == lossMass) ||
-                            (allLossMasses != null && allLossMasses.Contains(lossMass)))
+                        (firstLosses != null && firstLosses.Mass == lossMass &&
+                         firstLosses.TotalCharge == lossCharge) ||
+                        (allLossMassCharges != null &&
+                         allLossMassCharges.Contains(new Tuple<double, int>(lossMass, lossCharge))))
+                    {
                         continue;
+                    }
 
                     var tranLosses = CalcTransitionLosses(type, cleavageOffset, massType, losses);
                     if (allLosses == null)
@@ -743,15 +749,15 @@ namespace pwiz.Skyline.Model
                         else
                         {
                             allLosses = new List<TransitionLosses> { firstLosses };
-                            allLossMasses = new HashSet<double>();
-                            allLossMasses.Add(firstLosses.Mass);
+                            allLossMassCharges = new HashSet<Tuple<double, int>>();
+                            allLossMassCharges.Add(new Tuple<double, int>(firstLosses.Mass, firstLosses.TotalCharge));
                             firstLosses = null;
                         }
                     }
                     if (allLosses != null)
                         allLosses.Add(tranLosses);
-                    if (allLossMasses != null)
-                        allLossMasses.Add(tranLosses.Mass);
+                    if (allLossMassCharges != null)
+                        allLossMassCharges.Add(new Tuple<double, int>(tranLosses.Mass, tranLosses.TotalCharge));
                 }
 
                 // Handle the single losses case first
@@ -805,9 +811,10 @@ namespace pwiz.Skyline.Model
         }
 
         public static double CalcTransitionLossesMass(IonType type, int cleavageOffset,
-            MassType massType, IList<ExplicitLoss> losses)
+            MassType massType, IList<ExplicitLoss> losses, out int chargeLoss)
         {
             double mass = 0;
+            chargeLoss = 0;
             for (int i = 0; i < losses.Count; i++)
             {
                 var loss = losses[i];
@@ -829,6 +836,7 @@ namespace pwiz.Skyline.Model
                         break;
                 }
                 mass += loss.TransitionLoss.Mass;
+                chargeLoss += loss.TransitionLoss.Loss.Charge;
             }
             return mass;
         }
