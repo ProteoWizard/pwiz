@@ -730,8 +730,13 @@ namespace pwiz.Skyline.Model
                 foreach (var losses in potentialLosses)
                 {
                     double lossMass = CalcTransitionLossesMass(type, cleavageOffset, massType, losses, out var lossCharge);
+                    // The loss of the charge is only interesting to preserve separate from the mass in
+                    // the case of the precursor, because it has a fixed starting charge. Whereas, fragment
+                    // ions can lose charge during fragmentation no matter what the charge of the loss is,
+                    // and all charges down to charge 1 are allowed for fragments. So, it really is only
+                    // the mass of the loss that matters for fragment ions.
                     if (type != IonType.precursor)
-                        lossCharge = 0; // Only precursors care about the loss charge
+                        lossCharge = 0;
                     if (lossMass == 0 ||
                         (firstLosses != null && firstLosses.Mass == lossMass &&
                          firstLosses.TotalCharge == lossCharge) ||
