@@ -428,7 +428,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     using (new ToolbarUpdate(this))
                     {
                         comboPrecursor.Items.Clear();
-                        comboPrecursor.Items.AddRange(_updateManager.Precursors.ToArray());
+                        if (_updateManager.Precursors != null)
+                            comboPrecursor.Items.AddRange(_updateManager.Precursors.ToArray());
 
                         if (selectedPrecursorIndex == 0 || selectedPrecursor == null || comboPrecursor.Items.IndexOf(selectedPrecursor) == -1)
                         {
@@ -1052,7 +1053,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 UpdatePrecursors(null, null, null);
             }
 
-            public void CalculatePrecursors(SpectrumNodeSelection selection, SrmSettings settings)
+            public void CalculatePrecursors(SpectrumNodeSelection selection, SrmSettings settings, bool prosit)
             {
                 if (ReferenceEquals(_treeNode, selection.SelectedTreeNode) && ReferenceEquals(_settings, settings))
                     return;
@@ -1063,7 +1064,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (selection.NodeTranGroup != null)
                     {
-                        if (selection.NodeTranGroup.HasLibInfo)
+                        if (selection.NodeTranGroup.HasLibInfo || prosit)
                             precursors.Add(new Precursor(selection.SelectedTreeNode, selection.NodePep.Peptide,
                                 selection.NodePep.SourceUnmodifiedTarget, selection.NodePep.SourceExplicitMods, selection.NodeTranGroup));
                     }
@@ -1072,16 +1073,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         precursors.AddRange((
                             from peptide in selection.NodePep != null ? new[] { selection.NodePep } : selection.NodePepGroup.Peptides
                             from precursor in peptide.TransitionGroups
-                            where precursor.HasLibInfo
+                            where precursor.HasLibInfo || prosit
                             select new Precursor(selection.SelectedTreeNode, peptide.Peptide,
                                 peptide.SourceUnmodifiedTarget,
                                 peptide.SourceExplicitMods, precursor)).Take(limit));
                     }
                 }
-
-                // TODO: Only allow single precursors until the spectra loading performance issue is resolved.
-                if (precursors.Count > 1)
-                    precursors.Clear();
 
                 UpdatePrecursors(precursors, selection.SelectedTreeNode, settings);
             }
@@ -1092,281 +1089,105 @@ namespace pwiz.Skyline.Controls.Graphs
                 _treeNode = treeNode;
                 _settings = settings;
 
-                var helper = new SpectrumHelper(settings, precursors);
+                // Showing redundant spectra is only supported for full-scan filtering when
+                // the document has results files imported.
+                var getRedundant = settings != null && settings.HasResults &&
+                                   (settings.TransitionSettings.FullScan.IsEnabled ||
+                                    settings.PeptideSettings.Libraries.HasMidasLibrary);
 
-                while (helper.Next())
+                var matchedFiles = new Dictionary<MsDataFileUri, ChromSetFileMatch>();
+
+                var redundantSpectra = new List<SpectrumDisplayInfo>();
+                var replicateFiles = new Dictionary<string, HashSet<MsDataFileUri>>();
+
+                foreach (var precursor in precursors ?? Array.Empty<Precursor>())
                 {
-                    foreach (var lib in settings.PeptideSettings.Libraries.Libraries)
+                    var target = precursor.LookupTarget;
+                    var mods = precursor.LookupMods;
+                    var docNode = precursor.DocNode;
+                    var peptide = docNode.Peptide;
+                    var adduct = docNode.PrecursorAdduct;
+                    var labelType = docNode.LabelType;
+
+                    redundantSpectra.Clear();
+                    replicateFiles.Clear();
+
+                    foreach (var lib in settings.PeptideSettings.Libraries.Libraries.Where(lib => lib != null))
                     {
-                        foreach (var typedSeq in helper.TypedSequences())
+                        var blib = lib as BiblioSpecLiteLibrary;
+
+                        // Add best spectra
+                        var lazyInfosBest = new List<SpectrumInfoLazy>();
+                        foreach (var typedSeq in settings.GetTypedSequences(target, mods, adduct))
                         {
                             var libKey = typedSeq.ModifiedSequence.GetLibKey(typedSeq.Adduct);
-                            if (lib.Contains(libKey))
+                            if (blib != null)
                             {
-                                helper.Add(new SpectrumDisplayInfo(
-                                    new SpectrumHelper.SpectrumInfoLazy(lib, libKey, typedSeq.LabelType),
-                                    helper.DocNode));
+                                if (lib.Contains(libKey))
+                                {
+                                    var info = new SpectrumInfoLazy(lib, libKey, typedSeq.LabelType);
+                                    precursor.Spectra.Add(new SpectrumDisplayInfo(info, docNode));
+                                    lazyInfosBest.Add(info);
+                                }
+                            }
+                            else
+                            {
+                                // With other library formats, we don't know how many best spectra there will be.
+                                precursor.Spectra.AddRange(lib
+                                    .GetSpectra(libKey, typedSeq.LabelType, LibraryRedundancy.best)
+                                    .Select(info => new SpectrumDisplayInfo(info, docNode)));
                             }
                         }
 
-                        if (!helper.GetRedundant || (lib is BiblioSpecLiteLibrary blib && !blib.HasRedundantConnection))
+                        if (!getRedundant || (blib != null && !blib.HasRedundantConnection))
                             continue;
 
-                        var redundantLibKey = helper.RedundantLibKey();
+                        // Add redundant spectra
+                        var redundantLibKey = !peptide.IsCustomMolecule
+                            ? new LibKey(settings.GetModifiedSequence(target, labelType, mods), adduct)
+                            : new LibKey(peptide.CustomMolecule.PrimaryEquivalenceKey,
+                                settings.GetModifiedAdduct(adduct, peptide.CustomMolecule.UnlabeledFormula, labelType, mods)); // TODO that should be a formula
 
                         foreach (var path in lib.LibraryFiles.FilePaths.Select(MsDataFileUri.Parse))
                         {
-                            if (helper.TryGetMatchingFile(path, out var match) &&
-                                lib.TryGetRetentionTimes(redundantLibKey, path, out var rts))
+                            if (!matchedFiles.TryGetValue(path, out var fileMatch))
                             {
-                                foreach (var rt in rts)
-                                    helper.AddRedundant(match,
-                                        new SpectrumHelper.SpectrumInfoLazy(lib, redundantLibKey, helper.LabelType, path, rt),
-                                        rt);
+                                fileMatch = settings.MeasuredResults.FindMatchingMSDataFile(path);
+                                matchedFiles.Add(path, fileMatch);
                             }
-                        }
-                    }
-                }
-            }
 
-            private class SpectrumHelper
-            {
-                private SrmSettings Settings { get; }
+                            if (fileMatch == null || !lib.TryGetRetentionTimes(redundantLibKey, path, out var rts))
+                                continue;
 
-                // Showing redundant spectra is only supported for full-scan filtering when
-                // the document has results files imported.
-                public bool GetRedundant => Settings != null && Settings.HasResults &&
-                                            (Settings.TransitionSettings.FullScan.IsEnabled ||
-                                             Settings.PeptideSettings.Libraries.HasMidasLibrary);
-
-                private ICollection<Precursor> Precursors { get; }
-                private int PrecursorIndex { get; set; }
-                private Precursor Precursor { get; set; }
-                private Target Target => Precursor?.LookupTarget;
-                private ExplicitMods Mods => Precursor?.LookupMods;
-                public TransitionGroupDocNode DocNode => Precursor?.DocNode;
-                private Adduct Adduct => DocNode?.PrecursorAdduct;
-                public IsotopeLabelType LabelType => DocNode?.LabelType;
-
-                private Dictionary<MsDataFileUri, ChromSetFileMatch> MatchedFiles { get; }
-                private List<SpectrumDisplayInfo> SpectraRedundant { get; }
-                private Dictionary<string, HashSet<MsDataFileUri>> ReplicateFiles { get; }
-
-                public SpectrumHelper(SrmSettings settings, ICollection<Precursor> precursors)
-                {
-                    Settings = settings;
-
-                    Precursors = precursors ?? Array.Empty<Precursor>();
-                    PrecursorIndex = -1;
-
-                    MatchedFiles = new Dictionary<MsDataFileUri, ChromSetFileMatch>();
-                    SpectraRedundant = new List<SpectrumDisplayInfo>();
-                    ReplicateFiles = new Dictionary<string, HashSet<MsDataFileUri>>();
-                }
-
-                public bool Next()
-                {
-                    ProcessRedundantSpectra();
-
-                    PrecursorIndex++;
-                    if (PrecursorIndex >= Precursors.Count)
-                        return false;
-
-                    Precursor = Precursors.ElementAt(PrecursorIndex);
-
-                    SpectraRedundant.Clear();
-                    ReplicateFiles.Clear();
-                    return true;
-                }
-
-                public IEnumerable<SrmSettings.TypedSequence> TypedSequences()
-                {
-                    return Settings.GetTypedSequences(Target, Mods, DocNode.PrecursorAdduct);
-                }
-
-                public LibKey RedundantLibKey()
-                {
-                    var pep = DocNode.Peptide;
-                    if (!pep.IsCustomMolecule)
-                    {
-                        var sequenceMod = Settings.GetModifiedSequence(Target, LabelType, Mods);
-                        return new LibKey(sequenceMod, Adduct);
-                    }
-
-                    // For small molecules, label is in the adduct
-                    var molecule = pep.CustomMolecule;
-                    return new LibKey(molecule.PrimaryEquivalenceKey,
-                        Settings.GetModifiedAdduct(Adduct, molecule.UnlabeledFormula, LabelType, Mods)); // TODO that should be a formula
-                }
-
-                public bool TryGetMatchingFile(MsDataFileUri file, out ChromSetFileMatch fileMatch)
-                {
-                    if (!MatchedFiles.TryGetValue(file, out fileMatch))
-                    {
-                        fileMatch = Settings.MeasuredResults.FindMatchingMSDataFile(file);
-                        MatchedFiles.Add(file, fileMatch);
-                    }
-                    return fileMatch != null;
-                }
-
-                private void Add(IEnumerable<SpectrumDisplayInfo> infos)
-                {
-                    Precursor.Spectra.AddRange(infos);
-                }
-
-                public void Add(SpectrumDisplayInfo info)
-                {
-                    Precursor.Spectra.Add(info);
-                }
-
-                public void AddRedundant(ChromSetFileMatch fileMatch, SpectrumInfo info, double? rt)
-                {
-                    var replicateName = fileMatch.Chromatograms.Name;
-                    if (!ReplicateFiles.TryGetValue(replicateName, out var setFiles))
-                    {
-                        setFiles = new HashSet<MsDataFileUri>();
-                        ReplicateFiles.Add(replicateName, setFiles);
-                    }
-                    setFiles.Add(fileMatch.FilePath);
-                    SpectraRedundant.Add(new SpectrumDisplayInfo(info, DocNode, replicateName, fileMatch.FilePath,
-                        fileMatch.FileOrder, rt, false));
-                }
-
-                private void ProcessRedundantSpectra()
-                {
-                    if (!SpectraRedundant.Any())
-                        return;
-
-                    foreach (var spectrum in SpectraRedundant)
-                    {
-                        var replicateName = spectrum.ReplicateName;
-
-                        // Determine if replicate name is sufficient to uniquely identify the file
-                        if (replicateName != null && ReplicateFiles[replicateName].Count <= 1)
-                            spectrum.IsReplicateUnique = true;
-
-                        // Update best spectrum
-                        if (spectrum.IsBest)
-                        {
-                            var iBest = Precursor.Spectra.IndexOf(s =>
-                                Equals(s.Name, spectrum.Name) &&
-                                Equals(s.LabelType, spectrum.LabelType));
-                            if (iBest != -1)
+                            foreach (var rt in rts)
                             {
-                                Precursor.Spectra[iBest] = new SpectrumDisplayInfo(
-                                    Precursor.Spectra[iBest].SpectrumInfo, DocNode, replicateName, spectrum.FilePath, 0,
-                                    spectrum.RetentionTime, true);
-                            }
-                        }
-                    }
-                    
-                    SpectraRedundant.Sort();
-                    Add(SpectraRedundant);
-                }
-
-                public class SpectrumInfoLazy : SpectrumInfo
-                {
-                    private Library Library { get; }
-                    private LibKey LibKey { get; }
-                    private MsDataFileUri Path { get; }
-                    private double? RetentionTime { get; }
-
-                    private bool IsLoaded { get; set; }
-
-                    public SpectrumInfoLazy(Library lib, LibKey libKey, IsotopeLabelType labelType,
-                        MsDataFileUri path = null, double? rt = null) : base(labelType, !rt.HasValue)
-                    {
-                        Library = lib;
-                        LibKey = libKey;
-                        Path = path;
-                        RetentionTime = rt;
-                        IsLoaded = false;
-                    }
-
-                    private void RequireLoaded()
-                    {
-                        if (IsLoaded)
-                            return;
-
-                        var spectra = Library.GetSpectra(LibKey, LabelType,
-                            IsBest ? LibraryRedundancy.best : LibraryRedundancy.all).ToArray();
-
-                        if (Path != null)
-                        {
-                            spectra = spectra.Where(s => Equals(Path.GetFilePath(), s.FilePath)).ToArray();
-                        }
-
-                        var match = spectra.FirstOrDefault();
-                        if (RetentionTime.HasValue)
-                        {
-                            var closest = double.MaxValue;
-                            foreach (var spectrum in spectra.Where(s => s.RetentionTime.HasValue))
-                            {
-                                var diff = Math.Abs(RetentionTime.Value - spectrum.RetentionTime.Value);
-                                if (diff < closest)
+                                var replicateName = fileMatch.Chromatograms.Name;
+                                if (!replicateFiles.TryGetValue(replicateName, out var setFiles))
                                 {
-                                    closest = diff;
-                                    match = spectrum;
+                                    setFiles = new HashSet<MsDataFileUri>();
+                                    replicateFiles.Add(replicateName, setFiles);
                                 }
+                                setFiles.Add(fileMatch.FilePath);
+
+                                var info = new SpectrumInfoLazy(lib, redundantLibKey, labelType, path, rt);
+                                redundantSpectra.Add(new SpectrumDisplayInfo(info, docNode, replicateName, fileMatch.FilePath,
+                                    fileMatch.FileOrder, rt));
                             }
-
-                            if (closest >= 0.1)
-                                match = null;
                         }
 
-                        IsLoaded = true;
-                        _spectrumPeaksInfo = match?.SpectrumPeaksInfo;
-                        _chromatogramData = match?.ChromatogramData;
-                    }
-
-                    private bool Equals(SpectrumInfoLazy other)
-                    {
-                        return Equals(Library, other.Library) &&
-                               Equals(LibKey, other.LibKey) &&
-                               Equals(RetentionTime, other.RetentionTime) &&
-                               base.Equals(other);
-                    }
-
-                    public override bool Equals(object obj)
-                    {
-                        if (ReferenceEquals(null, obj)) return false;
-                        if (ReferenceEquals(this, obj)) return true;
-                        if (obj.GetType() != GetType()) return false;
-                        return Equals((SpectrumInfoLazy)obj);
-                    }
-
-                    public override int GetHashCode()
-                    {
-                        unchecked
+                        foreach (var spectrum in redundantSpectra)
                         {
-                            var hashCode = base.GetHashCode();
-                            hashCode = (hashCode * 397) ^ Library.GetHashCode();
-                            hashCode = (hashCode * 397) ^ LibKey.GetHashCode();
-                            hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
-                            return hashCode;
+                            // Determine if replicate name is sufficient to uniquely identify the file
+                            var replicateName = spectrum.ReplicateName;
+                            if (replicateName != null && replicateFiles[replicateName].Count <= 1)
+                                spectrum.IsReplicateUnique = true;
                         }
-                    }
 
-                    public override string Name => Library.Name;
+                        var lazyInfosRedundant = redundantSpectra.Select(s => (SpectrumInfoLazy)s.SpectrumInfo).ToArray();
+                        SpectrumInfoLazy.Group(lazyInfosBest.Concat(lazyInfosRedundant));
 
-                    private SpectrumPeaksInfo _spectrumPeaksInfo;
-                    public override SpectrumPeaksInfo SpectrumPeaksInfo
-                    {
-                        get
-                        {
-                            RequireLoaded();
-                            return _spectrumPeaksInfo;
-                        }
-                    }
-
-                    private LibraryChromGroup _chromatogramData;
-                    public override LibraryChromGroup ChromatogramData
-                    {
-                        get
-                        {
-                            RequireLoaded();
-                            return _chromatogramData;
-                        }
+                        redundantSpectra.Sort();
+                        precursor.Spectra.AddRange(redundantSpectra);
                     }
                 }
             }
@@ -1406,7 +1227,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         throw prositEx;
                 }
 
-                _updateManager.CalculatePrecursors(selection, settings);
+                _updateManager.CalculatePrecursors(selection, settings, usingProsit);
                 if (Precursors == null || (!Precursors.Any(p => p.DocNode.HasLibInfo) && !libraries.HasMidasLibrary && !usingProsit))
                 {
                     _updateManager.ClearPrecursors();
@@ -1417,6 +1238,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Try to load a list of spectra matching the criteria for
                     // the current node group.
                     UpdateToolbar();
+
+                    // Need this to make sure we still update the toolbar if the prosit prediction throws
+                    SpectrumDisplayInfo spectrum = null;
+                    PrositSpectrum = null;
 
                     if (usingProsit && !Settings.Default.LibMatchMirror && prositEx == null)
                     {
@@ -2007,19 +1832,19 @@ namespace pwiz.Skyline.Controls.Graphs
             SpectrumInfo = spectrumInfo;
             Precursor = precursor;
             IsBest = true;
-            RetentionTime = retentionTime;
+            _retentionTime = retentionTime;
         }
 
         public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, TransitionGroupDocNode precursor, string replicateName,
-            MsDataFileUri filePath, int fileOrder, double? retentionTime, bool isBest)
+            MsDataFileUri filePath, int fileOrder, double? retentionTime)
         {
             SpectrumInfo = spectrumInfo;
             Precursor = precursor;
             ReplicateName = replicateName;
-            FilePath = filePath;
+            _filePath = filePath;
             FileOrder = fileOrder;
-            RetentionTime = retentionTime;
-            IsBest = isBest;
+            _retentionTime = retentionTime;
+            IsBest = false;
         }
 
         public SpectrumInfo SpectrumInfo { get; }
@@ -2028,10 +1853,43 @@ namespace pwiz.Skyline.Controls.Graphs
         public IsotopeLabelType LabelType { get { return SpectrumInfo.LabelType; } }
         public string ReplicateName { get; private set; }
         public bool IsReplicateUnique { get; set; }
-        public MsDataFileUri FilePath { get; private set; }
         public string FileName { get { return FilePath.GetFileName(); } }
         public int FileOrder { get; private set; }
-        public double? RetentionTime { get; private set; }
+
+        private readonly MsDataFileUri _filePath;
+        public MsDataFileUri FilePath
+        {
+            get
+            {
+                if (_filePath != null)
+                {
+                    return _filePath;
+                }
+                else if (SpectrumInfo is SpectrumInfoLazy info)
+                {
+                    return info.Path;
+                }
+                return null;
+            }
+        }
+
+        private readonly double? _retentionTime;
+        public double? RetentionTime
+        {
+            get
+            {
+                if (_retentionTime.HasValue)
+                {
+                    return _retentionTime;
+                }
+                else if (SpectrumInfo is SpectrumInfoLazy info)
+                {
+                    return info.RetentionTime;
+                }
+                return null;
+            }
+        }
+
         public bool IsBest { get; private set; }
 
         public string Identity { get { return ToString(); } }
@@ -2066,6 +1924,193 @@ namespace pwiz.Skyline.Controls.Graphs
             if (IsReplicateUnique)
                 return string.Format(@"{0} ({1:F02} min)", ReplicateName, RetentionTime);
             return string.Format(@"{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);
+        }
+    }
+
+    public class SpectrumInfoLazy : SpectrumInfo
+    {
+        private Library Library { get; }
+        private LibKey LibKey { get; }
+
+        private MsDataFileUri _path;
+        public MsDataFileUri Path
+        {
+            get
+            {
+                if (_path != null)
+                    return _path;
+                RequireLoaded();
+                return _path;
+            }
+        }
+
+        private double? _retentionTime;
+        public double? RetentionTime
+        {
+            get
+            {
+                if (_retentionTime.HasValue)
+                    return _retentionTime;
+                RequireLoaded();
+                return _retentionTime;
+            }
+        }
+
+        private bool IsLoaded { get; set; }
+
+        private ICollection<SpectrumInfoLazy> _grouped;
+        private IEnumerable<SpectrumInfoLazy> Grouped => _grouped ?? new[] { this };
+
+        public SpectrumInfoLazy(Library lib, LibKey libKey, IsotopeLabelType labelType,
+            MsDataFileUri path = null, double? rt = null) : base(labelType, !rt.HasValue)
+        {
+            Library = lib;
+            LibKey = libKey;
+            _path = path;
+            _retentionTime = rt;
+            IsLoaded = false;
+        }
+
+        public static void Group(IEnumerable<SpectrumInfoLazy> infos)
+        {
+            var groups = new List<List<SpectrumInfoLazy>>();
+
+            foreach (var info in infos)
+            {
+                var group = groups.FirstOrDefault(g =>
+                    ReferenceEquals(g[0].Library, info.Library) &&
+                    Equals(g[0].LibKey, info.LibKey) &&
+                    Equals(g[0].LabelType, info.LabelType));
+
+                if (group == null)
+                {
+                    group = new List<SpectrumInfoLazy>();
+                    groups.Add(group);
+                }
+
+                group.Add(info);
+            }
+
+            foreach (var group in groups)
+            {
+                foreach (var info in group)
+                {
+                    info._grouped = group;
+                }
+            }
+        }
+
+        public void RequireLoaded()
+        {
+            if (IsLoaded)
+                return;
+
+            var loadRedundancy = IsBest ? LibraryRedundancy.best : LibraryRedundancy.all;
+            var spectra = Library.GetSpectra(LibKey, LabelType, loadRedundancy).ToArray();
+
+            foreach (var spectrumInfo in Grouped)
+                spectrumInfo.Load(spectra, loadRedundancy == LibraryRedundancy.best && !ReferenceEquals(this, spectrumInfo));
+        }
+
+        private void Load(SpectrumInfoLibrary[] spectra, bool allowNoMatch)
+        {
+            if (IsLoaded)
+                return;
+
+            var spectraThis = _path == null
+                ? spectra
+                : spectra.Where(s => Equals(_path.GetFilePath(), s.FilePath)).ToArray();
+
+            var match = spectraThis.FirstOrDefault();
+            if (_retentionTime.HasValue)
+            {
+                // CONSIDER: Binary search to find right spectrum?
+                var closest = double.MaxValue;
+                foreach (var spectrum in spectraThis.Where(s => s.RetentionTime.HasValue))
+                {
+                    var diff = Math.Abs(_retentionTime.Value - spectrum.RetentionTime.Value);
+                    if (diff < closest)
+                    {
+                        closest = diff;
+                        match = spectrum;
+                    }
+                }
+
+                if (closest >= 0.1)
+                    match = null;
+            }
+
+            // May not have loaded this spectrum, if we didn't query the library for non-best spectra.
+            if (match == null && allowNoMatch)
+                return;
+
+            if (match?.RetentionTime != null)
+                _retentionTime = match.RetentionTime;
+
+            if (_path == null && match?.FilePath != null)
+                _path = MsDataFileUri.Parse(match.FilePath);
+
+            IsLoaded = true;
+            _spectrumPeaksInfo = match?.SpectrumPeaksInfo;
+            _chromatogramData = match?.ChromatogramData;
+        }
+
+        private bool Equals(SpectrumInfoLazy other)
+        {
+            return Equals(Library, other.Library) &&
+                   Equals(LibKey, other.LibKey) &&
+                   Equals(_path, other._path) &&
+                   Equals(_retentionTime, other._retentionTime) &&
+                   base.Equals(other);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((SpectrumInfoLazy)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = base.GetHashCode();
+                hashCode = (hashCode * 397) ^ Library.GetHashCode();
+                hashCode = (hashCode * 397) ^ LibKey.GetHashCode();
+                hashCode = (hashCode * 397) ^ (_path != null ? _path.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ _retentionTime.GetHashCode();
+                return hashCode;
+            }
+        }
+
+        public override string Name => Library.Name;
+
+        private SpectrumPeaksInfo _spectrumPeaksInfo;
+        public override SpectrumPeaksInfo SpectrumPeaksInfo
+        {
+            get
+            {
+                RequireLoaded();
+                return _spectrumPeaksInfo;
+            }
+        }
+
+        private LibraryChromGroup _chromatogramData;
+        public override LibraryChromGroup ChromatogramData
+        {
+            get
+            {
+                RequireLoaded();
+                return _chromatogramData;
+            }
+        }
+
+        public override string ToString()
+        {
+            // For debugging
+            return @$"{Library.Name}: {LibKey} {LabelType}";
         }
     }
 

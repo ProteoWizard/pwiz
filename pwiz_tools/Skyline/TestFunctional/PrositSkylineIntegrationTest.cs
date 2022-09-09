@@ -98,15 +98,70 @@ namespace pwiz.SkylineTestFunctional
             {
                 "PING"
             },
-            new[] {0.0f});
+            new[] { 0.0f });
 
-        private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[] {
+        private static List<PrositQuery> QUERIES = new List<PrositQuery>(new PrositQuery[]
+        {
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
+                    new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2800f, 2)
+                },
+                new[]
+                {
+                    new[]
+                    {
+                        00.6462f, 00.0000f, 00.0052f, 00.0000f, 00.0000f, 00.0000f,
+                        00.0481f, 00.0000f, 00.0190f, 00.2609f, 00.0000f, 00.0000f,
+                        00.0031f, 00.0000f, 00.0860f, 00.2766f, 00.0000f, 00.0000f,
+                        00.0606f, 00.0000f, 00.1441f, 00.0000f, 00.0000f, 00.0000f,
+                        00.0341f, 00.0000f, 00.0769f, 00.3538f, 00.0000f, 00.0000f,
+                        00.1313f, 00.0000f, 00.0446f, 00.0000f, 00.0000f, 00.0000f,
+                        00.1047f, 00.0000f, 00.0000f, 00.0623f, 00.0000f, 00.0000f,
+                        00.1203f, 00.0000f, 00.0002f, 00.0829f, 00.0000f, 00.0000f,
+                        00.0054f, 00.0000f, 00.0000f, 00.1518f, 00.0179f, 00.0000f,
+                        01.2122f, 00.0996f, 00.0856f, 00.0864f, 00.0159f, 00.0086f,
+                        00.0000f, 00.0000f, 00.0968f, 00.1349f, 00.0193f, 00.0000f,
+                        00.0112f, 00.4437f, 00.0848f, 00.1889f, 00.0344f, 00.0000f,
+                        00.0000f, 00.0772f, 00.0844f, 00.0653f, 00.0163f, 00.0000f,
+                        00.0000f, 00.0685f, 00.0959f, 00.2330f, 00.0000f, 00.0000f,
+                        00.0081f, 00.2222f, 00.1793f, 00.2075f, 00.0033f, 00.0094f,
+                        00.0757f, 00.2487f, 00.1889f, 00.0083f, 00.0066f, 00.0154f,
+                        00.0640f, 00.2320f, 00.1659f, 00.0741f, 00.0029f, 00.0182f,
+                        00.0674f, 00.1956f, 00.2280f, 00.0000f, 00.0226f, 00.0201f,
+                        00.0762f, 00.1435f, 00.2334f, 00.0000f, 00.0000f, 00.0215f,
+                        00.0928f, 00.1372f, 00.1918f, 00.0000f, 00.0000f, 00.0175f,
+                        00.1501f, 00.1331f, 00.2328f, 00.0000f, 00.0075f, 00.0112f,
+                        00.2064f, 00.1221f, 00.2546f, 00.0183f, 00.0167f, 00.0000f,
+                        00.1455f, 00.0972f, 00.1552f, 00.0367f, 00.0000f, 00.0000f,
+                        00.4986f, 00.1516f, 00.0506f, 00.1853f, 00.0000f, 00.0000f,
+                        00.3394f, 00.1697f, 00.0730f, 00.0744f, 00.0160f, 00.0000f,
+                        00.3572f, 00.1354f, 00.0830f, 00.1141f, 00.0000f, 00.0000f,
+                        00.3186f, 00.1134f, 00.0722f, 00.0915f, 00.0000f, 00.0000f,
+                        00.1953f, 00.1130f, 00.2348f, 00.0758f, 00.0000f, 00.0000f,
+                        00.0888f, 00.1775f, 00.3485f, 00.1778f, 00.0502f, 00.0720f
+                    }
+                }
+            ),
+            new PrositRetentionTimeQuery(
+                new[]
+                {
+                    "CSLPRPWALTFSYGR"
+                },
+                new[]
+                {
+                    1.2758f
+                }
+            ),
+            new PrositIntensityQuery(
+                new[]
+                {
                     new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2500f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.5830f, 00.0000f, 00.0187f, 00.0000f, 00.0000f, 00.0000f,
                         00.0216f, 00.0000f, 00.0255f, 00.1427f, 00.0000f, 00.0000f,
                         00.0100f, 00.0000f, 00.0913f, 00.2454f, 00.0000f, 00.0000f,
@@ -140,19 +195,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "CSLPRPWALTFSYGR"
                 },
-                new[] {
+                new[]
+                {
                     1.2758f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2600f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.6077f, 00.0000f, 00.0163f, 00.0000f, 00.0000f, 00.0000f,
                         00.0282f, 00.0000f, 00.0251f, 00.1801f, 00.0000f, 00.0000f,
                         00.0023f, 00.0000f, 00.0929f, 00.2566f, 00.0000f, 00.0000f,
@@ -186,19 +246,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "CSLPRPWALTFSYGR"
                 },
-                new[] {
+                new[]
+                {
                     1.2758f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("LGGEEVSVACK", 0.2600f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.1251f, 00.0000f, 00.0043f, 00.0000f, 00.0000f, 00.0000f,
                         00.3919f, 00.0000f, 00.0081f, 00.5678f, 00.0000f, 00.0000f,
                         00.6387f, 00.0000f, 00.0170f, 00.2681f, 00.0000f, 00.0000f,
@@ -232,19 +297,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "LGGEEVSVACK"
                 },
-                new[] {
+                new[]
+                {
                     -0.6807f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("LGGEEVSVACK", 0.2700f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.1257f, 00.0000f, 00.0040f, 00.0000f, 00.0000f, 00.0000f,
                         00.4191f, 00.0000f, 00.0073f, 00.5884f, 00.0000f, 00.0000f,
                         00.6531f, 00.0000f, 00.0098f, 00.2856f, 00.0000f, 00.0000f,
@@ -278,19 +348,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "LGGEEVSVACK"
                 },
-                new[] {
+                new[]
+                {
                     -0.6807f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2222f, 00.0000f, 00.0216f, 00.0000f, 00.0000f, 00.0000f,
                         00.5488f, 00.0000f, 00.0027f, 00.0341f, 00.0000f, 00.0000f,
                         00.4643f, 00.0000f, 00.0232f, 00.1653f, 00.0000f, 00.0000f,
@@ -324,19 +399,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2228f, 00.0000f, 00.0218f, 00.0000f, 00.0000f, 00.0000f,
                         00.5515f, 00.0000f, 00.0027f, 00.0427f, 00.0000f, 00.0000f,
                         00.4695f, 00.0000f, 00.0186f, 00.1676f, 00.0000f, 00.0000f,
@@ -370,19 +450,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2800f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2001f, 00.0000f, 00.0075f, 00.0000f, 00.0000f, 00.0000f,
                         00.6741f, 00.0000f, 00.0045f, 00.3808f, 00.0000f, 00.0000f,
                         00.4529f, 00.0000f, 00.0027f, 00.3228f, 00.0000f, 00.0000f,
@@ -416,19 +501,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "TGTNLM[Oxidation (M)]DFLSR"
                 },
-                new[] {
+                new[]
+                {
                     0.7566f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2900f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2269f, 00.0000f, 00.0046f, 00.0000f, 00.0000f, 00.0000f,
                         00.6578f, 00.0000f, 00.0000f, 00.4145f, 00.0000f, 00.0000f,
                         00.4566f, 00.0000f, 00.0000f, 00.3164f, 00.0000f, 00.0000f,
@@ -462,19 +552,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "TGTNLM[Oxidation (M)]DFLSR"
                 },
-                new[] {
+                new[]
+                {
                     0.7566f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2500f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.5830f, 00.0000f, 00.0187f, 00.0000f, 00.0000f, 00.0000f,
                         00.0216f, 00.0000f, 00.0255f, 00.1427f, 00.0000f, 00.0000f,
                         00.0100f, 00.0000f, 00.0913f, 00.2454f, 00.0000f, 00.0000f,
@@ -508,19 +603,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "CSLPRPWALTFSYGR"
                 },
-                new[] {
+                new[]
+                {
                     1.2758f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("CSLPRPWALTFSYGR", 0.2600f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.6077f, 00.0000f, 00.0163f, 00.0000f, 00.0000f, 00.0000f,
                         00.0282f, 00.0000f, 00.0251f, 00.1801f, 00.0000f, 00.0000f,
                         00.0023f, 00.0000f, 00.0929f, 00.2566f, 00.0000f, 00.0000f,
@@ -554,19 +654,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "CSLPRPWALTFSYGR"
                 },
-                new[] {
+                new[]
+                {
                     1.2758f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("LGGEEVSVACK", 0.2600f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.1251f, 00.0000f, 00.0043f, 00.0000f, 00.0000f, 00.0000f,
                         00.3919f, 00.0000f, 00.0081f, 00.5678f, 00.0000f, 00.0000f,
                         00.6387f, 00.0000f, 00.0170f, 00.2681f, 00.0000f, 00.0000f,
@@ -600,19 +705,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "LGGEEVSVACK"
                 },
-                new[] {
+                new[]
+                {
                     -0.6807f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("LGGEEVSVACK", 0.2700f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.1257f, 00.0000f, 00.0040f, 00.0000f, 00.0000f, 00.0000f,
                         00.4191f, 00.0000f, 00.0073f, 00.5884f, 00.0000f, 00.0000f,
                         00.6531f, 00.0000f, 00.0098f, 00.2856f, 00.0000f, 00.0000f,
@@ -646,19 +756,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "LGGEEVSVACK"
                 },
-                new[] {
+                new[]
+                {
                     -0.6807f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2222f, 00.0000f, 00.0216f, 00.0000f, 00.0000f, 00.0000f,
                         00.5488f, 00.0000f, 00.0027f, 00.0341f, 00.0000f, 00.0000f,
                         00.4643f, 00.0000f, 00.0232f, 00.1653f, 00.0000f, 00.0000f,
@@ -692,19 +807,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2228f, 00.0000f, 00.0218f, 00.0000f, 00.0000f, 00.0000f,
                         00.5515f, 00.0000f, 00.0027f, 00.0427f, 00.0000f, 00.0000f,
                         00.4695f, 00.0000f, 00.0186f, 00.1676f, 00.0000f, 00.0000f,
@@ -738,19 +858,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2800f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2228f, 00.0000f, 00.0218f, 00.0000f, 00.0000f, 00.0000f,
                         00.5515f, 00.0000f, 00.0027f, 00.0427f, 00.0000f, 00.0000f,
                         00.4695f, 00.0000f, 00.0186f, 00.1676f, 00.0000f, 00.0000f,
@@ -784,19 +909,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2900f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2425f, 00.0000f, 00.0244f, 00.0000f, 00.0000f, 00.0000f,
                         00.5506f, 00.0000f, 00.0000f, 00.0501f, 00.0000f, 00.0000f,
                         00.4761f, 00.0000f, 00.0034f, 00.1620f, 00.0000f, 00.0000f,
@@ -830,19 +960,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.2900f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2269f, 00.0000f, 00.0046f, 00.0000f, 00.0000f, 00.0000f,
                         00.6578f, 00.0000f, 00.0000f, 00.4145f, 00.0000f, 00.0000f,
                         00.4566f, 00.0000f, 00.0000f, 00.3164f, 00.0000f, 00.0000f,
@@ -876,19 +1011,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "TGTNLM[Oxidation (M)]DFLSR"
                 },
-                new[] {
+                new[]
+                {
                     0.7566f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3000f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2502f, 00.0000f, 00.0027f, 00.0000f, 00.0000f, 00.0000f,
                         00.6503f, 00.0000f, 00.0000f, 00.4567f, 00.0000f, 00.0000f,
                         00.4638f, 00.0000f, 00.0000f, 00.3079f, 00.0000f, 00.0000f,
@@ -922,19 +1062,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "TGTNLM[Oxidation (M)]DFLSR"
                 },
-                new[] {
+                new[]
+                {
                     0.7566f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("LGGEEVSVACK", 0.2700f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.1257f, 00.0000f, 00.0040f, 00.0000f, 00.0000f, 00.0000f,
                         00.4191f, 00.0000f, 00.0073f, 00.5884f, 00.0000f, 00.0000f,
                         00.6531f, 00.0000f, 00.0098f, 00.2856f, 00.0000f, 00.0000f,
@@ -968,19 +1113,24 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "LGGEEVSVACK"
                 },
-                new[] {
+                new[]
+                {
                     -0.6807f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.2700f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.2222f, 00.0000f, 00.0216f, 00.0000f, 00.0000f, 00.0000f,
                         00.5488f, 00.0000f, 00.0027f, 00.0341f, 00.0000f, 00.0000f,
                         00.4643f, 00.0000f, 00.0232f, 00.1653f, 00.0000f, 00.0000f,
@@ -1014,23 +1164,28 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "GSYNLQDLLAQAK"
                 },
-                new[] {
+                new[]
+                {
                     1.2877f
                 }
             ),
             new PrositIntensityQuery(
-                new[] {
+                new[]
+                {
                     new PrositIntensityInput("CSLPRPWALTFSYGR", 0.3200f, 2),
                     new PrositIntensityInput("LGGEEVSVACK", 0.3200f, 2),
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
                     new PrositIntensityInput("GSYNLQDLLAQAK", 0.3200f, 2),
                     new PrositIntensityInput("TGTNLM[Oxidation (M)]DFLSR", 0.3200f, 2)
                 },
-                new[] {
-                    new[] {
+                new[]
+                {
+                    new[]
+                    {
                         00.7693f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
                         00.1020f, 00.0000f, 00.0090f, 00.4997f, 00.0000f, 00.0000f,
                         00.0556f, 00.0000f, 00.0549f, 00.3378f, 00.0000f, 00.0000f,
@@ -1060,7 +1215,9 @@ namespace pwiz.SkylineTestFunctional
                         00.1763f, 00.0352f, 00.1424f, 00.1103f, 00.0051f, 00.0000f,
                         00.1365f, 00.0398f, 00.1800f, 00.1396f, 00.0198f, 00.0000f,
                         00.3545f, 00.0992f, 00.1789f, 00.0327f, 00.0613f, 00.0315f
-                    },         new[] {
+                    },
+                    new[]
+                    {
                         00.1742f, 00.0000f, 00.0022f, 00.0000f, 00.0000f, 00.0017f,
                         00.7137f, 00.0000f, 00.0000f, 00.6339f, 00.0000f, 00.0000f,
                         00.8939f, 00.0000f, 00.0000f, 00.3521f, 00.0000f, 00.0000f,
@@ -1090,7 +1247,9 @@ namespace pwiz.SkylineTestFunctional
                         00.1623f, 00.0210f, 00.0000f, 00.0625f, 00.0417f, 00.0000f,
                         00.2765f, 00.0664f, 00.0000f, 00.0751f, 00.0613f, 00.0000f,
                         00.2680f, 00.1137f, 00.0901f, 00.0218f, 00.0685f, 00.0181f
-                    },         new[] {
+                    },
+                    new[]
+                    {
                         00.2843f, 00.0000f, 00.0172f, 00.0000f, 00.0000f, 00.0000f,
                         00.6344f, 00.0000f, 00.0000f, 00.0870f, 00.0000f, 00.0000f,
                         00.5449f, 00.0000f, 00.0000f, 00.1720f, 00.0000f, 00.0000f,
@@ -1120,7 +1279,9 @@ namespace pwiz.SkylineTestFunctional
                         00.0472f, 00.0087f, 00.0000f, 00.0561f, 00.0270f, 00.0000f,
                         00.1578f, 00.0208f, 00.0000f, 00.0493f, 00.0273f, 00.0000f,
                         00.2125f, 00.1077f, 00.0414f, 00.0028f, 00.0503f, 00.0000f
-                    },         new[] {
+                    },
+                    new[]
+                    {
                         00.2843f, 00.0000f, 00.0172f, 00.0000f, 00.0000f, 00.0000f,
                         00.6344f, 00.0000f, 00.0000f, 00.0870f, 00.0000f, 00.0000f,
                         00.5449f, 00.0000f, 00.0000f, 00.1720f, 00.0000f, 00.0000f,
@@ -1150,7 +1311,9 @@ namespace pwiz.SkylineTestFunctional
                         00.0472f, 00.0087f, 00.0000f, 00.0561f, 00.0270f, 00.0000f,
                         00.1578f, 00.0208f, 00.0000f, 00.0493f, 00.0273f, 00.0000f,
                         00.2125f, 00.1077f, 00.0414f, 00.0028f, 00.0503f, 00.0000f
-                    },         new[] {
+                    },
+                    new[]
+                    {
                         00.2941f, 00.0000f, 00.0000f, 00.0000f, 00.0000f, 00.0000f,
                         00.6894f, 00.0000f, 00.0000f, 00.5591f, 00.0000f, 00.0000f,
                         00.5015f, 00.0000f, 00.0000f, 00.3191f, 00.0000f, 00.0000f,
@@ -1184,13 +1347,15 @@ namespace pwiz.SkylineTestFunctional
                 }
             ),
             new PrositRetentionTimeQuery(
-                new[] {
+                new[]
+                {
                     "CSLPRPWALTFSYGR",
                     "LGGEEVSVACK",
                     "GSYNLQDLLAQAK",
                     "TGTNLM[Oxidation (M)]DFLSR"
                 },
-                new[] {
+                new[]
+                {
                     1.2758f,
                     -0.6807f,
                     1.2877f,
@@ -1483,18 +1648,6 @@ namespace pwiz.SkylineTestFunctional
         {
             var client = (FakePrositPredictionClient) PrositPredictionClient.Current;
 
-            // TODO: Remove this and uncomment the block below once multiple precursor selections can show spectra again.
-            // Selecting a protein should not make any predictions
-            SelectNode(SrmDocument.Level.MoleculeGroups, 0);
-            WaitForGraphs();
-            Assert.IsFalse(SkylineWindow.GraphSpectrum.HasSpectrum);
-            Assert.AreEqual(
-                Resources.UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable,
-                SkylineWindow.GraphSpectrum.GraphTitle);
-
-            var baseCE = 25;
-            Settings.Default.PrositNCE = baseCE;
-            /*
             var baseCE = 28;
             Assert.AreEqual(baseCE, Settings.Default.PrositNCE);
 
@@ -1503,7 +1656,6 @@ namespace pwiz.SkylineTestFunctional
             GraphSpectrum.SpectrumNodeSelection selection = null;
             RunUI(() => selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(SkylineWindow));
             WaitForPrositSpectrum(selection.NodePepGroup.Peptides.First().TransitionGroups.First(), baseCE);
-            */
 
             // Select several peptides and make sure they are displayed correctly
             TestPrositSinglePrecursorPredictions(client, SrmDocument.Level.Molecules, 0, 4);
