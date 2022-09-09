@@ -62,21 +62,23 @@ namespace pwiz.SkylineTest
             var neutralLoss = new FragmentLoss("H3PO4");
             var phosphoMultiLossMod = new StaticMod("Phospho Loss", "S, T, Y", null, false, "HPO3",
                 LabelAtoms.None, RelativeRT.Matching, null, null,
-                new[] { neutralLoss, neutralLoss.ChangeCharge(1), neutralLoss.ChangeCharge(2) });
+                new[] { neutralLoss, neutralLoss.ChangeCharge(2), neutralLoss.ChangeCharge(1) });
 
             // Only 1 extra precursor (charge 1) is expected from the neutral loss only case
             ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 12, false);
             // Now 2 extra precursors since both charged losses apply to a charge 3 precursor
             ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 13, false);
 
+            // Repeat with the losses reversed which should not matter
+            phosphoMultiLossMod = phosphoMultiLossMod.ChangeLosses(phosphoMultiLossMod.Losses.Reverse().ToArray());
+            ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 12, false);
+            ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 13, false);
+
             // Also try charged losses only
             phosphoMultiLossMod = phosphoMultiLossMod.ChangeLosses(
                 new[] { neutralLoss.ChangeCharge(1), neutralLoss.ChangeCharge(2) });
-            // Only 1 extra precursor (charge 1) is expected from the neutral loss only case
             ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 11, false);
-            // Now 2 extra precursors since both charged losses apply to a charge 3 precursor
             ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 12, false);
-
         }
 
         private static void ValidateNeutralLossTransitions(StaticMod lossMod, int precursorCharge, int expectedLosses, bool roundtrip)

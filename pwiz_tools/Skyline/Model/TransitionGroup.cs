@@ -729,12 +729,23 @@ namespace pwiz.Skyline.Model
                 HashSet<LossId> allLossMassCharges = null;
                 foreach (var losses in potentialLosses)
                 {
-                    var lossId = CalcTransitionLossesIds(type, cleavageOffset, massType, losses);
-                    if (lossId.Mass == 0 ||
-                        (firstLosses != null && Equals(GetLossId(type, firstLosses), lossId)) ||
-                        (allLossMassCharges != null && allLossMassCharges.Contains(lossId)))
-                    {
+                    var lossId = CalcTransitionLossesId(type, cleavageOffset, massType, losses);
+                    if (lossId.Mass == 0)
                         continue;
+                    if (firstLosses != null && Equals(GetLossId(type, firstLosses), lossId))
+                    {
+                        if (lossId.Charge > firstLosses.TotalCharge)
+                            continue;
+                        firstLosses = null;
+                    } 
+                    if (allLossMassCharges != null && allLossMassCharges.Contains(lossId))
+                    {
+                        int lossIndex = allLosses.IndexOf(l => Equals(GetLossId(type, l), lossId));
+                        Assume.AreNotEqual(-1, lossIndex); // Should be in there based on the ID match
+                        var currentLoss = allLosses[lossIndex];
+                        if (lossId.Charge > currentLoss.TotalCharge)
+                            continue;
+                        allLosses.RemoveAt(lossIndex);
                     }
 
                     var tranLosses = CalcTransitionLosses(type, cleavageOffset, massType, losses);
@@ -771,14 +782,22 @@ namespace pwiz.Skyline.Model
 
         private struct LossId
         {
+            public IonType IonType;
             public double Mass;
             public int Charge;
 
             #region Equality members
 
+            // The loss of the charge is only interesting to preserve separate from the mass in
+            // the case of the precursor, because it has a fixed starting charge. Whereas, fragment
+            // ions can lose charge during fragmentation no matter what the charge of the loss is,
+            // and all charges down to charge 1 are allowed for fragments. So, it really is only
+            // the mass of the loss that matters for fragment ions.
+
             public bool Equals(LossId other)
             {
-                return Mass.Equals(other.Mass) && Charge == other.Charge;
+                return Mass.Equals(other.Mass) && 
+                       (IonType != IonType.precursor || Charge == other.Charge);
             }
 
             public override bool Equals(object obj)
@@ -790,7 +809,7 @@ namespace pwiz.Skyline.Model
             {
                 unchecked
                 {
-                    return (Mass.GetHashCode() * 397) ^ Charge;
+                    return (Mass.GetHashCode() * 397) ^ (IonType == IonType.precursor ? Charge : 0);
                 }
             }
 
@@ -804,17 +823,7 @@ namespace pwiz.Skyline.Model
 
         private static LossId GetLossId(IonType type, double mass, int charge)
         {
-            var lossId = new LossId { Mass = mass };
-
-            // The loss of the charge is only interesting to preserve separate from the mass in
-            // the case of the precursor, because it has a fixed starting charge. Whereas, fragment
-            // ions can lose charge during fragmentation no matter what the charge of the loss is,
-            // and all charges down to charge 1 are allowed for fragments. So, it really is only
-            // the mass of the loss that matters for fragment ions.
-            if (type == IonType.precursor)
-                lossId.Charge = charge;
-
-            return lossId;
+            return new LossId { IonType = type, Mass = mass, Charge = charge};
         }
 
         /// <summary>
@@ -854,7 +863,7 @@ namespace pwiz.Skyline.Model
             return  new TransitionLosses(listLosses, massType);
         }
 
-        private static LossId CalcTransitionLossesIds(IonType type, int cleavageOffset,
+        private static LossId CalcTransitionLossesId(IonType type, int cleavageOffset,
             MassType massType, IList<ExplicitLoss> losses)
         {
             double mass = 0;
