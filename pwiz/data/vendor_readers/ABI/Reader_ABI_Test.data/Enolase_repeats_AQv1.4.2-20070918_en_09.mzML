@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="Enolase_repeats_AQv1.4.2-20070918_En_09" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.99" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,12 +9,12 @@
       <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
     </fileContent>
     <sourceFileList count="2">
-      <sourceFile id="WIFF" name="Enolase_repeats_AQv1.4.2.wiff" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data">
+      <sourceFile id="WIFF" name="Enolase_repeats_AQv1.4.2.wiff" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data">
         <cvParam cvRef="MS" accession="MS:1000770" name="WIFF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000562" name="ABI WIFF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="8f94673743de0a72e42ee690cb291f10a231ed49"/>
       </sourceFile>
-      <sourceFile id="WIFFSCAN" name="Enolase_repeats_AQv1.4.2.wiff.scan" location="file://C:\pwiz.git\pwiz\pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data">
+      <sourceFile id="WIFFSCAN" name="Enolase_repeats_AQv1.4.2.wiff.scan" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data">
         <cvParam cvRef="MS" accession="MS:1000770" name="WIFF nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000562" name="ABI WIFF format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="137217b608b6eb20cd6e0b06027874a2652ca3f3"/>
@@ -25,7 +25,7 @@
     <software id="Analyst" version="unknown">
       <cvParam cvRef="MS" accession="MS:1000551" name="Analyst" value=""/>
     </software>
-    <software id="pwiz_Reader_ABI" version="3.0.20071">
+    <software id="pwiz_Reader_ABI" version="3.0.22236">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -77,11 +77,11 @@
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>eJzNW0+IJUcZL0ZFhUkMEoZAiDZRWQmCKw7BICzTPe89nvHgEvS2SERZlCC0yS0gDkFd/7xoVnBI3ERKMSLRwx6eaBRCMAhzWYxB0MMg0YME9NDkYvBivnpdX79f//r7+r0JCBYU1V1d9f3/V/VmQvh/b0UZQiM9lu17Govyf4eL37l7rSl9GGdpzJ+138MRYT6O4N2GprPg3fb9rO2N0plaAzJhWWzDmzWHuomGjjbRa9kS21WR6UV7svTa5DXbyHyMrsLhKTp8buKV1zdbrMNm8eS1TT5prWV58hp+5jFu4D815tnT9TbwtrGps3y3eGy20Cu2OMLPtj5r4fP0ybHfkqcnc22eHeL6xpCN945zY7KzfMuiy7MLD54+b8oVHq2b2hjd7EOePsdyEO/Dd8snPF6RTg8fxu2iGqeH91lr4ojcLdu0aEQ+rVi7qbGceS/b8ib/YJrHcG7y2TE9Kb3Y5tVwvbXujcSaTeu25deixaLHs5ltcZ6VRosWz6d0HMs5Fixdj7GK52vR4fwwhOVhOLpjEo7unIRwRcZfyHifjI9L/70819IXee6j0s+1PTwre29If0n68WELq5a+e9jaR6zWz6knPz6tWtyLqsWfeizXtdEi25XyvMpzYGv6nniZV8NYzD5k2abnM0WGzesUX0H0oH6acqgzpc+r+yz8rGeMQ14+LAg/yo5lwo3hWjLj2MlznZycd/Qv1GUs+2t5H9JnxXkLL373YpS1fuwd7S01tAHPv7TxmcaK+6gDhGHJ2OOlMfB79mbFC445XvxEXBaeMTq98xHKAWnwmum71eazHt5JeDQgLZ0sqvXo0eDVhPzN8u84QrOnJ4teiy9PDvpu+T7HqzE/U5nw2o6nars8x7QzLis+sM1669S/0M9W7zn/7OScdTXnsM9IbrurzXcHP23z4cG/JuHlm6bh6BPSz03D+aemofjhNFw8lv70NMQr0pfTcPDzaXj+u9Pw8sem4fofp6H+lby/X97fJPvukD3vkfHfAvPmaQgvTMLzr8nzHwTXVRl/LONXZPyijI9MWjreJ++flHFv0ubaXRkbGf8s/UT6qfR96VH6Nel3tfk8XJH+zGGbb/fyXHHY8rqf+bwsvZHvl/K4o/ur9ZhktMx5e5XDs6wWeT71plrn+3lee5L9MebnOudChXmS9ybc92Xa0vNzUovcLXL5ViuPeLvI76LI7V3SHxL5/mgaHntS5PqiyO+eWXjtwVk4f+8s3LqYhVc+Jc9fnYX3fnsW5h+fhdu+MQuTp2Tu8Vm4OJ+Fj3x4Fq7fMgtvu1Pmzs3Cr98p+2+eheKJabj/JwL7SwLzkuD7guD6nPS3yPM7ZP4vQstfxQYeFdk/IP2y9KX0azJ/IOPt0ufSC3l/s4z/THLOenqrjE9n+Sf9/SPrZZn75Wx3x1kHSW+PZD3sZ7mkfiGPi2qtx908P8/PO7nvwb69jONS3ttkuad9Ues/0K+uq7MN7GhdpzrN9rTI6xdZz6d5z1xrumpdY9ZgK2on+v0k14UF2Mc848I6EdcoDsWjeDV2ad1VZJyc05YAewkwtUZVWDHvrZXPCvKM2ne5tnMrxiDNC6BV1youha/yVHpUrupbNdBUGM/Ip77P6ZvGRKVV6cVaXL/XUOco3706AeSmOsMc09XrVC/1cgDtU3noXuSjAX6suJ+ayjS1U9AX76urNVwrj2HtjnLB+h9prgk+5lvFrbBVrso75iysByLR0MmNcKEtor616TvCmlf9vbgW9YN0cH7FmmgBPqpwVLbLbNsn1To+7eYYKPHy6NMSO2+TWHkssf9nbXy9/92SN89LXt2TOPxlidFfl/j8gMTjR9vni5Jv4w3Jsz+YhhdflbzwG4nZad3vZN0z8q2W5+/L86KFc8tjOf9OZU7ySrghOP80CcWt09U59+hB6fe2+XeVg9N59+05vqc4/nDOsy9l2h/OsTXZ2HGOxZfyt0Zj6uE6jp6ATxfVOq6cQkzUuKq238U26BobNC4sKa6gTS1grcY6xdPZAsRDPOtozlYbbsqhTarNz2GsCY7a3cLgC2tNtJ0aeF0Ar7puBZPiHuYflZXKp9sLtl4AnSznztfB59Fn9J1jhMoc4eidhvKtcNDHMHZgPkEfRRx43lMdYuyrAT7Th/GDdcB6xrhdkAxZTg3RxblS83qibTf7w7Vcy74g/T+5Nkr+JvMpHhx9QPpnk+9J/2D2x3vy3IV8Z7U/WdVbq28nuc56NtfAVzLsZCv7UPPu5Hp573BdQ2gOjhXJDHyhBr2iDbAPqC3pd/QDXotyVnvw9ls+hrlLacTYjXdaiIPf0YYUL66NhAv3Ym7AuK/f2WY5h6B/Kq9dvILexTiYw3xTlH2cKAfVa4/ncij/nuxIDtznhmw5djBObb2cSjrjjjg9fx7oquy/I15sqC+Oj1x3dHxUQ1x4P8Y0WzQwT+gPuL5nX46/cMO9qAu0UU++q/3kU1jnYj2ndHdnG7BRrMNQVwpX+bHo8fhgOaKN89jh5XhWDmEgPaifzvbBP/lOs4Nj8ItwMWamvpNj8W6um9K5V2J7utNIdwDhv4er3yMO/i79utSFX5Pxpmk7/lLi/eflWWq3WEhN+L18P5N+s0j3K6+k3DBd7U315NE3pf9W9j3Z/p5x9B3pH5JvT0zaO5WUc/6W71SuZrqe03NzzhMX8pk85a1VDZffm5w79vI6PMPqnYnmEK0LTqt1naDxGs+YeBbt7KKC+iPLbwk2qTUM2ojaaO/8hnDAjhcEp6tXYE9qeN7E+gFtTWnmefR1bXy2XFR9O0P7W1Z9nji+WP5TAN0cF3GMgLPnP+S/Fk+cP5BHlRvjZR/DeNGUQ748mi2ZsvyRJrQphYN+7uZIQx8cn1CG+E3P2jyPz4VBD8tUx4bWI6yxnDWwDbKHHn1GTdDbS7ZeGPA4ZtZgM1ije3cTrHO0z0id+fBowf3Y8Hxmref8MWf5GDUIy82rH2tjnuNCw/xVQ7tEGLpncH9j2ADv7eQJ9YZlL5HowlyrrSYYLJtYGngJPto28+rFhoLiibeO8Vr+MDaPcJgu1plFh0eT+92wO5WvrmO8OI+Nz7ssE+SVaUx9QbQgHvTLSHxrfajPiAPvFFgGCM+yBdW71TD/KixLTitYEN+Lsv8caT++c0xB2rSNyQTXMKyx7wgD87KutUZdj7pA2WFOjEAv19Ion9T4/pVz1UA2gBNlw2ecgY8aZyA3Fji27MUFpJvjWSyHfFg+ynJBvJE64x6LT0i7tc+SscUz64Xt27Khgujt0VT5/sR0sBwQjyUTvIez/ALrK0uXqIOCuikHssnorGU54Z2xrrHiGO9nuhEn2/GyGvLm2STi5xrLsgHPp6KBzzorWI35YH9A+IzL8l3VD8uf5YRytOTL8K1zAX5LDc9m6Ce8Hu2W12njHGm1AuJyUQ7rYpSjFx9YltxZt5adou56d+KkSzyfW/pgfDqndwE4NyYXXYfPKAfWOeY3y24j0WviIN+w5GSd21hGAxqN/Gc1z84KkrlHP8Pgect2B7ov7Rhv+fDgvFL27Ydt2OJBYUXChzD5HJo63zlYMlH6Ytk/i7Lt8B6O77yP+bVsKxoj84kysWKcxR/bBdf2Vm7C7x6dSJN3/8nNoom/4/0b+iPecfD5gPcjX7iG7wrYji258b2ahZN1YfI2EitUbjWtMfkjX0T60bZ0L9feDJPvLCz6mVZsXN/wb2Wpec9MM/OEuNWHC/Bl/Hv3OcUmxtnLJXR+QXsoAE8sh+vQ/iw94hqUFduHNVcQzbH013j2a8URxtnJxKDf2qPr+U4KR6QHR6s+ZzmkVhsyt2IA4sL7T71TQhwoD+az4e+VTZeuR5u24oTCYJlpQ5tieeFe7x6EZeDpQOXYxa2qvz/CHPLG/tHhJX9mm+zoobMezin/1rm545/8ZkDfCO+oS7ZD/jszzgs92GQDln3zuXLM1wuiy7JfLy4wfJ5nfaiM9Rv+vcEJ2gTcDeLZQWWF/4ekf7OMtZPCxjN2L0eCvPH3sZ79037WO+qR/y4I7wJRr7hvNWfct6i8MB/w3V8a9W9OLd0oLL6PnI/YTkG0Iiy2dYbHMcO6n2L+GI/O8xyfNyN9x/WDeAn06Lt1/uNv2PH7YI2Ro6173N5Zx6ixPP6RD1yro1fTWrU+2rUFC+OpwvD0xHsH/Br0IR8Wn1w3e/cAYzSgPrDuQt/36Ea/3YST7YvXW/MWPM9/Ldqsd1MGDm+pWedo9iecG/stFee8eda7B8Nqnl8wLEs23jzGsE1y975ZdyXb7Pf4t2KM0sh0c4u03tqvz+xXY7Uk02bdAXq8bKMTzzc4fiud+n0sHvH93lhctXgZ44fnxt5xn+eXyCt+8/jz7qSG7XXdbf5X</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="4762" encodedLength="56">
+          <binaryDataArray arrayLength="4762" encodedLength="60">
             <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJztwQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAAAAAAAACPBkpoAAE=</binary>
+            <binary>eJztwwEJAAAMBKH7/qXXYyi4aqqqqqqqqqqqqqqqqqqqqqqqqr57oXASmw==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
@@ -100,15 +100,15 @@
             <cvParam cvRef="MS" accession="MS:1000515" name="intensity array" value="" unitCvRef="MS" unitAccession="MS:1000131" unitName="number of detector counts"/>
             <binary>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</binary>
           </binaryDataArray>
-          <binaryDataArray arrayLength="4762" encodedLength="56">
+          <binaryDataArray arrayLength="4762" encodedLength="60">
             <cvParam cvRef="MS" accession="MS:1000519" name="32-bit integer" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
             <cvParam cvRef="MS" accession="MS:1000786" name="non-standard data array" value="ms level" unitCvRef="UO" unitAccession="UO:0000186" unitName="dimensionless unit"/>
-            <binary>eJztwQENAAAAwqD3T20PBxQAAAAAAAAAAAAAAAAAAAAAAACPBkpoAAE=</binary>
+            <binary>eJztwwEJAAAMBKH7/qXXYyi4aqqqqqqqqqqqqqqqqqqqqqqqqr57oXASmw==</binary>
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="2" id="SRM SIC Q1=580.31 Q3=674.41 sample=9 period=1 experiment=1 transition=0" defaultArrayLength="4721">
+      <chromatogram index="2" id="SRM SIC Q1=580.31 Q3=674.41 sample=9 period=1 experiment=1 transition=0 start=100 end=100 ce=30 name=580.3 / 674.4" defaultArrayLength="4721">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <userParam name="MS_dwell_time" value="-0.001" type="xs:float"/>
@@ -118,7 +118,7 @@
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="0.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="30.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -141,7 +141,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="3" id="SRM SIC Q1=643.86 Q3=561.37 sample=9 period=1 experiment=1 transition=1" defaultArrayLength="4720">
+      <chromatogram index="3" id="SRM SIC Q1=643.86 Q3=561.37 sample=9 period=1 experiment=1 transition=1 start=100 end=100 ce=30 name=643.9 / 561.4" defaultArrayLength="4720">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <userParam name="MS_dwell_time" value="-0.001" type="xs:float"/>
@@ -151,7 +151,7 @@
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="0.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="30.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -174,7 +174,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="4" id="SRM SIC Q1=644.86 Q3=834.53 sample=9 period=1 experiment=1 transition=2" defaultArrayLength="4722">
+      <chromatogram index="4" id="SRM SIC Q1=644.86 Q3=834.53 sample=9 period=1 experiment=1 transition=2 start=100 end=100 ce=30 name=644.9 / 834.5" defaultArrayLength="4722">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <userParam name="MS_dwell_time" value="-0.001" type="xs:float"/>
@@ -184,7 +184,7 @@
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="0.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="30.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -207,7 +207,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="5" id="SRM SIC Q1=708.97 Q3=948.57 sample=9 period=1 experiment=1 transition=3" defaultArrayLength="4690">
+      <chromatogram index="5" id="SRM SIC Q1=708.97 Q3=948.57 sample=9 period=1 experiment=1 transition=3 start=100 end=100 ce=30 name=709.0 / 948.6" defaultArrayLength="4690">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <userParam name="MS_dwell_time" value="-0.001" type="xs:float"/>
@@ -217,7 +217,7 @@
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="0.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="30.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -240,7 +240,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="6" id="SRM SIC Q1=789.9 Q3=805.46 sample=9 period=1 experiment=1 transition=4" defaultArrayLength="4595">
+      <chromatogram index="6" id="SRM SIC Q1=789.9 Q3=805.46 sample=9 period=1 experiment=1 transition=4 start=100 end=100 ce=30 name=789.9 / 805.5" defaultArrayLength="4595">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <userParam name="MS_dwell_time" value="-0.001" type="xs:float"/>
@@ -250,7 +250,7 @@
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="0.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="30.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
@@ -273,7 +273,7 @@
           </binaryDataArray>
         </binaryDataArrayList>
       </chromatogram>
-      <chromatogram index="7" id="SRM SIC Q1=878.49 Q3=1172.71 sample=9 period=1 experiment=1 transition=5" defaultArrayLength="4541">
+      <chromatogram index="7" id="SRM SIC Q1=878.49 Q3=1172.71 sample=9 period=1 experiment=1 transition=5 start=100 end=100 ce=30 name=878.5 / 1172.7" defaultArrayLength="4541">
         <cvParam cvRef="MS" accession="MS:1001473" name="selected reaction monitoring chromatogram" value=""/>
         <cvParam cvRef="MS" accession="MS:1000130" name="positive scan" value=""/>
         <userParam name="MS_dwell_time" value="-0.001" type="xs:float"/>
@@ -283,7 +283,7 @@
           </isolationWindow>
           <activation>
             <cvParam cvRef="MS" accession="MS:1000133" name="collision-induced dissociation" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="0.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="30.0" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
           </activation>
         </precursor>
         <product>
