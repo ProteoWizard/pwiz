@@ -65,14 +65,17 @@ namespace pwiz.SkylineTest
                 new[] { neutralLoss, neutralLoss.ChangeCharge(2), neutralLoss.ChangeCharge(1) });
 
             // Only 1 extra precursor (charge 1) is expected from the neutral loss only case
-            ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 12, false);
+            var doc1 = ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 12, false);
             // Now 2 extra precursors since both charged losses apply to a charge 3 precursor
-            ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 13, false);
+            var doc2 = ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 13, false);
 
             // Repeat with the losses reversed which should not matter
             phosphoMultiLossMod = phosphoMultiLossMod.ChangeLosses(phosphoMultiLossMod.Losses.Reverse().ToArray());
-            ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 12, false);
-            ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 13, false);
+            var doc1Rev = ValidateNeutralLossTransitions(phosphoMultiLossMod, 2, 12, false);
+            var doc2Rev = ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 13, false);
+            // Make sure everything comes out in the same order
+            AssertEx.Cloned(doc1.Children, doc1Rev.Children);
+            AssertEx.Cloned(doc2.Children, doc2Rev.Children);
 
             // Also try charged losses only
             phosphoMultiLossMod = phosphoMultiLossMod.ChangeLosses(
@@ -81,7 +84,7 @@ namespace pwiz.SkylineTest
             ValidateNeutralLossTransitions(phosphoMultiLossMod, 3, 12, false);
         }
 
-        private static void ValidateNeutralLossTransitions(StaticMod lossMod, int precursorCharge, int expectedLosses, bool roundtrip)
+        private static SrmDocument ValidateNeutralLossTransitions(StaticMod lossMod, int precursorCharge, int expectedLosses, bool roundtrip)
         {
             var allowedIonTypes = new[] { IonType.y, IonType.precursor };
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault()
@@ -145,6 +148,8 @@ namespace pwiz.SkylineTest
                 docRoundTripped = AssertEx.RoundTripTransitionList(new AgilentMassListExporter(docLosses));
                 Assert.AreEqual(lossCount, GetLossCount(docRoundTripped, 1));
             }
+
+            return docLosses;
         }
 
         private static bool IsMatch(Transition tran, DocNode node)
