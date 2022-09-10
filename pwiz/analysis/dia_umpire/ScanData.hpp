@@ -35,6 +35,7 @@
 #include "pwiz/data/common/cv.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "pwiz/utility/misc/sort_together.hpp"
 
 
 namespace DiaUmpire {
@@ -670,8 +671,12 @@ class ScanCollection
         scan.RetentionTime = spectrum->scanList.scans.at(0).cvParam(MS_scan_start_time).timeInSeconds() / 60;
         scan.centroided = spectrum->hasCVParam(MS_centroid_spectrum);
 
-        const auto& mzArray = spectrum->getMZArray()->data;
-        const auto& intensityArray = spectrum->getIntensityArray()->data;
+        // local array copies
+        vector<double> mzArray(spectrum->getMZArray()->data);
+        vector<double> intensityArray(spectrum->getIntensityArray()->data);
+
+        pwiz::util::sort_together(mzArray, intensityArray); // ensure data is m/z sorted
+
         for (size_t i = 0; i < mzArray.size(); ++i)
             scan.AddPoint(mzArray[i], intensityArray[i]);
         NumPeaks += mzArray.size();

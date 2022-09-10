@@ -14,6 +14,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         event EventHandler<PropertyPathEventArgs> PropertyPathActivated;
         
         bool ShowHiddenFields { get; set; }
+        bool Alphabetical { get; set; }
         IViewTransformer ViewTransformer { get; }
     }
 

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Windows.Forms;
 
 namespace SkylineTester
 {
@@ -36,6 +37,11 @@ namespace SkylineTester
 
             var testList = new List<string>();
             TabTests.GetCheckedTests(MainWindow.TutorialsTree.TopNode, testList);
+            if (testList.Count == 0)
+            {
+                MessageBox.Show(MainWindow, "Check at least one tutorial to run.");
+                return false;
+            }
 
             var args = new StringBuilder("offscreen=off loop=1 perftests=on language=");
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));

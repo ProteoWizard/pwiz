@@ -28,10 +28,11 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class SynchronizedIntegrationDlg : Form
+    public partial class SynchronizedIntegrationDlg : ModeUIInvariantFormEx  // This dialog is the same in all UI modes
     {
         private readonly SkylineWindow _skylineWindow;
         private readonly bool _originalAlignRtPrediction;

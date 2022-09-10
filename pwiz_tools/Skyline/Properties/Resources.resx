@@ -11705,16 +11705,16 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_GetThresholds_incorrect" xml:space="preserve">
     <value>incorrect</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
+  <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>Error getting score type for this file.</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
+  <data name="BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
     <value>Score threshold minimum (score is probability that identification is correct).</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
+  <data name="BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
     <value>Score threshold maximum (score is probability that identification is incorrect).</value>
   </data>
-  <data name="BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
+  <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
     <value>Score threshold '{0}' is invalid (must be a decimal value between {1} and {2}).</value>
   </data>
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
@@ -11814,6 +11814,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
     <value>Shared Peptides</value>
   </data>
+  <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
+	<value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
     <value>Duplicated peptides</value>
   </data>
@@ -11822,5 +11825,14 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
+      <value>Score type not found.</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
+      <value>{0} ({1} - {2})</value>
+  </data>
+    <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+      <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
   </data>
 </root>

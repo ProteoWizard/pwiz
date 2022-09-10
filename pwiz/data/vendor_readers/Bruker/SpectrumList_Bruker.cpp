@@ -87,18 +87,23 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
     boost::container::flat_map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
     {
-        if (format_ == Reader_Bruker_Format_TDF)
+        try
         {
-            try
+            if (format_ == Reader_Bruker_Format_TDF)
             {
                 int frame = msdata::id::valueAs<int>(id, "frame");
                 int scan = msdata::id::valueAs<int>(id, "scan");
                 return compassDataPtr_->getSpectrumIndex(frame, scan);
             }
-            catch (exception&)
+            else if (format_ == Reader_Bruker_Format_TSF)
             {
-                // fall through and return size_ (id not found)
+                int frame = msdata::id::valueAs<int>(id, "frame");
+                return compassDataPtr_->getSpectrumIndex(frame, 0);
             }
+        }
+        catch (exception&)
+        {
+            // fall through and return size_ (id not found)
         }
         
         return checkNativeIdFindResult(size_, id);
@@ -250,6 +255,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 break;
         }
 
+        auto maldiChip = spectrum->getMaldiChip();
+        if (maldiChip)
+        {
+            auto maldiSpotName = spectrum->getMaldiSpotName();
+            result->spotID = "chip=" + toString(maldiChip.get()) + " spot=" + maldiSpotName.get();
+        }
+
         //sd.set(MS_base_peak_m_z, pScanStats_->BPM);
         if (spectrum->getTIC() > 0)
         {
@@ -336,8 +348,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                             precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth / 2, MS_m_z);
                         }
 
-                        if (isolationInfo[i].collisionEnergy > 0)
-                            precursor.activation.set(MS_collision_energy, isolationInfo[i].collisionEnergy);
+                        if (fabs(isolationInfo[i].collisionEnergy) > 0)
+                            precursor.activation.set(MS_collision_energy, fabs(isolationInfo[i].collisionEnergy));
                     }
                 }
             }
@@ -594,6 +606,28 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
             }
             break;
 
+        // a TSF's source path is the same as the source file
+        case Reader_Bruker_Format_TSF:
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.tsf");
+                // strip parent path to get "bar.d/Analysis.tsf"
+                bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.tsf";
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TSF_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TSF_format);
+                msd_.run.defaultSourceFilePtr = msd_.fileDescription.sourceFilePtrs.back();
+            }
+
+            {
+                sourcePaths_.push_back(rootpath_ / "Analysis.tsf_bin");
+                // strip parent path to get "bar.d/Analysis.tdf_bin"
+                bfs::path relativePath = bfs::path(rootpath_.filename()) / "Analysis.tsf_bin";
+                addSource(msd_, relativePath, rootpath_);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TSF_nativeID_format);
+                msd_.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_TSF_format);
+            }
+            break;
+
         // a BAF/U2 combo has two sources, with different nativeID formats
         case Reader_Bruker_Format_BAF_and_U2:
             {
@@ -702,6 +736,21 @@ PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
                 generate(sink,
                          "frame=" << int_ << " scan=" << int_,
                          frameScanPair.frame, frameScanPair.scanStart);
+        }
+    }
+    else if (format_ == Reader_Bruker_Format_TSF)
+    {
+        index_.reserve(compassDataPtr_->getMSSpectrumCount());
+        for (size_t scan = 1, end = compassDataPtr_->getMSSpectrumCount(); scan <= end; ++scan)
+        {
+            index_.emplace_back(IndexEntry());
+            IndexEntry& si = index_.back();
+            si.source = si.collection = -1;
+            si.index = index_.size() - 1;
+            si.scan = scan;
+            auto frameScanPair = compassDataPtr_->getFrameScanPair(scan);
+            std::back_insert_iterator<std::string> sink(si.id);
+            generate(sink, "frame=" << int_, frameScanPair.frame);
         }
     }
     else if (format_ != Reader_Bruker_Format_U2)
