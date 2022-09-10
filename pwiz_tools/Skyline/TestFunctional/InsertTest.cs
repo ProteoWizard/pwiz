@@ -103,8 +103,9 @@ namespace pwiz.SkylineTestFunctional
             string allErrorText = "";
             var pasteText = TransitionsClipboardText;
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
-            var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(windowDlg.OkDialog); // Some peptides aren't in background proteome
+            var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
+            WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+            var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(columnSelectDlg.OkDialog); // Some peptides aren't in background proteome
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(associateProteinsDlg.OkDialog);
             RunUI(() =>
             {
@@ -117,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
                         (506.7821).ToString(LocalizationHelper.CurrentCulture), errDlg.ErrorList));
             });
             OkDialog(errDlg, errDlg.CancelDialog);
-            OkDialog(windowDlg, windowDlg.CancelDialog);
+            OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
 
             // Test modification matching
             IList<TypedModifications> heavyMod = new[]
