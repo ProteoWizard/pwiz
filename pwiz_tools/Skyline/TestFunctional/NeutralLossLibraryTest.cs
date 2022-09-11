@@ -160,10 +160,10 @@ namespace pwiz.SkylineTestFunctional
                             .ChangeStaticModifications(new List<StaticMod>(mod.StaticModifications) {multipleLossMod, waterLossMod})
                             .ChangeModifications(IsotopeLabelType.heavy, new[] { heavyKMod }))
                     .ChangeTransitionFilter(filter =>
-                        filter.ChangeFragmentRangeFirstName("m/z > precursor")
-                            .ChangeFragmentRangeLastName("last ion")
+                        filter.ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.MZ_PRECURSOR.Name)
+                            .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.Name)
                             .ChangePeptideIonTypes(new[] { IonType.y, IonType.b })
-                            .ChangeMeasuredIons(new MeasuredIon[0]))
+                            .ChangeMeasuredIons(Array.Empty<MeasuredIon>()))
                     .ChangeTransitionLibraries(lib =>
                         lib.ChangePick(TransitionLibraryPick.filter)))));
 
