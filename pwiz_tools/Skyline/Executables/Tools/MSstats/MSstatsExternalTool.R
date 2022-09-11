@@ -36,11 +36,14 @@ ensureUniqueFileName <- function(baseName, folder, extension) {
   return(file.path(folder, finalfile))
 }
 
-ensurePathSeparatorEnd <- function(folderName) {
-  if (folderName == "" || endsWith(folderName, "/") || endsWith(folderName, "\\")) {
+# Replaces backslashes with forward slashes because some MSstats code chokes on the backslashes
+# Ensures that the path ends with a slash
+normalizePathSeparator <- function(folderName) {
+  folderName = gsub("\\\\", "/", folderName)
+  if (folderName == "" || endsWith(folderName, "/")) {
     return(folderName);
   }
-  return(paste(folderName, .Platform$file.sep, sep=""));
+  return(paste(folderName, "/", sep=""));
 }
 
 # Returns a new dataFrame where targetColumn is a value which either contains the 
@@ -98,7 +101,7 @@ CallDataProcess <- function(dataFileName, logFilePath, qValueCutoff = NULL, norm
 }
 
 GroupComparison <- function(dataFileName, ..., outputFolder="") {
-  outputFolder<-ensurePathSeparatorEnd(outputFolder)
+  outputFolder<-normalizePathSeparator(outputFolder)
   logFile <- ensureUniqueFileName("MSstats_GroupComparison", outputFolder, ".log")
   quantData <- CallDataProcess(dataFileName, logFile, ...)
   resultComparison <- try(groupComparison(contrast.matrix="pairwise", data=quantData, log_file_path=logFile, append=TRUE))
@@ -139,7 +142,7 @@ GroupComparison <- function(dataFileName, ..., outputFolder="") {
 }
 
 QualityControl <- function(dataFileName, width, height, ..., outputFolder="") {
-  outputFolder<-ensurePathSeparatorEnd(outputFolder)
+  outputFolder<-normalizePathSeparator(outputFolder)
   logFile <- ensureUniqueFileName("MSstats_DataProcess", outputFolder, ".log")
   quantData <- CallDataProcess(dataFileName, logFile, ...)
   
@@ -181,7 +184,7 @@ DesignSampleSize <- function(dataFileName,
                              FDR,
                              ldfc,
                              udfc, ... , outputFolder="") {
-  outputFolder<-ensurePathSeparatorEnd(outputFolder)
+  outputFolder<-normalizePathSeparator(outputFolder)
   logFile <- ensureUniqueFileName("MSstats_DesignSampleSize", outputFolder, ".log")
   quantData <- CallDataProcess(dataFileName, logFile, ...)
   if (class(quantData) != "try-error") {

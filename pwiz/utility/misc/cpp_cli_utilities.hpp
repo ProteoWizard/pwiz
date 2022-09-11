@@ -59,11 +59,27 @@ inline std::string ToStdString(System::String^ source)
     System::Text::Encoding^ encoding = System::Text::Encoding::UTF8;
     array<System::Byte>^ encodedBytes = encoding->GetBytes(source);
 
-    std::string target("", encodedBytes->Length);
-    char* buffer = &target[0];
-    unsigned char* unsignedBuffer = reinterpret_cast<unsigned char*>(buffer);
-    System::Runtime::InteropServices::Marshal::Copy(encodedBytes, 0, (System::IntPtr) unsignedBuffer, encodedBytes->Length);
-	return target;
+    const int stringCopyBufferSize = 500000; // crashes observed if buffer is too large
+    if (encodedBytes->Length < stringCopyBufferSize)
+    {
+        std::string target("", encodedBytes->Length);
+        char* buffer = &target[0];
+        unsigned char* unsignedBuffer = reinterpret_cast<unsigned char*>(buffer);
+        System::Runtime::InteropServices::Marshal::Copy(encodedBytes, 0, (System::IntPtr)unsignedBuffer, encodedBytes->Length);
+        return target;
+    }
+
+    std::string target("", stringCopyBufferSize);
+    std::string result;
+    for (int i = 0; i < encodedBytes->Length; i += stringCopyBufferSize)
+    {
+        target.resize(System::Math::Min(stringCopyBufferSize, encodedBytes->Length - i));
+        char* buffer = &target[0];
+        unsigned char* unsignedBuffer = reinterpret_cast<unsigned char*>(buffer);
+        System::Runtime::InteropServices::Marshal::Copy(encodedBytes, i, (System::IntPtr)unsignedBuffer, target.size());
+        result += target;
+    }
+	return result;
 }
 
 
