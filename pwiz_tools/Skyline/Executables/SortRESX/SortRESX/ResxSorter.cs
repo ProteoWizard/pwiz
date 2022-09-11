@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -8,8 +9,18 @@ namespace SortRESX
 {
     public class ResxSorter
     {
+        private static readonly XmlWriterSettings XmlWriterSettings = new XmlWriterSettings
+        {
+            Indent = true,
+            // Unicode encoding with no Byte Order Mark, and throw on invalid characters
+            Encoding = new UTF8Encoding(false, true)
+        };
         public XDocument SortResxDocument(XDocument resx)
         {
+            if (resx.Root == null)
+            {
+                return resx;
+            }
             return new XDocument(
                 new XElement(resx.Root.Name,
                     from comment in resx.Root.Nodes() where comment.NodeType == XmlNodeType.Comment select comment,
@@ -35,7 +46,10 @@ namespace SortRESX
             // Create a sorted version of the XML
             sortedDoc = SortResxDocument(originalDocument);
             MemoryStream outputMemoryStream = new MemoryStream();
-            sortedDoc.Save(outputMemoryStream);
+            using (var xmlWriter = XmlWriter.Create(outputMemoryStream, XmlWriterSettings))
+            {
+                sortedDoc.Save(xmlWriter);
+            }
             var outputBytes = outputMemoryStream.ToArray();
             if (outputBytes.SequenceEqual(inputBytes))
             {
