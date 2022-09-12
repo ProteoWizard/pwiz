@@ -208,7 +208,7 @@
     <value>7</value>
   </data>
   <data name="comboSkylineVersion.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
+    <value>Bottom, Left, Right</value>
   </data>
   <data name="comboSkylineVersion.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 8.25pt</value>
@@ -240,6 +240,9 @@ Note that not all data is preserved when saving as a previous version.</value>
   </data>
   <data name="&gt;&gt;comboSkylineVersion.ZOrder" xml:space="preserve">
     <value>5</value>
+  </data>
+  <data name="label2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -516,7 +519,7 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.1.9.250, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.1.9.252, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
@@ -528,6 +531,6 @@ Note that not all data is preserved when saving as a previous version.</value>
     <value>ShareTypeDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.1.9.252, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -44,6 +44,11 @@ namespace pwiz.Skyline.Util
         public const string EXT_WATERS_RAW = ".raw";
         public const string EXT_AGILENT_BRUKER_RAW = ".d";
         public const string EXT_MOBILION_MBI = ".mbi";
+
+        // Folders with these .EXTs may be data sources
+        public static readonly string[] EXT_DATA_FOLDERS = 
+            { EXT_WATERS_RAW, EXT_AGILENT_BRUKER_RAW };
+
         public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
 
         public const string TYPE_WIFF = "Sciex WIFF/WIFF2";

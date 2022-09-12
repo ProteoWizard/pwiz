@@ -159,12 +159,15 @@ namespace pwiz.Skyline.Model
         {
             string skylineFile = null;
 
-            foreach (var file in zip.EntryFileNames)
+            foreach (var entry in zip.Entries)
             {
+                if (entry == null) continue; // ReSharper
+                var file = entry.FileName;
+
                 if (file == null) continue; // ReSharper
 
-                // Shared files should not have subfolders.
-                if (Path.GetFileName(file) != file)
+                // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
+                if (entry.IsDirectory && !DataSourceUtil.EXT_DATA_FOLDERS.Any(ext => entry.FileName.Contains(ext+@"/")))
                     throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
 
                 // Shared files must have exactly one Skyline Document(.sky).
