@@ -188,6 +188,11 @@ namespace pwiz.Skyline.Model.Results
             return (currentNormalizeOption ?? RatioToFirstStandard(settings)).Constrain(settings);
         }
 
+        public bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+        {
+            return NormalizationMethod?.HideLabelType(settings, labelType) ?? false;
+        }
+
         /// <summary>
         /// NormalizeOptions which are wrappers around NormalizationMethod values
         /// </summary>

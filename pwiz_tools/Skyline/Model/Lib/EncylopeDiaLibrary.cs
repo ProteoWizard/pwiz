@@ -218,11 +218,11 @@ namespace pwiz.Skyline.Model.Lib
             try
             {
                 loader.UpdateProgress(status);
-                var libKeySourceFileDatas = new Dictionary<Tuple<string, int>, Dictionary<string, Tuple<double?, FileData>>>();
+                var libKeySourceFileDatas = new Dictionary<PeptideLibraryKey, Dictionary<string, ScoredFileData>>();
 
                 var scores = new EncyclopeDiaScores();
                 scores.ReadScores(_pooledSqliteConnection.Connection);
-                HashSet<Tuple<string, int>> quantPeptides = new HashSet<Tuple<string, int>>();
+                HashSet<LibraryKey> quantPeptides = new HashSet<LibraryKey>();
                 using (var cmd = new SQLiteCommand(_pooledSqliteConnection.Connection))
                 {
                     // From the "entries" table, read all of the peptides that were actually found
@@ -236,13 +236,14 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 throw new OperationCanceledException();
                             }
-                            var libKey = Tuple.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
+
+                            var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             // Tuple of filename, score, FileData
-                            Dictionary<string, Tuple<double?, FileData>> dataByFilename;
+                            Dictionary<string, ScoredFileData> dataByFilename;
                             
                             if (!libKeySourceFileDatas.TryGetValue(libKey, out dataByFilename))
                             {
-                                dataByFilename = new Dictionary<string, Tuple<double?, FileData>>();
+                                dataByFilename = new Dictionary<string, ScoredFileData>();
                                 libKeySourceFileDatas.Add(libKey, dataByFilename);
                             }
                             string fileName = reader.GetString(2);
@@ -251,11 +252,12 @@ namespace pwiz.Skyline.Model.Lib
                                 continue;
                             }
                             double score = reader.GetDouble(3);
-                            var qValue = scores.GetQValue(libKey.Item1, libKey.Item2, fileName) ??
+                            var qValue = scores.GetQValue(libKey, fileName) ??
                                          ExplicitPeakBounds.UNKNOWN_SCORE;
-                            dataByFilename.Add(fileName, Tuple.Create((double?) score,
-                                new FileData(reader.GetDouble(4)/60, 
-                                new ExplicitPeakBounds(reader.GetDouble(5)/60, reader.GetDouble(6)/60, qValue))));
+                            dataByFilename.Add(fileName, new ScoredFileData(score,
+                                new FileData(reader.GetDouble(4) / 60,
+                                    new ExplicitPeakBounds(reader.GetDouble(5) / 60, reader.GetDouble(6) / 60,
+                                        qValue))));
                         }
                     }
 
@@ -267,13 +269,13 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         while (reader.Read())
                         {
-                            var libKey = Tuple.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
+                            var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             quantPeptides.Add(libKey);
                             // Tuple of filename, score, FileData
-                            Dictionary<string, Tuple<double?, FileData>> dataByFilename;
+                            Dictionary<string, ScoredFileData> dataByFilename;
                             if (!libKeySourceFileDatas.TryGetValue(libKey, out dataByFilename))
                             {
-                                dataByFilename = new Dictionary<string, Tuple<double?, FileData>>();
+                                dataByFilename = new Dictionary<string, ScoredFileData>();
                                 libKeySourceFileDatas.Add(libKey, dataByFilename);
                             }
                             string fileName = reader.GetString(2);
@@ -281,11 +283,13 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 continue;
                             }
-                            double qValue = scores.GetQValue(libKey.Item1, libKey.Item2, fileName) ??
+                            double qValue = scores.GetQValue(libKey, fileName) ??
                                             ExplicitPeakBounds.UNKNOWN_SCORE;
                             dataByFilename.Add(fileName,
-                                Tuple.Create((double?) null,
-                                    new FileData(null, new ExplicitPeakBounds(reader.GetDouble(3)/60, reader.GetDouble(4)/60, qValue))));
+                                new ScoredFileData(null,
+                                    new FileData(null,
+                                        new ExplicitPeakBounds(reader.GetDouble(3) / 60, reader.GetDouble(4) / 60,
+                                            qValue))));
                         }
                     }
                 }
@@ -299,7 +303,7 @@ namespace pwiz.Skyline.Model.Lib
                     .ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
                 var spectrumInfos = libKeySourceFileDatas
                     .Where(entry => quantPeptides.Contains(entry.Key))
-                    .Select(entry => MakeSpectrumInfo(entry.Key.Item1, entry.Key.Item2, entry.Value, sourceFileIds));
+                    .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
                 SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
                 _sourceFiles = ImmutableList.ValueOf(sourceFiles);
                 // ReSharper restore PossibleMultipleEnumeration
@@ -405,7 +409,7 @@ namespace pwiz.Skyline.Model.Lib
                 HashSet<double> mzs = new HashSet<double>();
                 List<SpectrumPeaksInfo.MI> spectrum = new List<SpectrumPeaksInfo.MI>();
                 // First read all of the quantifiable transitions from the PeptideQuants table.
-                var peptideQuantSpectrum = ReadSpectrumFromPeptideQuants(connection, info);
+                var peptideQuantSpectrum = ReadSpectrumFromPeptideQuants(connection, info, sourceFileId);
                 if (peptideQuantSpectrum != null)
                 {
                     foreach (var mi in peptideQuantSpectrum)
@@ -442,13 +446,15 @@ namespace pwiz.Skyline.Model.Lib
             });
         }
 
-        private IEnumerable<SpectrumPeaksInfo.MI> ReadSpectrumFromPeptideQuants(SQLiteConnection connection, ElibSpectrumInfo info)
+        private IEnumerable<SpectrumPeaksInfo.MI> ReadSpectrumFromPeptideQuants(SQLiteConnection connection, ElibSpectrumInfo info, int sourceFileId)
         {
+            string sourceFile = _sourceFiles[sourceFileId];
             using (var cmd = new SQLiteCommand(connection))
             {
-                cmd.CommandText = @"SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ?";
+                cmd.CommandText = @"SELECT QuantIonMassLength, QuantIonMassArray, QuantIonIntensityLength, QuantIonIntensityArray FROM peptidequants WHERE PrecursorCharge = ? AND PeptideModSeq = ? AND SourceFile = ?";
                 cmd.Parameters.Add(new SQLiteParameter(DbType.Int32) { Value = info.Key.Charge });
                 cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = info.PeptideModSeq });
+                cmd.Parameters.Add(new SQLiteParameter(DbType.String) { Value = sourceFile });
                 SQLiteDataReader reader;
                 try
                 {
@@ -727,41 +733,43 @@ namespace pwiz.Skyline.Model.Lib
             return encyclopeDiaLibrary;
         }
 
-        private static ElibSpectrumInfo MakeSpectrumInfo(string peptideModSeq, int charge,
-            IDictionary<string, Tuple<double?, FileData>> fileDatas, IDictionary<string, int> sourceFileIds)
+        private static ElibSpectrumInfo MakeSpectrumInfo(PeptideLibraryKey libraryKey,
+            IDictionary<string, ScoredFileData> fileDatas, IDictionary<string, int> sourceFileIds)
         {
             double bestScore = double.MaxValue;
             string bestFileName = null;
 
             foreach (var entry in fileDatas)
             {
-                if (!entry.Value.Item1.HasValue)
+                if (!entry.Value.Score.HasValue)
                 {
                     continue;
                 }
-                if (bestFileName == null || entry.Value.Item1 < bestScore)
+                if (bestFileName == null || entry.Value.Score < bestScore)
                 {
                     bestFileName = entry.Key;
-                    bestScore = entry.Value.Item1.Value;
+                    bestScore = entry.Value.Score.Value;
                 }
             }
-            return new ElibSpectrumInfo(peptideModSeq, charge, bestFileName == null ? -1 : sourceFileIds[bestFileName],
+            return new ElibSpectrumInfo(libraryKey, bestFileName == null ? -1 : sourceFileIds[bestFileName],
                 fileDatas.Select(
-                    entry => new KeyValuePair<int, FileData>(sourceFileIds[entry.Key], entry.Value.Item2)));
+                    entry => new KeyValuePair<int, FileData>(sourceFileIds[entry.Key], entry.Value.FileData)));
 
         }
 
         public class ElibSpectrumInfo : ICachedSpectrumInfo
         {
-            public ElibSpectrumInfo(String peptideModSeq, int charge, int bestFileId, IEnumerable<KeyValuePair<int, FileData>> fileDatas)
+            public ElibSpectrumInfo(PeptideLibraryKey libKey, int bestFileId, IEnumerable<KeyValuePair<int, FileData>> fileDatas)
             {
-                PeptideModSeq = peptideModSeq;
-                Key = new LibKey(SequenceMassCalc.NormalizeModifiedSequence(peptideModSeq), charge);
+                Key = new LibKey(libKey);
                 BestFileId = bestFileId;
                 FileDatas = ImmutableSortedList.FromValues(fileDatas);
             }
 
-            public string PeptideModSeq { get; private set; }
+            public string PeptideModSeq
+            {
+                get { return Key.Sequence; }
+            }
             public LibKey Key { get; private set; }
             public int BestFileId { get; private set;}
             public ImmutableSortedList<int, FileData> FileDatas { get; private set; }
@@ -818,7 +826,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     peakBounds.Add(new KeyValuePair<int, FileData>(fileId, new FileData(apexTime, new ExplicitPeakBounds(startTime, endTime, score))));
                 }
-                return new ElibSpectrumInfo(peptideModSeq, charge, bestFileId, peakBounds);
+                return new ElibSpectrumInfo(new PeptideLibraryKey(peptideModSeq, charge), bestFileId, peakBounds);
             }
         }
         public class FileData
@@ -830,6 +838,16 @@ namespace pwiz.Skyline.Model.Lib
             }
             public double? ApexTime { get; private set; }
             public ExplicitPeakBounds PeakBounds { get; private set; }
+
+            public override string ToString()
+            {
+                if (ApexTime == null)
+                {
+                    return PeakBounds.ToString();
+                }
+
+                return string.Format(@"{0}({1:F04})", PeakBounds, ApexTime);
+            }
         }
 
         private class ElibSpectrumKey
@@ -850,28 +868,27 @@ namespace pwiz.Skyline.Model.Lib
             /// Mapping from (peptideModSeq,precursorCharge) to Map of filename to (qValue, posteriorErrorProbability).
             /// Only one file should have a qValue, but just in case there are multiple files, we store it in a dictionary.
             /// </summary>
-            private Dictionary<Tuple<string, int>, IDictionary<string, Tuple<double, double>>> _dictionary
-                = new Dictionary<Tuple<string, int>, IDictionary<string, Tuple<double, double>>>();
+            private Dictionary<LibraryKey, IDictionary<string, ScoreValue>> _dictionary
+                = new Dictionary<LibraryKey, IDictionary<string, ScoreValue>>();
 
-            public double? GetQValue(string peptideModSeq, int precursorCharge, string file)
+            public double? GetQValue(LibraryKey libraryKey, string file)
             {
-                IDictionary<string, Tuple<double, double>> values;
-                if (!_dictionary.TryGetValue(Tuple.Create(peptideModSeq, precursorCharge), out values))
+                IDictionary<string, ScoreValue> values;
+                if (!_dictionary.TryGetValue(libraryKey, out values))
                 {
                     return null;
                 }
-                Tuple<double, double> result;
-                values.TryGetValue(file, out result);
-                if (result == null)
+                ScoreValue result;
+                if (values.TryGetValue(file, out result))
                 {
-                    // If there is not an exact match of the file, just use the first qValue for that peptide&charge
-                    result = values.Values.FirstOrDefault();
+                    return result.QValue;
                 }
-                if (result == null)
+                // If there is not an exact match of the file, just use the first qValue for that peptide&charge
+                if (values.Count != 0)
                 {
-                    return null;
+                    return values.Values.First().QValue;
                 }
-                return result.Item1;
+                return null;
             }
 
             public void ReadScores(SQLiteConnection connection)
@@ -888,19 +905,54 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         while (reader.Read())
                         {
-                            var key = Tuple.Create(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
-                            var value = Tuple.Create(reader.GetDouble(3), reader.GetDouble(3));
+                            string sequence = reader.GetString(0);
+                            int charge = Convert.ToInt32(reader.GetValue(1));
+                            var key = new LibKey(sequence, charge).LibraryKey;
+                            var value = new ScoreValue(reader.GetDouble(3), reader.GetDouble(4));
                             string filename = reader.GetString(2);
-                            IDictionary<string, Tuple<double, double>> values;
+                            IDictionary<string, ScoreValue> values;
                             if (!_dictionary.TryGetValue(key, out values))
                             {
-                                values = new Dictionary<string, Tuple<double, double>>();
+                                values = new Dictionary<string, ScoreValue>();
                                 _dictionary.Add(key, values);
                             }
                             values[filename] = value;
                         }
                     }
                 }
+            }
+        }
+
+        private struct ScoreValue
+        {
+            public ScoreValue(double qValue, double posteriorErrorProbability)
+            {
+                QValue = qValue;
+                PosteriorErrorProbability = posteriorErrorProbability;
+            }
+
+            public double QValue { get; }
+            public double PosteriorErrorProbability { get; }
+        }
+
+        private struct ScoredFileData
+        {
+            public ScoredFileData(double? score, FileData fileData)
+            {
+                Score = score;
+                FileData = fileData;
+            }
+
+            public double? Score { get; }
+            public FileData FileData { get; }
+
+            public override string ToString()
+            {
+                if (Score.HasValue)
+                {
+                    return string.Format(@"{0:F04}:{1}", Score, FileData);
+                }
+                return FileData.ToString();
             }
         }
     }

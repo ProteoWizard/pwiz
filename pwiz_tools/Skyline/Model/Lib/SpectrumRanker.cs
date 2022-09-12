@@ -139,10 +139,19 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (isProteomic && Sequence.IsProteomic)
                 {
+                    var ionTypes = calcMatch.GetFragmentIonMasses(Sequence);
+                    var specialIons = new List<MatchedFragmentIon>();
+                    foreach (var specialIon in settings.TransitionSettings.Filter.MeasuredIons)
+                    {
+                        if(specialIon.IsCustom)
+                            specialIons.Add(
+                                new MatchedFragmentIon(IonType.custom, specialIons.Count,
+                                    Adduct.FromCharge(specialIon.Charge, Adduct.ADDUCT_TYPE.charge_only),
+                                    specialIon.Name, null, specialIon.SettingsCustomIon.MonoisotopicMassMz));
+                    }
                     moleculeMasses = new MoleculeMasses(
                         SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(Sequence), PrecursorAdduct),
-                        new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence),
-                            calcMatch.GetFragmentIonMasses(Sequence)));
+                        new IonMasses(calcMatch.GetPrecursorFragmentMass(Sequence), ionTypes).ChangeKnownFragments(specialIons));
                 }
                 else if (!isProteomic && !Sequence.IsProteomic)
                 {
@@ -180,13 +189,16 @@ namespace pwiz.Skyline.Model.Lib
                 if (!ReferenceEquals(calcPredict, calcMatch))
                 {
                     var ionTable = moleculeMasses.MatchIonMasses.FragmentMasses;
-                    if (Sequence.IsProteomic
-                    ) // CONSIDER - eventually we may be able to predict fragments for small molecules?
+                    if (Sequence.IsProteomic)
+                        // CONSIDER - eventually we may be able to predict fragments for small molecules?
                         ionTable = calcPredict.GetFragmentIonMasses(Sequence);
+
+                    var predictedMasses = new IonMasses(calcPredict.GetPrecursorFragmentMass(Sequence), ionTable);
+                    if (moleculeMasses.MatchIonMasses.KnownFragments != null)
+                        predictedMasses = predictedMasses.ChangeKnownFragments(moleculeMasses.MatchIonMasses
+                            .KnownFragments);
                     moleculeMasses =
-                        moleculeMasses.ChangePredictIonMasses(new IonMasses(
-                            calcPredict.GetPrecursorFragmentMass(Sequence),
-                            ionTable));
+                        moleculeMasses.ChangePredictIonMasses(predictedMasses);
                 }
             }
 
@@ -640,8 +652,11 @@ namespace pwiz.Skyline.Model.Lib
             var knownFragments = MoleculeMassesObj.MatchIonMasses.KnownFragments;
             if (knownFragments != null)
             {
+                var types = Types;
+                if (Sequence.IsProteomic)
+                    types = ImmutableList.ValueOf(new[] {IonType.custom});
                 // Small molecule work - we only know about the fragments we're given, we can't predict others
-                foreach (IonType type in Types)
+                foreach (IonType type in types)
                 {
                     if (Transition.IsPrecursor(type))
                     {
@@ -675,7 +690,8 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
                 }
-                return rankedMI;
+                if(!Sequence.IsProteomic)
+                    return rankedMI;
             }
 
             // Look for a predicted match within the acceptable tolerance
@@ -700,6 +716,10 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     continue;
                 }
+
+                // Custom ions have been already matched above. No need to do anything.
+                if (IonType.custom.Equals(type))
+                    continue;
 
                 foreach (var adduct in Adducts)
                 {

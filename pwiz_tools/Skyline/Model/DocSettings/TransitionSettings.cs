@@ -914,6 +914,15 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.FragmentRangeLastName = prop);
         }
 
+        public TransitionFilter ChangeFragmentRangeAll()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._fragmentRangeFirst = StartFragmentFinder.ION_1;
+                im._fragmentRangeLast = EndFragmentFinder.LAST_ION;
+            });
+        }
+
         public TransitionFilter ChangeMeasuredIons(IList<MeasuredIon> prop)
         {
             return ChangeProp(ImClone(this), im => im.MeasuredIons = prop);
@@ -2480,7 +2489,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public RetentionTimeFilterType RetentionTimeFilterType { get; private set; }
         [Track]
         public double RetentionTimeFilterLength { get; private set; }
-
         public bool IsEnabled
         {
             get { return IsEnabledMs || IsEnabledMsMs; }

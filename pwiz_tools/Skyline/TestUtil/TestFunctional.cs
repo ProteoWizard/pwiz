@@ -86,6 +86,15 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for parallel testing
+    /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoParallelTestingAttribute : Attribute
+    {
+    }
+
+    /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
     /// in the TestPerf namespace, where they receive special handling so as
@@ -254,7 +263,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>(Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
         {
             RunDlg(show, false, act, pause, millis);
         }

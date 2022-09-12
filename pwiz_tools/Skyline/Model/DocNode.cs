@@ -172,7 +172,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Id, Id) && Equals(obj.Annotations, Annotations);
+            var equals = Equals(obj.Id, Id) && Equals(obj.Annotations, Annotations);
+            return equals;
         }
 
         public override bool Equals(object obj)

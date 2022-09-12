@@ -34,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class RTScheduleGraphPane : SummaryGraphPane
+    public class RTScheduleGraphPane : SummaryGraphPane
     {
         private static readonly IList<Color> COLORS_WINDOW = GraphChromatogram.COLORS_LIBRARY;
         private SchedulingDataCalculator _dataCalculator;
@@ -329,9 +329,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
-                        double timeWindow;
                         double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, input.SchedulingReplicateIndex,
-                            input.SchedulingAlgorithm, singleWindow, out timeWindow);
+                            input.SchedulingAlgorithm, singleWindow, out var timeWindow);
                         var nodeGroupPrimary = primaryTransitionCount > 0
                             ? nodePep.GetPrimaryResultsGroup(nodeGroup)
                             : null;
@@ -382,7 +381,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     lastStep = Math.Min(lastStep, stepCount - 1);
                     for (int i = firstStep; i <= lastStep; i++)
                     {
-                        overlapCounts[i]++;
+                        overlapCounts[i] += schedule.TransitionCount;
                     }
                 }
 

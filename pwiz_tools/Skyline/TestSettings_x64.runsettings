@@ -7,17 +7,21 @@
     <!-- [x86] | x64 -->
     <TargetPlatform>x64</TargetPlatform>  
   
-    <!-- Framework35 | [Framework40] | Framework45 -->
-    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
+    <!-- Framework35 | [Framework40] | Framework45 
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion> -->
 
   </RunConfiguration>
-  
+
+  <TestRunParameters>
+    <Parameter name="CustomTestResultsDirectory" value=".\TestResults" />
+  </TestRunParameters>
+
   <MSTest>
-    <ForcedLegacyMode>True</ForcedLegacyMode>
-    <SettingsFile>TestSettings_x64.testsettings</SettingsFile>
+    <!--<ForcedLegacyMode>True</ForcedLegacyMode>
+    <SettingsFile>TestSettings_x64.testsettings</SettingsFile>-->
     <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
     <CaptureTraceOutput>False</CaptureTraceOutput>
     <DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>
-    <DeploymentEnabled>True</DeploymentEnabled>
+    <DeploymentEnabled>False</DeploymentEnabled>
   </MSTest>
 </RunSettings>

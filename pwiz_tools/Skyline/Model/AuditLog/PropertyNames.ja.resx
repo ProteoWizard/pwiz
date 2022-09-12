@@ -837,7 +837,7 @@
     <value>すべてのトランジションを自動選択</value>
   </data>
   <data name="RefinementSettings_MinPeptidesPerProtein" xml:space="preserve">
-    <value>タンパク質毎の最小ペプチド</value>
+    <value>タンパク質あたりの最小ペプチド</value>
   </data>
   <data name="RefinementSettings_MinTransitionsPepPrecursor" xml:space="preserve">
     <value>プリカーサー毎の最小トランジション</value>
@@ -1041,7 +1041,7 @@
     <value>ドキュメント内のペプチドをフィルタリング</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
-    <value>曖昧な一致を含める</value>
+    <value>あいまい一致を含む</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
     <value>ファイルを検索</value>
@@ -1361,6 +1361,9 @@
   <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
     <value>タンパク質</value>
   </data>
+  <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
+    <value>最小タンパク質リストを検索</value>
+  </data>
   <data name="ChooseSchedulingReplicatesSettings" xml:space="preserve">
     <value>RT予測の繰り返し測定を選択</value>
   </data>
@@ -1654,5 +1657,56 @@
   </data>
   <data name="DdaSearchSettings_SearchEngine" xml:space="preserve">
     <value>検索エンジン</value>
+  </data>
+  <data name="File_FileName" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="File_ScoreTypeName" xml:space="preserve">
+    <value>スコアタイプ</value>
+  </data>
+  <data name="File_ScoreThreshold" xml:space="preserve">
+    <value>スコアの閾値</value>
+  </data>
+  <data name="TransitionFullScan_IgnoreSimScans" xml:space="preserve">
+    <value>SIMスキャンを無視</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedPeptides" xml:space="preserve">
+    <value>マップ済みペプチド</value>
+  </data>
+  <data name="AssociateProteinsSettings_MappedProteins" xml:space="preserve">
+    <value>マップ済みタンパク質</value>
+  </data>
+  <data name="ParsimonySettings_SharedPeptides" xml:space="preserve">
+    <value>共有ペプチドオプション</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetPeptides" xml:space="preserve">
+    <value>ペプチドのターゲット</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteins" xml:space="preserve">
+    <value>タンパク質のターゲット</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedPeptides" xml:space="preserve">
+    <value>マップ解除されたペプチド</value>
+  </data>
+  <data name="AssociateProteinsSettings_UnmappedProteins" xml:space="preserve">
+    <value>マップ解除されたタンパク質</value>
+  </data>
+  <data name="ParsimonySettings_GroupProteins" xml:space="preserve">
+    <value>タンパク質をグループ化</value>
+  </data>
+  <data name="AssociateProteinsSettings_TargetProteinGroups" xml:space="preserve">
+    <value>タンパク質グループのターゲット</value>
+  </data>
+  <data name="ParsimonySettings_MinPeptidesPerProtein" xml:space="preserve">
+    <value>タンパク質あたりの最小ペプチド</value>
+  </data>
+  <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
+    <value>サブセットのタンパク質を削除</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
+    <value>タンパク質の関連付け</value>
+  </data>
+  <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
+    <value>タンパク質の関連付け設定</value>
   </data>
 </root>

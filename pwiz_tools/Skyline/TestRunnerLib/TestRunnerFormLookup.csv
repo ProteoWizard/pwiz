@@ -23,7 +23,8 @@ AuditLogForm,*
 AuditLogExtraInfoForm,TestAuditLogSaving
 LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
-BuildLibraryDlg,TestFullScanId
+BuildLibraryDlg.PropertiesPage,TestFullScanId
+BuildLibraryDlg.FilesPage,TestFullScanId
 BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
@@ -159,7 +160,6 @@ PeptideSettingsUI.ModificationsTab,TestNeutralLoss
 PeptideSettingsUI.LabelsTab,UIModeSettingsTest
 PeptideSettingsUI.PredictionTab,IrtFunctionalTest
 PeptideSettingsUI.QuantificationTab,TestCalibration
-PeptidesPerProteinDlg,TestImportPeptideSearch
 PermuteIsotopeModificationsDlg,TestModificationPermuter
 PivotEditor,TestPivotEditor
 PopupPickList,TestPrecursorIon

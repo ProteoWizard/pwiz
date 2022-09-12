@@ -1358,6 +1358,9 @@
   <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
     <value>FASTA</value>
   </data>
+  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
   <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
     <value>Find minimal protein list</value>
   </data>
@@ -1699,5 +1702,11 @@
   </data>
   <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
     <value>Remove subset proteins</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
+    <value>Associate Proteins</value>
+  </data>
+  <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
+    <value>Protein association settings</value>
   </data>
 </root>

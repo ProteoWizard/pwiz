@@ -2798,8 +2798,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                var peptideKey = LibraryKey as PeptideLibraryKey;
-                return peptideKey == null ? null : peptideKey.ModifiedSequence;
+                return LibraryKey.Target.ToString();
             }
         }
         public Target Target
@@ -2820,12 +2819,9 @@ namespace pwiz.Skyline.Model.Lib
                     : moleculeLibraryKey.SmallMoleculeLibraryAttributes;
             }
         }
-        public int Charge { get
-        {
-            return IsProteomicKey
-                ? ((PeptideLibraryKey) LibraryKey).Charge
-                : (IsPrecursorKey ? 0 : ((MoleculeLibraryKey) LibraryKey).Adduct.AdductCharge);
-        } }
+
+        public int Charge => LibraryKey.Adduct.AdductCharge;
+
         public Adduct Adduct 
         {
             get

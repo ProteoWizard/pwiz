@@ -1011,6 +1011,7 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
         public string SampleId { get; private set; }
         public string InstrumentSerialNumber { get; private set; }
+        public bool IsSrm { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -1059,6 +1060,7 @@ namespace pwiz.Skyline.Model.Results
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;
                                                      im.InstrumentSerialNumber = fileInfo.InstrumentSerialNumber;
+                                                     im.IsSrm = fileInfo.IsSrm;
                                                  });
         }
 
@@ -1138,7 +1140,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
                 return false;
-
+            if (!IsSrm.Equals(other.IsSrm))
+                return false;
             return true;
         }
 
@@ -1173,6 +1176,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobilityUnits.GetHashCode();
                 result = (result*397) ^ SampleId?.GetHashCode() ?? 0;
                 result = (result*397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
+                result = (result*397) ^ IsSrm.GetHashCode();
                 return result;
             }
         }

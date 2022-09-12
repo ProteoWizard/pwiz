@@ -39,6 +39,8 @@ namespace TestRunnerLib
 {
     public class TestInfo
     {
+        private bool? _isAuditLogTest;
+
         public readonly Type TestClassType;
         public readonly MethodInfo TestMethod;
         public readonly MethodInfo SetTestContext;
@@ -46,6 +48,7 @@ namespace TestRunnerLib
         public readonly MethodInfo TestCleanup;
         public readonly bool IsPerfTest;
         public readonly int? MinidumpLeakThreshold;
+        public readonly bool DoNotRunInParallel;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -56,10 +59,44 @@ namespace TestRunnerLib
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
 
+            var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
+            DoNotRunInParallel = noParallelTestAttr != null;
+
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
                 ? (int?) minidumpAttr.GetType().GetProperty("ThresholdMB")?.GetValue(minidumpAttr)
                 : null;
+        }
+
+        /// <summary>
+        /// True if this test records audit logging. This property is delay loaded because it
+        /// can end up locking test DLLs which can be a problem for the nightly tests.
+        /// </summary>
+        public bool IsAuditLogTest
+        {
+            get
+            {
+                if (!_isAuditLogTest.HasValue)
+                {
+                    _isAuditLogTest = false;
+
+                    var auditLogProp = TestClassType.GetProperty("AuditLogCompareLogs");
+                    if (auditLogProp != null)
+                    {
+                        var testObj = Activator.CreateInstance(TestClassType);
+                        SetTestContext?.Invoke(testObj, new object[]
+                        {
+                            new TestRunnerContext
+                            {
+                                Properties = { ["TestName"] = TestClassType.Name }
+                            }
+                        });
+                        _isAuditLogTest = (bool)auditLogProp.GetValue(testObj);
+                    }
+                }
+
+                return _isAuditLogTest.Value;
+            }
         }
     }
 
@@ -92,6 +129,7 @@ namespace TestRunnerLib
         public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
+        public bool IsParallelClient { get; private set; }
 
         public bool ReportSystemHeaps
         {
@@ -122,7 +160,8 @@ namespace TestRunnerLib
             int timeoutMultiplier = 1,
             string results = null,
             StreamWriter log = null,
-            bool verbose = false)
+            bool verbose = false,
+            bool isParallelClient = false)
         {
             _buildMode = buildMode;
             _log = log;
@@ -155,6 +194,7 @@ namespace TestRunnerLib
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
             Verbose = verbose;
+            IsParallelClient = isParallelClient;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -801,8 +841,17 @@ namespace TestRunnerLib
 
         public void TeamCityStartTest(TestInfo test)
         {
-            if (TeamCityTestDecoration)
-                Console.WriteLine(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            if (!TeamCityTestDecoration)
+                return;
+
+            string msg = string.Format(@"##teamcity[testStarted name='{0}' captureStandardOutput='true']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName);
+            Console.WriteLine(msg);
+            Console.Out.Flush();
+            if (IsParallelClient)
+            {
+                _log.WriteLine(msg);
+                _log.Flush();
+            }
         }
 
         public void TeamCityFinishTest(TestInfo test, string errorMessage = null)
@@ -820,11 +869,21 @@ namespace TestRunnerLib
                 tcMessage.Replace("\r", "|r");
                 tcMessage.Replace("[", "|[");
                 tcMessage.Replace("]", "|]");
-                Console.WriteLine("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                string failMsg = string.Format("##teamcity[testFailed name='{0}' message='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, tcMessage);
+                Console.WriteLine(failMsg);
+                if (IsParallelClient)
+                    _log.WriteLine(failMsg);
                 // ReSharper restore LocalizableElement
             }
 
-            Console.WriteLine(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            string msg = string.Format(@"##teamcity[testFinished name='{0}' duration='{1}']", test.TestMethod.Name + '-' + Language.TwoLetterISOLanguageName, LastTestDuration);
+            Console.WriteLine(msg);
+            Console.Out.Flush();
+            if (IsParallelClient)
+            {
+                _log.WriteLine(msg);
+                _log.Flush();
+            }
         }
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
@@ -837,9 +896,9 @@ namespace TestRunnerLib
                 if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
                     if (!DerivesFromAbstractUnitTest(type))
-// ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
-// ReSharper restore LocalizableElement
+                    {
+                        Console.WriteLine($@"ERROR: {type.Name} does not derive from AbstractUnitTest!"); 
+                    }
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
                     var methods = type.GetMethods();
@@ -883,5 +942,65 @@ namespace TestRunnerLib
             return GetAttribute(info, attributeName) != null;
         }
 
+        public static string RunCommand(string command, string args, string message, bool useShellExecute = false, bool elevated = false)
+        {
+            var psi = new ProcessStartInfo(command, args)
+            {
+                RedirectStandardOutput = !useShellExecute,
+                RedirectStandardError = !useShellExecute,
+                UseShellExecute = useShellExecute,
+                CreateNoWindow = !useShellExecute
+            };
+            if (elevated)
+                psi.Verb = "runas";
+
+            var p = Process.Start(psi);
+
+            var output = new StringBuilder();
+
+            if (!useShellExecute)
+            {
+                var reader = new ProcessStreamReader(p);
+                string line;
+                while (!(line = reader.ReadLine()).IsNullOrEmpty())
+                    output.AppendLine(line);
+            }
+
+            p?.WaitForExit();
+            if (p == null || p.ExitCode != 0)
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output});");
+             
+            return output.ToString();
+        }
+
+        public const string DOCKER_IMAGE_NAME = "chambm/always_up_runner";
+
+        public const string IS_DOCKER_RUNNING_MESSAGE = "Is Docker Desktop installed and is the daemon running? " +
+                                                        GETTING_PARALLEL_TESTING_WORKING;
+
+        public const string GETTING_PARALLEL_TESTING_WORKING =
+            "See the Skyline developer site to get parallel testing working with Skyline: " +
+            "https://skyline.ms/wiki/home/development/page.view?name=Running%20tests%20in%20parallel%20with%20Docker";
+
+        public static string ALWAYS_UP_RUNNER_REPO => Path.Combine(PathEx.GetDownloadsPath(), @"AlwaysUpRunner-master");
+        public static string ALWAYS_UP_SERVICE_EXE => Path.Combine(ALWAYS_UP_RUNNER_REPO, @"AlwaysUpService.exe");
+
+        public static IEnumerable<string> GetDockerWorkerNames()
+        {
+            string dockerPsOutput = RunCommand("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"", IS_DOCKER_RUNNING_MESSAGE);
+            foreach(var dockerWorkerName in dockerPsOutput.Split(new [] { Environment.NewLine }, StringSplitOptions.None))
+                yield return dockerWorkerName;
+        }
+
+        public static void SendDockerKill(string workerNames = null)
+        {
+            workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            Console.WriteLine(@"Sending docker kill command to all workers.");
+            var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
+            psi.CreateNoWindow = true;
+            psi.UseShellExecute = false;
+            Process.Start(psi);
+        }
     }
 }

@@ -1269,6 +1269,7 @@ void ScanInfoImpl::reinitialize(const string& filter)
 
 void ScanInfoImpl::initialize()
 {
+    bool goodFilter = false;
     try
     {
         scanSegment_ = 0;
@@ -1336,6 +1337,7 @@ void ScanInfoImpl::initialize()
                 filter_ = rawfile_->raw_->GetFilterForScanNumber(scanNumber_);
 #endif
             }
+            goodFilter = true;
 
 #ifndef _WIN64
             long isUniformTime = 0;
@@ -1396,7 +1398,7 @@ void ScanInfoImpl::initialize()
             }
         }
     }
-    CATCH_AND_FORWARD_EX(filter())
+    CATCH_AND_FORWARD_EX((goodFilter ? filter() : ("corrupt scan filter for scan " + lexical_cast<string>(scanNumber_))))
 }
 
 void ScanInfoImpl::initStatusLog() const
@@ -2270,7 +2272,7 @@ vector<string> RawFileImpl::getInstrumentMethods() const
             checkResult(raw_->GetInstMethodNames(&size, &variantLabels));
             InstrumentMethodLabelValueArray methods(variantLabels, size, raw_);
             for (int i = 0; i < size; ++i)
-                result.push_back(methods.value(i));
+                result.emplace_back(methods.value(i));
         }
         catch (exception&)
         {
@@ -2278,7 +2280,7 @@ vector<string> RawFileImpl::getInstrumentMethods() const
         }
 #else
         for (int i = 0; i < raw_->InstrumentMethodsCount; ++i)
-            result.push_back(ToStdString(raw_->GetInstrumentMethod(i)));
+            result.emplace_back(ToStdString(raw_->GetInstrumentMethod(i)));
 #endif
         return result;
     }

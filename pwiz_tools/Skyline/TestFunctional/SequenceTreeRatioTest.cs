@@ -102,6 +102,7 @@ namespace pwiz.SkylineTestFunctional
             var ratioToGlobalStandards = normalizedValueCalculator.GetTransitionValue(
                 NormalizationMethod.GLOBAL_STANDARDS, transitionTreeNode.PepNode,
                 transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
+                0,
                 transitionTreeNode.DocNode.GetSafeChromInfo(0).FirstOrDefault());
             Assert.IsNotNull(ratioToGlobalStandards);
             string resultsText = string.Format(Resources.TransitionTreeNode_GetResultsText__0__ratio__1__, 

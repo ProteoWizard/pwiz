@@ -46,8 +46,35 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
-            // Define a rule which sets SubjectId for the samples to "D" or "H" followed by "_" and the bioreplicate number.
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
+            RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations));
+            // Define some replicate annotations
+            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+            {
+                defineAnnotationDlg.AnnotationName = "SubjectId";
+                defineAnnotationDlg.AnnotationTargets =
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.text;
+                defineAnnotationDlg.OkDialog();
+            });
+            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+            {
+                defineAnnotationDlg.AnnotationName = "BioReplicate";
+                defineAnnotationDlg.AnnotationTargets =
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.number;
+                defineAnnotationDlg.OkDialog();
+            });
+            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+            {
+                defineAnnotationDlg.AnnotationName = "Condition";
+                defineAnnotationDlg.AnnotationTargets =
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.value_list;
+                defineAnnotationDlg.Items = new[] { "Healthy", "Diseased" };
+                defineAnnotationDlg.OkDialog();
+            });
+            // Define a rule which sets SubjectId for the samples to "D" or "H" followed by "_" and the bioreplicate number.
             RunUI(()=>
             {
                 documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);

@@ -534,7 +534,15 @@ namespace pwiz.Skyline.Model.Lib
 
         public override Target Target
         {
-            get { return PeptideLibraryKeys.First().Target; }
+            get { return new Target(ModifiedSequence); }
+        }
+
+        public string ModifiedSequence
+        {
+            get
+            {
+                return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks);
+            }
         }
 
         public int Charge { get; private set; }
@@ -688,7 +696,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks) + Transition.GetChargeIndicator(Adduct);
+            return ModifiedSequence + Transition.GetChargeIndicator(Adduct);
         }
 
         /// <summary>
@@ -783,6 +791,30 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        protected bool Equals(CrosslinkLibraryKey other)
+        {
+            return Charge == other.Charge && Equals(PeptideLibraryKeys, other.PeptideLibraryKeys) && Equals(Crosslinks, other.Crosslinks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CrosslinkLibraryKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Charge;
+                hashCode = (hashCode * 397) ^ (PeptideLibraryKeys != null ? PeptideLibraryKeys.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Crosslinks != null ? Crosslinks.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

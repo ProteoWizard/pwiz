@@ -373,7 +373,30 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private const int N_DISPLAY_LINES = 100; // Display no more first than 100 lines of the import
+        public const int N_DISPLAY_LINES = 100; // Display no more first than 100 lines of the import
+
+        private int _numColumns = -1;
+        private int GetColumnCount(bool reset)
+        {
+            if (reset || _numColumns < 0)
+            {
+                // Inspect the input for lines with more columns than headers, or more headers than columns
+                _numColumns = 0;
+                for (var index = 0; index < Importer.RowReader.Lines.Count; index++)
+                {
+                    var parsedLine = Importer.RowReader.Lines[index].ParseDsvFields(Importer.Separator);
+                    _numColumns = Math.Max(_numColumns, parsedLine.Length);
+                }
+
+                var headers = Importer.RowReader.Indices.Headers;
+                if (headers != null)
+                {
+                    _numColumns = Math.Max(_numColumns, headers.Length);
+                }
+            }
+
+            return _numColumns;
+        }
 
         private void DisplayData()
         {
@@ -381,7 +404,7 @@ namespace pwiz.Skyline.FileUI
             var table = new DataTable("TransitionList");
 
             // Create the first row of columns
-            var numColumns = Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length;
+            var numColumns = GetColumnCount(true);
             for (var i = 0; i < numColumns; i++)
                 table.Columns.Add().DataType = typeof(string);
 
@@ -405,19 +428,17 @@ namespace pwiz.Skyline.FileUI
             dataGrid.DataSource = table;
 
             var headers = Importer.RowReader.Indices.Headers;
-            if (headers != null && headers.Length > 0)
+
+            for (var i = 0; i < numColumns; i++)
             {
-                for (var i = 0; i < numColumns; i++)
+                if (headers != null && i < headers.Length)
                 {
                     dataGrid.Columns[i].HeaderText = headers[i];
                     dataGrid.Columns[i].ToolTipText =
                         string.Format(Resources.ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_header___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_for_import_, headers[i]);
+                    dataGrid.ColumnHeadersVisible = true;
                 }
-                dataGrid.ColumnHeadersVisible = true;
-            }
-            else
-            {
-                for (var i = 0; i < numColumns; i++)
+                else
                 {
                     // In this case when we don't have user provided headers, we still want localized headers that can be translated,
                     // this replaces the auto generated strings with a localized version
@@ -434,7 +455,8 @@ namespace pwiz.Skyline.FileUI
         private void InitializeComboBoxes()
         {
             ComboBoxes = new List<LiteDropDownList>();
-            for (var i = 0; i < Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length; i++)
+            var columnCount = GetColumnCount(true);
+            for (var i = 0; i < columnCount; i++)
             {
                 var combo = new LiteDropDownList();
                 ComboBoxes.Add(combo);
@@ -523,7 +545,7 @@ namespace pwiz.Skyline.FileUI
             // If there are items on our saved column list and the file does not contain headers (or the headers are the same as the previous file),
             // and the number of columns matches the saved column count then we try using the saved columns and apply them if they work
             int savedCount = Settings.Default.CustomImportTransitionListColumnTypesList.Count;
-            if (savedCount != 0 && (headers == null || sameHeaders) && savedCount == Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length)
+            if (savedCount != 0 && (headers == null || sameHeaders) && savedCount == GetColumnCount(false))
             {
                 UseSavedColumnsIfValid();
             }
@@ -1002,6 +1024,7 @@ namespace pwiz.Skyline.FileUI
         public class DocumentChecked
         {
             public SrmDocument Document;
+            public Dictionary<string, FastaSequence> ProteinAssociations;
             public IdentityPath SelectPath;
             public List<MeasuredRetentionTime> IrtPeptides;
             public List<SpectrumMzInfo> LibrarySpectra;
@@ -1182,10 +1205,13 @@ namespace pwiz.Skyline.FileUI
                         CheckMoleculeColumns();
                     }
 
+                    insertionParams.ProteinAssociations = checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0
+                        ? _dictNameSeq
+                        : new Dictionary<string, FastaSequence>();
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
                         out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders, 
-                        checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0 ? _dictNameSeq : new Dictionary<string, FastaSequence>());
+                        insertionParams.ProteinAssociations);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
             }

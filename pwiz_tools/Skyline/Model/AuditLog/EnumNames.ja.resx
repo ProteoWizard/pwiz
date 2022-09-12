@@ -633,4 +633,28 @@
   <data name="SearchEngine_MSGFPlus" xml:space="preserve">
     <value>MS-GF+</value>
   </data>
+  <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
+    <value>ペプチドの最も多いタンパク質に割当て</value>
+  </data>
+  <data name="SharedPeptides_AssignedToFirstProtein" xml:space="preserve">
+    <value>最初のタンパク質に割当て</value>
+  </data>
+  <data name="SharedPeptides_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>タンパク質間で重複</value>
+  </data>
+  <data name="SharedPeptides_Removed" xml:space="preserve">
+    <value>削除済み (ペプチドは特定のタンパク質に固有の必要がある)</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToBestProtein" xml:space="preserve">
+    <value>ペプチドの最も多いタンパク質グループに割当て</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToFirstProtein" xml:space="preserve">
+    <value>最初のタンパク質グループに割当て</value>
+  </data>
+  <data name="SharedPeptidesGroup_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>タンパク質グループ間で重複</value>
+  </data>
+  <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
+    <value>削除済み (ペプチドは特定のタンパク質グループに固有の必要がある)</value>
+  </data>
 </root>

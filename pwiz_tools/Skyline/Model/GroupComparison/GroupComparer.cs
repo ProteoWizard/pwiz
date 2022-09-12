@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 foreach (var precursor in peptide.TransitionGroups)
                 {
-                    if (NormalizationMethod.RatioToLabel.Matches(ComparisonDef.NormalizationMethod, precursor.TransitionGroup.LabelType))
+                    if (ComparisonDef.NormalizationMethod.HideLabelType(SrmDocument.Settings, precursor.LabelType))
                     {
                         continue;
                     }
@@ -451,8 +451,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                             BioReplicate = replicateEntry.Value.BioReplicate,
                             Control = replicateEntry.Value.IsControl,
                             IdentityPath = quantityEntry.Key,
-                            Intensity = Math.Max(1.0, quantityEntry.Value.Intensity),
-                            Denominator = Math.Max(1.0, quantityEntry.Value.Denominator),
+                            Intensity = quantityEntry.Value.Intensity,
+                            Denominator = quantityEntry.Value.Denominator,
                             ReplicateIndex = replicateEntry.Key,
                         };
                         foldChangeDetails.Add(dataRowDetails);

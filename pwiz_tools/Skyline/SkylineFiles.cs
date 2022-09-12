@@ -1945,6 +1945,7 @@ namespace pwiz.Skyline
             List<string> columnPositions = null;
             var docCurrent = DocumentUI;
             SrmDocument docNew = null;
+            Dictionary<string, FastaSequence> proteinAssociations = null;
             MassListImporter importer = null;
             var analyzingMessage = string.Format(Resources.SkylineWindow_ImportMassList_Analyzing_input__0_, inputs.InputFilename ?? string.Empty);
             using (var longWaitDlg0 = new LongWaitDlg(this)
@@ -1991,6 +1992,7 @@ namespace pwiz.Skyline
 
                     var insParams = columnDlg.InsertionParams;
                     docNew = insParams.Document;
+                    proteinAssociations = insParams.ProteinAssociations;
                     selectPath = insParams.SelectPath;
                     irtPeptides = insParams.IrtPeptides;
                     librarySpectra = insParams.LibrarySpectra;
@@ -2101,7 +2103,8 @@ namespace pwiz.Skyline
                     // If the document was changed during the operation, try all the changes again
                     // using the information given by the user.
                     docCurrent = DocumentUI;
-                    doc = doc.ImportMassList(inputs, importer, insertPath, out selectPath, columnPositions, hasHeaders);
+                    doc = doc.ImportMassList(inputs, importer, null, insertPath, out selectPath, out _, out _, out _,
+                        out _, columnPositions, SrmDocument.DOCUMENT_TYPE.none, hasHeaders, proteinAssociations);
                     if (irtInputs != null)
                     {
                         var iRTimporter = doc.PreImportMassList(irtInputs, null, false);

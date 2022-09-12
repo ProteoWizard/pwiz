@@ -34,17 +34,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition_result)]
     public class TransitionResult : Result
     {
-        private readonly CachedValue<TransitionChromInfo> _chromInfo;
-        private readonly CachedValue<Chromatogram> _chromatogram;
+        private readonly CachedValues _cachedValues = new CachedValues();
         public TransitionResult(Transition transition, ResultFile resultFile) : base(transition, resultFile)
         {
-            _chromInfo = CachedValue.Create(DataSchema, () => GetResultFile().FindChromInfo(transition.DocNode.Results));
-            _chromatogram = CachedValue.Create(DataSchema, 
-                () => new Chromatogram(new ChromatogramGroup(PrecursorResult), Transition));
         }
 
         [Browsable(false)]
-        public TransitionChromInfo ChromInfo { get { return _chromInfo.Value; } }
+        public TransitionChromInfo ChromInfo { get { return _cachedValues.GetValue(this); } }
 
         public void ChangeChromInfo(EditDescription editDescription, Func<TransitionChromInfo, TransitionChromInfo> newChromInfo)
         {
@@ -114,7 +110,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public Chromatogram Chromatogram
         {
-            get { return _chromatogram.Value; }
+            get { return _cachedValues.GetValue1(this); }
         }
 
         [InvariantDisplayName("TransitionReplicateNote")]
@@ -194,7 +190,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return DataSchema.NormalizedValueCalculator.GetTransitionValue(normalizationMethod,
-                Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, ChromInfo);
+                Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, GetResultFile().Replicate.ReplicateIndex, ChromInfo);
+        }
+
+        private class CachedValues : CachedValues<TransitionResult, TransitionChromInfo, Chromatogram>
+        {
+            protected override SrmDocument GetDocument(TransitionResult owner)
+            {
+                return owner.SrmDocument;
+            }
+
+            protected override TransitionChromInfo CalculateValue(TransitionResult owner)
+            {
+                return owner.GetResultFile().FindChromInfo(owner.Transition.DocNode.Results);
+            }
+
+            protected override Chromatogram CalculateValue1(TransitionResult owner)
+            {
+                return new Chromatogram(new ChromatogramGroup(owner.PrecursorResult), owner.Transition);
+            }
         }
     }
 }

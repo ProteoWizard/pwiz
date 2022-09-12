@@ -456,7 +456,7 @@ namespace pwiz.SkylineTest
             {
                 IProgressStatus status = new ProgressStatus();
                 viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
-                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, viewContext.GetCsvWriter());
+                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
             }
         }
 

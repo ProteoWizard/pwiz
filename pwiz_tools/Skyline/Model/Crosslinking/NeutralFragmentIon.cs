@@ -74,12 +74,57 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public bool IsEmpty
+        /// <summary>
+        /// Returns true if all of the peptides in this fragment ion are connected to each other by
+        /// at least one crosslinker.
+        /// </summary>
+        public bool IsConnected(PeptideStructure peptideStructure)
         {
-            get
+            var peptideIndexes =
+                Enumerable.Range(0, IonChain.Count).Where(i => !IonChain[i].IsEmpty).ToHashSet();
+            if (peptideIndexes.Count == 0)
             {
-                return IonChain.IsEmpty;
+                // Empty
+                return false;
             }
+
+            var containedCrosslinks = new List<Crosslink>();
+            foreach (var crosslink in peptideStructure.Crosslinks)
+            {
+                bool? isContained = ContainsCrosslink(peptideStructure, crosslink.Sites);
+                if (!isContained.HasValue)
+                {
+                    return false;
+                }
+
+                if (isContained.Value)
+                {
+                    containedCrosslinks.Add(crosslink);
+                }
+            }
+            var peptideIndexQueue = new Queue<int>();
+            var visitedPeptideIndexes = new HashSet<int>();
+            peptideIndexQueue.Enqueue(peptideIndexes.Min());
+            while (peptideIndexQueue.Count > 0)
+            {
+                var peptideIndex = peptideIndexQueue.Dequeue();
+                visitedPeptideIndexes.Add(peptideIndex);
+                foreach (var crosslink in containedCrosslinks)
+                {
+                    if (crosslink.Sites.PeptideIndexes.Contains(peptideIndex))
+                    {
+                        foreach (var site in crosslink.Sites)
+                        {
+                            if (visitedPeptideIndexes.Add(site.PeptideIndex))
+                            {
+                                peptideIndexQueue.Enqueue(site.PeptideIndex);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return visitedPeptideIndexes.SetEquals(peptideIndexes);
         }
 
         public bool IsOrphan
@@ -174,6 +219,8 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// This method only considers CrosslinkSites whose PeptideIndex is less than IonType.Count.
         /// This is to enable filtering out impossible partial ions while constructing larger ions using
         /// <see cref="SingleFragmentIon.Prepend"/>.
+        /// Note that this does not check whether all of the fragment ions are actually connected to each other.
+        /// For that, you would need to also check <see cref="IsConnected"/>.
         /// </summary>
         public bool IsAllowed(PeptideStructure peptideStructure)
         {

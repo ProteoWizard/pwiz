@@ -786,6 +786,7 @@ namespace ZedGraph
 		public void CalcRect( Graphics g, PaneBase pane, float scaleFactor,
 			ref RectangleF tChartRect )
 		{
+			var originalChartRect = tChartRect;
 			// Start with an empty rectangle
 			_rect = Rectangle.Empty;
 			_hStack = 1;
@@ -1020,6 +1021,13 @@ namespace ZedGraph
 				}
 			}
 
+			if (tChartRect.IsEmpty && !originalChartRect.IsEmpty)
+			{
+				// If there is not enough room for both the chart and the Legend, then allow
+				// the chart to use the entire rectangle so the user will see them both overlapping
+				// instead of an empty plot
+				tChartRect = originalChartRect;
+			}
 			_rect = newRect;
 		}
 
