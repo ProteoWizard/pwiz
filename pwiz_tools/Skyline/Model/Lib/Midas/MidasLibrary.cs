@@ -515,9 +515,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             if (!key.IsPrecursorKey)
             {
                 foreach (var spectrum in GetSpectraByPeptide(null, key))
-                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, 
-                        spectrum.RetentionTime, null, null,
-                        null, null, false, spectrum);
+                    yield return new SpectrumInfoLibrary(this, labelType, spectrum.ResultsFile.FilePath, spectrum.RetentionTime, null, null, null, null, false, spectrum);
                 yield break;
             }
 
