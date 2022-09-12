@@ -502,13 +502,7 @@ blt::local_date_time RawFileImpl::getCreationDate(bool adjustToHostTime) const
             bpt::time_duration(acquisitionTime.Hour, acquisitionTime.Minute, acquisitionTime.Second, bpt::millisec(acquisitionTime.Millisecond).fractional_seconds()));
 #endif
 
-        if (adjustToHostTime)
-        {
-            bpt::time_duration tzOffset = bpt::second_clock::universal_time() - bpt::second_clock::local_time();
-            return blt::local_date_time(pt + tzOffset, blt::time_zone_ptr()); // treat time as if it came from host's time zone; actual time zone is not provided by Thermo
-        }
-        else
-            return blt::local_date_time(pt, blt::time_zone_ptr());
+        return blt::local_date_time(pt, blt::time_zone_ptr());
     }
     CATCH_AND_FORWARD
 }
