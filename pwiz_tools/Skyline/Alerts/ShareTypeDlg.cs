@@ -35,18 +35,27 @@ namespace pwiz.Skyline.Alerts
     {
         private List<SkylineVersion> _skylineVersionOptions;
         private readonly SrmDocument _document; // Document from which replicate files and information can be extracted
+        private readonly DocumentFormat? _savedFileFormat;
+        private readonly bool _allowDataSources; // For now at least we never offer to include data sources in Panorama uploads
         private ShareResultsFilesDlg.AuxiliaryFiles _auxiliaryFiles; // Auxiliary files to be included (e.g. replicate files)
 
         public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
         {
         }
 
-        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat, SkylineVersion maxSupportedVersion)
+        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat, SkylineVersion maxSupportedVersion, bool allowDataSources = true)
         {
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
             _document = document;
-            cbIncludeReplicateFiles.Enabled = _document.Settings.HasResults; // Don't offer to include results files when there are none
+            _savedFileFormat = savedFileFormat;
+            _allowDataSources = allowDataSources;
+
+            if (!_allowDataSources)
+            {
+                // Get rid of the area where we would have asked about data sources
+                Height -= (btnSelectReplicateFiles.Height + (radioMinimal.Top - radioComplete.Bottom));
+            }
 
             if (savedFileFormat.HasValue && maxSupportedVersion.SrmDocumentVersion.CompareTo(savedFileFormat.Value) >= 0)
             {
@@ -65,6 +74,8 @@ namespace pwiz.Skyline.Alerts
             }
             comboSkylineVersion.SelectedIndex = 0;
             radioComplete.Checked = true;
+            UpdateDataSourceSharing(); // Don't offer to include results files when there are none, or when document format is too old
+
         }
 
         public ShareType ShareType { get; private set; }
@@ -176,6 +187,24 @@ namespace pwiz.Skyline.Alerts
             labelFileStatus.Visible = cbIncludeReplicateFiles.Checked;
         }
 
+        ///
+        private void UpdateDataSourceSharing()
+        {
+            var formatVersion = SelectedSkylineVersion?.SrmDocumentVersion ?? _savedFileFormat;
+            if (!_allowDataSources) // e.g. Panorama uploads
+            {
+                cbIncludeReplicateFiles.Visible = cbIncludeReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked =
+                    btnSelectReplicateFiles.Visible = labelFileStatus.Visible = false; // Don't offer to include results files for any formats
+            }
+            else if (formatVersion == null || formatVersion < DocumentFormat.SHARE_REPLICATE_FILES)
+            {
+                cbIncludeReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked = false; // Don't offer to include results files for older save formats
+            }
+            else
+            {
+                cbIncludeReplicateFiles.Enabled = _document.Settings.HasResults; // Don't offer to include results files when there are none
+            }
+        }
 
         /// <summary>
         /// Get all selected files
@@ -197,6 +226,11 @@ namespace pwiz.Skyline.Alerts
                 }
             }
             return auxiliaryFiles;
+        }
+
+        private void comboSkylineVersion_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateDataSourceSharing(); // Only allow data sources to be included with modern formats
         }
     }
 }

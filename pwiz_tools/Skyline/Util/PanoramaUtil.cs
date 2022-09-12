@@ -840,7 +840,8 @@ namespace pwiz.Skyline.Util
             var cacheVersion = GetDocumentCacheVersion(document);
             var supportedSkylineVersion = GetSupportedVersionForCacheFormat(folderInfo, cacheVersion);
             
-            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, supportedSkylineVersion))
+            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, supportedSkylineVersion, 
+                       false)) // Don't offer to include replicate data in .sky.zip - Panorama isn't expecting that
             {
                 if (dlgType.ShowDialog(parent) == DialogResult.Cancel)
                 {
