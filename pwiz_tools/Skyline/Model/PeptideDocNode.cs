@@ -869,14 +869,13 @@ namespace pwiz.Skyline.Model
                 if (!ExplicitMods.IsNullOrEmpty(ExplicitMods))
                 {
                     explicitMods = ExplicitMods.ChangeGlobalMods(settingsNew);
-                    if (explicitMods == null || !ArrayUtil.ReferencesEqual(explicitMods.GetHeavyModifications().ToArray(),
-                            ExplicitMods.GetHeavyModifications().ToArray()))
+                    if (explicitMods == null || !ArrayUtil.ReferencesEqual(
+                            explicitMods.GetHeavyModifications().ToArray(),
+                            ExplicitMods.GetHeavyModifications().ToArray()) ||
+                        !ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications)
+                       )
                     {
                         diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);
-                    }
-                    else if (!ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications))
-                    {
-                        diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
                     }
                 }
 
