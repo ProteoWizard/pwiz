@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model
     /// Then open the.skyr file in Notepad and replace all of the double quotes with single quotes and paste the contents of the file into
     /// a @"" string constant. Find the commit in which this comment was added for an example.
     ///
-    /// Note that if you skip step 1, users who have installed the current Skyline-Daily will not see the new report(s) when they upgrade.
+    /// Note that if you skip step 1, users who have installed the current Skyline-daily will not see the new report(s) when they upgrade.
     /// On your own computer, if you want to see the new reports without increasing the version number, you can go to Tools > Options > Miscellaneous
     /// and push the "Clear all saved settings" button.
     /// 
