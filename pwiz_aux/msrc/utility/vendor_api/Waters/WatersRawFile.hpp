@@ -42,6 +42,7 @@
 #include "MassLynxRawChromatogramReader.hpp"
 #include "MassLynxRawInfoReader.hpp"
 //#include "MassLynxRawScanStatsReader.h"
+#include <boost/range/algorithm/find_if.hpp>
 #include "MassLynxLockMassProcessor.hpp"
 #include "MassLynxRawProcessor.hpp"
 #include "MassLynxParameters.hpp"
@@ -135,12 +136,28 @@ struct PWIZ_API_DECL RawData
         // For functions over 100, the names become _FUNC0100.DAT
         // Keep track of the maximum function number
         string functionPathmask = rawpath + "/_FUNC*.DAT";
+        string chromatogramPathmask = rawpath + "/_CHRO*.DAT";
         vector<bfs::path> functionFilepaths;
+        vector<bfs::path> chromatogramFilepaths;
         expand_pathmask(functionPathmask, functionFilepaths);
+        expand_pathmask(chromatogramPathmask, chromatogramFilepaths);
         map<int, bfs::path> functionFilepathByNumber;
+        // If there are any chromatograms, then assume that any function without a matching chromatogram is lockmass data and not to be used
+        bool useChromatogramsToDetectLockmassFunction =
+            chromatogramFilepaths.size() > 0 && chromatogramFilepaths.size() == functionFilepaths.size() - 1;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
             string fileName = BFS_STRING(functionFilepaths[i].filename());
+            if (useChromatogramsToDetectLockmassFunction)
+            {
+                string chromatogramFileName = fileName;
+                boost::algorithm::replace_all(chromatogramFileName, "_FUNC", "_CHRO");
+                if (boost::range::find_if(chromatogramFilepaths, 
+                    [chromatogramFileName](const bfs::path& cfp) { return BFS_STRING(cfp.filename()) == chromatogramFileName; }) == chromatogramFilepaths.end())
+                {
+                    continue; // No matching chromatogram - presumably the lockmass function, don't add to list
+                }
+            }
             size_t number = lexical_cast<size_t>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
             functionIndexList.push_back(number-1); // 0-based
             functionFilepathByNumber[number-1] = functionFilepaths[i];
