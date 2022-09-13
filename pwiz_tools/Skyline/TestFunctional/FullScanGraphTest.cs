@@ -311,7 +311,7 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(false);
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             WaitForGraphs();
-            Assert.AreEqual(20, SkylineWindow.GraphFullScan.IonLabels.Count());
+            Assert.AreEqual(Skyline.Program.SkylineOffscreen? 70 : 20, SkylineWindow.GraphFullScan.IonLabels.Count());
 
             RunUI(() =>
             {
@@ -331,6 +331,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
             var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
+            Assert.AreEqual(Skyline.Program.SkylineOffscreen ? 49 : 1, graphLabels.Count());
         }
     }
 }
