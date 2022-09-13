@@ -75,7 +75,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 SkylineWindow.SaveDocument(); // Avoid "document changed since last edit" message
                 doc0 = SkylineWindow.DocumentUI;
             }); 
-            float tolerance = (float)doc0.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = doc0.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             double maxHeight0 = 0;
             var results0 = doc0.Settings.MeasuredResults;
             var intensities = new List<List<float>>();

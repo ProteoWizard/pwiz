@@ -21,6 +21,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
@@ -121,7 +122,7 @@ namespace pwiz.SkylineTestFunctional
 
                     ChromatogramGroupInfo[] chromatogramGroupInfos;
                     Assert.IsTrue(SkylineWindow.DocumentUI.MeasuredResults.TryLoadChromatogram(replicate.ChromatogramSet,
-                        transition.Precursor.Peptide.DocNode, transition.Precursor.DocNode, 0,
+                        transition.Precursor.Peptide.DocNode, transition.Precursor.DocNode, MzTolerance.ZERO_TOLERANCE,
                         out chromatogramGroupInfos));
                     Assert.AreEqual(1, chromatogramGroupInfos.Length);
                     var chromatogramGroup = chromatogramGroupInfos[0];
@@ -140,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
                             documentGridForm.FindColumn(pathData.Property(nameof(Chromatogram.Data.SpectrumIds)));
 
                         var chromatogramInfo =
-                            chromatogramGroup.GetTransitionInfo(transition.DocNode, .0001f, interpolated ? TransformChrom.interpolated : TransformChrom.raw, null);
+                            chromatogramGroup.GetTransitionInfo(transition.DocNode, new MzTolerance(.0001f), interpolated ? TransformChrom.interpolated : TransformChrom.raw, null);
                         Assert.IsNotNull(chromatogramInfo);
                         VerifyChromatogramData(cultureInfo, chromatogramInfo, row, colTimes, colIntensities, colMassErrors, colSpectrumIds);
                     }

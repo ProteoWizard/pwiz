@@ -1846,8 +1846,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MAX_MEASURABLE_MZ = 10000;
         public const double MIN_MZ_MATCH_TOLERANCE = 0.0001;
         public const double MAX_MZ_MATCH_TOLERANCE = 0.6;
+        public const double MIN_MZ_MATCH_TOLERANCE_PPM = 0.01;
+        public const double MAX_MZ_MATCH_TOLERANCE_PPM = 100;
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
         public const int MIN_TRANSITION_MAX_ORIGINAL = 50;
+        public const double DEFAULT_MZ_MATCH_TOLERANCE_PPM = 5;
         public const int MIN_TRANSITION_MAX = 320;
         public const int MAX_TRANSITION_MAX = 10000;
         public const int MIN_INCLUSION_MAX = 100;
@@ -1855,6 +1858,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_TIME = 0;
         public const int MAX_TIME = 500;
         public const int MIN_TIME_RANGE = 5;
+
+        public static MzTolerance DEFAULT_MATCH_TOLERANCE = new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE, MzTolerance.Units.mz);
+        public static MzTolerance ZERO_TOLERANCE = new MzTolerance(0, MzTolerance.Units.mz);
 
         public static double GetThermoDynamicMin(double precursorMz)
         {
@@ -1866,6 +1872,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                     int maxMz,
                                     bool isDynamicMin,
                                     double mzMatchTolerance,
+                                    MzTolerance.Units ionMatchToleranceUnit,
                                     int? maxTransitions,
                                     int? maxInclusions,
                                     int? minTime,
@@ -1875,6 +1882,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxMz = maxMz;
             IsDynamicMin = isDynamicMin;
             MzMatchTolerance = mzMatchTolerance;
+            IonMatchToleranceUnit = ionMatchToleranceUnit;
             MaxTransitions = maxTransitions;
             MaxInclusions = maxInclusions;
             MinTime = minTime;
@@ -1912,6 +1920,32 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [Track]
         public double MzMatchTolerance { get; private set; }
+
+        [Track]
+        public MzTolerance.Units IonMatchToleranceUnit { get; private set; }
+
+        public MzTolerance IonMatchMzTolerance
+        {
+            get
+            {
+                return new MzTolerance(MzMatchTolerance, IonMatchToleranceUnit);
+            }
+        }
+
+        public MzTolerance DefaultTolerance { 
+            get
+            {
+                switch(IonMatchToleranceUnit)
+                {
+                    case MzTolerance.Units.mz:
+                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE, IonMatchToleranceUnit);
+                    case MzTolerance.Units.ppm:
+                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE_PPM, IonMatchToleranceUnit);
+                }
+                return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE, IonMatchToleranceUnit);
+            } 
+        }
+
 
         public bool IsMzMatch(double mz1, double mz2)
         {

@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(SkylineWindow.SetDocument(docResults, doc));
             var document = WaitForDocumentLoaded();
 
-            float tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             foreach (var pair in document.MoleculePrecursorPairs)
             {
                 for (var f = 0; f < filenames.Count; f++)

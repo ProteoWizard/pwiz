@@ -24,6 +24,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.PeakFinding;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -55,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     ChromatogramGroupInfo[] chromatograms;
                     doc.Settings.MeasuredResults.TryLoadChromatogram(
-                        doc.Settings.MeasuredResults.Chromatograms.First(), peptideDocNode, transitionGroupDocNode, 0,
+                        doc.Settings.MeasuredResults.Chromatograms.First(), peptideDocNode, transitionGroupDocNode, TransitionInstrument.ZERO_TOLERANCE,
                         out chromatograms);
                     Assert.AreEqual(1, chromatograms.Length);
                     if (peakBounds == null)

@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(colIntensity);
             var document = SkylineWindow.Document;
 
-            float tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             RunUI(() =>
             {
                 var selectedPeptide =

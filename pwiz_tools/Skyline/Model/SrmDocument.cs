@@ -1831,7 +1831,7 @@ namespace pwiz.Skyline.Model
         }
 
         private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,
-            ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet,
+            ChromatogramGroupInfo chromInfoGroup, MzTolerance mzMatchTolerance, int indexSet,
             ChromFileInfoId indexFile, OptimizableRegression regression);
 
         private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, bool loadPoints,
@@ -1858,10 +1858,10 @@ namespace pwiz.Skyline.Model
                                   filePath, nameSet));
             }
             // Get all chromatograms for this transition group
-            double mzMatchTolerance = Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance = Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             ChromatogramGroupInfo[] arrayChromInfo;
             if (!Settings.MeasuredResults.TryLoadChromatogram(chromatograms, nodePep, nodeGroup,
-                (float) mzMatchTolerance, out arrayChromInfo))
+                mzMatchTolerance, out arrayChromInfo))
             {
                 throw new ArgumentOutOfRangeException(string.Format(
                     Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__,

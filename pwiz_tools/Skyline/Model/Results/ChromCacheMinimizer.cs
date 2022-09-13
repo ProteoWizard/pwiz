@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromCacheMinimizer
     {
-        private readonly float _tolerance;
+        private readonly MzTolerance _tolerance;
 
         public ChromCacheMinimizer(SrmDocument document, ChromatogramCache chromatogramCache)
         {
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
             var chromGroupHeaderInfos = chromatogramCache.ChromGroupHeaderInfos.ToArray();
             Array.Sort(chromGroupHeaderInfos, CompareLocation);
             ChromGroupHeaderInfos = Array.AsReadOnly(chromGroupHeaderInfos);
-            _tolerance = (float) Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            _tolerance = Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
         }
 
         /// <summary>

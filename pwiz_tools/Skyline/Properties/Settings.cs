@@ -53,6 +53,7 @@ using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Skyline.Properties
 {    
@@ -3002,7 +3003,8 @@ namespace pwiz.Skyline.Properties
                         50,   // MinMz
                         1500, // MaxMz
                         false, // IsDynamicMin
-                        TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, // MzMatchTolerance
+                        TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE,
+                        MzTolerance.Units.mz, // MzMatchTolerance 
                         null,  // MaxTransitions
                         null,  // MaxInclusions
                         null,  // MinTime

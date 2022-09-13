@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 document = docContainer.Document;
 
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 var results = document.Settings.MeasuredResults;
                 foreach (var pair in document.MoleculePrecursorPairs)
                 {

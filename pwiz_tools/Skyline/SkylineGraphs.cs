@@ -2329,7 +2329,7 @@ namespace pwiz.Skyline
             foreach (var chromSet in syncTargets)
             {
                 if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromSet, nodePep, nodeGroup,
-                    (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance, out var chromInfos))
+                    document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance, out var chromInfos))
                     continue;
 
                 foreach (var info in chromSet.MSDataFileInfos)

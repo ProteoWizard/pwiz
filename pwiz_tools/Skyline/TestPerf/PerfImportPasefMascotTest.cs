@@ -236,7 +236,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 }
             }
             
-            float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = doc1.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
             foreach (var pair in doc1.PeptidePrecursorPairs)

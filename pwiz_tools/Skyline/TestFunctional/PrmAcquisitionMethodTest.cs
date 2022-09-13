@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
         private bool HasChromatogram(string peptideSequence)
         {
             var doc = SkylineWindow.Document;
-            float tolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance =  doc.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             var chromatogramSet = doc.Settings.MeasuredResults.Chromatograms[0];
             var peptideDocNode = doc.Peptides.FirstOrDefault(pep => pep.Target.Sequence == peptideSequence);
             Assert.IsNotNull(peptideDocNode);

@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -570,7 +571,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionInstrument instrument = new TransitionInstrument(minMz,
-                    maxMz, isDynamicMin, mzMatchTolerance, maxTrans, maxInclusions, minTime, maxTime)
+                    maxMz, isDynamicMin, mzMatchTolerance, MzTolerance.Units.mz, maxTrans, maxInclusions, minTime, maxTime)
                 .ChangeTriggeredAcquisition(cbxTriggeredAcquisition.Checked);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 

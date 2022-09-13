@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
                 {Tuple.Create("FICEQCGK", "heavy"), 13.12781}
             };
             var chromatogramSet = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0];
-            var tolerance = (float) SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance =  SkylineWindow.Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             foreach (var peptide in SkylineWindow.Document.Molecules)
             {
                 foreach (var precursor in peptide.TransitionGroups)

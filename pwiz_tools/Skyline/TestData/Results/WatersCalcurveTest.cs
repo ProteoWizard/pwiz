@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -250,7 +251,7 @@ namespace pwiz.SkylineTestData.Results
                 doc = docContainer.Document;
 
                 var results = doc.Settings.MeasuredResults;
-                const float tolerance = (float)TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE;
+                var tolerance = TransitionInstrument.DEFAULT_MATCH_TOLERANCE;
                 foreach (var pair in doc.PeptidePrecursorPairs)
                 {
                     foreach (var chromSet in results.Chromatograms)
@@ -330,7 +331,7 @@ namespace pwiz.SkylineTestData.Results
                     }
                 }
 
-                const float tolerance = (float)TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE;
+                var tolerance = TransitionInstrument.DEFAULT_MATCH_TOLERANCE;
 
                 foreach (var pair in docResults.PeptidePrecursorPairs)
                 {

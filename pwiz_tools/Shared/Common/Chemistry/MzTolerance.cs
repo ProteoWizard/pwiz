@@ -23,10 +23,13 @@ namespace pwiz.Common.Chemistry
 {
     public class MzTolerance : IAuditLogObject
     {
+        public static MzTolerance ZERO_TOLERANCE => new MzTolerance(0, Units.mz);
+
         public enum Units { mz, ppm };
 
         public double Value { get; private set; }
         public Units Unit { get; private set; }
+        public double Interval { get { return Value * 2; } }
 
         public MzTolerance(double value = 0, Units units = Units.mz)
         {
@@ -61,15 +64,15 @@ namespace pwiz.Common.Chemistry
         }
 
         /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
-        public static bool IsWithinTolerance(double a, double b, MzTolerance tolerance)
+        public bool IsWithinTolerance(double a, double b)
         {
-            return (a > b - tolerance) && (a < b + tolerance);
+            return (a >= b - this) && (a <= b + this);
         }
 
         /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
-        public static bool LessThanTolerance(double a, double b, MzTolerance tolerance)
+        public bool LessThanTolerance(double a, double b)
         {
-            return (a < b - tolerance);
+            return (a <= b - this);
         }
 
         public override string ToString()

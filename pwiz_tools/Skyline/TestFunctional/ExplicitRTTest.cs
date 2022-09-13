@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.Serializable(doc, 3, AssertEx.DocumentCloned);
             ImportResultsAsync(filenames.Select(f => f + ExtensionTestContext.ExtMzml).ToArray(), null, null, filenames.Length > 1 ? false : (bool?) null);
             var document = WaitForDocumentChangeLoaded(doc);
-            float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             var infos = new List<ChromatogramGroupInfo[]>();
             int adductIndex = 0;
             foreach (var pair in document.MoleculePrecursorPairs)

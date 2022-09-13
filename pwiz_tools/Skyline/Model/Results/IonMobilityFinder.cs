@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Results
                 _progressStatus = _progressStatus.ChangeMessage(filePath.GetFileName());
             }
             _currentDisplayedTransitionGroupDocNode = null;
-            var tolerance = (float)_document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = _document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             foreach (var pair in _document.MoleculePrecursorPairs)
             {
                 var nodePep = pair.NodePep;
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private bool ProcessChromInfo(ChromFileInfo fileInfo, ChromatogramGroupInfo chromInfo, PeptidePrecursorPair pair,
-            TransitionGroupDocNode nodeGroup, float tolerance, LibKey libKey)
+            TransitionGroupDocNode nodeGroup, MzTolerance tolerance, LibKey libKey)
         {
             if (chromInfo.NumPeaks == 0)  // Due to data polarity mismatch, probably
                 return true;
@@ -258,8 +258,8 @@ namespace pwiz.Skyline.Model.Results
             // Only use the transitions currently enabled
             var transitionPointSets = chromInfo.TransitionPointSets.Where(
                 tp => nodeGroup.Transitions.Any(
-                    t => (t.Mz - (tp.ExtractionWidth ?? tolerance)/2) <= tp.ProductMz &&
-                         (t.Mz + (tp.ExtractionWidth ?? tolerance)/2) >= tp.ProductMz))
+                    t => (t.Mz - (tp.ExtractionWidth ?? tolerance.Interval) / 2) <= tp.ProductMz &&
+                         (t.Mz + (tp.ExtractionWidth ?? tolerance.Interval) / 2) >= tp.ProductMz))
                 .ToArray();
 
             for (var msLevel = 1; msLevel <= 2; msLevel++)
@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private bool ProcessMSLevel(ChromFileInfo fileInfo, int msLevel, IEnumerable<ChromatogramInfo> transitionPointSets,
-            ChromatogramGroupInfo chromInfo, double? apexRT, TransitionGroupDocNode nodeGroup, LibKey libKey, float tolerance)
+            ChromatogramGroupInfo chromInfo, double? apexRT, TransitionGroupDocNode nodeGroup, LibKey libKey, MzTolerance tolerance)
         {
             var transitions = new List<TransitionFullScanInfo>();
             var chromSource = (msLevel == 1) ? ChromSource.ms1 : ChromSource.fragment;
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private void EvaluateBestIonMobilityValue(int msLevel, LibKey libKey, float tolerance, List<TransitionFullScanInfo> transitions)
+        private void EvaluateBestIonMobilityValue(int msLevel, LibKey libKey, MzTolerance tolerance, List<TransitionFullScanInfo> transitions)
         {
             IonMobilityValue ionMobilityValue = IonMobilityValue.EMPTY;
             double maxIntensity = 0;
@@ -460,11 +460,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private static SignedMz FindRangeMz(float tolerance, TransitionFullScanInfo t, MsDataSpectrum scan, out int first)
+        private static SignedMz FindRangeMz(MzTolerance tolerance, TransitionFullScanInfo t, MsDataSpectrum scan, out int first)
         {
             Assume.IsTrue(t.ProductMz.IsNegative == scan.NegativeCharge);  // It would be strange if associated scan did not have same polarity
             var mzPeak = t.ProductMz;
-            var halfwin = (t.ExtractionWidth ?? tolerance) / 2;
+            var halfwin = (t.ExtractionWidth ?? tolerance.Interval) / 2;
             var mzLow = mzPeak - halfwin;
             var mzHigh = mzPeak + halfwin;
             first = Array.BinarySearch(scan.Mzs, mzLow);

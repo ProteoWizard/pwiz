@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestData.Results
                 var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
 
                 SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
-                var tolerance = (float)docResults.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                var tolerance = docResults.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
 
 
                 ChromCacheMinimizer.Settings settings = new ChromCacheMinimizer.Settings()

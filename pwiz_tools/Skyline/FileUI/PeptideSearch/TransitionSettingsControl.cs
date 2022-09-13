@@ -410,7 +410,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             var instrument = new TransitionInstrument(minIonMz, maxIonMz, settings.Instrument.IsDynamicMin,
-                settings.Instrument.MzMatchTolerance, settings.Instrument.MaxTransitions,
+                settings.Instrument.MzMatchTolerance, Common.Chemistry.MzTolerance.Units.mz, settings.Instrument.MaxTransitions,
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 

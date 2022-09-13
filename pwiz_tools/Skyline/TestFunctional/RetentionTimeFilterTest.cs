@@ -248,7 +248,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     ChromatogramGroupInfo[] infos;
                     document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
-                        (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, out infos);
+                        TransitionInstrument.DEFAULT_MATCH_TOLERANCE, out infos);
                     yield return new Tuple<PeptideDocNode, TransitionGroupDocNode, ChromatogramGroupInfo[]>(peptide, transitionGroup, infos);
                 }
             }

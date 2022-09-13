@@ -1257,7 +1257,7 @@ namespace pwiz.Skyline.Model
                 if (MustReadAllChromatograms(settingsNew, diff))
                 {
                     allChromatogramGroupInfos = measuredResults.LoadChromatogramsForAllReplicates(nodePep, this,
-                        (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance);
+                        settingsNew.TransitionSettings.Instrument.IonMatchMzTolerance);
                     ChromatogramGroupInfo.LoadPeaksForAll(allChromatogramGroupInfos.SelectMany(list => list), false);
                 }
             }
@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Model
                 canUseOldResults = CanUseOldResults(settingsNew, diff, nodePrevious, chromIndex, iResultOld);
             }
 
-            float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance = settingsNew.TransitionSettings.Instrument.IonMatchMzTolerance;
             if (!canUseOldResults)
             {
                 if (chromGroupInfos == null)
@@ -2741,7 +2741,7 @@ namespace pwiz.Skyline.Model
 
         public DocNode ChangePeak(SrmSettings settings,
                                   ChromatogramGroupInfo chromGroupInfo,
-                                  double mzMatchTolerance,
+                                  MzTolerance mzMatchTolerance,
                                   int indexSet,
                                   ChromFileInfoId fileId,
                                   OptimizableRegression regression,
@@ -2759,7 +2759,7 @@ namespace pwiz.Skyline.Model
             {
                 if (tranId != null && !ReferenceEquals(tranId, nodeTran.Id))
                     continue;
-                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance, regression);
+                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, regression);
                 if (chromInfo == null)
                     continue;
                 int indexPeak = chromInfo.IndexOfPeak(retentionTime);
@@ -2779,7 +2779,7 @@ namespace pwiz.Skyline.Model
             double startMin = double.MaxValue, endMax = double.MinValue;
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, (float)mzMatchTolerance, regression);
+                var chromInfo = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, regression);
                 if (chromInfo == null)
                     continue;
                 ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
@@ -2792,7 +2792,7 @@ namespace pwiz.Skyline.Model
             var listChildrenNew = new List<DocNode>(Children.Count);
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
+                var optStepChromatograms = chromGroupInfo.GetAllTransitionInfo(nodeTran, mzMatchTolerance, regression, TransformChrom.interpolated);
                 // Shouldn't need to update a transition with no chrom info
                 if (optStepChromatograms.IsEmpty) 
                     listChildrenNew.Add(nodeTran.RemovePeak(indexSet, fileId, userSet));
@@ -2819,7 +2819,7 @@ namespace pwiz.Skyline.Model
 
         public DocNode ChangePeak(SrmSettings settings,
                                   ChromatogramGroupInfo chromGroupInfo,
-                                  double mzMatchTolerance,
+                                  MzTolerance mzMatchTolerance,
                                   int indexSet,
                                   ChromFileInfoId fileId,
                                   OptimizableRegression regression,
@@ -2866,7 +2866,7 @@ namespace pwiz.Skyline.Model
                         }
                     }
                 }
-                var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran, (float)mzMatchTolerance, regression, TransformChrom.interpolated);
+                var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran, mzMatchTolerance, regression, TransformChrom.interpolated);
 
                 // Shouldn't need to update a transition with no chrom info
                 // Also if startTime is null, remove the peak

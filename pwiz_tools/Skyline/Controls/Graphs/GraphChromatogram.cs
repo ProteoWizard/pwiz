@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -863,7 +864,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _enableTrackingDot = false;
 
                 // Make sure all the chromatogram info for the relevant transition groups is present.
-                float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
+                var mzMatchTolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 var displayType = GetDisplayType(DocumentUI);
                 bool changedGroupIds;
                 if (displayToExtractor.ContainsKey(displayType))
@@ -1198,7 +1199,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var nodeGroup = _nodeGroups != null ? _nodeGroups.FirstOrDefault() : null;
             if (nodeGroup == null)
                 nodeTranSelected = null;
-            var info = chromGroupInfo.GetTransitionInfo(null, 0, TransformChrom.raw, chromatograms.OptimizationFunction);
+            var info = chromGroupInfo.GetTransitionInfo(null, MzTolerance.ZERO_TOLERANCE, TransformChrom.raw, chromatograms.OptimizationFunction);
 
             TransitionChromInfo tranPeakInfo = null;
             RetentionTimeValues bestQuantitativePeakTimes = null;
@@ -1276,7 +1277,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void DisplayTransitions(RegressionLine timeRegressionFunction,
                                         TransitionDocNode nodeTranSelected,
                                         ChromatogramSet chromatograms,
-                                        float mzMatchTolerance,
+                                        MzTolerance mzMatchTolerance,
                                         TransitionGroupDocNode nodeGroup,
                                         ChromatogramGroupInfo chromGroupInfo,
                                         PaneKey graphPaneKey,
@@ -1695,7 +1696,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void DisplayOptimizationTotals(RegressionLine timeRegressionFunction,
                                                ChromatogramSet chromatograms,
-                                               float mzMatchTolerance,
+                                               MzTolerance mzMatchTolerance,
                                                out RetentionTimeValues bestPeakTimes)
         {
             bestPeakTimes = null;
@@ -1720,7 +1721,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private List<ChromGraphItem> GetOptimizationTotalGraphItems(
             RegressionLine timeRegressionFunction,
             ChromatogramSet chromatograms,
-            float mzMatchTolerance,
+            MzTolerance mzMatchTolerance,
             TransitionGroupDocNode nodeGroup,
             ChromatogramGroupInfo chromGroupInfo,
             out RetentionTimeValues bestPeakTimes)
@@ -1925,7 +1926,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void DisplayTotals(RegressionLine timeRegressionFunction,
                                    ChromatogramSet chromatograms,
-                                   float mzMatchTolerance,
+                                   MzTolerance mzMatchTolerance,
                                    int countLabelTypes,
                                    out RetentionTimeValues bestPeakTimes)
         {
@@ -2052,7 +2053,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void DisplayPeptides(RegressionLine timeRegressionFunction,
                                    ChromatogramSet chromatograms,
-                                   float mzMatchTolerance,
+                                   MzTolerance mzMatchTolerance,
                                    int countLabelTypes,
                                    IList<PeptideDocNode> peptideDocNodes,
                                    out RetentionTimeValues firstPeak,
@@ -2544,7 +2545,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      PeptideDocNode[] nodePeps,
                                      TransitionGroupDocNode[] nodeGroups,
                                      IdentityPath[] groupPaths,
-                                     float mzMatchTolerance,
+                                     MzTolerance mzMatchTolerance,
                                      out bool changedGroups,
                                      out bool changedGroupIds)
         {

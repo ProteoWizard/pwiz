@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.Model
 
             var referenceMatchDataList = new List<PeakMatchData>();
 
-            var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance = doc.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 
             if (!nodeTranGroup.HasResults || resultsIndex < 0 || resultsIndex >= nodeTranGroup.Results.Count)
                 return;
@@ -182,7 +183,7 @@ namespace pwiz.Skyline.Model
 
             // Still not sure, pick the one with the most peak area
             TransitionGroupDocNode best = null;
-            float mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance =  doc.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             float highestAreaSum = 0;
             foreach (var tranGroup in nodeTranGroups)
             {
@@ -208,7 +209,7 @@ namespace pwiz.Skyline.Model
             if (referenceTarget == null)
                 return new PeakMatch(0, 0);
 
-            var mzMatchTolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance = doc.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
 
             ChromatogramGroupInfo[] loadInfos;
             if (!nodeTranGroup.HasResults || !doc.Settings.MeasuredResults.TryLoadChromatogram(chromSet, null, nodeTranGroup, mzMatchTolerance, out loadInfos))
@@ -298,7 +299,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static ChromPeak GetLargestPeak(TransitionGroupDocNode nodeTranGroup,
-            ChromatogramGroupInfo chromGroupInfo, int peakIndex, float mzMatchTolerance,
+            ChromatogramGroupInfo chromGroupInfo, int peakIndex, MzTolerance mzMatchTolerance,
             OptimizableRegression regression)
         {
             var largestPeak = ChromPeak.EMPTY;
@@ -472,7 +473,7 @@ namespace pwiz.Skyline.Model
             }
 
             public PeakMatchData(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo,
-                float mzMatchTolerance, int peakIndex, double totalChromArea,
+                MzTolerance mzMatchTolerance, int peakIndex, double totalChromArea,
                 OptimizableRegression regression)
             {
                 Abundances = new IonAbundances(nodeTranGroup, chromGroupInfo, mzMatchTolerance, peakIndex, regression);
@@ -510,7 +511,7 @@ namespace pwiz.Skyline.Model
             }
 
             public IonAbundances(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo,
-                float mzMatchTolerance, int peakIndex,
+                MzTolerance mzMatchTolerance, int peakIndex,
                 OptimizableRegression regression) : this()
             {
                 foreach (var nodeTran in nodeTranGroup.Transitions)

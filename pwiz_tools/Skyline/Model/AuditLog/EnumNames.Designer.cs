@@ -1645,6 +1645,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to mz.
+        /// </summary>
+        public static string Units_mz {
+            get {
+                return ResourceManager.GetString("Units_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ppm.
+        /// </summary>
+        public static string Units_ppm {
+            get {
+                return ResourceManager.GetString("Units_ppm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Built in Views.
         /// </summary>
         public static string ViewGroup_ {

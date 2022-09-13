@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return null;
             }
-            float tolerance = (float)SrmDocument.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = SrmDocument.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             var peptideDocNode = _precursorResult.Precursor.Peptide.DocNode;
             var chromatogramSet = _precursorResult.GetResultFile().Replicate.ChromatogramSet;
             var filePath = _precursorResult.GetResultFile().ChromFileInfo.FilePath;

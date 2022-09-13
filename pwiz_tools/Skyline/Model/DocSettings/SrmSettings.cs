@@ -2069,7 +2069,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             if (!MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
-                (float) TransitionSettings.Instrument.MzMatchTolerance, out var infoSet))
+                TransitionSettings.Instrument.IonMatchMzTolerance, out var infoSet))
             {
                 return null;
             }

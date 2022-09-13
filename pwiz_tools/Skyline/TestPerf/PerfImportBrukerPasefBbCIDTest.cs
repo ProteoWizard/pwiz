@@ -62,7 +62,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             ImportResults(TestFilesDir.GetTestPath("HESI_Celegans_MTBE-2_150ul_bbCID_4ul_neg_19_1_3206.d"));
             var doc1 = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc1, null, 1, 1, 1, 10);
-            float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = doc1.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
             foreach (var pair in doc1.MoleculePrecursorPairs)

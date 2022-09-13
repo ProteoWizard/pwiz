@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -56,11 +57,11 @@ namespace pwiz.Skyline.Model.Results
             get { return Settings.MeasuredResults.Chromatograms[ReplicateIndex]; }
         }
 
-        public float MzMatchTolerance
+        public MzTolerance MzMatchTolerance
         {
             get
             {
-                return (float) Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                return Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             }
         }
 

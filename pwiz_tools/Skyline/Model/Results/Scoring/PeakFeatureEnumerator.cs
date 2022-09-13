@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -144,7 +145,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                                                                    bool verbose)
         {
             var chromatograms = settings.MeasuredResults.Chromatograms;
-            float mzMatchTolerance = (float)settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             var nodeGroupChromGroupInfos = new List<List<IList<ChromatogramGroupInfo>>>();
             foreach (var nodeGroup in nodeGroups)
             {
@@ -508,7 +509,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     int ms1Count = 0, ms2Count = 0, totalCount = 0;
                     // Assume there will be one per transtion
                     var listPeakData = new ITransitionPeakData<ISummaryPeakData>[nodeGroup.TransitionCount];
-                    float mzMatchTolerance = (float)settings.TransitionSettings.Instrument.MzMatchTolerance;
+                    MzTolerance mzMatchTolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                     foreach (var nodeTran in nodeGroup.Transitions)
                     {
                         var tranInfo = _chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromatogramSet.OptimizationFunction);

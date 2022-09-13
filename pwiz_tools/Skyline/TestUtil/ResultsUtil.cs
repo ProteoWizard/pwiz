@@ -474,7 +474,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void MatchChromatograms(SrmDocument document, int iChrom1, int iChrom2, int delta, int missing)
         {
-            float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             var results = document.Settings.MeasuredResults;
             int missingPeaks = 0;
             foreach (var pair in document.MoleculePrecursorPairs)

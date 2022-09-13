@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.Model
             Document = document;
             _settings = Document.Settings;
             _measuredResults = _settings.MeasuredResults;
-            _matchTolerance = (float)_settings.TransitionSettings.Instrument.MzMatchTolerance;
+            _matchTolerance = _settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             _chromatogramSets = _measuredResults.Chromatograms;
         }
 
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Model
 
         private readonly SrmSettings _settings;
         private readonly MeasuredResults _measuredResults;
-        private readonly float _matchTolerance;
+        private readonly MzTolerance _matchTolerance;
         private readonly IList<ChromatogramSet> _chromatogramSets;
 
         // ReSharper disable LocalizableElement

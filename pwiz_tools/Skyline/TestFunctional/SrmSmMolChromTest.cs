@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void VerifyAllTransitionsHaveChromatograms(SrmDocument doc)
         {
-            var tolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = doc.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             foreach (var molecule in doc.Molecules)
             {
                 foreach (var precursor in molecule.TransitionGroups)

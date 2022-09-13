@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var list = new List<TimeIntensitiesGroup>();
             var measuredResults = document.Settings.MeasuredResults;
-            var tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             foreach (var molecule in document.Molecules)
             {
                 foreach (var transitionGroup in molecule.TransitionGroups)

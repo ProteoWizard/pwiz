@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
@@ -773,7 +774,7 @@ namespace pwiz.Skyline.Model.Results
         public bool TryLoadChromatogram(int index,
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
-                                        float tolerance,
+                                        MzTolerance tolerance,
                                         out ChromatogramGroupInfo[] infoSet)
         {
             return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup, tolerance, out infoSet);
@@ -784,7 +785,7 @@ namespace pwiz.Skyline.Model.Results
         public bool TryLoadChromatogram(ChromatogramSet chromatogram,
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
-                                        float tolerance,
+                                        MzTolerance tolerance,
                                         out ChromatogramGroupInfo[] infoSet)
         {
             IEnumerable<ChromatogramGroupInfo> infoEnum = Enumerable.Empty<ChromatogramGroupInfo>();
@@ -823,7 +824,7 @@ namespace pwiz.Skyline.Model.Results
         private IList<ChromatogramGroupInfo> GetMatchingChromatograms(ChromatogramSet chromatogram,
             PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup,
-            float tolerance, 
+            MzTolerance tolerance, 
             IEnumerable<ChromatogramGroupInfo> infoSet)
         {
             // Add precursor matches to a list, if they match at least 1 transition
@@ -887,7 +888,7 @@ namespace pwiz.Skyline.Model.Results
 
         public List<IList<ChromatogramGroupInfo>> LoadChromatogramsForAllReplicates(PeptideDocNode nodePep,
             TransitionGroupDocNode nodeGroup,
-            float tolerance)
+            MzTolerance tolerance)
         {
             var chromatogramGroupInfosByFile = CachesEx.SelectMany(cache => cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, null))
                 .ToLookup(chromGroupInfo=>chromGroupInfo.FilePath.GetLocation());

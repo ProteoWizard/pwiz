@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestUtil
                 : skylineWindow.SequenceTree.GetNodeOfType<TransitionGroupTreeNode>().DocNode;
 
             var settings = skylineWindow.Document.Settings;
-            float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchTolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
 
             var chromatograms = settings.MeasuredResults.Chromatograms;
             for (int resultsIndex = 0; resultsIndex < chromatograms.Count; resultsIndex++)

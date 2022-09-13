@@ -80,7 +80,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var expectedTitle = Resources.GraphFullScan_CreateIonMobilityHeatmap_Quadrupole_Scan_Range__m_z_;
             AssertEx.AreEqual(expectedTitle, yTitle, "expected fullscan graph y axis title to be " + expectedTitle);
             CloseSpectrumGraph();
-            float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = doc1.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
 

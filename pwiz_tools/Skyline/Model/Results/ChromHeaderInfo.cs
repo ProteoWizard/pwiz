@@ -2356,7 +2356,7 @@ namespace pwiz.Skyline.Model.Results
             return new SignedMz(_allTransitions[index].Product, _groupHeaderInfo.NegativeCharge);
         }
 
-        private bool IsProductGlobalMatch(int index, TransitionDocNode nodeTran, float tolerance)
+        private bool IsProductGlobalMatch(int index, TransitionDocNode nodeTran, MzTolerance tolerance)
         {
             var source = _allTransitions[index].Source;
             bool isMs1Chromatogram = source == ChromSource.ms1 || source == ChromSource.sim;
@@ -2380,12 +2380,12 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
         }
 
-        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression)
+        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, MzTolerance tolerance, OptimizableRegression regression)
         {
             return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated, regression);
         }
 
-        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform, OptimizableRegression regression)
+        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, MzTolerance tolerance, TransformChrom transform, OptimizableRegression regression)
         {
             var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
             int startTran = _groupHeaderInfo.StartTransitionIndex;
@@ -2425,7 +2425,7 @@ namespace pwiz.Skyline.Model.Results
                        : null;
         }
 
-        public OptStepChromatograms GetAllTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression, TransformChrom transform)
+        public OptStepChromatograms GetAllTransitionInfo(TransitionDocNode nodeTran, MzTolerance tolerance, OptimizableRegression regression, TransformChrom transform)
         {
             if (regression == null)
             {
@@ -2486,7 +2486,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // ReSharper disable SuggestBaseTypeForParameter
-        public virtual int MatchTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, float tolerance, bool multiMatch)
+        public virtual int MatchTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, MzTolerance tolerance, bool multiMatch)
         // ReSharper restore SuggestBaseTypeForParameter
         {
             int match = 0;
@@ -2508,7 +2508,7 @@ namespace pwiz.Skyline.Model.Results
             return match;
         }
 
-        public int CountTransitionMatches(TransitionDocNode nodeTran, float tolerance, ExplicitRetentionTimeInfo explicitRT)
+        public int CountTransitionMatches(TransitionDocNode nodeTran, MzTolerance tolerance, ExplicitRetentionTimeInfo explicitRT)
         {
             int countMatches = 0;
             if (explicitRT != null && Header.IsNotIncludedTime(explicitRT.RetentionTime))

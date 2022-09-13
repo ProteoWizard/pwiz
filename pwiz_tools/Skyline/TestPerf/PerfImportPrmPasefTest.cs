@@ -72,7 +72,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             AssertEx.IsDocumentState(doc1, null, 254, 253, 305, 3123);
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
-            float tolerance = (float)doc1.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = doc1.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             double maxHeight = 0;
             var results = doc1.Settings.MeasuredResults;
             foreach (var pair in doc1.PeptidePrecursorPairs)

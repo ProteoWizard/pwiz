@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public IEnumerable<ChromatogramGroupInfo> LoadChromatogramInfos(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-            float tolerance, ChromatogramSet chromatograms)
+            MzTolerance tolerance, ChromatogramSet chromatograms)
         {
             var precursorMz = nodeGroup != null ? nodeGroup.PrecursorMz : SignedMz.ZERO;
             double? explicitRT = null;
@@ -244,13 +244,13 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return LoadChromatogramInfos(null, null, 0, null).Any();
+                return LoadChromatogramInfos(null, null, MzTolerance.ZERO_TOLERANCE, null).Any();
             }
         }
 
         public IEnumerable<ChromatogramGroupInfo> LoadAllIonsChromatogramInfo(ChromExtractor extractor, ChromatogramSet chromatograms)
         {
-            return LoadChromatogramInfos(null, null, 0, chromatograms)
+            return LoadChromatogramInfos(null, null, MzTolerance.ZERO_TOLERANCE, chromatograms)
                 .Where(groupInfo => groupInfo.Header.Extractor == extractor);
         }
 
@@ -289,7 +289,7 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
+        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, MzTolerance tolerance,
             ChromatogramSet chromatograms)
         {
             foreach (int i in ChromatogramIndexesMatching(nodePep, precursorMz, tolerance, chromatograms))
@@ -307,7 +307,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SignedMz precursorMz,
-            float tolerance, ChromatogramSet chromatograms)
+            MzTolerance tolerance, ChromatogramSet chromatograms)
         {
             var fileIndexesFound = new HashSet<int>();
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
@@ -433,12 +433,12 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private int FindEntry(SignedMz precursorMz, float tolerance)
+        private int FindEntry(SignedMz precursorMz, MzTolerance tolerance)
         {
             return FindEntry(precursorMz, tolerance, 0, ChromGroupHeaderInfos.Count - 1);
         }
 
-        private int FindEntry(SignedMz precursorMz, float tolerance, int left, int right)
+        private int FindEntry(SignedMz precursorMz, MzTolerance tolerance, int left, int right)
         {
             // Binary search for the right precursorMz
             if (left > right)
@@ -457,12 +457,12 @@ namespace pwiz.Skyline.Model.Results
             return mid;
         }
 
-        private static int CompareMz(SignedMz precursorMz1, SignedMz precursorMz2, float tolerance)
+        private static int CompareMz(SignedMz precursorMz1, SignedMz precursorMz2, MzTolerance tolerance)
         {
             return precursorMz1.CompareTolerant(precursorMz2, tolerance);
         }
 
-        private static bool MatchMz(SignedMz mz1, SignedMz mz2, float tolerance)
+        private static bool MatchMz(SignedMz mz1, SignedMz mz2, MzTolerance tolerance)
         {
             return CompareMz(mz1, mz2, tolerance) == 0;
         }

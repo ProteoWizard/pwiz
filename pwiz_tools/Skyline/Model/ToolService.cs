@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model
                             chromatogramSet,
                             nodePep,
                             nodeGroup,
-                            (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
+                            document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance,
                             out arrayChromInfo);
                         foreach (var transition in nodeGroup.Transitions)
                         {

@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 var document = docContainer.Document;
 
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 double maxHeight = 0;
                 var results = document.Settings.MeasuredResults;
                 Assert.AreEqual(2, document.PeptidePrecursorPairs.Count());

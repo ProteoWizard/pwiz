@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model
         public abstract void ShowTransitionError(PasteError error);
         public abstract int ColumnIndex(string columnName);
 
-        private double MzMatchTolerance { get; set; }
+        private MzTolerance MzMatchTolerance { get; set; }
 
         public List<PasteError> ErrorList { get; set; }
         public bool HasHeaders { get; set; }
@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model
                 .ToHashSet();
             var groupNamesSeen = document.MoleculeGroups.Select(group => group.Name)
                 .Where(n => !string.IsNullOrEmpty(n)).ToHashSet();
-            MzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            MzMatchTolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
 
             _hasAnyMoleculeMz = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_PRECURSOR_MZ)));
             _hasAnyMoleculeFormula = Rows.Any(row => !string.IsNullOrEmpty(GetCellTrimmed(row, INDEX_MOLECULE_FORMULA)));
@@ -365,9 +365,8 @@ namespace pwiz.Skyline.Model
                                      .NeutralFormula)) ||
                              Equals(pep.CustomMolecule.UnlabeledFormula, precursor.UnlabeledFormula));
                 // Match existing molecule if similar m/z at the precursor charge
-                pepFound |= Math.Abs(ionMonoMz - precursorMonoMz) <= MzMatchTolerance &&
-                            Math.Abs(ionAverageMz - precursorAverageMz) <=
-                            MzMatchTolerance && // (we don't just check mass since we don't have a tolerance value for that)
+                pepFound |= MzMatchTolerance.IsWithinTolerance(ionMonoMz, precursorMonoMz) &&
+                            MzMatchTolerance.IsWithinTolerance(ionAverageMz, precursorAverageMz) && // (we don't just check mass since we don't have a tolerance value for that)
                             (adduct.AdductCharge < 0 == precursor.Adduct.AdductCharge < 0);
                 // Or no formula, and different isotope labels or matching label and mz
                 pepFound |= string.IsNullOrEmpty(pep.CustomMolecule.Formula) &&
@@ -1345,7 +1344,7 @@ namespace pwiz.Skyline.Model
                     // When no adduct is given, either it's implied (de)protonation, or formula is inherently charged. Formula and mz are a clue. Or it might be a precursor declaration.
                     try
                     {
-                        if (precursorInfo != null && charge.Value.Equals(precursorInfo.Adduct.AdductCharge) && Math.Abs(mz - precursorInfo.Mz) <= MzMatchTolerance )
+                        if (precursorInfo != null && charge.Value.Equals(precursorInfo.Adduct.AdductCharge) && MzMatchTolerance.IsWithinTolerance(mz, precursorInfo.Mz))
                         {
                             adduct = precursorInfo.Adduct; // Charge matches, mz matches, this is probably a precursor fragment declaration
                         }
@@ -1930,8 +1929,8 @@ namespace pwiz.Skyline.Model
             var ionType = !_requireProductInfo || // We inspected the input list and found only precursor info
                           FragmentColumnsIdenticalToPrecursorColumns(precursorIon, ion) ||
                           // Or the mass is explained by an isotopic label in the adduct
-                          (Math.Abs(customMolecule.MonoisotopicMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.MonoisotopicMass)) <= MzMatchTolerance &&
-                           Math.Abs(customMolecule.AverageMass.Value - group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass)) <= MzMatchTolerance) // Same mass, must be a precursor transition
+                          (MzMatchTolerance.IsWithinTolerance(customMolecule.MonoisotopicMass.Value, group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.MonoisotopicMass)) &&
+                           MzMatchTolerance.IsWithinTolerance(customMolecule.AverageMass.Value, group.PrecursorAdduct.ApplyIsotopeLabelsToMass(pep.CustomMolecule.AverageMass))) // Same mass, must be a precursor transition
                 ? IonType.precursor
                 : IonType.custom;
             var massType = (ionType == IonType.precursor)

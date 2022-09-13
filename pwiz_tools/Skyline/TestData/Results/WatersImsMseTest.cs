@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestData.Results
             document = ConvertToSmallMolecules(document, ref docPath, new[] {mz5Path}, asSmallMolecules);
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
-                float tolerance = (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 double maxHeight = 0;
                 var results = document.Settings.MeasuredResults;
                 AssertEx.AreEqual(1, document.MoleculePrecursorPairs.Count());

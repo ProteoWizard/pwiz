@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyDdaPeakAreas(SrmDocument document)
         {
             var measuredResults = document.MeasuredResults;
-            float tolerance = (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             Assert.IsNotNull(measuredResults);
             foreach (var peptideDocNode in document.Molecules)
             {

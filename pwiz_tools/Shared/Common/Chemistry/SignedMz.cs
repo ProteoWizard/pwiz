@@ -186,6 +186,17 @@ namespace pwiz.Common.Chemistry
                 return 0;
             return CompareTo(other);
         }
+        public int CompareTolerant(SignedMz other, MzTolerance tolerance)
+        {
+            if (IsNegative != other.IsNegative)
+            {
+                return IsNegative ? -1 : 1; // Not interested in tolerance when signs disagree 
+            }
+            // Same sign
+            if (tolerance.IsWithinTolerance(Value, other.Value))
+                return 0;
+            return CompareTo(other);
+        }
 
         public SignedMz ChangeMz(double mz)
         {
