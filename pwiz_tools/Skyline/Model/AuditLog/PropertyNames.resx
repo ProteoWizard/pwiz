@@ -268,7 +268,10 @@
     <value>Min time</value>
   </data>
   <data name="TransitionInstrument_MzMatchTolerance" xml:space="preserve">
-    <value>Method match tolerance m/z</value>
+    <value>Method match tolerance </value>
+  </data>
+  <data name="TransitionInstrument_IonMatchToleranceUnit" xml:space="preserve">
+    <value>Method match tolerance unit</value>
   </data>
   <data name="TransitionLibraries_PickMostIntenseIons" xml:space="preserve">
     <value>If a library spectrum is available, pick its most intense ions</value>

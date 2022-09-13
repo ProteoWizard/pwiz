@@ -4381,6 +4381,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method match tolerance unit.
+        /// </summary>
+        public static string TransitionInstrument_IonMatchToleranceUnit {
+            get {
+                return ResourceManager.GetString("TransitionInstrument_IonMatchToleranceUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Dynamic min product m/z.
         /// </summary>
         public static string TransitionInstrument_IsDynamicMin {
@@ -4444,7 +4453,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method match tolerance m/z.
+        ///   Looks up a localized string similar to Method match tolerance .
         /// </summary>
         public static string TransitionInstrument_MzMatchTolerance {
             get {
