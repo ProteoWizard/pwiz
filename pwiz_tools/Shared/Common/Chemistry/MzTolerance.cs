@@ -77,7 +77,7 @@ namespace pwiz.Common.Chemistry
         /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
         public bool IsWithinTolerance(double a, double b)
         {
-            return (a > b - this) && (a < b + this);
+            return (a >= b - this) && (a <= b + this);
         }
 
         /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
