@@ -29,6 +29,8 @@
 
 
 #pragma managed
+#using <System.dll> // Provides System::IO::InvalidDataException
+
 namespace pwiz {
 namespace vendor_api {
 namespace Agilent {
@@ -269,12 +271,16 @@ bool MidacDataImpl::canConvertDriftTimeAndCCS() const
 
 double MidacDataImpl::driftTimeToCCS(double driftTimeInMilliseconds, double mz, int charge) const
 {
-    try { return imsCcsReader_->CcsFromDriftTime(driftTimeInMilliseconds, mz, abs(charge)); } CATCH_AND_FORWARD
+    try { return imsCcsReader_->CcsFromDriftTime(driftTimeInMilliseconds, mz, abs(charge)); }
+    catch (System::IO::InvalidDataException^ e) { return NAN; } // "Cannot solve cubic fit" throws System.IO.InvalidDataExeption
+    CATCH_AND_FORWARD
 }
 
 double MidacDataImpl::ccsToDriftTime(double ccs, double mz, int charge) const
 {
-    try { return imsCcsReader_->DriftTimeFromCcs(ccs, mz, abs(charge)); } CATCH_AND_FORWARD
+    try { return imsCcsReader_->DriftTimeFromCcs(ccs, mz, abs(charge)); }
+    catch (System::IO::InvalidDataException^ e) { return NAN; } // "Cannot solve cubic fit" throws System.IO.InvalidDataExeption
+    CATCH_AND_FORWARD
 }
 
 ScanRecordPtr MidacDataImpl::getScanRecord(int rowNumber) const
