@@ -96,7 +96,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance, msLevelsToCentroid);
 }
 
-PWIZ_API_DECL boost::tribool SpectrumList_Waters::isLockMassFunction(int function) const
+PWIZ_API_DECL bool SpectrumList_Waters::isLockMassFunction(int function) const
 {
     if (lockmassFunction_ == LOCKMASS_FUNCTION_UNINIT) // See if we can figure out which is the lockmass function
     {
@@ -123,7 +123,7 @@ PWIZ_API_DECL boost::tribool SpectrumList_Waters::isLockMassFunction(int functio
         }
         lockmassFunction_ = hasChromMS ? apparentLockmassFunction : LOCKMASS_FUNCTION_UNKNOWN;
     }
-    return lockmassFunction_ == LOCKMASS_FUNCTION_UNKNOWN ? boost::tribool::indeterminate_value : (function == lockmassFunction_);
+    return function == lockmassFunction_;
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance, const pwiz::util::IntegerSet& msLevelsToCentroid) const
@@ -316,11 +316,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (detailLevel < DetailLevel_FullMetadata)
         return result;
 
+    if (config_.ignoreCalibrationScans && isLockMassFunction(ie.function))
+        return result;
+
     if (detailLevel == DetailLevel_FullData || detailLevel == DetailLevel_FullMetadata)
     {
         BinaryData<double> mzArray, intensityArray;
 
-        if (ie.block >= 0 && config_.combineIonMobilitySpectra && !isLockMassFunction(ie.function))
+        if (ie.block >= 0 && config_.combineIonMobilitySpectra && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
         {
             if (detailLevel == DetailLevel_FullMetadata)
                 return result;
@@ -349,7 +352,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         {
             vector<float> masses, intensities;
 
-            if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function))
+            if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
             {
                 MassLynxRawScanReader& scanReader = binaryDataSource.lock()->GetCompressedDataClusterForBlock(ie.function, ie.block);
                 scanReader.ReadScan(ie.function, ie.block, ie.scan, masses, intensities);
@@ -595,7 +598,7 @@ PWIZ_API_DECL void SpectrumList_Waters::getCombinedSpectrumData(int function, in
 
 PWIZ_API_DECL bool SpectrumList_Waters::calibrationSpectraAreOmitted() const
 {
-    return lockmassFunction_ >= 0;
+    return config_.ignoreCalibrationScans && lockmassFunction_ >= 0;
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::createIndex()

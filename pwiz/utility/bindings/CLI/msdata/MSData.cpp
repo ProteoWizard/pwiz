@@ -754,11 +754,7 @@ bool SpectrumList::benefitsFromWorkerThreads()
 // Currently only supported for Waters lockmass functions, as in msconvert with --ignoreCalibrationSpectra
 bool SpectrumList::calibrationSpectraAreOmitted()
 {
-    auto slAsWrapper = boost::dynamic_pointer_cast<b::SpectrumListWrapper>(*base_);
-    if (slAsWrapper != nullptr)
-        return slAsWrapper->calibrationSpectraAreOmitted();
-    else
-        return false;
+    try {return (*base_)->calibrationSpectraAreOmitted();} CATCH_AND_FORWARD
 }
 
 SpectrumListSimple::SpectrumListSimple()

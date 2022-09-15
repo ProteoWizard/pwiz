@@ -69,7 +69,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     virtual pair<int, int> sonarMzToBinRange(double precursorMz, double tolerance) const; // If precursor mz is outside SONAR range, returns pair <-1,-1>
     virtual double sonarBinToPrecursorMz(int bin) const; // If bin is outside SONAR range, returns 0
 
-    virtual boost::tribool isLockMassFunction(int tryFunction) const;
+    virtual bool isLockMassFunction(int tryFunction) const;
 
     virtual bool hasIonMobility() const;
     virtual bool hasCombinedIonMobility() const;
