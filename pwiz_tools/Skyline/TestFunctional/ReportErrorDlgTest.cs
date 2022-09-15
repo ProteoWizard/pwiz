@@ -19,10 +19,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -50,6 +52,9 @@ namespace pwiz.SkylineTestFunctional
                 skippedReportForm2.IsTest = true;
                 skippedReportForm2.SetFormProperties(true, true, "yuval@uw.edu", "text");
                 skippedReportForm2.OkDialog(false);
+                Assert.IsNotNull(skippedReportForm2.SkylineFileBytes);
+                Assert.AreNotEqual(0, skippedReportForm2.SkylineFileBytes.Length);
+                Assert.IsTrue(skippedReportForm2.SkylineFileBytes.Length < ReportErrorDlg.MAX_ATTACHMENT_SIZE);
             });
             WaitForClosedForm(reportErrorDlg);
 
@@ -75,6 +80,25 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(skippedReportForm, () => skippedReportForm.OkDialog(false));
             WaitForClosedForm(reportErrorDlg2);
+
+            RunUI(() =>
+            {
+                SkylineWindow.Paste(TextUtil.LineSeparate(Enumerable.Repeat("ELVISLIVES", 50000)));
+            });
+            ReportException(new Exception());
+            var reportErrorDlg3 = WaitForOpenForm<ReportErrorDlg>();
+            RunDlg<DetailedReportErrorDlg>(reportErrorDlg3.OkDialog, detailedDlg =>
+            {
+                Assert.IsNotNull(detailedDlg);
+                Assert.IsTrue(detailedDlg.ScreenShots.Count > 0);
+                detailedDlg.IsTest = true;
+                detailedDlg.SetFormProperties(true, true, "yuval@uw.edu", "text");
+                detailedDlg.OkDialog(false);
+                Assert.IsNotNull(detailedDlg.SkylineFileBytes);
+                Assert.AreEqual(ReportErrorDlg.MAX_ATTACHMENT_SIZE, detailedDlg.SkylineFileBytes.Length);
+            });
+            WaitForClosedForm(reportErrorDlg);
+
         }
 
         private void ReportException(Exception x)

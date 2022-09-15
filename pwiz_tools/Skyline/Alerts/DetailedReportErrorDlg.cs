@@ -252,9 +252,9 @@ namespace pwiz.Skyline.Alerts
         }
 
         // Test Method
-        public void SetFormProperties(bool sendScreenSchots, bool sendSkyFile, string email, string text)
+        public void SetFormProperties(bool sendScreenShots, bool sendSkyFile, string email, string text)
         {
-            checkBoxScreenShot.Checked = sendScreenSchots;
+            checkBoxScreenShot.Checked = sendScreenShots;
             checkBoxSkyFile.Checked = sendSkyFile;
             textBoxEmail.Text = email;
             textBoxMsg.Text = text;
