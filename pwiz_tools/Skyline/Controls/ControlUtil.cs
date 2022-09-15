@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls
             try
             {
                 val = double.Parse(control.Text, LocalizationHelper.CurrentCulture);
-                valid = true;
+                valid = !double.IsNaN(val) && !double.IsInfinity(val);
             }
             catch (FormatException)
             {
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Controls
                     valid = true;
                 }
             }
-            catch (FormatException)
+            catch (Exception)
             {
                 ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer);
             }

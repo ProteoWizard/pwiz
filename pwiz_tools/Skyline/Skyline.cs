@@ -4677,6 +4677,17 @@ namespace pwiz.Skyline
                 }
             }
         }
+
+        private void helpToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            // The "Submit Error Report" menu item should only be shown if the user was holding down the Shift key when they dropped the Help menu
+            submitErrorReportMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);
+        }
+
+        private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
+        {
+            Program.ReportException(new ApplicationException(Resources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
+        }
     }
 }
 

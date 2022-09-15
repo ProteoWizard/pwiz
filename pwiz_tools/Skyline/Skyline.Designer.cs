@@ -288,6 +288,7 @@ namespace pwiz.Skyline
             this.otherDocsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.submitErrorReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
@@ -2072,12 +2073,14 @@ namespace pwiz.Skyline
             this.documentationToolStripMenuItem,
             this.supportMenuItem,
             this.issuesMenuItem,
+            this.submitErrorReportMenuItem,
             this.checkForUpdatesSeparator,
             this.checkForUpdatesMenuItem,
             this.toolStripSeparator29,
             this.aboutMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             resources.ApplyResources(this.helpToolStripMenuItem, "helpToolStripMenuItem");
+            this.helpToolStripMenuItem.DropDownOpening += new System.EventHandler(this.helpToolStripMenuItem_DropDownOpening);
             // 
             // homeMenuItem
             // 
@@ -2141,6 +2144,12 @@ namespace pwiz.Skyline
             this.issuesMenuItem.Name = "issuesMenuItem";
             resources.ApplyResources(this.issuesMenuItem, "issuesMenuItem");
             this.issuesMenuItem.Click += new System.EventHandler(this.issuesMenuItem_Click);
+            // 
+            // submitErrorReportMenuItem
+            // 
+            this.submitErrorReportMenuItem.Name = "submitErrorReportMenuItem";
+            resources.ApplyResources(this.submitErrorReportMenuItem, "submitErrorReportMenuItem");
+            this.submitErrorReportMenuItem.Click += new System.EventHandler(this.submitErrorReportMenuItem_Click);
             // 
             // checkForUpdatesSeparator
             // 
@@ -2826,6 +2835,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
     }
 }
 
