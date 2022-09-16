@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Globalization;
 using System.Windows.Forms;
@@ -28,14 +29,18 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     public class MessageBoxHelperTest : AbstractFunctionalTest
     {
-        const string textBoxLabel = "TextBoxLabel";
-        private MessageBoxHelperTestForm _testForm;
+        private FormEx _testForm;
         private TextBox _testTextBox;
+        /// <summary>
+        /// Text of the Label which appears before _testTextBox.
+        /// <see cref="MessageBoxHelper.GetControlMessage"/> substitutes this text into its error messages.
+        /// </summary>
+        private const string TEXT_BOX_LABEL = "TextBoxLabel";
         [TestMethod]
         public void TestMessageBoxHelper()
         {
@@ -48,18 +53,20 @@ namespace pwiz.SkylineTest
             _testTextBox = null;
             RunUI(() =>
             {
-                _testForm = new MessageBoxHelperTestForm();
-                var flowLayoutPanel = new FlowLayoutPanel()
+                _testForm = new FormEx();
+                var flowLayoutPanel = new FlowLayoutPanel
                 {
                     Dock = DockStyle.Fill
                 };
                 _testForm.Controls.Add(flowLayoutPanel);
 
-                flowLayoutPanel.Controls.Add(new Label{Text = textBoxLabel});
+                // MessageBoxHelper.GetControlMessage inserts the text of the label before the textbox into
+                // the error message.
+                flowLayoutPanel.Controls.Add(new Label{Text = TEXT_BOX_LABEL});
                 _testTextBox = new TextBox();
                 flowLayoutPanel.Controls.Add(_testTextBox);
             });
-            Assert.AreSame(_testForm, ShowDialog<MessageBoxHelperTestForm>(() => _testForm.ShowDialog(Program.MainWindow)));
+            Program.MainWindow.BeginInvoke(new Action(()=>_testForm.ShowDialog(Program.MainWindow)), null);
             VerifyDecimalError("NaN");
             VerifyDecimalError("Infinity");
             VerifyDecimalError("1e99999");
@@ -69,6 +76,17 @@ namespace pwiz.SkylineTest
             VerifyDecimalNoError(double.MinValue);
             VerifyDecimalNoError(double.MaxValue);
             VerifyDecimalNoError("1e-9999999", 0);
+
+            VerifyIntegerError("99999999999");
+            VerifyIntegerError("xxx");
+            VerifyIntegerError("1.0");
+            VerifyIntegerError(long.MaxValue.ToString());
+            VerifyIntegerError(long.MinValue.ToString());
+            VerifyIntegerNoError("0000000000000000001", 1);
+            VerifyIntegerNoError(int.MaxValue.ToString(), int.MaxValue);
+            VerifyIntegerNoError(int.MinValue.ToString(), int.MinValue);
+
+
             OkDialog(_testForm, _testForm.Close);
             _testForm.Dispose();
         }
@@ -82,7 +100,7 @@ namespace pwiz.SkylineTest
                 messageBoxHelper.ValidateDecimalTextBox(_testTextBox, out _);
             }, messageDlg =>
             {
-                Assert.AreEqual(string.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, textBoxLabel), messageDlg.Message);
+                Assert.AreEqual(string.Format(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, TEXT_BOX_LABEL), messageDlg.Message);
                 messageDlg.OkDialog();
             });
         }
@@ -103,21 +121,29 @@ namespace pwiz.SkylineTest
             });
         }
 
-        private void VerifyError(Action action, string expectedMessage)
+        private void VerifyIntegerError(string textValue)
         {
-            RunDlg<AlertDlg>(action, alertDlg =>
+            var messageBoxHelper = new MessageBoxHelper(_testForm);
+            RunDlg<MessageDlg>(() =>
             {
-                if (expectedMessage != null)
-                {
-                    Assert.AreEqual(expectedMessage, alertDlg.Message);
-                }
-                alertDlg.OkDialog();
+                _testTextBox.Text = textValue;
+                messageBoxHelper.ValidateNumberTextBox(_testTextBox, null, null, out int _);
+            }, messageDlg =>
+            {
+                Assert.AreEqual(string.Format(Resources.MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer, TEXT_BOX_LABEL), messageDlg.Message);
+                messageDlg.OkDialog();
             });
         }
 
-        private class MessageBoxHelperTestForm : FormEx
+        private void VerifyIntegerNoError(string textValue, int expectedValue)
         {
-
+            var messageBoxHelper = new MessageBoxHelper(_testForm);
+            RunUI(() =>
+            {
+                _testTextBox.Text = textValue;
+                messageBoxHelper.ValidateNumberTextBox(_testTextBox, null, null, out int parsedValue);
+                Assert.AreEqual(expectedValue, parsedValue);
+            });
         }
     }
 }
