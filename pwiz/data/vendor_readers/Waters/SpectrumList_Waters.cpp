@@ -747,7 +747,7 @@ bool SpectrumList_Waters::hasCombinedIonMobility() const {return false;}
 bool SpectrumList_Waters::canConvertIonMobilityAndCCS() const {return false;}
 double SpectrumList_Waters::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}
 double SpectrumList_Waters::ccsToIonMobility(double ccs, double mz, int charge) const {return 0;}
-boost::tribool SpectrumList_Waters::isLockMassFunction(int function) const { return false;}
+bool SpectrumList_Waters::isLockMassFunction(int function) const { return false;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const { return SpectrumPtr(); }
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const { return SpectrumPtr(); }
