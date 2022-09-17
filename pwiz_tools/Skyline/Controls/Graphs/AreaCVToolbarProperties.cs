@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double qvalue = double.NaN;
             if (!string.IsNullOrWhiteSpace(textQValueCutoff.Text) &&
-                !helper.ValidateDecimalTextBox(textQValueCutoff, 0.0, 1.0, out qvalue))
+                !helper.ValidateDecimalTextBox(textQValueCutoff, 0.0, 1.0, out qvalue, allowNaN: true))
                 return;
 
             double cvCutoff;

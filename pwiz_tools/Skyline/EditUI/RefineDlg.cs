@@ -465,7 +465,7 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrWhiteSpace(textQVal.Text))
             {
                 double qvalue;
-                if (!helper.ValidateDecimalTextBox(textQVal, 0.0, 1.0, out qvalue))
+                if (!helper.ValidateDecimalTextBox(textQVal, 0.0, 1.0, out qvalue, allowNaN: true))
                     return;
                 qvalueCutoff = qvalue;
             }
