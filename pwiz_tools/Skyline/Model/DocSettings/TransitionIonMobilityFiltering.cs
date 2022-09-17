@@ -154,7 +154,8 @@ namespace pwiz.Skyline.Model.DocSettings
                         var ionMobilityValue = ionMobilityFunctionsProvider.IonMobilityFromCCS(
                             result.CollisionalCrossSectionSqA.Value,
                             ion.PrecursorMz ?? mz, ion.Charge);
-                        if (!Equals(ionMobilityValue, result.IonMobility))
+                        if (ionMobilityValue.HasValue && // Successful CCS->IM conversion
+                            !Equals(ionMobilityValue, result.IonMobility))
                         {
                             result = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue,
                                 result.CollisionalCrossSectionSqA, result.HighEnergyIonMobilityValueOffset);
