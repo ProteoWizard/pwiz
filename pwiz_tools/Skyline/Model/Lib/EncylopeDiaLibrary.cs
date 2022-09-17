@@ -94,6 +94,8 @@ namespace pwiz.Skyline.Model.Lib
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
         private ImmutableList<string> _sourceFiles;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
+        // List of entries which includes items which do not have a spectrum but which do have peak boundaries
+        private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
 
         private EncyclopeDiaLibrary()
         {
@@ -329,6 +331,21 @@ namespace pwiz.Skyline.Model.Lib
         }
         // ReSharper restore LocalizableElement
 
+        protected override void SetLibraryEntries(IEnumerable<ElibSpectrumInfo> entries)
+        {
+            var allEntries = ImmutableList.ValueOf(entries);
+            var entriesWithSpectra = ImmutableList.ValueOf(allEntries.Where(entry=>entry.BestFileId >= 0));
+            base.SetLibraryEntries(entriesWithSpectra);
+            if (entriesWithSpectra.Count == allEntries.Count)
+            {
+                _allLibraryEntries = _libraryEntries;
+            }
+            else
+            {
+                _allLibraryEntries = new LibKeyMap<ElibSpectrumInfo>(allEntries, allEntries.Select(entry => entry.Key.LibraryKey));
+            }
+        }
+
         private void WriteCache(ILoadMonitor loader)
         {
             using (FileSaver fs = new FileSaver(CachePath, loader.StreamManager))
@@ -343,8 +360,8 @@ namespace pwiz.Skyline.Model.Lib
                         PrimitiveArrays.WriteOneValue(stream, fileNameBytes.Length);
                         PrimitiveArrays.Write(stream, fileNameBytes);
                     }
-                    PrimitiveArrays.WriteOneValue(stream, _libraryEntries.Length);
-                    foreach (var elibSpectrumInfo in _libraryEntries)
+                    PrimitiveArrays.WriteOneValue(stream, _allLibraryEntries.Length);
+                    foreach (var elibSpectrumInfo in _allLibraryEntries)
                     {
                         elibSpectrumInfo.Write(stream);
                     }
@@ -566,20 +583,23 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             bool anyMatch = false;
-            foreach (var entry in LibraryEntriesWithSequences(peptideSequences))
+            foreach (var peptideSequence in peptideSequences)
             {
-                FileData fileData;
-                if (entry.FileDatas.TryGetValue(fileId, out fileData))
+                foreach (var entry in
+                         _allLibraryEntries.ItemsMatching(new LibKey(peptideSequence, Adduct.EMPTY), false))
                 {
-                    return fileData.PeakBounds;
-                }
+                    FileData fileData;
+                    if (entry.FileDatas.TryGetValue(fileId, out fileData))
+                    {
+                        return fileData.PeakBounds;
+                    }
 
-                if (entry.FileDatas.Any())
-                {
-                    anyMatch = true;
+                    if (entry.FileDatas.Any())
+                    {
+                        anyMatch = true;
+                    }
                 }
             }
-
             if (anyMatch)
             {
                 return ExplicitPeakBounds.EMPTY;
@@ -592,27 +612,27 @@ namespace pwiz.Skyline.Model.Lib
             int iEntry = FindEntry(key);
             if (iEntry < 0)
             {
-                return new SpectrumInfoLibrary[0];
+                yield break;
             }
             var entry = _libraryEntries[iEntry];
-            return entry.FileDatas.Where(kvp =>
+            foreach (var keyValuePair in entry.FileDatas)
+            {
+                var fileIndex = keyValuePair.Key;
+                var fileData = keyValuePair.Value;
+                if (!fileData.ApexTime.HasValue)
                 {
-                    if (!kvp.Value.ApexTime.HasValue)
-                    {
-                        return false;
-                    }
-                    if (redundancy == LibraryRedundancy.best && kvp.Key != entry.BestFileId)
-                    {
-                        return false;
-                    }
-                    return true;
-                })
-                .Select(kvp =>
-                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null, null,
-                        kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
-                    {
-                        SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
-                    });
+                    continue;
+                }
+                if (redundancy == LibraryRedundancy.best && keyValuePair.Key != entry.BestFileId)
+                {
+                    continue;
+                }
+                yield return new SpectrumInfoLibrary(this, labelType, _sourceFiles[fileIndex], fileData.ApexTime, null, null,
+                    fileIndex == entry.BestFileId, new ElibSpectrumKey(iEntry, fileIndex))
+                {
+                    SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
+                };
+            }
         }
 
         public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
@@ -748,7 +768,7 @@ namespace pwiz.Skyline.Model.Lib
 
             foreach (var entry in fileDatas)
             {
-                if (!entry.Value.Score.HasValue)
+                if (!entry.Value.Score.HasValue || !entry.Value.FileData.ApexTime.HasValue)
                 {
                     continue;
                 }
