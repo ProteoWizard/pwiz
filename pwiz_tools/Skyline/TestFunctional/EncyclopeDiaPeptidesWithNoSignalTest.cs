@@ -51,14 +51,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"EncyclopeDiaMissingPeptidesTest.sky")));
 
             // Use the Import Peptide Search wizard to import the peptides from the "quantreport.elib"
-            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsDlg =>
             {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Digest;
-                peptideSettingsUi.MaxMissedCleavages = 1;
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Filter;
-                peptideSettingsUi.TextMinLength = 4;
-                peptideSettingsUi.TextExcludeAAs = 0;
-                peptideSettingsUi.OkDialog();
+                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Digest;
+                peptideSettingsDlg.MaxMissedCleavages = 1;
+                peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Filter;
+                peptideSettingsDlg.TextMinLength = 4;
+                peptideSettingsDlg.TextExcludeAAs = 0;
+                peptideSettingsDlg.OkDialog();
             });
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             RunUI(() =>
