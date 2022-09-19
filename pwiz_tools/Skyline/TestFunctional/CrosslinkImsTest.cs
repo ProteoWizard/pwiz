@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -48,14 +49,15 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowTransitionSettingsUI();
                 transitionSettingsClosed = true;
             });
-            var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(() => transitionSettingsUi.IonMobilityControl.AddIonMobilityLibrary());
-            RunUI(() =>
+            RunUI(()=>transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            RunDlg<EditIonMobilityLibraryDlg>(() => transitionSettingsUi.IonMobilityControl.AddIonMobilityLibrary(), ionMobilityLibraryDlg=>
             {
                 ionMobilityLibraryDlg.LibraryName = "Test Crosslink IMS Library";
                 ionMobilityLibraryDlg.CreateDatabaseFile(TestFilesDir.GetTestPath("ImsLibrary.imsdb"));
                 ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
+                Assert.AreEqual(1, ionMobilityLibraryDlg.LibraryMobilitiesFlatCount);
+                ionMobilityLibraryDlg.OkDialog();
             });
-            OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
             OkDialog(transitionSettingsUi, transitionSettingsUi.OkDialog);
             WaitForConditionUI(() => transitionSettingsClosed);
             Assert.AreEqual(1, SkylineWindow.Document.PeptideCount);
@@ -70,6 +72,32 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, ionMobilityInfo.Count);
             var ionMobilityAndCcs = ionMobilityInfo.First();
             Assert.IsFalse(ionMobilityAndCcs.IsEmpty);
+
+            // Duplicate the one molecule in the document and make sure that Skyline does not get confused
+            RunUI(()=>
+            {
+                Assert.AreEqual(1, SkylineWindow.Document.MoleculeCount);
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.Molecules, 0);
+                SkylineWindow.Copy();
+                SkylineWindow.Paste();
+                Assert.AreEqual(2, SkylineWindow.Document.MoleculeCount);
+            });
+
+            // Bring up the EditIonMobilityLibraryDlg again, and make sure that pushing the "Use Results" button does not result in any
+            // additional values being added to the database.
+            transitionSettingsUi = ShowDialog<TransitionSettingsUI>(() =>
+            {
+                SkylineWindow.ShowTransitionSettingsUI();
+            });
+            RunUI(() => transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.IonMobility);
+            RunDlg<EditIonMobilityLibraryDlg>(() => transitionSettingsUi.IonMobilityControl.EditIonMobilityLibrary(), ionMobilityLibraryDlg=>
+            {
+                Assert.AreEqual(1, ionMobilityLibraryDlg.LibraryMobilitiesFlatCount);
+                ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
+                Assert.AreEqual(1, ionMobilityLibraryDlg.LibraryMobilitiesFlatCount);
+                ionMobilityLibraryDlg.OkDialog();
+            });
+            OkDialog(transitionSettingsUi, transitionSettingsUi.OkDialog);
         }
     }
 }

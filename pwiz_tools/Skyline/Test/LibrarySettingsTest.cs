@@ -320,8 +320,8 @@ namespace pwiz.SkylineTest
             AssertEx.IsDocumentState(docFilteredIons, ++startRev, 2, 4, 15); // Proline ions
             Assert.IsFalse(HasMaxTransitionRank(docFilteredIons, 5));
 
-            settings = settings.ChangeTransitionFilter(f => f.ChangeFragmentRangeFirstName("ion 4")
-                .ChangeFragmentRangeLastName("last ion").ChangeMeasuredIons(new MeasuredIon[0]));
+            settings = settings.ChangeTransitionFilter(f => f.ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_4.Name)
+                .ChangeFragmentRangeLastName(TransitionFilter.EndFragmentFinder.LAST_ION.Name).ChangeMeasuredIons(Array.Empty<MeasuredIon>()));
             settings = settings.ChangeTransitionLibraries(l => l.ChangePick(TransitionLibraryPick.filter));
             SrmDocument docRankedFiltered = docFilteredIons.ChangeSettings(settings);
             AssertEx.IsDocumentState(docRankedFiltered, ++startRev, 2, 4, 20);
