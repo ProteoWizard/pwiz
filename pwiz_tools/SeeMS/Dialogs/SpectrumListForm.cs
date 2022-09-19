@@ -251,7 +251,9 @@ namespace seems
 
             if (row.IonMobilityType == SpectrumDataSet.IonMobilityType_None && row.IonMobility != 0)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_SingleValue;
-            else if (s.id.Contains("frame=") || s.id.Contains("block=") || s.GetIonMobilityArray() != null)
+            else if ((s.id.Contains("frame=") && s.id.Contains("scan=")) ||
+                     s.id.Contains("block=") ||
+                     s.GetIonMobilityArray() != null)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_Array;
 
             row.SpotId = s.spotID;

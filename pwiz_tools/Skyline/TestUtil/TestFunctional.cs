@@ -263,7 +263,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>(Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
         {
             RunDlg(show, false, act, pause, millis);
         }

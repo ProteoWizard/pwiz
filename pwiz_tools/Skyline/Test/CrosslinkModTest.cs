@@ -117,8 +117,7 @@ namespace pwiz.SkylineTest
             var srmSettings = SrmSettingsList.GetDefault();
             srmSettings = srmSettings.ChangeTransitionSettings(srmSettings.TransitionSettings.ChangeFilter(
                 srmSettings.TransitionSettings.Filter
-                    .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
-                    .ChangeFragmentRangeLastName(@"last ion")
+                    .ChangeFragmentRangeAll()
                     .ChangePeptideIonTypes(new[] {IonType.precursor, IonType.y, IonType.b})
             ));
 
@@ -192,8 +191,7 @@ namespace pwiz.SkylineTest
             var srmSettings = SrmSettingsList.GetDefault();
             var transitionFilter = srmSettings.TransitionSettings.Filter;
             transitionFilter = transitionFilter
-                .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
-                .ChangeFragmentRangeLastName(@"last ion")
+                .ChangeFragmentRangeAll()
                 .ChangePeptideIonTypes(new[]{IonType.precursor,IonType.y, IonType.b});
             srmSettings =  srmSettings.ChangeTransitionSettings(
                 srmSettings.TransitionSettings.ChangeFilter(transitionFilter));
@@ -221,8 +219,7 @@ namespace pwiz.SkylineTest
                 settings.PeptideSettings.Modifications.ChangeStaticModifications(new[] {crosslinkerDef})));
             settings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeFilter(
                 settings.TransitionSettings.Filter
-                    .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
-                    .ChangeFragmentRangeLastName(@"last ion")
+                    .ChangeFragmentRangeAll()
                     .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.y, IonType.b })
             )); var mainPeptide = new Peptide("MERCURY");
             var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.light);
@@ -335,8 +332,7 @@ namespace pwiz.SkylineTest
             var srmSettings = SrmSettingsList.GetDefault();
             var transitionFilter = srmSettings.TransitionSettings.Filter;
             transitionFilter = transitionFilter
-                .ChangeFragmentRangeFirstName(TransitionFilter.StartFragmentFinder.ION_1.Name)
-                .ChangeFragmentRangeLastName(@"last ion")
+                .ChangeFragmentRangeAll()
                 .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.y, IonType.b });
             srmSettings = srmSettings.ChangeTransitionSettings(
                 srmSettings.TransitionSettings.ChangeFilter(transitionFilter));
