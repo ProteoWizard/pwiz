@@ -177,6 +177,7 @@
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
+    <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
+    <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
@@ -503,6 +505,7 @@
     <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaLibraryMatchTest.zip" />
+    <None Include="EncyclopeDiaPeptidesWithNoSignalTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitAnalyteConcentrationTest.zip" />

@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>207</ApplicationRevision>
-    <ApplicationVersion>22.1.9.207</ApplicationVersion>
+    <ApplicationRevision>256</ApplicationRevision>
+    <ApplicationVersion>22.2.1.256</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -3340,6 +3340,14 @@
       <Link>grpc_csharp_ext.x86.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3445,6 +3453,7 @@
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
+    <None Include="PreBuildEvents.bat" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -5721,7 +5730,7 @@
     <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>
