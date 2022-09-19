@@ -66,21 +66,14 @@ namespace pwiz.Skyline.Controls
                    (double.TryParse(control.Text, out value) && Equals(value, 0.0));
         }
 
-        public bool ValidateDecimalTextBox(TextBox control, out double val, bool allowNaN = false)
+        public bool ValidateDecimalTextBox(TextBox control, out double val)
         {
             val = default(double);
             bool valid;
             try
             {
                 val = double.Parse(control.Text, LocalizationHelper.CurrentCulture);
-                if (allowNaN)
-                {
-                    valid = true;
-                }
-                else
-                {
-                    valid = !double.IsNaN(val) && !double.IsInfinity(val);
-                }
+                valid = !double.IsNaN(val) && !double.IsInfinity(val);
             }
             catch (Exception)
             {
@@ -94,9 +87,9 @@ namespace pwiz.Skyline.Controls
         }
 
         public bool ValidateDecimalTextBox(TextBox control,
-                                           double? min, double? max, out double val, bool includeMin = true, bool includeMax = true, bool allowNaN = false)
+                                           double? min, double? max, out double val, bool includeMin = true, bool includeMax = true)
         {
-            if (!ValidateDecimalTextBox(control, out val, allowNaN))
+            if (!ValidateDecimalTextBox(control, out val))
                 return false;
 
             bool valid = false;
