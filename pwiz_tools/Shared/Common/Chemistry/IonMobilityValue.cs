@@ -50,7 +50,7 @@ namespace pwiz.Common.Chemistry
 
         public static IonMobilityValue GetIonMobilityValue(double mobility, eIonMobilityUnits units)
         {
-            return (units == eIonMobilityUnits.none)
+            return (units == eIonMobilityUnits.none || double.IsNaN(mobility))
                 ? EMPTY
                 : new IonMobilityValue(mobility, units);
         }
@@ -58,9 +58,7 @@ namespace pwiz.Common.Chemistry
 
         public static IonMobilityValue GetIonMobilityValue(double? value, eIonMobilityUnits units)
         {
-            return (units == eIonMobilityUnits.none || !value.HasValue)
-                ? EMPTY
-                : new IonMobilityValue(value, units);
+            return GetIonMobilityValue(value ?? double.NaN, units);
         }
 
         /// <summary>
