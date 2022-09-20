@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -129,6 +130,7 @@ namespace pwiz.SkylineTestFunctional
                 startPage.SelectedTab = StartPage.TABS.Tutorial;
 
                 Assert.IsTrue(AllBoxPanelsExist(startPage));
+                Assert.IsTrue(AllTutorialLinksExist(startPage));
                 startPage.DoAction(skylineWindow=>true);
             });
             WaitForOpenForm<SkylineWindow>();
@@ -140,6 +142,24 @@ namespace pwiz.SkylineTestFunctional
             GetControlsOfType(boxPanels, startPage);
             var openBoxPanels = startPage.GetVisibleBoxPanels();
             return boxPanels.Count == openBoxPanels.Count;
+        }
+
+        private bool AllTutorialLinksExist(StartPage startPage)
+        {
+            var boxPanels = new List<ActionBoxControl>();
+            GetControlsOfType(boxPanels, startPage);
+            var openBoxPanels = startPage.GetVisibleBoxPanels();
+            foreach (var boxPanel in openBoxPanels)
+            {
+                if (boxPanel is TutorialActionBoxControl t)
+                {
+                    startPage.TutorialActionsTestDataUrisOnly = true;
+                    t.EventAction(); // Run the Tutorial action, but only check link validity
+                    startPage.TutorialActionsTestDataUrisOnly = false;
+                }
+            }
+
+            return true;
         }
 
         private void GetControlsOfType<T>(List<T> controls, Control root) where T :Control 
