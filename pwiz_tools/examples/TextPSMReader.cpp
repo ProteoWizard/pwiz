@@ -32,7 +32,7 @@
 
 #include "TextPSMReader.hpp"
 
-using namespace std;
+using namespace pwiz::examples;
 
 // Convenience utility functions - no visibility outside of this
 // file. There are probably better boost equivalents, but I don't have
@@ -42,10 +42,10 @@ using namespace std;
 
 // Remove leading and trailing whitespace, replace one or more
 // whitespace characters with a single space.
-string clean(string const & s) {
+std::string clean(std::string const & s) {
   istringstream iss(s);
-  string clean;
-  string tok;
+  std::string clean;
+  std::string tok;
   bool first = true;
   while (iss) {
     tok = "";
@@ -65,11 +65,11 @@ string clean(string const & s) {
 // Split on whitespace, resulting in up to (max_split+1) pieces. 
 // Remainder of string is in the last position of the vector.
 // The number of tokens appended to the vector v is returned.
-int split(string const & s, vector<string> & v, int max_split=0) {
+int split(std::string const & s, std::vector<std::string> & v, int max_split=0) {
   // cerr << "Split: " << s << endl;
-  istringstream iss(s);
+  std::istringstream iss(s);
   int cnt = 0;
-  string tok;
+  std::string tok;
   if (max_split <= 0) {
     // Overestimate...
     max_split = s.length()+1;
@@ -111,27 +111,27 @@ int split(string const & s, vector<string> & v, int max_split=0) {
   return cnt;
 }
 
-double toReal(string s) {
-  istringstream iss(s);
+double toReal(std::string s) {
+  std::istringstream iss(s);
   double value;
   iss >> value;
   return value;
 }
 
-long int toInteger(string s) {
-  istringstream iss(s);
+long int toInteger(std::string s) {
+  std::istringstream iss(s);
   long int value;
   iss >> value;
   return value;
 }
 
-bool toBoolean(string s) {
+bool toBoolean(std::string s) {
   return (toInteger(s) == 0);
 }
 
-string TextPSMMod::instantiate(string const & s) {
+std::string TextPSMMod::instantiate(std::string const & s) {
   int ntok;
-  vector<string> tok;
+  std::vector<std::string> tok;
   ntok = split(s, tok, 3);
   if (ntok < 3) {
     return "too few values";
@@ -148,7 +148,7 @@ string TextPSMMod::instantiate(string const & s) {
   return "";
 }
 
-void TextPSMMod::error(string const & msg, string const & line) const {
+void TextPSMMod::error(std::string const & msg, std::string const & line) const {
   if (msg != "") {
     cerr << "Bad Modification: " << msg << " - aborting!!!!" << endl;
   } 
@@ -167,9 +167,9 @@ void TextPSMMod::error(string const & msg, string const & line) const {
   exit(1);
 }
 
-bool TextPSMScore::instantiate(string const & s) {
+bool TextPSMScore::instantiate(std::string const & s) {
   int ntok;
-  vector<string> tok;
+  std::vector<std::string> tok;
   ntok = split(s, tok, 3);
   if (ntok < 2) {
     return false;
@@ -182,9 +182,9 @@ bool TextPSMScore::instantiate(string const & s) {
   return true;
 }
 
-bool TextPSMParam::instantiate(string const & s) {
+bool TextPSMParam::instantiate(std::string const & s) {
   int ntok;
-  vector<string> tok;
+  std::vector<std::string> tok;
   ntok = split(s, tok, 3);
   if (ntok < 1) {
     return false;
@@ -199,12 +199,12 @@ bool TextPSMParam::instantiate(string const & s) {
   return true;
 }
 
-bool TextPSMProtein::instantiate(string const & s) {
+bool TextPSMProtein::instantiate(std::string const & s) {
   int ntok;
-  vector<string> tok;
+  std::vector<std::string> tok;
   size_t i;
   i = s.find(">");
-  if (i != string::npos) {
+  if (i != std::string::npos) {
     prdef = clean(s.substr(i+1));
     ntok = split(clean(s.substr(0,i)),tok,6);
   } else {
@@ -228,9 +228,9 @@ bool TextPSMProtein::instantiate(string const & s) {
   return true;
 }
 
-// bool TextPSMSeqDB::instantiate(string const & s) {
+// bool TextPSMSeqDB::instantiate(std::string const & s) {
 //   int ntok;
-//   vector<string> tok;
+//   std::vector<std::string> tok;
 //   ntok = split(s, tok, 1);
 //   if (ntok < 2) {
 //     return false;
@@ -240,9 +240,9 @@ bool TextPSMProtein::instantiate(string const & s) {
 //   return true;
 // }
 
-bool TextPSMSoftware::instantiate(string const & s) {
+bool TextPSMSoftware::instantiate(std::string const & s) {
   int ntok;
-  vector<string> tok;
+  std::vector<std::string> tok;
   ntok = split(s, tok, 1);
   if (ntok < 1) {
     return false;
@@ -254,12 +254,12 @@ bool TextPSMSoftware::instantiate(string const & s) {
   return true;
 }
 
-string TextPSMRecord::peptideID() const {
-  ostringstream oss;
+std::string TextPSMRecord::peptideID() const {
+  std::ostringstream oss;
   oss << Peptide;
-  list<TextPSMMod>::const_iterator mit=Modifications.begin();
+  std::list<TextPSMMod>::const_iterator mit=Modifications.begin();
   while (mit != Modifications.end()) {
-    ostringstream deltass;
+    std::ostringstream deltass;
     deltass << fixed << showpos << setprecision(2) << mit->delta;
     if (mit->residue == '-') {
       oss << "|" << mit->location << ":" << deltass.str();
@@ -271,7 +271,7 @@ string TextPSMRecord::peptideID() const {
   return oss.str();
 }
 
-bool TextPSMReader::valid(const TextPSMRecord & r, const string & block) const {
+bool TextPSMReader::valid(const TextPSMRecord & r, const std::string & block) const {
 
   if (r.SpectrumFile == "") {
     cerr << "Bad PSM: SpectrumFile is required" << endl;
@@ -298,7 +298,7 @@ bool TextPSMReader::valid(const TextPSMRecord & r, const string & block) const {
 
   // Check the modification locations and residues...
   int peplen = r.Peptide.length();
-  list<TextPSMMod>::const_iterator mit=r.Modifications.begin();
+  std::list<TextPSMMod>::const_iterator mit=r.Modifications.begin();
   while (mit != r.Modifications.end()) {
     if (mit->location < 0 || mit->location > (peplen+1)) {
       mit->error("Bad location");
@@ -339,10 +339,10 @@ void TextPSMReader::addMod(IdentData& mzid, ModificationPtr mod, int peplen) {
   } else {
     residue = mod->residues[0];
   }
-  ostringstream oss;
+  std::ostringstream oss;
   oss << residue << ":" << mod->monoisotopicMassDelta << ":" << termind << endl;
-  string key = oss.str();
-  map<string,SearchModificationPtr>::iterator mit;
+  std::string key = oss.str();
+  map<std::string,SearchModificationPtr>::iterator mit;
   mit = modifications.find(key);
   if (mit == modifications.end()) {
     SearchModificationPtr sm = SearchModificationPtr(new SearchModification);
@@ -350,9 +350,9 @@ void TextPSMReader::addMod(IdentData& mzid, ModificationPtr mod, int peplen) {
     sm->massDelta = mod->monoisotopicMassDelta;
     sm->residues.push_back(residue);
     if (termind == -1) {
-      sm->specificityRules = CVParam(getCVID("MS:1001189"));
+      sm->specificityRules = CVParam(pwiz::cv::MS_modification_specificity_peptide_N_term);
     } else if (termind == 1) {
-      sm->specificityRules = CVParam(getCVID("MS:1001190"));
+      sm->specificityRules = CVParam(pwiz::cv::MS_modification_specificity_peptide_C_term);
     }
     CVID mid = mod->cvParamChild(UNIMOD_unimod_root_node).cvid;
     if (mid != CVID_Unknown) {
@@ -364,8 +364,8 @@ void TextPSMReader::addMod(IdentData& mzid, ModificationPtr mod, int peplen) {
 }
 
 PeptidePtr TextPSMReader::getPeptide(TextPSMRecord const & r, IdentData& mzid) {
-  string pid = r.peptideID();
-  map<string,PeptidePtr>::const_iterator pit;
+  std::string pid = r.peptideID();
+  map<std::string,PeptidePtr>::const_iterator pit;
   pit = peptides.find(pid);
   if (pit != peptides.end()) {
     return pit->second;
@@ -375,7 +375,7 @@ PeptidePtr TextPSMReader::getPeptide(TextPSMRecord const & r, IdentData& mzid) {
   mzid.sequenceCollection.peptides.push_back(p);
   p->id = pid;
   p->peptideSequence = r.Peptide;
-  list<TextPSMMod>::const_iterator mit=r.Modifications.begin();
+  std::list<TextPSMMod>::const_iterator mit=r.Modifications.begin();
   while (mit != r.Modifications.end()) {
     ModificationPtr mod = ModificationPtr(new pwiz::identdata::Modification);
     mod->location = mit->location;
@@ -402,22 +402,22 @@ PeptidePtr TextPSMReader::getPeptide(TextPSMRecord const & r, IdentData& mzid) {
   return p;
 }
 
-SearchDatabasePtr TextPSMReader::getSearchDatabase(string const & db, IdentData &mzid) {
-  map<string,SearchDatabasePtr>::const_iterator sdit;
+SearchDatabasePtr TextPSMReader::getSearchDatabase(std::string const & db, IdentData &mzid) {
+  map<std::string,SearchDatabasePtr>::const_iterator sdit;
   sdit = databases.find(db);
   assert (sdit != databases.end());
   return sdit->second;
 }
 
-bool TextPSMReader::testProtein(const string & accin) const {
-  string acc = accin;
-  string db = "";
+bool TextPSMReader::testProtein(const std::string & accin) const {
+  std::string acc = accin;
+  std::string db = "";
   size_t i = acc.rfind(':');
-  if (i != string::npos) {
+  if (i != std::string::npos) {
     db = acc.substr(0,i);
     acc = acc.substr(i+1);
   }
-  map<string,DBSequencePtr>::const_iterator pit;
+  map<std::string,DBSequencePtr>::const_iterator pit;
   pit = proteins.find(acc);
   if (pit != proteins.end()) {
     return true;
@@ -425,28 +425,28 @@ bool TextPSMReader::testProtein(const string & accin) const {
   return false;
 }
 
-DBSequencePtr TextPSMReader::findProtein(const string & accin) const {
-  string acc = accin;
-  string db = "";
+DBSequencePtr TextPSMReader::findProtein(const std::string & accin) const {
+  std::string acc = accin;
+  std::string db = "";
   size_t i = acc.rfind(':');
-  if (i != string::npos) {
+  if (i != std::string::npos) {
     db = acc.substr(0,i);
     acc = acc.substr(i+1);
   }
-  map<string,DBSequencePtr>::const_iterator pit;
+  map<std::string,DBSequencePtr>::const_iterator pit;
   pit = proteins.find(acc);
   return pit->second;
 }
 
 DBSequencePtr TextPSMReader::getProtein(TextPSMProtein const & pr, IdentData &mzid) {
-  string acc = pr.pracc;
-  string db = "";
+  std::string acc = pr.pracc;
+  std::string db = "";
   size_t i = acc.rfind(':');
-  if (i != string::npos) {
+  if (i != std::string::npos) {
     db = acc.substr(0,i);
     acc = acc.substr(i+1);
   }
-  map<string,DBSequencePtr>::const_iterator pit;
+  map<std::string,DBSequencePtr>::const_iterator pit;
   pit = proteins.find(acc);
   if (pit != proteins.end()) {
     return pit->second;
@@ -455,7 +455,7 @@ DBSequencePtr TextPSMReader::getProtein(TextPSMProtein const & pr, IdentData &mz
   p->id = acc;
   p->accession = acc;
   if (pr.prdef != "") {
-    p->set(getCVID("protein description"),pr.prdef);
+    p->set(pwiz::cv::MS_protein_description,pr.prdef);
   }
   if (pr.len >= 0) {
     p->length = pr.len;
@@ -470,11 +470,11 @@ PeptideEvidencePtr TextPSMReader::getPeptideEvidence(PeptidePtr const & pep,
 						     DBSequencePtr const & pr,
 						     TextPSMProtein const & psmpr,
 						     IdentData &mzid) {
-  ostringstream oss; 
+  std::ostringstream oss; 
   size_t p=pep->id.find('|');
-  string mods = "";
-  string pepseq = pep->id;
-  if (p != string::npos) {
+  std::string mods = "";
+  std::string pepseq = pep->id;
+  if (p != std::string::npos) {
     mods = pep->id.substr(p+1);
     pepseq = pep->id.substr(0,p);
   }
@@ -487,9 +487,9 @@ PeptideEvidencePtr TextPSMReader::getPeptideEvidence(PeptidePtr const & pep,
     // Punt, we can't tell if this has occured anyway...
     oss << pr->id << "|||" << pepseq << "|||" << mods;
   }
-  string id = oss.str();
+  std::string id = oss.str();
 
-  map<string,PeptideEvidencePtr>::const_iterator peit;
+  map<std::string,PeptideEvidencePtr>::const_iterator peit;
   peit = peptideEvidence.find(id);
   if (peit != peptideEvidence.end()) {
     return peit->second;
@@ -510,9 +510,9 @@ PeptideEvidencePtr TextPSMReader::getPeptideEvidence(PeptidePtr const & pep,
   if (psmpr.raa != '$') {
     pe->post = psmpr.raa;
   }
-  CVID cvid = getCVID("decoy DB accession regexp");
+  CVID cvid = pwiz::cv::MS_decoy_DB_accession_regexp;
   if (pr->searchDatabasePtr->hasCVParam(cvid)) {
-    string decoy_prefix = pr->searchDatabasePtr->cvParam(cvid).value.substr(1);
+    std::string decoy_prefix = pr->searchDatabasePtr->cvParam(cvid).value.substr(1);
     if (pr->id.substr(0,decoy_prefix.length()) == decoy_prefix) {
       pe->isDecoy = true;
     } else {
@@ -525,9 +525,9 @@ PeptideEvidencePtr TextPSMReader::getPeptideEvidence(PeptidePtr const & pep,
   return pe;
 }
 
-int TextPSMReader::getNextRecord(istream & is, TextPSMContainer* & c) const {
-  string line;
-  string block;
+int TextPSMReader::getNextRecord(std::istream & is, TextPSMContainer* & c) const {
+  std::string line;
+  std::string block;
   TextPSMRecord *r=NULL;
   TextPSMMetaData *md=NULL;
   TextPSMGroupMetaData *gmd=NULL;
@@ -612,14 +612,14 @@ int TextPSMReader::getNextRecord(istream & is, TextPSMContainer* & c) const {
       block += '\n';
     }
     block  += line;
-    vector<string> sline;
+    std::vector<std::string> sline;
     int ntok;
     ntok = split(line, sline, 1);
     if (ntok != 2) {
       continue;
     }
-    string key = sline[0];
-    string value = sline[1];
+    std::string key = sline[0];
+    std::string value = sline[1];
     if (md && key == "SpectrumIDFormat") {
       md->SpectrumIDFormat = value;
       continue;
@@ -738,14 +738,14 @@ int TextPSMReader::getNextRecord(istream & is, TextPSMContainer* & c) const {
       prg->praccs.push_back(value);
     }
     if (prg && key == "Score") {
-      vector<string> svalue;
+      std::vector<std::string> svalue;
       int ntok = split(value,svalue,1);
       if (ntok != 2) {
 	cerr << "Bad Protein Group Score line " << lineno << " - aborting!!!!" << endl;
 	cerr << line << endl;
 	exit(1);
       }
-      string pracc = svalue[0];
+      std::string pracc = svalue[0];
       if (!testProtein(pracc)) {
 	cerr << "Bad Protein Group Protein " << lineno << " - aborting!!!!" << endl;
 	cerr << line << endl;
@@ -761,14 +761,14 @@ int TextPSMReader::getNextRecord(istream & is, TextPSMContainer* & c) const {
       continue;
     }
     if (prg && key == "Param") {
-      vector<string> svalue;
+      std::vector<std::string> svalue;
       int ntok = split(value,svalue,1);
       if (ntok != 2) {
 	cerr << "Bad Protein Group Param line " << lineno << " - aborting!!!!" << endl;
 	cerr << line << endl;
 	exit(1);
       }
-      string pracc = svalue[0];
+      std::string pracc = svalue[0];
       if (pracc != "-" && !testProtein(pracc)) {
 	cerr << "Bad Protein Group Protein " << lineno << " - aborting!!!!" << endl;
 	cerr << line << endl;
@@ -821,7 +821,7 @@ int TextPSMReader::getNextRecord(istream & is, TextPSMContainer* & c) const {
     }
     if (r && key == "Modification") {
       TextPSMMod m;
-      string msg;
+      std::string msg;
       if ((msg=m.instantiate(value)) != "") {
 	m.error(msg,line);
       }
@@ -950,25 +950,25 @@ int TextPSMReader::getNextRecord(istream & is, TextPSMContainer* & c) const {
   return 0;
 }
 
-CVID TextPSMReader::getCVID(string const & term) const {
+CVID TextPSMReader::getCVID(std::string const & term) const {
   if (term == "") {
     return CVID_Unknown;
   }
   size_t i;
   i = term.find(":");
-  if (i != string::npos && term.substr(0,i) == "MS") {
+  if (i != std::string::npos && term.substr(0,i) == "MS") {
     return (CVID)toInteger(term.substr(i+1));
   }
   return translator.translate(term);
 }
 
-CVID TextPSMReader::getCVID_UNIMOD(string const & term) const {
+CVID TextPSMReader::getCVID_UNIMOD(std::string const & term) const {
   if (term == "") {
     return CVID_Unknown;
   }
   size_t i;
   i = term.find(":");
-  if (i != string::npos && term.substr(0,i) == "UNIMOD") {
+  if (i != std::string::npos && term.substr(0,i) == "UNIMOD") {
     return (CVID)(UNIMOD_unimod_root_node + toInteger(term.substr(i+1)));
   }
   try {
@@ -979,7 +979,7 @@ CVID TextPSMReader::getCVID_UNIMOD(string const & term) const {
   }
 }
 
-void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
+void TextPSMReader::readTextStream(std::istream & is, IdentData& mzid) {
  
   initialize(mzid);
 
@@ -1000,20 +1000,20 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
 
   sip = SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol("SIP"));
   mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
-  sip->searchType = getCVID("MS:1001083");
+  sip->searchType = pwiz::cv::MS_ms_ms_search;
   si = SpectrumIdentificationPtr(new SpectrumIdentification("SI"));
   mzid.analysisCollection.spectrumIdentification.push_back(si);
   si->spectrumIdentificationProtocolPtr = sip;
   si->spectrumIdentificationListPtr = sil;
   si->activityDate = mzid.creationDate;
 
-  string currentSpectrumFile = "";
-  string currentSpectrumID = "";
+  std::string currentSpectrumFile = "";
+  std::string currentSpectrumID = "";
   int spectrumCounter = 1;
   int psmCounter = -1;
 
-  CVID spectrumIDFormat;
-  CVID fileFormat;
+  CVID spectrumIDFormat = pwiz::cv::CVID_Unknown;
+  CVID fileFormat = pwiz::cv::CVID_Unknown;
  
   int ctype = 0;
   TextPSMContainer *c;
@@ -1053,13 +1053,13 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       spectrumIDFormat = getCVID(md->SpectrumIDFormat);
       if (spectrumIDFormat == CVID_Unknown) {
         // Use scan number native ID format?
-        spectrumIDFormat = getCVID("MS:1000776");
+        spectrumIDFormat = pwiz::cv::MS_scan_number_only_nativeID_format;
       }
 
       fileFormat = getCVID(md->FileFormat);
       if (fileFormat == CVID_Unknown) {
 	// Use mzML file format?
-	fileFormat = getCVID("MS:1000566");
+	fileFormat = pwiz::cv::MS_mzML_format; // NOTE: Change from mzXML, despite comment
       }
 
       TextPSMParam* thr = md->threshold;
@@ -1082,10 +1082,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       }
       CVID id = getCVID(md->enzyme);
       if (md->enzyme == "" || id == CVID_Unknown) {
-	  // unspecific cleavage: MS:1001956
-	  id = getCVID("MS:1001956");
-	  // NoEnzyme: MS:1001091
-	  // id = getCVID("MS:1001091");
+	id = pwiz::cv::MS_unspecific_cleavage;
       } else {
 	if (md->enzymesemi) {
 	  enz->terminalSpecificity = pwiz::proteome::Digestion::SemiSpecific;
@@ -1094,9 +1091,9 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       enz->enzymeName.set(id);
       sip->enzymes.enzymes.push_back(enz);
 
-      string sipasstr = md->AnalysisSoftware;
+      std::string sipasstr = md->AnalysisSoftware;
 
-      list<TextPSMSoftware>::iterator sit = md->Software.begin();
+      std::list<TextPSMSoftware>::iterator sit = md->Software.begin();
       while (sit != md->Software.end()) {
 	AnalysisSoftwarePtr as = AnalysisSoftwarePtr(new AnalysisSoftware);
 	as->id = sit->name;
@@ -1145,7 +1142,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       mzid.analysisCollection.proteinDetection.proteinDetectionProtocolPtr = pdp;
       mzid.dataCollection.analysisData.proteinDetectionListPtr = pdl;
 
-      map<string,AnalysisSoftwarePtr>::const_iterator it = software.find(gmd->AnalysisSoftware);
+      map<std::string,AnalysisSoftwarePtr>::const_iterator it = software.find(gmd->AnalysisSoftware);
       if (it != software.end()) {
 	pdp->analysisSoftwarePtr = it->second;
       }
@@ -1160,7 +1157,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
         }
       }
 
-      list<TextPSMParam>::iterator pit = gmd->AnalysisParams.begin();
+      std::list<TextPSMParam>::iterator pit = gmd->AnalysisParams.begin();
       while (pit != gmd->AnalysisParams.end()) {
 	CVID pid = getCVID(pit->name);
         if (pid != CVID_Unknown) {
@@ -1191,12 +1188,12 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
 	if (cvid != CVID_Unknown) {
 	  sdb1->databaseName.set(cvid);
 	} else {
-	  cvid = getCVID("database name");
+	  cvid = pwiz::cv::MS_database_name;
 	  sdb1->databaseName.set(cvid,sdb->name);
 	}
       }
       if (sdb->organism != "") {
-	CVID cvid = getCVID("taxonomy: common name");
+	CVID cvid = pwiz::cv::MS_taxonomy__common_name;
 	sdb1->set(cvid,sdb->organism);
       }
       if (sdb->source != "") {
@@ -1204,17 +1201,17 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
 	if (cvid != CVID_Unknown) {
 	  sdb1->set(cvid);
 	} else {
-	  CVID cvid = getCVID("database source");
+	  CVID cvid = pwiz::cv::MS_database_source; 
 	  sdb1->set(cvid,sdb->source);
 	}
       }
       if (sdb->uri != "") {
-	CVID cvid = getCVID("database original uri");
+	CVID cvid = pwiz::cv::MS_database_original_uri; 
 	sdb1->set(cvid,sdb->uri);
       }
       if (sdb->decoyPrefix != "") {
-	CVID cvid = getCVID("decoy DB accession regexp");
-	sdb1->set(cvid,string("^")+sdb->decoyPrefix);
+	CVID cvid = pwiz::cv::MS_decoy_DB_accession_regexp;
+	sdb1->set(cvid,std::string("^")+sdb->decoyPrefix);
       }
       mzid.dataCollection.inputs.searchDatabase.push_back(sdb1);
       si->searchDatabase.push_back(sdb1);
@@ -1230,14 +1227,14 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
 
       typedef multimap<DBSequencePtr,PeptideEvidencePtr>::const_iterator mmcit1;
       typedef multimap<PeptideEvidencePtr,SpectrumIdentificationItemPtr>::const_iterator mmcit2;
-      typedef multimap<string,TextPSMParam>::const_iterator mmcit3;
+      typedef multimap<std::string,TextPSMParam>::const_iterator mmcit3;
 
       ProteinAmbiguityGroupPtr pag = 
 	ProteinAmbiguityGroupPtr(new ProteinAmbiguityGroup);
       pag->id = prg->name;
       pag->name = prg->name;
 
-      list<string>::const_iterator sit = prg->praccs.begin();
+      std::list<std::string>::const_iterator sit = prg->praccs.begin();
       while (sit != prg->praccs.end()) {
 	DBSequencePtr dbseq = findProtein(*sit);
 	ProteinDetectionHypothesisPtr pdh = 
@@ -1264,7 +1261,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
 	pair<mmcit3,mmcit3> bounds3 = prg->Params.equal_range(*sit);
 	mmcit3 it3 = bounds3.first;
 	while (it3 != bounds3.second) {
-	  string thevalue = it3->second.value;
+	  std::string thevalue = it3->second.value;
 	  if (testProtein(it3->second.value)) {
 	    DBSequencePtr dbseq = findProtein(it3->second.value);
 	    thevalue = dbseq->id;
@@ -1295,7 +1292,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       pair<mmcit3,mmcit3> bounds3 = prg->Params.equal_range("-");
       mmcit3 it3 = bounds3.first;
       while (it3 != bounds3.second) {
-        string thevalue = it3->second.value;
+        std::string thevalue = it3->second.value;
         if (testProtein(it3->second.value)) {
           DBSequencePtr dbseq = findProtein(it3->second.value);
           thevalue = dbseq->id;
@@ -1339,7 +1336,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
     // Assumes PSMs are ordered by SpectrumID within a SpectrumFile
     if (r->SpectrumID != currentSpectrumID) {
       sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
-      ostringstream oss;
+      std::ostringstream oss;
       if (r->Scan != "") {
         oss << sd->id << "|" << r->Scan;
       } else {
@@ -1352,7 +1349,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       sir->spectrumID = r->SpectrumID;
       currentSpectrumID = r->SpectrumID;
 
-      list<TextPSMParam>::const_iterator pait=r->SpecParams.begin();
+      std::list<TextPSMParam>::const_iterator pait=r->SpecParams.begin();
       while (pait != r->SpecParams.end()) {
         CVID id = getCVID(pait->name);
         if (id != CVID_Unknown) {
@@ -1376,7 +1373,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
     }
     
     sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
-    ostringstream oss;
+    std::ostringstream oss;
     oss << sir->id << "|" << psmCounter;
     sii->id = oss.str();
     psmCounter++;
@@ -1402,20 +1399,20 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
     sii->calculatedMassToCharge = pwiz::chemistry::Ion::mz(proteomePeptide.monoisotopicMass(), 
 							   sii->chargeState);
     
-    list<TextPSMScore>::const_iterator sit=r->Scores.begin();
+    std::list<TextPSMScore>::const_iterator sit=r->Scores.begin();
     while (sit != r->Scores.end()) {
       CVID id = getCVID(sit->name);
       if (id != CVID_Unknown) {
 	sii->set(id,sit->value);
       } else {
-	ostringstream oss;
+	std::ostringstream oss;
 	oss << sit->value;
 	sii->userParams.push_back(UserParam(sit->name, oss.str(), "xsd:float"));      
       }
       ++sit;
     }
 
-    list<TextPSMParam>::const_iterator pait=r->Params.begin();
+    std::list<TextPSMParam>::const_iterator pait=r->Params.begin();
     while (pait != r->Params.end()) {
       CVID id = getCVID(pait->name);
       if (id != CVID_Unknown) {
@@ -1435,7 +1432,7 @@ void TextPSMReader::readTextStream(istream & is, IdentData& mzid) {
       ++pait;
     }
 
-    list<TextPSMProtein>::const_iterator pit=r->Proteins.begin();
+    std::list<TextPSMProtein>::const_iterator pit=r->Proteins.begin();
     while (pit != r->Proteins.end()) {
       DBSequencePtr pr = getProtein(*pit,mzid);
       PeptideEvidencePtr pe = getPeptideEvidence(sii->peptidePtr,pr,*pit,mzid);
