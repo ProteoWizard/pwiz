@@ -8,7 +8,6 @@ using namespace pwiz::identdata;
 
 #include "TextPSMReader.hpp"
 
-using namespace std;
 using namespace pwiz::examples;
 
 int main()
@@ -18,9 +17,9 @@ int main()
 	IdentData mzid;
         TextPSMReader reader;
 
-	reader.readTextStream(cin, mzid);
+	reader.readTextStream(std::cin, mzid);
 
-	IdentDataFile::write(mzid, "", cout);
+	IdentDataFile::write(mzid, "", std::cout);
 
         return 0;
     }
