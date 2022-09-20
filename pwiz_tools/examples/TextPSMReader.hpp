@@ -1,3 +1,6 @@
+//
+// Original author: Nathan Edwards <nje5@georgetown.edu>
+//
 
 #ifndef _TEXTPSMREADER_HPP_
 #define _TEXTSPMREADER_HPP_
