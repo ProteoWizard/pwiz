@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -29,7 +30,6 @@ using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -146,20 +146,39 @@ namespace pwiz.SkylineTestFunctional
 
         private bool AllTutorialLinksExist(StartPage startPage)
         {
-            var boxPanels = new List<ActionBoxControl>();
-            GetControlsOfType(boxPanels, startPage);
-            var openBoxPanels = startPage.GetVisibleBoxPanels();
-            foreach (var boxPanel in openBoxPanels)
+            var tutorialActionOriginal = startPage.Tutorial;
+            try
             {
-                if (boxPanel is TutorialActionBoxControl t)
+                startPage.Tutorial = TutorialLinksExist;
+
+                var boxPanels = new List<ActionBoxControl>();
+                GetControlsOfType(boxPanels, startPage);
+                foreach (var boxPanel in startPage.GetVisibleBoxPanels())
                 {
-                    startPage.TutorialActionsTestDataUrisOnly = true;
-                    t.EventAction(); // Run the Tutorial action, but only check link validity
-                    startPage.TutorialActionsTestDataUrisOnly = false;
+                    if (boxPanel is TutorialActionBoxControl t)
+                        t.EventAction(); // Trigger the action to cause the link test
                 }
+            }
+            finally
+            {
+                startPage.Tutorial = tutorialActionOriginal;
             }
 
             return true;
+        }
+
+        private void TutorialLinksExist(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+        {
+            // See if data URIs are accessible
+            foreach (var uri in new[] { skyFileLocation, pdfFileLocation, zipSkyFileLocation })
+            {
+                if (!string.IsNullOrEmpty(uri) && uri.StartsWith(@"http"))
+                {
+                    var httpClient = new HttpClient();
+                    var response = httpClient.GetAsync(new Uri(uri), HttpCompletionOption.ResponseHeadersRead).Result;
+                    Assert.IsTrue(response.IsSuccessStatusCode, @"Could not access tutorial doc at " + uri);
+                }
+            }
         }
 
         private void GetControlsOfType<T>(List<T> controls, Control root) where T :Control 

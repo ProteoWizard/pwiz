@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -264,6 +263,8 @@ namespace pwiz.Skyline.Controls.Startup
 
         private void PopulateTutorialPanel()
         {
+            Tutorial = TutorialAction;
+
             var labelFont = new Font(@"Arial", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             var labelAnchor = AnchorStyles.Left | AnchorStyles.Right;
             var labelWidth = flowLayoutPanelTutorials.ClientRectangle.Width - SystemInformation.VerticalScrollBarWidth;
@@ -633,27 +634,12 @@ namespace pwiz.Skyline.Controls.Startup
         {
             DoAction(new ActionImport(type).DoStartupAction);
         }
-        
-        private void Tutorial(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+
+        public Action<string, string, string> Tutorial { get; set; }
+
+        private void TutorialAction(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
         {
             Assume.IsNotNull(skyFileLocation);
-
-            // Test support
-            if (TutorialActionsTestDataUrisOnly)
-            {
-                // In tests, just want to see if data URIs are accessible
-                foreach (var uri in new []{ skyFileLocation, pdfFileLocation,  zipSkyFileLocation })
-                {
-                    if (!string.IsNullOrEmpty(uri) && uri.StartsWith(@"http"))
-                    {
-                        var httpClient = new HttpClient();
-                        var response = httpClient.GetAsync(new Uri(uri), HttpCompletionOption.ResponseHeadersRead).Result;
-                        Assume.IsTrue(response.IsSuccessStatusCode, @"Could not access tutorial doc at " + uri);
-                    }
-                }
-
-                return;
-            }
 
             var pathChooserDlg = new PathChooserDlg(Resources.StartPage_Tutorial__Folder_for_tutorial_files_, skyFileLocation);
             if (pathChooserDlg.ShowDialog(this) != DialogResult.OK)
@@ -745,8 +731,6 @@ namespace pwiz.Skyline.Controls.Startup
                 return TAB_PAGES[selectedIndex];
             }
         }
-
-        public bool TutorialActionsTestDataUrisOnly { get; set; }
 
         public TABS SelectedTab
         {
