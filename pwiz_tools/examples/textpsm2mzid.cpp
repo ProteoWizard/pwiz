@@ -1,4 +1,6 @@
 //
+// Original author: Nathan Edwards <nje5@georgetown.edu>
+//
 
 #include "pwiz/data/identdata/IdentData.hpp"
 #include "pwiz/data/identdata/IdentDataFile.hpp"
