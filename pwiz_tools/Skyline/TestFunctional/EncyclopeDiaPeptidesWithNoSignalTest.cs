@@ -144,6 +144,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             WaitForConditionUI(() => peptideSettingsClosed);
+            WaitForDocumentLoaded();
             var chromLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
             Assert.IsNotNull(chromLib);
             Assert.AreEqual(chromLibName, chromLib.Name);
