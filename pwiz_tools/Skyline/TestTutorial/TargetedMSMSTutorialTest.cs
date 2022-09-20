@@ -491,8 +491,11 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.Width = 1050);
             RestoreViewOnScreen(20);
             PauseForScreenShot("Main window with data imported", 20);
-            TestRedundantComboBox();
-            TestPropertySheet();
+            if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
+            {
+                TestRedundantComboBox();
+                TestPropertySheet();
+            }
 
             ValidatePeakRanks(1, 176, true);
 
@@ -1023,61 +1026,83 @@ namespace pwiz.SkylineTestTutorial
         {
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewMenu.ViewSpectralLibraries);
             WaitForConditionUI(() => dlg.IsUpdateComplete);
-            // Checks the number of peptides displayed to determine if this is a small molecule test which uses 10 or the full data set
-            if (dlg.PeptideDisplayCount > 11)
+            if (AsSmallMoleculesTestMode == RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
+                Assert.AreEqual(690, dlg.PeptidesCount);
+
                 // The dropdown is only visible if the peptide has redundant spectra. Index 0 does.
-                Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
-                RunUI(() => dlg.SelectedIndex = 1);
-                // The peptide at index one does not have redundant spectra
-                Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+                VerifyRedundant(dlg, 0, true, 144);
                 // Check that the peaks count of the graphed item matches the peaks of the selected spectra
-                Assert.AreNotEqual(144, dlg.GraphItem.PeaksCount);
-                RunUI(() => dlg.SelectedIndex = 0);
-                Assert.AreEqual(144, dlg.GraphItem.PeaksCount);
-                RunUI(() =>
-                {
-                    dlg.FilterString = "ik";
-                    dlg.SelectedIndex = 4;
-                });
-                Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
-                Assert.AreEqual(1, dlg.RedundantComboBox.Items.Count);
+                VerifyRedundant(dlg, 1, false, 346);
+                RunUI(() => dlg.FilterString = "ik");
+                VerifyRedundant(dlg, 4, true, 514);
+                RunUI(() => Assert.AreEqual(1, dlg.RedundantComboBox.Items.Count));
                 // This simulates the user clicking on or showing the drop down for the combobox, which populates the combobox
                 RunUI(dlg.UpdateRedundantComboItems);
                 // Checks that for this peptide, there are 11 different spectra available in the dropdown
                 WaitForConditionUI(() => dlg.IsComboBoxUpdated);
-                Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count);
+                RunUI(() => Assert.AreEqual(11, dlg.RedundantComboBox.Items.Count));
                 RunUI(() => dlg.RedundantComboBox.SelectedIndex = 1);
                 // Checks the peaks count changes upon changing the selected redundant spectra in the dropdown
-                Assert.AreEqual(551, dlg.GraphItem.PeaksCount);
+                RunUI(() => Assert.AreEqual(551, dlg.GraphItem.PeaksCount));
                 RunUI(() => dlg.RedundantComboBox.SelectedIndex = 2);
-                Assert.AreEqual(513, dlg.GraphItem.PeaksCount);
-                var fileSet = new HashSet<String>();
-                var RTSet = new HashSet<String>();
-                // Different languages have different parenthesis characters - split on either
-                var splitterChars = new[] { '(', '（' };
-                foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
+                RunUI(() => Assert.AreEqual(513, dlg.GraphItem.PeaksCount));
+                var fileSet = new HashSet<string>();
+                var RTSet = new HashSet<string>();
+                RunUI(() =>
                 {
-                    var splitName = redundantOption.OptionName.Split(splitterChars);
-                    fileSet.Add(splitName[0]);
-                    RTSet.Add(splitName[1]);
-                }
+                    // Different languages have different parenthesis characters - split on either
+                    var splitterChars = new[] { '(', '（' };
+                    foreach (ViewLibraryDlg.ComboOption redundantOption in dlg.RedundantComboBox.Items)
+                    {
+                        var splitName = redundantOption.OptionName.Split(splitterChars);
+                        fileSet.Add(splitName[0]);
+                        RTSet.Add(splitName[1]);
+                    }
+                });
                 // Checks the naming conventions are accurate, two different file names and 11 different retention times
                 Assert.AreEqual(2, fileSet.Count);
                 Assert.AreEqual(11, RTSet.Count);
-                RunUI(() => dlg.SelectedIndex = 1);
-                Assert.IsFalse(dlg.IsVisibleRedundantSpectraBox);
+                VerifyRedundant(dlg, 1, false, 725);
             }
             else
             {
+                Assert.AreEqual(10, dlg.PeptidesCount);
+
                 // For small molecules, all have redundancies. Check to make sure the dropdown is visible for all of them
+                var peakCounts = new[] { 382, 368, 385, 435, 514, 627, 534, 425, 458, 554 };
                 for (var i = 0; i < 10; i++)
-                {
-                    RunUI(() => dlg.SelectedIndex = i);
-                    Assert.IsTrue(dlg.IsVisibleRedundantSpectraBox);
-                }
+                    VerifyRedundant(dlg, i, true, peakCounts[i]);
             }
-            RunUI(() => dlg.Close());
+            OkDialog(dlg, () => dlg.Close());
+        }
+
+        private static bool IsRecordMode { get { return false; } }  // Set to true to get peak counts
+
+        private static void VerifyRedundant(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
+        {
+            RunUI(() => dlg.SelectedIndex = i);
+            // The peptide at index one does not have redundant spectra
+            int waitMs = IsRecordMode ? 1000 : 10 * 1000;
+            if (!TryWaitForConditionUI(waitMs, () => IsViewLibraryDlgState(dlg, i, visible, peakCount)) && !IsRecordMode)
+            {
+                string redundantMessage = visible
+                    ? string.Format("Redundant list hidden with {0} selected",
+                        dlg.SelectedIndex)
+                    : string.Format("Redundant list visible with {0} selected, and {1} entries",
+                        dlg.SelectedIndex, dlg.RedundantComboBox.Items.Count);
+                string peaksMessage = string.Format("(peaks {0}, expected {1})", dlg.GraphItem.PeaksCount, peakCount);
+                string message = TextUtil.SpaceSeparate(redundantMessage, peaksMessage);
+                Assert.Fail(message);
+            }
+            if (IsRecordMode)
+                Console.Write(dlg.GraphItem.PeaksCount + @", ");
+        }
+
+        private static bool IsViewLibraryDlgState(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
+        {
+            return dlg.SelectedIndex == i && dlg.IsVisibleRedundantSpectraBox == visible &&
+                   peakCount == dlg.GraphItem.PeaksCount;
         }
 
         /// <summary>
@@ -1090,7 +1115,7 @@ namespace pwiz.SkylineTestTutorial
             // Consider(nicksh): I don't think "isSmallMolecules" ever ends up being true
             var isSmallMolecules = dlg.PeptideDisplayCount < 11;
             var graphExtension = dlg.GraphExtensionControl;
-            Assert.IsFalse(graphExtension.PropertiesVisible);
+            RunUI(() => Assert.IsFalse(graphExtension.PropertiesVisible));
             ToolStripButton propertiesButton = null;
             // Check the pressing the properties button on the toolstrip displays the property sheet
             RunUI(() =>
@@ -1121,9 +1146,10 @@ namespace pwiz.SkylineTestTutorial
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
                 ValidatePropertyCount(expectedPropCount, propertyGrid);
                 ValidateSpectrumCount(401, propertyGrid);
+
+                Assert.IsTrue(graphExtension.PropertiesVisible);
+                Assert.IsTrue(propertiesButton.Checked);
             });
-            Assert.IsTrue(graphExtension.PropertiesVisible);
-            Assert.IsTrue(propertiesButton.Checked);
             // Checks that the property sheet displays nothing when no peptide is selected
             RunUI(() =>
             {
@@ -1154,9 +1180,12 @@ namespace pwiz.SkylineTestTutorial
                 });
             }
             RunUI(() => propertiesButton.PerformClick());
-            Assert.IsFalse(graphExtension.PropertiesVisible);
-            Assert.IsFalse(propertiesButton.Checked);
-            RunUI(() => dlg.Close());
+            RunUI(() =>
+            {
+                Assert.IsFalse(graphExtension.PropertiesVisible);
+                Assert.IsFalse(propertiesButton.Checked);
+            });
+            OkDialog(dlg, () => dlg.Close());
         }
 
         private static PropertyDescriptorCollection GetProperties(PropertyGrid propertyGrid)
