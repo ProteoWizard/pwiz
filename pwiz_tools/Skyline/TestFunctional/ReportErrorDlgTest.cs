@@ -19,10 +19,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -50,6 +54,9 @@ namespace pwiz.SkylineTestFunctional
                 skippedReportForm2.IsTest = true;
                 skippedReportForm2.SetFormProperties(true, true, "yuval@uw.edu", "text");
                 skippedReportForm2.OkDialog(false);
+                Assert.IsNotNull(skippedReportForm2.SkylineFileBytes);
+                Assert.AreNotEqual(0, skippedReportForm2.SkylineFileBytes.Length);
+                Assert.IsTrue(skippedReportForm2.SkylineFileBytes.Length < ReportErrorDlg.MAX_ATTACHMENT_SIZE);
             });
             WaitForClosedForm(reportErrorDlg);
 
@@ -75,6 +82,82 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(skippedReportForm, () => skippedReportForm.OkDialog(false));
             WaitForClosedForm(reportErrorDlg2);
+
+            // Add 50,000 peptides to the document so that its size will exceed ReportErrorDlg.MAX_ATTACHMENT_SIZE
+            RunUI(() =>
+            {
+                SkylineWindow.Paste(TextUtil.LineSeparate(Enumerable.Repeat("ELVISLIVES", 50000)));
+            });
+
+            // Verify that the "Report Error" menu item on the Help menu is hidden unless the user holds down the shift key
+            ToolStripMenuItem submitErrorReportMenuItem = null;
+            RunUI(() =>
+            {
+                var helpMenuItem = skylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "helpToolStripMenuItem");
+                Assert.IsNotNull(helpMenuItem);
+                Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
+                helpMenuItem.ShowDropDown();
+                submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "submitErrorReportMenuItem");
+                Assert.IsNotNull(submitErrorReportMenuItem);
+                Assert.IsFalse(submitErrorReportMenuItem.Visible);
+                helpMenuItem.HideDropDown();
+                SetShiftKeyState(true);
+                Assert.AreEqual(Keys.Shift, Control.ModifierKeys & Keys.Shift);
+                helpMenuItem.ShowDropDown();
+                submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "submitErrorReportMenuItem");
+                Assert.IsNotNull(submitErrorReportMenuItem);
+                Assert.IsTrue(submitErrorReportMenuItem.Visible);
+                SetShiftKeyState(false);
+                Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
+            });
+            Assert.IsNotNull(submitErrorReportMenuItem);
+
+            // Use the hidden help menu item to bring up the ReportErrorDlg and verify that the document bytes are
+            // truncated to MAX_ATTACHMENT_SIZE 
+            var reportErrorDlg3 = ShowDialog<ReportErrorDlg>(()=>
+            {
+                using (new StoreExceptions())
+                {
+                    submitErrorReportMenuItem.PerformClick();
+                }
+            });
+            RunDlg<DetailedReportErrorDlg>(reportErrorDlg3.OkDialog, detailedDlg =>
+            {
+                Assert.IsNotNull(detailedDlg);
+                Assert.IsTrue(detailedDlg.ScreenShots.Count > 0);
+                detailedDlg.IsTest = true;
+                detailedDlg.SetFormProperties(true, true, "yuval@uw.edu", "text");
+                detailedDlg.OkDialog(false);
+                Assert.IsNotNull(detailedDlg.SkylineFileBytes);
+                Assert.AreEqual(ReportErrorDlg.MAX_ATTACHMENT_SIZE, detailedDlg.SkylineFileBytes.Length);
+            });
+            WaitForClosedForm(reportErrorDlg3);
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool SetKeyboardState(byte[] lpKeyState);
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetKeyboardState(byte[] lpKeyState);
+        private void SetShiftKeyState(bool pressed)
+        {
+            var keyStates = new byte[256];
+            Assert.IsTrue(GetKeyboardState(keyStates));
+            var shiftKeyState = keyStates[(int)Keys.ShiftKey];
+            if (pressed)
+            {
+                shiftKeyState |= 0x80;
+            }
+            else
+            {
+                shiftKeyState = (byte)(shiftKeyState & ~0x80);
+            }
+            keyStates[(int)Keys.ShiftKey] = shiftKeyState;
+            Assert.IsTrue(SetKeyboardState(keyStates));
+            Assert.AreEqual(pressed, 0 != (Control.ModifierKeys & Keys.Shift));
         }
 
         private void ReportException(Exception x)

@@ -245,14 +245,17 @@ namespace pwiz.Skyline.EditUI
             set { comboTransType.SelectedItem = value.ToString(); }
         }
 
-        public double QValueCutoff
+        public double? QValueCutoff
         {
             get
             {
                 double result;
-                return double.TryParse(textQVal.Text, out result) ? result : double.NaN;
+                return double.TryParse(textQVal.Text, out result) ? result : (double?) null;
             }
-            set { textQVal.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set
+            {
+                textQVal.Text = value?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+            }
         }
 
         public int MinimumDetections
