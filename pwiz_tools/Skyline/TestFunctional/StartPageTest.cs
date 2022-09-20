@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -129,6 +130,7 @@ namespace pwiz.SkylineTestFunctional
                 startPage.SelectedTab = StartPage.TABS.Tutorial;
 
                 Assert.IsTrue(AllBoxPanelsExist(startPage));
+                Assert.IsTrue(AllTutorialLinksExist(startPage));
                 startPage.DoAction(skylineWindow=>true);
             });
             WaitForOpenForm<SkylineWindow>();
@@ -140,6 +142,43 @@ namespace pwiz.SkylineTestFunctional
             GetControlsOfType(boxPanels, startPage);
             var openBoxPanels = startPage.GetVisibleBoxPanels();
             return boxPanels.Count == openBoxPanels.Count;
+        }
+
+        private bool AllTutorialLinksExist(StartPage startPage)
+        {
+            var tutorialActionOriginal = startPage.Tutorial;
+            try
+            {
+                startPage.Tutorial = TutorialLinksExist;
+
+                var boxPanels = new List<ActionBoxControl>();
+                GetControlsOfType(boxPanels, startPage);
+                foreach (var boxPanel in startPage.GetVisibleBoxPanels())
+                {
+                    if (boxPanel is TutorialActionBoxControl t)
+                        t.EventAction(); // Trigger the action to cause the link test
+                }
+            }
+            finally
+            {
+                startPage.Tutorial = tutorialActionOriginal;
+            }
+
+            return true;
+        }
+
+        private void TutorialLinksExist(string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+        {
+            // See if data URIs are accessible
+            foreach (var uri in new[] { skyFileLocation, pdfFileLocation, zipSkyFileLocation })
+            {
+                if (!string.IsNullOrEmpty(uri) && uri.StartsWith(@"http"))
+                {
+                    var httpClient = new HttpClient();
+                    var response = httpClient.GetAsync(new Uri(uri), HttpCompletionOption.ResponseHeadersRead).Result;
+                    Assert.IsTrue(response.IsSuccessStatusCode, @"Could not access tutorial doc at " + uri);
+                }
+            }
         }
 
         private void GetControlsOfType<T>(List<T> controls, Control root) where T :Control 

@@ -338,6 +338,12 @@
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>Charges</value>
   </data>
+  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>80, 22</value>
+  </data>
+  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
+    <value>Special Ions</value>
+  </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
@@ -1745,6 +1751,15 @@
   </data>
   <data name="issuesMenuItem.Text" xml:space="preserve">
     <value>&amp;Issues</value>
+  </data>
+  <data name="submitErrorReportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="submitErrorReportMenuItem.Text" xml:space="preserve">
+    <value>Submit Error Report...</value>
+  </data>
+  <data name="submitErrorReportMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="checkForUpdatesSeparator.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 6</value>

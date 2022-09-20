@@ -145,8 +145,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (string.IsNullOrEmpty(line))
                     continue;
                 DbIrtPeptide peptide = null;
-                var target = TargetResolver.ResolveTarget(line);
-                if (target == null || !_dictSequenceToPeptide.TryGetValue(target, out peptide))  // CONSIDER(bspratt) - small molecule equivalent?
+                var target = TargetResolver.TryResolveTarget(line, out var resolveError);
+                if (target == null || !_dictSequenceToPeptide.TryGetValue(target, out peptide) || !string.IsNullOrEmpty(resolveError))  // CONSIDER(bspratt) - small molecule equivalent?
                     invalidLines.Add(line);
                 standardPeptides.Add(peptide);
             }

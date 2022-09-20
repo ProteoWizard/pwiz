@@ -38,12 +38,11 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.1.92
-//   date: 07:01:2022 11:44
-//   saved-by: Joshua Klein
+//   data-version: 4.1.99
+//   date: 24:08:2022 10:06
+//   saved-by: Matt Chambers
 //   auto-generated-by: OBO-Edit 2.3.1
 //   import: http://purl.obolibrary.org/obo/pato.obo
-//   import: http://purl.obolibrary.org/obo/uo.obo
 //   import: http://purl.obolibrary.org/obo/stato.owl
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
@@ -69,7 +68,7 @@
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
-//   remark: URL: https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo
+//   remark: URL: http://purl.obolibrary.org/obo/ms/psi-ms.obo
 //   remark: This work is licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.
 //   remark: To view a copy of this license, visit https://creativecommons.org/licenses/by/4.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 //   ontology: ms
@@ -8530,7 +8529,7 @@ public enum class CVID
     /// <summary>interaction score derived from cross-linking: Parent term for interaction scores derived from cross-linking.</summary>
     MS_interaction_score_derived_from_cross_linking = 1002664,
 
-    /// <summary>regular expression for interaction scores derived from cross-linking: ([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\})).</summary>
+    /// <summary>regular expression for interaction scores derived from cross-linking: ([0-9]+)[.]([a|b]):([0-9]+|null):([\-+]?[0-9]+(?:[.][0-9]+)?(?:[Ee][+-][0-9]+)?):(true|false)</summary>
     MS_regular_expression_for_interaction_scores_derived_from_cross_linking = 1002665,
 
     /// <summary>impact II: Bruker Daltonics' impact II.</summary>
@@ -9829,20 +9828,20 @@ public enum class CVID
     /// <summary>NIST msp comment: Term for a comment field withing the NIST msp file format</summary>
     MS_NIST_msp_comment = 1003102,
 
-    /// <summary>ion interpretation format: Interpretation format used for annotating individual spectrum ion peaks.</summary>
-    MS_ion_interpretation_format = 1003103,
+    /// <summary>ion annotation format: Annotation format used for annotating individual spectrum ion peaks.</summary>
+    MS_ion_annotation_format = 1003103,
 
-    /// <summary>peptide ion interpretation format: Interpretation format designed primarily for peptides, with allowances for generic chemical formulas and other miscellaneous named ions.</summary>
-    MS_peptide_ion_interpretation_format = 1003104,
+    /// <summary>peptide ion annotation format: Annotation format designed primarily for peptides, with allowances for generic chemical formulas and other miscellaneous named ions.</summary>
+    MS_peptide_ion_annotation_format = 1003104,
 
-    /// <summary>cross-linked peptide ion interpretation format: Interpretation format designed specifically for cross-linked peptide ion peaks.</summary>
-    MS_cross_linked_peptide_ion_interpretation_format = 1003105,
+    /// <summary>cross-linked peptide ion annotation format: Annotation format designed specifically for cross-linked peptide ion peaks.</summary>
+    MS_cross_linked_peptide_ion_annotation_format = 1003105,
 
-    /// <summary>glycan ion interpretation format: Interpretation format designed specifically for glycan ion peaks.</summary>
-    MS_glycan_ion_interpretation_format = 1003106,
+    /// <summary>glycan ion annotation format: Annotation format designed specifically for glycan ion peaks.</summary>
+    MS_glycan_ion_annotation_format = 1003106,
 
-    /// <summary>lipid ion interpretation format: Interpretation format designed specifically for lipid ion peaks.</summary>
-    MS_lipid_ion_interpretation_format = 1003107,
+    /// <summary>lipid ion annotation format: Annotation format designed specifically for lipid ion peaks.</summary>
+    MS_lipid_ion_annotation_format = 1003107,
 
     /// <summary>PatternLab: PatternLab for Proteomics is an integrated computational environment for analyzing shotgun proteomic data.</summary>
     MS_PatternLab = 1003108,
@@ -10345,11 +10344,53 @@ public enum class CVID
     /// <summary>spectrum cluster member spectrum keys: A list of integers corresponding to the library spectrum keys of the members of this cluster. These members must be in the same library.</summary>
     MS_spectrum_cluster_member_spectrum_keys = 1003268,
 
-    /// <summary>spectrum cluster member USI: A member of this cluster external to the library, specified using a PSI Universal Spectrum Identifier </summary>
+    /// <summary>spectrum cluster member USI: A member of this cluster external to the library, specified using a PSI Universal Spectrum Identifier.</summary>
     MS_spectrum_cluster_member_USI = 1003269,
 
-    /// <summary>proforma peptidoform ion notation: A string describing the peptidoform ion using the PSI ProForma notation, which should include the charge state, and optionally the adduct type.  </summary>
+    /// <summary>proforma peptidoform ion notation: A string describing the peptidoform ion using the PSI ProForma notation, which should include the charge state, and optionally the adduct type.</summary>
     MS_proforma_peptidoform_ion_notation = 1003270,
+
+    /// <summary>peak annotation: The molecular identity(-ies) of the ion(s) producing this peak, inferred manually or computationally based on its m/z and the molecular interpretation of the spectrum.</summary>
+    MS_peak_annotation = 1003271,
+
+    /// <summary>peak annotation string: A string representing the peak annotation, in a defined format specified by the attribute 'ion annotation format'.</summary>
+    MS_peak_annotation_string = 1003272,
+
+    /// <summary>peak annotation confidence: A confidence value of assigning a peak annotation to a peak, as defined by the attribute 'peak annotation confidence metric'.</summary>
+    MS_peak_annotation_confidence = 1003273,
+
+    /// <summary>peak annotation confidence metric: A confidence metric of assigning a peak annotation to a peak. By default, this should range from 0 (no confidence) to 1 (certain), and if there are multiple annotations of the same peak, the sum of their confidence levels should be no more than 1.</summary>
+    MS_peak_annotation_confidence_metric = 1003274,
+
+    /// <summary>other attribute name: A user-provided name for a user-defined value describing a trait not covered by an existing controlled vocabulary term. This term should be used sparingly, preferring existing terms that describe the specific concept. Should be used with MS:1003276 to provide the attribute's value</summary>
+    MS_other_attribute_name = 1003275,
+
+    /// <summary>other attribute value: A user-provided value for a user-defined name describing a trait not covered by an existing controlled vocabulary term. This term should be used sparingly, preferring existing terms that describe the specific concept. Should be used with MS:1003275 to provide the attribute's name</summary>
+    MS_other_attribute_value = 1003276,
+
+    /// <summary>value between -1 and 1 inclusive: Value range for signed normalized score values.</summary>
+    MS_value_between__1_and_1_inclusive = 1003277,
+
+    /// <summary>m/z variability of peak: A measure of the statistical variability of the m/z value of this peak, usually estimated from replicate spectra of the same analyte.</summary>
+    MS_m_z_variability_of_peak = 1003278,
+
+    /// <summary>observation frequency of peak: The frequency at which this peak is observed among replicate spectra of the same analyte.</summary>
+    MS_observation_frequency_of_peak = 1003279,
+
+    /// <summary>intensity variability of peak: A measure of the statistical variability of the intensity of this peak, usually estimated from replicate spectra of the same analyte.</summary>
+    MS_intensity_variability_of_peak = 1003280,
+
+    /// <summary>Casanovo: Casanovo is a deep learning-based de novo spectrum identification tool. Official website https://github.com/Noble-Lab/casanovo/.</summary>
+    MS_Casanovo = 1003281,
+
+    /// <summary>Bruker TSF format: Bruker TSF raw file format.</summary>
+    MS_Bruker_TSF_format = 1003282,
+
+    /// <summary>Bruker TSF nativeID format: Native format defined by frame=xsd:nonNegativeInteger.</summary>
+    MS_Bruker_TSF_nativeID_format = 1003283,
+
+    /// <summary>Bruker TSF nativeID format, combined spectra: Bruker TSF comma separated list of spectra that have been combined prior to searching or interpretation.</summary>
+    MS_Bruker_TSF_nativeID_format__combined_spectra = 1003284,
 
     /// <summary>PSI-MS CV Quality Control Vocabulary: PSI Quality Control controlled vocabulary term.</summary>
     MS_PSI_MS_CV_Quality_Control_Vocabulary = 4000000,

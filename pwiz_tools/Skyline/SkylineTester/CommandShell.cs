@@ -75,10 +75,13 @@ namespace SkylineTester
         // Insert a pause before next executed command
         public void InsertPause()
         {
-            var pauseCommand = "timeout /T " + RETRY_WAIT_SECONDS + " /NOBREAK";
-            if (_commands.Count == 0 || _commands[0] != pauseCommand)
+            lock (_commands)
             {
-                _commands.Insert(0, pauseCommand);
+                var pauseCommand = "waitfor nothing /T " + RETRY_WAIT_SECONDS;
+                if (_commands.Count == 0 || _commands[0] != pauseCommand)
+                {
+                    _commands.Insert(0, pauseCommand);
+                }
             }
         }
 
@@ -89,15 +92,21 @@ namespace SkylineTester
         /// </summary>
         public int Add(string command, params object[] args)
         {
-            _commands.Add(command.With(args));
-            return _commands.Count - 1;
+            lock (_commands)
+            {
+                _commands.Add(command.With(args));
+                return _commands.Count - 1;
+            }
         }
 
         public int AddWithRetry(string command, params object[] args)
         {
-            var result = Add(command, args);
-            _commandsWithRetry.Add(_commands[result]);
-            return result;
+            lock (_commands)
+            {
+                var result = Add(command, args);
+                _commandsWithRetry.Add(_commands[result]);
+                return result;
+            }
         }
 
         public void AddImmediate(string command, params object[] args)
@@ -155,6 +164,16 @@ namespace SkylineTester
             RunUI(RunNext);
         }
 
+        private string GetNextCommand()
+        {
+            lock (_commands)
+            {
+                if (NextCommand < _commands.Count)
+                    return _commands[NextCommand++];
+                return null;
+            }
+        }
+
         // Called on UI thread.
         private void RunNext()
         {
@@ -163,10 +182,9 @@ namespace SkylineTester
             if (NextCommand > 0 && FinishedOneCommand != null)
                 FinishedOneCommand();
 
-            while (NextCommand < _commands.Count)
+            string line;
+            while ((line = GetNextCommand()) != null)
             {
-                var line = _commands[NextCommand++];
-
                 // Handle comment line.
                 if (line.StartsWith("#"))
                 {
@@ -313,7 +331,10 @@ namespace SkylineTester
             }
             else
             {
-                _commands.Clear();
+                lock (_commands)
+                {
+                    _commands.Clear();
+                }
                 _doneAction(exitType == EXIT_TYPE.success);
             }
         } 
@@ -373,9 +394,18 @@ namespace SkylineTester
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_LIMIT", @"1000"); // Fail if transfer rate falls below 1Kbps,
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_TIME", @"300");   // and stays that way for 5 minutes
 
-            _process.OutputDataReceived += HandleOutput;
-            _process.ErrorDataReceived += HandleOutput;
-            _process.Exited += ProcessExit;
+            if (exe.StartsWith("waitfor", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _process.OutputDataReceived += IgnoreOutput;
+                _process.ErrorDataReceived += IgnoreOutput;
+                _process.Exited += ProcessExitIgnoreError;
+            }
+            else
+            {
+                _process.OutputDataReceived += HandleOutput;
+                _process.ErrorDataReceived += HandleOutput;
+                _process.Exited += ProcessExit;
+            }
             _process.Start();
             _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
@@ -401,6 +431,11 @@ namespace SkylineTester
         {
             ResetLastOutputTime();
             Log(e.Data);
+        }
+
+        private void IgnoreOutput(object sender, DataReceivedEventArgs e)
+        {
+            // Do nothing
         }
 
         /// <summary>
@@ -463,6 +498,16 @@ namespace SkylineTester
         /// </summary>
         void ProcessExit(object sender, EventArgs e)
         {
+            ProcessExit(false);
+        }
+
+        void ProcessExitIgnoreError(object sender, EventArgs e)
+        {
+            ProcessExit(true);
+        }
+
+        void ProcessExit(bool ignoreError)
+        {
             if (_process == null)
                 return;
 
@@ -472,7 +517,7 @@ namespace SkylineTester
             bool processKilled = _processKilled;
             _processKilled = false;
 
-            if (exitCode == 0)
+            if (ignoreError || exitCode == 0)
             {
                 // Tricky: we have to wait for the final output of the last process to
                 // be logged, otherwise the output from the next process may be interleaved.

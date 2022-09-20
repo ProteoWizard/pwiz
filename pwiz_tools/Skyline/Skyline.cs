@@ -2285,11 +2285,12 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            if (newDoc != null)
+
+            var standardPepGroup = firstAdded != null ? (PeptideGroupDocNode)newDoc?.FindNode(firstAdded) : null;
+            if (standardPepGroup != null)
             {
                 ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
                 {
-                    var standardPepGroup = newDoc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
                     var pepList = new List<DocNode>();
                     foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.ContainsKey(pep.ModifiedTarget)))
                     {
@@ -4675,6 +4676,17 @@ namespace pwiz.Skyline
                     modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
                 }
             }
+        }
+
+        private void helpToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            // The "Submit Error Report" menu item should only be shown if the user was holding down the Shift key when they dropped the Help menu
+            submitErrorReportMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);
+        }
+
+        private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
+        {
+            Program.ReportException(new ApplicationException(Resources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
         }
     }
 }

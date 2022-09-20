@@ -59,7 +59,7 @@ namespace pwiz.SkylineTest
             var explicitCurrentXsdContents = GetResourceText(explicitCurrentResourceName); // May be null if DocumentFormat.CURRENT is pre-release and explicit file hasn't been created yet
             if (IsOfficialBuild())
             {
-                // When we are releasing a new Skyline or Skyline-Daily, we expect that there will exist
+                // When we are releasing a new Skyline or Skyline-daily, we expect that there will exist
                 // a "Skyline_YY.N.xsd" file with the current version.
                 // That way, the next time someone wants to modify Skyline_Current.xsd, they will know that they
                 // also have to increment the current version number.
@@ -75,7 +75,7 @@ namespace pwiz.SkylineTest
             Assert.IsNotNull(currentXsdContents);
             if (explicitCurrentXsdContents != null)
             {
-                Assert.AreEqual(currentXsdContents, explicitCurrentXsdContents, 
+                AssertEx.NoDiff(explicitCurrentXsdContents,currentXsdContents,
                     string.Format("Expected resource files {0} and {1} to be identical - did you change the contents of Skyline_Current.xsd without incrementing the value of DocumentFormat.CURRENT?",
                         explicitCurrentResourceName, xsdCurrentResourceName));
             }

@@ -156,14 +156,14 @@
   <data name="AttributeGroupId">
     <value>属性组 ID</value>
   </data>
+  <data name="AuditLogDetailRowId">
+    <value>详细 Id</value>
+  </data>
   <data name="AuditLogRow">
     <value>审计日志行</value>
   </data>
   <data name="AuditLogRowId">
     <value>条目 Id</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>详细 Id</value>
   </data>
   <data name="AutoSelectMolecules">
     <value>自动选择分子</value>
@@ -219,8 +219,14 @@
   <data name="CalibrationCurve">
     <value>校准曲线</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>候选峰组</value>
+  </data>
   <data name="CAS">
     <value>CAS（化学文摘社）</value>
+  </data>
+  <data name="Chosen">
+    <value>已选择</value>
   </data>
   <data name="Chromatogram">
     <value>色谱图</value>
@@ -252,10 +258,10 @@
   <data name="Coeluting">
     <value>共洗脱</value>
   </data>
-  <data name="CollisionCrossSection">
+  <data name="CollisionalCrossSection">
     <value>碰撞横截面</value>
   </data>
-  <data name="CollisionalCrossSection">
+  <data name="CollisionCrossSection">
     <value>碰撞横截面</value>
   </data>
   <data name="CollisionEnergy">
@@ -306,14 +312,23 @@
   <data name="CvTotalAreaRatio">
     <value>总面积比的变异系数</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>峰间周期时间</value>
+  </data>
   <data name="DeclusteringPotential">
     <value>去簇电压</value>
   </data>
   <data name="DecoyMzShift">
     <value>诱饵 Mz 偏移</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>自由度</value>
+  </data>
   <data name="DetailReason">
     <value>详细原因</value>
+  </data>
+  <data name="Details">
+    <value>细节</value>
   </data>
   <data name="DetectionQValue">
     <value>检测 Q 值</value>
@@ -321,17 +336,11 @@
   <data name="DetectionZScore">
     <value>检测 Z 得分</value>
   </data>
-  <data name="DegreesOfFreedom">
-    <value>自由度</value>
-  </data>
-  <data name="Details">
-    <value>细节</value>
+  <data name="DriftTimeFragment">
+    <value>漂移时间片段</value>
   </data>
   <data name="DriftTimeMS1">
     <value>漂移时间 MS1</value>
-  </data>
-  <data name="DriftTimeFragment">
-    <value>漂移时间片段</value>
   </data>
   <data name="DriftTimeWindow">
     <value>漂移时间窗口</value>
@@ -354,6 +363,9 @@
   <data name="ExplicitAnalyteConcentration">
     <value>明确分析物浓度</value>
   </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明确的碰撞横截面</value>
+  </data>
   <data name="ExplicitCollisionEnergy">
     <value>明确碰撞能量</value>
   </data>
@@ -368,9 +380,6 @@
   </data>
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>明确漂移时间高能偏置毫秒</value>
-  </data>
-  <data name="ExplicitCollisionalCrossSection">
-    <value>明确的碰撞横截面</value>
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明确的漂移时间毫秒</value>
@@ -395,6 +404,9 @@
   </data>
   <data name="ExplicitSLens">
     <value>明示SLens</value>
+  </data>
+  <data name="Features">
+    <value>特征</value>
   </data>
   <data name="FiguresOfMerit">
     <value>品质因数</value>
@@ -453,11 +465,14 @@
   <data name="Identified">
     <value>已确认的</value>
   </data>
+  <data name="InChI">
+    <value>InChI（国际化合物标识）</value>
+  </data>
   <data name="InChiKey">
     <value>InChiKey（国际化合物标识键）</value>
   </data>
-  <data name="InChI">
-    <value>InChI（国际化合物标识）</value>
+  <data name="InstrumentSerialNumber">
+    <value>仪器序列号</value>
   </data>
   <data name="Intensities">
     <value>强度</value>
@@ -498,14 +513,14 @@
   <data name="IonMobilityMS1">
     <value>离子迁移 MS1</value>
   </data>
+  <data name="IonMobilityUnits">
+    <value>离子迁移单位</value>
+  </data>
   <data name="IonMobilityValue">
     <value>离子迁移值</value>
   </data>
   <data name="IonMobilityWindow">
     <value>离子迁移窗口</value>
-  </data>
-  <data name="IonMobilityUnits">
-    <value>离子迁移单位</value>
   </data>
   <data name="IonName">
     <value>离子名称</value>
@@ -543,14 +558,14 @@
   <data name="LibraryDotProduct">
     <value>库点积</value>
   </data>
-  <data name="LibraryIonMobilityHighEnergyOffset">
-    <value>库离子迁移高能偏置</value>
-  </data>
   <data name="LibraryIntensity">
     <value>库强度</value>
   </data>
   <data name="LibraryIonMobility">
     <value>库离子迁移</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>库离子迁移高能偏置</value>
   </data>
   <data name="LibraryIonMobilityUnits">
     <value>库离子迁移单位</value>
@@ -630,12 +645,6 @@
   <data name="MaxRetentionTime">
     <value>保留时间最大值</value>
   </data>
-  <data name="Median">
-    <value>中位数</value>
-  </data>
-  <data name="MedianDetectionQValue" xml:space="preserve">
-    <value>中位数检测 Q 值</value>
-  </data>
   <data name="Mean">
     <value>平均</value>
   </data>
@@ -672,6 +681,15 @@
   <data name="MeanTotalAreaRatio">
     <value>平均总面积比</value>
   </data>
+  <data name="Median">
+    <value>中位数</value>
+  </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>中位数检测 Q 值</value>
+  </data>
+  <data name="MedianPeakArea">
+    <value>中位数峰面积</value>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -692,6 +710,9 @@
   </data>
   <data name="MissedCleavages">
     <value>遗漏的酶解位点数</value>
+  </data>
+  <data name="ModelScore">
+    <value>模型得分</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>修改的面积比例</value>
@@ -720,26 +741,17 @@
   <data name="Molecule">
     <value>分子</value>
   </data>
-  <data name="MoleculeListAbundance">
-    <value>分子列表丰度</value>
-  </data>
-  <data name="MoleculeListLocator">
-    <value>分子列表定位器</value>
-  </data>
-  <data name="MoleculeListResult">
-    <value>分子列表结果</value>
-  </data>
-  <data name="MoleculeListResults">
-    <value>分子列表结果</value>
-  </data>
-  <data name="MoleculeName">
-    <value>分子名称</value>
-  </data>
   <data name="MoleculeFormula">
     <value>分子式</value>
   </data>
   <data name="MoleculeList">
     <value>分子列表</value>
+  </data>
+  <data name="MoleculeListAbundance">
+    <value>分子列表丰度</value>
+  </data>
+  <data name="MoleculeListLocator">
+    <value>分子列表定位器</value>
   </data>
   <data name="MoleculeListName">
     <value>分子列表名称</value>
@@ -747,11 +759,20 @@
   <data name="MoleculeListNote">
     <value>分子列表注释</value>
   </data>
+  <data name="MoleculeListResult">
+    <value>分子列表结果</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>分子列表结果</value>
+  </data>
   <data name="MoleculeLists">
     <value>分子列表</value>
   </data>
   <data name="MoleculeLocator">
     <value>分子定位器</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名称</value>
   </data>
   <data name="MoleculeNote">
     <value>分子注释</value>
@@ -783,6 +804,9 @@
   <data name="NextAa">
     <value>下一个 Aa</value>
   </data>
+  <data name="NormalizationDivisor">
+    <value>归一化除数</value>
+  </data>
   <data name="NormalizationMethod">
     <value>校准方法</value>
   </data>
@@ -804,11 +828,26 @@
   <data name="OptStep">
     <value>最优步骤</value>
   </data>
+  <data name="PeakGroupEndTime">
+    <value>峰组结束时间</value>
+  </data>
+  <data name="PeakGroupRetentionTime" xml:space="preserve">
+    <value>峰组保留时间</value>
+  </data>
+  <data name="PeakGroupStartTime">
+    <value>峰组开始时间</value>
+  </data>
+  <data name="PeakQValue">
+    <value>峰 Q 值</value>
+  </data>
   <data name="PeakRank">
     <value>峰排名</value>
   </data>
   <data name="PeakRankByLevel">
     <value>按级别进行峰排名</value>
+  </data>
+  <data name="PeakScores">
+    <value>峰得分</value>
   </data>
   <data name="Peptide">
     <value>肽段</value>
@@ -873,9 +912,6 @@
   <data name="PointsAcrossPeak">
     <value>峰内点</value>
   </data>
-  <data name="CycleTimeAcrossPeak">
-    <value>峰间周期时间</value>
-  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
@@ -897,11 +933,11 @@
   <data name="PrecursorExplicitCollisionEnergy">
     <value>母离子明确碰撞能量</value>
   </data>
-  <data name="PrecursorIonName">
-    <value>母离子名称</value>
-  </data>
   <data name="PrecursorIonFormula">
     <value>母离子公式</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>母离子名称</value>
   </data>
   <data name="PrecursorLocator">
     <value>母离子定位器</value>
@@ -1089,11 +1125,11 @@
   <data name="ReplicateCount">
     <value>重复测定计数</value>
   </data>
-  <data name="ReplicateGroup">
-    <value>重复测定群组</value>
-  </data>
   <data name="ReplicateErrorMessage">
     <value>重复测定错误消息</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>重复测定群组</value>
   </data>
   <data name="ReplicateIndex">
     <value>重复测定索引</value>
@@ -1119,14 +1155,14 @@
   <data name="ReplicateRSquared">
     <value>重复测定 R 平方</value>
   </data>
+  <data name="Replicates">
+    <value>重复测定</value>
+  </data>
   <data name="ReplicateSampleIdentity">
     <value>重复测定样本身份</value>
   </data>
   <data name="ReplicateSlope">
     <value>重复测定斜度</value>
-  </data>
-  <data name="Replicates">
-    <value>重复测定</value>
   </data>
   <data name="ReplicateTurningPoint">
     <value>重复测定转折点</value>
@@ -1149,11 +1185,17 @@
   <data name="SampleDilutionFactor">
     <value>样品稀释因子</value>
   </data>
+  <data name="SampleId">
+    <value>样品 ID</value>
+  </data>
   <data name="SampleName">
     <value>样品名称</value>
   </data>
   <data name="SampleType">
     <value>样品类型</value>
+  </data>
+  <data name="Score">
+    <value>得分</value>
   </data>
   <data name="SkylineVersion">
     <value>Skyline 版本</value>
@@ -1224,9 +1266,6 @@
   <data name="TicArea">
     <value>总离子电流面积</value>
   </data>
-  <data name="TotalArea">
-    <value>总面积</value>
-  </data>
   <data name="Time">
     <value>时间</value>
   </data>
@@ -1235,6 +1274,9 @@
   </data>
   <data name="TimeStamp">
     <value>时间戳</value>
+  </data>
+  <data name="TotalArea">
+    <value>总面积</value>
   </data>
   <data name="TotalAreaFragment">
     <value>片段总面积</value>
@@ -1257,11 +1299,11 @@
   <data name="TotalBackgroundMs1">
     <value>MS1 总体背景</value>
   </data>
-  <data name="TransitionCount">
-    <value>离子对计数</value>
-  </data>
   <data name="Transition">
     <value>离子对</value>
+  </data>
+  <data name="TransitionCount">
+    <value>离子对计数</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>离子对是诱饵</value>
@@ -1323,10 +1365,16 @@
   <data name="UTCTime">
     <value>UTC 时间</value>
   </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>样品 ID</value>
+  <data name="Weight">
+    <value>权重</value>
   </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>仪器序列号</value>
+  <data name="WeightedFeature">
+    <value>加权特征</value>
+  </data>
+  <data name="WeightedFeatures">
+    <value>加权特征</value>
+  </data>
+  <data name="WeightedScore">
+    <value>加权得分</value>
   </data>
 </root>

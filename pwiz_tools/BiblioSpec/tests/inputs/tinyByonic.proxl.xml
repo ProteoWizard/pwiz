@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<proxl_input fasta_filename="2019-11-Ecoli-Klevit-Arp23.fasta">
+    <!-- This file was manually spliced together from a real Byonic result into the existing tiny.proxl.xml test data -->
+    <search_program_info>
+        <search_programs>
+            <search_program name="Byonic" display_name="Byonic" version="PMI-Byonic-Demo:v3.5.114">
+                <psm_annotation_types>
+                    <filterable_psm_annotation_types>
+                        <filterable_psm_annotation_type name="Byonic score" description="Byonic score, the primary indicator of PSM correctness" filter_direction="above" default_filter="false"/>
+                        <filterable_psm_annotation_type name="Delta Score" description="The drop in Byonic score from the top-scoring peptide to the next distinct peptide." filter_direction="above" default_filter="false"/>
+                        <filterable_psm_annotation_type name="DeltaMod Score" description="The drop in Byonic score from the top-scoring peptide to the next peptide different in any way, including placement of modifications." filter_direction="above" default_filter="false"/>
+                        <filterable_psm_annotation_type name="Peptide AbsLogProb2D" description="The log p-value of the PSM. This is the log of the probability that the PSM with such a score and delta would arise by chance in a search of this size (size of the protein database, as expanded by the modification rules)." filter_direction="above" default_filter="false"/>
+                    </filterable_psm_annotation_types>
+                </psm_annotation_types>
+            </search_program>
+        </search_programs>
+        <default_visible_annotations>
+            <visible_psm_annotations>
+                <search_annotation search_program="Byonic" annotation_name="Byonic score"/>
+                <search_annotation search_program="Byonic" annotation_name="Delta Score"/>
+                <search_annotation search_program="Byonic" annotation_name="DeltaMod Score"/>
+                <search_annotation search_program="Byonic" annotation_name="Peptide AbsLogProb2D"/>
+            </visible_psm_annotations>
+        </default_visible_annotations>
+        <annotation_sort_order>
+            <psm_annotation_sort_order>
+                <search_annotation search_program="Byonic" annotation_name="Byonic score"/>
+                <search_annotation search_program="Byonic" annotation_name="Delta Score"/>
+            </psm_annotation_sort_order>
+        </annotation_sort_order>
+    </search_program_info>
+    <linkers>
+        <linker name="dss">
+            <monolink_masses>
+                <monolink_mass mass="156.0786"/>
+                <monolink_mass mass="155.0946"/>
+            </monolink_masses>
+            <crosslink_masses>
+                <crosslink_mass mass="138.0680742"/>
+            </crosslink_masses>
+        </linker>
+    </linkers>
+    <reported_peptides>
+        <reported_peptide reported_peptide_string="NDEELNKLLGKVTIAQGGVLPNIQAVLLPK(7,11)-LOOP" type="looplink">
+            <peptides>
+                <peptide sequence="NDEELNKLLGKVTIAQGGVLPNIQAVLLPK" unique_id="1">
+                    <linked_positions>
+                        <linked_position position="7"/>
+                        <linked_position position="11"/>
+                    </linked_positions>
+                </peptide>
+            </peptides>
+            <psms>
+                <psm scan_file_name="tinyByonicProxl" scan_number="1" precursor_charge="3" linker_mass="138.0681">
+                    <filterable_psm_annotations>
+                        <filterable_psm_annotation search_program="Byonic" annotation_name="Byonic score" value="88.84087781"/>
+                        <filterable_psm_annotation search_program="Byonic" annotation_name="Delta Score" value="74.1328987"/>
+                        <filterable_psm_annotation search_program="Byonic" annotation_name="DeltaMod Score" value="74.1328987"/>
+                        <filterable_psm_annotation search_program="Byonic" annotation_name="Peptide AbsLogProb2D" value="12.5648103543"/>
+                    </filterable_psm_annotations>
+                </psm>
+            </psms>
+        </reported_peptide>
+    </reported_peptides>
+    <static_modifications>
+        <static_modification amino_acid="C" mass_change="57.02146"/>
+    </static_modifications>
+    <decoy_labels>
+        <decoy_label prefix="random_seq_"/>
+    </decoy_labels>
+</proxl_input>
