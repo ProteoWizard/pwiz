@@ -1,11 +1,5 @@
 //
-// Copied from examples.cpp
-//
-//
-// Original author: Robert Burke <robert.burke@proteowizard.org>
-//
-// Copyright 2007 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+// Original author: Nathan Edwards <nje5@georgetown.edu>
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
