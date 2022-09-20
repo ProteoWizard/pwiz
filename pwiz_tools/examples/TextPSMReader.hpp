@@ -16,7 +16,8 @@
 using namespace pwiz::data;
 using namespace pwiz::identdata;
 
-namespace pwiz::examples {
+namespace pwiz {
+namespace examples {
 
 class TextPSMMod {
 public:
@@ -169,6 +170,6 @@ public:
   CVID getCVID_UNIMOD(std::string const & term) const;
 };
 
-}
+}} // namespace scope
 
 #endif // _TEXTPSMREADER_HPP_
