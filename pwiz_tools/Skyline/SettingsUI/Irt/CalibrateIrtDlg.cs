@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -734,25 +735,28 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
 
                 RegressionLine cirtRegression = null;
-                var useCirt = false;
+                List<Tuple<DbIrtPeptide, PeptideDocNode>> cirtPeps = null;
                 var cirtUsePredefined = false;
-                if (_picker.TryGetCirtRegression(count, out var tryCirtRegression, out var matchedPeptides))
+                var cirtResult = _picker.GetCirtRegressionResult(count);
+                if (cirtResult.Valid)
                 {
+                    cirtRegression = cirtResult.Regression;
+                    cirtPeps = cirtResult.DbIrtPeptides.Zip(cirtResult.NodePeps, Tuple.Create).ToList();
+
                     var currentIsCirt = currentRegression != null && currentRegression.IsCirtDiscovered;
                     switch (MultiButtonMsgDlg.Show(_parent, string.Format(
-                        Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
-                        _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                                Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
+                                _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                     {
                         case DialogResult.Yes:
-                            cirtRegression = tryCirtRegression;
-                            useCirt = true;
+                            cirtRegression = cirtResult.Regression;
                             if ((currentRegression != null && currentRegression.FixedPoint) || currentIsCirt)
                             {
                                 switch (MultiButtonMsgDlg.Show(_parent,
-                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
-                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
-                                    Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
-                                    true))
+                                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
+                                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
+                                            Resources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
+                                            true))
                                 {
                                     case DialogResult.Yes:
                                         cirtUsePredefined = true;
@@ -765,15 +769,41 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             }
                             break;
                         case DialogResult.No:
-                            if (currentIsCirt)
-                                cirtRegression = tryCirtRegression;
+                            if (!currentIsCirt)
+                                cirtRegression = null;
+                            cirtResult = null;
                             break;
                         case DialogResult.Cancel:
                             return null;
                     }
                 }
+                else if (_picker.CirtPeptideCount >= count)
+                {
+                    var msg = new StringBuilder();
 
-                var bestPeptides = _picker.Pick(count, exclude, useCirt);
+                    if (cirtResult.Regression == null)
+                    {
+                        msg.AppendLine(string.Format(
+                            Resources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_,
+                            _picker.CirtPeptideCount));
+                    }
+                    else
+                    {
+                        msg.AppendLine(string.Format(
+                            Resources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_,
+                            _picker.CirtPeptideCount, cirtResult.Count
+                        ));
+                        msg.AppendLine();
+                        foreach (var pep in cirtResult.Peptides.OrderBy(pep => pep.Time))
+                        {
+                            msg.AppendLine(string.Format(@"{0} ({1})", pep.NodePep.ModifiedTarget, pep.Time.ToString(Formats.RETENTION_TIME)));
+                        }
+                    }
+
+                    MessageDlg.Show(_parent, msg.ToString());
+                }
+
+                var bestPeptides = _picker.Pick(count, exclude, cirtResult);
                 if (cirtRegression != null)
                 {
                     var standardPeptides = bestPeptides.Select(pep => new StandardPeptide
@@ -782,8 +812,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         RetentionTime = pep.RetentionTime,
                         Target = pep.Target
                     }).ToList();
-                    cirt = new RegressionOption(Resources.CalibrationGridViewDriver_CiRT_option_name, cirtRegression, false,
-                        matchedPeptides.ToList(), standardPeptides);
+                    cirt = new RegressionOption(Resources.CalibrationGridViewDriver_CiRT_option_name, cirtRegression,
+                        false, cirtPeps, standardPeptides);
                 }
                 return bestPeptides;
             }

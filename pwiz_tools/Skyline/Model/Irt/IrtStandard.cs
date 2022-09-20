@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.Irt
                 MakePeptide(@"DSTLIMQLLR",                 101.79),
             });
 
-        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", null, null,
+        public static readonly IrtStandard CIRT = new IrtStandard(@"CiRT", @"CiRT_all.sky", null,
             new[] {
                 MakePeptide(@"ADTLDPALLRPGR",               35.99),
                 MakePeptide(@"AFEEAEK",                    -21.36),
@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Model.Irt
         public static IrtStandard WhichStandard(IEnumerable<Target> peptides)
         {
             var list = peptides.Select(p => new DbIrtPeptide(p, 0, true, TimeSource.peak)).ToList();
-            return ALL.FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
+            return ALL.Append(CIRT).FirstOrDefault(s => s.ContainsAll(list, null)) ?? EMPTY;
         }
 
         public IrtStandard ChangePeptides(IEnumerable<DbIrtPeptide> peptides)

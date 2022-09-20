@@ -11826,6 +11826,12 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
   </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_" xml:space="preserve">
+      <value>{0} CiRT peptides were found, but a valid regression could not be calculated.</value>
+  </data>
+  <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range_" xml:space="preserve">
+      <value>{0} CiRT peptides were found and a regression was calculated using {1} of them, but they did not sufficiently span the retention time range:</value>
+  </data>
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
       <value>Score type not found.</value>
   </data>

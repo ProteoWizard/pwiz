@@ -518,7 +518,7 @@ namespace pwiz.Skyline.Model
             // Filter again, retain only those with rank info,  or at least an interesting name
             SpectrumHeaderInfo groupLibInfo = null;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
-            nodeGroupUnranked.GetLibraryInfo(Settings, ExplicitMods.EMPTY, true, ref groupLibInfo, transitionRanks);
+            nodeGroupUnranked.GetLibraryInfo(Settings, ExplicitMods.EMPTY, false, true, ref groupLibInfo, transitionRanks);
             foreach (var ranked in transitionRanks)
             {
                 transitionDocNodes.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, ranked.Value.MI, ranked.Value.Rank));

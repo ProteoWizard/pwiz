@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -1458,6 +1459,118 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(0, expectedStandards.Count);
             Assert.AreEqual(0, expectedLibrary.Count);
+        }
+    }
+
+    [TestClass]
+    public class IrtDocumentTest : AbstractFunctionalTestEx
+    {
+        [TestMethod]
+        public void IrtDocumentFunctionalTest()
+        {
+            RunFunctionalTest();
+        }
+
+        protected override void DoTest()
+        {
+            foreach (var standard in IrtStandard.ALL.Where(standard => standard.HasDocument))
+            {
+                if (ReferenceEquals(standard, IrtStandard.REPLICAL))
+                    continue; // TODO: Fix neutral loss transition bug and remove this.
+
+                TestStandardDocument(standard);
+            }
+
+            // Test full CiRT with first 20 peptides not found in short CiRT list.
+            TestStandardDocument(IrtStandard.CIRT,
+                IrtStandard.CIRT.Peptides.Where(pep => !IrtStandard.CIRT_SHORT.Contains(pep.ModifiedTarget)).Take(20));
+
+            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky")));
+        }
+
+        private void TestStandardDocument(IrtStandard standard, IEnumerable<DbIrtPeptide> overrideStandards = null, int numTransitions = 3)
+        {
+            RunUI(() => SkylineWindow.NewDocument(true));
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
+            var standards = (overrideStandards ?? standard.Peptides).ToArray();
+
+            // Add iRT calculator.
+            RunDlg<EditIrtCalcDlg>(peptideSettings.AddCalculator, dlg =>
+            {
+                dlg.CalcName = string.Format("Test {0}", standard.Name);
+                dlg.CreateDatabase(TestContext.GetTestPath("test.irtdb"));
+                dlg.StandardPeptides = standards;
+                dlg.OkDialog();
+            });
+
+            // Add the iRT standards to the document.
+            RunDlg<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog, dlg =>
+            {
+                dlg.NumTransitions = numTransitions;
+                dlg.BtnYesClick();
+            });
+
+            WaitForCondition(() => SkylineWindow.Document.Peptides.Any() && SkylineWindow.Document.IsLoaded);
+
+            // Check that the document contains the standards.
+            var doc = SkylineWindow.Document;
+            Assert.AreEqual(standards.Length, doc.PeptideCount,
+                $"{standard.Name}: have {doc.PeptideCount} peptides in document but want {standards.Length}");
+            var docTargets = new TargetMap<PeptideDocNode>(doc.Peptides.Select(pep =>
+                new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+            Assert.IsTrue(standards.All(pep => docTargets.ContainsKey(pep.ModifiedTarget)),
+                $"{standard.Name}: have document peptides {string.Join(", ", docTargets.Keys)} but want {string.Join(",", standards.Select(pep => pep.ModifiedTarget))}");
+
+            // Compare the added standards to the reference document.
+            var refDoc = (SrmDocument)(new XmlSerializer(typeof(SrmDocument))).Deserialize(standard.GetReader());
+            Assert.AreEqual(standard.Peptides.Count, refDoc.PeptideCount,
+                $"{standard.Name}: have {refDoc.PeptideCount} peptides in reference document but want {standard.Peptides.Count}");
+            var refDocTargets = new TargetMap<PeptideDocNode>(refDoc.Peptides.Select(pep =>
+                new KeyValuePair<Target, PeptideDocNode>(pep.ModifiedTarget, pep)));
+            foreach (var pep in docTargets)
+            {
+                var target = pep.Key;
+                var nodePep = pep.Value;
+
+                Assert.IsTrue(refDocTargets.TryGetValue(target, out var refNodePep),
+                    $"{standard.Name}: reference document does not contain added target {target}");
+
+                // Check precursors.
+                var nodeTranGroups = nodePep.TransitionGroups.OrderBy(nodeTranGroup => nodeTranGroup.PrecursorMz).ToArray();
+                var refNodeTranGroups = refNodePep.TransitionGroups.OrderBy(nodeTranGroup => nodeTranGroup.PrecursorMz).ToArray();
+                Assert.AreEqual(refNodeTranGroups.Length, nodeTranGroups.Length,
+                    $"{standard.Name}: have {nodePep.TransitionGroupCount} precursors but want {refNodePep.TransitionGroupCount} for {target}");
+                for (var i = 0; i < nodeTranGroups.Length; i++)
+                {
+                    // Check transitions.
+                    var nodeTranGroup = nodeTranGroups[i];
+                    var refNodeTranGroup = refNodeTranGroups[i];
+                    Assert.AreEqual(refNodeTranGroup.PrecursorMz, nodeTranGroup.PrecursorMz,
+                        $"{standard.Name}: have precursor m/z {nodeTranGroup.PrecursorMz} for {target} but want {refNodeTranGroup.PrecursorMz}");
+
+                    foreach (var nodeTran in refNodeTranGroup.Transitions)
+                        Assert.IsTrue(nodeTran.HasLibInfo,
+                            $"{standard.Name}: reference document missing LibInfo for {target}, {refNodeTranGroup.PrecursorMz}, {nodeTran.FragmentIonName}");
+
+                    foreach (var nodeTran in nodeTranGroup.Transitions)
+                        Assert.IsTrue(nodeTran.HasLibInfo,
+                            $"{standard.Name}: missing LibInfo for added target {target}, {nodeTranGroup.PrecursorMz}, {nodeTran.FragmentIonName}");
+
+                    var expectedTransitions = refNodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.LibInfo.Rank).Take(numTransitions).ToArray();
+                    var actualTransitions = nodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.LibInfo.Rank).ToArray();
+                    Assert.AreEqual(expectedTransitions.Length, actualTransitions.Length,
+                        $"{standard.Name}: have {actualTransitions.Length} transitions for {target}, {nodeTranGroup.PrecursorMz} but want {expectedTransitions.Length}");
+
+                    for (var j = 0; j < actualTransitions.Length; j++)
+                    {
+                        var actualTransition = actualTransitions[j];
+                        var expectedTransition = expectedTransitions[j];
+                        Assert.AreEqual(expectedTransition, actualTransition,
+                            $"{standard.Name}: {target}, {nodeTranGroup.PrecursorMz} transition {actualTransition.FragmentIonName} does not equal expected transition");
+                    }
+                }
+            }
         }
     }
 }
