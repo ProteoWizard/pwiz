@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
                 if (pass == 2)
                 {
                     // Verify that we can use settings saved in invariant format (our normal way of doing things)
-                    RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(nextHeader.Split(',')));
+                    RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(nextHeader.Split(','), false));
                 }
                 else if (pass == 3)
                 {
@@ -177,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify that the correct columns were saved in the settings (N.B. we save the invariant strings to the settings, though we will read localized strings for backward compatibility)
             var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
             expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
-            CollectionAssert.AreEqual(ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(expectedColumns), Settings.Default.CustomImportTransitionListColumnTypesList);
+            CollectionAssert.AreEqual(ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(expectedColumns, false), Settings.Default.CustomImportTransitionListColumnTypesList);
             
             // Paste in the same transition list and verify that the earlier modification was saved
             var peptideTransitionList1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());

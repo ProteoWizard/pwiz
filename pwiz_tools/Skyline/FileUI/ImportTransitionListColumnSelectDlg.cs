@@ -49,6 +49,8 @@ namespace pwiz.Skyline.FileUI
 
         private bool showIgnoredCols { get; set; }
 
+        private bool _isAssayLibraryImport { get; set; } // Don't use the term "explicit" when populating a library
+
         // These are only for error checking
         private readonly SrmDocument _docCurrent;
         private readonly MassListInputs _inputs;
@@ -69,9 +71,9 @@ namespace pwiz.Skyline.FileUI
         private List<Protein> _proteinList;
 
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
-        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes = GetKnownHeaderTypes();
+        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes => GetKnownHeaderTypes(_isAssayLibraryImport);
 
-        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypes()
+        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypes(bool isAssayLibraryImport)
         {
             return new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
             {
@@ -96,19 +98,19 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,SrmDocument.DOCUMENT_TYPE.proteomic), // e.g. y7 etc
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Name,SrmDocument.DOCUMENT_TYPE.small_molecules), // Could be anything
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderRetentionTime(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderRetentionTimeWindow(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderCollisionEnergy(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderDeclusteringPotential(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_S_Lens,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderIonMobility(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderIonMobilityUnits(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderImMsec(isAssayLibraryImport), SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderImInverseK0(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderIonMobilityHighEnergyOffset(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderCollisionCrossSectionSQA(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(ColumnHeaderCompensationVoltage(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Note,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(@"InChiKey",SrmDocument.DOCUMENT_TYPE.small_molecules),
                 Tuple.Create(@"CAS",SrmDocument.DOCUMENT_TYPE.small_molecules),
@@ -119,9 +121,9 @@ namespace pwiz.Skyline.FileUI
             };
         }
 
-        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypesInvariant()
+        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypesInvariant(bool isAssayLibraryImport)
         {
-            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, GetKnownHeaderTypes);
+            return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () => GetKnownHeaderTypes(isAssayLibraryImport));
         }
 
         // When we switch modes we want to keep the column positions that were set in the mode not being used
@@ -136,6 +138,7 @@ namespace pwiz.Skyline.FileUI
             _insertPath = insertPath;
             _originalLines = Importer.RowReader.Lines.ToArray();
             showIgnoredCols = true;
+            _isAssayLibraryImport = assayLibrary;
 
             _proteinTip = new NodeTip(this) { Parent = this };
             previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
@@ -507,21 +510,21 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.FragmentNameColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name);
             SetComboBoxText(columns.ProductChargeColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             SetComboBoxText(columns.MoleculeListNameColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
-            SetComboBoxText(columns.ExplicitRetentionTimeColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
-            SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window);
+            SetComboBoxText(columns.ExplicitRetentionTimeColumn, ColumnHeaderRetentionTime(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitRetentionTimeWindowColumn, ColumnHeaderRetentionTimeWindow(_isAssayLibraryImport));
             SetComboBoxText(columns.SLensColumn, Resources.PasteDlg_UpdateMoleculeType_S_Lens);
             SetComboBoxText(columns.ConeVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
-            SetComboBoxText(columns.ExplicitIonMobilityColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility);
-            SetComboBoxText(columns.ExplicitIonMobilityUnitsColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units);
-            SetComboBoxText(columns.ExplicitDriftTimeColumn, SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC);
-            SetComboBoxText(columns.ExplicitInverseK0Column, SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0);
-            SetComboBoxText(columns.ExplicitCompensationVoltageColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage);
-            SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset);
-            SetComboBoxText(columns.ExplicitCollisionCrossSectionColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_);
+            SetComboBoxText(columns.ExplicitIonMobilityColumn, ColumnHeaderIonMobility(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitIonMobilityUnitsColumn, ColumnHeaderIonMobilityUnits(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitDriftTimeColumn, ColumnHeaderImMsec(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitInverseK0Column, ColumnHeaderImInverseK0(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitCompensationVoltageColumn, ColumnHeaderCompensationVoltage(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, ColumnHeaderIonMobilityHighEnergyOffset(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitCollisionCrossSectionColumn, ColumnHeaderCollisionCrossSectionSQA(_isAssayLibraryImport));
             SetComboBoxText(columns.MolecularFormulaColumn, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
+            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, ColumnHeaderDeclusteringPotential(_isAssayLibraryImport));
             SetComboBoxText(columns.ProductNeutralLossColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
-            SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+            SetComboBoxText(columns.ExplicitCollisionEnergyColumn, ColumnHeaderCollisionEnergy(_isAssayLibraryImport));
             SetComboBoxText(columns.ProductNameColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
             SetComboBoxText(columns.ProductFormulaColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
             SetComboBoxText(columns.PrecursorAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
@@ -555,6 +558,28 @@ namespace pwiz.Skyline.FileUI
             Assume.IsTrue(missed.Length == 0, @"missing handler for column(s) " + string.Join(@", ", missed));
         }
 
+        private static string ColumnHeaderRetentionTimeWindow(bool isAssayLibraryImport) { return isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Retention_Time_Window : Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window; }
+
+        private static string ColumnHeaderRetentionTime(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Retention_Time : Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time; }
+
+        private static string ColumnHeaderCollisionEnergy(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Collision_Energy : Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy; }
+
+        private static string ColumnHeaderDeclusteringPotential(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential : Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential; }
+
+        private static string ColumnHeaderCollisionCrossSectionSQA(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ : Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_; }
+
+        private static string ColumnHeaderIonMobilityHighEnergyOffset(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset : Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset; }
+
+        private static string ColumnHeaderCompensationVoltage(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Compensation_Voltage : Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage; }
+
+        private static string ColumnHeaderImInverseK0(bool isAssayLibraryImport) { return  isAssayLibraryImport ? SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_IM_INVERSE_K0 :  SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0; }
+
+        private static string ColumnHeaderImMsec(bool isAssayLibraryImport) { return  isAssayLibraryImport ? SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_IM_MSEC : SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC; }
+
+        private static string ColumnHeaderIonMobilityUnits(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_Units : Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units; }
+
+        private static string ColumnHeaderIonMobility(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility : Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility; }
+
         // Applies the saved column positions if they seem to be correct
         private void UseSavedColumnsIfValid()
         {
@@ -562,7 +587,7 @@ namespace pwiz.Skyline.FileUI
             var detectedColumns = CurrentColumnPositions();
 
             // Accept invariant column names from settings as well as localized
-            var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
+            var headerTypesInvariant = GetKnownHeaderTypesInvariant(_isAssayLibraryImport);
             var settingsColumns = new List<string>();
             foreach (var col in Settings.Default.CustomImportTransitionListColumnTypesList)
             {
@@ -608,9 +633,9 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public List<string> CurrentColumnPositionsInvariant()
         {
-            return ColumnNamesInvariant(CurrentColumnPositions());
+            return ColumnNamesInvariant(CurrentColumnPositions(), _isAssayLibraryImport);
         }
-        public static List<string> ColumnNamesInvariant(IEnumerable<string> local)
+        public static List<string> ColumnNamesInvariant(IEnumerable<string> local, bool isAssayLibraryImport)
         {
             return local.Select(ColumnNameInvariant).ToList();
         }
@@ -635,14 +660,21 @@ namespace pwiz.Skyline.FileUI
 
         public static string ColumnNameInvariant(string local)
         {
-            var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
-            var headerTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes();
-            var index = headerTypes.IndexOf(s => s.Item1.Equals(local));
-            if (index < 0)
+            foreach (var isAssayLibraryImport in new []{true, false})
             {
-                index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(local));
+                var headerTypesInvariant = GetKnownHeaderTypesInvariant(isAssayLibraryImport);
+                var headerTypes = GetKnownHeaderTypes(isAssayLibraryImport);
+                var index = headerTypes.IndexOf(s => s.Item1.Equals(local));
+                if (index < 0)
+                {
+                    index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(local));
+                }
+                if (index >= 0)
+                {
+                    return headerTypesInvariant[index].Item1;
+                }
             }
-            return headerTypesInvariant[Math.Max(0, index)].Item1;
+            return null;
         }
         
         public string[] SupportedColumnTypes => ComboBoxes[1].Items.Select(item=> item.ToString()).ToArray(); // Using 1th as 0th is sometimes generated with a restricted list as AssociateProteins

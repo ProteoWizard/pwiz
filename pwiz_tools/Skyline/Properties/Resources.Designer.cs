@@ -16657,6 +16657,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Declustering Potential.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Declustering Potential.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential {
@@ -22096,11 +22105,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision Cross Section (sq A).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collision Energy.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Collision_Energy {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Energy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collisional Cross Section (sq A).
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_ {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Compensation_Voltage {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Compensation_Voltage", resourceCulture);
             }
         }
         
@@ -22227,6 +22263,33 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Fragment_Name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Fragment_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility High Energy Offset.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Units.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility_Units {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility_Units", resourceCulture);
             }
         }
         
@@ -22408,6 +22471,24 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Protein_name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Protein_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Retention_Time {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Retention_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time Window.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Retention_Time_Window {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Retention_Time_Window", resourceCulture);
             }
         }
         

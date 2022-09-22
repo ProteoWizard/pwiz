@@ -2076,6 +2076,12 @@ namespace pwiz.SkylineTestUtil
             var transitionSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
+            // Verify that we don't use "Explicit*" language in dropdowns for assay library
+            var items = transitionSelectDlg.ComboBoxes.First().Items;
+            AssertEx.AreEqual(isAssayLibrary,
+                items.Any(item => Equals(item, Resources.PasteDlg_UpdateMoleculeType_Collision_Energy)));
+            AssertEx.AreEqual(!isAssayLibrary, 
+                items.Any(item => Equals(item, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy)));
             if (errorList == null)
             {
                 OkDialog(transitionSelectDlg, transitionSelectDlg.OkDialog);

@@ -2129,7 +2129,9 @@ namespace pwiz.Skyline.Model
         public const string idKEGG = "KEGG";
         public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
         public static string COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0 => Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility + @" (1/K0)";
+        public static string COLUMN_HEADER_IM_INVERSE_K0 => Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility + @" (1/K0)";
         public static string COLUMN_HEADER_EXPLICIT_IM_MSEC => Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility + @" (msec)";
+        public static string COLUMN_HEADER_IM_MSEC => Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility + @" (msec)";
 
 
         public static readonly List<string> KnownHeaders;
@@ -2227,6 +2229,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(dtPrecursor, COLUMN_HEADER_EXPLICIT_IM_MSEC),
                     Tuple.Create(imPrecursor_invK0, COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0),
                     Tuple.Create(imPrecursor_invK0, @"1/K0"),
+                    Tuple.Create(imPrecursor_invK0, @"PrecursorIonMobility"), // As in Bruker PASER files
                     Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility + @" (CoV)"),
                     Tuple.Create(compensationVoltage, @"CoV"),
                     Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_),
