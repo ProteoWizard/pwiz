@@ -639,8 +639,7 @@ namespace TestRunner
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
             var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log=c:\AlwaysUpCLT\TestRunner-{workerName}.log";
-            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
-                testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
+            testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
             string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
@@ -658,6 +657,13 @@ namespace TestRunner
                 log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
             }
             return workerName;
+        }
+
+        private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
+        {
+            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck", "runsmallmoleculeversions" })
+                testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
+            return testRunnerCmd;
         }
 
         private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, ConcurrentDictionary<string, bool> workerIsAlive, StreamWriter log)
@@ -820,8 +826,7 @@ namespace TestRunner
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
                             var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log=serverWorker.log parallelmode=server_worker loop=1 language={testInfo.Language}";
-                            foreach (string a in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
-                                testRunnerCmd += $" {a}={commandLineArgs.ArgAsString(a)}";
+                            testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
                             var psi = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, testRunnerCmd);
                             psi.WindowStyle = ProcessWindowStyle.Hidden;
