@@ -516,11 +516,11 @@ Summary   : Deleted target CRP > YEVQGEVFTKPQLWP
 All Info  :
 Deleted target CRP > YEVQGEVFTKPQLWP
 
-Undo Redo : Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
-Summary   : Settings > Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
+Undo Redo : Transition Settings -- Instrument > Method match tolerance  changed to "0.065"
+Summary   : Settings > Transition Settings -- Instrument > Method match tolerance  changed to "0.065"
 All Info  :
-Transition Settings -- Instrument > Method match tolerance m/z changed to "0.065"
-Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.065"
+Transition Settings -- Instrument > Method match tolerance  changed to "0.065"
+Settings > Transition Settings -- Instrument > Method match tolerance  changed from "0.055" to "0.065"
 
 Undo Redo : Transition Settings -- Integration > Integrate All changed to True
 Summary   : Settings > Transition Settings -- Integration > Integrate All changed to True
