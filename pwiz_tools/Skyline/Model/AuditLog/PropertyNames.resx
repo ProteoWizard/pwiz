@@ -1361,6 +1361,9 @@
   <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
     <value>FASTA</value>
   </data>
+  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
   <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
     <value>Find minimal protein list</value>
   </data>

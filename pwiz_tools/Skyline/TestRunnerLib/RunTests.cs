@@ -39,6 +39,8 @@ namespace TestRunnerLib
 {
     public class TestInfo
     {
+        private bool? _isAuditLogTest;
+
         public readonly Type TestClassType;
         public readonly MethodInfo TestMethod;
         public readonly MethodInfo SetTestContext;
@@ -64,6 +66,37 @@ namespace TestRunnerLib
             MinidumpLeakThreshold = minidumpAttr != null
                 ? (int?) minidumpAttr.GetType().GetProperty("ThresholdMB")?.GetValue(minidumpAttr)
                 : null;
+        }
+
+        /// <summary>
+        /// True if this test records audit logging. This property is delay loaded because it
+        /// can end up locking test DLLs which can be a problem for the nightly tests.
+        /// </summary>
+        public bool IsAuditLogTest
+        {
+            get
+            {
+                if (!_isAuditLogTest.HasValue)
+                {
+                    _isAuditLogTest = false;
+
+                    var auditLogProp = TestClassType.GetProperty("AuditLogCompareLogs");
+                    if (auditLogProp != null)
+                    {
+                        var testObj = Activator.CreateInstance(TestClassType);
+                        SetTestContext?.Invoke(testObj, new object[]
+                        {
+                            new TestRunnerContext
+                            {
+                                Properties = { ["TestName"] = TestClassType.Name }
+                            }
+                        });
+                        _isAuditLogTest = (bool)auditLogProp.GetValue(testObj);
+                    }
+                }
+
+                return _isAuditLogTest.Value;
+            }
         }
     }
 
