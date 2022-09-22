@@ -1868,8 +1868,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MAX_TIME = 500;
         public const int MIN_TIME_RANGE = 5;
 
-        public static MzTolerance DEFAULT_MATCH_TOLERANCE = new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE, MzTolerance.Units.mz);
-        public static MzTolerance ZERO_TOLERANCE = new MzTolerance(0, MzTolerance.Units.mz);
+        public static MzTolerance DEFAULT_MATCH_TOLERANCE = new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE);
+        public static MzTolerance ZERO_TOLERANCE = new MzTolerance();
 
         public static double GetThermoDynamicMin(double precursorMz)
         {

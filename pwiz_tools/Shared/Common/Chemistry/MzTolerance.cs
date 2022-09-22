@@ -23,7 +23,7 @@ namespace pwiz.Common.Chemistry
 {
     public class MzTolerance : IAuditLogObject
     {
-        public static MzTolerance ZERO_TOLERANCE => new MzTolerance(0, Units.mz);
+        public static MzTolerance ZERO_TOLERANCE => new MzTolerance();
 
         public enum Units { mz, ppm };
 

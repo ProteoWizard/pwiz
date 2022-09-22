@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
                     var ms2mzs = precursorGrouping.SelectMany(p => p.GetMsMsTransitions(true)).Select(t => t.Mz)
                         .ToHashSet();
                     Assert.IsTrue(measuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode,
-                        precursorGrouping.First(), new MzTolerance(.05f, MzTolerance.Units.mz), out var chromGroupInfos));
+                        precursorGrouping.First(), new MzTolerance(.05f), out var chromGroupInfos));
                     Assert.AreEqual(1, chromGroupInfos.Length);
                     var chromatogramGroupInfo = chromGroupInfos[0];
                     var ms2Chromatograms =
