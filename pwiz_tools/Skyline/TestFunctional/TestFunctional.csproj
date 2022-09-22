@@ -149,6 +149,7 @@
     </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -177,11 +178,13 @@
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
+    <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
+    <Compile Include="MessageBoxHelperTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
@@ -504,6 +507,7 @@
     <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaLibraryMatchTest.zip" />
+    <None Include="EncyclopeDiaPeptidesWithNoSignalTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitAnalyteConcentrationTest.zip" />
