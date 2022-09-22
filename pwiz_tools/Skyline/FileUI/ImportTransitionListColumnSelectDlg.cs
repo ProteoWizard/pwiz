@@ -100,8 +100,8 @@ namespace pwiz.Skyline.FileUI
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,SrmDocument.DOCUMENT_TYPE.small_molecules),
                 Tuple.Create(ColumnHeaderRetentionTime(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(ColumnHeaderRetentionTimeWindow(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(ColumnHeaderCollisionEnergy(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
-                Tuple.Create(ColumnHeaderDeclusteringPotential(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,SrmDocument.DOCUMENT_TYPE.mixed),
+                Tuple.Create(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_S_Lens,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
                 Tuple.Create(ColumnHeaderIonMobility(isAssayLibraryImport),SrmDocument.DOCUMENT_TYPE.mixed),
@@ -522,9 +522,9 @@ namespace pwiz.Skyline.FileUI
             SetComboBoxText(columns.ExplicitIonMobilityHighEnergyOffsetColumn, ColumnHeaderIonMobilityHighEnergyOffset(_isAssayLibraryImport));
             SetComboBoxText(columns.ExplicitCollisionCrossSectionColumn, ColumnHeaderCollisionCrossSectionSQA(_isAssayLibraryImport));
             SetComboBoxText(columns.MolecularFormulaColumn, Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula);
-            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, ColumnHeaderDeclusteringPotential(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitDeclusteringPotentialColumn, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential);
             SetComboBoxText(columns.ProductNeutralLossColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss);
-            SetComboBoxText(columns.ExplicitCollisionEnergyColumn, ColumnHeaderCollisionEnergy(_isAssayLibraryImport));
+            SetComboBoxText(columns.ExplicitCollisionEnergyColumn, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);  // N.B. this is likely to be a library value someday
             SetComboBoxText(columns.ProductNameColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Name);
             SetComboBoxText(columns.ProductFormulaColumn, Resources.PasteDlg_UpdateMoleculeType_Product_Formula);
             SetComboBoxText(columns.PrecursorAdductColumn, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct);
@@ -561,10 +561,6 @@ namespace pwiz.Skyline.FileUI
         private static string ColumnHeaderRetentionTimeWindow(bool isAssayLibraryImport) { return isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Retention_Time_Window : Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window; }
 
         private static string ColumnHeaderRetentionTime(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Retention_Time : Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time; }
-
-        private static string ColumnHeaderCollisionEnergy(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Collision_Energy : Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy; }
-
-        private static string ColumnHeaderDeclusteringPotential(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential : Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential; }
 
         private static string ColumnHeaderCollisionCrossSectionSQA(bool isAssayLibraryImport) { return  isAssayLibraryImport ? Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ : Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_; }
 

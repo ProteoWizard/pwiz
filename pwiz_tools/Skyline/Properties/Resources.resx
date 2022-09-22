@@ -1199,9 +1199,6 @@
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy" xml:space="preserve">
     <value>Explicit Collision Energy</value>
   </data>
-  <data name="PasteDlg_UpdateMoleculeType_Collision_Energy" xml:space="preserve">
-    <value>Collision Energy</value>
-  </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>Copying external tools from a previous installation</value>
   </data>
@@ -11462,9 +11459,6 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
     <value>Explicit Declustering Potential</value>
-  </data>
-  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
-    <value>Declustering Potential</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>

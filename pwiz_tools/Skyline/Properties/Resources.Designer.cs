@@ -16657,15 +16657,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Declustering Potential.
-        /// </summary>
-        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential {
-            get {
-                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Explicit Declustering Potential.
         /// </summary>
         public static string ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential {
@@ -22110,15 +22101,6 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Collision Energy.
-        /// </summary>
-        public static string PasteDlg_UpdateMoleculeType_Collision_Energy {
-            get {
-                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Energy", resourceCulture);
             }
         }
         
