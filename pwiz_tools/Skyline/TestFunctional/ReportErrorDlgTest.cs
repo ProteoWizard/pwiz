@@ -118,13 +118,15 @@ namespace pwiz.SkylineTestFunctional
 
             // Use the hidden help menu item to bring up the ReportErrorDlg and verify that the document bytes are
             // truncated to MAX_ATTACHMENT_SIZE 
-            var reportErrorDlg3 = ShowDialog<ReportErrorDlg>(()=>
+            SkylineWindow.BeginInvoke(new Action(() =>
             {
                 using (new StoreExceptions())
                 {
                     submitErrorReportMenuItem.PerformClick();
                 }
-            });
+            }));
+            Assert.IsNotNull(Program.TestExceptions);
+            var reportErrorDlg3 = WaitForOpenForm<ReportErrorDlg>();
             RunDlg<DetailedReportErrorDlg>(reportErrorDlg3.OkDialog, detailedDlg =>
             {
                 Assert.IsNotNull(detailedDlg);
