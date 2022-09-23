@@ -376,7 +376,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (!CreateIMSDB(commandArgs))
+            if (commandArgs.ImsDbFile != null && !CreateImsDb(commandArgs))
             {
                 return false;
             }
@@ -593,25 +593,23 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool CreateIMSDB(CommandArgs commandArgs)
+        private bool CreateImsDb(CommandArgs commandArgs)
         {
-            if (commandArgs.IMSDbFile == null)
-            {
-                return true;  // Nothing to do
-            }
-            _out.WriteLine(Resources.CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___);
+            var libName = commandArgs.ImsDbName ?? Path.GetFileNameWithoutExtension(commandArgs.ImsDbFile);
+            var message = string.Format(
+                Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName,
+                commandArgs.ImsDbFile);
+            _out.WriteLine(Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName, commandArgs.ImsDbFile);
             try
             {
-                ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(p =>
+                ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIonMobilityFiltering(ionMobilityFiltering =>
                 {
-                    var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                    var path = commandArgs.IMSDbFile.GetFilePath();
-                    var name = commandArgs.IMSDbName ?? Path.GetFileNameWithoutExtension(path);
+                    var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(message));
                     var lib = IonMobilityLibrary.CreateFromResults(
-                        doc, null, false, name, path,
+                        doc, null, false, libName, commandArgs.ImsDbFile,
                         progressMonitor);
 
-                    return p.ChangeIonMobilityFiltering(p.IonMobilityFiltering.ChangeLibrary(lib));
+                    return ionMobilityFiltering.ChangeLibrary(lib);
                 })), AuditLogEntry.SettingsLogFunction);
                 return true;
             }

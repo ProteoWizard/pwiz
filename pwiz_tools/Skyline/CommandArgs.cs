@@ -34,6 +34,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -216,15 +217,21 @@ namespace pwiz.Skyline
         public ShareType SharedFileType { get; private set; }
 
         // For creating a .imsdb ion mobility library
-        public static readonly Argument ARG_CREATE_IMSDB = new DocArgument(@"ionmobility-create-library", PATH_TO_FILE,
-            (c, p) => c.CreateIMSDB(p));
+        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", () => GetPathToFile(IonMobilityDb.EXT),
+            (c, p) => c.ImsDbFile = p.ValueFullPath);
 
         // For creating a .imsdb ion mobility library
-        public static readonly Argument ARG_CREATE_IMSDB_NAME = new DocArgument(@"ionmobility-create-library-name", NAME_VALUE,
-            (c, p) => c.IMSDbName = p.Value);
+        public static readonly Argument ARG_IMSDB_NAME = new DocArgument(@"ionmobility-library-name", NAME_VALUE,
+            (c, p) => c.ImsDbName = p.Value);
 
         private static readonly ArgumentGroup GROUP_CREATE_IMSDB = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library, false,
-            ARG_CREATE_IMSDB, ARG_CREATE_IMSDB_NAME);
+            ARG_IMSDB_CREATE, ARG_IMSDB_NAME)
+        {
+            Dependencies =
+            {
+                {  ARG_IMSDB_NAME, ARG_IMSDB_CREATE },
+            },
+        };
 
         public static readonly Argument ARG_IMPORT_FILE = new DocArgument(@"import-file", PATH_TO_FILE,
             (c, p) => c.ParseImportFile(p));
@@ -348,8 +355,8 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public MsDataFileUri IMSDbFile { get; private set; }
-        public string IMSDbName { get; private set; }
+        public string ImsDbFile { get; private set; }
+        public string ImsDbName { get; private set; }
 
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
@@ -374,11 +381,6 @@ namespace pwiz.Skyline
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
         public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
-
-        private void CreateIMSDB(NameValuePair pair)
-        {
-            IMSDbFile = new MsDataFilePath(pair.ValueFullPath);
-        }
 
         private void ParseImportFile(NameValuePair pair)
         {
@@ -576,7 +578,7 @@ namespace pwiz.Skyline
         }
         public bool CreatingIMSDB
         {
-            get { return IMSDbFile != null; }
+            get { return !string.IsNullOrEmpty(ImsDbFile); }
         }
         public bool ImportingResults
         {

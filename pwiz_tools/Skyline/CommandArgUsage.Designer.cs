@@ -738,18 +738,18 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
         /// </summary>
-        internal static string _ionmobility_create_library {
+        internal static string _ionmobility_library_create {
             get {
-                return ResourceManager.GetString("_ionmobility_create_library", resourceCulture);
+                return ResourceManager.GetString("_ionmobility_library_create", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Name to give the ion mobility library in an –-ionmobility-create-library operation..
+        ///   Looks up a localized string similar to Name to give the ion mobility library in an –-ionmobility-library-create operation..
         /// </summary>
-        internal static string _ionmobility_create_library_name {
+        internal static string _ionmobility_library_name {
             get {
-                return ResourceManager.GetString("_ionmobility_create_library_name", resourceCulture);
+                return ResourceManager.GetString("_ionmobility_library_name", resourceCulture);
             }
         }
         

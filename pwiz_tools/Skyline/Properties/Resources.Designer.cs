@@ -5416,11 +5416,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creating an ion mobility library....
+        ///   Looks up a localized string similar to Creating ion mobility library &quot;{0}&quot; in &quot;{1}&quot;....
         /// </summary>
-        public static string CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___ {
+        public static string CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____ {
             get {
-                return ResourceManager.GetString("CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___", resourceCulture);
+                return ResourceManager.GetString("CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____", resourceCulture);
             }
         }
         
