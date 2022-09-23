@@ -96,6 +96,7 @@ namespace pwiz.SkylineTestFunctional
                 var helpMenuItem = skylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
                     .FirstOrDefault(item => item.Name == "helpToolStripMenuItem");
                 Assert.IsNotNull(helpMenuItem);
+                SetShiftKeyState(false);
                 Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
                 helpMenuItem.ShowDropDown();
                 submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
