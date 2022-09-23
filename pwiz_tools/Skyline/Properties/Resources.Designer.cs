@@ -5416,6 +5416,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creating an ion mobility library....
+        /// </summary>
+        public static string CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Importing an assay library to a document without an iRT calculator cannot create {0}, because it exists..
         /// </summary>
         public static string CommandLine_CreateIrtDatabase_Error__Importing_an_assay_library_to_a_document_without_an_iRT_calculator_cannot_create__0___because_it_exists_ {

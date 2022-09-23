@@ -11838,4 +11838,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
 	  <value>Submitting an unhandled error report</value>
   </data>
+  <data name="CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___" xml:space="preserve">
+	  <value>Creating an ion mobility library...</value>
+  </data>
 </root>

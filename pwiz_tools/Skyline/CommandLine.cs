@@ -376,6 +376,11 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            if (!CreateIMSDB(commandArgs))
+            {
+                return false;
+            }
+
             if (commandArgs.Saving)
             {
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
@@ -572,6 +577,42 @@ namespace pwiz.Skyline
             {
                 ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
                     commandArgs.Refinement.EntryCreator.Create);
+                return true;
+            }
+            catch (Exception x)
+            {
+                if (!_out.IsErrorReported)
+                {
+                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                }
+                else
+                {
+                    _out.WriteLine(x.Message);
+                }
+                return false;
+            }
+        }
+
+        private bool CreateIMSDB(CommandArgs commandArgs)
+        {
+            if (commandArgs.IMSDbFile == null)
+            {
+                return true;  // Nothing to do
+            }
+            _out.WriteLine(Resources.CommandLine_CreateIMSDB_Creating_an_ion_mobility_library___);
+            try
+            {
+                ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(p =>
+                {
+                    var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
+                    var path = commandArgs.IMSDbFile.GetFilePath();
+                    var name = commandArgs.IMSDbName ?? Path.GetFileNameWithoutExtension(path);
+                    var lib = IonMobilityLibrary.CreateFromResults(
+                        doc, null, false, name, path,
+                        progressMonitor);
+
+                    return p.ChangeIonMobilityFiltering(p.IonMobilityFiltering.ChangeLibrary(lib));
+                })), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
             catch (Exception x)

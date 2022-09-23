@@ -215,6 +215,17 @@ namespace pwiz.Skyline
         public string SharedFile { get; private set; }
         public ShareType SharedFileType { get; private set; }
 
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_CREATE_IMSDB = new DocArgument(@"ionmobility-create-library", PATH_TO_FILE,
+            (c, p) => c.CreateIMSDB(p));
+
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_CREATE_IMSDB_NAME = new DocArgument(@"ionmobility-create-library-name", NAME_VALUE,
+            (c, p) => c.IMSDbName = p.Value);
+
+        private static readonly ArgumentGroup GROUP_CREATE_IMSDB = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library, false,
+            ARG_CREATE_IMSDB, ARG_CREATE_IMSDB_NAME);
+
         public static readonly Argument ARG_IMPORT_FILE = new DocArgument(@"import-file", PATH_TO_FILE,
             (c, p) => c.ParseImportFile(p));
         public static readonly Argument ARG_IMPORT_REPLICATE_NAME = new DocArgument(@"import-replicate-name", NAME_VALUE,
@@ -337,6 +348,8 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public MsDataFileUri IMSDbFile { get; private set; }
+        public string IMSDbName { get; private set; }
 
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
@@ -361,6 +374,11 @@ namespace pwiz.Skyline
         public double? LockmassNegative { get; private set; }
         public double? LockmassTolerance { get; private set; }
         public LockMassParameters LockMassParameters { get { return new LockMassParameters(LockmassPositive, LockmassNegative, LockmassTolerance); } }
+
+        private void CreateIMSDB(NameValuePair pair)
+        {
+            IMSDbFile = new MsDataFilePath(pair.ValueFullPath);
+        }
 
         private void ParseImportFile(NameValuePair pair)
         {
@@ -555,6 +573,10 @@ namespace pwiz.Skyline
         public bool AddDecoys
         {
             get { return !string.IsNullOrEmpty(AddDecoysType); }
+        }
+        public bool CreatingIMSDB
+        {
+            get { return IMSDbFile != null; }
         }
         public bool ImportingResults
         {
@@ -1784,6 +1806,7 @@ namespace pwiz.Skyline
                     GROUP_IMPORT_SEARCH,
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
+                    GROUP_CREATE_IMSDB,
                     GROUP_DECOYS,
                     GROUP_REFINEMENT,
                     GROUP_REFINEMENT_W_RESULTS,

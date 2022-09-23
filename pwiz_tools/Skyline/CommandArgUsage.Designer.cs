@@ -736,6 +736,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
+        /// </summary>
+        internal static string _ionmobility_create_library {
+            get {
+                return ResourceManager.GetString("_ionmobility_create_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name to give the ion mobility library in an –-ionmobility-create-library operation..
+        /// </summary>
+        internal static string _ionmobility_create_library_name {
+            get {
+                return ResourceManager.GetString("_ionmobility_create_library_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The name for the iRT calculator created during assay library import. (optional) The default name is the document base name..
         /// </summary>
         internal static string _irt_calc_name {
@@ -1684,6 +1702,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating an ion mobility library.
+        /// </summary>
+        internal static string CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library", resourceCulture);
             }
         }
         

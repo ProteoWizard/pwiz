@@ -200,18 +200,24 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             if (File.Exists(testPath))
                 File.Delete(testPath);
+            var imsdbPath = TestFilesDir.GetTestPath("testlib.imsdb");
 
             // Show anyone watching that work is being performed
+            // Create an ion mobility library after import just to exercise that code
             RunUI(() => {
                 using (var longWait = new LongWaitDlg(SkylineWindow) { Message = "Running command-line import" })
                 {
                     longWait.PerformWork(SkylineWindow, 500, () =>
+                    {
                         RunCommand("--in=" + skyFile,
                             "--import-file=" + TestFilesDir.GetTestPath(BSA_50fmol_TIMS_InfusionESI_10precd),
-                            "--out=" + testPath));
+                            "--ionmobility-create-library=" + imsdbPath,
+                            "--ionmobility-create-library-name=testlib",
+                            "--out=" + testPath);
+                    });
                 }
             });
-            
+            AssertEx.FileExists(imsdbPath);
             VerifySerialization(testPath, false);
         }
 
