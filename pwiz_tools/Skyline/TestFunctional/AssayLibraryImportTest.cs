@@ -1098,17 +1098,40 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.NewDocument(true);
                 SkylineWindow.ResetDefaultSettings();
+
+                // Prepare the document to rank all of the imported transitions                
+                SkylineWindow.ModifyDocument("Change transition filter", docMod =>
+                    docMod.ChangeSettings(docMod.Settings.ChangeTransitionFilter(f =>
+                        f.ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
+                            .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
+                            .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor }))));
+
                 Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
             });
             doc = SkylineWindow.Document;
             var errorList = new List<string>();
-            ImportAssayLibrarySkipColumnSelect(TestFilesDir.GetTestPath("cirts.tsv"), errorList);
+            string cirtsPath = TestFilesDir.GetTestPath("cirts.tsv");
+            string cirtsMixedPath = TestFilesDir.GetTestPath("cirts-mixed.tsv");
+            // Randomizing the order should not impact the resulting document
+            var cirtLines = File.ReadAllLines(cirtsPath);
+            var cirtMixedLines = new List<string>();
+            cirtMixedLines.Add(cirtLines.First());
+            cirtMixedLines.AddRange(cirtLines.Skip(1).ToArray().RandomOrder());
+            File.WriteAllLines(cirtsMixedPath, cirtMixedLines);
+            ImportAssayLibrarySkipColumnSelect(cirtsMixedPath, errorList);
             var chooseIrt3 = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
             var useCirtsDlg = ShowDialog<AddIrtStandardsDlg>(() => chooseIrt3.OkDialogStandard(IrtStandard.CIRT_SHORT));
             RunUI(() => useCirtsDlg.StandardCount = 12);
             OkDialog(useCirtsDlg, useCirtsDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
-            AssertEx.IsDocumentState(doc, null, 63, 120, 202, 1574);
+            AssertEx.IsDocumentState(doc, null, 63, 113, 202, 1574);
+            // This assay library has rows that are out of order and need to be merged, so check that all
+            // of the resulting transitions have library info
+            var calc = doc.Settings.PeptideSettings.Prediction.NonNullRetentionTime.Calculator as RCalcIrt;
+            Assert.IsNotNull(calc);
+            Assert.AreEqual(doc.PeptideCount, calc.PeptideScores.Count());
+            AssertEx.IsTrue(doc.PeptideTransitions.All(t => t.HasLibInfo),
+                string.Format("Found {0} transitions without lib info", doc.PeptideTransitions.Count(t => !t.HasLibInfo)));
             CheckAssayLibrarySettings();
 
             // Undo import
@@ -1117,7 +1140,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Import assay library and choose a standard
             var chooseStandard = IrtStandard.BIOGNOSYS_11;
-            var overwriteDlg2 = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(TestFilesDir.GetTestPath("cirts.tsv")));
+            var overwriteDlg2 = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ImportAssayLibrary(cirtsPath));
             transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(overwriteDlg2.BtnYesClick);  // Expect a confirmation of column selections
             var transitionErrs2 = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.OkDialog); // Expect an error report
             RunUI(() => Assert.IsTrue(transitionErrs2.AcceptButton.DialogResult == DialogResult.OK));
@@ -1125,7 +1148,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
             doc = WaitForDocumentChange(doc);
             // We should have an extra peptide group and extra peptides since the standard peptides should've been added to the document
-            AssertEx.IsDocumentState(doc, null, 64, 120 + chooseStandard.Peptides.Count, null, null);
+            AssertEx.IsDocumentState(doc, null, 64, 113 + chooseStandard.Peptides.Count, null, null);
             var biognosysTargets = new TargetMap<bool>(chooseStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
             var standardGroup = doc.PeptideGroups.First();
             Assert.AreEqual(chooseStandard.Peptides.Count, standardGroup.PeptideCount);
