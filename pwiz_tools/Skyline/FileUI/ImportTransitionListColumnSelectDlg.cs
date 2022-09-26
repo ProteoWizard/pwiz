@@ -150,10 +150,10 @@ namespace pwiz.Skyline.FileUI
             }
 
             fileLabel.Text = Importer.Inputs.InputFilename;
+            InitializeRadioButtons();
             InitializeComboBoxes();
             DisplayData();
             PopulateComboBoxes();
-            InitializeRadioButtons();
             checkBoxAssociateProteins.Visible = CheckboxVisible();
             UpdateAssociateProteinsState();
             IgnoreAllEmptyCols();
@@ -1155,6 +1155,8 @@ namespace pwiz.Skyline.FileUI
             {
                 radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
             }
+
+            radioPeptide.CheckedChanged += radioPeptide_CheckedChanged;
         }
 
         /// <summary>
