@@ -117,16 +117,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(submitErrorReportMenuItem);
 
             // Use the hidden help menu item to bring up the ReportErrorDlg and verify that the document bytes are
-            // truncated to MAX_ATTACHMENT_SIZE 
-            SkylineWindow.BeginInvoke(new Action(() =>
+            // truncated to MAX_ATTACHMENT_SIZE
+            using (new StoreExceptions())
             {
-                using (new StoreExceptions())
+                SkylineWindow.BeginInvoke(new Action(() =>
                 {
                     submitErrorReportMenuItem.PerformClick();
-                }
-            }));
-            Assert.IsNotNull(Program.TestExceptions);
-            var reportErrorDlg3 = WaitForOpenForm<ReportErrorDlg>();
+                }));
+                WaitForCondition(10000, () => null != FindOpenForm<ReportErrorDlg>(), throwOnProgramException: false);
+            }
+
+            var reportErrorDlg3 = FindOpenForm<ReportErrorDlg>();
+            Assert.IsNotNull(reportErrorDlg3);
             RunDlg<DetailedReportErrorDlg>(reportErrorDlg3.OkDialog, detailedDlg =>
             {
                 Assert.IsNotNull(detailedDlg);
