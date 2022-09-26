@@ -138,7 +138,7 @@ namespace TestPerf
             WaitForConditionUI(() => (qvalue1Data = GetCurrentData(pane)) != null);
             AreaCVGraphDataStatistics qvalue1Statistics = null;
             RunUI(() => qvalue1Statistics = new AreaCVGraphDataStatistics(qvalue1Data, pane.GetTotalBars()));
-            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = double.NaN);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = null);
             AreaCVGraphData qvalueNaNData = null;
             WaitForConditionUI(() => (qvalueNaNData = GetCurrentData(pane)) != null);
             AreaCVGraphDataStatistics qvalueNaNStatistics = null;
@@ -163,7 +163,7 @@ namespace TestPerf
             Assert.IsNotNull(toolbar);
 
             RunUI(() => toolbar.SetMinimumDetections(2));
-            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = double.NaN);
+            OpenAndChangeAreaCVProperties(graph, p => p.QValueCutoff = null);
 
             // Make sure toolbar is there, combo box items are correct and data is correct
             T pane;
@@ -224,7 +224,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 refineDlg.CVCutoff = 20;
-                refineDlg.QValueCutoff = double.NaN;
+                refineDlg.QValueCutoff = null;
             });
             OkDialog(refineDlg, refineDlg.OkDialog);
             WaitForCondition(() =>

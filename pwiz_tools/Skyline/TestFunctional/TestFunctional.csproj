@@ -149,6 +149,7 @@
     </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -183,6 +184,7 @@
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
+    <Compile Include="MessageBoxHelperTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />

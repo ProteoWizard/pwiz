@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return document != null && Document != null && IsValid &&
                    ReferenceEquals(document, Document) &&
-                   qValue == QValueCutoff;
+                   Equals(qValue, QValueCutoff);
         }
 
         public class DataSet

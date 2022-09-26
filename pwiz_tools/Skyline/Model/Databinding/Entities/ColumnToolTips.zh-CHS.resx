@@ -101,7 +101,7 @@
     <value>倍数变化的绝对值</value>
   </data>
   <data name="AbsLog2FoldChange">
-    <value>倍数变化的以 2 为底的对数的绝对值</value>
+    <value>倍数变化取以 2 为底的对数的绝对值</value>
   </data>
   <data name="Abundance">
     <value>重复测定的值是用于计算倍数的变化。此数值取决于归一化方法以及是基于蛋白质还是肽段级别来计算倍数的变化。</value>
@@ -638,7 +638,7 @@
     <value>进行线性回归以确定倍数变化的结果。</value>
   </data>
   <data name="Log2FoldChange">
-    <value>倍数变化值的以 2 为底的对数。</value>
+    <value>倍数变化值取以 2 为底的对数。</value>
   </data>
   <data name="Losses">
     <value>此片段中所有中性丢失的逗号分隔清单</value>

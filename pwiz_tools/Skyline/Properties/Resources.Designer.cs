@@ -30633,6 +30633,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Submitting an unhandled error report.
+        /// </summary>
+        public static string SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report {
+            get {
+                return ResourceManager.GetString("SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_repor" +
+                        "t", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?.
         /// </summary>
         public static string SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_ {
