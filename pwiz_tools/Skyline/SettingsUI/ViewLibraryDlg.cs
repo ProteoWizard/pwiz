@@ -169,7 +169,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries = new SettingsListComboDriver<LibrarySpec>(comboLibrary, Settings.Default.SpectralLibraryList);
             Settings.Default.SpectralLibraryList.ListChanged += SpectralLibraryList_ListChanged;
 
-            GraphSettings = new GraphSpectrumSettings(UpdateUI);
+            GraphSettings = new GraphSpectrumSettings(selectionChanged =>
+            {
+                UpdateUI(selectionChanged);
+                (Owner as SkylineWindow)?.UpdateSpectrumGraph(selectionChanged);
+            });
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
@@ -354,6 +358,13 @@ namespace pwiz.Skyline.SettingsUI
                 Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesSorted =
                 msGraphExtension1.PropertiesSheet.PropertySort == PropertySort.Alphabetical;
+
+            var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
+            if (ionTypeSelector != null)
+            {
+                ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
+            }
 
             base.OnClosing(e);
         }
@@ -757,13 +768,8 @@ namespace pwiz.Skyline.SettingsUI
                     btnXIons.Enabled = btnXIons.Visible =
                     btnYIons.Enabled = btnYIons.Visible =
                     btnZIons.Enabled = btnZIons.Visible =
-                    aionsContextMenuItem.Enabled = aionsContextMenuItem.Visible =
-                    bionsContextMenuItem.Enabled = bionsContextMenuItem.Visible =
-                    cionsContextMenuItem.Enabled = cionsContextMenuItem.Visible =
-                    xionsContextMenuItem.Enabled = xionsContextMenuItem.Visible =
-                    yionsContextMenuItem.Enabled = yionsContextMenuItem.Visible =
-                    zionsContextMenuItem.Enabled = zionsContextMenuItem.Visible
-                    = isSequenceLibrary && !isSmallMoleculeItem;
+                    ionTypesContextMenuItem.Enabled = ionTypesContextMenuItem.Visible = isSequenceLibrary && !isSmallMoleculeItem;
+
                 btnFragmentIons.Enabled = btnFragmentIons.Visible =
                     fragmentionsContextMenuItem.Enabled = fragmentionsContextMenuItem.Visible =
                     isSequenceLibrary && isSmallMoleculeItem;
@@ -1182,34 +1188,14 @@ namespace pwiz.Skyline.SettingsUI
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
-            aionsContextMenuItem.Checked = set.ShowAIons;
-            menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-            bionsContextMenuItem.Checked = set.ShowBIons;
-            menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-            cionsContextMenuItem.Checked = set.ShowCIons;
-            menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-            xionsContextMenuItem.Checked = set.ShowXIons;
-            menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-            yionsContextMenuItem.Checked = set.ShowYIons;
-            menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-            zionsContextMenuItem.Checked = set.ShowZIons;
-            menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
             fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
+            menuStrip.Items.Insert(iInsert++,  ionTypesContextMenuItem);
+
             menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
             menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-            if (chargesContextMenuItem.DropDownItems.Count == 0)
-            {
-                chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        charge1ContextMenuItem,
-                        charge2ContextMenuItem,
-                        charge3ContextMenuItem,
-                        charge4ContextMenuItem,
-                    });
-            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
@@ -1530,10 +1516,77 @@ namespace pwiz.Skyline.SettingsUI
                 UpdateListPeptide(listPeptide.SelectedIndex);
             }    
         }
-        
+
         #endregion
-        
+
         #region Mouse Click Events
+
+        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
+                ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
+            {
+                ionSelector.Update(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                ionTypesContextMenuItem.DropDownItems.Clear();
+                var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+                ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
+                ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
+                //ionTypeSelector.Invalidate();
+            }
+        }
+
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
+        {
+            if (GraphControl.ContextMenuStrip != null)
+            {
+                var chargesItem = GraphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+                if (chargesItem != null)
+                    return chargesItem.DropDownItems[0] as MenuControl<T>;
+            }
+            return null;
+        }
+
+
+        private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
+        {
+            switch (type)
+            {
+                case IonType.a:
+                    GraphSettings.ShowAIons = show;
+                    break;
+                case IonType.b:
+                    GraphSettings.ShowBIons = show;
+                    break;
+                case IonType.c:
+                    GraphSettings.ShowCIons = show;
+                    break;
+                case IonType.x:
+                    GraphSettings.ShowXIons = show;
+                    break;
+                case IonType.y:
+                    GraphSettings.ShowYIons = show;
+                    break;
+                case IonType.z:
+                    GraphSettings.ShowZIons = show;
+                    break;
+                case IonType.zh:
+                    GraphSettings.ShowZHIons = show;
+                    break;
+                case IonType.zhh:
+                    GraphSettings.ShowZHHIons = show;
+                    break;
+            }
+        }
+
+        private void IonTypeSelector_LossChanged(string[] losses)
+        {
+            GraphSettings.ShowLosses = new List<string>(losses);
+        }
 
         private void aionsContextMenuItem_Click(object sender, EventArgs e)
         {
@@ -1575,6 +1628,25 @@ namespace pwiz.Skyline.SettingsUI
             GraphSettings.ShowPrecursorIon = !GraphSettings.ShowPrecursorIon;
         }
 
+        public void IonChargeSelector_ionChargeChanged(int charge, bool show)
+        {
+            switch (charge)
+            {
+                case 1:
+                    GraphSettings.ShowCharge1 = show;
+                    break;
+                case 2:
+                    GraphSettings.ShowCharge2 = show;
+                    break;
+                case 3:
+                    GraphSettings.ShowCharge3 = show;
+                    break;
+                case 4:
+                    GraphSettings.ShowCharge4 = show;
+                    break;
+            }
+        }
+
         private void charge1ContextMenuItem_Click(object sender, EventArgs e)
         {
             GraphSettings.ShowCharge1 = !GraphSettings.ShowCharge1;
@@ -1613,10 +1685,17 @@ namespace pwiz.Skyline.SettingsUI
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             var set = GraphSettings;
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            charge3ContextMenuItem.Checked = set.ShowCharge3;
-            charge4ContextMenuItem.Checked = set.ShowCharge4;
+            if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
+            {
+                chargeSelector.Update(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                chargesContextMenuItem.DropDownItems.Clear();
+                var selectorControl = new MenuControl<ChargeSelectionPanel>(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+                chargesContextMenuItem.DropDownItems.Add(selectorControl);
+                selectorControl.HostedControl.OnChargeChanged += IonChargeSelector_ionChargeChanged;
+            }
         }
 
         private void ranksContextMenuItem_Click(object sender, EventArgs e)

@@ -946,6 +946,25 @@ namespace pwiz.Skyline
             }
         }
 
+        public void IonChargeSelector_ionChargeChanged(int charge, bool show)
+        {
+            switch (charge)
+            {
+                case 1:
+                    ShowCharge1(show);
+                    break;
+                case 2:
+                    ShowCharge2(show);
+                    break;
+                case 3:
+                    ShowCharge3(show);
+                    break;
+                case 4:
+                    ShowCharge4(show);
+                    break;
+            }
+        }
+
         private void IonTypeSelector_LossChanged(string[] losses)
         {
             ShowLosses(losses);
@@ -1010,10 +1029,7 @@ namespace pwiz.Skyline
                 chargesContextMenuItem.DropDownItems.Clear();
                 var selectorControl = new MenuControl<ChargeSelectionPanel>(_graphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
                 chargesContextMenuItem.DropDownItems.Add(selectorControl);
-                selectorControl.HostedControl.OnCharge1Changed += ShowCharge1;
-                selectorControl.HostedControl.OnCharge2Changed += ShowCharge2;
-                selectorControl.HostedControl.OnCharge3Changed += ShowCharge3;
-                selectorControl.HostedControl.OnCharge4Changed += ShowCharge4;
+                selectorControl.HostedControl.OnChargeChanged += IonChargeSelector_ionChargeChanged;
             }
         }
 
@@ -1031,7 +1047,6 @@ namespace pwiz.Skyline
                 ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
                 ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
                 ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
-                //ionTypeSelector.Invalidate();
             }
         }
 

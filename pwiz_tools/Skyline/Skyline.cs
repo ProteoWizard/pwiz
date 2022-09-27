@@ -1106,10 +1106,7 @@ namespace pwiz.Skyline
                 var chargeSelector = _graphFullScan.GetHostedControl<ChargeSelectionPanel>();
                 if(chargeSelector != null)
                 {
-                    chargeSelector.HostedControl.OnCharge1Changed -= ShowCharge1;
-                    chargeSelector.HostedControl.OnCharge2Changed -= ShowCharge2;
-                    chargeSelector.HostedControl.OnCharge3Changed -= ShowCharge3;
-                    chargeSelector.HostedControl.OnCharge4Changed -= ShowCharge4;
+                    chargeSelector.HostedControl.OnChargeChanged -= IonChargeSelector_ionChargeChanged;
                 }
                 var ionTypeSelector = _graphFullScan.GetHostedControl<IonTypeSelectionPanel>();
                 if (ionTypeSelector != null)
