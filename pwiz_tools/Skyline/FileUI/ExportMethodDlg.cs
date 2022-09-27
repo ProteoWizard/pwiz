@@ -2082,6 +2082,13 @@ namespace pwiz.Skyline.FileUI
                     return;
                 }
 
+                var ionMobilityError = BrukerTimsTofIsolationListExporter.CheckIonMobilities(_document, _exportProperties, brukerTemplate);
+                if (!string.IsNullOrEmpty(ionMobilityError))
+                {
+                    MessageDlg.Show(this, ionMobilityError);
+                    return;
+                }
+
                 using (var longWait = new LongWaitDlg())
                 {
                     longWait.PerformWork(this, 800, progress =>

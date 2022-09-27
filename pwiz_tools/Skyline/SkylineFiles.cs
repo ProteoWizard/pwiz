@@ -1644,7 +1644,7 @@ namespace pwiz.Skyline
                                                             string.Empty, strNameMatches);
                         if (DialogResult.Cancel == MultiButtonMsgDlg.Show(
                             this,
-                            string.Format(message), Resources.SkylineWindow_ImportFasta_OK))
+                            message, Resources.SkylineWindow_ImportFasta_OK))
                         {
                             return;
                         }

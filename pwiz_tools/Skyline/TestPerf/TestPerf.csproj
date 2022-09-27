@@ -154,6 +154,7 @@
     <Compile Include="PerfImportDiaPasefTest.cs" />
     <Compile Include="PerfImportPasefMascotTest.cs" />
     <Compile Include="PerfImportPrmPasefTest.cs" />
+    <Compile Include="PerfImportResultsAgilentIMSFringeValues.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
     <Compile Include="PerfImportResultsHugeTest.cs" />

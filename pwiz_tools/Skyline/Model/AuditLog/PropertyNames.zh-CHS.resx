@@ -1686,10 +1686,10 @@
     <value>蛋白质目标</value>
   </data>
   <data name="AssociateProteinsSettings_UnmappedPeptides" xml:space="preserve">
-    <value>肽段取消映射</value>
+    <value>取消映射的肽段</value>
   </data>
   <data name="AssociateProteinsSettings_UnmappedProteins" xml:space="preserve">
-    <value>蛋白质取消映射</value>
+    <value>取消映射的蛋白质</value>
   </data>
   <data name="ParsimonySettings_GroupProteins" xml:space="preserve">
     <value>蛋白质分组</value>
@@ -1701,7 +1701,7 @@
     <value>每个蛋白质的最少肽段数</value>
   </data>
   <data name="ParsimonySettings_RemoveSubsetProteins" xml:space="preserve">
-    <value>删除子集蛋白质</value>
+    <value>删除蛋白质子集</value>
   </data>
   <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
     <value>关联蛋白质</value>
