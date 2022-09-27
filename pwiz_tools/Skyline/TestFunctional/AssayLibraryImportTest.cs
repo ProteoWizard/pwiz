@@ -1110,7 +1110,6 @@ namespace pwiz.SkylineTestFunctional
 
                 Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
             });
-            doc = SkylineWindow.Document;
             var errorList = new List<string>();
             string cirtsPath = TestFilesDir.GetTestPath("cirts.tsv");
             string cirtsMixedPath = TestFilesDir.GetTestPath("cirts-mixed.tsv");
@@ -1142,8 +1141,9 @@ namespace pwiz.SkylineTestFunctional
             var chooseIrt3 = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
             var useCirtsDlg = ShowDialog<AddIrtStandardsDlg>(() => chooseIrt3.OkDialogStandard(IrtStandard.CIRT_SHORT));
             RunUI(() => useCirtsDlg.StandardCount = 12);
+            doc = SkylineWindow.Document;
             OkDialog(useCirtsDlg, useCirtsDlg.OkDialog);
-            doc = WaitForDocumentChange(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
             AssertEx.IsDocumentState(doc, null, 63, 113, 204, cirtMixedLines.Count - 6 /* why? */ - 1 /* header line */);
             // This assay library has rows that are out of order and need to be merged, so check that all
             // of the resulting transitions have library info
@@ -1166,7 +1166,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.IsTrue(transitionErrs2.AcceptButton.DialogResult == DialogResult.OK));
             var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(transitionErrs2.AcceptButton.PerformClick);
             OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
-            doc = WaitForDocumentChange(doc);
+            doc = WaitForDocumentChangeLoaded(doc);
             // We should have an extra peptide group and extra peptides since the standard peptides should've been added to the document
             AssertEx.IsDocumentState(doc, null, 64, 113 + chooseStandard.Peptides.Count, null, null);
             var biognosysTargets = new TargetMap<bool>(chooseStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
