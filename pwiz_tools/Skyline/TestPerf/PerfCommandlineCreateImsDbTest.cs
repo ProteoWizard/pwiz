@@ -21,6 +21,7 @@
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -28,6 +29,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 {
     /// <summary>
     /// Verify commandline handling for ion mobility library building
+    /// Tests for:
+    ///  normal operation
+    ///  support for not specifying "--ionmobility-library-name"
+    ///  error handling for illegal characters in imsdb filename
+    ///  error handling for non-existent subdirectories in imsdb file path
+    ///  error handling for specifying "--ionmobility-library-name" without "--ionmobility-library-create"
     /// </summary>
     [TestClass]
     public class TestCommandlineCreateImsDbPerf : AbstractUnitTestEx
@@ -43,8 +50,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             TestFilesPersistent = new[] {  rawFile }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, ".", TestFilesPersistent);
 
-            var badName = @"blorf";
-            foreach (var libName in new[]{@"_myname", string.Empty, badName}) // Try with and without explicit library name, and with an illegal name
+            var badName = @"badname";
+            var badPath = @"badpath";
+            var badArgs = @"badargs";
+            foreach (var libName in new[]{ 
+                         @"_myname",   //  normal operation
+                         string.Empty, //  support for not specifying "--ionmobility-library-name"
+                         badName,      //  error handling for illegal characters in imsdb filename
+                         badPath,      //  error handling for non-existent subdirectories in imsdb file path
+                         badArgs }     //  error handling for specifying "--ionmobility-library-name" without "--ionmobility-library-create"
+                     ) 
             {
                 var template = TestFilesDirs[0].GetTestPath("Scripps_IMS_Template.sky");
                 var inFile = TestFilesDirs[0].GetTestPath(rawFile);
@@ -52,46 +67,61 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var outSky = TestFilesDirs[0].GetTestPath($"{root}.sky");
                 var transitionList = TestFilesDirs[0].GetTestPath("test_run_1_transition_list.csv");
                 var imsdb = TestFilesDirs[0].GetTestPath($"{(root.EndsWith(badName) ? root + @":?" : root)}.imsdb");
+                if (Equals(libName, badPath))
+                {
+                    imsdb = imsdb.Replace(TestFilesDirs[0].GetTestPath(string.Empty), badPath + "\\" + badPath);
+                }
                 var outCSV = TestFilesDirs[0].GetTestPath($"{root}.csv");
                 var output = RunCommand($"--in={template}",
                     $"--out={outSky}",
                     $"--import-transition-list={transitionList}",
                     $"--import-file={inFile}",
-                    $"--ionmobility-library-create={imsdb}",
+                    Equals(libName, badArgs) ? string.Empty : $"--ionmobility-library-create={imsdb}",
                     string.IsNullOrEmpty(libName) ? string.Empty : $"--ionmobility-library-name={libName}",
                     "--report-name=Precursor CCS",
                     $"--report-file={outCSV}");
                 if (Equals(libName, badName))
                 {
-                    // Expect failure because of illegal filename characters
-                    AssertEx.Contains(output, $"--ionmobility-library-create failed");
+                    // Expect failure because of illegal characters in imsdb filename
+                    AssertEx.Contains(output, 
+                        string.Format(Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_,
+                            imsdb, "--ionmobility-library-create"));
+                    continue;
+                }
+                else if (Equals(libName, badPath))
+                {
+                    // Expect failure because of nonexistent subdirectories in path
+                    AssertEx.ContainsSimilar(output, Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_);
+                    continue;
+                }
+                else if (Equals(libName, badArgs))
+                {
+                    // Expect failure because of missing "--ionmobility-library-create"
+                    AssertEx.Contains(output, 
+                        string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                            "--ionmobility-library-name", "--ionmobility-library-create"));
                     continue;
                 }
                 AssertEx.FileExists(imsdb);
-                AssertEx.Contains(output, $"Ion mobility library changed from \"None\" to \"{(string.IsNullOrEmpty(libName) ? root : libName)}\"");
 
-                // Compare to expected result
+                // Compare to expected result - may need to localize the expected copy to match the actual copy
                 var expected = File.ReadAllLines(TestFilesDirs[0].GetTestPath("ImsDbTest_expected.csv"));
                 var actual = File.ReadAllLines(outCSV);
                 AssertEx.AreEqual(expected.Length, actual.Length, $"Report difference - expected same line count");
-
-                var i = 0;
-
-                string Localize(string s)
+                for (var i = 1; i < expected.Length; i++) // Skipping header, which may be localized
                 {
-                    return s.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_CSV_INTL).
-                        Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator, CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                }
-
-                foreach (var line in expected)
-                {
-                    var expectedLine = line;
+                    var expectedLine = expected[i];
                     if (CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator !=
                         CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
                     {
-                        if (line.StartsWith("\""))
+                        string Localize(string s)
                         {
-                            var parts = line.Split('"');
+                            return s.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_CSV_INTL).
+                                Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator, CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                        }
+                        if (expectedLine.StartsWith("\""))
+                        {
+                            var parts = expectedLine.Split('"');
                             expectedLine = parts[1] + Localize(parts[2]);
                         }
                         else
@@ -100,7 +130,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                         }
                     }
 
-                    AssertEx.AreEqual(expectedLine, actual[i++], $"Report difference at line {i}");
+                    AssertEx.AreEqual(expectedLine, actual[i], $"Difference in actual and expected report at line {i}");
                 }
             }
 

@@ -435,6 +435,14 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized)
         {
+            if (!Directory.Exists(Path.GetDirectoryName(path)))
+            {
+                var message =
+                    string.Format(
+                        Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
+                        path);
+                throw new DirectoryNotFoundException(message);
+            }
             const string libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
             const int majorVer = 0; // This will increment when we add data
             const int minorVer = DbLibInfo.SCHEMA_VERSION_CURRENT;

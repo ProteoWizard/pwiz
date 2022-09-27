@@ -236,6 +236,28 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        // Checks that string value could have been partially created with given format
+        // e.g. value "Oh no! My dog has fleas! Now what?" agrees with format "My {0} has {1}!" because it contains
+        // "My ", " has ", and "!" in that order.
+        public static void ContainsSimilar(string value, string format)
+        {
+            var testString = value;
+            foreach (var part in format.Split('{'))
+            {
+                var close = part.IndexOf('}');
+                var find = part.Substring(close+1);
+                if (!string.IsNullOrEmpty(find))
+                {
+                    var index = testString.IndexOf(find, StringComparison.Ordinal);
+                    if (index < 0)
+                    {
+                        Fail("The text '{0}' does not have expected format '{1}'", value, format);
+                    }
+                    testString = testString.Substring(index + find.Length);
+                }
+            }
+        }
+
         public static void FileExists(string filePath, string message = null)
         {
             if (!File.Exists(filePath))
