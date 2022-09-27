@@ -2066,9 +2066,9 @@ namespace pwiz.SkylineTestUtil
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
         }
 
-        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null)
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true)
         {
-            ImportAssayLibraryOrTransitionList(csvPath, true, errorList);
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
         private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)

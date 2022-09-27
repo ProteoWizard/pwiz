@@ -1101,10 +1101,12 @@ namespace pwiz.SkylineTestFunctional
 
                 // Prepare the document to rank all of the imported transitions                
                 SkylineWindow.ModifyDocument("Change transition filter", docMod =>
-                    docMod.ChangeSettings(docMod.Settings.ChangeTransitionFilter(f =>
-                        f.ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
-                            .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
-                            .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor }))));
+                    docMod.ChangeSettings(docMod.Settings
+                        .ChangeTransitionInstrument(ti => ti.ChangeMaxMz(1800))
+                        .ChangeTransitionFilter(tf =>
+                            tf.ChangePeptidePrecursorCharges(new[] { Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
+                                .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED, Adduct.DOUBLY_PROTONATED, Adduct.TRIPLY_PROTONATED })
+                                .ChangePeptideIonTypes(new[] { IonType.y, IonType.b, IonType.precursor }))));
 
                 Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
             });
@@ -1116,15 +1118,33 @@ namespace pwiz.SkylineTestFunctional
             var cirtLines = File.ReadAllLines(cirtsPath);
             var cirtMixedLines = new List<string>();
             cirtMixedLines.Add(cirtLines.First());
-            cirtMixedLines.AddRange(cirtLines.Skip(1).ToArray().RandomOrder());
+            cirtMixedLines.AddRange(cirtLines.Skip(1).ToArray().RandomOrder(ArrayUtil.RANDOM_SEED));
             File.WriteAllLines(cirtsMixedPath, cirtMixedLines);
-            ImportAssayLibrarySkipColumnSelect(cirtsMixedPath, errorList);
+
+            ImportAssayLibrarySkipColumnSelect(cirtsPath, errorList, false);
+            Assert.AreEqual(503, errorList.Count);
+            RunUI(() =>
+            {
+                // Add neutral loss modifications
+                SkylineWindow.ModifyDocument("Add neutral loss mods", docMod =>
+                    docMod.ChangeSettings(docMod.Settings.ChangePeptideModifications(m =>
+                        m.ChangeModifications(IsotopeLabelType.light, new[]
+                        {
+                            m.GetModifications(IsotopeLabelType.light),
+                            new [] { UniMod.GetModification("Water Loss (D, E, S, T)", true),
+                                UniMod.GetModification("Ammonia Loss (K, N, Q, R)", true) }
+                        }.SelectMany(l => l).ToArray()))));
+
+                Assert.IsTrue(SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("assay_import_cirt.sky")));
+            });
+            ImportAssayLibrarySkipColumnSelect(cirtsMixedPath); // Expecting no errors now
+
             var chooseIrt3 = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
             var useCirtsDlg = ShowDialog<AddIrtStandardsDlg>(() => chooseIrt3.OkDialogStandard(IrtStandard.CIRT_SHORT));
             RunUI(() => useCirtsDlg.StandardCount = 12);
             OkDialog(useCirtsDlg, useCirtsDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
-            AssertEx.IsDocumentState(doc, null, 63, 113, 202, 1574);
+            AssertEx.IsDocumentState(doc, null, 63, 113, 204, cirtMixedLines.Count - 6 /* why? */ - 1 /* header line */);
             // This assay library has rows that are out of order and need to be merged, so check that all
             // of the resulting transitions have library info
             var calc = doc.Settings.PeptideSettings.Prediction.NonNullRetentionTime.Calculator as RCalcIrt;
@@ -1135,7 +1155,7 @@ namespace pwiz.SkylineTestFunctional
             CheckAssayLibrarySettings();
 
             // Undo import
-            RunUI(SkylineWindow.Undo);
+            RunUI(() => SkylineWindow.UndoRestore(1));  // Before the losses were added
             doc = WaitForDocumentChange(doc);
 
             // Import assay library and choose a standard
