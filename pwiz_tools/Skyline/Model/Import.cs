@@ -657,7 +657,55 @@ namespace pwiz.Skyline.Model
             if (seqBuilder != null)
                 AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides, librarySpectra, errorList);
 
-            return MergeEqualGroups(progressMonitor, peptideGroupsNew, ref status);
+            var peptideGroupsResult = MergeEqualGroups(progressMonitor, peptideGroupsNew, ref status);
+            if (!ArrayUtil.ReferencesEqual(peptideGroupsResult, peptideGroupsNew))
+            {
+                var irtPeptidesMerged = MergeRtInfo(irtPeptides);
+                irtPeptides.Clear();
+                irtPeptides.AddRange(irtPeptidesMerged);
+                
+                var librarySpectraMerged = MergeSpectra(librarySpectra, errorList);
+                librarySpectra.Clear();
+                librarySpectra.AddRange(librarySpectraMerged);
+            }
+
+            return peptideGroupsResult;
+        }
+
+        private List<SpectrumMzInfo> MergeSpectra(List<SpectrumMzInfo> librarySpectra, List<TransitionImportErrorInfo> errorList)
+        {
+            var mergedSpectra = new List<SpectrumMzInfo>();
+            foreach (var g in librarySpectra.GroupBy(s => s.Key))
+            {
+                var combined = g.First();
+                foreach (var other in g.Skip(1))
+                {
+                    combined = combined.CombineSpectrumInfo(other, out var combineErrors);
+                    if (combineErrors.Count > 0)
+                        errorList.AddRange(combineErrors);
+                }
+                mergedSpectra.Add(combined);
+            }
+
+            return mergedSpectra;
+        }
+
+        private List<MeasuredRetentionTime> MergeRtInfo(List<MeasuredRetentionTime> irtPeptides)
+        {
+            return (from rt in irtPeptides
+                group rt by rt.PeptideSequence
+                into g
+                select new MeasuredRetentionTime(g.Key, GetBestRt(g), true, IsStandard(g))).ToList();
+        }
+
+        private static double GetBestRt(IEnumerable<MeasuredRetentionTime> rtValues)
+        {
+            return new Statistics(rtValues.Select(rt => rt.RetentionTime)).Median();
+        }
+
+        private static bool IsStandard(IEnumerable<MeasuredRetentionTime> rtValues)
+        {
+            return rtValues.Any(rt => rt.IsStandard);
         }
 
         private IList<PeptideGroupDocNode> MergeEqualGroups(IProgressMonitor progressMonitor,
@@ -689,7 +737,7 @@ namespace pwiz.Skyline.Model
             foreach (var groupsToMerge in listKeys.Select(k => dictGroupsToMergeLists[k]))
             {
                 if (groupsToMerge.Count == 1)
-                    peptideGroupsNew.Add(groupsToMerge[0]);
+                    peptideGroupsNew.Add(groupsToMerge[0].Merge());
                 else
                 {
                     var nodeGroupNew = groupsToMerge[0];

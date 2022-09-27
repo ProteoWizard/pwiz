@@ -330,6 +330,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnAIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_A;
             resources.ApplyResources(this.btnAIons, "btnAIons");
             this.btnAIons.Name = "btnAIons";
+            this.btnAIons.Click += new System.EventHandler(this.aionsContextMenuItem_Click);
             // 
             // btnBIons
             // 
@@ -337,6 +338,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_B;
             resources.ApplyResources(this.btnBIons, "btnBIons");
             this.btnBIons.Name = "btnBIons";
+            this.btnBIons.Click += new System.EventHandler(this.bionsContextMenuItem_Click);
             // 
             // btnCIons
             // 
@@ -344,6 +346,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_C;
             resources.ApplyResources(this.btnCIons, "btnCIons");
             this.btnCIons.Name = "btnCIons";
+            this.btnCIons.Click += new System.EventHandler(this.cionsContextMenuItem_Click);
             // 
             // btnXIons
             // 
@@ -351,6 +354,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnXIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_X;
             resources.ApplyResources(this.btnXIons, "btnXIons");
             this.btnXIons.Name = "btnXIons";
+            this.btnXIons.Click += new System.EventHandler(this.xionsContextMenuItem_Click);
             // 
             // btnYIons
             // 
@@ -358,6 +362,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnYIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Y;
             resources.ApplyResources(this.btnYIons, "btnYIons");
             this.btnYIons.Name = "btnYIons";
+            this.btnYIons.Click += new System.EventHandler(this.yionsContextMenuItem_Click);
             // 
             // btnZIons
             // 
@@ -365,6 +370,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnZIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Z;
             resources.ApplyResources(this.btnZIons, "btnZIons");
             this.btnZIons.Name = "btnZIons";
+            this.btnZIons.Click += new System.EventHandler(this.zionsContextMenuItem_Click);
             // 
             // btnFragmentIons
             // 
@@ -372,6 +378,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnFragmentIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_fragments;
             resources.ApplyResources(this.btnFragmentIons, "btnFragmentIons");
             this.btnFragmentIons.Name = "btnFragmentIons";
+            this.btnFragmentIons.Click += new System.EventHandler(this.fragmentionsContextMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
@@ -384,6 +391,7 @@ namespace pwiz.Skyline.SettingsUI
             this.charge1Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_1;
             resources.ApplyResources(this.charge1Button, "charge1Button");
             this.charge1Button.Name = "charge1Button";
+            this.charge1Button.Click += new System.EventHandler(this.charge1ContextMenuItem_Click);
             // 
             // charge2Button
             // 
@@ -391,6 +399,7 @@ namespace pwiz.Skyline.SettingsUI
             this.charge2Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_2;
             resources.ApplyResources(this.charge2Button, "charge2Button");
             this.charge2Button.Name = "charge2Button";
+            this.charge2Button.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -416,6 +425,7 @@ namespace pwiz.Skyline.SettingsUI
             this.copyMetafileButton.Image = global::pwiz.Skyline.Properties.Resources.Copy;
             resources.ApplyResources(this.copyMetafileButton, "copyMetafileButton");
             this.copyMetafileButton.Name = "copyMetafileButton";
+            this.copyMetafileButton.Click += new System.EventHandler(this.copyMetafileButton_Click);
             // 
             // btnCopy
             // 
@@ -423,6 +433,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy_Bitmap;
             resources.ApplyResources(this.btnCopy, "btnCopy");
             this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // btnSave
             // 
@@ -430,6 +441,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave.Image = global::pwiz.Skyline.Properties.Resources.Save;
             resources.ApplyResources(this.btnSave, "btnSave");
             this.btnSave.Name = "btnSave";
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnPrint
             // 
@@ -437,6 +449,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnPrint.Image = global::pwiz.Skyline.Properties.Resources.Print;
             resources.ApplyResources(this.btnPrint, "btnPrint");
             this.btnPrint.Name = "btnPrint";
+            this.btnPrint.Click += new System.EventHandler(this.btnPrint_Click);
             // 
             // panel2
             // 
