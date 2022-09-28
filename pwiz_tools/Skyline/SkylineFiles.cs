@@ -2002,7 +2002,7 @@ namespace pwiz.Skyline
                     isAssociateProteins = columnDlg.checkBoxAssociateProteins.Checked;
 
                     // Store the text for the audit log if it didn't come from a file
-                    if (inputs.InputFilename == null)
+                    if (string.IsNullOrEmpty(inputs.InputFilename))
                     {
                         // Grab the final grid contents (may have been altered by Associate Proteins, or user additions/deletions
                         var sb = new StringBuilder();
@@ -2139,6 +2139,7 @@ namespace pwiz.Skyline
                 object[] args;
 
                 // Log the column assignments
+                // CONSIDER(brendanx): It would be better to use an object that subclasses AuditLogOperationSettings
                 var columnsUsed = (colSelections == null || colSelections.Count == 0)
                     ? null
                     : string.Format(Resources.SkylineWindow_ImportMassList_Columns_identified_as__0_, TextUtil.ToCsvLine(colSelections.Select(s => $@"'{s}'")));
@@ -2155,7 +2156,7 @@ namespace pwiz.Skyline
                 extraInfo.Add(columnsUsed);
 
                 // Imported from file
-                if (inputs.InputFilename != null)
+                if (!string.IsNullOrEmpty(inputs.InputFilename))
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library_from_file : MessageType.imported_transition_list_from_file;
                     args = new object[] { AuditLogPath.Create(inputs.InputFilename) };
@@ -2165,11 +2166,10 @@ namespace pwiz.Skyline
                 else
                 {
                     msgType = assayLibrary ? MessageType.imported_assay_library : MessageType.imported_transition_list;
-                    args = new object[0];
+                    args = Array.Empty<object>();
                     extraInfo.Add(gridValues ?? inputs.InputText);
                 }
 
-                // CONSIDER: This doesn't seem like enough, because it doesn't store the column selections and protein association
                 return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, args), 
                     TextUtil.LineSeparate(extraInfo.Where(s => !string.IsNullOrEmpty(s)))).Merge(docPair, entryCreators);
             });
