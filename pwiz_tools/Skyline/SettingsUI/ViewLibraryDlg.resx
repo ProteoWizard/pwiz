@@ -1251,45 +1251,6 @@
   <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
     <value>Ion Types</value>
   </data>
-  <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
-  <data name="aionsContextMenuItem.Text" xml:space="preserve">
-    <value>A-ions</value>
-  </data>
-  <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
-  <data name="bionsContextMenuItem.Text" xml:space="preserve">
-    <value>B-ions</value>
-  </data>
-  <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
-  <data name="cionsContextMenuItem.Text" xml:space="preserve">
-    <value>C-ions</value>
-  </data>
-  <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
-  <data name="xionsContextMenuItem.Text" xml:space="preserve">
-    <value>X-ions</value>
-  </data>
-  <data name="yionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
-  <data name="yionsContextMenuItem.Text" xml:space="preserve">
-    <value>Y-ions</value>
-  </data>
-  <data name="zionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
-  <data name="zionsContextMenuItem.Text" xml:space="preserve">
-    <value>Z-ions</value>
-  </data>
-  <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>263, 32</value>
-  </data>
   <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
     <value>Fragment Ions</value>
   </data>
@@ -1298,6 +1259,12 @@
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
     <value>Precursor</value>
+  </data>
+  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
+    <value>Special Ions</value>
   </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
     <value>260, 6</value>
@@ -1334,6 +1301,12 @@
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Observed m/z Values</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>Mass Error</value>
   </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>

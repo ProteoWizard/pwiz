@@ -54,6 +54,7 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel = new System.Windows.Forms.Panel();
             this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.MsGraphExtension();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.specialionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnAIons = new System.Windows.Forms.ToolStripButton();
             this.btnBIons = new System.Windows.Forms.ToolStripButton();
@@ -93,6 +94,7 @@ namespace pwiz.Skyline.SettingsUI
             this.scoreContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.massErrorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -524,6 +526,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { 
             this.ionTypesContextMenuItem,
+            this.specialionsContextMenuItem,
             this.fragmentionsContextMenuItem,
             this.precursorIonContextMenuItem,
             this.toolStripSeparator11,
@@ -533,6 +536,7 @@ namespace pwiz.Skyline.SettingsUI
             this.scoreContextMenuItem,
             this.ionMzValuesContextMenuItem,
             this.observedMzValuesContextMenuItem,
+            this.massErrorToolStripMenuItem,
             this.duplicatesContextMenuItem,
             this.toolStripSeparator13,
             this.lockYaxisContextMenuItem,
@@ -566,6 +570,15 @@ namespace pwiz.Skyline.SettingsUI
             this.precursorIonContextMenuItem.Name = "precursorIonContextMenuItem";
             resources.ApplyResources(this.precursorIonContextMenuItem, "precursorIonContextMenuItem");
             this.precursorIonContextMenuItem.Click += new System.EventHandler(this.precursorIonContextMenuItem_Click);
+            
+            // 
+            // specialionsContextMenuItem
+            // 
+            this.specialionsContextMenuItem.CheckOnClick = true;
+            this.specialionsContextMenuItem.Name = "specialionsContextMenuItem";
+            resources.ApplyResources(this.specialionsContextMenuItem, "specialionsContextMenuItem");
+            this.specialionsContextMenuItem.Click += new System.EventHandler(this.specialionsContextMenuItem_Click);
+
             // 
             // toolStripSeparator11
             // 
@@ -610,6 +623,13 @@ namespace pwiz.Skyline.SettingsUI
             this.observedMzValuesContextMenuItem.Name = "observedMzValuesContextMenuItem";
             resources.ApplyResources(this.observedMzValuesContextMenuItem, "observedMzValuesContextMenuItem");
             this.observedMzValuesContextMenuItem.Click += new System.EventHandler(this.observedMzValuesContextMenuItem_Click);
+            // 
+            // massErrorToolStripMenuItem
+            // 
+            this.massErrorToolStripMenuItem.CheckOnClick = true;
+            this.massErrorToolStripMenuItem.Name = "massErrorToolStripMenuItem";
+            resources.ApplyResources(this.massErrorToolStripMenuItem, "massErrorToolStripMenuItem");
+            this.massErrorToolStripMenuItem.Click += new System.EventHandler(this.massErrorToolStripMenuItem_Click);
             // 
             // duplicatesContextMenuItem
             // 
@@ -735,6 +755,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private System.Windows.Forms.ToolStripMenuItem fragmentionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorIonContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem specialionsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripMenuItem ranksContextMenuItem;
@@ -749,6 +770,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbShowModMasses;
         private System.Windows.Forms.ToolStripMenuItem ionMzValuesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem observedMzValuesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
         private System.Windows.Forms.Button btnAddAll;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.CheckBox cbAssociateProteins;

@@ -67,10 +67,6 @@ namespace pwiz.Skyline.Controls
 
     public class ChargeSelectionPanel : FlowLayoutPanel, IControlSize
     {
-        public event Action<bool> OnCharge1Changed;
-        public event Action<bool> OnCharge2Changed;
-        public event Action<bool> OnCharge3Changed;
-        public event Action<bool> OnCharge4Changed;
         public event Action<int, bool> OnChargeChanged;
         
         public ChargeSelectionPanel()

@@ -169,11 +169,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries = new SettingsListComboDriver<LibrarySpec>(comboLibrary, Settings.Default.SpectralLibraryList);
             Settings.Default.SpectralLibraryList.ListChanged += SpectralLibraryList_ListChanged;
 
-            GraphSettings = new GraphSpectrumSettings(selectionChanged =>
-            {
-                UpdateUI(selectionChanged);
-                (Owner as SkylineWindow)?.UpdateSpectrumGraph(selectionChanged);
-            });
+            GraphSettings = new GraphSpectrumSettings(UpdateGraphs);
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
@@ -203,6 +199,12 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
+        }
+
+        private void UpdateGraphs(bool selectionChanged)
+        {
+            UpdateUI(selectionChanged);
+            (Owner as SkylineWindow)?.UpdateSpectrumGraph(selectionChanged);
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -950,6 +952,7 @@ namespace pwiz.Skyline.SettingsUI
                             ShowScores = Settings.Default.ShowLibraryScores,
                             ShowMz = Settings.Default.ShowIonMz,
                             ShowObservedMz = Settings.Default.ShowObservedMz,
+                            ShowMassError = Settings.Default.ShowFullScanMassError,
                             ShowDuplicates = Settings.Default.ShowDuplicateIons,
                             FontSize = Settings.Default.SpectrumFontSize,
                             LineWidth = Settings.Default.SpectrumLineWidth
@@ -1193,6 +1196,8 @@ namespace pwiz.Skyline.SettingsUI
 
             menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+            menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
+            specialionsContextMenuItem.Checked = set.ShowSpecialIons;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
             menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
@@ -1208,6 +1213,8 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
             menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
+            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
@@ -1657,14 +1664,9 @@ namespace pwiz.Skyline.SettingsUI
             GraphSettings.ShowCharge2 = !GraphSettings.ShowCharge2;
         }
 
-        private void charge3ContextMenuItem_Click(object sender, EventArgs e)
+        private void specialionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSettings.ShowCharge3 = !GraphSettings.ShowCharge3;
-        }
-
-        private void charge4ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            GraphSettings.ShowCharge4 = !GraphSettings.ShowCharge4;
+            GraphSettings.ShowSpecialIons = !GraphSettings.ShowSpecialIons;
         }
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
@@ -1701,19 +1703,19 @@ namespace pwiz.Skyline.SettingsUI
         private void ranksContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
-            UpdateUI();
+            UpdateGraphs(true);
         }
 
         private void scoreContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowLibraryScores = !Settings.Default.ShowLibraryScores;
-            UpdateUI();
+            UpdateGraphs(true);
         }
 
         private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
-            UpdateUI();
+            GraphSettings.ShowSpecialIons = !Settings.Default.ShowIonMz;
+            UpdateGraphs(true);
         }
 
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
@@ -1721,10 +1723,16 @@ namespace pwiz.Skyline.SettingsUI
             SetObservedMzValues(!Settings.Default.ShowObservedMz);
         }
 
+        private void massErrorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanMassError = !Settings.Default.ShowFullScanMassError;
+            UpdateGraphs(true);
+        }
+
         public void SetObservedMzValues(bool on)
         {
             Settings.Default.ShowObservedMz = on;
-            UpdateUI();
+            UpdateGraphs(true);
         }
 
         private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
