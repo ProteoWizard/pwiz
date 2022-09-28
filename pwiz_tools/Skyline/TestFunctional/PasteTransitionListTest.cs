@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
             // Paste in the same list and verify that the invalid column positions were not saved
             LoadNewDocument(true);
             var transitions1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            WaitForConditionUI(() => transitions1.WindowShown);
+            transitions1.WaitForShown();
             
             RunUI(() =>
             {

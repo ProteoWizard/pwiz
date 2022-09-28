@@ -33,6 +33,7 @@ using System.Data;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.FileUI
         public MassListImporter Importer { get; set; }
         public List<LiteDropDownList> ComboBoxes { get; private set; }
 
-        public bool WindowShown { get; private set; }
+        private ManualResetEvent _windowShownEvent;
 
         private bool ShowIgnoredCols { get; set; }
 
@@ -131,6 +132,8 @@ namespace pwiz.Skyline.FileUI
 
         public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath, bool assayLibrary)
         {
+            _windowShownEvent = new ManualResetEvent(false);
+
             Importer = importer;
             _docCurrent = docCurrent;
             _inputs = inputs;
@@ -160,6 +163,27 @@ namespace pwiz.Skyline.FileUI
             IgnoreAllEmptyCols();
             //dataGrid.Update();
             ResizeComboBoxes();
+        }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (components != null)
+                    components.Dispose();
+
+                _windowShownEvent.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        public void WaitForShown()
+        {
+            _windowShownEvent.WaitOne();
         }
 
         public Rectangle ScreenRect
@@ -793,7 +817,7 @@ namespace pwiz.Skyline.FileUI
             dataGrid.Columns[comboBoxIndex].DefaultCellStyle.ForeColor = foreColor;
         }
 
-        private void OnColumnsShown(object sender, EventArgs e)
+        private void form_Shown(object sender, EventArgs e)
         {
             foreach (var comboBox in ComboBoxes)
             {
@@ -801,13 +825,13 @@ namespace pwiz.Skyline.FileUI
             }
 
             // After initial display, see if we should enable AssociateProteins - which may cause a dialog to appear
-            if (checkBoxAssociateProteins.Visible && !WindowShown)
+            if (checkBoxAssociateProteins.Visible)
             {
                 // If there's a background proteome, use it
                 checkBoxAssociateProteins.Checked = true;
             }
 
-            WindowShown = true;
+            _windowShownEvent.Set();
         }
 
         // Hides columns if the data is not being used and the appropriate setting is selected
@@ -989,6 +1013,9 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
+            // Wait until the window is fully shown to do processing below
+            WaitForShown();
+
             var isAssociateProteins = checkBoxAssociateProteins.Checked;
 
             Assume.IsTrue(isAssociated || !isAssociateProteins, @"expected a complete associate proteins preview");
@@ -1032,6 +1059,9 @@ namespace pwiz.Skyline.FileUI
 
         public void CheckForErrors()
         {
+            // Wait until the window is fully shown to do processing below
+            WaitForShown();
+
             CheckForErrors(false);
         }
 

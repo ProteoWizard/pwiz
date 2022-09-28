@@ -2112,7 +2112,6 @@ namespace pwiz.SkylineTestUtil
             if (expectColumnSelectDialog)
             {
                 var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             }
             else
@@ -2126,7 +2125,6 @@ namespace pwiz.SkylineTestUtil
             if (expectColumnSelectDialog)
             {
                 var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
-                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             }
             else
