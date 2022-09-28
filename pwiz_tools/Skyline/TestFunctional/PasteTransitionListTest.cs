@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
                 int covCol = 0;
                 RunUI(() =>
                 {
-                    var thermBoxes = therm.CurrentColumnPositions();
+                    var thermBoxes = therm.CurrentColSelections();
                     // Checks that automatically assigning column headers works properly
                     AssertEx.AreEqual(protName, thermBoxes[0]);
                     AssertEx.AreEqual(peptide, thermBoxes[1]);
@@ -164,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() =>
             {
-                var peptideBoxes = peptideTransitionList.CurrentColumnPositions();
+                var peptideBoxes = peptideTransitionList.CurrentColSelections();
                 // Column positions are only saved if at least one combobox is changed, so
                 // change a couple in order to trigger column saving
                 peptideBoxes[14] = ignoreColumn;
@@ -184,7 +184,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() => 
             {
-                Assert.AreEqual(labelType, peptideTransitionList1.CurrentColumnPositions()[4]);
+                Assert.AreEqual(labelType, peptideTransitionList1.CurrentColSelections()[4]);
                 peptideTransitionList1.CancelDialog();
             });
 
@@ -196,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
             LoadNewDocument(true);
             RunUI(() =>
             {
-                var diffPeptideBoxes = peptideTransitionListDiffHeaders.CurrentColumnPositions();
+                var diffPeptideBoxes = peptideTransitionListDiffHeaders.CurrentColSelections();
                 // Checks that the program did not use the saved indices
                 Assert.AreNotEqual(diffPeptideBoxes[4], 1);
 
@@ -214,11 +214,11 @@ namespace pwiz.SkylineTestFunctional
                 // Checks that two comboboxes cannot have the same header (unless it is Ignore Column)
                 dlg.SetSelectedColumnTypes(dlg.SupportedColumnTypes[1]); // Set 1st column
                 dlg.SetSelectedColumnTypes(null, dlg.SupportedColumnTypes[1]); // Leave 1st column alone, try to set 2nd column to same value
-                var columnTypes = dlg.CurrentColumnPositions();
+                var columnTypes = dlg.CurrentColSelections();
                 Assert.AreNotEqual(columnTypes[0], columnTypes[1]);
 
                 dlg.SetSelectedColumnTypes(null, null, ignoreColumn, ignoreColumn); // Leave first two columns alone, set next two to "ignore"
-                columnTypes = dlg.CurrentColumnPositions();
+                columnTypes = dlg.CurrentColSelections();
                 Assert.AreEqual(columnTypes[2], columnTypes[3]);
                 // Checks resizing of comboboxes 
                 var oldBoxWidth = dlg.ColumnTypeControlWidths[0];
@@ -261,7 +261,7 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() =>
             {
-                var transitions1Boxes = transitions1.CurrentColumnPositions();
+                var transitions1Boxes = transitions1.CurrentColSelections();
                 Assert.AreNotEqual(transitions1Boxes[0], Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 Assert.AreNotEqual(transitions1Boxes[1], Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
                 Assert.AreNotEqual(transitions1Boxes[3], Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column);
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify that we did not use the saved position of "precursor m/z"
             RunUI(() =>
             {
-                var pep1Boxes = pep1.CurrentColumnPositions();
+                var pep1Boxes = pep1.CurrentColSelections();
                 Assert.AreNotEqual(pep1Boxes[2], pep1.SupportedColumnTypes[6]);
                 // Verify that we did use the detected values instead
                 Assert.AreEqual(pep1Boxes[4], pep1.SupportedColumnTypes[8]);

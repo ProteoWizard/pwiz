@@ -657,7 +657,55 @@ namespace pwiz.Skyline.Model
             if (seqBuilder != null)
                 AddPeptideGroup(peptideGroupsNew, seqBuilder, irtPeptides, librarySpectra, errorList);
 
-            return MergeEqualGroups(progressMonitor, peptideGroupsNew, ref status);
+            var peptideGroupsResult = MergeEqualGroups(progressMonitor, peptideGroupsNew, ref status);
+            if (!ArrayUtil.ReferencesEqual(peptideGroupsResult, peptideGroupsNew))
+            {
+                var irtPeptidesMerged = MergeRtInfo(irtPeptides);
+                irtPeptides.Clear();
+                irtPeptides.AddRange(irtPeptidesMerged);
+                
+                var librarySpectraMerged = MergeSpectra(librarySpectra, errorList);
+                librarySpectra.Clear();
+                librarySpectra.AddRange(librarySpectraMerged);
+            }
+
+            return peptideGroupsResult;
+        }
+
+        private List<SpectrumMzInfo> MergeSpectra(List<SpectrumMzInfo> librarySpectra, List<TransitionImportErrorInfo> errorList)
+        {
+            var mergedSpectra = new List<SpectrumMzInfo>();
+            foreach (var g in librarySpectra.GroupBy(s => s.Key))
+            {
+                var combined = g.First();
+                foreach (var other in g.Skip(1))
+                {
+                    combined = combined.CombineSpectrumInfo(other, out var combineErrors);
+                    if (combineErrors.Count > 0)
+                        errorList.AddRange(combineErrors);
+                }
+                mergedSpectra.Add(combined);
+            }
+
+            return mergedSpectra;
+        }
+
+        private List<MeasuredRetentionTime> MergeRtInfo(List<MeasuredRetentionTime> irtPeptides)
+        {
+            return (from rt in irtPeptides
+                group rt by rt.PeptideSequence
+                into g
+                select new MeasuredRetentionTime(g.Key, GetBestRt(g), true, IsStandard(g))).ToList();
+        }
+
+        private static double GetBestRt(IEnumerable<MeasuredRetentionTime> rtValues)
+        {
+            return new Statistics(rtValues.Select(rt => rt.RetentionTime)).Median();
+        }
+
+        private static bool IsStandard(IEnumerable<MeasuredRetentionTime> rtValues)
+        {
+            return rtValues.Any(rt => rt.IsStandard);
         }
 
         private IList<PeptideGroupDocNode> MergeEqualGroups(IProgressMonitor progressMonitor,
@@ -689,7 +737,7 @@ namespace pwiz.Skyline.Model
             foreach (var groupsToMerge in listKeys.Select(k => dictGroupsToMergeLists[k]))
             {
                 if (groupsToMerge.Count == 1)
-                    peptideGroupsNew.Add(groupsToMerge[0]);
+                    peptideGroupsNew.Add(groupsToMerge[0].Merge());
                 else
                 {
                     var nodeGroupNew = groupsToMerge[0];
@@ -2709,45 +2757,6 @@ namespace pwiz.Skyline.Model
         public MzMatchException(string message, long lineNum, int colNum)
             : base(message, TextUtil.LineSeparate(string.Empty, Resources.MzMatchException_suggestion), lineNum, colNum)
         { }
-    }
-
-    public class LineColNumberedIoException : IOException
-    {
-        public LineColNumberedIoException(string message, long lineNum, int colIndex)
-            : base(FormatMessage(message, lineNum, colIndex))
-        {
-            PlainMessage = message;
-            LineNumber = lineNum;
-            ColumnIndex = colIndex;
-        }
-
-        public LineColNumberedIoException(string message, string suggestion, long lineNum, int colIndex)
-            : base(TextUtil.LineSeparate(FormatMessage(message, lineNum, colIndex), suggestion))
-        {
-            PlainMessage = TextUtil.LineSeparate(message, suggestion);
-            LineNumber = lineNum;
-            ColumnIndex = colIndex;
-        }
-
-        public LineColNumberedIoException(string message, long lineNum, int colIndex, Exception inner)
-            : base(FormatMessage(message, lineNum, colIndex), inner)
-        {
-            PlainMessage = message;
-            LineNumber = lineNum;
-            ColumnIndex = colIndex;
-        }
-
-        private static string FormatMessage(string message, long lineNum, int colIndex)
-        {
-            if (colIndex == -1)
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
-            else
-                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
-        }
-
-        public string PlainMessage { get; private set; }
-        public long LineNumber { get; private set; }
-        public int ColumnIndex { get; private set; }
     }
 
     public class PeptideGroupBuilder

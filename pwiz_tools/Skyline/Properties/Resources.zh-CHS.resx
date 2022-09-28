@@ -11635,10 +11635,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>正在查找 FASTA 文件中的肽段</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
-    <value>母离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值或留空，Skyline 将为您进行计算。</value>
+    <value>母离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值，或留空来让Skyline 为您进行计算。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
-    <value>子离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值或留空，Skyline 将为您进行计算。</value>
+    <value>子离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值，或留空来让Skyline 为您进行计算。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
     <value>母离子公式和质荷比值在任何电荷状态下都不一致。</value>
@@ -11686,7 +11686,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>{1} 的得分阈值 {0} 只包括得分理想的鉴定。</value>
   </data>
   <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_" xml:space="preserve">
-    <value>{1} 的得分阈值 {1} 包括所有鉴定。</value>
+    <value>{1} 的得分阈值 {0} 包括所有鉴定。</value>
   </data>
   <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_" xml:space="preserve">
     <value>{1} 的得分阈值 {0} 异常宽松。</value>
@@ -11777,13 +11777,13 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>正在计算蛋白质簇</value>
   </data>
   <data name="ProteinAssociation_Removing_subset_proteins" xml:space="preserve">
-    <value>正在删除子集蛋白质</value>
+    <value>正在删除蛋白质子集</value>
   </data>
   <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
     <value>查找能解释所有肽段的最小蛋白质组列表(&amp;M)</value>
   </data>
   <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
-    <value>删除子集蛋白质组(&amp;R)</value>
+    <value>删除蛋白质组子集(&amp;R)</value>
   </data>
   <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
     <value>每个蛋白质组的最小肽段数(&amp;N)</value>
@@ -11792,10 +11792,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>点积：{0:0.0000}</value>
   </data>
   <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
-    <value>第 {0} 行出错：在 {2} 位置出现无效的非 ASCII 字符 '{1}' ；是否确定这是 FASTA 文件？</value>
+    <value>第 {0} 行出错：在 {2} 位置出现无效的非 ASCII 字符 '{1}' ；确定这是 FASTA 文件吗？</value>
   </data>
   <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
-    <value>将所有文档肽段组织到关联的蛋白质或蛋白质组中。</value>
+    <value>将所有文档中的肽段组织到关联的蛋白质或蛋白质组中。</value>
   </data>
   <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
     <value>现有蛋白质关联将被丢弃。</value>

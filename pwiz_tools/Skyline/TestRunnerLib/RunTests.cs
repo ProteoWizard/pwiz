@@ -88,7 +88,7 @@ namespace TestRunnerLib
                         {
                             new TestRunnerContext
                             {
-                                Properties = { ["TestName"] = TestClassType.Name }
+                                Properties = { ["TestName"] = TestMethod.Name }
                             }
                         });
                         _isAuditLogTest = (bool)auditLogProp.GetValue(testObj);
