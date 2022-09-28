@@ -57,12 +57,7 @@ namespace pwiz.SkylineTestFunctional
             string[] columnOrder)
         {
             var allErrorText = string.Empty;
-            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
-                !clipText.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
-            {
-                clipText = clipText.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
-            }
-            clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            clipText = ToLocalText(clipText);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = clipText);
 
@@ -100,6 +95,18 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(windowDlg, windowDlg.CancelDialog);
             }
             WaitForClosedForm(transitionDlg);
+        }
+
+        private static string ToLocalText(string text)
+        {
+            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
+                !text.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
+            {
+                text = text.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
+            }
+
+            text = text.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            return text;
         }
 
         const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
@@ -1007,11 +1014,21 @@ namespace pwiz.SkylineTestFunctional
                 NewDocument();
 
                 // Now see what happens when we add an extra trailing field in a data line (so more columns in line than in header)
-                var longData = textCSV.Replace(lineEnd, lineEnd+@",paintball");
+                const string suffixField = @",paintball";
+                var longData = textCSV.Replace(lineEnd, lineEnd + suffixField);
                 AssertEx.AreNotEqual(longData, textCSV, "did something change in the test code?");
                 docOrig = SkylineWindow.Document;
-                TestError(longData, null, null);
-                WaitForDocumentChange(docOrig);
+                string expectedError = null;
+                if (loop == 1)
+                {
+                    // When the user can't see the field to use in making column decisions, an error is shown
+                    var lineText = ToLocalText(longData.Split('\n').First(l => l.EndsWith(suffixField)));
+                    expectedError =
+                        string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_, lineText, 12, 11);
+                }
+                TestError(longData, expectedError, null);
+                if (expectedError == null)
+                    WaitForDocumentChange(docOrig);
                 NewDocument();
 
                 if (loop == 0)
