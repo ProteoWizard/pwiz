@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
                 var pasteText = TransitionsClipboardText;
                 var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
-                // WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
                 var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(columnSelectDlg.OkDialog); // Some peptides aren't in background proteome
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(associateProteinsDlg.OkDialog);
                 RunUI(() =>
@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                 var pasteText = "LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
                 var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
-                // WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
                 var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => columnSelectDlg.CheckForErrors()); // Some peptides aren't in background proteome
                 var noErrDlg = ShowDialog<MessageDlg>(associateProteinsDlg.OkDialog);
                 Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
