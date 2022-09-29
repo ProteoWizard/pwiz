@@ -2077,11 +2077,13 @@ namespace pwiz.SkylineTestUtil
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
             // Verify that we don't use "Explicit*" language in dropdowns for assay library import
-            var items = transitionSelectDlg.ComboBoxes.First().Items;
-            AssertEx.AreEqual(isAssayLibrary,
-                items.Any(item => Equals(item, Resources.PasteDlg_UpdateMoleculeType_Retention_Time)));
-            AssertEx.AreEqual(!isAssayLibrary, 
-                items.Any(item => Equals(item, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time)));
+            var expectedHeaderTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes(isAssayLibrary);
+            var unexpectedHeaderTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes(!isAssayLibrary);
+            var forbidden = unexpectedHeaderTypes.Where(t => !expectedHeaderTypes.Contains(t)).Select(t => t.Item1).ToArray();
+            AssertEx.IsTrue(forbidden.Length > 0); // Headers should differ somewhat when importing assay library
+            var items = transitionSelectDlg.ComboBoxes.First().Items.Select(item => item.ToString()).ToArray();
+            AssertEx.IsTrue(!items.Any(forbidden.Contains));
+
             if (errorList == null)
             {
                 OkDialog(transitionSelectDlg, transitionSelectDlg.OkDialog);

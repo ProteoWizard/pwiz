@@ -70,18 +70,18 @@ namespace pwiz.Skyline.Model
 
         public ExplicitTransitionGroupValues ChangeIonMobility(double? imNew, eIonMobilityUnits unitsNew)
         {
-            var explicitTransitionGroupValues = ChangeProp(ImClone(this), (im, v) => im.IonMobility = v, imNew);
-            return ChangeProp(ImClone(explicitTransitionGroupValues), (im, v) => im.IonMobilityUnits = v, unitsNew);
+            var explicitTransitionGroupValues = Equals(imNew, this.IonMobility) ? this : ChangeProp(ImClone(this), (im, v) => im.IonMobility = v, imNew);
+            return Equals(unitsNew, this.IonMobilityUnits) ? explicitTransitionGroupValues : ChangeProp(ImClone(explicitTransitionGroupValues), (im, v) => im.IonMobilityUnits = v, unitsNew);
         }
 
         public ExplicitTransitionGroupValues ChangeCollisionalCrossSection(double? ccs)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.CollisionalCrossSectionSqA = v, ccs);
+            return Equals(ccs, this.CollisionalCrossSectionSqA) ? this : ChangeProp(ImClone(this), (im, v) => im.CollisionalCrossSectionSqA = v, ccs);
         }
 
         public ExplicitTransitionGroupValues ChangeCollisionEnergy(double? ce)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.CollisionEnergy = v, ce);
+            return Equals(ce, this.CollisionEnergy) ? this : ChangeProp(ImClone(this), (im, v) => im.CollisionEnergy = v, ce);
         }
 
         protected bool Equals(ExplicitTransitionGroupValues other)

@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -59,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
             TestEmbeddedIrts();
 
             TestAssayImport2();
+            TestPaser();
         }
 
         protected void TestAssayImportGeneral()
@@ -215,19 +217,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("AQUA4_Human_Existing_Calc-assay", currentLibraries.LibrarySpecs[0].Name);
                 var currentLibrary = currentLibraries.Libraries[0];
                 Assert.AreEqual(12, currentLibrary.SpectrumCount);
-                Assert.AreEqual(12, docCurrent.MoleculeTransitionGroups.Count(tg => tg.ExplicitValues.IonMobility.HasValue));
-                // The data has fake ion mobility values set as 1+(mz/2), this should appear in document and in library
-                var mobilities = new HashSet<double>();
-                foreach (var tg in docCurrent.MoleculeTransitionGroups.Where(n => n.ExplicitValues.IonMobility.HasValue))
-                {
-                    var imExpected = 1 + (0.5 * tg.PrecursorMz);
-                    AssertEx.IsTrue(Math.Abs(imExpected - tg.ExplicitValues.IonMobility.Value) < 0.0001);
-                    mobilities.Add(tg.ExplicitValues.IonMobility.Value);
-                }
+                // The data has fake ion mobility values set as 1+(mz/2), this should appear in library
                 foreach(var key in currentLibrary.Keys)
                 {
                     var spec = currentLibrary.GetSpectra(key, IsotopeLabelType.light, LibraryRedundancy.all).First();
-                    AssertEx.IsTrue(mobilities.Any(im => Math.Abs(im - spec.IonMobilityInfo.IonMobility.Mobility.Value) < 0.0001));
+                    AssertEx.IsTrue(spec.IonMobilityInfo.IonMobility.Mobility.HasValue);
+                    AssertEx.AreEqual(eIonMobilityUnits.inverse_K0_Vsec_per_cm2, spec.IonMobilityInfo.IonMobility.Units);
                 }
             });
 
@@ -1175,6 +1170,61 @@ namespace pwiz.SkylineTestFunctional
             foreach (var nodePep in standardGroup.Peptides)
                 Assert.IsTrue(biognosysTargets.ContainsKey(nodePep.ModifiedTarget));
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void TestPaser()
+        {
+            var txtPaser =
+                "PrecursorMz\tProductMz\tAnnotation\tProteinId\tGeneName\tPeptideSequence\tModifiedPeptideSequence\tPrecursorCharge\tLibraryIntensity\tNormalizedRetentionTime\tPrecursorIonMobility\tFragmentType\tFragmentCharge\tFragmentSeriesNumber\tFragmentLossType\tDecoyMobility\r\n" +
+                "455.740693\t611.325988\ty5^1\tP04196\tP04196\tIADAHLDR\tIADAHLDR\t2\t5214.866434\t20.49698273123607\t0.8467999999999987\ty\t1\t5\t\t1.0551737300670958\r\n" +
+                "657.010784\t467.224876\tb4^1\tP04114\tP04114\tTIHDLHLFIENIDFNK\tTIHDLHLFIENIDFNK\t3\t1877.282403\t72.22338448248237\t0.8796639241517041\tb\t1\t4\t\t0.7898170321876461\r\n" +
+                "455.740693\t621.33549\tb6^1\tP04196\tP04196\tIADAHLDR\tIADAHLDR\t2\t280.898876\t20.49698273123607\t0.8467999999999987\tb\t1\t6\t\t1.0551737300670958\r\n" +
+                "657.010784\t489.263804\tb8^2\tP04114\tP04114\tTIHDLHLFIENIDFNK\tTIHDLHLFIENIDFNK\t3\t6017.323145\t72.22338448248237\t0.8796639241517041\tb\t2\t8\t\t0.7898170321876461\r\n" +
+                "455.740693\t726.352932\ty6^1\tP04196\tP04196\tIADAHLDR\tIADAHLDR\t2\t7823.772915\t20.49698273123607\t0.8467999999999987\ty\t1\t6\t\t1.0551737300670958\r\n" +
+                "657.010784\t496.75601\ty8^2\tP04114\tP04114\tTIHDLHLFIENIDFNK\tTIHDLHLFIENIDFNK\t3\t468.687675\t72.22338448248237\t0.8796639241517041\ty\t2\t8\t\t0.7898170321876461\r\n";
+
+            var csvFile = TestFilesDir.GetTestPath("_ip2_ip2_data_paser_spectral_library__timsTOFHT_plasma_lib_dilution.tsv");
+            File.WriteAllText(csvFile, txtPaser);
+
+            RunUI(() => SkylineWindow.NewDocument());
+            var doc = SkylineWindow.Document;
+
+            // Enable use of ion mobility values from spectral libraries, and set a nonzero resolving power
+            var ionMobilityFilteringSettings =
+                doc.Settings.TransitionSettings.IonMobilityFiltering
+                    .ChangeUseSpectralLibraryIonMobilityValues(true)
+                    .ChangeFilterWindowWidthCalculator(new IonMobilityWindowWidthCalculator(30.0));
+            RunUI(() => SkylineWindow.ModifyDocument("adjust ion mobility filter settings", skyDoc =>
+                skyDoc.ChangeSettings(
+                    doc.Settings.ChangeTransitionSettings(
+                        doc.Settings.TransitionSettings.ChangeIonMobilityFiltering(ionMobilityFilteringSettings)))));
+            doc = WaitForDocumentChange(doc);
+            var skyFile = TestFilesDir.GetTestPath("PASeRimport.sky");
+            RunUI(() => Assert.IsTrue(SkylineWindow.SaveDocument(skyFile)));
+            doc = WaitForDocumentChange(doc);
+
+            // Import assay library
+            ImportAssayLibrarySkipColumnSelect(csvFile);
+            var chooseIrt = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
+            OkDialog(chooseIrt, () => chooseIrt.OkDialogStandard(IrtStandard.BIOGNOSYS_11));
+            doc = WaitForDocumentChange(doc);
+
+            // Make sure that things like RT and IM are library values rather than explicit values
+            foreach (var ppp in doc.PeptidePrecursorPairs)
+            {
+                AssertEx.AreEqual( ExplicitTransitionGroupValues.EMPTY, ppp.NodeGroup.ExplicitValues, "Expected no explicit values to be set, should all be in library");
+                if (!Equals(ppp.NodePep.GlobalStandardType, StandardType.IRT))
+                {
+                    var libKey = ppp.NodeGroup.GetLibKey(doc.Settings, ppp.NodePep);
+                    doc.Settings.PeptideSettings.Libraries.TryGetSpectralLibraryIonMobilities(new[] { libKey }, 
+                        null, out var libraryIonMobilityInfo);
+                    var imsFilter = doc.Settings.GetIonMobilityFilter(ppp.NodePep, ppp.NodeGroup, null,
+                        libraryIonMobilityInfo, null, 0);
+                    AssertEx.AreEqual(eIonMobilityUnits.inverse_K0_Vsec_per_cm2, imsFilter.IonMobilityUnits);
+                    var expectedIM = Equals(libKey.Target.Sequence, "IADAHLDR") ? 0.8468 : 0.87966;
+                    AssertEx.AreEqual(expectedIM, imsFilter.IonMobility.Mobility, 0.001);
+                }
+            }
         }
 
         // Expects a message dialog after import window closes

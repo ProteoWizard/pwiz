@@ -2196,7 +2196,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (resultDict.Count > foundDictKeys.Count)
             {
                 // Other libraries contributed some drift info
-                ionMobilities = new LibraryIonMobilityInfo(filePath.GetFilePath(), false, resultDict);
+                ionMobilities = new LibraryIonMobilityInfo(filePath?.GetFilePath(), false, resultDict);
             }
             return ionMobilities != null;
         }
