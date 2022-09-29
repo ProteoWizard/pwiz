@@ -47,7 +47,7 @@ namespace pwiz.Skyline.FileUI
 
         public bool WindowShown { get; private set; }
 
-        private bool showIgnoredCols { get; set; }
+        private bool ShowIgnoredCols { get; set; }
 
         // These are only for error checking
         private readonly SrmDocument _docCurrent;
@@ -61,8 +61,9 @@ namespace pwiz.Skyline.FileUI
         private int _originalProteinIndex;
         private int _originalPeptideIndex;
         private string[] _originalColumnIDs;
-        private string[] _columnDropdownNamesAtSuccessfulAssociateProteins; // State of headers at last associate proteins success
-        private string[] _currentColumnDropdownNames => ComboBoxes.Select(c => c.Text).ToArray();
+
+        private string[] _colSelectionsAtSuccessfulAssociateProteins = Array.Empty<string>(); // State of headers at last associate proteins success
+
         // Protein name, FASTA sequence pairs for importing peptides into protein groups
         private Dictionary<string, FastaSequence> _dictNameSeq;
         // Stores the position of proteins for _proteinTip
@@ -125,8 +126,8 @@ namespace pwiz.Skyline.FileUI
         }
 
         // When we switch modes we want to keep the column positions that were set in the mode not being used
-        private List<string> smallMolColPositions;
-        private List<string> peptideColPositions;
+        private List<string> _smallMolColSelections;
+        private List<string> _peptideColSelections;
 
         public ImportTransitionListColumnSelectDlg(MassListImporter importer, SrmDocument docCurrent, MassListInputs inputs, IdentityPath insertPath, bool assayLibrary)
         {
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.FileUI
             _inputs = inputs;
             _insertPath = insertPath;
             _originalLines = Importer.RowReader.Lines.ToArray();
-            showIgnoredCols = true;
+            ShowIgnoredCols = true;
 
             _proteinTip = new NodeTip(this) { Parent = this };
             previousIndices = new int[Importer.RowReader.Lines[0].ParseDsvFields(Importer.Separator).Length + 1];
@@ -150,10 +151,10 @@ namespace pwiz.Skyline.FileUI
             }
 
             fileLabel.Text = Importer.Inputs.InputFilename;
+            InitializeRadioButtons();
             InitializeComboBoxes();
             DisplayData();
             PopulateComboBoxes();
-            InitializeRadioButtons();
             checkBoxAssociateProteins.Visible = CheckboxVisible();
             UpdateAssociateProteinsState();
             IgnoreAllEmptyCols();
@@ -382,7 +383,7 @@ namespace pwiz.Skyline.FileUI
             {
                 // Inspect the input for lines with more columns than headers, or more headers than columns
                 _numColumns = 0;
-                for (var index = 0; index < Importer.RowReader.Lines.Count; index++)
+                for (var index = 0; index < Math.Min(Importer.RowReader.Lines.Count, N_DISPLAY_LINES); index++)
                 {
                     var parsedLine = Importer.RowReader.Lines[index].ParseDsvFields(Importer.Separator);
                     _numColumns = Math.Max(_numColumns, parsedLine.Length);
@@ -404,7 +405,8 @@ namespace pwiz.Skyline.FileUI
             var table = new DataTable("TransitionList");
 
             // Create the first row of columns
-            var numColumns = GetColumnCount(true);
+            var numColumns = GetColumnCount(false);
+            Assume.IsTrue(numColumns == ComboBoxes.Count, @"InitializeComboBoxes() must be called before DisplayData()");
             for (var i = 0; i < numColumns; i++)
                 table.Columns.Add().DataType = typeof(string);
 
@@ -463,6 +465,14 @@ namespace pwiz.Skyline.FileUI
                 comboPanelInner.Controls.Add(combo);
                 combo.BringToFront();
             }
+            // The combo boxes index into the previousIndices array. So make sure they match in size.
+            if (previousIndices.Length != ComboBoxes.Count)
+            {
+                var reallocIndices = new int[ComboBoxes.Count];
+                Array.Copy(previousIndices, reallocIndices, Math.Min(ComboBoxes.Count, previousIndices.Length));
+                previousIndices = reallocIndices;
+            }
+
         }
 
         SrmDocument.DOCUMENT_TYPE GetRadioType()
@@ -559,7 +569,7 @@ namespace pwiz.Skyline.FileUI
         private void UseSavedColumnsIfValid()
         {
             // Save the detected columns so if the saved columns are invalid we can revert back
-            var detectedColumns = CurrentColumnPositions();
+            var detectedColumns = CurrentColSelections();
 
             // Accept invariant column names from settings as well as localized
             var headerTypesInvariant = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypesInvariant();
@@ -575,30 +585,42 @@ namespace pwiz.Skyline.FileUI
             }
 
             // Change the column positions to the saved columns so we can check if they produce valid transitions
-            SetColumnPositions(settingsColumns);
+            SetColSelections(settingsColumns);
 
-            // Make a copy of the current transition list with N_DISPLAY_LINES rows or the length of the current transition list (whichever is smaller)
-            var input = new MassListInputs(Importer.RowReader.Lines.Take(N_DISPLAY_LINES).ToArray());
-            // Try importing that list to check for errors
-            var insertionParams = new DocumentChecked();
-            List<TransitionImportErrorInfo> testErrorList1 = null;
-            insertionParams.Document = _docCurrent.ImportMassList(input, Importer, null,
-                _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                out insertionParams.LibrarySpectra, out testErrorList1, out insertionParams.PeptideGroups,
-                null, SrmDocument.DOCUMENT_TYPE.none, false);
-
-            var allError = ReferenceEquals(insertionParams.Document, _docCurrent);
-            // If all transitions are errors, reset the columns to the detected columns
-            if (allError)
+            if (!IsValidColSelections())
             {
-                SetColumnPositions(detectedColumns);
+                SetColSelections(detectedColumns);
             }
+        }
+
+        private bool IsValidColSelections()
+        {
+            var savedLines = Importer.RowReader.Lines;
+            SrmDocument docImport;
+            try
+            {
+                // Make a copy of the current transition list with N_DISPLAY_LINES rows or the length
+                // of the current transition list (whichever is smaller)
+                Importer.RowReader.Lines = savedLines.Take(N_DISPLAY_LINES).ToArray();
+                // Try importing that list to check for errors
+                docImport = _docCurrent.ImportMassList(Importer.Inputs, Importer, null,
+                    _insertPath, out _, out _, out _, out _, out _, null,
+                    SrmDocument.DOCUMENT_TYPE.none, false);
+            }
+            finally
+            {
+                Importer.RowReader.Lines = savedLines;
+            }
+
+            // If this operation changed the document at all, the the column selections
+            // are considered valid.
+            return !ReferenceEquals(docImport, _docCurrent);
         }
 
         /// <summary>
         /// Returns the current column positions as a list of strings
         /// </summary>
-        public List<string> CurrentColumnPositions()
+        public List<string> CurrentColSelections()
         {
             return ComboBoxes.Select(combo => combo.Text).ToList();
         }
@@ -608,7 +630,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public List<string> CurrentColumnPositionsInvariant()
         {
-            return ColumnNamesInvariant(CurrentColumnPositions());
+            return ColumnNamesInvariant(CurrentColSelections());
         }
         public static List<string> ColumnNamesInvariant(IEnumerable<string> local)
         {
@@ -653,7 +675,7 @@ namespace pwiz.Skyline.FileUI
         /// <summary>
         /// Set the combo boxes and column indices given a list of column positions
         /// </summary>
-        private void SetColumnPositions(IList<string> columnPositions)
+        private void SetColSelections(IList<string> columnPositions)
         {
             for (int i = 0; i < columnPositions.Count; i++)
             {
@@ -672,7 +694,7 @@ namespace pwiz.Skyline.FileUI
             var activeColumnIndexes = new List<int>();
             for (var i = 0; i < dataGrid.Columns.Count; i++)
             {
-                if (!(!showIgnoredCols && Equals(ComboBoxes[i].Text,
+                if (!(!ShowIgnoredCols && Equals(ComboBoxes[i].Text,
                     Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column)))
                 {
                     activeColumnIndexes.Add(i);
@@ -796,8 +818,8 @@ namespace pwiz.Skyline.FileUI
             if (Equals(comboBox.Text, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column))
             {
                 var comboBoxIndex = ComboBoxes.IndexOf(comboBox);
-                dataGrid.Columns[comboBoxIndex].Visible = showIgnoredCols;
-                comboBox.Visible = showIgnoredCols;
+                dataGrid.Columns[comboBoxIndex].Visible = ShowIgnoredCols;
+                comboBox.Visible = ShowIgnoredCols;
             }
         }
 
@@ -971,10 +993,8 @@ namespace pwiz.Skyline.FileUI
 
             Assume.IsTrue(isAssociated || !isAssociateProteins, @"expected a complete associate proteins preview");
 
-            // Check for errors is expensive with associate proteins, so don't re-run if associate proteins is known good
-            if (InsertionParams == null || // Haven't checked yet
-                _associateProteinsMode == AssociateProteinsMode.preview || // Either no associate proteins, or we didn't do the full input set
-                !_currentColumnDropdownNames.SequenceEqual(_columnDropdownNamesAtSuccessfulAssociateProteins)) // Something changed in headers selection since last association
+            // Check for errors is expensive with associate proteins, if a known good check exists
+            if (IsCheckForErrorsNecessary(isAssociateProteins)) // Something changed in headers selection since last association
             {
                 if (CheckForErrors(true)) // Look for errors, be silent on success
                     return;
@@ -985,6 +1005,24 @@ namespace pwiz.Skyline.FileUI
                 return; // User canceled out of associate proteins dialog, wait and see what they do next
             }
             DialogResult = DialogResult.OK;
+        }
+
+        private bool IsCheckForErrorsNecessary(bool isAssociateProteins)
+        {
+            if (InsertionParams == null)
+                return true;    // Haven't checked yet
+            var currentColumnSelections = CurrentColSelections();
+            if (!currentColumnSelections.SequenceEqual(InsertionParams.ColSelections))
+                return true;    // Columns selections changed since check
+            if (isAssociateProteins)
+            {
+                if (_associateProteinsMode == AssociateProteinsMode.preview)
+                    return true;    // Either no associate proteins, or we didn't do the full input set
+                if (!currentColumnSelections.SequenceEqual(_colSelectionsAtSuccessfulAssociateProteins))
+                    return true;    // Columns changes since protein associations
+            }
+
+            return false;
         }
 
         private void ButtonCheckForErrors_Click(object sender, EventArgs e)
@@ -1029,7 +1067,7 @@ namespace pwiz.Skyline.FileUI
             public List<MeasuredRetentionTime> IrtPeptides;
             public List<SpectrumMzInfo> LibrarySpectra;
             public List<PeptideGroupDocNode> PeptideGroups;
-            public List<string> ColumnHeaderList;
+            public List<string> ColSelections;
             public bool IsSmallMoleculeList;
         }
 
@@ -1110,17 +1148,17 @@ namespace pwiz.Skyline.FileUI
             if (radioPeptide.Checked)
             {
                 // Set the column headers to what they were last time we were in peptide mode
-                if (peptideColPositions != null)
+                if (_peptideColSelections != null)
                 {
-                    SetColumnPositions(peptideColPositions);
+                    SetColSelections(_peptideColSelections);
                 }
             }
             else
             {
                 // Set the column headers to what they were last time we were in small molecule mode
-                if (smallMolColPositions != null)
+                if (_smallMolColSelections != null)
                 {
-                    SetColumnPositions(smallMolColPositions);
+                    SetColSelections(_smallMolColSelections);
                 }
             }
         }
@@ -1132,6 +1170,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (comboBox.Text == string.Empty)
                 {
+                    Assume.IsTrue(comboBox.Items.Count > 0);
                     comboBox.SelectedIndex = 0;
                 }
                 
@@ -1155,6 +1194,8 @@ namespace pwiz.Skyline.FileUI
             {
                 radioPeptide.Checked = Settings.Default.TransitionListInsertPeptides;
             }
+
+            radioPeptide.CheckedChanged += radioPeptide_CheckedChanged;
         }
 
         /// <summary>
@@ -1172,7 +1213,7 @@ namespace pwiz.Skyline.FileUI
             bool hasHeaders = Importer.RowReader.Indices.Headers != null;
             List<TransitionImportErrorInfo> testErrorList = null;
             var errorCheckCanceled = true;
-            insertionParams.ColumnHeaderList = CurrentColumnPositions();
+            insertionParams.ColSelections = CurrentColSelections();
 
             if (checkBoxAssociateProteins.Checked)
             {
@@ -1210,7 +1251,7 @@ namespace pwiz.Skyline.FileUI
                         : new Dictionary<string, FastaSequence>();
                     insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                         _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColumnHeaderList, GetRadioType(), hasHeaders, 
+                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, GetRadioType(), hasHeaders, 
                         insertionParams.ProteinAssociations);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
@@ -1260,7 +1301,7 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.PasteDlg_ShowNoErrors_No_errors);
             }
             
-            insertionParams.ColumnHeaderList = CurrentColumnPositions();
+            insertionParams.ColSelections = CurrentColSelections();
             insertionParams.IsSmallMoleculeList = !radioPeptide.Checked;
             InsertionParams = insertionParams;
             return false; // No errors
@@ -1341,7 +1382,7 @@ namespace pwiz.Skyline.FileUI
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            showIgnoredCols = CheckShowUnusedColumns.Checked;
+            ShowIgnoredCols = CheckShowUnusedColumns.Checked;
 
             // Goes through each comboBox and sets their visibility if they are an Ignore Column
             foreach (var comboBox in ComboBoxes)
@@ -1358,7 +1399,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (radioPeptide.Checked)
             {
-                smallMolColPositions = CurrentColumnPositions();
+                _smallMolColSelections = CurrentColSelections();
             }
             else
             {
@@ -1369,7 +1410,7 @@ namespace pwiz.Skyline.FileUI
                     checkBoxAssociateProteins.Checked = false;
                 }
 
-                peptideColPositions = CurrentColumnPositions();
+                _peptideColSelections = CurrentColSelections();
             }
             foreach (var comboBox in ComboBoxes)
             {
@@ -1386,18 +1427,18 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void ReverseAssociateProteins()
         {
-            var oldPositions = CurrentColumnPositions();
+            var oldColSelections = CurrentColSelections();
             dataGrid.Columns[0].HeaderText = null;
             // Show the original transition list without the protein names we have added
             Importer.RowReader.Lines = _originalLines;
             Importer.RowReader.Indices.Headers = _originalColumnIDs;
-            _columnDropdownNamesAtSuccessfulAssociateProteins = Array.Empty<string>();
+            _colSelectionsAtSuccessfulAssociateProteins = Array.Empty<string>();
             isAssociated = false;
 
             UpdateForm();
-            oldPositions.RemoveAt(0);
+            oldColSelections.RemoveAt(0);
             dataGrid.Columns[0].DefaultCellStyle.Font = new Font(dataGrid.DefaultCellStyle.Font, FontStyle.Regular);
-            SetColumnPositions(oldPositions);
+            SetColSelections(oldColSelections);
             // Make sure we set the "Protein Name" column back to it's original index
             if (_originalProteinIndex != -1 && _originalProteinIndex != 0)
             {
@@ -1428,7 +1469,7 @@ namespace pwiz.Skyline.FileUI
         /// <returns>True if not canceled by user</returns>
         private bool UpdateProteinAssociationState(AssociateProteinsMode mode)
         {
-            var oldPositions = CurrentColumnPositions();
+            var originalColSelections = CurrentColSelections();
             var proteinName = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name;
             var canceled = false;
             if (checkBoxAssociateProteins.Checked)
@@ -1439,7 +1480,8 @@ namespace pwiz.Skyline.FileUI
                     return true; // Not canceled
                 }
 
-                if (isAssociated && Equals(mode, AssociateProteinsMode.preview) && Equals(_columnDropdownNamesAtSuccessfulAssociateProteins, _currentColumnDropdownNames))
+                if (isAssociated && Equals(mode, AssociateProteinsMode.preview) &&
+                    originalColSelections.SequenceEqual(_colSelectionsAtSuccessfulAssociateProteins))
                 {
                     return true; // We have already handled the first bunch of visible peptides
                 }
@@ -1447,7 +1489,7 @@ namespace pwiz.Skyline.FileUI
                 if (mode == AssociateProteinsMode.preview)
                 {
                     // Newly ticked checkbox
-                    _columnDropdownNamesAtSuccessfulAssociateProteins = Array.Empty<string>();
+                    _colSelectionsAtSuccessfulAssociateProteins = Array.Empty<string>();
                     _originalColumnIDs = Importer.RowReader.Indices.Headers;
                     _originalProteinIndex = Importer.RowReader.Indices.ProteinColumn;
                 }
@@ -1486,17 +1528,17 @@ namespace pwiz.Skyline.FileUI
                         // If there was an existing protein name box, set its value to "Ignore Column"
                         if (_originalProteinIndex != -1)
                         {
-                            oldPositions[_originalProteinIndex] =
+                            originalColSelections[_originalProteinIndex] =
                                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
                         }
 
-                        oldPositions.Insert(0, proteinName);
+                        originalColSelections.Insert(0, proteinName);
                     }
 
-                    SetColumnPositions(oldPositions);
+                    SetColSelections(originalColSelections);
                     if (mode != AssociateProteinsMode.preview)
                     {
-                        _columnDropdownNamesAtSuccessfulAssociateProteins = _currentColumnDropdownNames;
+                        _colSelectionsAtSuccessfulAssociateProteins = CurrentColSelections().ToArray();
                     }
                     isAssociated = true;
                 }
