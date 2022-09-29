@@ -82,6 +82,9 @@ public ref class ReaderConfig
     /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
     bool combineIonMobilitySpectra;
 
+    // when true, scans with only calibration data will be ignored (currently Waters lockmass only)
+    bool ignoreCalibrationScans;
+
     /// when true, Waters SONAR data populates "drift" information with bin number instead of pseudo ion mobility values
     bool reportSonarBins;
 
@@ -114,6 +117,7 @@ public ref class ReaderConfig
     , acceptZeroLengthSpectra(false)
     , ignoreZeroIntensityPoints(false)
     , combineIonMobilitySpectra(false)
+    , ignoreCalibrationScans(false)
     , reportSonarBins(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
