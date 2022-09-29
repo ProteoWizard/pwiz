@@ -737,6 +737,10 @@ class PWIZ_API_DECL SpectrumList
     /// - e.g. spectrumList.min_level_accepted([](const Spectrum& s) { return s.hasCVParam(MS_ms_level); })
     virtual DetailLevel min_level_accepted(std::function<boost::tribool(const Spectrum&)> predicate) const;
 
+    // returns true if the source data contains calibration spectra (e.g. Waters lockmass function) that is being skipped over
+    // (as with msconvert's --ignoreCalibrationScans flag)
+    virtual bool calibrationSpectraAreOmitted() const;
+
     virtual ~SpectrumList(){} 
 };
 
