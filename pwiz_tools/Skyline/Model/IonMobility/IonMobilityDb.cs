@@ -435,7 +435,8 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public static IonMobilityDb CreateIonMobilityDb(string path, string libraryName, bool minimized)
         {
-            if (!Directory.Exists(Path.GetDirectoryName(path)))
+            var directoryName = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directoryName) && !Directory.Exists(directoryName))
             {
                 var message =
                     string.Format(
