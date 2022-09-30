@@ -11841,4 +11841,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
 	  <value>Creating ion mobility library "{0}" in "{1}"...</value>
   </data>
+  <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
+	  <value>Unable to determine format of delimiter separated value file</value>
+  </data>
 </root>

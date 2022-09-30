@@ -32194,6 +32194,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to determine format of delimiter separated value file.
+        /// </summary>
+        public static string TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file {
+            get {
+                return ResourceManager.GetString("TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_v" +
+                        "alue_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All Files.
         /// </summary>
         public static string TextUtil_FileDialogFiltersAll_All_Files {

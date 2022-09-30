@@ -236,28 +236,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        // Checks that string value could have been partially created with given format
-        // e.g. value "Oh no! My dog has fleas! Now what?" agrees with format "My {0} has {1}!" because it contains
-        // "My ", " has ", and "!" in that order.
-        public static void ContainsSimilar(string value, string format)
-        {
-            var testString = value;
-            foreach (var part in format.Split('{'))
-            {
-                var close = part.IndexOf('}');
-                var find = part.Substring(close+1);
-                if (!string.IsNullOrEmpty(find))
-                {
-                    var index = testString.IndexOf(find, StringComparison.Ordinal);
-                    if (index < 0)
-                    {
-                        Fail("The text '{0}' does not have expected format '{1}'", value, format);
-                    }
-                    testString = testString.Substring(index + find.Length);
-                }
-            }
-        }
-
         public static void FileExists(string filePath, string message = null)
         {
             if (!File.Exists(filePath))
@@ -934,6 +912,59 @@ namespace pwiz.SkylineTestUtil
             string file1 = File.ReadAllText(path1);
             string file2 = File.ReadAllText(path2);
             NoDiff(file1, file2, null, columnTolerances);
+        }
+
+        /// <summary>
+        /// Compare two DSV files, accounting for possible L10N differences
+        /// </summary>
+        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders)
+        {
+            var lines1 = File.ReadAllLines(path1);
+            var lines2 = File.ReadAllLines(path2);
+            AssertEx.AreEqual(lines1.Length, lines2.Length, "Expected same line count");
+            if (lines1.Length == 0)
+            {
+                return;
+            }
+
+            var sep1 = TextUtil.DetermineDsvDelimiter(lines1, out var colCount1);
+            var sep2 = TextUtil.DetermineDsvDelimiter(lines2, out var colCount2);
+            var reader1 = new DsvFileReader(path1, sep1, hasHeaders);
+            var reader2 = new DsvFileReader(path2, sep2, hasHeaders);
+            for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
+            {
+                var cols1 = reader1.ReadLine();
+                var cols2 = reader2.ReadLine();
+                if ((cols1 == null) && (cols2 == null))
+                {
+                    return;
+                }
+                if ((cols1 == null) || (cols2 == null))
+                {
+                    AssertEx.Fail("Unexpected failure comparing DSV files");
+                    return; // Avoids a null check warning below
+                }
+                for (var colNum = 0; colNum < cols1.Length; colNum++)
+                {
+                    var same = Equals(cols1[colNum], cols2[colNum]);
+
+                    if (!same)
+                    {
+                        // Possibly a decimal value, or even a field like "1.234[M+H]" vs "1,234[M+H]"
+                        string Dotted(string val)
+                        {
+                            return val.Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator, @"_dot_").
+                                Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, @"_dot_");
+                        }
+                        same = Equals(Dotted(cols1[colNum]), Dotted(cols2[colNum]));
+                    }
+
+                    if (!same)
+                    {
+                        AssertEx.AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
+                    }
+                }
+            }
         }
 
         public static void FieldsEqual(string target, string actual, int countFields, bool allowForNumericPrecisionDifferences = false)
