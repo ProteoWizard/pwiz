@@ -72,13 +72,15 @@ namespace pwiz.Skyline.FileUI
         private List<Protein> _proteinList;
 
         // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
-        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes => GetKnownHeaderTypes(_isAssayLibraryImport);
+        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes;
 
         public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypes(bool isAssayLibraryImport)
         {
+            var explicitVsLibraryColumnHeaders = GetExplicitVsLibraryColumnHeaders();
+
             Tuple<string, SrmDocument.DOCUMENT_TYPE> CreateKnownHeaderTuple(string hdr, SrmDocument.DOCUMENT_TYPE mode)
             {
-                if (isAssayLibraryImport && ExplicitVsLibraryColumnHeaders.TryGetValue(hdr, out var hdrNonExplicit))
+                if (isAssayLibraryImport && explicitVsLibraryColumnHeaders.TryGetValue(hdr, out var hdrNonExplicit))
                 {
                     return new Tuple<string, SrmDocument.DOCUMENT_TYPE>(hdrNonExplicit, mode);
                 }
@@ -148,6 +150,8 @@ namespace pwiz.Skyline.FileUI
             _insertPath = insertPath;
             _originalLines = Importer.RowReader.Lines.ToArray();
             _isAssayLibraryImport = assayLibrary;
+            KnownHeaderTypes = GetKnownHeaderTypes(assayLibrary);
+            _explicitVsLibraryColumnHeaders = GetExplicitVsLibraryColumnHeaders();
             _showIgnoredCols = true;
 
 
@@ -579,18 +583,23 @@ namespace pwiz.Skyline.FileUI
         }
 
         // Some headers (RT and IM related only, for now) we show as "explicit" in the context of transition lists, but not for assay libraries
-        private static Dictionary<string, string> ExplicitVsLibraryColumnHeaders = new Dictionary<string, string>()
+        // NOTE: Never store localized text in a static global variable, use a function to calculate it and a member to cache it
+        private readonly Dictionary<string, string> _explicitVsLibraryColumnHeaders;
+        private static Dictionary<string, string> GetExplicitVsLibraryColumnHeaders()
         {
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, Resources.PasteDlg_UpdateMoleculeType_Retention_Time_Window },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, Resources.PasteDlg_UpdateMoleculeType_Retention_Time },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, Resources.PasteDlg_UpdateMoleculeType_Compensation_Voltage },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_ },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_ },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_Units },
-            { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility }
-        };
+            return new Dictionary<string, string>
+            {
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, Resources.PasteDlg_UpdateMoleculeType_Retention_Time_Window },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, Resources.PasteDlg_UpdateMoleculeType_Retention_Time },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, Resources.PasteDlg_UpdateMoleculeType_Compensation_Voltage },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_ },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_ },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_Units },
+                { Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility }
+            };
+        }
 
         // Applies the saved column positions if they seem to be correct
         private void UseSavedColumnsIfValid()
@@ -802,7 +811,7 @@ namespace pwiz.Skyline.FileUI
         // For assay library use, some columns should be labeled without the word "Explicit"
         private string AssayLibraryVsTransitionListHeaderName(string text)
         {
-            if (_isAssayLibraryImport && ExplicitVsLibraryColumnHeaders.TryGetValue(text, out var nonExplicitVersion))
+            if (_isAssayLibraryImport && _explicitVsLibraryColumnHeaders.TryGetValue(text, out var nonExplicitVersion))
             {
                 return nonExplicitVersion;
             }
@@ -1083,7 +1092,7 @@ namespace pwiz.Skyline.FileUI
             CheckForErrors(false);
         }
 
-        private static List<string> MissingEssentialColumns { get; set; }
+        private List<string> MissingEssentialColumns { get; set; }
         // If an essential column is missing, add it to a list to display later
         private void CheckEssentialColumn(Tuple<int, string> column)
         {
