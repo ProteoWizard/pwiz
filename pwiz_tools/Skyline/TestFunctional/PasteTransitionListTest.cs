@@ -61,107 +61,45 @@ namespace pwiz.SkylineTestFunctional
             TestEmptyTransitionList();
             TestMissingFragmentMz();
 
-            RunUI(() => SkylineWindow.NewDocument());
+            // Import a peptide transition list with many recognized headers.
+            var lines = File.ReadAllLines(TestFilesDir.GetTestPath("PeptideTransitionListExtendedHeaders.csv"));
+            var formColSelections = TestHeaderScenario(lines, true);
 
-            var allText = File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListExtendedHeaders.csv"));
-            var lines = allText.Split('\n');
-            List<string> savedHeaderTypesSetting = null;
+            // Save the column selections that actually got used and saved to settings.
+            // This includes the correction made to fix the IMS header conflict.
+            var savedColSelections = Settings.Default.CustomImportTransitionListColumnTypesList;
 
-            for (var pass = 0; pass < 5; pass++)
+            // Replace header line with the column selections as they appeared initially
+            // in the ImportTransitionListColumnSelectDlg these will be in the current
+            // locale language, to make sure we aren't accidentally english-dependent
+            lines[0] = formColSelections.ToDsvLine(TextUtil.SEPARATOR_CSV);
+            TestHeaderScenario(lines, true);
+
+            // Remove header line, did we properly remember the order?
+            RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = savedColSelections);
+            lines = lines.Skip(1).ToArray();
+            // Note that the returned values here will be localized without the conflict
+            formColSelections = TestHeaderScenario(lines);
+
+            // The saved columns should always be in invariant format, which means
+            // we just tested using saved invariant settings.
+            var invariantColSelections = ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(formColSelections, false);
+            Assert.IsTrue(savedColSelections.SequenceEqual(invariantColSelections));
+
+            // If we are currently running in a translated language, however
+            if (!formColSelections.SequenceEqual(savedColSelections))
             {
-                var doc = SkylineWindow.Document;
-                SetClipboardText(allText);
-                var nextHeader = string.Empty;
-                var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-                int invK0Col = 0;
-                int covCol = 0;
-                RunUI(() =>
-                {
-                    var thermBoxes = therm.CurrentColSelections();
-                    // Checks that automatically assigning column headers works properly
-                    AssertEx.AreEqual(protName, thermBoxes[0]);
-                    AssertEx.AreEqual(peptide, thermBoxes[1]);
-                    AssertEx.AreEqual(precursor, thermBoxes[2]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4]);
-                    AssertEx.AreEqual(product, thermBoxes[5]);
-                    AssertEx.AreEqual(fragName, thermBoxes[7]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, thermBoxes[10]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, thermBoxes[11]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14]);
-                    AssertEx.AreEqual(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_MSEC, thermBoxes[15]);
-                    if (pass < 2)
-                        AssertEx.AreEqual(SmallMoleculeTransitionListColumnHeaders.COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0, thermBoxes[invK0Col = 16]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[17]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[18]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[19]);
-                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[20]);
-                    if (pass < 2)
-                        AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[covCol = 21]);
-                    AssertEx.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[22]);
-                    nextHeader = string.Join(",", thermBoxes);
-                });
-                if (pass < 2)
-                {
-                    // Attempt to proceed, should get an error about conflicting ion mobility declarations
-                    for (var loop = 0; loop < 2; loop++)
-                    {
-                        var errDlg = ShowDialog<ImportTransitionListErrorDlg>(therm.OkDialog);
-                        AssertEx.IsTrue(errDlg.ErrorList.Any(err => err.ErrorMessage.Contains(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations)));
-                        RunUI(() => errDlg.Close());
-                        RunUI(() => therm.ComboBoxes[loop == 0? invK0Col : covCol].SelectedIndex = 0); // Ignore the 1/K0 and CoV values
-                    }
-                }
-                OkDialog(therm, therm.OkDialog);
-                doc = WaitForDocumentChange(doc);
-                var transitionGroupDocNodes = doc.MoleculeTransitionGroups.ToArray();
-                AssertEx.AreEqual(0.5, transitionGroupDocNodes[0].ExplicitValues.IonMobility);
-                AssertEx.AreEqual(330, transitionGroupDocNodes[0].ExplicitValues.CollisionalCrossSectionSqA);
-                AssertEx.AreEqual(0.6, transitionGroupDocNodes[1].ExplicitValues.IonMobility);
-                AssertEx.AreEqual(330.3, transitionGroupDocNodes[1].ExplicitValues.CollisionalCrossSectionSqA);
-                var transitionDocNodes = doc.MoleculeTransitions.ToArray();
-                AssertEx.AreEqual(9, transitionDocNodes[0].ExplicitValues.DeclusteringPotential);
-                AssertEx.AreEqual(1.1, transitionDocNodes[1].ExplicitValues.SLens);
-                AssertEx.AreEqual(1.12, transitionDocNodes[1].ExplicitValues.ConeVoltage);
-                AssertEx.AreEqual(-0.2, transitionDocNodes[1].ExplicitValues.IonMobilityHighEnergyOffset);
-                AssertEx.AreEqual(-0.3, transitionDocNodes[2].ExplicitValues.IonMobilityHighEnergyOffset);
-
-                if (pass == 0)
-                {
-                    // Replace header line with current locale language, to make sure we aren't accidentally english-dependent
-                    lines[0] = nextHeader;
-                    savedHeaderTypesSetting = Settings.Default.CustomImportTransitionListColumnTypesList;
-                }
-                RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = savedHeaderTypesSetting);
-                if (pass == 1)
-                {
-                    // Remove header line, did we properly remember the order?
-                    lines = lines.Skip(1).ToArray();
-                }
-                allText = TextUtil.LineSeparate(lines);
-
-                if (pass == 2)
-                {
-                    // Verify that we can use settings saved in invariant format (our normal way of doing things)
-                    RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(nextHeader.Split(',')));
-                }
-                else if (pass == 3)
-                {
-                    // Verify that we can use settings saved in locale (for backward compatibility, we normally save in invariant form)
-                    RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = nextHeader.Split(',').ToList());
-                }
-                RunUI(() => { SkylineWindow.NewDocument(true); });
-                WaitForDocumentLoaded();
+                // Verify that we can use settings saved in locale (for backward compatibility)
+                RunUI(() => Settings.Default.CustomImportTransitionListColumnTypesList = formColSelections);
+                TestHeaderScenario(lines);
             }
+
+            LoadNewDocument(true);
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             // This will paste in a transition list with headers
             var peptideTransitionList = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
 
-            RunUI(() => SkylineWindow.NewDocument());
-
-            WaitForDocumentLoaded();
             RunUI(() =>
             {
                 var peptideBoxes = peptideTransitionList.CurrentColSelections();
@@ -172,40 +110,38 @@ namespace pwiz.SkylineTestFunctional
                 peptideTransitionList.SetSelectedColumnTypes(peptideBoxes.ToArray());
             });
             // Clicking the OK button should save the column locations
-            OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
+            using (new WaitDocumentChange(null, true))
+            {
+                OkDialog(peptideTransitionList, peptideTransitionList.OkDialog);
+            }
 
             // Verify that the correct columns were saved in the settings (N.B. we save the invariant strings to the settings, though we will read localized strings for backward compatibility)
             var expectedColumns = new List<string> {protName, peptide, precursor, ignoreColumn, labelType, product, ignoreColumn, fragName};
             expectedColumns.AddRange(Enumerable.Repeat(ignoreColumn, 13)); // The last 13 should all be 'ignore column'
-            CollectionAssert.AreEqual(ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(expectedColumns), Settings.Default.CustomImportTransitionListColumnTypesList);
+            CollectionAssert.AreEqual(ImportTransitionListColumnSelectDlg.ColumnNamesInvariant(expectedColumns, false), Settings.Default.CustomImportTransitionListColumnTypesList);
             
             // Paste in the same transition list and verify that the earlier modification was saved
             var peptideTransitionList1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            WaitForDocumentLoaded();
-            RunUI(() => 
-            {
-                Assert.AreEqual(labelType, peptideTransitionList1.CurrentColSelections()[4]);
-                peptideTransitionList1.CancelDialog();
-            });
+            RunUI(() => Assert.AreEqual(labelType, peptideTransitionList1.CurrentColSelections()[4]));
+            OkDialog(peptideTransitionList1, peptideTransitionList1.CancelDialog);
+
+            LoadNewDocument(true);
 
             // This will paste in the same transition list, but with different headers. The program should realize it has
             // different headers and not use the saved list of column names
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionListdiffheaders.csv")));
 
             var peptideTransitionListDiffHeaders = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            LoadNewDocument(true);
             RunUI(() =>
             {
                 var diffPeptideBoxes = peptideTransitionListDiffHeaders.CurrentColSelections();
                 // Checks that the program did not use the saved indices
                 Assert.AreNotEqual(diffPeptideBoxes[4], 1);
-
-                peptideTransitionListDiffHeaders.CancelDialog();
             });
+            OkDialog(peptideTransitionListDiffHeaders, peptideTransitionListDiffHeaders.CancelDialog);
 
             // Now check UI interactions with a bad import file
-            RunUI(() => SkylineWindow.NewDocument());
-            WaitForDocumentLoaded();
+            LoadNewDocument(false);
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
             var dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
@@ -233,9 +169,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(dlg, dlg.CancelDialog);
 
             // Now verify that we do not save invalid sets of headers
-            RunUI(() => SkylineWindow.NewDocument());
-
-            WaitForDocumentLoaded();
+            LoadNewDocument(false);
 
             SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("ThermoTransitionList.csv")));
 
@@ -311,8 +245,7 @@ namespace pwiz.SkylineTestFunctional
             // Now check UI interactions with a bad import file whose headers we correct in the dialog
             using (new CheckDocumentState(1,2,2,9))
             {
-                RunUI(() => SkylineWindow.NewDocument());
-                WaitForDocumentLoaded();
+                LoadNewDocument(false);
 
                 SetClipboardText(File.ReadAllText(TestFilesDir.GetTestPath("PeptideTransitionList.csv")));
                 dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
@@ -352,10 +285,84 @@ namespace pwiz.SkylineTestFunctional
             // As long as the message tells us that we are missing "Peptide Modified Sequence" and not "Molecule Molecule", then everything is working how we want it to
             var msg = ShowDialog<MessageDlg>(dlg.buttonCheckForErrors.PerformClick);
             Assert.IsTrue(msg.Message.Contains(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
-            msg.OkDialog();
+            OkDialog(msg, msg.OkDialog);
             OkDialog(dlg, dlg.CancelDialog);
 
             LoadNewDocument(true); // Tidy up
+        }
+
+        /// <summary>
+        /// Test transition list import for various header and column selection states
+        /// </summary>
+        /// <param name="lines">The lines to be imported</param>
+        /// <param name="expectHeaderConflict">True if a conflict in the IMS columns is expected</param>
+        /// <returns>A list of strings with the localized text of the combo box selections when
+        /// <see cref="ImportTransitionListColumnSelectDlg"/> was first shown</returns>
+        private List<string> TestHeaderScenario(string[] lines, bool expectHeaderConflict = false)
+        {
+            LoadNewDocument(true);
+            var doc = SkylineWindow.Document;
+            SetClipboardText(TextUtil.LineSeparate(lines));
+            var nextHeader = string.Empty;
+            var therm = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            int invK0Col = 0;
+            int covCol = 0;
+            var thermBoxes = new List<string>();
+            RunUI(() =>
+            {
+                thermBoxes = therm.CurrentColSelections();
+                // Checks that automatically assigning column headers works properly
+                AssertEx.AreEqual(protName, thermBoxes[0]);
+                AssertEx.AreEqual(peptide, thermBoxes[1]);
+                AssertEx.AreEqual(precursor, thermBoxes[2]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy, thermBoxes[4]);
+                AssertEx.AreEqual(product, thermBoxes[5]);
+                AssertEx.AreEqual(fragName, thermBoxes[7]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time, thermBoxes[10]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window, thermBoxes[11]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Note, thermBoxes[12]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_S_Lens, thermBoxes[13]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, thermBoxes[14]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_, thermBoxes[15]);
+                if (expectHeaderConflict)
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_, thermBoxes[invK0Col = 16]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility, thermBoxes[17]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units, thermBoxes[18]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset, thermBoxes[19]);
+                AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_, thermBoxes[20]);
+                if (expectHeaderConflict)
+                    AssertEx.AreEqual(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage, thermBoxes[covCol = 21]);
+                AssertEx.AreEqual(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential, thermBoxes[22]);
+            });
+            if (expectHeaderConflict)
+            {
+                // Attempt to proceed, should get an error about conflicting ion mobility declarations
+                foreach (var col in new[] { invK0Col, covCol }) // Turn off conflicting columns one at a time
+                {
+                    var errDlg = ShowDialog<ImportTransitionListErrorDlg>(therm.OkDialog);
+                    AssertEx.IsTrue(errDlg.ErrorList.Any(err =>
+                        err.ErrorMessage.Contains(Resources
+                            .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations)));
+                    RunUI(() => errDlg.Close());
+                    RunUI(() => therm.ComboBoxes[col].SelectedIndex = 0); // Ignore the 1/K0 and CoV values
+                }
+            }
+
+            OkDialog(therm, therm.OkDialog);
+            doc = WaitForDocumentChange(doc);
+            var transitionGroupDocNodes = doc.MoleculeTransitionGroups.ToArray();
+            AssertEx.AreEqual(0.5, transitionGroupDocNodes[0].ExplicitValues.IonMobility);
+            AssertEx.AreEqual(330, transitionGroupDocNodes[0].ExplicitValues.CollisionalCrossSectionSqA);
+            AssertEx.AreEqual(0.6, transitionGroupDocNodes[1].ExplicitValues.IonMobility);
+            AssertEx.AreEqual(330.3, transitionGroupDocNodes[1].ExplicitValues.CollisionalCrossSectionSqA);
+            var transitionDocNodes = doc.MoleculeTransitions.ToArray();
+            AssertEx.AreEqual(9, transitionDocNodes[0].ExplicitValues.DeclusteringPotential);
+            AssertEx.AreEqual(1.1, transitionDocNodes[1].ExplicitValues.SLens);
+            AssertEx.AreEqual(1.12, transitionDocNodes[1].ExplicitValues.ConeVoltage);
+            AssertEx.AreEqual(-0.2, transitionDocNodes[1].ExplicitValues.IonMobilityHighEnergyOffset);
+            AssertEx.AreEqual(-0.3, transitionDocNodes[2].ExplicitValues.IonMobilityHighEnergyOffset);
+
+            return thermBoxes;
         }
 
         private void TestPeptideOnlyDoc()

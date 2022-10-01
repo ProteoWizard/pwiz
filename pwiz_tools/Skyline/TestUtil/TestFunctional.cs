@@ -2073,17 +2073,20 @@ namespace pwiz.SkylineTestUtil
 
         private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
         {
-            var transitionSelectDlg = isAssayLibrary ?
+            var columnSelectDlg = isAssayLibrary ?
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
+
+            VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
+
             if (errorList == null)
             {
-                OkDialog(transitionSelectDlg, transitionSelectDlg.OkDialog);
+                OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             }
             else
             {
                 // We're expecting errors, collect them then move on
-                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectDlg.OkDialog);
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
                 errorList.Clear();
                 foreach (var err in errDlg.ErrorList)
                 {
@@ -2092,14 +2095,25 @@ namespace pwiz.SkylineTestUtil
                 if (proceedWithErrors)
                 {
                     OkDialog(errDlg, errDlg.AcceptButton.PerformClick);
-                    WaitForClosedForm(transitionSelectDlg);
+                    WaitForClosedForm(columnSelectDlg);
                 }
                 else
                 {
                     OkDialog(errDlg, errDlg.Close);
-                    OkDialog(transitionSelectDlg, transitionSelectDlg.CancelDialog); // Canceling the error dialog drops us back into the import dialog
+                    OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog); // Canceling the error dialog drops us back into the import dialog
                 }
             }
+        }
+
+        private static void VerifyExplicitUseInColumnSelect(bool isAssayLibrary, ImportTransitionListColumnSelectDlg transitionSelectDlg)
+        {
+            // Verify that we don't use "Explicit*" language in dropdowns for assay library import
+            var expectedHeaderTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes(isAssayLibrary);
+            var unexpectedHeaderTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes(!isAssayLibrary);
+            var forbidden = unexpectedHeaderTypes.Where(t => !expectedHeaderTypes.Contains(t)).Select(t => t.Name).ToArray();
+            AssertEx.IsTrue(forbidden.Length > 0); // Headers should differ somewhat when importing assay library
+            var items = transitionSelectDlg.ComboBoxes.SelectMany(c => c.Items.Select(item => item.ToString())).Distinct();
+            AssertEx.IsTrue(!items.Any(forbidden.Contains));
         }
 
         public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
@@ -2109,29 +2123,26 @@ namespace pwiz.SkylineTestUtil
 
         public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)
         {
-            if (expectColumnSelectDialog)
-            {
-                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
-                OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
-            }
-            else
-            {
-                RunUI(SkylineWindow.Paste);
-            }
+            PasteTransitionListSkipColumnSelect(SkylineWindow.Paste, expectColumnSelectDialog);
         }
 
         public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true)
         {
+            PasteTransitionListSkipColumnSelect(() => SkylineWindow.Paste(text), expectColumnSelectDialog);
+        }
+
+        private static void PasteTransitionListSkipColumnSelect(Action pasteAction, bool expectColumnSelectDialog)
+        {
             if (expectColumnSelectDialog)
             {
-                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste(text));
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(pasteAction);
                 WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                VerifyExplicitUseInColumnSelect(false, columnSelectDlg);
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             }
             else
             {
-                RunUI(() => SkylineWindow.Paste(text));
+                RunUI(pasteAction);
             }
         }
 
