@@ -295,7 +295,7 @@
     <value>The name for the iRT calculator created during assay library import. (optional) The default name is the document base name.</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if –irt-standards-group-name or –irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb</value>
+    <value>The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if -–irt-standards-group-name or -–irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>The path to a separate assay library containing the iRT standards to be applied to an imported assay library. (optional)</value>
