@@ -3258,8 +3258,8 @@ namespace pwiz.Skyline.Model
                         _activeExplicitTransitionGroupValues.CollisionalCrossSectionSqA, libraryIonMobilityHighEnergyOffset), 
                     Label = precursorExp.LabelType,
                     SpectrumPeaks = new SpectrumPeaksInfo(_activeLibraryIntensities.ToArray()),
-                } :
-                null;
+                }
+                : null;
             _groupLibTriples.Add(new TransitionGroupLibraryIrtTriple(currentLibrarySpectrum, newTransitionGroup, _irtValue, _activePrecursorMz));
             _activePrecursorMz = 0;
             _activeExplicitTransitionGroupValues = ExplicitTransitionGroupValues.EMPTY;

@@ -71,69 +71,81 @@ namespace pwiz.Skyline.FileUI
         // Stores the position of proteins for _proteinTip
         private List<Protein> _proteinList;
 
-        // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
-        public List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> KnownHeaderTypes;
+        public struct HeaderDocType
+        {
+            public HeaderDocType(string name, SrmDocument.DOCUMENT_TYPE docType)
+            {
+                Name = name;
+                DocType = docType;
+            }
 
-        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypes(bool isAssayLibraryImport)
+            public string Name;
+            public SrmDocument.DOCUMENT_TYPE DocType;
+        }
+
+        // This list stores headers in the order we want to present them to the user along with an identifier denoting which mode they are associated with
+        public List<HeaderDocType> KnownHeaderTypes;
+
+        public static List<HeaderDocType> GetKnownHeaderTypes(bool isAssayLibraryImport)
         {
             var explicitVsLibraryColumnHeaders = GetExplicitVsLibraryColumnHeaders();
 
-            Tuple<string, SrmDocument.DOCUMENT_TYPE> CreateKnownHeaderTuple(string hdr, SrmDocument.DOCUMENT_TYPE mode)
+            HeaderDocType CreateKnownHeaderDocType(string hdr, SrmDocument.DOCUMENT_TYPE mode)
             {
                 if (isAssayLibraryImport && explicitVsLibraryColumnHeaders.TryGetValue(hdr, out var hdrNonExplicit))
                 {
-                    return new Tuple<string, SrmDocument.DOCUMENT_TYPE>(hdrNonExplicit, mode);
+                    return new HeaderDocType(hdrNonExplicit, mode);
                 }
-                return new Tuple<string, SrmDocument.DOCUMENT_TYPE>(hdr, mode);
+                return new HeaderDocType(hdr, mode);
             }
 
-            return new List<Tuple<string, SrmDocument.DOCUMENT_TYPE>>
+            return new List<HeaderDocType>
             {
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.proteomic),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Product_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Product_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,SrmDocument.DOCUMENT_TYPE.proteomic), // e.g. y7 etc
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Product_Name,SrmDocument.DOCUMENT_TYPE.small_molecules), // Could be anything
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_S_Lens, SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_, SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_, SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(Resources.PasteDlg_UpdateMoleculeType_Note, SrmDocument.DOCUMENT_TYPE.mixed),
-                CreateKnownHeaderTuple(@"InChiKey", SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(@"CAS", SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(@"HMDB", SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(@"InChi", SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(@"SMILES", SrmDocument.DOCUMENT_TYPE.small_molecules),
-                CreateKnownHeaderTuple(@"KEGG", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Description,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Decoy,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_iRT,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Library_Intensity,SrmDocument.DOCUMENT_TYPE.proteomic),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Product_Formula,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Product_Charge,SrmDocument.DOCUMENT_TYPE.small_molecules), // This is a derived value for peptides
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Fragment_Name,SrmDocument.DOCUMENT_TYPE.proteomic), // e.g. y7 etc
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Product_Name,SrmDocument.DOCUMENT_TYPE.small_molecules), // Could be anything
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_S_Lens, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(Resources.PasteDlg_UpdateMoleculeType_Note, SrmDocument.DOCUMENT_TYPE.mixed),
+                CreateKnownHeaderDocType(@"InChiKey", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(@"CAS", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(@"HMDB", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(@"InChi", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(@"SMILES", SrmDocument.DOCUMENT_TYPE.small_molecules),
+                CreateKnownHeaderDocType(@"KEGG", SrmDocument.DOCUMENT_TYPE.small_molecules),
             };
         }
 
-        public static List<Tuple<string, SrmDocument.DOCUMENT_TYPE>> GetKnownHeaderTypesInvariant(bool isAssayLibraryImport)
+        public static List<HeaderDocType> GetKnownHeaderTypesInvariant(bool isAssayLibraryImport)
         {
             return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () => GetKnownHeaderTypes(isAssayLibraryImport));
         }
@@ -216,7 +228,8 @@ namespace pwiz.Skyline.FileUI
         private string[] ResolveMatchedProteins(int numWithDuplicates, int numUnmatched, int numFiltered, out bool canceled)
         {
             // Show a dialog asking the user how to proceed
-            using (var filterDlg = new FilterMatchedPeptidesDlg( numWithDuplicates, numUnmatched, numFiltered, Importer.RowReader.Lines.Count == 1,  
+            using (var filterDlg = new FilterMatchedPeptidesDlg(numWithDuplicates, numUnmatched, numFiltered, 
+                       Importer.RowReader.Lines.Count == 1,  
                        false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
@@ -318,8 +331,10 @@ namespace pwiz.Skyline.FileUI
                     for (var j = 0; j < associateHelper.proteinNames.Count; j++)
                     {
                         AddAssociatedProtein(fields, lines, associateHelper.proteinNames[j], associateHelper.proteins[j], true);
+                    }
                 }
-                } else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.first_occurrence) {
+                else if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.first_occurrence)
+                {
                     // If we found at least one match, edit the line to include the name
                     AddAssociatedProtein(fields, lines, associateHelper.proteinNames[0], associateHelper.proteins[0], true);
                 }
@@ -578,7 +593,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             // Did we consider all possible column types?
-            var missed = KnownHeaderTypes.Where(hdr => !_considered.Contains(hdr.Item1)).Select(hdr => hdr.Item1).ToArray();
+            var missed = KnownHeaderTypes.Where(hdr => !_considered.Contains(hdr.Name)).Select(hdr => hdr.DocType).ToArray();
             Assume.IsTrue(missed.Length == 0, @"missing handler for column(s) " + string.Join(@", ", missed));
         }
 
@@ -612,12 +627,12 @@ namespace pwiz.Skyline.FileUI
             var settingsColumns = new List<string>();
             foreach (var col in Settings.Default.CustomImportTransitionListColumnTypesList)
             {
-                var index = KnownHeaderTypes.IndexOf(s => s.Item1.Equals(col));
+                var index = KnownHeaderTypes.IndexOf(s => s.Name.Equals(col));
                 if (index < 0)
                 {
-                    index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(col));
+                    index = headerTypesInvariant.IndexOf(s => s.Name.Equals(col));
                 }
-                settingsColumns.Add(KnownHeaderTypes[Math.Max(0, index)].Item1);
+                settingsColumns.Add(KnownHeaderTypes[Math.Max(0, index)].Name);
             }
 
             // Change the column positions to the saved columns so we can check if they produce valid transitions
@@ -697,14 +712,14 @@ namespace pwiz.Skyline.FileUI
             {
                 var headerTypesInvariant = GetKnownHeaderTypesInvariant(isAssayLibraryImport);
                 var headerTypes = GetKnownHeaderTypes(isAssayLibraryImport);
-                var index = headerTypes.IndexOf(s => s.Item1.Equals(local));
+                var index = headerTypes.IndexOf(s => s.Name.Equals(local));
                 if (index < 0)
                 {
-                    index = headerTypesInvariant.IndexOf(s => s.Item1.Equals(local));
+                    index = headerTypesInvariant.IndexOf(s => s.Name.Equals(local));
                 }
                 if (index >= 0)
                 {
-                    return headerTypesInvariant[index].Item1;
+                    return headerTypesInvariant[index].Name;
                 }
             }
             return null;
@@ -773,13 +788,11 @@ namespace pwiz.Skyline.FileUI
         {
             foreach (var item in KnownHeaderTypes)
             {
-                string name = item.Item1;
-                SrmDocument.DOCUMENT_TYPE type = item.Item2;
-                if (name.Equals(text))
+                if (item.Name.Equals(text))
                 {
                     if (radioPeptide.Checked)
                     {
-                        if (type != SrmDocument.DOCUMENT_TYPE.small_molecules)
+                        if (item.DocType != SrmDocument.DOCUMENT_TYPE.small_molecules)
                         {
                             SetComboBoxText(comboBoxIndex, text);
                         }
@@ -790,7 +803,7 @@ namespace pwiz.Skyline.FileUI
                     }
                     else
                     {
-                        if (type != SrmDocument.DOCUMENT_TYPE.proteomic)
+                        if (item.DocType != SrmDocument.DOCUMENT_TYPE.proteomic)
                         {
                             SetComboBoxText(comboBoxIndex, text);
                         }
@@ -1139,8 +1152,8 @@ namespace pwiz.Skyline.FileUI
             // Add appropriate headers to the comboBox range based on the user selected mode
             foreach (var item in KnownHeaderTypes)
             {
-                string name = item.Item1;
-                SrmDocument.DOCUMENT_TYPE type = item.Item2;
+                string name = item.Name;
+                SrmDocument.DOCUMENT_TYPE type = item.DocType;
                 if (type == SrmDocument.DOCUMENT_TYPE.mixed ||
                     (type == SrmDocument.DOCUMENT_TYPE.proteomic && radioPeptide.Checked) ||
                     (type == SrmDocument.DOCUMENT_TYPE.small_molecules && !radioPeptide.Checked))
@@ -1499,8 +1512,8 @@ namespace pwiz.Skyline.FileUI
             // Make sure we set the "Protein Name" column back to it's original index
             if (_originalProteinIndex != -1 && _originalProteinIndex != 0)
             {
-                ComboBoxes[_originalProteinIndex].SelectedIndex = KnownHeaderTypes.IndexOf(new Tuple<string, SrmDocument.DOCUMENT_TYPE>
-                    (Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name, SrmDocument.DOCUMENT_TYPE.proteomic));
+                ComboBoxes[_originalProteinIndex].SelectedIndex = KnownHeaderTypes.IndexOf(new HeaderDocType(
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Protein_Name, SrmDocument.DOCUMENT_TYPE.proteomic));
             }
         }
 

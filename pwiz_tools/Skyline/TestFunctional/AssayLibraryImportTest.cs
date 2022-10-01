@@ -43,7 +43,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class AssayLibraryImportTest : AbstractFunctionalTest
+    public class AssayLibraryImportTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestAssayLibraryImport()
@@ -1186,41 +1186,41 @@ namespace pwiz.SkylineTestFunctional
             var csvFile = TestFilesDir.GetTestPath("_ip2_ip2_data_paser_spectral_library__timsTOFHT_plasma_lib_dilution.tsv");
             File.WriteAllText(csvFile, txtPaser);
 
-            RunUI(() => SkylineWindow.NewDocument());
-            var doc = SkylineWindow.Document;
+            LoadNewDocument(true);
 
             // Enable use of ion mobility values from spectral libraries, and set a nonzero resolving power
-            var ionMobilityFilteringSettings =
-                doc.Settings.TransitionSettings.IonMobilityFiltering
-                    .ChangeUseSpectralLibraryIonMobilityValues(true)
-                    .ChangeFilterWindowWidthCalculator(new IonMobilityWindowWidthCalculator(30.0));
             RunUI(() => SkylineWindow.ModifyDocument("adjust ion mobility filter settings", skyDoc =>
-                skyDoc.ChangeSettings(
-                    doc.Settings.ChangeTransitionSettings(
-                        doc.Settings.TransitionSettings.ChangeIonMobilityFiltering(ionMobilityFilteringSettings)))));
-            doc = WaitForDocumentChange(doc);
+                skyDoc.ChangeSettings(skyDoc.Settings.ChangeTransitionIonMobilityFiltering(im =>
+                    im.ChangeUseSpectralLibraryIonMobilityValues(true)
+                        .ChangeFilterWindowWidthCalculator(new IonMobilityWindowWidthCalculator(30.0))))));
+
             var skyFile = TestFilesDir.GetTestPath("PASeRimport.sky");
             RunUI(() => Assert.IsTrue(SkylineWindow.SaveDocument(skyFile)));
-            doc = WaitForDocumentChange(doc);
 
             // Import assay library
             ImportAssayLibrarySkipColumnSelect(csvFile);
             var chooseIrt = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
-            OkDialog(chooseIrt, () => chooseIrt.OkDialogStandard(IrtStandard.BIOGNOSYS_11));
-            doc = WaitForDocumentChange(doc);
+            using (new WaitDocumentChange(null, true))
+            {
+                OkDialog(chooseIrt, () => chooseIrt.OkDialogStandard(IrtStandard.BIOGNOSYS_11));
+            }
 
             // Make sure that things like RT and IM are library values rather than explicit values
+            var doc = SkylineWindow.Document;
             foreach (var ppp in doc.PeptidePrecursorPairs)
             {
                 AssertEx.AreEqual( ExplicitTransitionGroupValues.EMPTY, ppp.NodeGroup.ExplicitValues, "Expected no explicit values to be set, should all be in library");
                 if (!Equals(ppp.NodePep.GlobalStandardType, StandardType.IRT))
                 {
+                    Assert.IsNull(ppp.NodeGroup.ExplicitValues.IonMobility);    // No explicit ion mobility
+
                     var libKey = ppp.NodeGroup.GetLibKey(doc.Settings, ppp.NodePep);
                     doc.Settings.PeptideSettings.Libraries.TryGetSpectralLibraryIonMobilities(new[] { libKey }, 
                         null, out var libraryIonMobilityInfo);
                     var imsFilter = doc.Settings.GetIonMobilityFilter(ppp.NodePep, ppp.NodeGroup, null,
                         libraryIonMobilityInfo, null, 0);
-                    AssertEx.AreEqual(eIonMobilityUnits.inverse_K0_Vsec_per_cm2, imsFilter.IonMobilityUnits);
+                    AssertEx.AreEqual(eIonMobilityUnits.inverse_K0_Vsec_per_cm2, imsFilter.IonMobilityUnits,
+                        string.Format("Unexpected ion mobility filter {0}", imsFilter));
                     var expectedIM = Equals(libKey.Target.Sequence, "IADAHLDR") ? 0.8468 : 0.87966;
                     AssertEx.AreEqual(expectedIM, imsFilter.IonMobility.Mobility, 0.001);
                 }
