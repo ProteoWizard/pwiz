@@ -18,7 +18,9 @@
  */
 
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -37,84 +39,96 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class TestCommandlineCreateImsDbPerf : AbstractUnitTestEx
     {
 
-        private const string _rawFile = "010521_Enamine_U6601911_A1_f100_pos_1_1_1086.d";
-        private const string _normal = @"_normal";
-        private const string _badName = @"badname";
-        private const string _impliedName = @"impliedname";
-        private const string _badPath = @"badpath";
-        private const string _badArgs = @"badargs";
+        private const string RAW_FILE = "010521_Enamine_U6601911_A1_f100_pos_1_1_1086.d";
+
+        private string GetTestPath(string relativePath)
+        {
+            return TestFilesDirs[0].GetTestPath(relativePath);
+        }
+
+        private string GetImsDbFileName(string testMode)
+        {
+            return $"ImsDbTest{testMode}.imsdb";
+        }
+
+        private string GetImsDbFilePath(string testMode)
+        {
+            return GetTestPath(GetImsDbFileName(testMode));
+        }
 
         [TestMethod]
         public void CommandlineCreateImsDbPerfTest()
         {
-
             TestFilesZip = GetPerfTestDataURL(@"PerfCommandlineCreateImsDbTest.zip");
-            TestFilesPersistent = new[] {  _rawFile }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
+            TestFilesPersistent = new[] {  RAW_FILE }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, ".", TestFilesPersistent);
 
-            TestCreateImsdb(_normal); //  normal operation
-            TestCreateImsdb(_impliedName); //  support for  optionally not specifying "--ionmobility-library-name"
-            TestCreateImsdb(_badName); //  error handling for illegal characters in imsdb filename
-            TestCreateImsdb(_badPath); //  error handling for non-existent subdirectories in imsdb file path
-            TestCreateImsdb(_badArgs); //  error handling for specifying "--ionmobility-library-name" without "--ionmobility-library-create"
+            // Normal use
+            const string normal = @"normal";
+            TestCreateImsdb(normal, GetImsDbFilePath(normal));
 
+            // Support for  optionally not specifying "--ionmobility-library-name"
+            TestCreateImsdb(null, GetImsDbFilePath(@"implied-name"));
+
+            // Expect failure because of illegal characters in imsdb filename
+            string imsdbPathBadName = GetImsDbFilePath("bad-name:?");
+            string output = TestCreateImsdb(@"bad-name", imsdbPathBadName, true);
+            AssertEx.Contains(output,
+                string.Format(
+                    Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_,
+                    imsdbPathBadName, CommandArgs.ARG_IMSDB_CREATE.ArgumentText));
+
+            // Expect failure because of nonexistent subdirectories in path
+            const string badPath = @"bad-path";
+            output = TestCreateImsdb(badPath, Path.Combine(badPath, GetImsDbFileName(badPath)), true);
+            AssertEx.AreComparableStrings(
+                Resources.CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
+                output);
+
+            // Expect failure because of missing "--ionmobility-library-create"
+            output = TestCreateImsdb(@"bad-args", null, true);
+            AssertEx.Contains(output,
+                string.Format(
+                    Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                    CommandArgs.ARG_IMSDB_NAME.ArgumentText, CommandArgs.ARG_IMSDB_CREATE.ArgumentText));
         }
 
-        private void TestCreateImsdb(string testMode)
+        private string TestCreateImsdb(string imsdbName, string imsdbPath, bool errorExpected = false)
         {
-            var template = TestFilesDirs[0].GetTestPath("Scripps_IMS_Template.sky");
-            var inFile = TestFilesDirs[0].GetTestPath(_rawFile);
-            var root = $"ImsDbTest{testMode}";
-            var outSky = TestFilesDirs[0].GetTestPath($"{root}.sky");
-            var transitionList = TestFilesDirs[0].GetTestPath("test_run_1_transition_list.csv");
-            var imsdb = TestFilesDirs[0].GetTestPath($"{(root.EndsWith(_badName) ? root + @":?" : root)}.imsdb");
-            if (Equals(testMode, _badPath))
+            string reportFilePath = GetTestPath("Scripps_CCS_report.csv");
+            var output = RunCommand(GetPathArg(CommandArgs.ARG_IN, "Scripps_IMS_Template.sky"),
+                GetPathArg(CommandArgs.ARG_OUT, "Scripps_IMS_DB.sky"),
+                GetPathArg(CommandArgs.ARG_IMPORT_TRANSITION_LIST, "test_run_1_transition_list.csv"),
+                GetPathArg(CommandArgs.ARG_IMPORT_FILE, RAW_FILE),
+                GetOptionalArg(CommandArgs.ARG_IMSDB_CREATE, imsdbPath),
+                GetOptionalArg(CommandArgs.ARG_IMSDB_NAME, imsdbName),
+                GetArg(CommandArgs.ARG_REPORT_NAME, "Precursor CCS"),
+                GetArg(CommandArgs.ARG_REPORT_FILE, reportFilePath));
+
+            if (!errorExpected)
             {
-                imsdb = imsdb.Replace(TestFilesDirs[0].GetTestPath(string.Empty), _badPath + "\\" + _badPath);
+                AssertEx.FileExists(imsdbPath);
+
+                // Compare to expected report - may need to localize the expected copy to match the actual copy
+                AssertEx.AreEquivalentDsvFiles(GetTestPath("ImsDbTest_expected.csv"), reportFilePath, true);
             }
 
-            var outCSV = TestFilesDirs[0].GetTestPath($"{root}.csv");
-            var output = RunCommand($"--in={template}",
-                $"--out={outSky}",
-                $"--import-transition-list={transitionList}",
-                $"--import-file={inFile}",
-                Equals(testMode, _badArgs) ? string.Empty : $"--ionmobility-library-create={imsdb}",
-                Equals(testMode, _impliedName) ? string.Empty : $"--ionmobility-library-name={testMode}",
-                "--report-name=Precursor CCS",
-                $"--report-file={outCSV}");
-            if (Equals(testMode, _badName))
-            {
-                // Expect failure because of illegal characters in imsdb filename
-                AssertEx.Contains(output,
-                    string.Format(
-                        Resources
-                            .ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_,
-                        imsdb, "--ionmobility-library-create"));
-                return;
-            }
-            else if (Equals(testMode, _badPath))
-            {
-                // Expect failure because of nonexistent subdirectories in path
-                AssertEx.AreComparableStrings(
-                    Resources
-                        .CommandLine_SaveFile_Error__The_file_could_not_be_saved_to__0____Check_that_the_directory_exists_and_is_not_read_only_,
-                    output);
-                return;
-            }
-            else if (Equals(testMode, _badArgs))
-            {
-                // Expect failure because of missing "--ionmobility-library-create"
-                AssertEx.Contains(output,
-                    string.Format(
-                        Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
-                        "--ionmobility-library-name", "--ionmobility-library-create"));
-                return;
-            }
+            return output;
+        }
 
-            AssertEx.FileExists(imsdb);
+        private string GetArg(CommandArgs.Argument arg, string value)
+        {
+            return arg.GetArgumentTextWithValue(value);
+        }
 
-            // Compare to expected report - may need to localize the expected copy to match the actual copy
-            AssertEx.AreEquivalentDsvFiles(TestFilesDirs[0].GetTestPath("ImsDbTest_expected.csv"), outCSV, true);
+        private string GetOptionalArg(CommandArgs.Argument arg, string value)
+        {
+            return string.IsNullOrEmpty(value) ? string.Empty : GetArg(arg, value);
+        }
+
+        private string GetPathArg(CommandArgs.Argument arg, string value)
+        {
+            return GetArg(arg, GetTestPath(value));
         }
     }
 }
