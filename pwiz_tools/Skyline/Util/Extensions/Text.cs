@@ -716,51 +716,6 @@ namespace pwiz.Skyline.Util.Extensions
                 return false;
             }
         }
-
-        /// <summary>
-        /// Examine the lines of a DSV file an attempt to determine what kind of delimiter it uses
-        /// </summary>
-        /// <param name="lines">lines of th file</param>
-        /// <param name="columnCount">return value: column count</param>
-        /// <returns>the identified delimiter</returns>
-        /// <exception cref="LineColNumberedIoException">thrown when we can't figure it out</exception>
-        public static char DetermineDsvDelimiter(string[] lines, out int columnCount)
-        {
-
-            // If a candidate delimiter yields different column counts line to line, it's probably not the right one.
-            // So parse some distance in to see which delimiters give a consistent column count.
-            var countsPerLinePerCandidateDelimiter = new Dictionary<char, List<int>>
-            {
-                { TextUtil.SEPARATOR_CSV, new List<int>()},
-                { TextUtil.SEPARATOR_SPACE, new List<int>()},
-                { TextUtil.SEPARATOR_TSV, new List<int>()},
-                { TextUtil.SEPARATOR_CSV_INTL, new List<int>()}
-            };
-
-            for (var lineNum = 0; lineNum < Math.Min(100, lines.Length); lineNum++)
-            {
-                foreach (var sep in countsPerLinePerCandidateDelimiter.Keys)
-                {
-                    countsPerLinePerCandidateDelimiter[sep].Add((new DsvFileReader(new StringReader(lines[lineNum]), sep)).NumberOfFields);
-                }
-            }
-
-            var likelyCandidates = 
-                countsPerLinePerCandidateDelimiter.Where(kvp => kvp.Value.Distinct().Count() == 1).ToArray();
-            if (likelyCandidates.Length > 0)
-            {
-                // The candidate that yields the highest column count wins
-                var maxColumnCount = likelyCandidates.Max(kvp => kvp.Value[0]);
-                if (likelyCandidates.Count(kvp => Equals(maxColumnCount, kvp.Value[0])) == 1)
-                {
-                    var delimiter = likelyCandidates.First(kvp => Equals(maxColumnCount, kvp.Value[0])).Key;
-                    columnCount = maxColumnCount;
-                    return delimiter;
-                }
-            }
-
-            throw new LineColNumberedIoException(Resources.TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file, 1, 1);
-        }
     }
 
     /// <summary>

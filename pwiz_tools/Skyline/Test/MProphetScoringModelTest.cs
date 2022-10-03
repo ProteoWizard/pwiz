@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class MProphetScoringModelTest : AbstractUnitTest
+    public class MProphetScoringModelTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"Test\MProphetScoringModelTest.zip";  // Not L10N
 
@@ -377,7 +377,7 @@ namespace pwiz.SkylineTest
 
                 // Determine separator (comma, space, or tab).
                 var headerTest = lines[0].Trim();
-                var separator = TextUtil.DetermineDsvDelimiter(lines, out var columnCount);
+                var separator = DetermineDsvDelimiter(lines, out var columnCount);
 
                 // Find header labels.  If all headings are numeric, then no header.
                 Header = headerTest.ParseDsvFields(separator);

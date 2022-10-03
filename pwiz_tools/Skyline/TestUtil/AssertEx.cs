@@ -927,22 +927,16 @@ namespace pwiz.SkylineTestUtil
                 return;
             }
 
-            var sep1 = TextUtil.DetermineDsvDelimiter(lines1, out var colCount1);
-            var sep2 = TextUtil.DetermineDsvDelimiter(lines2, out var colCount2);
-            var reader1 = new DsvFileReader(path1, sep1, hasHeaders);
-            var reader2 = new DsvFileReader(path2, sep2, hasHeaders);
+            var sep1 = AbstractUnitTestEx.DetermineDsvDelimiter(lines1, out var colCount1);
+            var sep2 = AbstractUnitTestEx.DetermineDsvDelimiter(lines2, out var colCount2);
             for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
             {
-                var cols1 = reader1.ReadLine();
-                var cols2 = reader2.ReadLine();
-                if ((cols1 == null) && (cols2 == null))
+                var cols1 = lines1[lineNum].ParseDsvFields(sep1);
+                var cols2 = lines2[lineNum].ParseDsvFields(sep2);
+                AssertEx.AreEqual(cols1.Length, cols2.Length, $"Expected same column count at line {lineNum}");
+                if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
                 {
-                    return;
-                }
-                if ((cols1 == null) || (cols2 == null))
-                {
-                    AssertEx.Fail("Unexpected failure comparing DSV files");
-                    return; // Avoids a null check warning below
+                    continue; // Don't expect localized headers to match 
                 }
                 for (var colNum = 0; colNum < cols1.Length; colNum++)
                 {
