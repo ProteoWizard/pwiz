@@ -763,7 +763,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if –irt-standards-group-name or –irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
+        ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if -–irt-standards-group-name or -–irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
         /// </summary>
         internal static string _irt_database_path {
             get {

@@ -295,7 +295,7 @@
     <value>アッセイライブラリのインポート中に作成されるiRTカルキュレータの名前です。（オプション）デフォルト名はドキュメントのベース名です。</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>インポート済みのアッセイライブラリで使用する、既存のiRTカルキュレータ（.irtdbファイル）へのパスです。あるいは、–irt-standards-group-nameまたは–irt-standards-fileが使用される場合には、作成済みの.irtdbファイルの出力パスです。（オプション）iRTカルキュレータのデフォルトパスはpath/to/document.irtdbです。</value>
+    <value>インポート済みのアッセイライブラリで使用する、既存のiRTカルキュレータ（.irtdbファイル）へのパスです。あるいは、-–irt-standards-group-nameまたは-–irt-standards-fileが使用される場合には、作成済みの.irtdbファイルの出力パスです。（オプション）iRTカルキュレータのデフォルトパスはpath/to/document.irtdbです。</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>インポート済みのアッセイライブラリに適用されるiRT標準を含む別個のアッセイライブラリへのパスです。（オプション）</value>
