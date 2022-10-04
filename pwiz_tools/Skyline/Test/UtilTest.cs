@@ -97,7 +97,7 @@ namespace pwiz.SkylineTest
                 TextUtil.LineSeparate("while parsing:", line, string.Empty, 
                     "expected:", TextUtil.LineSeparate(fields), string.Empty, 
                     "got:",TextUtil.LineSeparate(fieldsOut)));
-            var detectedSeparator = AbstractUnitTestEx.DetermineDsvDelimiter(new[] { line }, out var detectedColumnCount);
+            var detectedSeparator = AssertEx.DetermineDsvDelimiter(new[] { line }, out var detectedColumnCount);
             Assert.AreEqual(separator, detectedSeparator);
             Assert.AreEqual(fields.Length, detectedColumnCount);
         }

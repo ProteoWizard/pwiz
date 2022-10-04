@@ -377,7 +377,7 @@ namespace pwiz.SkylineTest
 
                 // Determine separator (comma, space, or tab).
                 var headerTest = lines[0].Trim();
-                var separator = DetermineDsvDelimiter(lines, out var columnCount);
+                var separator = AssertEx.DetermineDsvDelimiter(lines, out var columnCount);
 
                 // Find header labels.  If all headings are numeric, then no header.
                 Header = headerTest.ParseDsvFields(separator);

@@ -848,8 +848,8 @@ namespace pwiz.SkylineTestUtil
             var matchExpected = regexGUID.Match(lineExpected);
             var matchActual = regexGUID.Match(lineActual);
             if (matchExpected.Success && matchActual.Success
-                                    && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                    && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+                                      && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                      && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
             {
                 return true;
             }
@@ -861,8 +861,8 @@ namespace pwiz.SkylineTestUtil
             matchExpected = regexTimestamp.Match(lineExpected);
             matchActual = regexTimestamp.Match(lineActual);
             if (matchExpected.Success && matchActual.Success
-                                    && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                    && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+                                      && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                      && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
             {
                 return true;
             }
@@ -921,19 +921,19 @@ namespace pwiz.SkylineTestUtil
         {
             var lines1 = File.ReadAllLines(path1);
             var lines2 = File.ReadAllLines(path2);
-            AssertEx.AreEqual(lines1.Length, lines2.Length, "Expected same line count");
+            AreEqual(lines1.Length, lines2.Length, "Expected same line count");
             if (lines1.Length == 0)
             {
                 return;
             }
 
-            var sep1 = AbstractUnitTestEx.DetermineDsvDelimiter(lines1, out var colCount1);
-            var sep2 = AbstractUnitTestEx.DetermineDsvDelimiter(lines2, out var colCount2);
+            var sep1 = DetermineDsvDelimiter(lines1, out var colCount1);
+            var sep2 = DetermineDsvDelimiter(lines2, out var colCount2);
             for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
             {
                 var cols1 = lines1[lineNum].ParseDsvFields(sep1);
                 var cols2 = lines2[lineNum].ParseDsvFields(sep2);
-                AssertEx.AreEqual(cols1.Length, cols2.Length, $"Expected same column count at line {lineNum}");
+                AreEqual(cols1.Length, cols2.Length, $"Expected same column count at line {lineNum}");
                 if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
                 {
                     continue; // Don't expect localized headers to match 
@@ -955,10 +955,59 @@ namespace pwiz.SkylineTestUtil
 
                     if (!same)
                     {
-                        AssertEx.AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
+                        AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Examine the lines of a DSV file an attempt to determine what kind of delimiter it uses
+        /// N.B. NOT ROBUST ENOUGH FOR GENERAL USE - would likely fail, for example, on data that has
+        /// irregular column counts. But still useful in the test context where we aren't handed random
+        /// data sets from users.
+        /// </summary>
+        /// <param name="lines">lines of the file</param>
+        /// <param name="columnCount">return value: column count</param>
+        /// <returns>the identified delimiter</returns>
+        /// <exception cref="LineColNumberedIoException">thrown when we can't figure it out</exception>
+        public static char DetermineDsvDelimiter(string[] lines, out int columnCount)
+        {
+
+            // If a candidate delimiter yields different column counts line to line, it's probably not the right one.
+            // So parse some distance in to see which delimiters give a consistent column count.
+            // NOTE we do see files like that in the wild, but not in our test suite
+            var countsPerLinePerCandidateDelimiter = new Dictionary<char, List<int>>
+            {
+                { TextUtil.SEPARATOR_CSV, new List<int>()},
+                { TextUtil.SEPARATOR_SPACE, new List<int>()},
+                { TextUtil.SEPARATOR_TSV, new List<int>()},
+                { TextUtil.SEPARATOR_CSV_INTL, new List<int>()}
+            };
+
+            for (var lineNum = 0; lineNum < Math.Min(100, lines.Length); lineNum++)
+            {
+                foreach (var sep in countsPerLinePerCandidateDelimiter.Keys)
+                {
+                    countsPerLinePerCandidateDelimiter[sep].Add((new DsvFileReader(new StringReader(lines[lineNum]), sep)).NumberOfFields);
+                }
+            }
+
+            var likelyCandidates =
+                countsPerLinePerCandidateDelimiter.Where(kvp => kvp.Value.Distinct().Count() == 1).ToArray();
+            if (likelyCandidates.Length > 0)
+            {
+                // The candidate that yields the highest column count wins
+                var maxColumnCount = likelyCandidates.Max(kvp => kvp.Value[0]);
+                if (likelyCandidates.Count(kvp => Equals(maxColumnCount, kvp.Value[0])) == 1)
+                {
+                    var delimiter = likelyCandidates.First(kvp => Equals(maxColumnCount, kvp.Value[0])).Key;
+                    columnCount = maxColumnCount;
+                    return delimiter;
+                }
+            }
+
+            throw new LineColNumberedIoException(Resources.TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file, 1, 1);
         }
 
         public static void FieldsEqual(string target, string actual, int countFields, bool allowForNumericPrecisionDifferences = false)
