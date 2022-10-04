@@ -11706,13 +11706,13 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Associate Proteins</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
-	  <value>Waiting for SCIEX OS to start</value>
+      <value>Waiting for SCIEX OS to start</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
-	  <value>Working...</value>
+      <value>Working...</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
-	  <value>Failed to find a valid SCIEX OS installation.</value>
+      <value>Failed to find a valid SCIEX OS installation.</value>
   </data>
   <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
     <value>File</value>
@@ -11854,7 +11854,7 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Shared Peptides</value>
   </data>
   <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	<value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
     <value>Duplicated peptides</value>
@@ -11875,6 +11875,12 @@ If you do not have the original file, you may build the library with embedded sp
       <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
   </data>
   <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
-	  <value>Submitting an unhandled error report</value>
+      <value>Submitting an unhandled error report</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram" xml:space="preserve">
+      <value>No MS1 spectra found in base peak chromatogram</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram" xml:space="preserve">
+      <value>No MS1 spectra found in TIC chromatogram</value>
   </data>
 </root>

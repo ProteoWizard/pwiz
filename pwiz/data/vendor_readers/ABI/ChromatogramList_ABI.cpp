@@ -356,8 +356,10 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         idToIndexMap_[ie.id] = ie.index;
     }
 
-    index_.push_back(IndexEntry());
+    // wiff2 doesn't support BPC for now
+    if (!bal::iends_with(wifffile_->getWiffPath(), ".wiff2"))
     {
+        index_.push_back(IndexEntry());
         IndexEntry& ie = index_.back();
         ie.index = index_.size() - 1;
         ie.id = "BPC";
