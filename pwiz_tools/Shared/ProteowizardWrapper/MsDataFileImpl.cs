@@ -739,6 +739,13 @@ namespace pwiz.ProteowizardWrapper
                         intensityList.Add((float) intensityArrayData[i]);
                     }
 
+                    // if there were no MS1 TIC points, add a placeholder so the TIC graph displays an appropriate message
+                    if (timeList.Count == 0)
+                    {
+                        timeList.Add(0);
+                        intensityList.Add(1);
+                    }
+
                     timeArray = timeList.ToArray();
                     intensityArray = intensityList.ToArray();
                 }
