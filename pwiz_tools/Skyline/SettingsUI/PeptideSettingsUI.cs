@@ -82,10 +82,16 @@ namespace pwiz.Skyline.SettingsUI
         private readonly LabelTypeComboDriver _driverLabelType;
         private static readonly IList<int?> _quantMsLevels = ImmutableList.ValueOf(new int?[] {null, 1, 2});
         private readonly LabelTypeComboDriver _driverSmallMolInternalStandardTypes;
+        private readonly string _staticModsOriginalTooltip;
+        private readonly string _heavyModsOriginalTooltip;
+        private readonly string _librariesOriginalTooltip;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager, TABS? selectTab)
         {
             InitializeComponent();
+            _staticModsOriginalTooltip = helpTip.GetToolTip(listStaticMods);
+            _heavyModsOriginalTooltip = helpTip.GetToolTip(listHeavyMods);
+            _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
 
             _tabPages = new Dictionary<TABS, TabWithPage>
             {
@@ -1838,6 +1844,46 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return (PeptidePick) comboMatching.SelectedIndex; }
             set { comboMatching.SelectedIndex = (int) value; }
+        }
+        private void ChangeTooltip(Control control, string newToolTip)
+        {
+            if (helpTip.GetToolTip(control) != newToolTip)
+            {
+                helpTip.SetToolTip(control, newToolTip);
+            }
+        }
+        
+        private void listStaticMods_MouseMove(object sender, MouseEventArgs e)
+        {
+            var itemIndex = listStaticMods.IndexFromPoint(e.Location);
+            StaticMod staticMod = null;
+            if (itemIndex >= 0 && itemIndex < _driverStaticMod.Choices.Length)
+            {
+                staticMod = _driverStaticMod.Choices[itemIndex];
+            }
+            ChangeTooltip(listStaticMods, staticMod?.GetToolTip() ?? _staticModsOriginalTooltip);
+        }
+
+        private void listHeavyMods_MouseMove(object sender, MouseEventArgs e)
+        {
+            var itemIndex = listHeavyMods.IndexFromPoint(e.Location);
+            StaticMod heavyMod = null;
+            if (itemIndex >= 0 && itemIndex < _driverHeavyMod.Choices.Length)
+            {
+                heavyMod = _driverHeavyMod.Choices[itemIndex];
+            }
+            ChangeTooltip(listHeavyMods, heavyMod?.GetToolTip() ?? _heavyModsOriginalTooltip);
+        }
+
+        private void listLibraries_MouseMove(object sender, MouseEventArgs e)
+        {
+            var itemIndex = listLibraries.IndexFromPoint(e.Location);
+            LibrarySpec librarySpec = null;
+            if (itemIndex >= 0 && itemIndex < _driverLibrary.Choices.Length)
+            {
+                librarySpec = _driverLibrary.Choices[itemIndex];
+            }
+            ChangeTooltip(listLibraries, librarySpec?.GetToolTip() ?? _librariesOriginalTooltip);
         }
     }
 }

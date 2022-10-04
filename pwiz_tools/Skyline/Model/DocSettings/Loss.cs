@@ -20,14 +20,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -68,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     [XmlRoot("potential_loss")]
-    public sealed class FragmentLoss : Immutable, IXmlSerializable
+    public sealed class FragmentLoss : Immutable, IXmlSerializable, IHasToolTip
     {
         public const double MIN_LOSS_MASS = 0.0001;
         public const double MAX_LOSS_MASS = 5000;
@@ -137,6 +141,18 @@ namespace pwiz.Skyline.Model.DocSettings
             Array.Sort(arrayLosses, (l1, l2) =>
                 Comparer<double>.Default.Compare(l1.MonoisotopicMass, l2.MonoisotopicMass));
             return arrayLosses;
+        }
+
+        public string GetToolTip()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, MonoisotopicMass, AverageMass));
+            if (Charge != 0)
+            {
+                stringBuilder.Append(Adduct.FromChargeProtonated(Charge));
+            }
+            // Consider: "Include By Default"?
+            return stringBuilder.ToString();
         }
 
         #region Property change methods

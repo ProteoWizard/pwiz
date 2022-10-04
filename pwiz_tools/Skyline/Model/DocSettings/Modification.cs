@@ -27,8 +27,10 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -93,7 +95,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// case of C-terminal or N-terminal modifications.
     /// </summary>
     [XmlRoot("static_modification")]
-    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable
+    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable, IHasToolTip
     {
         private ImmutableList<FragmentLoss> _losses;
         public static StaticMod EMPTY = new StaticMod();
@@ -377,6 +379,148 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return new MoleculeMassOffset(Molecule.ParseExpression(Formula), 0, 0);
+        }
+
+        public string GetToolTip()
+        {
+            var lines = new List<string>();
+            if (!string.IsNullOrEmpty(AAs))
+            {
+                lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AAs, AAs));
+            }
+
+            if (Terminus != null)
+            {
+                lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, Terminus.ToString()));
+            }
+
+            if (IsVariable)
+            {
+                lines.Add(PropertyNames.StaticMod_IsVariable);
+            }
+
+            if (IsCrosslinker)
+            {
+                lines.Add(PropertyNames.StaticMod_IsCrosslinker);
+            }
+
+            var labelDescriptions = new List<string>();
+            if (Label2H)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label2H);
+            }
+            if (Label13C)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label13C);
+            }
+            if (Label15N)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label15N);
+            }
+            if (Label18O)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label18O);
+            }
+            if (Label32P)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label32P);
+            }
+            if (Label34S)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label32P);
+            }
+            if (Label37Cl)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label37Cl);
+            }
+            if (Label81Br)
+            {
+                labelDescriptions.Add(PropertyNames.StaticMod_Label81Br);
+            }
+
+            if (labelDescriptions.Any())
+            {
+                lines.Add(TextUtil.SpaceSeparate(labelDescriptions));
+            }
+            else 
+            {
+                if (HasMod || !HasLoss)
+                {
+                    lines.Add(FormatFormulaOrMass(Formula, MonoisotopicMass, AverageMass));
+                }
+            }
+            if (RelativeRT != RelativeRT.Matching)
+            {
+                lines.Add(TextUtil.ColonSeparate("Relative retention time", RelativeRT.GetLocalizedString()));
+            }
+            if (Losses?.Count > 0)
+            {
+                if (Losses.Count == 1)
+                {
+                    if (Losses[0].Charge == 0)
+                    {
+                        lines.Add(TextUtil.ColonSeparate("Neutral loss", Losses[0].GetToolTip()));
+                    }
+                    else
+                    {
+                        lines.Add(TextUtil.ColonSeparate("Loss", Losses[0].GetToolTip()));
+                    }
+                }
+                else 
+                {
+                    if (Losses.All(loss => loss.Charge == 0))
+                    {
+                        lines.Add(TextUtil.AppendColon("Neutral losses"));
+                    }
+                    else
+                    {
+                        lines.Add(TextUtil.AppendColon("Losses"));
+                    }
+                    const string indent = @"    ";
+                    foreach (var fragmentLoss in Losses)
+                    {
+                        lines.Add(indent + fragmentLoss.GetToolTip());
+                    }
+                }
+            }
+            return TextUtil.LineSeparate(lines);
+        }
+
+        public static string FormatFormulaOrMass(string formula, double? monoMass, double? averageMass)
+        {
+            if (!string.IsNullOrEmpty(formula))
+            {
+                return TextUtil.ColonSeparate(PropertyNames.StaticMod_Formula, formula);
+            }
+
+            return FormatMass(monoMass, averageMass);
+        }
+
+        public static string FormatMass(double? monoMass, double? averageMass)
+        {
+            var massDescriptions = new List<string>();
+            if (monoMass.HasValue)
+            {
+                if (Equals(monoMass, averageMass))
+                {
+                    return TextUtil.ColonSeparate("Mass", monoMass.Value.ToString(Formats.RoundTrip));
+                }
+                massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_MonoisotopicMass,
+                    monoMass.Value.ToString(Formats.RoundTrip)));
+            }
+
+            if (averageMass.HasValue)
+            {
+                massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AverageMass, averageMass.Value.ToString(Formats.RoundTrip)));
+            }
+
+            if (massDescriptions.Any())
+            {
+                return TextUtil.SpaceSeparate(massDescriptions);
+            }
+
+            // Should not happen
+            return "Unknown mass";
         }
 
         #region Property change methods

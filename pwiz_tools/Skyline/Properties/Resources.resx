@@ -11877,4 +11877,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
 	  <value>Submitting an unhandled error report</value>
   </data>
+  <data name="Colon" xml:space="preserve">
+	  <value>:</value>
+	  <comment>The colon that appears in "Name: Value"</comment>
+  </data>
 </root>

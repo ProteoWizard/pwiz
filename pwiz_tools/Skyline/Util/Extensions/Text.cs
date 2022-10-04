@@ -25,6 +25,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
@@ -454,6 +455,22 @@ namespace pwiz.Skyline.Util.Extensions
         public static string SpaceSeparate(params string[] values)
         {
             return SpaceSeparate(values.AsEnumerable());
+        }
+
+        /// <summary>
+        /// Append the localized colon character to a string.
+        /// </summary>
+        public static string AppendColon(string left)
+        {
+            return left + Resources.Colon;
+        }
+
+        /// <summary>
+        /// Separate two strings with the localized colon character and a space.
+        /// </summary>
+        public static string ColonSeparate(string left, string right)
+        {
+            return SpaceSeparate(AppendColon(left), right);
         }
 
         /// <summary>
