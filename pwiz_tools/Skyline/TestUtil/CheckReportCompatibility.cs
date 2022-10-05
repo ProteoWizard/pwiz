@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util.Extensions;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 using Transition = pwiz.Skyline.Model.Databinding.Entities.Transition;
 
@@ -101,7 +102,7 @@ namespace pwiz.SkylineTestUtil
             {
                 IProgressStatus status = new ProgressStatus();
                 viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
-                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec.ViewSpec), writer, viewContext.GetCsvWriter());
+                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec.ViewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
             }
         }
     }

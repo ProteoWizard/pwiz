@@ -555,6 +555,9 @@ PWIZ_API_DECL string translateScanNumberToNativeID(CVID nativeIdFormat, const st
         case MS_scan_number_only_nativeID_format:
             return "scan=" + scanNumber;
 
+        case MS_Bruker_TSF_nativeID_format:
+            return "frame=" + scanNumber;
+
         default:
             return "";
     }
@@ -584,6 +587,9 @@ PWIZ_API_DECL string translateNativeIDToScanNumber(CVID nativeIdFormat, const st
         case MS_Bruker_BAF_nativeID_format:
         case MS_scan_number_only_nativeID_format:
             return value(id, "scan");
+
+        case MS_Bruker_TSF_nativeID_format:
+            return value(id, "frame");
 
         default:
             if (bal::starts_with(id, "scan=")) return value(id, "scan");
@@ -1189,6 +1195,10 @@ PWIZ_API_DECL DetailLevel SpectrumList::min_level_accepted(std::function<boost::
     throw runtime_error("[SpectrumList::min_level_accepted] no spectrum satisfied the given predicate at any DetailLevel");
 }
 
+PWIZ_API_DECL bool SpectrumList::calibrationSpectraAreOmitted() const
+{
+    return false; // Default implementation, currently only Waters lockmass functions are actually handled
+}
 
 //
 // SpectrumListSimple
@@ -1362,6 +1372,25 @@ PWIZ_API_DECL vector<DataProcessingPtr> MSData::allDataProcessingPtrs() const
         if (sldp.get() && std::find_if(result.begin(), result.end(), HasID<DataProcessing>(sldp->id)) == result.end())
             result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
     }
+
+    /* CONSIDER: alternate merging approach
+    if (run.spectrumListPtr.get() && run.spectrumListPtr->dataProcessingPtr().get())
+    {
+        // if SpectrumList::dataProcessingPtr() is not in MSData::dataProcessingPtrs, add it
+        const shared_ptr<const DataProcessing> sldp = run.spectrumListPtr->dataProcessingPtr();
+        auto dpInMsdItr = std::find_if(result.begin(), result.end(), HasID<DataProcessing>(sldp->id));
+        if (dpInMsdItr != result.end())
+        {
+            Diff<DataProcessing, DiffConfig> diff(*sldp, **dpInMsdItr);
+            if (diff)
+            {
+                (*dpInMsdItr)->id += "_old";
+                result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
+            }
+        }
+        else
+            result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
+    }*/
 
     if (run.chromatogramListPtr.get())
     {

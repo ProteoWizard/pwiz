@@ -23,7 +23,8 @@ AuditLogForm,*
 AuditLogExtraInfoForm,TestAuditLogSaving
 LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
-BuildLibraryDlg,TestFullScanId
+BuildLibraryDlg.PropertiesPage,TestFullScanId
+BuildLibraryDlg.FilesPage,TestFullScanId
 BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest

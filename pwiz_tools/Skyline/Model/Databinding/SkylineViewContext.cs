@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.UserInterfaces;
@@ -211,6 +212,18 @@ namespace pwiz.Skyline.Model.Databinding
             Settings.Default.ExportDirectory = value;
         }
 
+        protected override IEnumerable<TabularFileFormat> ListAvailableExportFormats()
+        {
+            yield return new TabularFileFormat(TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider),
+                TextUtil.FILTER_CSV);
+            yield return new TabularFileFormat('\t', TextUtil.FILTER_TSV);
+        }
+
+        protected override void SetClipboardText(Control owner, string text)
+        {
+            ClipboardHelper.SetClipboardText(owner, text);
+        }
+
         public bool Export(Control owner, ViewInfo viewInfo)
         {
             using (var saveFileDialog = new SaveFileDialog
@@ -231,7 +244,7 @@ namespace pwiz.Skyline.Model.Databinding
                     ? TextUtil.SEPARATOR_TSV
                     : TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider);
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
-                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, GetDsvWriter(separator));
+                return ExportToFile(owner, viewInfo, saveFileDialog.FileName, separator);
             }
         }
 
@@ -240,22 +253,23 @@ namespace pwiz.Skyline.Model.Databinding
             return ReferenceEquals(DataSchema.DataSchemaLocalizer, DataSchemaLocalizer.INVARIANT);
         }
 
-        public DsvWriter GetDsvWriter(char separator)
+        public override DsvWriter CreateDsvWriter(char separator, ColumnFormats columnFormats)
         {
-            DsvWriter dsvWriter = new DsvWriter(DataSchema.DataSchemaLocalizer.FormatProvider, DataSchema.DataSchemaLocalizer.Language, separator);
+            var dsvWriter = base.CreateDsvWriter(separator, columnFormats);
             if (IsInvariantLanguage())
             {
                 dsvWriter.NumberFormatOverride = Formats.RoundTrip;
             }
+
             return dsvWriter;
         }
 
-        public DsvWriter GetCsvWriter()
+        public DsvWriter GetDsvWriter(char separator)
         {
-            return GetDsvWriter(TextUtil.GetCsvSeparator(DataSchema.DataSchemaLocalizer.FormatProvider));
+            return CreateDsvWriter(separator, null);
         }
 
-        public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, DsvWriter dsvWriter)
+        public bool ExportToFile(Control owner, ViewInfo viewInfo, string fileName, char separator)
         {
             try
             {
@@ -274,7 +288,7 @@ namespace pwiz.Skyline.Model.Databinding
                             progressMonitor.UpdateProgress(status);
                             using (var writer = new StreamWriter(stream))
                             {
-                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, dsvWriter);
+                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, separator);
                                 writer.Close();
                             }
                             if (success)
@@ -297,7 +311,7 @@ namespace pwiz.Skyline.Model.Databinding
         }
 
         public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
-            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, DsvWriter dsvWriter)
+            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, char separator)
         {
             ViewLayout viewLayout = null;
             if (viewInfo.ViewGroup != null)
@@ -309,19 +323,19 @@ namespace pwiz.Skyline.Model.Databinding
                 }
             }
 
-            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, dsvWriter);
+            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, separator);
         }
 
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, DsvWriter dsvWriter)
+        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
-            progressMonitor = progressMonitor ?? new SilentProgressMonitor();
+            progressMonitor ??= new SilentProgressMonitor(cancellationToken);
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                     .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, dsvWriter);
+                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
                 if (progressMonitor.IsCanceled)
                     return false;
 
@@ -891,6 +905,23 @@ namespace pwiz.Skyline.Model.Databinding
             }
 
             return true;
+        }
+
+        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec)
+        {
+            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec);
+            viewEditor.Alphabetical = Settings.Default.AlphabeticalReportEditor;
+            viewEditor.Closed += ViewEditorClosed;
+            return viewEditor;
+        }
+
+        private void ViewEditorClosed(object sender, EventArgs eventArgs)
+        {
+            var viewEditor = sender as ViewEditor;
+            if (viewEditor?.DialogResult == DialogResult.OK)
+            {
+                Settings.Default.AlphabeticalReportEditor = viewEditor.Alphabetical;
+            }
         }
     }
 }

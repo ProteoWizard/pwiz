@@ -90,8 +90,16 @@ namespace pwiz.SkylineTest
                     writer.Write(separator);
                 writer.WriteDsvField(field, separator);
             }
-            var fieldsOut = sb.ToString().ParseDsvFields(separator);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut), "while parsing:\n"+sb+"\nexpected:\n" + string.Join("\n", fields) + "\n\ngot:\n" + string.Join("\n", fieldsOut));
+
+            var line = sb.ToString();
+            var fieldsOut = line.ParseDsvFields(separator);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut),
+                TextUtil.LineSeparate("while parsing:", line, string.Empty, 
+                    "expected:", TextUtil.LineSeparate(fields), string.Empty, 
+                    "got:",TextUtil.LineSeparate(fieldsOut)));
+            var detectedSeparator = AssertEx.DetermineDsvDelimiter(new[] { line }, out var detectedColumnCount);
+            Assert.AreEqual(separator, detectedSeparator);
+            Assert.AreEqual(fields.Length, detectedColumnCount);
         }
 
         [TestMethod]

@@ -141,6 +141,8 @@
     <Compile Include="DiaUmpireTutorialTest.cs" />
     <Compile Include="DiaSwathTutorialTest.cs" />
     <Compile Include="PerfAssociateProteinsTest.cs" />
+    <Compile Include="PerfCommandlineCreateImsDbTest.cs" />
+    <Compile Include="PerfDetectLockmassFunctionTest.cs" />
     <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
@@ -153,6 +155,7 @@
     <Compile Include="PerfImportDiaPasefTest.cs" />
     <Compile Include="PerfImportPasefMascotTest.cs" />
     <Compile Include="PerfImportPrmPasefTest.cs" />
+    <Compile Include="PerfImportResultsAgilentIMSFringeValues.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
     <Compile Include="PerfImportResultsHugeTest.cs" />
@@ -172,6 +175,7 @@
     <Compile Include="PerfPeakViewConvert.cs" />
     <Compile Include="PerfThermoFAIMSTest.cs" />
     <Compile Include="PerfThermoNegativeFAIMSTest.cs" />
+    <Compile Include="PerfThermoSureQuantFAIMSTest.cs" />
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="PerfWatersSonarTest.cs" />

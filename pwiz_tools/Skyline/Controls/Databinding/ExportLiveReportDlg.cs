@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return viewContext.Export(this, viewInfo);
             }
-            return viewContext.ExportToFile(this, viewInfo, filename, viewContext.GetDsvWriter(separator));
+            return viewContext.ExportToFile(this, viewInfo, filename, separator);
         }
 
         private void Repopulate()
