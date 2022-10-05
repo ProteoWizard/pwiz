@@ -15110,6 +15110,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No MS1 spectra found in base peak chromatogram.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No MS1 spectra found in TIC chromatogram.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No precursor ion chromatograms found.
         /// </summary>
         public static string GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found {
