@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Web;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -453,6 +454,22 @@ namespace pwiz.Skyline.Model
             {
                 return Interlocked.Increment(ref _timeoutCount) < maxCount;
             }
+        }
+
+        public int GetProcessId()
+        {
+            return Process.GetCurrentProcess().Id;
+        }
+
+        public void DeleteElements(string[] elementLocators)
+        {
+            // TODO: Implement this
+            ; ; ;
+        }
+
+        public void ImportProperties(string csvText)
+        {
+            _skylineWindow.ImportAnnotations(new StringReader(csvText), new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType, "External tool"));
         }
     }
 }

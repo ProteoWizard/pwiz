@@ -18,6 +18,11 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+
 // ReSharper disable All
 
 namespace SkylineTool
@@ -57,11 +62,13 @@ namespace SkylineTool
             return new Report(reportCsv);
         }
 
+        [Obsolete]
         public DocumentLocation GetDocumentLocation()
         {
             return _client.GetDocumentLocation();
         }
 
+        [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
             _client.SetDocumentLocation(documentLocation);
@@ -77,6 +84,7 @@ namespace SkylineTool
             return _client.GetReplicateName();
         }
 
+        [Obsolete]
         public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
         {
             return _client.GetChromatograms(documentLocation);
@@ -147,11 +155,13 @@ namespace SkylineTool
                 return RemoteCallFunction(GetReportFromDefinition, reportDefinition);
             }
 
+            [Obsolete]
             public DocumentLocation GetDocumentLocation()
             {
                 return RemoteCallFunction(GetDocumentLocation);
             }
 
+            [Obsolete]
             public void SetDocumentLocation(DocumentLocation documentLocation)
             {
                 RemoteCall(SetDocumentLocation, documentLocation);
@@ -167,6 +177,7 @@ namespace SkylineTool
                 return RemoteCallFunction(GetReplicateName);
             }
 
+            [Obsolete]
             public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
             {
                 return RemoteCallFunction(GetChromatograms, documentLocation);
@@ -206,37 +217,52 @@ namespace SkylineTool
             {
                 RemoteCall(RemoveDocumentChangeReceiver, receiverName);
             }
+
+            public int GetProcessId()
+            {
+                return RemoteCallFunction(GetProcessId);
+            }
+
+            public void DeleteElements(string[] elementLocators)
+            {
+                RemoteCall(DeleteElements, elementLocators);
+            }
+
+            public void ImportProperties(string csvText)
+            {
+                RemoteCall(ImportProperties, csvText);
+            }
         }
 
         private class Report : IReport
         {
             public Report(string reportCsv)
             {
-                // ReSharper disable LocalizableElement
-                var lines = reportCsv.Split(new [] {"\r\n"}, StringSplitOptions.None);
-                // ReSharper restore LocalizableElement
-                ColumnNames = lines[0].Split(',');
-                Cells = new string[lines.Length-1][];
-                CellValues = new double?[lines.Length-1][];
-                for (int i = 0; i < lines.Length-1; i++)
+                const char sep = ',';
+                TextReader reader = new StringReader(reportCsv);
+                ColumnNames = ReadDsvLine(reader, sep).ToArray();
+                var rows = new List<List<string>>();
+                List<string> line;
+                while (null != (line = ReadDsvLine(reader, sep)))
                 {
-                    Cells[i] = new string[ColumnNames.Length];
-                    CellValues[i] = new double?[ColumnNames.Length];
-                    var row = lines[i + 1].Split(',');
-                    for (int j = 0; j < row.Length; j++)
-                    {
-                        Cells[i][j] = row[j];
-                        double value;
-                        if (double.TryParse(row[j], out value))
-                            CellValues[i][j] = value;
-                    }
+                    rows.Add(line);
                 }
+                Cells = rows.Select(row => row.ToArray()).ToArray();
+                CellValues = rows.Select(row => row.Select(cell =>
+                {
+                    if (double.TryParse(cell, out double value))
+                    {
+                        return value;
+                    }
+
+                    return (double?)null;
+                }).ToArray()).ToArray();
             }
 
             public string[] ColumnNames { get; private set; }
             public string[][] Cells { get; private set; }
             public double?[][] CellValues { get; private set; }
-            
+
             public string Cell(int row, string columnName)
             {
                 int column = FindColumn(columnName);
@@ -258,6 +284,74 @@ namespace SkylineTool
                 }
                 return -1;
             }
+
+        }
+        private static List<string> ReadDsvLine(TextReader reader, char separator)
+        {
+            List<string> fields = new List<string>();
+            StringBuilder currentValue = null;
+            bool inQuote = false;
+            while (true)
+            {
+                int nextValue = reader.Read();
+                if (nextValue == -1)
+                {
+                    if (currentValue == null)
+                    {
+                        return null;
+                    }
+                    fields.Add(currentValue.ToString());
+                    return fields;
+                }
+
+                char chNext = (char)nextValue;
+
+                currentValue = currentValue ?? new StringBuilder();
+                if (inQuote)
+                {
+                    if (chNext == '"')
+                    {
+                        if (reader.Peek() == '"')
+                        {
+                            reader.Read();
+                            currentValue.Append('"');
+                        }
+                        else
+                        {
+                            inQuote = false;
+                        }
+                    }
+                    else
+                    {
+                        currentValue.Append(chNext);
+                    }
+                }
+                else
+                {
+                    if (chNext == separator)
+                    {
+                        fields.Add(currentValue.ToString());
+                        currentValue.Clear();
+                    }
+                    else if (chNext == '"')
+                    {
+                        inQuote = true;
+                    }
+                    else if (chNext == '\r' || chNext == '\n')
+                    {
+                        if (chNext == '\r' && reader.Peek() == '\n')
+                        {
+                            reader.Read();
+                        }
+                        fields.Add(currentValue.ToString());
+                        return fields;
+                    }
+                    else
+                    {
+                        currentValue.Append(chNext);
+                    }
+                }
+            }
         }
     }
 
@@ -271,5 +365,4 @@ namespace SkylineTool
     }
 
     public delegate void SelectionChangedEventHandler(object sender, EventArgs args);
-
 }

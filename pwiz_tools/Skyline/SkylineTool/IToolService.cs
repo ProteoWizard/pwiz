@@ -32,7 +32,9 @@ namespace SkylineTool
         string GetReport(string toolName, string reportName);
         string GetReportFromDefinition(string reportDefinition);
 
+        [Obsolete]
         DocumentLocation GetDocumentLocation();
+        [Obsolete]
         void SetDocumentLocation(DocumentLocation documentLocation);
 
         string GetDocumentLocationName();
@@ -50,6 +52,9 @@ namespace SkylineTool
 
         void AddDocumentChangeReceiver(string receiverName, string toolName);
         void RemoveDocumentChangeReceiver(string receiverName);
+        int GetProcessId();
+        void DeleteElements(string[] elementLocators);
+        void ImportProperties(string csvText);
     }
 
     public interface IDocumentChangeReceiver
