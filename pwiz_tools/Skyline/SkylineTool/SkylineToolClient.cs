@@ -115,6 +115,21 @@ namespace SkylineTool
             _client.AddSpectralLibrary(libraryName, libraryPath);
         }
 
+        public int GetProcessId()
+        {
+            return _client.GetProcessId();
+        }
+
+        public string GetSelectedElementLocator(string elementType)
+        {
+            return _client.GetSelectedElementLocator(elementType);
+        }
+
+        public void ImportProperties(string propertiesCsv)
+        {
+            _client.ImportProperties(propertiesCsv);
+        }
+
         private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver
         {
             private readonly SkylineToolClient _toolClient;
@@ -232,10 +247,16 @@ namespace SkylineTool
             {
                 RemoteCall(ImportProperties, csvText);
             }
+
+            public string GetSelectedElementLocator(string elementType)
+            {
+                return RemoteCallFunction(GetSelectedElementLocator, elementType);
+            }
         }
 
         private class Report : IReport
         {
+            private double?[][] _cellValues;
             public Report(string reportCsv)
             {
                 const char sep = ',';
@@ -248,20 +269,31 @@ namespace SkylineTool
                     rows.Add(line);
                 }
                 Cells = rows.Select(row => row.ToArray()).ToArray();
-                CellValues = rows.Select(row => row.Select(cell =>
-                {
-                    if (double.TryParse(cell, out double value))
-                    {
-                        return value;
-                    }
-
-                    return (double?)null;
-                }).ToArray()).ToArray();
             }
 
             public string[] ColumnNames { get; private set; }
             public string[][] Cells { get; private set; }
-            public double?[][] CellValues { get; private set; }
+
+            public double?[][] CellValues
+            {
+                get
+                {
+                    if (_cellValues == null)
+                    {
+                        _cellValues = Cells.Select(row => row.Select(cell =>
+                        {
+                            if (double.TryParse(cell, out double value))
+                            {
+                                return value;
+                            }
+
+                            return (double?) null;
+                        }).ToArray()).ToArray();
+                    }
+
+                    return _cellValues;
+                }
+            }
 
             public string Cell(int row, string columnName)
             {

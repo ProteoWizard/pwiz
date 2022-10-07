@@ -40,6 +40,7 @@ namespace SkylineTool
         string GetDocumentLocationName();
         string GetReplicateName();
 
+        [Obsolete]
         Chromatogram[] GetChromatograms(DocumentLocation documentLocation);
         string GetDocumentPath();
         Version GetVersion();
@@ -55,6 +56,7 @@ namespace SkylineTool
         int GetProcessId();
         void DeleteElements(string[] elementLocators);
         void ImportProperties(string csvText);
+        string GetSelectedElementLocator(string elementType);
     }
 
     public interface IDocumentChangeReceiver

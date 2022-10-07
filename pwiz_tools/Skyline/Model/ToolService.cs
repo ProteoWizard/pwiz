@@ -23,15 +23,16 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Web;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -101,7 +102,7 @@ namespace pwiz.Skyline.Model
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();
-            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer,
+            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), viewSpec.DefaultViewLayout, writer,
                     TextUtil.SEPARATOR_CSV))
             {
                 return writer.ToString();
@@ -469,7 +470,80 @@ namespace pwiz.Skyline.Model
 
         public void ImportProperties(string csvText)
         {
-            _skylineWindow.ImportAnnotations(new StringReader(csvText), new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType, "External tool"));
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                _skylineWindow.ImportAnnotations(new StringReader(csvText),
+                    new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
+                        "Import Properties from external tool"));
+            }));
+        }
+
+        public string GetSelectedElementLocator(string elementType)
+        {
+            ElementRef result = null;
+            Exception exception = null;
+            _skylineWindow.Invoke(new Action(() => 
+            {
+                try
+                {
+                    result = GetSelectedElementRefNow(elementType);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            }));
+            if (exception != null)
+            {
+                throw new TargetInvocationException(exception);
+            }
+            return result?.ToString();
+        }
+
+        private ElementRef GetSelectedElementRefNow(string elementType)
+        {
+            var document = _skylineWindow.DocumentUI;
+
+            SrmDocument.Level nodeLevel;
+            if (elementType == ReplicateRef.PROTOTYPE.ElementType)
+            {
+                if (!document.Settings.HasResults)
+                {
+                    return null;
+                }
+
+                return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
+                    .Chromatograms[_skylineWindow.ComboResults.SelectedIndex]);
+            }
+
+            if (elementType == TransitionRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Transitions;
+            }
+            else if (elementType == PrecursorRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.TransitionGroups;
+            }
+            else if (elementType == MoleculeRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Molecules;
+            }
+            else if (elementType == MoleculeGroupRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.MoleculeGroups;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format("Unsupported element type '{0}'", elementType));
+            }
+
+            var selectedPath = _skylineWindow.SelectedPath;
+            if (selectedPath.Length <= (int)nodeLevel)
+            {
+                return null;
+            }
+            var elementRefs = new ElementRefs(document);
+            return elementRefs.GetNodeRef(selectedPath.GetPathTo((int)nodeLevel));
         }
     }
 }
