@@ -32,6 +32,10 @@ namespace TestCommandLineInteractiveTool
                     {
                         new SetNoteOnSelectedNode(toolClient).RunCommand();
                     }
+                    else if (commandName == "DeleteSelectedNode")
+                    {
+                        new DeleteSelectedNode(toolClient).RunCommand();
+                    }
                     else
                     {
                         Console.Error.WriteLine("Unknown command: {0}", commandName);

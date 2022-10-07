@@ -30,15 +30,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>
             {
                 SkylineWindow.PopulateToolsMenu();
-                Assert.AreEqual("Monitor Selection", SkylineWindow.GetToolText(0));
-                Assert.AreEqual("Set Note On Selected Node", SkylineWindow.GetToolText(1));
+                Assert.AreEqual("Delete Selected Node", SkylineWindow.GetToolText(0));
+                Assert.AreEqual("Monitor Selection", SkylineWindow.GetToolText(1));
+                Assert.AreEqual("Set Note On Selected Node", SkylineWindow.GetToolText(2));
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MultiLabel.sky"));
             });
             IdentityPath idPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 3);
             RunUI(() =>
             {
                 SkylineWindow.SelectedPath = idPath;
-                SkylineWindow.RunTool(1);
+                SkylineWindow.RunTool(2);
             });
             WaitForCondition(() =>
             {

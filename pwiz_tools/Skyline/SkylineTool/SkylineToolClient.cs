@@ -120,6 +120,11 @@ namespace SkylineTool
             return _client.GetProcessId();
         }
 
+        public void DeleteElements(string[] elementLocators)
+        {
+            _client.DeleteElements(elementLocators);
+        }
+
         public string GetSelectedElementLocator(string elementType)
         {
             return _client.GetSelectedElementLocator(elementType);

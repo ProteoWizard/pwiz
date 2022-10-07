@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbstractCommand.cs" />
+    <Compile Include="DeleteSelectedNode.cs" />
     <Compile Include="OutputProcessIds.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -57,6 +58,7 @@
     <None Include="App.config" />
     <None Include="CreateToolZip.bat" />
     <None Include="tool-inf\info.properties" />
+    <None Include="tool-inf\DeleteSelectedNode.properties" />
     <None Include="tool-inf\SetNoteOnSelectedNode.properties" />
     <None Include="tool-inf\MonitorSelection.properties" />
   </ItemGroup>

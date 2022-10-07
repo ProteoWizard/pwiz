@@ -31,6 +31,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.RowActions;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Find;
@@ -110,6 +111,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        [Obsolete]
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
@@ -135,6 +137,7 @@ namespace pwiz.Skyline.Model
         /// Select a document location in Skyline's tree view.
         /// </summary>
         /// <param name="documentLocation">Which location to select (null for insert node).</param>
+        [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
             Program.MainWindow.Invoke(new Action(() =>
@@ -163,6 +166,7 @@ namespace pwiz.Skyline.Model
             return name;
         }
 
+        [Obsolete]
         public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
         {
             if (documentLocation == null)
@@ -462,10 +466,42 @@ namespace pwiz.Skyline.Model
             return Process.GetCurrentProcess().Id;
         }
 
-        public void DeleteElements(string[] elementLocators)
+        public void DeleteElements(string[] elementLocatorStrings)
         {
-            // TODO: Implement this
-            ; ; ;
+            var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                DeleteElementsNow(elementLocators);
+            }));
+        }
+
+        private void DeleteElementsNow(IEnumerable<ElementLocator> elementLocators)
+        {
+            lock (_skylineWindow.GetDocumentChangeLock())
+            {
+                var originalDocument = _skylineWindow.Document;
+                var document = originalDocument;
+                var identityPathsToDelete = new HashSet<IdentityPath>();
+                foreach (var elementLocator in elementLocators)
+                {
+                    var elementRef = ElementRefs.FromObjectReference(elementLocator);
+                    if (elementRef is NodeRef nodeRef)
+                    {
+                        identityPathsToDelete.Add(nodeRef.ToIdentityPath(document));
+                    }
+                    else
+                    {
+                        throw new ArgumentException(string.Format("Unsupported element {0}" + elementLocator));
+                    }
+                }
+
+                if (!identityPathsToDelete.Any())
+                {
+                    return;
+                }
+
+                DeleteNodesAction.DeleteIdentityPaths(_skylineWindow, identityPathsToDelete);
+            }
         }
 
         public void ImportProperties(string csvText)
