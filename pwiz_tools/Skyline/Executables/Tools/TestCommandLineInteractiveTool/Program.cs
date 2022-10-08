@@ -5,7 +5,6 @@ namespace TestCommandLineInteractiveTool
 {
     internal static class Program
     {
-        public const string TOOL_NAME = "TestCommandLineInteractiveTool";
         static int Main(string[] args)
         {
             if (args.Length == 0)

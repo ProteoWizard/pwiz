@@ -12,7 +12,7 @@ namespace TestCommandLineInteractiveTool
 
         public override void RunCommand()
         {
-            Console.Out.WriteLine("{0} process id: {1} Skyline process id: {2}", Program.TOOL_NAME, Process.GetCurrentProcess().Id, SkylineToolClient.GetProcessId());
+            Console.Out.WriteLine("{0} process id: {1} Skyline process id: {2}", typeof(OutputProcessIds).Assembly.GetName().Name, Process.GetCurrentProcess().Id, SkylineToolClient.GetProcessId());
         }
     }
 }
