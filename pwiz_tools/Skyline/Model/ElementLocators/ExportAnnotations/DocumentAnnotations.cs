@@ -100,36 +100,11 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
             {
                 return string.Empty;
             }
-            if (value is SampleType sampleType)
-            {
-                return sampleType.Name;
-            }
-            if (value is NormalizationMethod normalizationMethod)
-            {
-                return normalizationMethod.Name;
-            }
             if (value is double)
             {
                 return ((double) value).ToString(Formats.RoundTrip, CultureInfo);
             }
             return value.ToString();
-        }
-
-        private object ParseValue(string value, Type type)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return null;
-            }
-            if (type == typeof(SampleType))
-            {
-                return SampleType.FromName(value);
-            }
-            if (type == typeof(NormalizationMethod))
-            {
-                return NormalizationMethod.FromName(value);
-            }
-            return Convert.ChangeType(value, type, DataSchema.DataSchemaLocalizer.FormatProvider);
         }
 
         public SrmDocument ReadAnnotationsFromFile(CancellationToken cancellationToken, string filename)
