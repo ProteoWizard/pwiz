@@ -96,7 +96,10 @@ namespace TestRunner
         private static Dictionary<string, ExpandedLeakCheck> LeakCheckIterationsOverrideByTestName = new Dictionary<string, ExpandedLeakCheck>
         {
             {"TestGroupedStudiesTutorialDraft", new ExpandedLeakCheck(LeakCheckIterations * 4, true)},
-            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)}
+            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
+            {"TestPermuteIsotopeModifications", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
+            {"TestLibraryExplorer", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
+            {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
