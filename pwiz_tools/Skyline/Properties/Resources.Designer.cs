@@ -4762,9 +4762,18 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to :.
         /// </summary>
-        public static string Colon {
+        public static string ColonEndOfLine {
             get {
-                return ResourceManager.GetString("Colon", resourceCulture);
+                return ResourceManager.GetString("ColonEndOfLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1}.
+        /// </summary>
+        public static string ColonSeparator {
+            get {
+                return ResourceManager.GetString("ColonSeparator", resourceCulture);
             }
         }
         

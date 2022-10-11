@@ -462,7 +462,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string AppendColon(string left)
         {
-            return left + Resources.Colon;
+            return left + Resources.ColonEndOfLine;
         }
 
         /// <summary>
@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static string ColonSeparate(string left, string right)
         {
-            return SpaceSeparate(AppendColon(left), right);
+            return string.Format(Resources.ColonSeparator, left, right);
         }
 
         /// <summary>

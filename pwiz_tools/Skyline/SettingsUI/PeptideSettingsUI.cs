@@ -89,6 +89,8 @@ namespace pwiz.Skyline.SettingsUI
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager, TABS? selectTab)
         {
             InitializeComponent();
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
             _staticModsOriginalTooltip = helpTip.GetToolTip(listStaticMods);
             _heavyModsOriginalTooltip = helpTip.GetToolTip(listHeavyMods);
             _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
