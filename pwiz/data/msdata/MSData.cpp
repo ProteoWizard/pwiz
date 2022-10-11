@@ -1195,6 +1195,10 @@ PWIZ_API_DECL DetailLevel SpectrumList::min_level_accepted(std::function<boost::
     throw runtime_error("[SpectrumList::min_level_accepted] no spectrum satisfied the given predicate at any DetailLevel");
 }
 
+PWIZ_API_DECL bool SpectrumList::calibrationSpectraAreOmitted() const
+{
+    return false; // Default implementation, currently only Waters lockmass functions are actually handled
+}
 
 //
 // SpectrumListSimple
