@@ -68,14 +68,18 @@ namespace pwiz.Skyline.Controls
 
         public bool ValidateDecimalTextBox(TextBox control, out double val)
         {
-            bool valid = false;
             val = default(double);
+            bool valid;
             try
             {
                 val = double.Parse(control.Text, LocalizationHelper.CurrentCulture);
-                valid = true;
+                valid = !double.IsNaN(val) && !double.IsInfinity(val);
             }
-            catch (FormatException)
+            catch (Exception)
+            {
+                valid = false;
+            }
+            if (!valid)
             {
                 ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value);
             }
@@ -177,7 +181,7 @@ namespace pwiz.Skyline.Controls
                     valid = true;
                 }
             }
-            catch (FormatException)
+            catch (Exception)
             {
                 ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer);
             }
