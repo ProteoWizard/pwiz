@@ -123,6 +123,12 @@
   <data name="_add_library_path" xml:space="preserve">
     <value>Specify a spectral library to be added to the open document.</value>
   </data>
+  <data name="_ionmobility_library_create" xml:space="preserve">
+    <value>Add an ion mobility library to the open document, based on its currently loaded chromatograms.</value>
+  </data>
+  <data name="_ionmobility_library_name" xml:space="preserve">
+    <value>Name to give the ion mobility library in an –-ionmobility-library-create operation.</value>
+  </data>
   <data name="_batch_commands" xml:space="preserve">
     <value>Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands.</value>
   </data>
@@ -386,6 +392,9 @@
   </data>
   <data name="CommandArgs_GROUP_IMPORT_Importing_results_replicates" xml:space="preserve">
     <value>Importing results replicates</value>
+  </data>
+  <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
+    <value>Creating an ion mobility library</value>
   </data>
   <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
     <value>Removing results replicates</value>
