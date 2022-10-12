@@ -159,16 +159,34 @@ namespace pwiz.Skyline.Model
         {
             string skylineFile = null;
 
-            foreach (var entry in zip.Entries)
+            // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
+            // Just look at top level files and directories  (e.g. "foo.sky", "agilentfile.d/", "watersdata.raw/", "watersdata.raw/_FUNC01.DAT, "agilentdata.d/AcqData/"")
+
+            var topLevelDirectories =
+                zip.Entries.Where(e => e is { IsDirectory: true } && e.FileName.Count(ch => ch == '/') == 1)
+                    .Select(e => e.FileName).ToArray();
+            var topLevelZipEntries = zip.Entries.Where(e => e != null && e.FileName.Count(ch => ch == '/') <= 2).ToArray();
+            foreach (var entry in topLevelZipEntries)
             {
-                if (entry == null) continue; // ReSharper
                 var file = entry.FileName;
 
                 if (file == null) continue; // ReSharper
 
                 // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
-                if (entry.IsDirectory && !DataSourceUtil.EXT_DATA_FOLDERS.Any(ext => entry.FileName.Contains(ext+@"/")))
-                    throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
+                if (entry.IsDirectory && topLevelDirectories.Contains(entry.FileName))
+                {
+                    // Mimic System.IO.DirectoryInfo - only deals with top level of directory
+                    var directoryName = entry.FileName;
+                    var files =
+                        topLevelZipEntries.Where(e => e.FileName.StartsWith(directoryName) && !e.IsDirectory && e.FileName.Count(ch => ch == '/') == 1).
+                            Select(e => e.FileName.Split('/')[1]).ToArray();
+                    var subdirectories =
+                        topLevelZipEntries.Where(e => e.FileName.StartsWith(directoryName) && e.IsDirectory && !Equals(e.FileName, directoryName)).Select(e => e.FileName.Split('/')[1]).ToArray();
+                    if (DataSourceUtil.GetSourceType(directoryName.Trim('/'), files, subdirectories) == DataSourceUtil.FOLDER_TYPE)
+                    {
+                        throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
+                    }
+                }
 
                 // Shared files must have exactly one Skyline Document(.sky).
                 if (!file.EndsWith(SrmDocument.EXT)) continue;
