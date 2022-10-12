@@ -81,36 +81,34 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
-            return GetSourceType(dirInfo.FullName,
-                dirInfo.GetFiles().Select(f => f.Name).ToArray(),
-                dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+            try
+            {
+                return GetSourceType(dirInfo.FullName,
+                    dirInfo.GetFiles().Select(f => f.Name).ToArray(),
+                    dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+            }
+            catch (Exception) // Probably dirInfo was constructed with a file path rather than an actual directory
+            {
+                // TODO: Folder without access type
+                return FOLDER_TYPE; // It might actually be a file, or nonexistent. But callers expect FOLDER_TYPE return value for "not a data source"
+            }
         }
 
         public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
         {
-            // ReSharper disable LocalizableElement
-            try
+            if (directoryName.ToLowerInvariant().EndsWith(EXT_WATERS_RAW) &&
+                (fileNames.Count(fn => fn.StartsWith(@"_FUNC") && fn.EndsWith(@".DAT") && fn.Count(ch => ch=='.')==1) > 0))
+                return TYPE_WATERS_RAW;
+            if (directoryName.ToLowerInvariant().EndsWith(EXT_AGILENT_BRUKER_RAW))
             {
-                if (directoryName.ToLowerInvariant().EndsWith(EXT_WATERS_RAW) &&
-                    (fileNames.Count(fn => fn.StartsWith("_FUNC") && fn.EndsWith(".DAT") && fn.Count(ch => ch=='.')==1) > 0))
-                    return TYPE_WATERS_RAW;
-                if (directoryName.ToLowerInvariant().EndsWith(EXT_AGILENT_BRUKER_RAW))
-                {
-                    if (subdirectoryNames.Contains("AcqData"))
-                        return TYPE_AGILENT;
-                    if (fileNames.Contains("analysis.baf") ||
-                        fileNames.Contains("analysis.tdf") || // TIMS ion mobility data
-                        fileNames.Contains("analysis.tsf"))
-                        return TYPE_BRUKER;
-                }
-                return FOLDER_TYPE;
+                if (subdirectoryNames.Contains(@"AcqData"))
+                    return TYPE_AGILENT;
+                if (fileNames.Contains(@"analysis.baf") ||
+                    fileNames.Contains(@"analysis.tdf") || // TIMS ion mobility data
+                    fileNames.Contains(@"analysis.tsf"))
+                    return TYPE_BRUKER;
             }
-            // ReSharper restore LocalizableElement
-            catch (Exception)
-            {
-                // TODO: Folder without access type
-                return FOLDER_TYPE;
-            }
+            return FOLDER_TYPE;
         }
 
         private static bool HasExtension(this DirectoryInfo dirInfo, string ext)
