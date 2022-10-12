@@ -1338,7 +1338,8 @@ namespace pwiz.Skyline.Model.Results
                             lastEntry.StartTime,
                             lastEntry.EndTime,
                             lastEntry.CollisionalCrossSection, 
-                            lastEntry.IonMobilityUnits));
+                            lastEntry.IonMobilityUnits,
+                            lastEntry.HasOptimizationScanIds));
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)

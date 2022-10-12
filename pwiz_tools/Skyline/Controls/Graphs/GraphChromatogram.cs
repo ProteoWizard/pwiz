@@ -171,6 +171,7 @@ namespace pwiz.Skyline.Controls.Graphs
             MsDataFileUri SelectedScanFile { get; }
             double SelectedScanRetentionTime { get; }
             Identity SelectedScanTransition { get; }
+            int? SelectedScanOptStep { get; }
         }
 
         private const int FULLSCAN_TRACKING_INDEX = 0;
@@ -335,27 +336,20 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 curveList = GetCurveList(graphPane);
             }
-            int scanIndex = MsDataFileScanHelper.FindScanIndex(chromatogramInfo, retentionTime.MeasuredTime);
+
             var transitions = new List<TransitionFullScanInfo>(curveList.Count);
             int? transitionIndex = null;
             foreach (var curve in curveList)
             {
-                var graphItem = (ChromGraphItem) curve.Tag;
-                if (ReferenceEquals(curve, _closestCurve))
+                var isClosestCurve = ReferenceEquals(curve, _closestCurve);
+                if (isClosestCurve)
                     transitionIndex = transitions.Count;
-                var fullScanInfo = graphItem.FullScanInfo;
-                transitions.Add(new TransitionFullScanInfo
-                {
-                    Name = fullScanInfo.ScanName,
-                    Source = fullScanInfo.ChromInfo.Source,
-                    TimeIntensities = fullScanInfo.ChromInfo.TimeIntensities,
-                    Color = curve.Color,
-                    PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
-                    ProductMz = fullScanInfo.ChromInfo.ProductMz,
-                    ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth,
-                    _ionMobilityInfo = fullScanInfo.ChromInfo.GetIonMobilityFilter(),
-                    Id = graphItem.TransitionNode.Id
-                });
+
+                if (clickedItem.OptimizationStep.HasValue && !isClosestCurve)
+                    continue;
+
+                var graphItem = (ChromGraphItem)curve.Tag;
+                transitions.Add(MakeTransitionFullScanInfo(graphItem.TransitionNode.Id, graphItem.FullScanInfo, curve.Color));
             }
 
             if (!transitionIndex.HasValue)
@@ -363,15 +357,49 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Curve that they clicked on is no longer in CurveList
                 return;
             }
+
+            var thisTransition = transitions[transitionIndex.Value];
+
+            if (clickedItem.OptimizationStep.HasValue)
+            {
+                var groups = OptStepChromatograms.FromChromatograms(ChromGroupInfo.GetRawTransitionInfos())
+                    .ToDictionary(group => group.GetChromatogramForStep(0).ProductMz, group => group);
+                foreach (var nodeTran in clickedItem.TransitionGroupNode.Transitions)
+                {
+                    if (Equals(nodeTran.Mz, thisTransition.ProductMz) || !groups.TryGetValue(nodeTran.Mz, out var group))
+                        continue;
+
+                    transitions.Add(MakeTransitionFullScanInfo(nodeTran.Id,
+                        new FullScanInfo(group.GetChromatogramForStep(clickedItem.OptimizationStep.Value), nodeTran),
+                        thisTransition.Color));
+                }
+            }
+
             var measuredResults = DocumentUI.Settings.MeasuredResults;
             IScanProvider scanProvider = new ScanProvider(_documentContainer.DocumentFilePath, FilePath, 
                 chromatogramInfo.Source, chromatogramInfo.Times, transitions.ToArray(), measuredResults);
             var e = new ClickedChromatogramEventArgs(
                 scanProvider,
-                transitionIndex.Value, 
-                scanIndex);
-            if (ClickedChromatogram != null)    // For ReSharper
-                ClickedChromatogram(this, e);
+                transitionIndex.Value,
+                MsDataFileScanHelper.FindScanIndex(chromatogramInfo, retentionTime.MeasuredTime),
+                clickedItem.OptimizationStep);
+            ClickedChromatogram?.Invoke(this, e);
+        }
+
+        private TransitionFullScanInfo MakeTransitionFullScanInfo(Identity transitionId, FullScanInfo fullScanInfo, Color color)
+        {
+            return new TransitionFullScanInfo
+            {
+                Name = fullScanInfo.ScanName,
+                Source = fullScanInfo.ChromInfo.Source,
+                TimeIntensities = fullScanInfo.ChromInfo.TimeIntensities,
+                Color = color,
+                PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
+                ProductMz = fullScanInfo.ChromInfo.ProductMz,
+                ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth,
+                _ionMobilityInfo = fullScanInfo.ChromInfo.GetIonMobilityFilter(),
+                Id = transitionId
+            };
         }
 
         [Browsable(true)]
@@ -1027,7 +1055,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             foreach (var graphPane in GraphPanes)
                             {
-                                var transitionCurve = GetTransitionCurve(graphPane);
+                                var transitionCurve = GetTransitionCurve(graphPane, _stateProvider.SelectedScanOptStep);
                                 if (transitionCurve == null)
                                     continue;
                                 var graphItem = transitionCurve.Tag as ChromGraphItem;
@@ -1148,13 +1176,14 @@ namespace pwiz.Skyline.Controls.Graphs
             Refresh();
         }
 
-        private CurveItem GetTransitionCurve(GraphPane graphPane)
+        private CurveItem GetTransitionCurve(GraphPane graphPane, int? optStep = null)
         {
             foreach (var curve in GetCurves(graphPane))
             {
                 var graphItem = curve.Tag as ChromGraphItem;
                 if (graphItem != null && graphItem.TransitionNode != null &&
-                    ReferenceEquals(_stateProvider.SelectedScanTransition, graphItem.TransitionNode.Id))
+                    ReferenceEquals(_stateProvider.SelectedScanTransition, graphItem.TransitionNode.Id) &&
+                    (!optStep.HasValue || optStep.Value == graphItem.OptimizationStep))
                 {
                     return curve;
                 }
@@ -1274,7 +1303,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                true,
                                                true,
                                                null,
-                                               0,
+                                               null,
                                                COLORS_GROUPS[(int)extractor % COLORS_GROUPS.Count],
                                                FontSize,
                                                LineWidth);
@@ -1511,7 +1540,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     continue;
                 }
-                int step = numSteps != 0 ? i - numSteps : 0;
+                var step = numSteps != 0 ? i - numSteps : (int?)null;
 
                 Color color;
                 bool isSelected = false;
@@ -1532,16 +1561,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (bestPeakTran == i)
                     tranPeakInfoGraph = tranPeakInfo;
 
-                var scanName = nodeTran.FragmentIonName;
-                if (nodeTran.Transition.Adduct != Adduct.SINGLY_PROTONATED)  // Positive singly charged is uninteresting
-                    scanName += Transition.GetChargeIndicator(nodeTran.Transition.Adduct);
-                if (nodeTran.Transition.MassIndex != 0)
-                    scanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
-                var fullScanInfo = new FullScanInfo
-                {
-                    ChromInfo = info,
-                    ScanName = scanName
-                };
+                var fullScanInfo = new FullScanInfo(info, nodeTran);
                 if (fullScanInfo.ChromInfo != null && fullScanInfo.ChromInfo.ExtractionWidth > 0)
                     _enableTrackingDot = true;
                 // In order to display raw times within the defined peak bound we need to pass the
@@ -1600,7 +1620,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ShadeGraph(TransitionChromInfo tranPeakInfo, ChromatogramInfo chromatogramInfo,
             RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
-            int step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
+            int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
             if (tranPeakInfo == null)
                 return; // Nothing to shade
@@ -2036,7 +2056,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        false,
                                                        false,
                                                        null,
-                                                       0,
+                                                       null,
                                                        color,
                                                        fontSize,
                                                        lineWidth)
@@ -2204,7 +2224,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     false,
                     false,
                     null,
-                    0,
+                    null,
                     color,
                     fontSize,
                     lineWidth)
@@ -3740,16 +3760,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class ClickedChromatogramEventArgs : EventArgs
     {
-        public ClickedChromatogramEventArgs(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        public ClickedChromatogramEventArgs(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             ScanProvider = scanProvider;
             TransitionIndex = transitionIndex;
             ScanIndex = scanIndex;
+            OptStep = optStep;
         }
 
         public IScanProvider ScanProvider { get; private set; }
         public int TransitionIndex { get; private set; }
         public int ScanIndex { get; private set; }
+        public int? OptStep { get; }
     }
 
     public sealed class ChangedPeakBoundsEventArgs : PeakEventArgs

@@ -2312,7 +2312,7 @@ namespace pwiz.Skyline.Model
             var prediction = Settings.TransitionSettings.Prediction;
             var methodType = prediction.OptimizedMethodType;
             var lib = prediction.OptimizedLibrary;
-            if (lib != null && !lib.IsNone)
+            if (lib != null && !lib.IsNone && nodeTransition != null)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
                     Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,

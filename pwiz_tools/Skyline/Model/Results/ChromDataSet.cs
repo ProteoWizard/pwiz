@@ -1424,8 +1424,10 @@ namespace pwiz.Skyline.Model.Results
 
                 return rawTimeIntensities;
             }
-            return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
-                _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
+            return new InterpolatedTimeIntensities(
+                _listChromData.Select(chromData => chromData.TimeIntensities), 
+                _listChromData.Select(chromData => chromData.PrimaryKey.Source),
+                _listChromData.Any(chromData => chromData.OptimizationStep != 0));
         }
 
         public TimeIntervals TimeIntervals { get; set; }
@@ -1475,7 +1477,8 @@ namespace pwiz.Skyline.Model.Results
                 MinRawTime,
                 MaxRawTime,
                 CollisionalCrossSectionSqA,
-                IonMobilityUnits);
+                IonMobilityUnits,
+                groupOfTimeIntensities is InterpolatedTimeIntensities interpolatedTimeIntensities && interpolatedTimeIntensities.OptimizationScans);
         }
 
         public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNames featureNames, ChromCachedFile chromCachedFile)

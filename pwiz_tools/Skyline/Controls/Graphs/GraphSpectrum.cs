@@ -963,11 +963,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChromatogramInfo chromatogramInfo;
                 MakeChromatogramInfo(selection.NodeTranGroup.PrecursorMz, chromatogramData, chromData,
                     out chromatogramInfo, out tranPeakInfo);
-                var graphItem = new ChromGraphItem(selection.NodeTranGroup, matchingTransition,
-                    chromatogramInfo,
+                var graphItem = new ChromGraphItem(selection.NodeTranGroup, matchingTransition, chromatogramInfo,
                     iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
-                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, 0,
-                    color, Settings.Default.ChromatogramFontSize, 1);
+                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, null, color,
+                    Settings.Default.ChromatogramFontSize, 1);
                 LineItem curve =
                     (LineItem)_graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                 if (matchingTransition == null)
@@ -1621,7 +1620,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
+                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits, false);
             var groupInfo = new ChromatogramGroupInfo(header,
                 new[]
                 {

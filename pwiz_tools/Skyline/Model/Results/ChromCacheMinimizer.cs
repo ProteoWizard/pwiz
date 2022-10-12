@@ -172,8 +172,7 @@ namespace pwiz.Skyline.Model.Results
                     fileIndexes.Add(fileIndex);
                 }
             }
-            var chromatograms = Enumerable.Range(0, chromatogramGroupInfo.NumTransitions)
-                .Select(chromatogramGroupInfo.GetRawTransitionInfo).ToArray();
+            var chromatograms = chromatogramGroupInfo.GetRawTransitionInfos().ToArray();
             Assume.IsTrue(Equals(chromatogramGroupInfo.NumTransitions, chromatograms.Length));
             var keptTransitionIndexes = new List<int>();
             double minRetentionTime = Double.MaxValue;
@@ -718,7 +717,8 @@ namespace pwiz.Skyline.Model.Results
                                                       originalHeader.StatusRank,
                                                       originalHeader.StartTime, originalHeader.EndTime,
                                                       originalHeader.CollisionalCrossSection, 
-                                                      originalHeader.IonMobilityUnits);
+                                                      originalHeader.IonMobilityUnits,
+                                                      originalHeader.HasOptimizationScanIds);
                 _chromGroupHeaderInfos.Add(header);
             }
 

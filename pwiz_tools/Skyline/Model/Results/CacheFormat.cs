@@ -39,7 +39,8 @@ namespace pwiz.Skyline.Model.Results
         Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
         Fifteen = 15, // Add import time to CachedFileHeaderStruct
-        CURRENT = Fifteen,
+        Sixteen = 16, // Add optimization_scan_ids flag
+        CURRENT = Sixteen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
@@ -159,7 +160,7 @@ namespace pwiz.Skyline.Model.Results
         public static readonly CacheFormat CURRENT = new CacheFormat
         {
             FormatVersion = CacheFormatVersion.CURRENT,
-            VersionRequired = CacheFormatVersion.Fourteen,
+            VersionRequired = CacheFormatVersion.Sixteen,
             CachedFileSize = Marshal.SizeOf<CachedFileHeaderStruct>(),
             ChromGroupHeaderSize = Marshal.SizeOf<ChromGroupHeaderInfo>(),
             ChromPeakSize = Marshal.SizeOf<ChromPeak>(),
@@ -206,8 +207,14 @@ namespace pwiz.Skyline.Model.Results
             {
                 return CacheHeaderStruct.WithStructSizes;
             }
+
             // Version Fourteen added some variable length fields ("lenSampleId", "lenSerialNumber") to the end of CachedFileHeaders.
-            return CacheFormatVersion.Fourteen;
+            if (formatVersion < CacheFormatVersion.Sixteen)
+            {
+                return CacheFormatVersion.Fourteen;
+            }
+
+            return CacheFormatVersion.Sixteen;
         }
 
 
