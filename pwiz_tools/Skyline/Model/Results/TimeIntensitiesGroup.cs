@@ -205,9 +205,9 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                foreach (var timeIntensities in TransitionTimeIntensities)
+                foreach (var scanIds in TransitionTimeIntensities.Select(ti => ti.ScanIds).Where(scanIds => scanIds != null))
                 {
-                    PrimitiveArrays.Write(stream, timeIntensities.ScanIds.ToArray());
+                    PrimitiveArrays.Write(stream, scanIds.ToArray());
                 }
             }
         }
