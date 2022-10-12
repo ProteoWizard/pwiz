@@ -100,7 +100,6 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_13 = new DocumentFormat(22.13); // protein_group and protein_association added
         public static readonly DocumentFormat PROTEIN_GROUPS = VERSION_22_13;
         public static readonly DocumentFormat VERSION_22_2 = new DocumentFormat(22.2); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_22_2;
         public static readonly DocumentFormat VERSION_22_21 = new DocumentFormat(22.21); // Shared (.sky.zip) files may contain mass spec data files
         public static readonly DocumentFormat SHARE_REPLICATE_FILES = VERSION_22_21;
         public static readonly DocumentFormat CURRENT = VERSION_22_21;

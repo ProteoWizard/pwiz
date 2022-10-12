@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -80,19 +81,26 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
+            return GetSourceType(dirInfo.FullName,
+                dirInfo.GetFiles().Select(f => f.Name).ToArray(),
+                dirInfo.GetDirectories().Select(d => d.Name).ToArray());
+        }
+
+        public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
+        {
             // ReSharper disable LocalizableElement
             try
             {
-                if (dirInfo.HasExtension(EXT_WATERS_RAW) &&
-                        dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
+                if (directoryName.ToLowerInvariant().EndsWith(EXT_WATERS_RAW) &&
+                    (fileNames.Count(fn => fn.StartsWith("_FUNC") && fn.EndsWith(".DAT") && fn.Count(ch => ch=='.')==1) > 0))
                     return TYPE_WATERS_RAW;
-                if (dirInfo.HasExtension(EXT_AGILENT_BRUKER_RAW))
+                if (directoryName.ToLowerInvariant().EndsWith(EXT_AGILENT_BRUKER_RAW))
                 {
-                    if (dirInfo.GetDirectories("AcqData").Length > 0)
+                    if (subdirectoryNames.Contains("AcqData"))
                         return TYPE_AGILENT;
-                    if (dirInfo.GetFiles("analysis.baf").Length > 0 || 
-                        dirInfo.GetFiles("analysis.tdf").Length > 0 || // TIMS ion mobility data
-                        dirInfo.GetFiles("analysis.tsf").Length > 0) 
+                    if (fileNames.Contains("analysis.baf") ||
+                        fileNames.Contains("analysis.tdf") || // TIMS ion mobility data
+                        fileNames.Contains("analysis.tsf"))
                         return TYPE_BRUKER;
                 }
                 return FOLDER_TYPE;
