@@ -80,11 +80,11 @@ namespace TestRunner
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
         private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
 
-        struct ExpandedLeakCheck
+        class ExpandedLeakCheck
         {
-            public ExpandedLeakCheck(int iterations = LeakCheckIterations * 2, bool reportLeakEarly = false)
+            public ExpandedLeakCheck(int? iterations = null, bool reportLeakEarly = false)
             {
-                Iterations = iterations;
+                Iterations = iterations ?? LeakCheckIterations * 2;
                 ReportLeakEarly = reportLeakEarly;
             }
 
