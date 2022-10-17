@@ -64,7 +64,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfCommandlineCreateImsDbTest.zip");
             TestFilesPersistent = new[] {  RAW_FILE }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, ".", TestFilesPersistent);
+            TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestDirectoryName, TestFilesPersistent);
 
             // Normal use
             const string normal = @"normal";
