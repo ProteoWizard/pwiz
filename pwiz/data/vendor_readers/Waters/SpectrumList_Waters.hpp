@@ -87,6 +87,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     RawDataPtr rawdata_;
     size_t size_;
     Reader::Config config_;
+    bool useDDAProcessor_ = false;
 
     struct IndexEntry : public SpectrumIdentity
     {
@@ -94,6 +95,8 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
         int process;
         int scan;
         int block; // block < 0 is not ion mobility
+        float setMass; // DDA-only
+        float precursorMass; // DDA-only
     };
 
     mutable vector<IndexEntry> index_;
@@ -112,6 +115,9 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
     mutable boost::mutex readMutex;
 
     void createIndex();
+    void createDDAIndex();
+    void getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities, IndexEntry& ie) const;
+
 #endif // PWIZ_READER_WATERS
 
     mutable int lockmassFunction_; // 0-based. Special values: -1=uninitialized -2=unknown

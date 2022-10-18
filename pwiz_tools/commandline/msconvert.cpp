@@ -78,6 +78,7 @@ struct Config : public Reader::Config
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
+        ddaProcessing = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -337,6 +338,9 @@ Config parseCommandLine(int argc, char** argv)
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
             ": write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra")
+        ("ddaProcessing",
+            po::value<bool>(&config.ddaProcessing)->zero_tokens(),
+            ": combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.")
         ("ignoreCalibrationScans",
             po::value<bool>(&config.ignoreCalibrationScans)->zero_tokens(),
             ": do not process calibration scans (currently only applies to Waters lockmass function)")
