@@ -31,6 +31,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public sealed class TestFilesDir : IDisposable
     {
+        public const string TEST_FULL_NAME = @"TestFullName"; // This must agree with the keyword in TestRunnerLib.RunTests
         private TestContext TestContext { get; set; }
 
         /// <summary>
@@ -79,12 +80,13 @@ namespace pwiz.SkylineTestUtil
             {
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
-            // Where to place persistent (usually large, expensive to extract) files, if any
-            if (!(AbstractUnitTest.DownloadFromS3 && // Only happens on TeamCity
-                  TestContext.FullyQualifiedTestClassName.Contains(@$"{AbstractUnitTest.PERFTEST_NAMESPACE}.")))
+            var testFullName = TestContext.Properties.Contains(TEST_FULL_NAME) ? TestContext.Properties[TEST_FULL_NAME].ToString() : TestContext.FullyQualifiedTestClassName;
+            var isPerfTest = testFullName.Contains(@$"{AbstractUnitTest.PERFTEST_NAMESPACE}.");
+            // Special treatment to persistent (usually large, expensive to extract) files, if any
+            // We don't do this on TeamCity for perftests, as they won't actually get re-used and may
+            // take up so much room as to interfere with other builds
+            if (!(isPerfTest && AbstractUnitTest.DownloadFromS3)) // S3 dowload only happens on TeamCity
             {
-                // We don't do this on TeamCity for perftests, as they won't actually get re-used and may
-                // take up so much room as to interfere with other builds
                 PersistentFiles = persistentFiles;
                 PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
             }

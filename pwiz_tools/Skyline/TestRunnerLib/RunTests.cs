@@ -306,6 +306,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
+                TestContext.Properties["TestFullName"] = test.TestMethod.DeclaringType?.FullName; // This keyword must agree with TestFilesDir.TEST_FULL_NAME
                 TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
 
