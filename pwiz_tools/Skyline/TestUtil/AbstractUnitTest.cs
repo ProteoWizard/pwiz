@@ -102,9 +102,10 @@ namespace pwiz.SkylineTestUtil
         /// in the TestPerf namespace so that they can be skipped when the RunPerfTests 
         /// flag is unset.
         /// </summary>
+        public const string PERFTEST_NAMESPACE = @"TestPerf";
         public bool IsPerfTest
         {
-            get { return ("TestPerf".Equals(GetType().Namespace)); }
+            get { return (PERFTEST_NAMESPACE.Equals(GetType().Namespace)); }
         }
 
         /// <summary>
@@ -219,12 +220,14 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool DownloadFromS3 => Environment.GetEnvironmentVariable(@"SKYLINE_DOWNLOAD_FROM_S3") == "1";
+
         private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
         {
             if (!Directory.Exists(targetFolder))
                 Directory.CreateDirectory(targetFolder);
 
-            bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
+            var downloadFromS3 = DownloadFromS3;
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
             string message = string.Empty;
             for (var retry = true; ; retry = false)

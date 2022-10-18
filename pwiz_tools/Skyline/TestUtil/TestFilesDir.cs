@@ -79,9 +79,15 @@ namespace pwiz.SkylineTestUtil
             {
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
-            // where to place persistent (usually large, expensive to extract) files if any
-            PersistentFiles = persistentFiles;
-            PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
+            // Where to place persistent (usually large, expensive to extract) files, if any
+            if (!(AbstractUnitTest.DownloadFromS3 && // Only happens on TeamCity
+                  TestContext.FullyQualifiedTestClassName.Contains(@$"{AbstractUnitTest.PERFTEST_NAMESPACE}.")))
+            {
+                // We don't do this on TeamCity for perftests, as they won't actually get re-used and may
+                // take up so much room as to interfere with other builds
+                PersistentFiles = persistentFiles;
+                PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
+            }
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
         }
