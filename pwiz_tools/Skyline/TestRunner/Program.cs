@@ -80,33 +80,46 @@ namespace TestRunner
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
         private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
 
-        struct ExpandedLeakCheck
+        class ExpandedLeakCheck
         {
-            public ExpandedLeakCheck(int iterations = LeakCheckIterations * 2, bool reportLeakEarly = false)
+            public ExpandedLeakCheck(int? iterations = null, bool reportLeakEarly = false)
             {
-                Iterations = iterations;
+                Iterations = iterations ?? LeakCheckIterations * 2;
                 ReportLeakEarly = reportLeakEarly;
             }
 
+            /// <summary>
+            /// Only if <see cref="ReportLeakEarly"/> is false, the number of
+            /// iterations used to detect a leak is extended to this value.
+            /// </summary>
             public int Iterations { get; set; }
+
+            /// <summary>
+            /// Leaks get reported at the normal number of iterations. If a leak
+            /// is detected testing begins an infinite loop on the failing test
+            /// to get more information on whether it is truly leaking.
+            /// </summary>
             public bool ReportLeakEarly { get; set; }
         }
 
         // These tests get extra runs to meet the leak thresholds
         private static Dictionary<string, ExpandedLeakCheck> LeakCheckIterationsOverrideByTestName = new Dictionary<string, ExpandedLeakCheck>
         {
+            // These tests check leaks at the normal time and then start an infinite
+            // loop when a leak is detected.
             {"TestGroupedStudiesTutorialDraft", new ExpandedLeakCheck(LeakCheckIterations * 4, true)},
             {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
-            {"TestPermuteIsotopeModifications", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
-            {"TestLibraryExplorer", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
-            {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
+            // These tests expand the number of iterations before reporting a leak
+            // with no potential for infinite looping on a detected leak.
+            {"TestLibraryExplorer", new ExpandedLeakCheck()},
+            {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
         public static string[] RunOnceTestNames = { "AaantivirusTestExclusion", "CodeInspection" };
 
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
-        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft" };
+        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft", "TestPermuteIsotopeModifications" };
 
         // These tests are allowed to fail the total handle leak threshold, and extra iterations are not done to stabilize a spiky total handle distribution
         public static string[] MutedTotalHandleLeakTestNames = { };
