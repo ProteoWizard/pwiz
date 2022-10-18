@@ -11901,4 +11901,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
 	  <value>Unable to determine format of delimiter separated value file</value>
   </data>
+  <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
+	  <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+  </data>
 </root>
