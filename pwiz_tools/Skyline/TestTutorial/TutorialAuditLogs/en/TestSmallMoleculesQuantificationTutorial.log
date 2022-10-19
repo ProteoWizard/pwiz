@@ -17,7 +17,7 @@ Settings > Transition Settings -- Prediction > Collision energy > Regression par
 Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.036", Intercept = "-1.328" }
 Settings > Transition Settings -- Prediction > Optimization method changed from "None" to "Transition"
 Settings > Transition Settings -- Prediction > Use optimization values when present changed from False to True
-Settings > Transition Settings -- Instrument > Method match tolerance  changed from "0.055" to "0.02"
+Settings > Transition Settings -- Instrument > Method match tolerance  changed from 0.055mz to 0.02mz
 
 Undo Redo : Imported results from 47 files
 Summary   : Imported results from 47 files

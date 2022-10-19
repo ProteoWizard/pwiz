@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -844,7 +845,7 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
-                    var mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;  
+                    var mzMatchTolerance = new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE);  
                     var isGC = false;
                     if (!match.Success)
                     {
@@ -1078,7 +1079,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (isMzVault)
                         {
                             // mzVault uses a wider tolerance than most in m/z matching for precursor identification
-                            mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
+                            mzMatchTolerance = new MzTolerance(10.0 * DEFAULT_MZ_MATCH_TOLERANCE);
                         }
                     } // End parser loop
 

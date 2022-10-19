@@ -155,7 +155,8 @@ namespace pwiz.Skyline.SettingsUI
             textMinMz.Text = Instrument.MinMz.ToString(LocalizationHelper.CurrentCulture);
             textMaxMz.Text = Instrument.MaxMz.ToString(LocalizationHelper.CurrentCulture);
             cbDynamicMinimum.Checked = Instrument.IsDynamicMin;
-            textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
+            textMzMatchTolerance.Text = Instrument.IonMatchMzTolerance.Value.ToString(LocalizationHelper.CurrentCulture);
+            comboMzMatchToleranceUnit.SelectedIndex = (int)Instrument.IonMatchMzTolerance.Unit;
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString(LocalizationHelper.CurrentCulture);
             if (Instrument.MaxInclusions.HasValue)
@@ -202,7 +203,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.SureQuant)
             {
-                MZMatchTolerance = SureQuantMzMatchTolerance;
+                MZMatchTolerance = new MzTolerance(SureQuantMzMatchTolerance);
                 TriggeredAcquisition = true;
             }
         }
@@ -518,12 +519,14 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateNumberTextBox(textMaxMz, min, max, out maxMz))
                 return;
             bool isDynamicMin = cbDynamicMinimum.Checked;
+
+            MzTolerance.Units mzMatchToleranceUnit = (MzTolerance.Units)comboMzMatchToleranceUnit.SelectedIndex;
             double mzMatchTolerance;
-            minTol = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE;
-            maxTol = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            var toleranceRange = TransitionInstrument.GetToleranceValidationRange(mzMatchToleranceUnit);
             if (!helper.ValidateDecimalTextBox(textMzMatchTolerance,
-                    minTol, maxTol, out mzMatchTolerance))
+                    toleranceRange.Start, toleranceRange.End, out mzMatchTolerance))
                 return;
+
             int? maxTrans = null;
             if (!string.IsNullOrEmpty(textMaxTrans.Text))
             {
@@ -571,7 +574,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionInstrument instrument = new TransitionInstrument(minMz,
-                    maxMz, isDynamicMin, mzMatchTolerance, MzTolerance.Units.mz, maxTrans, maxInclusions, minTime, maxTime)
+                    maxMz, isDynamicMin, new MzTolerance(mzMatchTolerance, mzMatchToleranceUnit), maxTrans, maxInclusions, minTime, maxTime)
                 .ChangeTriggeredAcquisition(cbxTriggeredAcquisition.Checked);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
@@ -866,10 +869,18 @@ namespace pwiz.Skyline.SettingsUI
             FullScanSettingsControl.SetRetentionTimeFilter(retentionTimeFilterType, length);
         }
 
-        public double MZMatchTolerance
+        public MzTolerance MZMatchTolerance
         {
-            get { return Double.Parse(textMzMatchTolerance.Text); }
-            set { textMzMatchTolerance.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get
+            {
+                MzTolerance.Units mzMatchToleranceUnit = (MzTolerance.Units)comboMzMatchToleranceUnit.SelectedIndex;
+                return new MzTolerance(Double.Parse(textMzMatchTolerance.Text), mzMatchToleranceUnit);
+            }
+            set
+            {
+                textMzMatchTolerance.Text = value.Value.ToString(LocalizationHelper.CurrentCulture);
+                comboMzMatchToleranceUnit.SelectedIndex = (int)value.Unit;
+            }
         }
 
         public CollisionEnergyRegression RegressionCE

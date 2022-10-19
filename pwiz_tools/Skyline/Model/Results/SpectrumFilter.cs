@@ -1147,11 +1147,11 @@ namespace pwiz.Skyline.Model.Results
                 // if more than one match at this m/z value return a list
 
                 double minMzDelta = double.MaxValue;
-                double mzDeltaEpsilon = Math.Min(_instrument.MzMatchTolerance, .0001);
+                double mzDeltaEpsilon = Math.Min(_instrument.IonMatchMzTolerance.GetAbsoluteValue(isoWin.IsolationMz.Value), .0001);
 
                 // Isolation width for single is based on the instrument m/z match tolerance
                 var isoTargMz = isoWin.IsolationMz.Value;
-                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.MzMatchTolerance * 2);
+                var isoWinSingle = new IsolationWindowFilter(isoTargMz, _instrument.IonMatchMzTolerance.GetAbsoluteValue(isoTargMz) * 2);
 
                 foreach (var filterPair in FindFilterPairs(isoWinSingle, FullScanAcquisitionMethod.DIA, true))
                 {
@@ -1187,7 +1187,7 @@ namespace pwiz.Skyline.Model.Results
             }
             else // PRM or SureQuant
             {
-                return FindFilterPairs(new IsolationWindowFilter(isoWin.IsolationMz, 2 * _instrument.MzMatchTolerance),
+                return FindFilterPairs(new IsolationWindowFilter(isoWin.IsolationMz, 2 * _instrument.IonMatchMzTolerance.GetAbsoluteValue(isoWin.IsolationMz.Value)),
                     FullScanAcquisitionMethod.DIA, true);
             }
 
@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline.Model.Results
                 // Find isolation window.
             else if (isolationScheme.PrespecifiedIsolationWindows.Count > 0)
             {
-                var isolationWindow = isolationScheme.GetIsolationWindow(isolationTargetMz, _instrument.MzMatchTolerance);
+                var isolationWindow = isolationScheme.GetIsolationWindow(isolationTargetMz, _instrument.IonMatchMzTolerance.GetAbsoluteValue(isolationTargetMz));
                 if (isolationWindow == null)
                 {
                     _filterPairDictionary[new IsolationWindowFilter(isolationTargetMz, isolationWidth)] = new List<SpectrumFilterPair>();

@@ -1880,8 +1880,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionInstrument(int minMz,
                                     int maxMz,
                                     bool isDynamicMin,
-                                    double mzMatchTolerance,
-                                    MzTolerance.Units ionMatchToleranceUnit,
+                                    MzTolerance mzMatchTolerance,
                                     int? maxTransitions,
                                     int? maxInclusions,
                                     int? minTime,
@@ -1890,14 +1889,30 @@ namespace pwiz.Skyline.Model.DocSettings
             MinMz = minMz;
             MaxMz = maxMz;
             IsDynamicMin = isDynamicMin;
-            MzMatchTolerance = mzMatchTolerance;
-            IonMatchToleranceUnit = ionMatchToleranceUnit;
+            IonMatchMzTolerance = mzMatchTolerance;
             MaxTransitions = maxTransitions;
             MaxInclusions = maxInclusions;
             MinTime = minTime;
             MaxTime = maxTime;
 
             DoValidate();
+        }
+
+        public static bool ValidateMatchTolerance(MzTolerance matchTolerance)
+        {
+            var range = GetToleranceValidationRange(matchTolerance.Unit);
+                return range.InclusiveIn(matchTolerance.Value);
+        }
+
+        public static Interval<double> GetToleranceValidationRange(MzTolerance.Units unit)
+        {
+            switch (unit)
+            {
+                case MzTolerance.Units.ppm:
+                    return new Interval<double>(MIN_MZ_MATCH_TOLERANCE_PPM, MAX_MZ_MATCH_TOLERANCE_PPM, ((start, end) => end - start));
+                default:
+                    return new Interval<double>(MIN_MZ_MATCH_TOLERANCE, MAX_MZ_MATCH_TOLERANCE, ((start, end) => end - start));
+            }
         }
 
         [Track]
@@ -1928,37 +1943,23 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         [Track]
-        public double MzMatchTolerance { get; private set; }
-
-        [Track]
-        public MzTolerance.Units IonMatchToleranceUnit { get; private set; }
-
         public MzTolerance IonMatchMzTolerance
         {
-            get
-            {
-                return new MzTolerance(MzMatchTolerance, IonMatchToleranceUnit);
-            }
+            get;
+            private set;
         }
 
         public MzTolerance DefaultTolerance { 
             get
             {
-                switch(IonMatchToleranceUnit)
+                switch(IonMatchMzTolerance.Unit)
                 {
-                    case MzTolerance.Units.mz:
-                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE, IonMatchToleranceUnit);
                     case MzTolerance.Units.ppm:
-                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE_PPM, IonMatchToleranceUnit);
+                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE_PPM, IonMatchMzTolerance.Unit);
+                    default:
+                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE);
                 }
-                return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE, IonMatchToleranceUnit);
             } 
-        }
-
-
-        public bool IsMzMatch(double mz1, double mz2)
-        {
-            return Math.Abs(mz1 - mz1) <= MzMatchTolerance;
         }
 
         [Track]
@@ -2003,9 +2004,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.IsDynamicMin = prop);
         }
 
-        public TransitionInstrument ChangeMzMatchTolerance(double prop)
+        public TransitionInstrument ChangeIonMatchMzTolerance(MzTolerance prop)
         {
-            return ChangeProp(ImClone(this), im => im.MzMatchTolerance = prop);
+            return ChangeProp(ImClone(this), im => im.IonMatchMzTolerance = prop);
         }
 
         public TransitionInstrument ChangeMaxTransitions(int? prop)
@@ -2064,6 +2065,7 @@ namespace pwiz.Skyline.Model.DocSettings
             max_time,
             dynamic_min,
             mz_match_tolerance,
+            mz_match_tolerance_unit,
             max_transitions,
             max_inclusions,
             triggered_acquisition,
@@ -2099,11 +2101,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     string.Format(Resources.TransitionInstrument_DoValidate_Instrument_maximum_mz_exceeds_allowable_maximum__0__,
                                   MAX_MEASURABLE_MZ));
             }
-            if (MIN_MZ_MATCH_TOLERANCE > MzMatchTolerance || MzMatchTolerance > MAX_MZ_MATCH_TOLERANCE)
+
+            var validationRange = GetToleranceValidationRange(IonMatchMzTolerance.Unit);
+            if (!ValidateMatchTolerance(IonMatchMzTolerance))
             {
                 throw new InvalidDataException(
                     string.Format(Resources.TransitionInstrument_DoValidate_The_mz_match_tolerance__0__must_be_between__1__and__2__,
-                                  MzMatchTolerance, MIN_MZ_MATCH_TOLERANCE, MAX_MZ_MATCH_TOLERANCE));
+                        IonMatchMzTolerance, validationRange.Start, validationRange.End));
             }
             if (MIN_TRANSITION_MAX_ORIGINAL > MaxTransitions || MaxTransitions > MAX_TRANSITION_MAX)
             {
@@ -2172,7 +2176,9 @@ namespace pwiz.Skyline.Model.DocSettings
             IsDynamicMin = reader.GetBoolAttribute(ATTR.dynamic_min);
             MinMz = reader.GetIntAttribute(ATTR.min_mz);
             MaxMz = reader.GetIntAttribute(ATTR.max_mz);
-            MzMatchTolerance = reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE);
+            IonMatchMzTolerance = new MzTolerance(
+                    reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE),
+                    reader.GetEnumAttribute(ATTR.mz_match_tolerance_unit, MzTolerance.Units.mz));
             MinTime = reader.GetNullableIntAttribute(ATTR.min_time);
             MaxTime = reader.GetNullableIntAttribute(ATTR.max_time);
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
@@ -2206,7 +2212,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.dynamic_min, IsDynamicMin);
             writer.WriteAttribute(ATTR.min_mz, MinMz);
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
-            writer.WriteAttribute(ATTR.mz_match_tolerance, MzMatchTolerance);
+            writer.WriteAttribute(ATTR.mz_match_tolerance, IonMatchMzTolerance.Value);
+            writer.WriteAttribute(ATTR.mz_match_tolerance_unit, IonMatchMzTolerance.Unit);
             writer.WriteAttributeNullable(ATTR.min_time, MinTime);
             writer.WriteAttributeNullable(ATTR.max_time, MaxTime);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
@@ -2225,7 +2232,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return other.MinMz == MinMz &&
                 other.MaxMz == MaxMz &&
                 other.IsDynamicMin.Equals(IsDynamicMin) &&
-                other.MzMatchTolerance.Equals(MzMatchTolerance) &&
+                other.IonMatchMzTolerance.Equals(IonMatchMzTolerance) &&
                 other.MinTime.Equals(MinTime) &&
                 other.MaxTime.Equals(MaxTime) &&
                 other.MaxTransitions.Equals(MaxTransitions) &&
@@ -2252,7 +2259,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = MinMz;
                 result = (result*397) ^ MaxMz;
                 result = (result*397) ^ IsDynamicMin.GetHashCode();
-                result = (result*397) ^ MzMatchTolerance.GetHashCode();
+                result = (result*397) ^ IonMatchMzTolerance.GetHashCode();
                 result = (result*397) ^ (MinTime.HasValue ? MinTime.Value : 0);
                 result = (result*397) ^ (MaxTime.HasValue ? MaxTime.Value : 0);
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);

@@ -1022,8 +1022,12 @@ namespace pwiz.Skyline.Model.Serialization
                 var pushReader = reader; // Preserve in case we substitute with a backward compatibility reader
                 if (isCustomMolecule && DocumentMayContainMoleculesWithEmbeddedIons)
                 {
+                    // If instrument match tolerance is specified in ppm use the most tolerant value
+                    var tolerance =
+                        Settings.TransitionSettings.Instrument.IonMatchMzTolerance.GetAbsoluteValue(
+                            Settings.TransitionSettings.Instrument.MaxMz);
                     // If this is an older small molecule file, clean up any problems with former data model
-                    reader = new Pre372CustomIonTransitionGroupHandler(reader, Settings.TransitionSettings.Instrument.MzMatchTolerance).Read(ref peptide);
+                    reader = new Pre372CustomIonTransitionGroupHandler(reader, tolerance).Read(ref peptide);
                 }
                 reader.ReadStartElement();
                 if (reader.IsStartElement())

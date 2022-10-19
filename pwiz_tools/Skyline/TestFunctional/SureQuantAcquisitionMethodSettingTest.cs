@@ -55,11 +55,11 @@ namespace pwiz.SkylineTestFunctional
                 }
 
                 // Verify that choosing the "SureQuant" acquisition method also changes MzMatchTolerance and Triggered Acquisition
-                Assert.AreEqual(TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, transitionSettingsUi.MZMatchTolerance);
+                Assert.AreEqual(TransitionInstrument.DEFAULT_MATCH_TOLERANCE, transitionSettingsUi.MZMatchTolerance);
                 Assert.IsFalse(transitionSettingsUi.TriggeredAcquisition);
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.SureQuant;
                 Assert.IsTrue(transitionSettingsUi.TriggeredAcquisition);
-                Assert.AreEqual(TransitionSettingsUI.SureQuantMzMatchTolerance, transitionSettingsUi.MZMatchTolerance);
+                Assert.AreEqual(TransitionSettingsUI.SureQuantMzMatchTolerance, transitionSettingsUi.MZMatchTolerance.Value);
                 transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.Instrument;
             });
 

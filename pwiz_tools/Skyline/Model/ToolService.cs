@@ -217,8 +217,7 @@ namespace pwiz.Skyline.Model
                                 for (int iTransition = 0; iTransition < chromatogramGroup.NumTransitions; iTransition++)
                                 {
                                     ChromatogramInfo transitionInfo = chromatogramGroup.GetTransitionInfo(iTransition);
-                                    if (Math.Abs(transitionInfo.ProductMz - transition.Mz) >
-                                        document.Settings.TransitionSettings.Instrument.MzMatchTolerance)
+                                    if (document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance.IsWithinTolerance(transitionInfo.ProductMz, transition.Mz))
                                     {
                                         continue;
                                     }

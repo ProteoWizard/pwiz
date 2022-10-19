@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -40,7 +41,7 @@ namespace pwiz.Skyline.Model
         /// <param name="massShift">Mass shift required to to achieve this charge state or zero</param>
         /// <param name="nearestCharge">closest matching charge, useful when return value is null</param>
         /// <returns>A matching charge or null, in which case the closest non-matching charge can be found in the nearestCharge value.</returns>
-        public static Adduct CalcCharge(TypedMass mass, double mz, double tolerance, bool isCustomIon, int minCharge, int maxCharge,
+        public static Adduct CalcCharge(TypedMass mass, double mz, MzTolerance tolerance, bool isCustomIon, int minCharge, int maxCharge,
             ICollection<int> massShifts, MassShiftType massShiftType, out int massShift, out int nearestCharge)
         {
             Assume.IsTrue(minCharge <= maxCharge);
@@ -60,8 +61,7 @@ namespace pwiz.Skyline.Model
                     double delta = mz - calculatedMz;
                     double deltaAbs = Math.Abs(delta);
                     int potentialShift = (int) Math.Round(deltaAbs);
-                    double fractionalDelta = deltaAbs - potentialShift;
-                    if (MatchMz(fractionalDelta, tolerance) && MatchMassShift(potentialShift, massShifts, massShiftType))
+                    if (tolerance.IsWithinTolerance(deltaAbs, potentialShift) && MatchMassShift(potentialShift, massShifts, massShiftType))
                     {
                         massShift = potentialShift;
                         if (delta < 0)
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model
         public static Adduct CalcPrecursorCharge(TypedMass precursorMassH,
                                               int? precursorZ,
                                               double precursorMz,
-                                              double tolerance,
+                                              MzTolerance tolerance,
                                               bool isCustomIon,
                                               bool isDecoy,
                                               out int massShift,
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model
                 out massShift, out nearestCharge);
         }
 
-        private static Adduct CalcProductCharge(TypedMass productMassH, int? productZ, double productMz, double tolerance, bool isCustomIon,
+        private static Adduct CalcProductCharge(TypedMass productMassH, int? productZ, double productMz, MzTolerance tolerance, bool isCustomIon,
                                              Adduct maxCharge, MassShiftType massShiftType, out int massShift, out int nearestCharge)
         {
             return CalcCharge(productMassH, productMz, tolerance, isCustomIon,
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Model
             IonTable<TypedMass> productMasses,
             IList<IList<ExplicitLoss>> potentialLosses,
             double productMz,
-            double tolerance,
+            MzTolerance tolerance,
             MassType massType,
             MassShiftType massShiftType,
             out IonType? ionType,
@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model
 
                 // Types have priorities.  If changing type category, and there is already a
                 // suitable answer stop looking.
-                if (category != categoryLast && minDelta.HasValue && MatchMz(minDelta.Value, tolerance))
+                if (category != categoryLast && minDelta.HasValue && MatchMz(minDelta.Value, tolerance.GetAbsoluteValue(productMz)))
                     break;
                 categoryLast = category;
 

@@ -18,6 +18,7 @@
  */
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -83,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
         private void SetMzMatchTolerance(double value)
         {
             var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() => { transitionSettingsDlg.MZMatchTolerance = value; });
+            RunUI(() => { transitionSettingsDlg.MZMatchTolerance = new MzTolerance(value); });
             OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
         }
 

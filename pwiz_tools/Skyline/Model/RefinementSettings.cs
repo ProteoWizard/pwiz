@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -1237,14 +1238,16 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private SrmDocument ForceReloadChromatograms(SrmDocument document)
         {
-            double mzMatchToleranceOld = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var mzMatchToleranceOld = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             // Find the double value which is the smallest step away from the current value
-            double mzMatchToleranceNew =
-                BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(mzMatchToleranceOld) - 1);
+            var mzMatchToleranceNew = new MzTolerance(
+                BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(mzMatchToleranceOld.Value) - 1),
+                mzMatchToleranceOld.Unit);
+
             document = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(instrument =>
-                instrument.ChangeMzMatchTolerance(mzMatchToleranceNew)));
+                instrument.ChangeIonMatchMzTolerance(mzMatchToleranceNew)));
             return document.ChangeSettings(document.Settings.ChangeTransitionInstrument(instrument =>
-                instrument.ChangeMzMatchTolerance(mzMatchToleranceOld)));
+                instrument.ChangeIonMatchMzTolerance(mzMatchToleranceOld)));
 
         }
 

@@ -2240,6 +2240,12 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;label22.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="comboToleranceUnits.Items" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="comboToleranceUnits.Items1" xml:space="preserve">
+    <value>ppm</value>
+  </data>
   <data name="&gt;&gt;textMinIonCount.Name" xml:space="preserve">
     <value>textMinIonCount</value>
   </data>

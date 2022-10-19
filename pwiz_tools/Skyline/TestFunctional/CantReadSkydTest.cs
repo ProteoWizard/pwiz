@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -44,10 +45,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const double newMzMatchTolerance = 0.054;
+            var newMzMatchTolerance = new MzTolerance(0.054);
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Human_plasma.sky")));
             WaitForDocumentLoaded();
-            Assert.AreNotEqual(newMzMatchTolerance, SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+            Assert.AreNotEqual(newMzMatchTolerance, SkylineWindow.Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance);
 
             // Bring up the Transition Settings dialog and change the Instrument Mz Match Tolerance
             // Changing this setting requires reading chromatogram peaks for every precursor in the document
@@ -90,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure the change that we made was accepted
             WaitForCondition(() =>
-                SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance == newMzMatchTolerance);
+                SkylineWindow.Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance.Equals(newMzMatchTolerance));
         }
     }
 }

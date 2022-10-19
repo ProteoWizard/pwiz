@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -410,7 +411,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             var instrument = new TransitionInstrument(minIonMz, maxIonMz, settings.Instrument.IsDynamicMin,
-                settings.Instrument.MzMatchTolerance, Common.Chemistry.MzTolerance.Units.mz, settings.Instrument.MaxTransitions,
+                settings.Instrument.IonMatchMzTolerance, settings.Instrument.MaxTransitions,
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 

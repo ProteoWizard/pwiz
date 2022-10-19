@@ -1007,7 +1007,7 @@ namespace pwiz.Skyline.Model
                 return ModMatcher.GetDocModifications(document);
             }
 
-            private double MzMatchTolerance { get { return Settings.TransitionSettings.Instrument.MzMatchTolerance; } }
+            private MzTolerance MzMatchTolerance { get { return Settings.TransitionSettings.Instrument.IonMatchMzTolerance; } }
 
             public ExTransitionInfo TransitionInfo { get; private set; }
 
@@ -1179,7 +1179,7 @@ namespace pwiz.Skyline.Model
             private static Adduct CalcPrecursorCharge(TypedMass precursorMassH,
                 int? precursorZ,
                 double precursorMz,
-                double tolerance,
+                MzTolerance tolerance,
                 bool isCustomIon,
                 bool isDecoy,
                 out int massShift,
@@ -1305,7 +1305,7 @@ namespace pwiz.Skyline.Model
                                                IsotopeLabelType labelType,
                                                int iSequence,
                                                int iDecoy,
-                                               double tolerance,
+                                               MzTolerance tolerance,
                                                IFormatProvider provider,
                                                SrmSettings settings,
                                                out IList<TransitionExp> transitionExps)
@@ -1357,7 +1357,7 @@ namespace pwiz.Skyline.Model
             }
 
             protected static int FindProduct(string[] fields, string seq, IEnumerable<TransitionExp> transitionExps,
-                int iSequence, int iPrecursor, double tolerance, IFormatProvider provider, SrmSettings settings)
+                int iSequence, int iPrecursor, MzTolerance tolerance, IFormatProvider provider, SrmSettings settings)
             {
                 double maxProductMz = 0;
                 int maxIndex = -1;
@@ -1480,7 +1480,7 @@ namespace pwiz.Skyline.Model
                 int bestCandidateIndex = -1;
                 int iLabelType = -1;
 
-                double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
+                MzTolerance tolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
 
                 var linesSeen = 0;
                 status = progressMonitor != null
@@ -2038,7 +2038,7 @@ namespace pwiz.Skyline.Model
                     throw new LineColNumberedIoException(message, 1, iExPeptide);
                 }
 
-                double tolerance = settings.TransitionSettings.Instrument.MzMatchTolerance;
+                MzTolerance tolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 IList<TransitionExp> transitionExps;
                 int iPrecursor = FindPrecursor(fields, sequence, modifiedSequence, labelType, iExPeptide, indices.DecoyColumn,
                                                tolerance, provider, settings, out transitionExps);

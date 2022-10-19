@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Results
     public class PeptideFinder
     {
         private readonly List<PeptidePrecursorMz> _precursorMzPeptideList = new List<PeptidePrecursorMz>();
-        private readonly double _mzMatchTolerance;
+        private readonly MzTolerance _mzMatchTolerance;
 
         public PeptideFinder(SrmDocument document)
         {
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
             // Sort list by PrecursorMz.
             _precursorMzPeptideList.Sort((p1, p2) => p1.PrecursorMz.CompareTo(p2.PrecursorMz));
 
-            _mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            _mzMatchTolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
         }
 
         /// <summary>
@@ -74,9 +74,9 @@ namespace pwiz.Skyline.Model.Results
             var closestMatch = _precursorMzPeptideList[i];
 
             // Return color seed only if the match is within allowed tolerance.
-            return Math.Abs(closestMatch.PrecursorMz - precursorMz) > _mzMatchTolerance
-                ? null
-                : closestMatch.NodePeptide;
+            return _mzMatchTolerance.IsWithinTolerance(closestMatch.PrecursorMz, precursorMz)
+                ? closestMatch.NodePeptide
+                : null;
         }
 
         private sealed class PeptidePrecursorMz

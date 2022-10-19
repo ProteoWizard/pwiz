@@ -617,7 +617,7 @@ namespace pwiz.Skyline.Model
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
         }
 
-        public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct,
+        public static int? ValidateFormulaWithMzAndAdduct(MzTolerance tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct,
             TypedMass mz, int? charge, bool? isPositive, bool isPrecursor, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
         {
             var ion = new CustomIon(moleculeFormula);
@@ -632,7 +632,7 @@ namespace pwiz.Skyline.Model
                 adductInferred = Adduct.NonProteomicProtonatedFromCharge(charge.Value);
             }
             mzCalc = adductInferred.AdductCharge != 0 ? adductInferred.MzFromNeutralMass(mass) : (double?) null;
-            if (mzCalc.HasValue && tolerance >= (Math.Abs(mzCalc.Value - mz)))
+            if (mzCalc.HasValue && tolerance.IsWithinTolerance(mzCalc.Value, mz))
             {
                 adduct = adductInferred;
                 return charge;
@@ -661,7 +661,7 @@ namespace pwiz.Skyline.Model
                     if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
                     {
                         var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                        if (err <= tolerance && err < leastError)
+                        if (tolerance.IsWithinTolerance(adductInferred.MzFromNeutralMass(mass), mz) && tolerance.GetAbsoluteValue(mz) < leastError)
                         {
                             bestMatch = adductInferred;
                             leastError = err;
@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Model
                                 var tail = text.Substring(parts[0].Length);
                                 adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                 err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                if (err <= tolerance && err < leastError)
+                                if (tolerance.IsWithinTolerance(adductInferred.MzFromNeutralMass(mass), mz) && tolerance.GetAbsoluteValue(mz) < leastError)
                                 {
                                     bestMatch = adductInferred;
                                     leastError = err;
@@ -685,7 +685,7 @@ namespace pwiz.Skyline.Model
                                     // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
                                     adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                     err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                    if (err <= tolerance && err < leastError)
+                                    if (tolerance.IsWithinTolerance(adductInferred.MzFromNeutralMass(mass), mz) && tolerance.GetAbsoluteValue(mz) < leastError)
                                     {
                                         bestMatch = adductInferred;
                                         leastError = err;
@@ -1442,7 +1442,7 @@ namespace pwiz.Skyline.Model
                         {
                             // Is the ion's formula the old style where user expected us to add a hydrogen? 
                             double? mzCalc;
-                            var tolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                            var tolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                             var useMonoisotopicMass = document.Settings.TransitionSettings.Prediction.FragmentMassType.IsMonoisotopic();
                             var expectIsPositiveCharge = (precursorInfo == null || precursorInfo.Adduct.IsEmpty) ? 
                                 (charge ?? 0) != 0 ? (charge > 0) : (bool?)null:
@@ -1476,7 +1476,7 @@ namespace pwiz.Skyline.Model
                                     errMessage = String.Format(getPrecursorColumns
                                         ? Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_
                                         : Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
-                                        (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+                                        (float)mz, (float)mzCalc.Value, (float)(mzCalc.Value - mz), document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance);
                                     errColumn = indexMz;
                                 }
                                 else

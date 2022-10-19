@@ -1567,8 +1567,7 @@ namespace pwiz.Skyline.Model
                 return true;
             }
 
-            if (settingsNew.TransitionSettings.Instrument.MzMatchTolerance !=
-                settingsOld.TransitionSettings.Instrument.MzMatchTolerance)
+            if (!settingsNew.TransitionSettings.Instrument.IonMatchMzTolerance.Equals(settingsOld.TransitionSettings.Instrument.IonMatchMzTolerance))
             {
                 return true;
             }
@@ -1596,7 +1595,7 @@ namespace pwiz.Skyline.Model
             {
                 return false;
             }
-            if (settingsNew.TransitionSettings.Instrument.MzMatchTolerance != settingsOld.TransitionSettings.Instrument.MzMatchTolerance)
+            if (!settingsNew.TransitionSettings.Instrument.IonMatchMzTolerance.Equals(settingsOld.TransitionSettings.Instrument.IonMatchMzTolerance))
             {
                 return false;
             }

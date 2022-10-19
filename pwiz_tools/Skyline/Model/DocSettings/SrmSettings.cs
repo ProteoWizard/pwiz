@@ -2772,7 +2772,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll)
                 DiffResults = DiffResultsAll = true;
             // If the match tolerance has changed, then force a full update of all results
-            if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
+            if (!newTran.Instrument.IonMatchMzTolerance.Equals(oldTran.Instrument.IonMatchMzTolerance))
                 DiffResults = DiffResultsAll = true;
             // If internal standard type or all types changed, update all results to recalculate ratios.
             if (!ArrayUtil.EqualsDeep(newMods.InternalStandardTypes, oldMods.InternalStandardTypes) ||

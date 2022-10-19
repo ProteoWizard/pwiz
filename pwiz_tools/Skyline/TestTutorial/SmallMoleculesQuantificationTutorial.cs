@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
@@ -175,7 +176,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Instrument;
                     transitionSettingsUI.MinMz = 50;
                     transitionSettingsUI.MaxMz = 1500;
-                    transitionSettingsUI.MZMatchTolerance = .02;
+                    transitionSettingsUI.MZMatchTolerance = new MzTolerance(.02);
                     transitionSettingsUI.MinTime = null;
                     transitionSettingsUI.MaxTime = null;
                 });

@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
@@ -45,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
-                transitionSettingsUi.MZMatchTolerance = 0.055;
+                transitionSettingsUi.MZMatchTolerance = new MzTolerance(0.055);
                 transitionSettingsUi.OkDialog();
             });
             string dataPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2.mzML");
@@ -57,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
-                transitionSettingsUi.MZMatchTolerance = 0.1;
+                transitionSettingsUi.MZMatchTolerance = new MzTolerance(0.1);
                 transitionSettingsUi.OkDialog();
             });
             var doc = SkylineWindow.Document;
@@ -75,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
             {
                 transitionSettingsUi.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
-                transitionSettingsUi.MZMatchTolerance = 0.4;
+                transitionSettingsUi.MZMatchTolerance = new MzTolerance(0.4);
                 transitionSettingsUi.OkDialog();
             });
             doc = SkylineWindow.Document;

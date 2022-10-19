@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+
 namespace pwiz.Common.Collections
 {
     public struct Range
@@ -28,5 +31,33 @@ namespace pwiz.Common.Collections
         public int Start { get; private set; }
         public int End { get; private set; }
         public int Length { get { return End - Start; } }
+    }
+
+    public struct Interval<T> where T:IComparable
+    {
+        public delegate T MetricDelegate(T item1, T item2);
+
+        public Interval(T start, T end, MetricDelegate metric)
+        {
+            Start =start;
+            End =end;
+            Metric =metric;
+        }
+        public T Start { get; private set; }
+        public T End { get; private set; }
+        public MetricDelegate Metric { get; private set; }
+        public T Length
+        {
+            get { return Metric(Start, End); }
+        }
+
+        public bool InclusiveIn(T val)
+        {
+            return Start.CompareTo(val) <= 0 && End.CompareTo(val) >= 0;
+        }
+        public bool ExclusiveIn(T val)
+        {
+            return Start.CompareTo(val) < 0 && End.CompareTo(val) > 0;
+        }
     }
 }

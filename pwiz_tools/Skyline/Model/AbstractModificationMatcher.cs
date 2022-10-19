@@ -580,16 +580,15 @@ namespace pwiz.Skyline.Model
                 var averageMass = charge.MassFromMz(peak.Mz, MassType.Average);
 
                 if (!(peakAnnotation.Ion.MonoisotopicMass.Equals(monoisotopicMass,
-                          Settings.TransitionSettings.Instrument.MzMatchTolerance) ||
-                      peakAnnotation.Ion.AverageMass.Equals(averageMass,
-                          Settings.TransitionSettings.Instrument.MzMatchTolerance)))
+                          Settings.TransitionSettings.Instrument.IonMatchMzTolerance) ||
+                      Settings.TransitionSettings.Instrument.IonMatchMzTolerance.IsWithinTolerance(peakAnnotation.Ion.AverageMass, averageMass)))
                 {
 
                     return string.Format(
                         @"annotated observed ({0}) and theoretical ({1}) masses differ for peak {2} of library entry {3} by more than the current instrument mz match tolerance of {4}",
                         peak.Mz, peakAnnotation.Ion.MonoisotopicMassMz, peakAnnotation,
                         key,
-                        Settings.TransitionSettings.Instrument.MzMatchTolerance);
+                        Settings.TransitionSettings.Instrument.IonMatchMzTolerance);
                 }
             }
             return null;

@@ -214,6 +214,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string AssociateProteinsSettings_Proteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide targets.
         /// </summary>
         public static string AssociateProteinsSettings_TargetPeptides {
@@ -4381,11 +4390,11 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method match tolerance unit.
+        ///   Looks up a localized string similar to Method match tolerance .
         /// </summary>
-        public static string TransitionInstrument_IonMatchToleranceUnit {
+        public static string TransitionInstrument_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionInstrument_IonMatchToleranceUnit", resourceCulture);
+                return ResourceManager.GetString("TransitionInstrument_IonMatchMzTolerance", resourceCulture);
             }
         }
         
@@ -4449,15 +4458,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionInstrument_MinTime {
             get {
                 return ResourceManager.GetString("TransitionInstrument_MinTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Method match tolerance .
-        /// </summary>
-        public static string TransitionInstrument_MzMatchTolerance {
-            get {
-                return ResourceManager.GetString("TransitionInstrument_MzMatchTolerance", resourceCulture);
             }
         }
         

@@ -183,9 +183,9 @@ namespace pwiz.Skyline.Util
             return CompareTo(other) == 0;
         }
 
-        public bool Equals(TypedMass other, double tolerance)
+        public bool Equals(TypedMass other, MzTolerance tolerance)
         {
-            return CompareTo(other) == 0 || Math.Abs(Value - other.Value) <= tolerance;
+            return CompareTo(other) == 0 || tolerance.IsWithinTolerance(Value, other.Value);
         }
 
         public override int GetHashCode()

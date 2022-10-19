@@ -209,10 +209,10 @@ namespace pwiz.SkylineTestFunctional
                 Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder);
             TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
                 String.Format(Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                (float)precursorMzAtZNeg2, 499.0295, 402.9966, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                (float)precursorMzAtZNeg2, 499.0295, 402.9966, docEmpty.Settings.TransitionSettings.Instrument.IonMatchMzTolerance), fullColumnOrder);
             TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
                 String.Format(Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
-                (float)productMzAtZNeg2, 456.5045, 396.9916, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+                (float)productMzAtZNeg2, 456.5045, 396.9916, docEmpty.Settings.TransitionSettings.Instrument.IonMatchMzTolerance), fullColumnOrder);
             var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
             TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
                 String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
@@ -434,7 +434,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ChangeSettings(doc.Settings.
                 ChangeTransitionSettings(
                     doc.Settings.TransitionSettings.ChangeInstrument(
-                        doc.Settings.TransitionSettings.Instrument.ChangeMzMatchTolerance(0.6))), true));
+                        doc.Settings.TransitionSettings.Instrument.ChangeIonMatchMzTolerance(new MzTolerance(0.6)))), true));
             PasteMoleculesTestImportResults(paths);
             var importDoc = SkylineWindow.Document;
             var transitionCount = importDoc.MoleculeTransitionCount;
@@ -1546,11 +1546,11 @@ namespace pwiz.SkylineTestFunctional
                 3, 2, "Acetic Acid C2H4O2 1 [M-H] 59"), errDlg.ErrorList[0]);
             AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
                     Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                    536.88, 537.879, 0.9990012, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance), 
+                    536.88, 537.879, 0.9990012, SkylineWindow.Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance), 
                 4, 3, "Acetic Acid C2H4O2 1 [6M-H6+Fe3+O] 536.88"), errDlg.ErrorList[1]);
             AssertEx.AreEqual(new TransitionImportErrorInfo(string.Format(
                     Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                    596.9, 597.9001, 1.000131, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance),
+                    596.9, 597.9001, 1.000131, SkylineWindow.Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance),
                 4, 5, "Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9"), errDlg.ErrorList[2]);
             RunUI(() => errDlg.OkDialog());
             RunUI(() => transitionDlg.CancelDialog());

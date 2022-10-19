@@ -69,6 +69,17 @@ namespace pwiz.Common.Chemistry
             return (a >= b - this) && (a <= b + this);
         }
 
+        public double GetAbsoluteValue(double ionMz)
+        {
+            switch (Unit)
+            {
+                case Units.ppm:
+                    return ionMz * Value * 1e-6;
+                default:
+                    return Value;
+            }
+        }
+
         /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
         public bool LessThanTolerance(double a, double b)
         {
@@ -82,5 +93,31 @@ namespace pwiz.Common.Chemistry
 
         public string AuditLogText => ToString();
         public bool IsName => false;
+
+        #region object overrides
+
+        public bool Equals(MzTolerance other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return other.Value == Value &&
+                   other.Unit == Unit;
+        }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(MzTolerance)) return false;
+            return Equals((MzTolerance)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Value.GetHashCode() * 397) ^ Unit.GetHashCode();
+            }
+        }
+        #endregion
     };
 }

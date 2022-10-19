@@ -654,6 +654,9 @@
             // comboMzMatchToleranceUnit
             // 
             this.comboMzMatchToleranceUnit.FormattingEnabled = true;
+            this.comboMzMatchToleranceUnit.Items.AddRange(new object[] {
+                resources.GetString("comboToleranceUnits.Items"),
+                resources.GetString("comboToleranceUnits.Items1")});
             resources.ApplyResources(this.comboMzMatchToleranceUnit, "comboMzMatchToleranceUnit");
             this.comboMzMatchToleranceUnit.Name = "comboMzMatchToleranceUnit";
             // 

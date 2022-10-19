@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
@@ -410,7 +411,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 transitionSettings2.RegressionCEName = "SRMcourse_20140211_Parameters_custom-CE-equation";
                 transitionSettings2.SelectedTab = TransitionSettingsUI.TABS.Instrument;
-                transitionSettings2.MZMatchTolerance = 0.01;
+                transitionSettings2.MZMatchTolerance = new MzTolerance(0.01);
             });
             PauseForScreenShot("Instrument Tab", 7);
             OkDialog(transitionSettings2, transitionSettings2.OkDialog);
