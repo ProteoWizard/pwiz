@@ -363,7 +363,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (DisplayedMirrorSpectrum != null)
                     maxIntensity = Math.Max(maxIntensity, DisplayedMirrorSpectrum.Intensities.Max());
-
+                if (maxIntensity == 0)
+                {
+                    // Prevent Scale.Max and Scale.Min being set to the same value because it makes the entire chart disappear
+                    maxIntensity = 1;
+                }
                 maxIntensity *= YMAX_SCALE;
 
                 GraphPane.YAxis.Scale.Max = DisplayedSpectrum == null ? 0.0 : maxIntensity;

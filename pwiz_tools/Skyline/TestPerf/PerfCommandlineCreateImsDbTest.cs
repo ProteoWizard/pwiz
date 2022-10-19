@@ -62,9 +62,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod]
         public void CommandlineCreateImsDbPerfTest()
         {
+
+            if (IsPerfTest && !RunPerfTests)
+            {
+                return; // Don't want to run this test with its large download right now
+            }
+
             TestFilesZip = GetPerfTestDataURL(@"PerfCommandlineCreateImsDbTest.zip");
             TestFilesPersistent = new[] {  RAW_FILE }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, ".", TestFilesPersistent);
+            TestDirectoryName = "ImsDbTest";
+            TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestDirectoryName, TestFilesPersistent);
 
             // Normal use
             const string normal = @"normal";
