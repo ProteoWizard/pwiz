@@ -261,6 +261,11 @@ namespace pwiz.SkylineTestUtil
                     FileEx.SafeDelete(Path.Combine(PersistentFilesDir, file), true);
                     DirectoryEx.SafeDelete(Path.Combine(PersistentFilesDir, file)); // The "file" might actually be a directory
                 }
+                // Remove the downloaded zipfile
+                if (TestContext.Properties.Contains(ExtensionTestContext.DATA_ZIP_PATH))
+                {
+                    FileEx.SafeDelete(TestContext.Properties[ExtensionTestContext.DATA_ZIP_PATH].ToString());
+                }
             }
         }
     }

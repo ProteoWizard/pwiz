@@ -84,6 +84,8 @@ namespace pwiz.SkylineTestUtil
             return GetProjectDirectory(relativePath);
         }
 
+        public const string DATA_ZIP_PATH = "DataZipPath";
+
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir, string[] persistentFiles, string persistentFilesDir)
         {
             string pathZip = testContext.GetProjectDirectory(relativePathZip);
@@ -101,6 +103,8 @@ namespace pwiz.SkylineTestUtil
                                 zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
                         }
                     }
+
+                    testContext.Properties[DATA_ZIP_PATH] = relativePathZip;
                 });
             }
             catch (Exception ex)
