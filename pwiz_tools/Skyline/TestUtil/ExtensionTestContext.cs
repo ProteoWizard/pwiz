@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestUtil
                         }
                     }
 
-                    testContext.Properties[DATA_ZIP_PATH] = relativePathZip;
+                    testContext.Properties[DATA_ZIP_PATH] = pathZip;
                 });
             }
             catch (Exception ex)

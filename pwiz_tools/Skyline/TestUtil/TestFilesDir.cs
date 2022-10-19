@@ -82,8 +82,8 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Special treatment to persist files that are expensive to download and/or extract
-            // Note that we don't actually persist these for perftests on TeamCity, as they won't get re-used and may
-            // take up so much room as to interfere with other builds. (See Dispose method for details)
+            // Note that we don't actually persist these on TeamCity, as they won't get re-used and may
+            // potentially cause storage limit problems. (See Dispose method for details)
             PersistentFiles = persistentFiles;
             PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
@@ -248,24 +248,25 @@ namespace pwiz.SkylineTestUtil
                 }
             }
 
-            // We normally persist large expensive-to-extract files, but we don't for perftests on TeamCity,
-            // as they won't get re-used and may take up so much room as to interfere with other builds
+            // We normally persist downloaded data files, along with selected large expensive-to-extract files
+            // contained therein, but we don't on TeamCity as they won't get re-used anyway, and could cause storage
+            // limit problems
             var testFullName = TestContext.Properties.Contains(TEST_FULL_NAME)
                 ? TestContext.Properties[TEST_FULL_NAME].ToString()
                 : TestContext.FullyQualifiedTestClassName;
-            var isPerfTest = testFullName.Contains(@$"{AbstractUnitTest.PERFTEST_NAMESPACE}.");
             var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
-            if (isPerfTest && isTeamCity)
+            if (isTeamCity)
             {
                 foreach (var file in PersistentFiles)
                 {
-                    FileEx.SafeDelete(Path.Combine(PersistentFilesDir, file), true);
-                    DirectoryEx.SafeDelete(Path.Combine(PersistentFilesDir, file)); // The "file" might actually be a directory
+                    var path = Path.Combine(PersistentFilesDir, file);
+                    FileEx.SafeDelete(path, true);
+                    DirectoryEx.SafeDelete(path); // The "file" might actually be a directory
                 }
                 // Remove the downloaded zipfile
                 if (TestContext.Properties.Contains(ExtensionTestContext.DATA_ZIP_PATH))
                 {
-                    FileEx.SafeDelete(TestContext.Properties[ExtensionTestContext.DATA_ZIP_PATH].ToString());
+                    FileEx.SafeDelete(TestContext.Properties[ExtensionTestContext.DATA_ZIP_PATH].ToString(), true);
                 }
             }
         }
