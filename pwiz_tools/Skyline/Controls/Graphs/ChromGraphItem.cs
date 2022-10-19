@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
                     return Chromatogram.GroupInfo.TextId ?? @"no summary text";
                 }
-                if (OptimizationStep.HasValue)
+                if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, OptimizationStep);
 
                 return GetTitle(TransitionGroupNode, TransitionNode);
