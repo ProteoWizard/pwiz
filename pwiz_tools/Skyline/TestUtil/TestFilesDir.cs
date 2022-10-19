@@ -254,7 +254,8 @@ namespace pwiz.SkylineTestUtil
                 ? TestContext.Properties[TEST_FULL_NAME].ToString()
                 : TestContext.FullyQualifiedTestClassName;
             var isPerfTest = testFullName.Contains(@$"{AbstractUnitTest.PERFTEST_NAMESPACE}.");
-            if (isPerfTest && AbstractUnitTest.DownloadFromS3) // S3 download only happens on TeamCity
+            var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
+            if (isPerfTest && isTeamCity)
             {
                 foreach (var file in PersistentFiles)
                 {

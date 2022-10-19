@@ -220,14 +220,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static bool DownloadFromS3 => Environment.GetEnvironmentVariable(@"SKYLINE_DOWNLOAD_FROM_S3") == "1";
-
         private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
         {
             if (!Directory.Exists(targetFolder))
                 Directory.CreateDirectory(targetFolder);
 
-            var downloadFromS3 = DownloadFromS3;
+            var downloadFromS3 = Environment.GetEnvironmentVariable(@"SKYLINE_DOWNLOAD_FROM_S3") == "1";
             string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
             string message = string.Empty;
             for (var retry = true; ; retry = false)
