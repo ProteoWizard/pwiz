@@ -257,11 +257,14 @@ namespace pwiz.SkylineTestUtil
             var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
             if (isTeamCity)
             {
-                foreach (var file in PersistentFiles)
+                if (PersistentFiles != null)
                 {
-                    var path = Path.Combine(PersistentFilesDir, file);
-                    FileEx.SafeDelete(path, true);
-                    DirectoryEx.SafeDelete(path); // The "file" might actually be a directory
+                    foreach (var file in PersistentFiles)
+                    {
+                        var path = Path.Combine(PersistentFilesDir, file);
+                        FileEx.SafeDelete(path, true);
+                        DirectoryEx.SafeDelete(path); // The "file" might actually be a directory
+                    }
                 }
                 // Remove the downloaded zipfile
                 if (TestContext.Properties.Contains(ExtensionTestContext.DATA_ZIP_PATH))
