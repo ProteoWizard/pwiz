@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -251,9 +252,6 @@ namespace pwiz.SkylineTestUtil
             // We normally persist downloaded data files, along with selected large expensive-to-extract files
             // contained therein, but we don't on TeamCity as they won't get re-used anyway, and could cause storage
             // limit problems
-            var testFullName = TestContext.Properties.Contains(TEST_FULL_NAME)
-                ? TestContext.Properties[TEST_FULL_NAME].ToString()
-                : TestContext.FullyQualifiedTestClassName;
             var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
             if (isTeamCity)
             {
@@ -266,10 +264,15 @@ namespace pwiz.SkylineTestUtil
                         DirectoryEx.SafeDelete(path); // The "file" might actually be a directory
                     }
                 }
-                // Remove the downloaded zipfile
+                // Remove the data zipfile if it actually was downloaded (could be in source control)
                 if (TestContext.Properties.Contains(ExtensionTestContext.DATA_ZIP_PATH))
                 {
-                    FileEx.SafeDelete(TestContext.Properties[ExtensionTestContext.DATA_ZIP_PATH].ToString(), true);
+                    var zipfilePath = TestContext.Properties[ExtensionTestContext.DATA_ZIP_PATH].ToString();
+                    var downloadsPath = PathEx.GetDownloadsPath();
+                    if (zipfilePath.StartsWith(downloadsPath))
+                    {
+                        FileEx.SafeDelete(zipfilePath, true);
+                    }
                 }
             }
         }
