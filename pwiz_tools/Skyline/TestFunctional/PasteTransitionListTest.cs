@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
                     {
                         var errDlg = ShowDialog<ImportTransitionListErrorDlg>(therm.OkDialog);
                         AssertEx.IsTrue(errDlg.ErrorList.Any(err => err.ErrorMessage.Contains(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations)));
-                        RunUI(() => errDlg.Close());
+                        OkDialog(errDlg, errDlg.Close);
                         RunUI(() => therm.ComboBoxes[loop == 0? invK0Col : covCol].SelectedIndex = 0); // Ignore the 1/K0 and CoV values
                     }
                 }
