@@ -1462,8 +1462,9 @@ namespace pwiz.Skyline.Model
                                           out List<TransitionImportErrorInfo> errorList,
                                           out List<PeptideGroupDocNode> peptideGroups,
                                           List<string> columnPositions = null,
-                                          DOCUMENT_TYPE radioType = DOCUMENT_TYPE.none,
-                                          bool hasHeaders = true, Dictionary<string, FastaSequence> dictNameSeq = null)
+                                          DOCUMENT_TYPE forceDocType = DOCUMENT_TYPE.none,
+                                          bool hasHeaders = true,
+                                          Dictionary<string, FastaSequence> dictNameSeq = null)
         {
             irtPeptides = new List<MeasuredRetentionTime>();
             librarySpectra = new List<SpectrumMzInfo>();
@@ -1474,7 +1475,8 @@ namespace pwiz.Skyline.Model
             firstAdded = null;
 
             // Is this a small molecule transition list, or trying to be?
-            if (((importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules) && radioType == DOCUMENT_TYPE.none) || radioType == DOCUMENT_TYPE.small_molecules)
+            if (forceDocType == DOCUMENT_TYPE.small_molecules || 
+                (forceDocType == DOCUMENT_TYPE.none && importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules))
             {
                 IList<string> lines = null;
                 try
@@ -1507,11 +1509,12 @@ namespace pwiz.Skyline.Model
                     if (importer != null)
                     {
                         IdentityPath nextAdd;
-                        //peptideGroups = importer.Import(progressMonitor, out irtPeptides, out librarySpectra, out errorList).ToList();
                         if (dictNameSeq == null)
                         {
                             dictNameSeq = new Dictionary<string, FastaSequence>();
                         }
+
+                        Assume.IsTrue(ReferenceEquals(inputs, importer.Inputs));    // DoImport assumes this
 
                         var imported = importer.DoImport(progressMonitor, dictNameSeq, irtPeptides, librarySpectra, errorList);
                         if (progressMonitor != null && progressMonitor.IsCanceled)

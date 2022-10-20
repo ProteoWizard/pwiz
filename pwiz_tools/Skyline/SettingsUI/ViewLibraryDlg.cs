@@ -153,6 +153,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             _graphHelper = GraphHelper.Attach(GraphControl);
+            GraphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
             GraphExtensionControl.Splitter.MouseDown += splitMain_MouseDown;
             GraphExtensionControl.Splitter.MouseUp += splitMain_MouseUp;
 
