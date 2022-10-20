@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Globalization;
 using System.IO;
+using System.Web.UI.WebControls;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -2213,7 +2214,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.min_mz, MinMz);
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
             writer.WriteAttribute(ATTR.mz_match_tolerance, IonMatchMzTolerance.Value);
-            writer.WriteAttribute(ATTR.mz_match_tolerance_unit, IonMatchMzTolerance.Unit);
+            if(IonMatchMzTolerance.Unit != MzTolerance.Units.mz)
+                writer.WriteAttribute(ATTR.mz_match_tolerance_unit, IonMatchMzTolerance.Unit);
             writer.WriteAttributeNullable(ATTR.min_time, MinTime);
             writer.WriteAttributeNullable(ATTR.max_time, MaxTime);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);

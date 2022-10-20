@@ -443,7 +443,7 @@
           <xs:attribute name="min_mz" type="xs:nonNegativeInteger" use="required"/>
           <xs:attribute name="max_mz" type="xs:nonNegativeInteger" use="required"/>
           <xs:attribute name="mz_match_tolerance" type="xs:double" use="required"/>
-          <xs:attribute name="mz_match_tolerance_unit" type="mz_match_tolerance_unit_type" use="required"/>
+          <xs:attribute name="mz_match_tolerance_unit" type="mz_match_tolerance_unit_type"/>
           <xs:attribute name="min_time" type="xs:nonNegativeInteger"/>
           <xs:attribute name="max_time" type="xs:nonNegativeInteger"/>
           <xs:attribute name="max_transitions" type="xs:nonNegativeInteger"/>
