@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
@@ -466,7 +465,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                transitionSettingsUI.MZMatchTolerance = new MzTolerance(0.065);
+                transitionSettingsUI.MZMatchTolerance = 0.065;
                 transitionSettingsUI.OkDialog();
             });
             RunUI(() =>

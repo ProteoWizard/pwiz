@@ -19,7 +19,6 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -54,7 +53,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var results = doc.Settings.MeasuredResults;
             var negIndex = results.Chromatograms[0].Name.Equals("neg") ? 0 : 1;
             var posIndex = (negIndex ==1) ? 0 : 1;
-            var tolerance = new MzTolerance(.005f);
+            var tolerance = .005f;
             foreach (var pair in doc.MoleculePrecursorPairs)
             {
                 var index = pair.NodeGroup.PrecursorCharge < 0 ? negIndex : posIndex;

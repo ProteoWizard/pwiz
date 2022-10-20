@@ -845,7 +845,7 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     Match match = REGEX_NAME.Match(line);
                     var isPeptide = true;
-                    var mzMatchTolerance = new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE);  
+                    MzTolerance mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;  
                     var isGC = false;
                     if (!match.Success)
                     {
@@ -1079,7 +1079,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (isMzVault)
                         {
                             // mzVault uses a wider tolerance than most in m/z matching for precursor identification
-                            mzMatchTolerance = new MzTolerance(10.0 * DEFAULT_MZ_MATCH_TOLERANCE);
+                            mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
                         }
                     } // End parser loop
 

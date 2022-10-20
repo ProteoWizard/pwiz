@@ -434,7 +434,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ChangeSettings(doc.Settings.
                 ChangeTransitionSettings(
                     doc.Settings.TransitionSettings.ChangeInstrument(
-                        doc.Settings.TransitionSettings.Instrument.ChangeIonMatchMzTolerance(new MzTolerance(0.6)))), true));
+                        doc.Settings.TransitionSettings.Instrument.ChangeIonMatchMzTolerance(0.6))), true));
             PasteMoleculesTestImportResults(paths);
             var importDoc = SkylineWindow.Document;
             var transitionCount = importDoc.MoleculeTransitionCount;

@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Globalization;
 using System.IO;
-using System.Web.UI.WebControls;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -1869,7 +1868,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MAX_TIME = 500;
         public const int MIN_TIME_RANGE = 5;
 
-        public static MzTolerance DEFAULT_MATCH_TOLERANCE = new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE);
+        public static MzTolerance DEFAULT_MATCH_TOLERANCE = DEFAULT_MZ_MATCH_TOLERANCE;
         public static MzTolerance ZERO_TOLERANCE = new MzTolerance();
 
         public static double GetThermoDynamicMin(double precursorMz)

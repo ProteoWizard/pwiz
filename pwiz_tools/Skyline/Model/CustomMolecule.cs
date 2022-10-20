@@ -835,7 +835,7 @@ namespace pwiz.Skyline.Model
                     result = AccessionNumbers.CompareTo(other.AccessionNumbers);
                     if (result == 0)
                     {
-                        result = MonoisotopicMass.Equals(other.MonoisotopicMass, new MzTolerance(5E-10)) ? // Allow for float vs double serialization effects
+                        result = MonoisotopicMass.Equals(other.MonoisotopicMass, 5E-10) ? // Allow for float vs double serialization effects
                             0 : MonoisotopicMass.CompareTo(other.MonoisotopicMass);
                     }
                 }

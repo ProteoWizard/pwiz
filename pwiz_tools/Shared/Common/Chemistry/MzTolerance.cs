@@ -63,6 +63,11 @@ namespace pwiz.Common.Chemistry
             return 0;
         }
 
+        public static implicit operator MzTolerance(double tolerance)
+        {
+            return new MzTolerance(tolerance);
+        }
+
         /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
         public bool IsWithinTolerance(double a, double b)
         {

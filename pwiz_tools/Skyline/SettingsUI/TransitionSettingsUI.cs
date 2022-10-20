@@ -203,7 +203,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (FullScanSettingsControl.AcquisitionMethod == FullScanAcquisitionMethod.SureQuant)
             {
-                MZMatchTolerance = new MzTolerance(SureQuantMzMatchTolerance);
+                MZMatchTolerance = SureQuantMzMatchTolerance;
                 TriggeredAcquisition = true;
             }
         }

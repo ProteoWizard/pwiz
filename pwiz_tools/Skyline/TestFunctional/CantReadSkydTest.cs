@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var newMzMatchTolerance = new MzTolerance(0.054);
+            MzTolerance newMzMatchTolerance = 0.054;
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Human_plasma.sky")));
             WaitForDocumentLoaded();
             Assert.AreNotEqual(newMzMatchTolerance, SkylineWindow.Document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance);
