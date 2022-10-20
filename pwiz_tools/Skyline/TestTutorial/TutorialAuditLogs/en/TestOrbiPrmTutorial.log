@@ -95,16 +95,16 @@ LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mu
 SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
 		
 
-Undo Redo : Imported results from "heavy-PRM.mzXML"
-Summary   : Imported results from "heavy-PRM.mzXML"
+Undo Redo : Imported results from "heavy-PRM.raw"
+Summary   : Imported results from "heavy-PRM.raw"
 All Info  :
-Imported results from "heavy-PRM.mzXML"
-Import results settings > File names : contains "heavy-PRM.mzXML"
+Imported results from "heavy-PRM.raw"
+Import results settings > File names : contains "heavy-PRM.raw"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
-    "heavy-PRM.mzXML"
+    "heavy-PRM.raw"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"
@@ -138,28 +138,28 @@ Undo Redo : Imported results from 9 files
 Summary   : Imported results from 9 files
 All Info  :
 Imported results from 9 files
-Import results settings > File names : contains "G1_rep1.mzXML"
-Import results settings > File names : contains "G1_rep2.mzXML"
-Import results settings > File names : contains "G1_rep3.mzXML"
-Import results settings > File names : contains "G2M_rep1.mzXML"
-Import results settings > File names : contains "G2M_rep2.mzXML"
-Import results settings > File names : contains "G2M_rep3.mzXML"
-Import results settings > File names : contains "S_rep1.mzXML"
-Import results settings > File names : contains "S_rep2.mzXML"
-Import results settings > File names : contains "S_rep3.mzXML"
+Import results settings > File names : contains "G1_rep1.raw"
+Import results settings > File names : contains "G1_rep2.raw"
+Import results settings > File names : contains "G1_rep3.raw"
+Import results settings > File names : contains "G2M_rep1.raw"
+Import results settings > File names : contains "G2M_rep2.raw"
+Import results settings > File names : contains "G2M_rep3.raw"
+Import results settings > File names : contains "S_rep1.raw"
+Import results settings > File names : contains "S_rep2.raw"
+Import results settings > File names : contains "S_rep3.raw"
 Import results settings > Add single-injection replicates in files is True
 Import results settings > Files to import simultaneously is "Many"
 Extra Info: File names = 
 [
-    "G1_rep1.mzXML",
-    "G1_rep2.mzXML",
-    "G1_rep3.mzXML",
-    "G2M_rep1.mzXML",
-    "G2M_rep2.mzXML",
-    "G2M_rep3.mzXML",
-    "S_rep1.mzXML",
-    "S_rep2.mzXML",
-    "S_rep3.mzXML"
+    "G1_rep1.raw",
+    "G1_rep2.raw",
+    "G1_rep3.raw",
+    "G2M_rep1.raw",
+    "G2M_rep2.raw",
+    "G2M_rep3.raw",
+    "S_rep1.raw",
+    "S_rep2.raw",
+    "S_rep3.raw"
 ],
 Add single-injection replicates in files = True,
 Files to import simultaneously = "Many"

@@ -1245,7 +1245,7 @@ namespace pwiz.SkylineTestData
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
             string extRaw = useRaw
                                 ? ExtensionTestContext.ExtThermoRaw
-                                : ".mzML";
+                                : ExtensionTestContext.ExtMzml;
             string testZipPath = useRaw
                                     ? @"TestData\ImportAllCmdLineTest.zip"
                                     : @"TestData\ImportAllCmdLineTestMzml.zip";
@@ -1320,8 +1320,8 @@ namespace pwiz.SkylineTestData
                                      ? @"TestData\ImportAllCmdLineTest.zip"
                                      : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                                ? ".raw"
-                                : ".mzML";
+                                ? ExtensionTestContext.ExtThermoRaw
+                                : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
@@ -1562,8 +1562,8 @@ namespace pwiz.SkylineTestData
                 ? @"TestData\ImportAllCmdLineTest.zip"
                 : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                ? ".raw"
-                : ".mzML";
+                ? ExtensionTestContext.ExtThermoRaw
+                : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
@@ -2390,8 +2390,8 @@ namespace pwiz.SkylineTestData
                                      ? @"TestData\ImportAllCmdLineTest.zip"
                                      : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                                ? ".raw"
-                                : ".mzML";
+                                ? ExtensionTestContext.ExtThermoRaw
+                                : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
