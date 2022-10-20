@@ -3003,9 +3003,7 @@ namespace pwiz.Skyline.Properties
                         50,   // MinMz
                         1500, // MaxMz
                         false, // IsDynamicMin
-                        new MzTolerance(        // MzMatchTolerance 
-                            TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE,
-                            MzTolerance.Units.mz), 
+                        new MzTolerance(TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE),               // MzMatchTolerance 
                         null,  // MaxTransitions
                         null,  // MaxInclusions
                         null,  // MinTime

@@ -1957,7 +1957,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     case MzTolerance.Units.ppm:
                         return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE_PPM, IonMatchMzTolerance.Unit);
                     default:
-                        return new MzTolerance(DEFAULT_MZ_MATCH_TOLERANCE);
+                        return DEFAULT_MZ_MATCH_TOLERANCE;
                 }
             } 
         }

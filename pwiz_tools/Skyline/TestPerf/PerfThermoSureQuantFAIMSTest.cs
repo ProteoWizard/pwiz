@@ -78,7 +78,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             var doc = SkylineWindow.Document;
             var chromatogramSet = doc.Settings.MeasuredResults.Chromatograms.First();
             var pair = doc.PeptidePrecursorPairs.ToArray()[1];
-            doc.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, pair.NodePep, pair.NodeGroup, new pwiz.Common.Chemistry.MzTolerance(.001f), out var chromGroups);
+            doc.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, pair.NodePep, pair.NodeGroup, .001f, out var chromGroups);
             foreach (var chromatogramGroupInfo in chromGroups)
             {
                 var chromatogramInfo = chromatogramGroupInfo.TransitionPointSets.First();
