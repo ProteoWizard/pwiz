@@ -62,26 +62,25 @@ namespace TestPerf
     [TestClass]
     public class OrbiPrmTutorialTest : AbstractFunctionalTestEx
     {
-        private const string EXT_ZIP = ".zip";
-        private const string ROOT_DIR = "PRM-Orbi";
-        private static string LIBRARY_DIR = Path.Combine(ROOT_DIR, "Heavy Library");
-        private static string DATA_DIR = Path.Combine(ROOT_DIR, "PRM data");
-        private static string SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
-        private static string STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
-
         [TestMethod]
         public void TestOrbiPrmTutorial()
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
+
+            // ForceMzml = true;
+            ExtMzml = @".mzXML";    // PRBB used .mzXML instead of .mzML
+
             CoverShotName = "PRM-Obitrap";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-Orbitrap-21_2.pdf";
 
             TestFilesZipPaths = new[]
             {
-                @"http://skyline.ms/tutorials/PRM-Orbi.zip",
+                UseRawFiles
+                    ? @"http://skyline.ms/tutorials/PRM-OrbiRaw.zip"
+                    : @"http://skyline.ms/tutorials/PRM-OrbiMzxml.zip",
                 @"TestPerf\OrbiPrmViews.zip",
             };
 
@@ -91,22 +90,26 @@ namespace TestPerf
                 Path.Combine(LIBRARY_DIR, "heavy-01.pep.xml"),
                 Path.Combine(LIBRARY_DIR, "heavy-02.mzXML"),
                 Path.Combine(LIBRARY_DIR, "heavy-02.pep.xml"),
-                Path.Combine(SAMPLES_DIR, "G1_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G1_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G1_rep3.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "G2M_rep3.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep1.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep2.mzXML"),
-                Path.Combine(SAMPLES_DIR, "S_rep3.mzXML"),
-                Path.Combine(STANDARDS_DIR, "heavy-PRM.mzXML"),
+                Path.Combine(SAMPLES_DIR, "G1_rep1" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "G1_rep2" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "G1_rep3" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "G2M_rep1" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "G2M_rep2" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "G2M_rep3" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "S_rep1" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "S_rep2" + ExtThermoRawLower),
+                Path.Combine(SAMPLES_DIR, "S_rep3" + ExtThermoRawLower),
+                Path.Combine(STANDARDS_DIR, "heavy-PRM" + ExtThermoRawLower),
             };
 
             RunFunctionalTest();            
         }
 
-        private string DataPath => TestFilesDirs.Last().PersistentFilesDir;
+        private string ROOT_DIR => UseRawFiles ? "PRM-OrbiRaw" : "PRM-OrbiMzxml";
+        private string LIBRARY_DIR => Path.Combine(ROOT_DIR, "Heavy Library");
+        private string DATA_DIR => Path.Combine(ROOT_DIR, "PRM data");
+        private string SAMPLES_DIR => Path.Combine(DATA_DIR, "Samples");
+        private string STANDARDS_DIR => Path.Combine(DATA_DIR, "Standards");
 
         private string GetTestPath(string relativePath)
         {

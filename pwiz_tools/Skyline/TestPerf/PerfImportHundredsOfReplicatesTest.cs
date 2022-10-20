@@ -20,6 +20,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -41,7 +42,7 @@ namespace TestPerf
             string templateFile = TestFilesDir.GetTestPath("mzmlfile.template");
             for (int i = 0; i < REPLICATE_COUNT_TO_TEST; i++)
             {
-                string destFileName = TestFilesDir.GetTestPath("clone" + i.ToString("0000") + ".mzML");
+                string destFileName = TestFilesDir.GetTestPath("clone" + i.ToString("0000") + ExtensionTestContext.ExtMzml);
                 File.Copy(templateFile, destFileName);
             }
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -54,7 +55,7 @@ namespace TestPerf
             RunUI(() =>
             {
                 openDataSourceDialog.CurrentDirectory = new MsDataFilePath(Path.GetDirectoryName(templateFile));
-                openDataSourceDialog.SelectAllFileType("mzML");
+                openDataSourceDialog.SelectAllFileType(DataSourceUtil.TYPE_MZML);
             });
             
             OkDialog(openDataSourceDialog, openDataSourceDialog.Open);

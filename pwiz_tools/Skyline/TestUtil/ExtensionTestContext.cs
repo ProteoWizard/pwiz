@@ -133,6 +133,11 @@ namespace pwiz.SkylineTestUtil
             get { return CanImportThermoRaw ? DataSourceUtil.EXT_THERMO_RAW.ToUpperInvariant() : ExtMzml; } // *** Case matters to ConsoleImportNonSRMFile
         }
 
+        public static string ExtThermoRawLower
+        {
+            get { return CanImportThermoRaw ? DataSourceUtil.EXT_THERMO_RAW : ExtMzml; }
+        }
+
         public static bool CanImportAgilentRaw
         {
             get

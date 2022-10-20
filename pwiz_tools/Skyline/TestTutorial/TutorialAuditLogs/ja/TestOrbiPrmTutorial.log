@@ -95,16 +95,16 @@ LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mu
 SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
 		
 
-Undo Redo : 「heavy-PRM.mzXML」から結果がインポートされました
-Summary   : 「heavy-PRM.mzXML」から結果がインポートされました
+Undo Redo : 「heavy-PRM.raw」から結果がインポートされました
+Summary   : 「heavy-PRM.raw」から結果がインポートされました
 All Info  :
-「heavy-PRM.mzXML」から結果がインポートされました
-結果設定をインポート>ファイル名："heavy-PRM.mzXML"が含まれています
+「heavy-PRM.raw」から結果がインポートされました
+結果設定をインポート>ファイル名："heavy-PRM.raw"が含まれています
 結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
 結果設定をインポート>同時にインポートするファイルは"多く"です
 Extra Info: ファイル名 = 
 [
-    "heavy-PRM.mzXML"
+    "heavy-PRM.raw"
 ],
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く"
@@ -138,28 +138,28 @@ Undo Redo : 9個のファイルから結果がインポートされました
 Summary   : 9個のファイルから結果がインポートされました
 All Info  :
 9個のファイルから結果がインポートされました
-結果設定をインポート>ファイル名："G1_rep1.mzXML"が含まれています
-結果設定をインポート>ファイル名："G1_rep2.mzXML"が含まれています
-結果設定をインポート>ファイル名："G1_rep3.mzXML"が含まれています
-結果設定をインポート>ファイル名："G2M_rep1.mzXML"が含まれています
-結果設定をインポート>ファイル名："G2M_rep2.mzXML"が含まれています
-結果設定をインポート>ファイル名："G2M_rep3.mzXML"が含まれています
-結果設定をインポート>ファイル名："S_rep1.mzXML"が含まれています
-結果設定をインポート>ファイル名："S_rep2.mzXML"が含まれています
-結果設定をインポート>ファイル名："S_rep3.mzXML"が含まれています
+結果設定をインポート>ファイル名："G1_rep1.raw"が含まれています
+結果設定をインポート>ファイル名："G1_rep2.raw"が含まれています
+結果設定をインポート>ファイル名："G1_rep3.raw"が含まれています
+結果設定をインポート>ファイル名："G2M_rep1.raw"が含まれています
+結果設定をインポート>ファイル名："G2M_rep2.raw"が含まれています
+結果設定をインポート>ファイル名："G2M_rep3.raw"が含まれています
+結果設定をインポート>ファイル名："S_rep1.raw"が含まれています
+結果設定をインポート>ファイル名："S_rep2.raw"が含まれています
+結果設定をインポート>ファイル名："S_rep3.raw"が含まれています
 結果設定をインポート>ファイルにシングルインジェクション繰り返し測定を追加は真です
 結果設定をインポート>同時にインポートするファイルは"多く"です
 Extra Info: ファイル名 = 
 [
-    "G1_rep1.mzXML",
-    "G1_rep2.mzXML",
-    "G1_rep3.mzXML",
-    "G2M_rep1.mzXML",
-    "G2M_rep2.mzXML",
-    "G2M_rep3.mzXML",
-    "S_rep1.mzXML",
-    "S_rep2.mzXML",
-    "S_rep3.mzXML"
+    "G1_rep1.raw",
+    "G1_rep2.raw",
+    "G1_rep3.raw",
+    "G2M_rep1.raw",
+    "G2M_rep2.raw",
+    "G2M_rep3.raw",
+    "S_rep1.raw",
+    "S_rep2.raw",
+    "S_rep3.raw"
 ],
 ファイルにシングルインジェクション繰り返し測定を追加 = 真,
 同時にインポートするファイル = "多く"

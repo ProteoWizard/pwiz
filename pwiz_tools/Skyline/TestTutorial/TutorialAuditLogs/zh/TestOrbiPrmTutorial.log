@@ -95,16 +95,16 @@ LAEQFAAGEVLTDMSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mu
 SVESQGAIHGSMSQPAAGC[+57]SSSDSSR	sp|Q80X41|VRK1_MOUSE	Serine/threonine-protein kinase VRK1 OS=Mus musculus GN=Vrk1 PE=1 SV=2
 		
 
-Undo Redo : 已从“heavy-PRM.mzXML”导入结果
-Summary   : 已从“heavy-PRM.mzXML”导入结果
+Undo Redo : 已从“heavy-PRM.raw”导入结果
+Summary   : 已从“heavy-PRM.raw”导入结果
 All Info  :
-已从“heavy-PRM.mzXML”导入结果
-导入结果设置 > 文件名称 : 包含 "heavy-PRM.mzXML"
+已从“heavy-PRM.raw”导入结果
+导入结果设置 > 文件名称 : 包含 "heavy-PRM.raw"
 导入结果设置 > 在文件中添加单次注射重复测定 是 真
 导入结果设置 > 要同步导入的文件 是 "许多个"
 Extra Info: 文件名称 = 
 [
-    "heavy-PRM.mzXML"
+    "heavy-PRM.raw"
 ],
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
@@ -138,28 +138,28 @@ Undo Redo : 已从 9 文件导入结果
 Summary   : 已从 9 文件导入结果
 All Info  :
 已从 9 文件导入结果
-导入结果设置 > 文件名称 : 包含 "G1_rep1.mzXML"
-导入结果设置 > 文件名称 : 包含 "G1_rep2.mzXML"
-导入结果设置 > 文件名称 : 包含 "G1_rep3.mzXML"
-导入结果设置 > 文件名称 : 包含 "G2M_rep1.mzXML"
-导入结果设置 > 文件名称 : 包含 "G2M_rep2.mzXML"
-导入结果设置 > 文件名称 : 包含 "G2M_rep3.mzXML"
-导入结果设置 > 文件名称 : 包含 "S_rep1.mzXML"
-导入结果设置 > 文件名称 : 包含 "S_rep2.mzXML"
-导入结果设置 > 文件名称 : 包含 "S_rep3.mzXML"
+导入结果设置 > 文件名称 : 包含 "G1_rep1.raw"
+导入结果设置 > 文件名称 : 包含 "G1_rep2.raw"
+导入结果设置 > 文件名称 : 包含 "G1_rep3.raw"
+导入结果设置 > 文件名称 : 包含 "G2M_rep1.raw"
+导入结果设置 > 文件名称 : 包含 "G2M_rep2.raw"
+导入结果设置 > 文件名称 : 包含 "G2M_rep3.raw"
+导入结果设置 > 文件名称 : 包含 "S_rep1.raw"
+导入结果设置 > 文件名称 : 包含 "S_rep2.raw"
+导入结果设置 > 文件名称 : 包含 "S_rep3.raw"
 导入结果设置 > 在文件中添加单次注射重复测定 是 真
 导入结果设置 > 要同步导入的文件 是 "许多个"
 Extra Info: 文件名称 = 
 [
-    "G1_rep1.mzXML",
-    "G1_rep2.mzXML",
-    "G1_rep3.mzXML",
-    "G2M_rep1.mzXML",
-    "G2M_rep2.mzXML",
-    "G2M_rep3.mzXML",
-    "S_rep1.mzXML",
-    "S_rep2.mzXML",
-    "S_rep3.mzXML"
+    "G1_rep1.raw",
+    "G1_rep2.raw",
+    "G1_rep3.raw",
+    "G2M_rep1.raw",
+    "G2M_rep2.raw",
+    "G2M_rep3.raw",
+    "S_rep1.raw",
+    "S_rep2.raw",
+    "S_rep3.raw"
 ],
 在文件中添加单次注射重复测定 = 真,
 要同步导入的文件 = "许多个"
