@@ -1562,7 +1562,7 @@ namespace pwiz.SkylineTestData
                 ? @"TestData\ImportAllCmdLineTest.zip"
                 : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                ? ExtensionTestContext.ExtThermoRaw
+                ? ExtensionTestContext.ExtThermoRawLower
                 : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
