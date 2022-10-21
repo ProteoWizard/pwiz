@@ -1197,13 +1197,13 @@ namespace TestRunner
                     runTests.Skyline.Set("NoVendorReaders", true);
                     runTests.AccessInternet = false;
                     runTests.LiveReports = false;
-                    runTests.RunPerfTests = false;
+                    runTests.RunPerfTests = !asNightly && perftests; // Only run perf tests in pass0 when not nightly
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
                     bool warnedPass0PerfTest = false;
                     for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                     {
                         var test = testList[testNumber];
-                        if (test.IsPerfTest)
+                        if (asNightly && test.IsPerfTest)
                         {
                             // These are largely about vendor and/or internet performance, so not worth doing in pass 0
                             if (!warnedPass0PerfTest)
@@ -1249,7 +1249,7 @@ namespace TestRunner
                             var test = testList[testNumber];
                             bool failed = false;
 
-                            if (test.IsPerfTest)
+                            if (asNightly && test.IsPerfTest)
                             {
                                 // These are generally too lengthy to run multiple times, so not a good fit for pass 1
                                 if (!warnedPass1PerfTest)
