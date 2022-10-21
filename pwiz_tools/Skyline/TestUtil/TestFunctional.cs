@@ -113,6 +113,11 @@ namespace pwiz.SkylineTestUtil
         private bool _testCompleted;
         private ScreenshotManager _shotManager;
 
+        protected AbstractFunctionalTest()
+        {
+            ExtMzml = ExtensionTestContext.ExtMzml;
+        }
+
         protected ScreenshotManager ScreenshotManager
         {
             get { return _shotManager; }
@@ -127,6 +132,8 @@ namespace pwiz.SkylineTestUtil
             get { return _forceMzml; }
             set { _forceMzml = value && !IsPauseForScreenShots && !IsCoverShotMode;  }    // Don't force mzML during screenshots
         }
+
+        protected string ExtMzml { get; set; }
 
         protected static bool LaunchDebuggerOnWaitForConditionTimeout { get; set; } // Use with caution - this will prevent scheduled tests from completing, so we can investigate a problem
 
@@ -144,22 +151,27 @@ namespace pwiz.SkylineTestUtil
 
         protected string ExtThermoRaw
         {
-            get { return UseRawFiles ? ExtensionTestContext.ExtThermoRaw : ExtensionTestContext.ExtMzml; }
+            get { return UseRawFiles ? ExtensionTestContext.ExtThermoRaw : ExtMzml; }
+        }
+
+        protected string ExtThermoRawLower
+        {
+            get { return UseRawFiles ? ExtensionTestContext.ExtThermoRawLower : ExtMzml; }
         }
 
         protected string ExtAbWiff
         {
-            get { return UseRawFiles ? ExtensionTestContext.ExtAbWiff : ExtensionTestContext.ExtMzml; }
+            get { return UseRawFiles ? ExtensionTestContext.ExtAbWiff : ExtMzml; }
         }
 
         protected string ExtAgilentRaw
         {
-            get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtensionTestContext.ExtMzml; }
+            get { return UseRawFiles ? ExtensionTestContext.ExtAgilentRaw : ExtMzml; }
         }
 
         protected string ExtWatersRaw
         {
-            get { return UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtensionTestContext.ExtMzml; }
+            get { return UseRawFiles ? ExtensionTestContext.ExtWatersRaw : ExtMzml; }
         }
 
         protected void RunWithOldReports(Action test)
@@ -1542,8 +1554,8 @@ namespace pwiz.SkylineTestUtil
             if (ForceMzml)
             {
                 // If the only difference is in the mention of a raw file extension, ignore that
-                var extMzml = @".mzml";
-                var actualParts = actual.Split(new[] {extMzml, @".mzML", @".MZML" }, StringSplitOptions.None);
+                var extMzml = DataSourceUtil.EXT_MZML;
+                var actualParts = actual.Split(new[] {extMzml, ExtMzml, extMzml.ToUpperInvariant() }, StringSplitOptions.None);
                 if (actualParts.Length > 1)
                 {
                     var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);

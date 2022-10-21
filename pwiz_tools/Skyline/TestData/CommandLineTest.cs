@@ -1243,9 +1243,6 @@ namespace pwiz.SkylineTestData
         public void ConsoleImportNonSRMFile()
         {
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
-            string extRaw = useRaw
-                                ? ExtensionTestContext.ExtThermoRaw
-                                : ".mzML";
             string testZipPath = useRaw
                                     ? @"TestData\ImportAllCmdLineTest.zip"
                                     : @"TestData\ImportAllCmdLineTestMzml.zip";
@@ -1274,7 +1271,9 @@ namespace pwiz.SkylineTestData
             var docPath = testFilesDir.GetTestPath("test.sky");
             var outPath = testFilesDir.GetTestPath("import_nonSRM_file.sky");
 
-            var rawPath = testFilesDir.GetTestPath("FullScan" + extRaw);
+            var rawPath = testFilesDir.GetTestPath("FullScan" + (useRaw
+                ? ExtensionTestContext.ExtThermoRaw
+                : ExtensionTestContext.ExtMzml));
 
             // Try to import FullScan.RAW|mzML
             var msg = RunCommand("--in=" + docPath,
@@ -1320,8 +1319,8 @@ namespace pwiz.SkylineTestData
                                      ? @"TestData\ImportAllCmdLineTest.zip"
                                      : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                                ? ".raw"
-                                : ".mzML";
+                                ? ExtensionTestContext.ExtThermoRawLower
+                                : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
@@ -1562,8 +1561,8 @@ namespace pwiz.SkylineTestData
                 ? @"TestData\ImportAllCmdLineTest.zip"
                 : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                ? ".raw"
-                : ".mzML";
+                ? ExtensionTestContext.ExtThermoRawLower
+                : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
@@ -2390,8 +2389,8 @@ namespace pwiz.SkylineTestData
                                      ? @"TestData\ImportAllCmdLineTest.zip"
                                      : @"TestData\ImportAllCmdLineTestMzml.zip";
             string extRaw = useRaw
-                                ? ".raw"
-                                : ".mzML";
+                                ? ExtensionTestContext.ExtThermoRawLower
+                                : ExtensionTestContext.ExtMzml;
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
