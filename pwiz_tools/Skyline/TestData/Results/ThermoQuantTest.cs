@@ -257,9 +257,10 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
 
-                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.InstrumentSerialNumber == "TQU00490"));
-                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.SampleId == "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid"));
-
+                AssertEx.AreEqualDeep(new[] { "TQU00490" },
+                    docResults.MeasuredResults.CachedFileInfos.Select(fi => fi.InstrumentSerialNumber).Distinct().ToList());
+                AssertEx.AreEqualDeep(new[] { "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid" },
+                    docResults.MeasuredResults.CachedFileInfos.Select(fi => fi.SampleId).Distinct().ToList());
 
                 // Remove the first light transition, checking that this removes the ratio
                 // from the corresponding heavy transition, but not the entire group, until
