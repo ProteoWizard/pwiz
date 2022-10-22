@@ -20,7 +20,6 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -32,8 +31,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public sealed class TestFilesDir : IDisposable
     {
-        public const string TEST_FULL_NAME = @"TestFullName"; // This must agree with the keyword in TestRunnerLib.RunTests
-        private TestContext TestContext { get; set; }
+         private TestContext TestContext { get; set; }
 
         /// <summary>
         /// Creates a sub-directory of the Test Results directory with the same
@@ -82,9 +80,7 @@ namespace pwiz.SkylineTestUtil
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
 
-            // Special treatment to persist files that are expensive to download and/or extract
-            // Note that we don't actually persist these on TeamCity, as they won't get re-used and may
-            // potentially cause storage limit problems. (See Dispose method for details)
+            // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
             PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
@@ -246,33 +242,6 @@ namespace pwiz.SkylineTestUtil
                 {
                     // Useful for debugging. Exception names file that is locked.
                     Helpers.TryTwice(() => Directory.Delete(guidName, true));
-                }
-            }
-
-            // We normally persist downloaded data files, along with selected large expensive-to-extract files
-            // contained therein, but we don't on TeamCity as they won't get re-used anyway, and could cause storage
-            // limit problems
-            var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
-            if (isTeamCity)
-            {
-                if (PersistentFiles != null)
-                {
-                    foreach (var file in PersistentFiles)
-                    {
-                        var path = Path.Combine(PersistentFilesDir, file);
-                        FileEx.SafeDelete(path, true);
-                        DirectoryEx.SafeDelete(path); // The "file" might actually be a directory
-                    }
-                }
-                // Remove the data zipfile if it actually was downloaded (could be in source control)
-                if (TestContext.Properties.Contains(ExtensionTestContext.DATA_ZIP_PATH))
-                {
-                    var zipfilePath = TestContext.Properties[ExtensionTestContext.DATA_ZIP_PATH].ToString();
-                    var downloadsPath = PathEx.GetDownloadsPath();
-                    if (zipfilePath.StartsWith(downloadsPath))
-                    {
-                        FileEx.SafeDelete(zipfilePath, true);
-                    }
                 }
             }
         }

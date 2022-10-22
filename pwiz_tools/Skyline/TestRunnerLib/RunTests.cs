@@ -107,7 +107,7 @@ namespace TestRunnerLib
         private readonly bool _showStatus;
         private readonly bool _buildMode;
 
-        public readonly TestContext TestContext;
+        public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
         public long CheckCrtLeaks;
         public int FailureCount { get; private set; }
@@ -169,6 +169,9 @@ namespace TestRunnerLib
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
             SetTestDir(TestContext, results);
+            // Minimize disk use on TeamCity VMs by removing downloaded files
+            // during test clean-up
+            TestContext.Properties["RemoveDownloadedFilesInCleanup"] = teamcityTestDecoration.ToString();
 
             // Set Skyline state for unit testing.
             Skyline = new InvokeSkyline();
@@ -300,13 +303,13 @@ namespace TestRunnerLib
                 var testObject = Activator.CreateInstance(test.TestClassType);
 
                 // Set the TestContext.
+                TestContext.HasPassed = false;
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["TestFullName"] = test.TestMethod.DeclaringType?.FullName; // This keyword must agree with TestFilesDir.TEST_FULL_NAME
                 TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
 
@@ -337,6 +340,8 @@ namespace TestRunnerLib
                     //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
                 }
 
+                // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                TestContext.HasPassed = true;
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
             }
