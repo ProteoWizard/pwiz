@@ -79,7 +79,6 @@ namespace pwiz.SkylineTestUtil
             {
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
-
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
             PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
