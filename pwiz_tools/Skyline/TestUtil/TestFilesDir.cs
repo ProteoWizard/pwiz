@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public sealed class TestFilesDir : IDisposable
     {
-         private TestContext TestContext { get; set; }
+        private TestContext TestContext { get; set; }
 
         /// <summary>
         /// Creates a sub-directory of the Test Results directory with the same
@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestUtil
         public TestFilesDir(TestContext testContext, string relativePathZip)
             : this(testContext, relativePathZip, null)
         {
-
+            
         }
 
         /// <summary>
@@ -72,8 +72,8 @@ namespace pwiz.SkylineTestUtil
             TestContext = testContext;
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
-                Assert.Fail("Null zip base name"); // Resharper
-            directoryName = GetExtractDir(directoryName, zipBaseName, false); // Only persistent files can be extract here
+                Assert.Fail("Null zip base name");  // Resharper
+            directoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
             FullPath = TestContext.GetTestPath(directoryName);
             if (Directory.Exists(FullPath))
             {
@@ -129,8 +129,8 @@ namespace pwiz.SkylineTestUtil
         {
             string testPath = GetTestPath(relativePath);
             return Path.Combine(Path.GetDirectoryName(testPath) ?? "",
-                Path.GetFileNameWithoutExtension(testPath) + "_Intl" +
-                Path.GetExtension(testPath));
+                    Path.GetFileNameWithoutExtension(testPath) + "_Intl" +
+                    Path.GetExtension(testPath));
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestUtil
             if (parentPath != null)
                 guidName = Path.Combine(parentPath, guidName);
 
-            if (Directory.Exists(FullPath)) // Did test already clean up after itself?
+            if (Directory.Exists(FullPath))  // Did test already clean up after itself?
             {
                 try
                 {
