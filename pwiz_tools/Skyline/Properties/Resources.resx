@@ -1199,6 +1199,9 @@
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy" xml:space="preserve">
     <value>Explicit Collision Energy</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Energy" xml:space="preserve">
+    <value>Collision Energy</value>
+  </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>Copying external tools from a previous installation</value>
   </data>
@@ -5589,6 +5592,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window" xml:space="preserve">
     <value>Explicit Retention Time Window</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Retention_Time_Window" xml:space="preserve">
+    <value>Retention Time Window</value>
+  </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
     <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}. A non-degenerate overlapping window scheme is required.</value>
   </data>
@@ -7493,6 +7499,9 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time" xml:space="preserve">
     <value>Explicit Retention Time</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Retention_Time" xml:space="preserve">
+    <value>Retention Time</value>
+  </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} of the peptide {1} is out of range for the instrument settings.</value>
   </data>
@@ -8434,6 +8443,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage" xml:space="preserve">
     <value>Explicit Compensation Voltage</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Compensation_Voltage" xml:space="preserve">
+    <value>Compensation Voltage</value>
   </data>
   <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
     <value>The modification {0} is not valid. Expected a numeric delta mass.</value>
@@ -9553,11 +9565,32 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility" xml:space="preserve">
     <value>Explicit Ion Mobility</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_" xml:space="preserve">
+    <value>Explicit Ion Mobility (1/K0)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_" xml:space="preserve">
+    <value>Explicit Ion Mobility (msec)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_" xml:space="preserve">
+    <value>Ion Mobility (1/K0)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_" xml:space="preserve">
+    <value>Ion Mobility (msec)</value>
+  </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
     <value>Explicit Ion Mobility Units</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility_Units" xml:space="preserve">
+    <value>Ion Mobility Units</value>
+  </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
     <value>Explicit Ion Mobility High Energy Offset</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
+    <value>Ion Mobility High Energy Offset</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__" xml:space="preserve">
     <value>Invalid ion mobility units value {0} (accepted values are {1})</value>
@@ -11409,6 +11442,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Explicit Collision Cross Section (sq A)</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Collision Cross Section (sq A)</value>
+  </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
     <value>Percentage of peak max height to use as intensity threshold.</value>
   </data>
@@ -11438,6 +11474,9 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
     <value>Explicit Declustering Potential</value>
+  </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
+    <value>Declustering Potential</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>
@@ -11667,13 +11706,13 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Associate Proteins</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
-	  <value>Waiting for SCIEX OS to start</value>
+      <value>Waiting for SCIEX OS to start</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
-	  <value>Working...</value>
+      <value>Working...</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
-	  <value>Failed to find a valid SCIEX OS installation.</value>
+      <value>Failed to find a valid SCIEX OS installation.</value>
   </data>
   <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
     <value>File</value>
@@ -11815,7 +11854,7 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Shared Peptides</value>
   </data>
   <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
-	<value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
     <value>Duplicated peptides</value>
@@ -11836,6 +11875,21 @@ If you do not have the original file, you may build the library with embedded sp
       <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
   </data>
   <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
-	  <value>Submitting an unhandled error report</value>
+      <value>Submitting an unhandled error report</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram" xml:space="preserve">
+      <value>No MS1 spectra found in base peak chromatogram</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram" xml:space="preserve">
+      <value>No MS1 spectra found in TIC chromatogram</value>
+  </data>
+  <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
+	  <value>Creating ion mobility library "{0}" in "{1}"...</value>
+  </data>
+  <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
+	  <value>Unable to determine format of delimiter separated value file</value>
+  </data>
+  <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
+	  <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
   </data>
 </root>

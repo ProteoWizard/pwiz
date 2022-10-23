@@ -2700,15 +2700,13 @@ namespace pwiz.Skyline.Model.Lib
 
     public struct BiblioLiteSpectrumInfo : ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein)
-            : this(key, copies, numPeaks, id, protein, default(IndexedRetentionTimes), default(IndexedIonMobilities), 
-            ImmutableSortedList<int, ExplicitPeakBounds>.EMPTY, null, null)
-        {
-        }
 
         public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein,
-            IndexedRetentionTimes retentionTimesByFileId, IndexedIonMobilities ionMobilitiesByFileId,
-            ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries, double? score, string scoreType)
+            IndexedRetentionTimes retentionTimesByFileId = default(IndexedRetentionTimes), 
+            IndexedIonMobilities ionMobilitiesByFileId = default(IndexedIonMobilities),
+            ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries = null,
+            double? score = null, 
+            string scoreType = null)
         {
             Key = key;
             Copies = copies;
@@ -2717,7 +2715,7 @@ namespace pwiz.Skyline.Model.Lib
             Protein = protein;
             RetentionTimesByFileId = retentionTimesByFileId;
             IonMobilitiesByFileId = ionMobilitiesByFileId;
-            PeakBoundariesByFileId = peakBoundaries;
+            PeakBoundariesByFileId = peakBoundaries ?? ImmutableSortedList<int, ExplicitPeakBounds>.EMPTY;
             Score = score;
             ScoreType = scoreType;
         }
