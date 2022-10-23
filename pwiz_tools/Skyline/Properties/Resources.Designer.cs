@@ -24529,6 +24529,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The charge {0} is not supported by Prosit. The maximum supported charge is {1}..
+        /// </summary>
+        public static string PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge {
+            get {
+                return ResourceManager.GetString("PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         public static System.Drawing.Bitmap Protein {
