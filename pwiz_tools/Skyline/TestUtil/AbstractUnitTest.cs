@@ -444,9 +444,12 @@ namespace pwiz.SkylineTestUtil
                         DirectoryEx.SafeDelete(dir);
                     }
                 }
-                foreach (var zipFilePath in _testFilesZips.Where(p => p.StartsWith(downloadFolder)))
+                if (_testFilesZips != null)
                 {
-                    FileEx.SafeDelete(zipFilePath, true);
+                    foreach (var zipFilePath in _testFilesZips.Where(p => p.StartsWith(downloadFolder)))
+                    {
+                        FileEx.SafeDelete(zipFilePath, true);
+                    }
                 }
             }
 
