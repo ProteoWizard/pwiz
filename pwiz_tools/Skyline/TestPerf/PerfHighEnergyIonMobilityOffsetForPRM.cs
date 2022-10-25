@@ -42,12 +42,6 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             
         }
 
-        private string GetTestPath(string relativePath)
-        {
-            return TestFilesDirs[0].GetTestPath(relativePath);
-        }
-
-
         protected override void DoTest()
         {
             string skyfile = TestFilesDir.GetTestPath("prm_dt_offset.sky");
@@ -57,13 +51,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var doc = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 2);
             ImportResults("data.mzML");
-            doc = WaitForDocumentChangeLoaded(doc);
+            doc = SkylineWindow.Document;
 
             // Verify that this is PRM data
             AssertEx.AreEqual(FullScanAcquisitionMethod.PRM, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
 
             // Verify that a high energy ion mobility offset was applied for chromatogram extraction
-            var peptide = SkylineWindow.Document.Molecules.First();
+            var peptide = doc.Molecules.First();
             var precursor = peptide.TransitionGroups.First();
             var transitionGroupChromInfo = precursor.Results[0].First();
             // Without the fix, MS1 and MSMS drift times would be identical
