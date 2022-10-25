@@ -64,9 +64,9 @@ namespace pwiz.SkylineTestUtil
         /// set to true for TeamCity, where the VMs start clean every time, tests only get run
         /// once, and limiting VM disk space is cost effective.
         /// </summary>
-        protected TestRunnerContext.DesiredCleanupLevel DesiredCleanupLevel
+        protected DesiredCleanupLevel DesiredCleanupLevel
         {
-            get { return TestContext.GetEnumValue("DesiredCleanupLevel", TestRunnerContext.DesiredCleanupLevel.none); }  // Return none if unspecified
+            get { return TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none); }  // Return none if unspecified
             set { TestContext.Properties["DesiredCleanupLevel"] = value.ToString(); }
         }
 
@@ -437,7 +437,7 @@ namespace pwiz.SkylineTestUtil
             // used for months on end, and even in cases where the computer is disconnected from a network.
             // In a single run case on a pristine VM (like TeamCity), however, removing them greatly reduces
             // the disk space required to run the tests.
-            if (_testFilesZips != null && DesiredCleanupLevel > TestRunnerContext.DesiredCleanupLevel.persistent_files)
+            if (_testFilesZips != null && DesiredCleanupLevel > DesiredCleanupLevel.persistent_files)
             {
                 // Only remove files from the Downloads folder
                 string downloadFolder = PathEx.GetDownloadsPath();
@@ -449,7 +449,7 @@ namespace pwiz.SkylineTestUtil
 
             // Audit logging can create this folder with no other association
             TestFilesDir.CheckForFileLocks(TestContext.TestRunResultsDirectory,
-                DesiredCleanupLevel == TestRunnerContext.DesiredCleanupLevel.all);
+                DesiredCleanupLevel == DesiredCleanupLevel.all);
         }
 
         protected virtual void Initialize() {}

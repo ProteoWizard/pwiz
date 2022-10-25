@@ -22,10 +22,14 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using TestRunnerLib;
 
 namespace pwiz.SkylineTestUtil
 {
+    /// <summary>
+    /// Desired level of clean-up in test directories
+    /// </summary>
+    public enum DesiredCleanupLevel { none, persistent_files, downloads, all }
+
     /// <summary>
     /// Creates and cleans up a directory containing the contents of a
     /// test ZIP file.
@@ -232,12 +236,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public void Cleanup()
         {
-            var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", TestRunnerContext.DesiredCleanupLevel.none);
+            var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none);
 
-            CheckForFileLocks(RootPath, desiredCleanupLevel == TestRunnerContext.DesiredCleanupLevel.all);
+            CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
             // Also check for file locks on the persistent files directory
             // since it is essentially an extension of the test directory.
-            CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != TestRunnerContext.DesiredCleanupLevel.none);
+            CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
         }
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)

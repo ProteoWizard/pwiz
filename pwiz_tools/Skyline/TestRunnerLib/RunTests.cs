@@ -106,7 +106,7 @@ namespace TestRunnerLib
         private readonly StreamWriter _log;
         private readonly bool _showStatus;
         private readonly bool _buildMode;
-        private readonly TestRunnerContext.DesiredCleanupLevel _cleanupLevel;
+        private readonly bool _cleanupLevelAll;
 
         public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
@@ -174,8 +174,8 @@ namespace TestRunnerLib
             // during test clean-up
             if (teamcityTestDecoration)
             {
-                _cleanupLevel = TestRunnerContext.DesiredCleanupLevel.all;
-                TestContext.Properties["DesiredCleanupLevel"] = _cleanupLevel.ToString();
+                _cleanupLevelAll = true;
+                TestContext.Properties["DesiredCleanupLevel"] = "all";  // Must match DesiredCleanupLevel value
             }
 
             // Set Skyline state for unit testing.
@@ -508,7 +508,7 @@ namespace TestRunnerLib
         {
             var allEntries = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
-            if (_cleanupLevel == TestRunnerContext.DesiredCleanupLevel.all && Directory.Exists(TestContext.TestDir))
+            if (_cleanupLevelAll && Directory.Exists(TestContext.TestDir))
             {
                 allEntries.AddRange(Directory.EnumerateFileSystemEntries(TestContext.TestDir));
                 if (allEntries.Count > 0)

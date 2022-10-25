@@ -35,8 +35,6 @@ namespace TestRunnerLib
             _dictionary = new Dictionary<string, string>();
         }
 
-        public enum DesiredCleanupLevel { none, persistent_files, downloads, all }
-
         public bool HasPassed { get; set; }
 
         public override UnitTestOutcome CurrentTestOutcome => HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
