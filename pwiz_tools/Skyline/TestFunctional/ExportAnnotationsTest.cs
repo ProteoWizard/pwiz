@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
 
             var originalDocument = SkylineWindow.Document;
             // First export a CSV where all of the properties are blank
-            var blankPropertiesCsv = Path.Combine(TestContext.TestDir, "blankProperties.csv");
+            var blankPropertiesCsv = TestContext.GetTestResultsPath("blankProperties.csv");
             ExportProperties(blankPropertiesCsv);
 
             // Use the document grid to set the ExplicitCollisionEnergy, ExplicitRetentionTime, and ExplicitRetentionTimeWindow
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentWithAnnotations = SkylineWindow.Document;
             Assert.AreNotEqual(originalDocument, documentWithAnnotations);
-            var propertiesCsv = Path.Combine(TestContext.TestDir, "properties.csv");
+            var propertiesCsv = TestContext.GetTestResultsPath("properties.csv");
             ExportProperties(propertiesCsv);
 
             // Reading back in the blank CSV file should obliterate the properties

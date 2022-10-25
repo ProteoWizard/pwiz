@@ -1268,7 +1268,7 @@ namespace pwiz.SkylineTestUtil
             DocumentClonedLoadable(ref target, ref actual, null, false);
         }
         public static void DocumentClonedLoadable(ref SrmDocument target, ref SrmDocument actual, string testDir, bool forceFullLoad)
-            {
+        {
             for (var retry = 0; retry < 2;)
             {
                 try

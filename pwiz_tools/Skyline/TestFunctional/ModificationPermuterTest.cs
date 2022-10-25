@@ -160,7 +160,7 @@ namespace pwiz.SkylineTestFunctional
 
             CollectionAssert.AreEqual(new[] {true, false, true, true},
                 SkylineWindow.Document.Peptides.Select(p => p.AutoManageChildren).ToList());
-            var filePath = Path.Combine(TestContext.TestDir, "ModificationPermuterTest.sky");
+            var filePath = TestContext.GetTestResultsPath("ModificationPermuterTest.sky");
             RunUI(()=>
             {
                 SkylineWindow.SaveDocument(filePath);

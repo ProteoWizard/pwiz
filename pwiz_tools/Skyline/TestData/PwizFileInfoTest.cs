@@ -127,9 +127,9 @@ namespace pwiz.SkylineTestData
         {
             const string testZipPath = @"TestData\PressureTracesTest.zip";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
-            using (var msDataFile = new MsDataFileImpl(testFilesDir.GetTestPath("PressureTrace1" + ExtensionTestContext.ExtAbWiff)))
+            using (var msDataFile = new MsDataFileImpl(TestFilesDir.GetTestPath("PressureTrace1" + ExtensionTestContext.ExtAbWiff)))
             {
                 var pressureTraces = msDataFile.GetQcTraces();
 
@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestData
                 VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
 
-                string docPath = testFilesDir.GetTestPath("PressureTrace1.sky");
+                string docPath = TestFilesDir.GetTestPath("PressureTrace1.sky");
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
                 AssertEx.IsDocumentState(doc, 0, 1, 3, 9);
 
@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestData
                     var chromSets = new[]
                     {
                         new ChromatogramSet(replicateName, new[]
-                            { new MsDataFilePath(testFilesDir.GetTestPath("PressureTrace1" + extRaw)),  }),
+                            { new MsDataFilePath(TestFilesDir.GetTestPath("PressureTrace1" + extRaw)),  }),
                     };
                     var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                     Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
@@ -186,8 +186,12 @@ namespace pwiz.SkylineTestData
             if (Skyline.Program.NoVendorReaders)
                 return;
 
-            const string testZipPath = @"TestData\PwizFileInfoTest.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDirs = new []
+            {
+                new TestFilesDir(TestContext, @"TestData\PwizFileInfoTest.zip"),
+                new TestFilesDir(TestContext, @"TestData\Results\ThermoQuant.zip")
+            };
+            var testFilesDir = TestFilesDirs[0];
 
             if (ExtensionTestContext.CanImportAbWiff2)
                 VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
@@ -208,8 +212,7 @@ namespace pwiz.SkylineTestData
             {
                 VerifySerialNumber(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.raw"), null); // Thermo RAW file with empty serial number
 
-                const string testZipPath2 = @"TestData\Results\ThermoQuant.zip";
-                var testFilesDir2 = new TestFilesDir(TestContext, testZipPath2);
+                var testFilesDir2 = TestFilesDirs[1];
                 VerifySerialNumber(testFilesDir2.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.raw"), "TQU00490");
             }
         }

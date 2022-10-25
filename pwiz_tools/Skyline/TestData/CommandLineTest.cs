@@ -102,6 +102,7 @@ namespace pwiz.SkylineTestData
             AssertResult.IsDocumentResultsState(doc, "Single", 6, 6, 0, 42, 0);
 
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -118,6 +119,8 @@ namespace pwiz.SkylineTestData
 
             var outFilesDir = new TestFilesDir(TestContext, outPath);
             AssertEx.FileExists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky"));
+            outFilesDir.Cleanup();
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -173,6 +176,7 @@ namespace pwiz.SkylineTestData
             AssertEx.Contains(output, allFiles);
 
             Assert.IsNull(doc.Settings.MeasuredResults);
+            testFilesDir.Cleanup();
         }
 
         // TODO: Enable this again once file locking issues have been resolved
@@ -252,6 +256,7 @@ namespace pwiz.SkylineTestData
                                 "--add-library-path=" + libPath,
                                 "--out=" + outPath);
             CheckRunCommandOutputContains(Resources.CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_library_already_in_the_file_, output);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -285,6 +290,7 @@ namespace pwiz.SkylineTestData
             Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -337,6 +343,7 @@ namespace pwiz.SkylineTestData
 
             string reportLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(reportLines, programmaticReport);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -387,6 +394,7 @@ namespace pwiz.SkylineTestData
 
             string chromLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(chromLines, programmaticReport);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -443,6 +451,7 @@ namespace pwiz.SkylineTestData
                                        "--decoys-add-count=" + expectFewerPeptides);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_AddDecoys_Added__0__decoy_peptides_using___1___method,
                 expectFewerPeptides, DecoyGeneration.REVERSE_SEQUENCE));
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -519,6 +528,7 @@ namespace pwiz.SkylineTestData
 
             // Run it again as a mixed polarity document
             MixedPolarityTest(doc, testFilesDir, docPath, watersPath, cmd, false, false);
+            testFilesDir.Cleanup();
         }
 
         private static void MixedPolarityTest(SrmDocument doc, TestFilesDir testFilesDir, string inPath, string outPath, string[]cmds, 
@@ -720,6 +730,7 @@ namespace pwiz.SkylineTestData
                     prevProduct = product;
                 }
             }
+            commandFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -827,7 +838,8 @@ namespace pwiz.SkylineTestData
 
             // Run it again as a mixed polarity document
             MixedPolarityTest(doc, testFilesDir, docPath, agilentIsolationPath, cmd, true, false);
-
+            commandFilesDir.Cleanup();
+            testFilesDir.Cleanup();
         }
 
         private static void AssertErrorCount(int expectedErrorsInOutput, string output, string failureMessage)
@@ -1106,6 +1118,7 @@ namespace pwiz.SkylineTestData
                                                 "tool-output-to-immediate-window",
                                                 "exp-polarity",
                                             });
+            testFilesDir.Cleanup();
         }
 
         private void TestMissingValueFailures(string[] names)
@@ -1154,6 +1167,7 @@ namespace pwiz.SkylineTestData
 
             //There are no tests. This is for debugging.
             CommandLineRunner.RunCommand(args, consoleOutput);
+            testFilesDir.Cleanup();
         }
 
         //[TestMethod]
@@ -1236,6 +1250,7 @@ namespace pwiz.SkylineTestData
                 Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file"));
                 // Or a replicate named "bad_file_folder"
                 Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file_folder"));
+                testFilesDir.Cleanup();
             }
         }
 
@@ -1310,6 +1325,7 @@ namespace pwiz.SkylineTestData
             Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("FullScan"));
             // Or a replicate named "FullScan_folder"
             Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("FullScan_folder"));
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -1552,6 +1568,7 @@ namespace pwiz.SkylineTestData
             if (File.Exists(badFileMoved))
                 File.Move(badFileMoved, badFilePath);
             File.Move(fullScanMoved, fullScanPath);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -1679,6 +1696,7 @@ namespace pwiz.SkylineTestData
                     Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_,
                     rawPath), log.ToString());
             CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -1758,6 +1776,7 @@ namespace pwiz.SkylineTestData
                         Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
                         msDataFileUri.GetFileName(), fileregex, msDataFileUri), log.ToString());
             }
+            testFilesDir.Cleanup();
         }
         
         [TestMethod]
@@ -1837,6 +1856,7 @@ namespace pwiz.SkylineTestData
                     Resources
                         .CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                     "Rep1", "Rep12"), msg);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -2055,6 +2075,7 @@ namespace pwiz.SkylineTestData
                         Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                         defaultReplicateName, defaultReplicateName + "3")), msg);
             }
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -2204,6 +2225,7 @@ namespace pwiz.SkylineTestData
                         Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                         defaultReplicateName, defaultReplicateName + "4")), msg);
             }
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -2378,6 +2400,7 @@ namespace pwiz.SkylineTestData
                         Resources.CommandLine_MakeReplicateNamesUnique_Replicate___0___already_exists_in_the_document__using___1___instead_,
                         defaultReplicateName, defaultReplicateName + "4")), msg);
             }
+            testFilesDir.Cleanup();
         }
 
 
@@ -2446,6 +2469,7 @@ namespace pwiz.SkylineTestData
             doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsFalse(msg.Contains("Skipping Panorama import."), msg);
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -2705,6 +2729,7 @@ namespace pwiz.SkylineTestData
                     Settings.Default.ToolList.Clear();
                     DirectoryEx.SafeDelete(ToolDescriptionHelpers.GetToolsDirectory());
                 }
+                testFilesDir.Cleanup();
             }
             finally
             {
@@ -2749,7 +2774,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(output3.Contains("overwriting"));
             // Do want to use == to show it is not the same object, changed
             Assert.IsFalse(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
-
+            commandFilesDir.Cleanup();
         }
 
         // TODO: Don removed this test because it was failing in multiple runs under TestRunner
@@ -2782,7 +2807,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
             // the number of tools is unchanged.
             Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
-
+            commandFilesDir.Cleanup();
         }
 
         [TestMethod]
@@ -3069,7 +3094,7 @@ namespace pwiz.SkylineTestData
                     .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
             TestOutputHasErrorLine(buffer.ToString());
-
+            testFilesDir.Cleanup();
         }
 
         [TestMethod]

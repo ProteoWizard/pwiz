@@ -29,6 +29,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
@@ -63,10 +64,10 @@ namespace pwiz.SkylineTestUtil
         /// set to true for TeamCity, where the VMs start clean every time, tests only get run
         /// once, and limiting VM disk space is cost effective.
         /// </summary>
-        protected bool RemoveDownloadedFilesInCleanup
+        protected TestRunnerContext.DesiredCleanupLevel DesiredCleanupLevel
         {
-            get { return GetBoolValue("RemoveDownloadedFilesInCleanup", false); }  // Return false if unspecified
-            set { TestContext.Properties["RemoveDownloadedFilesInCleanup"] = value ? "true" : "false"; }
+            get { return TestContext.GetEnumValue("DesiredCleanupLevel", TestRunnerContext.DesiredCleanupLevel.none); }  // Return none if unspecified
+            set { TestContext.Properties["DesiredCleanupLevel"] = value.ToString(); }
         }
 
         /// <summary>
@@ -75,8 +76,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool AllowInternetAccess
         {
-            get { return GetBoolValue("AccessInternet", false); }  // Return false if unspecified
-            set { TestContext.Properties["AccessInternet"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("AccessInternet", false); }  // Return false if unspecified
+            set { TestContext.Properties["AccessInternet"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -84,8 +85,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RunPerfTests
         {
-            get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
-            set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+            set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -93,8 +94,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RetryDataDownloads
         {
-            get { return GetBoolValue("RetryDataDownloads", false); }  // Return false if unspecified
-            set { TestContext.Properties["RetryDataDownloads"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RetryDataDownloads", false); }  // Return false if unspecified
+            set { TestContext.Properties["RetryDataDownloads"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -102,8 +103,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RecordAuditLogs
         {
-            get { return GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
-            set { TestContext.Properties["RecordAuditLogs"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
+            set { TestContext.Properties["RecordAuditLogs"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -116,8 +117,8 @@ namespace pwiz.SkylineTestUtil
         private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
-            set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -145,7 +146,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public bool IsRunningInTestRunner
         {
-            get { return TestContext is TestRunnerLib.TestRunnerContext; }
+            get { return TestContext is TestRunnerContext; }
         }
 
         /// <summary>
@@ -170,14 +171,6 @@ namespace pwiz.SkylineTestUtil
         {
             return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
-
-        protected bool GetBoolValue(string property, bool defaultValue)
-        {
-            var value = TestContext.Properties[property];
-            return (value == null) ? defaultValue :
-                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
-        }
-
 
         private string[] _testFilesZips;
         public string TestFilesZip
@@ -424,32 +417,6 @@ namespace pwiz.SkylineTestUtil
 
         private void CleanupFiles()
         {
-            // We normally persist downloaded data files, along with selected large expensive-to-extract files
-            // contained therein because this is highly beneficial for cases that run tests multiple times,
-            // like nightly test runs or on a developer machine where the same downloaded files can be
-            // used for months on end, and even in cases where the computer is disconnected from a network.
-            // In a single run case on a pristine VM (like TeamCity), however, removing them greatly reduces
-            // the disk space required to run the tests.
-            if (RemoveDownloadedFilesInCleanup)
-            {
-                // Only remove files from the Downloads folder
-                string downloadFolder = PathEx.GetDownloadsPath();
-                if (TestFilesDirs != null)
-                {
-                    foreach (var dir in TestFilesDirs
-                                 .Where(d => d != null)
-                                 .Select(d => d.PersistentFilesDir)
-                                 .Where(d => d.StartsWith(downloadFolder)))
-                    {
-                        DirectoryEx.SafeDelete(dir);
-                    }
-                }
-                foreach (var zipFilePath in _testFilesZips.Where(p => p.StartsWith(downloadFolder)))
-                {
-                    FileEx.SafeDelete(zipFilePath, true);
-                }
-            }
-
             // If test passed, dispose the working directories to make sure file handles are not still open.
             // Note: Normally this has no impact on the directory contents, because the directory is
             // simply renamed and then renamed back. If the rename fails, the directory gets
@@ -460,9 +427,29 @@ namespace pwiz.SkylineTestUtil
             {
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
                 {
-                    dir.Dispose();
+                    dir.Cleanup();
                 }
             }
+
+            // We normally persist downloaded data files, along with selected large expensive-to-extract files
+            // contained therein because this is highly beneficial for cases that run tests multiple times,
+            // like nightly test runs or on a developer machine where the same downloaded files can be
+            // used for months on end, and even in cases where the computer is disconnected from a network.
+            // In a single run case on a pristine VM (like TeamCity), however, removing them greatly reduces
+            // the disk space required to run the tests.
+            if (_testFilesZips != null && DesiredCleanupLevel > TestRunnerContext.DesiredCleanupLevel.persistent_files)
+            {
+                // Only remove files from the Downloads folder
+                string downloadFolder = PathEx.GetDownloadsPath();
+                foreach (var zipFilePath in _testFilesZips.Where(p => p.StartsWith(downloadFolder)))
+                {
+                    FileEx.SafeDelete(zipFilePath, true);
+                }
+            }
+
+            // Audit logging can create this folder with no other association
+            TestFilesDir.CheckForFileLocks(TestContext.TestRunResultsDirectory,
+                DesiredCleanupLevel == TestRunnerContext.DesiredCleanupLevel.all);
         }
 
         protected virtual void Initialize() {}

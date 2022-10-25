@@ -69,8 +69,7 @@ namespace pwiz.SkylineTestFunctional
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunUI(()=>exportLiveReportDlg.ReportName = Resources.Resources_ReportSpecList_GetDefaults_Peptide_Quantification);
 
-            Directory.CreateDirectory(TestContext.TestDir);
-            string outputFile = Path.Combine(TestContext.TestDir, "file.csv");
+            string outputFile = TestContext.GetTestResultsPath("file.csv");
             OkDialog(exportLiveReportDlg, () => exportLiveReportDlg.OkDialog(outputFile, TextUtil.CsvSeparator));
             using (var textReader = new StreamReader(outputFile))
             {

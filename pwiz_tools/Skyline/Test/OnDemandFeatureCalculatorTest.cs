@@ -32,19 +32,16 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestForcedIntegrationForUserIntegratedPeaks()
         {
-            using (var testFilesDir = new TestFilesDir(TestContext, @"Test\OnDemandFeatureCalculatorTest.zip"))
+            TestFilesDir = new TestFilesDir(TestContext, @"Test\OnDemandFeatureCalculatorTest.zip");
+            SrmDocument document;
+            using (var stream = File.OpenRead(TestFilesDir.GetTestPath("OnDemandFeatureCalculatorTest.sky")))
             {
-                SrmDocument document;
-                using (var stream = File.OpenRead(testFilesDir.GetTestPath("OnDemandFeatureCalculatorTest.sky")))
-                {
-                    document = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(stream);
-                }
-
-                var chromatogramCache = ChromatogramCache.Load(
-                    testFilesDir.GetTestPath("OnDemandFeatureCalculatorTest.skyd"), new ProgressStatus(),
-                    new DefaultFileLoadMonitor(new SilentProgressMonitor()), false);
-
+                document = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(stream);
             }
+
+            var chromatogramCache = ChromatogramCache.Load(
+                TestFilesDir.GetTestPath("OnDemandFeatureCalculatorTest.skyd"), new ProgressStatus(),
+                new DefaultFileLoadMonitor(new SilentProgressMonitor()), false);
         }
     }
 }

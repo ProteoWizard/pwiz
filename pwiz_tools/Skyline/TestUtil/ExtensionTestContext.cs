@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,21 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool GetBoolValue(this TestContext testContext, string property, bool defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
+        }
+
+        public static TValue GetEnumValue<TValue>(this TestContext testContext, string property, TValue defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                (TValue)Enum.Parse(typeof(TValue), value.ToString());
+        }
+
+
         public static string GetTestDir(this TestContext testContext)
         {
             // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
@@ -49,6 +65,11 @@ namespace pwiz.SkylineTestUtil
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
             return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
+        }
+
+        public static string GetTestResultsPath(this TestContext testContext, string relativePath)
+        {
+            return Path.Combine(testContext.TestRunResultsDirectory, relativePath);
         }
 
         public static String GetProjectDirectory()

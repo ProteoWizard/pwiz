@@ -1326,7 +1326,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         try
                         {
-                            dir?.Dispose();
+                            dir?.Cleanup();
                         }
                         catch (Exception x)
                         {

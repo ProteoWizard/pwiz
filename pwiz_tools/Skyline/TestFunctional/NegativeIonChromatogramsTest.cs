@@ -38,27 +38,25 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void NegativeIonChromatogramsTest()
         {
+            // CONSIDER: in this zip file is a tiny data set "134.sky" and "134.mzml" that demonstrate how we still don't
+            //           do a perfect job of handling chromatograms with same Q1Q3 and overlapping RT ranges.  There
+            //           are two chromatograms in the mzml with Q1=134Q3=134 and similar time ranges.  We don't pick the best
+            //           of the two so a would-be peak match gets missed.
+            TestFilesZip = ZIP_FILE;
             RunFunctionalTest();
         }
 
         // Verify proper peak selection when polarity information is present
         protected override void DoTest()
         {
-            // CONSIDER: in this zip file is a tiny data set "134.sky" and "134.mzml" that demonstrate how we still don't
-            //           do a perfect job of handling chromatograms with same Q1Q3 and overlapping RT ranges.  There
-            //           are two chromatograms in the mzml with Q1=134Q3=134 and similar time ranges.  We don't pick the best
-            //           of the two so a would-be peak match gets missed.
-
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-
-            var replicatePath = testFilesDir.GetTestPath("090215_033.mzML"); // properly converted, with polarity sense
-            var allNegativePath = testFilesDir.GetTestPath("all_negative.mzML"); // Hacked to declare all chromatograms as negative
-            var noPolarityPath = testFilesDir.GetTestPath("no_polarity.mzML"); // Converted by older msconvert without any ion polarity sense, so all positive
+            var replicatePath = TestFilesDir.GetTestPath("090215_033.mzML"); // properly converted, with polarity sense
+            var allNegativePath = TestFilesDir.GetTestPath("all_negative.mzML"); // Hacked to declare all chromatograms as negative
+            var noPolarityPath = TestFilesDir.GetTestPath("no_polarity.mzML"); // Converted by older msconvert without any ion polarity sense, so all positive
             var replicateName = Path.GetFileNameWithoutExtension(replicatePath);
 
-            var docProperPolarity = LoadDocWithReplicate(testFilesDir, replicateName, replicatePath);
-            var docNoPolarity = LoadDocWithReplicate(testFilesDir, replicateName, noPolarityPath);
-            var docNegPolarity = LoadDocWithReplicate(testFilesDir, replicateName, allNegativePath);
+            var docProperPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, replicatePath);
+            var docNoPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath);
+            var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath);
 
             var transProperPolarity = docProperPolarity.MoleculeTransitions.ToArray();
             var transNoPolarity = docNoPolarity.MoleculeTransitions.ToArray();
@@ -100,7 +98,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(74, countPeaksNoPolarity, "countPeaksNoPolarity");
             RunUI(()=>SkylineWindow.SwitchDocument(new SrmDocument(SrmSettingsList.GetDefault()), null));
             // Note that 26+74 != 98 : as it happens there is a negative transition 136,136 that matches when it's faked up as positive
-            testFilesDir.Dispose();
         }
 
         // Load a skyline doc, half of which is positve charges and half negative, so we can verify interaction with 
