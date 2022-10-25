@@ -226,8 +226,8 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
                 doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
             Assert.AreEqual(1, doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
-            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
-            Assert.AreEqual(libPath, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].Name);
+            Assert.AreEqual(Path.GetFileName(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].FileNameHint);
 
             // Add another library with name
             output = RunCommand("--in=" + outPath,
@@ -243,10 +243,10 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
                 doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
             Assert.AreEqual(2, doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
-            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
-            Assert.AreEqual(libPath, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath);
-            Assert.AreEqual(libName, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
-            Assert.AreEqual(libPath2, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].Name);
+            Assert.AreEqual(Path.GetFileName(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].FileNameHint);
+            Assert.AreEqual(libName, doc.Settings.PeptideSettings.Libraries.Libraries[1].Name);
+            Assert.AreEqual(Path.GetFileName(libPath2), doc.Settings.PeptideSettings.Libraries.Libraries[1].FileNameHint);
 
             // Test error (library with conflicting name)
             output = RunCommand("--in=" + outPath,
