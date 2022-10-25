@@ -249,6 +249,7 @@ namespace pwiz.SkylineTestUtil
             // and the operation will throw a useful exception if it fails
             if (useDeletion)
             {
+                RemoveReadonlyFlags(path);
                 Helpers.TryTwice(() => Directory.Delete(path, true));
                 return;
             }
@@ -278,6 +279,28 @@ namespace pwiz.SkylineTestUtil
             {
                 // Useful for debugging. Exception names file that is locked.
                 Helpers.TryTwice(() => Directory.Delete(guidName, true));
+            }
+        }
+
+        /// <summary>
+        /// Recursively removes read-only flags from files in a directory
+        /// making it possible to delete with Directory.Delete().
+        /// Note that it does not check for shortcuts/symbolic links to
+        /// other folders.
+        /// </summary>
+        public static void RemoveReadonlyFlags(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+            string[] dirs = Directory.GetDirectories(path);
+
+            foreach (string file in files)
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            foreach (string dir in dirs)
+            {
+                RemoveReadonlyFlags(dir);
             }
         }
     }
