@@ -231,7 +231,7 @@ namespace pwiz.SkylineTestData.Results
                 var refine = new RefinementSettings();
                 doc = refine.ConvertToSmallMolecules(doc, TestContext.ResultsDirectory, smallMoleculesTestMode);
                 // This is our first example of a converted label doc - check roundtripping
-                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc, TestContext.TestRunResultsDirectory, smallMoleculesTestMode);
+                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc, TestContext.GetTestResultsPath(), smallMoleculesTestMode);
                 AssertEx.Serializable(doc);
             }
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))

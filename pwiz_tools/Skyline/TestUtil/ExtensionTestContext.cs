@@ -67,9 +67,16 @@ namespace pwiz.SkylineTestUtil
             return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
         }
 
-        public static string GetTestResultsPath(this TestContext testContext, string relativePath)
+        public static string GetTestResultsPath(this TestContext testContext, string relativePath = null)
         {
-            return Path.Combine(testContext.TestRunResultsDirectory, relativePath);
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath ?? string.Empty));
+        }
+
+        public static void EnsureTestResultsDir(this TestContext testContext)
+        {
+            var testResultsDir = testContext.GetTestResultsPath();
+            if (testResultsDir != null && Directory.Exists(testResultsDir))
+                Directory.CreateDirectory(testResultsDir);
         }
 
         public static String GetProjectDirectory()

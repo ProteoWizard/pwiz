@@ -1268,7 +1268,7 @@ namespace pwiz.SkylineTest
             var tmpFile19 = "V19_1.sky";
             var tmpFileCurrent = "V20_13.sky";
             var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
-            var testPath = TestContext.TestRunResultsDirectory;
+            var testPath = TestContext.GetTestResultsPath();
             if (!File.Exists(testPath))
                 Directory.CreateDirectory(testPath);
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.V19_1); // Round trip with IMS info in peptide settings
