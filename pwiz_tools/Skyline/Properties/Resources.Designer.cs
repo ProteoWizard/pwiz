@@ -6211,6 +6211,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Reports could not be imported from {0}.
+        /// </summary>
+        public static string CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Success! Imported Reports from {0}.
         /// </summary>
         public static string CommandLine_ImportSkyr_Success__Imported_Reports_from__0_ {

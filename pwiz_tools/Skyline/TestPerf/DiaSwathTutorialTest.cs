@@ -500,7 +500,7 @@ namespace TestPerf
             SrmDocument doc = SkylineWindow.Document;
 
             string documentBaseName = "DIA-" + InstrumentTypeName + "-tutorial";
-            string documentFile = TestContext.GetTestPath(documentBaseName + SrmDocument.EXT);
+            string documentFile = TestFilesDirs[0].GetTestPath(documentBaseName + SrmDocument.EXT);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             //var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);

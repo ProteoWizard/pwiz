@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSkylineCmdInEmptyDirectory()
         {
-            var tempPath = TestContext.GetTestPath("SkylineCmdTempDirectory" + Guid.NewGuid());
+            var tempPath = Path.Combine(TestContext.TestRunResultsDirectory, "SkylineCmdTempDirectory" + Guid.NewGuid());
             Directory.CreateDirectory(tempPath);
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
             File.Copy(FindSkylineCmdExe(), destFileName);

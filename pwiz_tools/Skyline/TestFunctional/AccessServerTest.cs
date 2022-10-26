@@ -124,7 +124,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
 
-            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test.sky")));
 
             CheckPublishFailure(VALID_PANORAMA_SERVER, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder);
             CheckPublishFailure(NO_WRITE_TARGETED,
