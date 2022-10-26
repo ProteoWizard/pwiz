@@ -1133,7 +1133,7 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        // TODO: Test the case where the imported replicate has the wrong path without Lorenzo's data
+        // Historical: Test the case where the imported replicate has the wrong path without Lorenzo's data
         //[TestMethod]
         public void TestLorenzo()
         {
@@ -2384,8 +2384,8 @@ namespace pwiz.SkylineTestData
         }
 
 
-        //[TestMethod]
-        // TODO: Uncomment this test when it can clean up before/after itself
+        // CONSIDER: Uncomment this test when it can clean up before/after itself on Panorama
+        // [TestMethod]
         public void ConsolePanoramaImportTest()
         {
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
@@ -2717,73 +2717,101 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        // TODO: Don removed this test because it was failing in multiple runs under TestRunner
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleAddSkyrTest()
         {
-            int initialNumber = Settings.Default.ReportSpecList.Count;
+            Settings.Default.PersistedViews.ResetDefaults();
+            var existingReports = ReportSharing.GetExistingReports();
+            int initialNumber = existingReports.Count;
+            const string reportName = "TextREportexam";
+            var viewName = new ViewName(PersistedViews.MainGroup.Id, "TextREportexam");
             // Assumes the title TextREportexam is a unique title. 
+            Assert.IsFalse(existingReports.Keys.Contains(v => Equals(reportName, v.Name)));
+
             // Add test.skyr which only has one report type named TextREportexam
             TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var skyrFile = TestFilesDir.GetTestPath("test.skyr");
+            var overwriteFile = TestFilesDir.GetTestPath("overwrite.skyr");
+            File.WriteAllText(overwriteFile, File.ReadAllText(skyrFile).Replace(">Description<", ">Name<"));
             string output = RunCommand("--report-add=" + skyrFile);
-            Assert.AreEqual(initialNumber+1, Settings.Default.ReportSpecList.Count);
-            Assert.AreEqual("TextREportexam", Settings.Default.ReportSpecList.Last().GetKey());
-            Assert.IsTrue(output.Contains("Success"));
-            var skyrAdded = Settings.Default.ReportSpecList.Last();
+            existingReports = ReportSharing.GetExistingReports();
+            Assert.AreEqual(initialNumber+2, existingReports.Count);    // TODO(NickSh): Needs to pass with 1
+            Assert.IsTrue(existingReports.ContainsKey(viewName));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(skyrFile)));
+            var skyrAdded = existingReports[viewName].ViewSpecLayout;
+            Assert.IsNotNull(skyrAdded);
 
-            // Attempt to add the same skyr again.
-            string output2 = RunCommand("--report-add=" + skyrFile);
-            Assert.IsTrue(output2.Contains("Error"));
-            // Do want to use == to show it is the same object, unchanged
-            Assert.IsTrue(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
+            // Attempt to add a skyr file that would change the report
+            string output2 = RunCommand("--report-add=" + overwriteFile);
+            AssertEx.Contains(output2, Resources.ImportSkyrHelper_ResolveImportConflicts_Use_command);
+            existingReports = ReportSharing.GetExistingReports();
+            Assert.AreEqual(skyrAdded, existingReports[viewName].ViewSpecLayout);
 
             // Specify skip
-            string output4 = RunCommand("--report-add=" + skyrFile,
+            string output4 = RunCommand("--report-add=" + overwriteFile,
                 "--report-conflict-resolution=skip");
-            Assert.IsTrue(output4.Contains("skipping"));
-            // Do want to use == to show it is the same object, unchanged
-            Assert.IsTrue(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
-
+            AssertEx.Contains(output4, Resources.ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_skipping_);
+            existingReports = ReportSharing.GetExistingReports();
+            Assert.AreEqual(skyrAdded, existingReports[viewName].ViewSpecLayout);
 
             // Specify overwrite
-            string output3 = RunCommand("--report-add=" + skyrFile,
+            string output3 = RunCommand("--report-add=" + overwriteFile,
                 "--report-conflict-resolution=overwrite");
-            Assert.IsTrue(output3.Contains("overwriting"));
-            // Do want to use == to show it is not the same object, changed
-            Assert.IsFalse(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
+            AssertEx.Contains(output3, Resources.ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_overwriting_);
+            var existingOverwriteReports = ReportSharing.GetExistingReports();
+            Assert.AreNotEqual(skyrAdded, existingOverwriteReports[viewName].ViewSpecLayout);
+            Settings.Default.PersistedViews.ResetDefaults();
         }
 
-        // TODO: Don removed this test because it was failing in multiple runs under TestRunner
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleRunCommandsTest()
         {
+            Settings.Default.ToolList.ResetDefaults();
             int toolListCount = Settings.Default.ToolList.Count;
             TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var commandsToRun = TestFilesDir.GetTestPath("ToolList2.txt");
-            string output = RunCommand("--batch-commands=" + commandsToRun);            
-            Assert.IsTrue(output.Contains("NeWtOOl was added to the Tools Menu"));
-            Assert.IsTrue(output.Contains("iHope was added to the Tools Menu"));
-            Assert.IsTrue(output.Contains("thisWorks was added to the Tools Menu"));
-            Assert.IsTrue(output.Contains("FirstTry was added to the Tools Menu"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "thisWorks"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
-            Assert.AreEqual(toolListCount+4, Settings.Default.ToolList.Count);
+            string output = RunCommand(CommandArgs.ARG_BATCH.GetArgumentTextWithValue(commandsToRun));
+            const string toolCommand = @"C:\Windows\Notepad.exe";
+            const string toolArgs = "$(DocumentDir)";
+            const string toolDir = @"C:\";
+            ValidateToolAdded(output, "NeWtOOl", toolCommand, toolArgs, toolDir);
+            ValidateToolAdded(output, "iHope", toolCommand);
+            ValidateToolAdded(output, "thisWorks");
+            ValidateToolAdded(output, "FirstTry");
+            Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
 
             // run the same command again. this time each should be skipped.
-            string output2 = RunCommand("--batch-commands=" + commandsToRun);
-            Assert.IsFalse(output2.Contains("NeWtOOl was added to the Tools Menu"));
-            Assert.IsFalse(output2.Contains("iHope was added to the Tools Menu"));
-            Assert.IsFalse(output2.Contains("thisWorks was added to the Tools Menu"));
-            Assert.IsFalse(output2.Contains("FirstTry was added to the Tools Menu"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "thisWorks"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
+            output = RunCommand(CommandArgs.ARG_BATCH.GetArgumentTextWithValue(commandsToRun));
+            ValidateToolSkipped(output, "NeWtOOl", toolCommand, toolArgs, toolDir);
+            ValidateToolSkipped(output, "iHope", toolCommand);
+            ValidateToolSkipped(output, "thisWorks");
+            ValidateToolSkipped(output, "FirstTry");
             // the number of tools is unchanged.
             Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
+        }
+
+        private static void ValidateToolAdded(string output, string toolName,
+            string toolCommand = null, string toolArgs = null, string toolDir = null)
+        {
+            AssertEx.Contains(output,
+                string.Format(Resources.CommandLine_ImportTool__0__was_added_to_the_Tools_Menu_, toolName));
+            CheckToolExists(toolName, toolCommand, toolArgs, toolDir);
+        }
+
+        private static void ValidateToolSkipped(string output, string toolName,
+            string toolCommand = null, string toolArgs = null, string toolDir = null)
+        {
+            AssertEx.Contains(output,
+                string.Format(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, toolName));
+            CheckToolExists(toolName, toolCommand, toolArgs, toolDir);
+        }
+
+        private static void CheckToolExists(string toolName, string toolCommand, string toolArgs, string toolDir)
+        {
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == toolName &&
+                                                             (toolCommand == null || t.Command == toolCommand) &&
+                                                             (toolArgs == null || t.Arguments == toolArgs) &&
+                                                             (toolDir == null || t.InitialDirectory == toolDir)));
         }
 
         [TestMethod]
