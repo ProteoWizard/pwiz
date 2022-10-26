@@ -1928,7 +1928,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
         /// </summary>
-        public static bool RunningOnWine => GetProcAddress(GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
+        public static bool IsRunningOnWine => GetProcAddress(GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
