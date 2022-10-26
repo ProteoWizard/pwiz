@@ -335,9 +335,14 @@ namespace SkylineTester
             _tabs[_previousTab].Enter();
             statusLabel.Text = "";
 
+            StartBackgroundLoadTestSet();
+        }
+
+        private void StartBackgroundLoadTestSet()
+        {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
+            loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -350,9 +355,7 @@ namespace SkylineTester
                 var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
-                var testSetValue = testSet.InvokeRequired
-                    ? (string)Invoke(new Func<string>(() => testSet.SelectedItem.ToString()))
-                    : testSet.SelectedItem.ToString();
+                var testSetValue = e.Argument;
                 var arrayDllNames = Equals(testSetValue, "All tests") ? TEST_DLLS : TUTORIAL_DLLS;
                 foreach (var testDll in arrayDllNames)
                 {
@@ -1895,9 +1898,7 @@ namespace SkylineTester
 
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
-            var loader = new BackgroundWorker();
-            loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
+            StartBackgroundLoadTestSet();
         }
 
         #endregion Control events

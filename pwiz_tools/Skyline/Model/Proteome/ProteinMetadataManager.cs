@@ -209,7 +209,10 @@ namespace pwiz.Skyline.Model.Proteome
                                         if ((parsedProteinMetaData == null) || Equals(parsedProteinMetaData.Merge(proteinMetadata), proteinMetadata.SetWebSearchCompleted()))
                                         {
                                             // That didn't parse well enough to make a search term, or didn't add any new info - just set it as searched so we don't keep trying
-                                            _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.SetWebSearchCompleted());
+                                            if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedProteinGroupMetadata))
+                                                _processedNodes[node.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted());
+                                            else
+                                                _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted()));
                                             if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved2 / nUnresolved, ref progressStatus2))
                                                 return;
                                             proteinMetadata = null; // No search to be done

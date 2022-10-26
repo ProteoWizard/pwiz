@@ -376,6 +376,11 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            if (commandArgs.ImsDbFile != null && !CreateImsDb(commandArgs))
+            {
+                return false;
+            }
+
             if (commandArgs.Saving)
             {
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
@@ -572,6 +577,40 @@ namespace pwiz.Skyline
             {
                 ModifyDocumentWithLogging(doc => commandArgs.Refinement.Refine(doc),
                     commandArgs.Refinement.EntryCreator.Create);
+                return true;
+            }
+            catch (Exception x)
+            {
+                if (!_out.IsErrorReported)
+                {
+                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                }
+                else
+                {
+                    _out.WriteLine(x.Message);
+                }
+                return false;
+            }
+        }
+
+        private bool CreateImsDb(CommandArgs commandArgs)
+        {
+            var libName = commandArgs.ImsDbName ?? Path.GetFileNameWithoutExtension(commandArgs.ImsDbFile);
+            var message = string.Format(
+                Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName,
+                commandArgs.ImsDbFile);
+            _out.WriteLine(Resources.CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____, libName, commandArgs.ImsDbFile);
+            try
+            {
+                ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIonMobilityFiltering(ionMobilityFiltering =>
+                {
+                    var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(message));
+                    var lib = IonMobilityLibrary.CreateFromResults(
+                        doc, null, false, libName, commandArgs.ImsDbFile,
+                        progressMonitor);
+
+                    return ionMobilityFiltering.ChangeLibrary(lib);
+                })), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
             catch (Exception x)

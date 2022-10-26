@@ -80,30 +80,46 @@ namespace TestRunner
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
         private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
 
-        struct ExpandedLeakCheck
+        class ExpandedLeakCheck
         {
-            public ExpandedLeakCheck(int iterations = LeakCheckIterations * 2, bool reportLeakEarly = false)
+            public ExpandedLeakCheck(int? iterations = null, bool reportLeakEarly = false)
             {
-                Iterations = iterations;
+                Iterations = iterations ?? LeakCheckIterations * 2;
                 ReportLeakEarly = reportLeakEarly;
             }
 
+            /// <summary>
+            /// Only if <see cref="ReportLeakEarly"/> is false, the number of
+            /// iterations used to detect a leak is extended to this value.
+            /// </summary>
             public int Iterations { get; set; }
+
+            /// <summary>
+            /// Leaks get reported at the normal number of iterations. If a leak
+            /// is detected testing begins an infinite loop on the failing test
+            /// to get more information on whether it is truly leaking.
+            /// </summary>
             public bool ReportLeakEarly { get; set; }
         }
 
         // These tests get extra runs to meet the leak thresholds
         private static Dictionary<string, ExpandedLeakCheck> LeakCheckIterationsOverrideByTestName = new Dictionary<string, ExpandedLeakCheck>
         {
+            // These tests check leaks at the normal time and then start an infinite
+            // loop when a leak is detected.
             {"TestGroupedStudiesTutorialDraft", new ExpandedLeakCheck(LeakCheckIterations * 4, true)},
-            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)}
+            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
+            // These tests expand the number of iterations before reporting a leak
+            // with no potential for infinite looping on a detected leak.
+            {"TestLibraryExplorer", new ExpandedLeakCheck()},
+            {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
         public static string[] RunOnceTestNames = { "AaantivirusTestExclusion", "CodeInspection" };
 
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
-        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft" };
+        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft", "TestPermuteIsotopeModifications" };
 
         // These tests are allowed to fail the total handle leak threshold, and extra iterations are not done to stabilize a spiky total handle distribution
         public static string[] MutedTotalHandleLeakTestNames = { };
@@ -598,7 +614,7 @@ namespace TestRunner
 
         private static void CheckDocker(CommandLineArgs commandLineArgs)
         {
-            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f json", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f \"{{json .}}\"", RunTests.IS_DOCKER_RUNNING_MESSAGE);
             var dockerVersionJson = JObject.Parse(dockerVersionOutput);
             if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
             {
@@ -649,8 +665,7 @@ namespace TestRunner
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
             var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
-            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
-                testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
+            testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
             string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
@@ -668,6 +683,13 @@ namespace TestRunner
                 log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
             }
             return workerName;
+        }
+
+        private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
+        {
+            foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck", "runsmallmoleculeversions" })
+                testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
+            return testRunnerCmd;
         }
 
         private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, ConcurrentDictionary<string, bool> workerIsAlive, StreamWriter log)
@@ -836,8 +858,7 @@ namespace TestRunner
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
                             var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log=serverWorker.log parallelmode=server_worker loop=1 language={testInfo.Language}";
-                            foreach (string a in new[] { "perftests", "teamcitytestdecoration", "buildcheck" })
-                                testRunnerCmd += $" {a}={commandLineArgs.ArgAsString(a)}";
+                            testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
                             var psi = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, testRunnerCmd);
                             psi.WindowStyle = ProcessWindowStyle.Hidden;

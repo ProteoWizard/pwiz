@@ -2653,6 +2653,27 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1} - {2}).
+        /// </summary>
+        public static string BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:.
+        /// </summary>
+        public static string BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_ {
+            get {
+                return ResourceManager.GetString("BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_io" +
+                        "n_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a" +
+                        "_different_template_method__or_change_the_ion_mobility_values_for_the_following_" +
+                        "targets_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error copying template file..
         /// </summary>
         public static string BrukerTimsTofMethodExporter_ExportMethod_Error_copying_template_file_ {
@@ -5391,6 +5412,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_ {
             get {
                 return ResourceManager.GetString("CommandLine_ConnectLibrarySpecs_Warning__Could_not_find_the_spectral_library__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating ion mobility library &quot;{0}&quot; in &quot;{1}&quot;....
+        /// </summary>
+        public static string CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____ {
+            get {
+                return ResourceManager.GetString("CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____", resourceCulture);
             }
         }
         
@@ -15080,6 +15110,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No MS1 spectra found in base peak chromatogram.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No MS1 spectra found in TIC chromatogram.
+        /// </summary>
+        public static string GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram {
+            get {
+                return ResourceManager.GetString("GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No precursor ion chromatograms found.
         /// </summary>
         public static string GraphChromatogram_UpdateUI_No_precursor_ion_chromatograms_found {
@@ -16632,6 +16680,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_CheckMoleculeColumns_Precursor_Adduct_and_or_" +
                         "Precursor_Charge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Declustering Potential.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential", resourceCulture);
             }
         }
         
@@ -22075,11 +22132,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collision Cross Section (sq A).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collision Energy.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Collision_Energy {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collision_Energy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collisional Cross Section (sq A).
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_ {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Compensation_Voltage {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Compensation_Voltage", resourceCulture);
             }
         }
         
@@ -22165,6 +22249,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility (1/K0).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explicit Ion Mobility (msec).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Explicit Ion Mobility High Energy Offset.
         /// </summary>
         public static string PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset {
@@ -22206,6 +22308,51 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Fragment_Name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Fragment_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility (1/K0).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility (msec).
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_ {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility High Energy Offset.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ion Mobility Units.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Ion_Mobility_Units {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Ion_Mobility_Units", resourceCulture);
             }
         }
         
@@ -22387,6 +22534,24 @@ namespace pwiz.Skyline.Properties {
         public static string PasteDlg_UpdateMoleculeType_Protein_name {
             get {
                 return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Protein_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Retention_Time {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Retention_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time Window.
+        /// </summary>
+        public static string PasteDlg_UpdateMoleculeType_Retention_Time_Window {
+            get {
+                return ResourceManager.GetString("PasteDlg_UpdateMoleculeType_Retention_Time_Window", resourceCulture);
             }
         }
         
@@ -24360,6 +24525,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("prosit_logo_dark_blue", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The charge {0} is not supported by Prosit. The maximum supported charge is {1}..
+        /// </summary>
+        public static string PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge {
+            get {
+                return ResourceManager.GetString("PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge", resourceCulture);
             }
         }
         
@@ -30612,6 +30786,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Submitting an unhandled error report.
+        /// </summary>
+        public static string SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report {
+            get {
+                return ResourceManager.GetString("SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_repor" +
+                        "t", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Showing targets at 1% FDR will set the replicate display type to single. Do you want to continue?.
         /// </summary>
         public static string SkylineWindow_targetsAt1FDRToolStripMenuItem_Click_Showing_targets_at_1__FDR_will_set_the_replicate_display_type_to_single__Do_you_want_to_continue_ {
@@ -32150,6 +32334,16 @@ namespace pwiz.Skyline.Properties {
         public static string TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_ {
             get {
                 return ResourceManager.GetString("TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to determine format of delimiter separated value file.
+        /// </summary>
+        public static string TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file {
+            get {
+                return ResourceManager.GetString("TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_v" +
+                        "alue_file", resourceCulture);
             }
         }
         
