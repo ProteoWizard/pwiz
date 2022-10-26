@@ -1055,7 +1055,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var irtCalc = ShowDialog<EditIrtCalcDlg>(peptideSettings.AddCalculator);
-            var testDir = TestContext.TestDir;
+            var testDir = TestContext.TestRunResultsDirectory;
             RunUI(() =>
             {
                 irtCalc.CalcName = "Biognosys-10";

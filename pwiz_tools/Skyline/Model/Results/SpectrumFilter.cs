@@ -305,9 +305,8 @@ namespace pwiz.Skyline.Model.Results
                                     ? nodeGroup.Transitions.Where(nodeTran => !nodeTran.IsMs1)
                                     : nodeGroup.Transitions;
 
-                                var values = transitions.Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, IsMseData()
-                                    ? nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0
-                                    : 0));
+                                var values = transitions.Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz,
+                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0));
 
                                 filterCount += filter.AddQ3FilterValues(values, calcWindowsQ3);
                             }

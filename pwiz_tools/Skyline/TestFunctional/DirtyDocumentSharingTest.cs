@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var directory = Path.Combine(TestContext.TestDir, Guid.NewGuid().ToString());
+            var directory = Path.Combine(TestContext.TestRunResultsDirectory, "DirtyDocumentSharing" + Guid.NewGuid().ToString());
             Directory.CreateDirectory(directory);
             var format201SkyZip = Path.Combine(directory, "Format201.sky.zip");
             RunUI(() =>

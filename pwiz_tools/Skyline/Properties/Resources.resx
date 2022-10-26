@@ -11884,10 +11884,10 @@ If you do not have the original file, you may build the library with embedded sp
       <value>No MS1 spectra found in TIC chromatogram</value>
   </data>
   <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
-	  <value>Creating ion mobility library "{0}" in "{1}"...</value>
+      <value>Creating ion mobility library "{0}" in "{1}"...</value>
   </data>
   <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
-	  <value>Unable to determine format of delimiter separated value file</value>
+      <value>Unable to determine format of delimiter separated value file</value>
   </data>
   <data name="ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_" xml:space="preserve">
       <value>The transition prediction settings for this document are set to use optimized values by transition.</value>
@@ -11896,6 +11896,9 @@ If you do not have the original file, you may build the library with embedded sp
       <value>Using optimized values by transition is invalid for this instrument type. Would you like to use optimized values by precursor instead?</value>
   </data>
   <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
-	  <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+      <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+      <value>Error: Reports could not be imported from {0}</value>
   </data>
 </root>

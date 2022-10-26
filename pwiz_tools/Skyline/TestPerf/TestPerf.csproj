@@ -143,6 +143,7 @@
     <Compile Include="PerfAssociateProteinsTest.cs" />
     <Compile Include="PerfCommandlineCreateImsDbTest.cs" />
     <Compile Include="PerfDetectLockmassFunctionTest.cs" />
+    <Compile Include="PerfHighEnergyIonMobilityOffsetForPRM.cs" />
     <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
