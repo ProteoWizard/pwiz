@@ -550,7 +550,8 @@ namespace TestRunner
 
                 while (!cts.IsCancellationRequested)
                 {
-                    //TeeLog("Waiting for message");
+                    // This should be redundant with the new "Starting test" message, but may help debugging if there are connection issues
+                    // TeeLog("Waiting for message");
                     if (!sender2.TrySignalOK())
                     {
                         Thread.Sleep(2000);
@@ -643,10 +644,7 @@ namespace TestRunner
             string dockerRunRedirect = string.Empty;
             string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
-            {
-                //dockerRunRedirect = $"> c:\\pwiz\\TestRunner-{workerName}-docker.log 2>1";
                 testRunnerLog = @$"c:\pwiz\TestRunner-{workerName}-docker.log";
-            }
 
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
