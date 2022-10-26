@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string GetTestResultsPath(this TestContext testContext, string relativePath = null)
         {
-            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath ?? string.Empty));
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), testContext.TestName, relativePath ?? string.Empty));
         }
 
         public static void EnsureTestResultsDir(this TestContext testContext)
