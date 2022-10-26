@@ -63,6 +63,7 @@ namespace pwiz.Skyline.Util
                 Version = string.Empty;
             }
 
+            RunningOnWine = Helpers.RunningOnWine;
         }
         public enum InstallType { release, daily, developer }
 
@@ -80,6 +81,7 @@ namespace pwiz.Skyline.Util
 
         public static bool IsDeveloperInstall { get; }
         public static bool IsAutomatedBuild { get; private set; }
+        public static bool RunningOnWine { get; }
 
         public static bool Is64Bit
         {
@@ -153,10 +155,11 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                return string.Format(@"{0} ({1}-bit{2}{3}) {4}",
+                return string.Format(@"{0} ({1}-bit{2}{3}{4}) {5}",
                                      Program.Name, BitsText,
                                     (IsDeveloperInstall ? @" : developer build" : string.Empty),
                                     (IsAutomatedBuild ? @" : automated build" : string.Empty),
+                                    (RunningOnWine ? @" running on Wine" : string.Empty),
                                      Regex.Replace(Version, @"(\d+\.\d+\.\d+\.\d+)-(\S+)", "$1 ($2)"));
             } 
         }
