@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
-            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = new SkylineWindowDataSchema(skylineWindow);
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             BindingListSource.ListChanged += bindingListSource_ListChanged;
             BindingListSource.CurrentChanged += bindingListSource_CurrentChanged;
