@@ -2735,7 +2735,7 @@ namespace pwiz.SkylineTestData
             File.WriteAllText(overwriteFile, File.ReadAllText(skyrFile).Replace(">Description<", ">Name<"));
             string output = RunCommand("--report-add=" + skyrFile);
             existingReports = ReportSharing.GetExistingReports();
-            Assert.AreEqual(initialNumber+2, existingReports.Count);    // TODO(NickSh): Needs to pass with 1
+            Assert.AreEqual(initialNumber+1, existingReports.Count);
             Assert.IsTrue(existingReports.ContainsKey(viewName));
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(skyrFile)));
             var skyrAdded = existingReports[viewName].ViewSpecLayout;
