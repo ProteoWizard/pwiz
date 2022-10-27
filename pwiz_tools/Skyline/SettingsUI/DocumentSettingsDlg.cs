@@ -301,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void NewReport()
         {
-            var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var dataSchema = SkylineWindowDataSchema.FromDocumentContainer(DocumentContainer);
             var viewContext = new DocumentGridViewContext(dataSchema) { EnablePreview = true };
             var newView = viewContext.NewView(this, PersistedViews.MainGroup);
             if (newView != null)
