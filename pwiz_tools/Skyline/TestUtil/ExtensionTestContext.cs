@@ -75,7 +75,7 @@ namespace pwiz.SkylineTestUtil
         public static void EnsureTestResultsDir(this TestContext testContext)
         {
             var testResultsDir = testContext.GetTestResultsPath();
-            if (testResultsDir != null && Directory.Exists(testResultsDir))
+            if (testResultsDir != null && !Directory.Exists(testResultsDir))
                 Directory.CreateDirectory(testResultsDir);
         }
 
