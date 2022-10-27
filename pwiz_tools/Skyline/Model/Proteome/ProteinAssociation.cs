@@ -94,6 +94,10 @@ namespace pwiz.Skyline.Model.Proteome
                     }
                 }
             }
+            catch (InvalidDataException)
+            {
+                throw;
+            }
             catch (Exception e)
             {
                 throw new InvalidDataException(Resources.AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_, e);
