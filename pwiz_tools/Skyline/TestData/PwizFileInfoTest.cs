@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestData
                 return;
             const string testZipPath = @"TestData\PwizFileInfoTest.zip";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Waters file (.raw directory) and mz5 equivalent
             foreach (
@@ -47,12 +47,12 @@ namespace pwiz.SkylineTestData
                     new[]
                     {ExtensionTestContext.ExtWatersRaw, ExtensionTestContext.ExtMz5})
             {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ext),
+                VerifyInstrumentInfo(TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ext),
                     "Waters instrument model", "", "", "");
             }
 
             // ABI .wiff file
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
                 "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
 
 /* Waiting for CCS<->DT support in .mbi reader
@@ -67,15 +67,15 @@ namespace pwiz.SkylineTestData
                 "X500R QTOF", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
 
             // MzWiff generated mzXML files
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
                 "4000 Q Trap", "electrospray ionization", "TOFMS", "");
 
             // Agilent file (.d directory)
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw),
                 "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
 
             // Shimadzu TOF file (.lcd file)
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
                 "Shimadzu instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
 
             // Thermo .raw|mzML file
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestData
                     new[]
                     {ExtensionTestContext.ExtThermoRaw, ExtensionTestContext.ExtMzml})
             {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ext),
+                VerifyInstrumentInfo(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ext),
                     "TSQ Vantage", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
             }
         }
