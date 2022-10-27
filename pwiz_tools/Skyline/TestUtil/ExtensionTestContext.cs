@@ -72,11 +72,19 @@ namespace pwiz.SkylineTestUtil
             return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), testContext.TestName, relativePath ?? string.Empty));
         }
 
+        /// <summary>
+        /// Ensures the <see cref="GetTestResultsPath"/> root folder is created and empty.
+        /// </summary>
         public static void EnsureTestResultsDir(this TestContext testContext)
         {
             var testResultsDir = testContext.GetTestResultsPath();
-            if (testResultsDir != null && !Directory.Exists(testResultsDir))
+            if (testResultsDir != null)
+            {
+                if (Directory.Exists(testResultsDir))
+                    DirectoryEx.SafeDelete(testResultsDir);
+
                 Directory.CreateDirectory(testResultsDir);
+            }
         }
 
         public static String GetProjectDirectory()

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
