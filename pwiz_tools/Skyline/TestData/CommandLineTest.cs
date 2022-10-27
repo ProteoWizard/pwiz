@@ -845,14 +845,19 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsolePathCoverage()
         {
-            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string bogusPath = TestFilesDir.GetTestPath("bogus_file.sky");
-            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = TestFilesDir.GetTestPath("Output_file.sky");
-            string tsvPath = TestFilesDir.GetTestPath("Exported_test_report.csv");
+            TestFilesDirs = new[]
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, COMMAND_FILE)
+            };
+            var testFilesDir = TestFilesDirs[0];
+            string bogusPath = testFilesDir.GetTestPath("bogus_file.sky");
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("Output_file.sky");
+            string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
 
             // Import the first RAW file (or mzML for international)
-            string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
             //Error: file does not exist
@@ -901,7 +906,7 @@ namespace pwiz.SkylineTestData
                                 "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
                                 "--exp-method-type=scheduled",
                                 "--exp-strategy=single",
-                                "--exp-file=" + TestFilesDir.GetTestPath("Bogus.meth"));
+                                "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"));
             Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_));
             Assert.IsFalse(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
 
@@ -910,26 +915,26 @@ namespace pwiz.SkylineTestData
                                 "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
                                 "--exp-method-type=scheduled",
                                 "--exp-strategy=single",
-                                "--exp-file=" + TestFilesDir.GetTestPath("Bogus.meth"),
-                                "--exp-template=" + TestFilesDir.GetTestPath("Bogus_template.meth"));
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_, TestFilesDir.GetTestPath("Bogus_template.meth"))));
+                                "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
+                                "--exp-template=" + testFilesDir.GetTestPath("Bogus_template.meth"));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__The_template_file__0__does_not_exist_, testFilesDir.GetTestPath("Bogus_template.meth"))));
             Assert.IsFalse(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
 
             //Error: can't schedule instrument type
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            var commandFilesDir = TestFilesDirs[1];
             string thermoTemplate = commandFilesDir.GetTestPath("20100329_Protea_Peptide_targeted.meth");
             output = RunCommand("--in=" + docPath,
                                 "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
                                 "--exp-method-type=scheduled",
                                 "--exp-strategy=single",
-                                "--exp-file=" + TestFilesDir.GetTestPath("Bogus.meth"),
+                                "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
                                 "--exp-template=" + thermoTemplate);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_,"Thermo LTQ")));
             Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
 
             //Error: not all peptides have RT info
             const string watersFilename = "Waters_test.csv";
-            string watersPath = TestFilesDir.GetTestPath(watersFilename);
+            string watersPath = testFilesDir.GetTestPath(watersFilename);
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
@@ -944,7 +949,7 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_list_will_be_exported_));
 
             //check for success. This is merely to cover more paths
-            string schedulePath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
+            string schedulePath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
             var doc = ResultsUtil.DeserializeDocument(docPath);
             doc = (SrmDocument)doc.RemoveChild(doc.Children[1]);
             new CommandLine().SaveDocument(doc, schedulePath, Console.Out);

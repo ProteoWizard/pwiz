@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -38,9 +37,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var directory = Path.Combine(TestContext.TestRunResultsDirectory, "DirtyDocumentSharing" + Guid.NewGuid().ToString());
-            Directory.CreateDirectory(directory);
-            var format201SkyZip = Path.Combine(directory, "Format201.sky.zip");
+            TestContext.EnsureTestResultsDir();
+            var format201SkyZip = TestContext.GetTestResultsPath("Format201.sky.zip");
             RunUI(() =>
             {
                 SkylineWindow.Paste(@"PEPTIDEK");
@@ -63,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             // Close the audit log form before creating Format202.sky.zip
             OkDialog(auditLogForm, auditLogForm.Close);
             
-            var format202SkyZip = Path.Combine(directory, "Format202.sky.zip");
+            var format202SkyZip = TestContext.GetTestResultsPath("Format202.sky.zip");
             Assert.IsFalse(File.Exists(format202SkyZip));
             RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ShareDocument(format202SkyZip), dlg => dlg.ClickNo());
             {

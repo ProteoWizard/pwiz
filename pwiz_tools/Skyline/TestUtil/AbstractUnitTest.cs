@@ -448,7 +448,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Audit logging can create this folder with no other association
-            TestFilesDir.CheckForFileLocks(TestContext.TestRunResultsDirectory,
+            TestFilesDir.CheckForFileLocks(TestContext.GetTestResultsPath(),
                 DesiredCleanupLevel == DesiredCleanupLevel.all);
         }
 
