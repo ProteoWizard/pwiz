@@ -276,8 +276,6 @@ namespace TestRunnerLib
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
-            // CONSIDER: Seems like this should be TestMethod.Name. Is TestClassType consistent with MSTest?
-            var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
@@ -287,7 +285,7 @@ namespace TestRunnerLib
                 {
                     if (string.IsNullOrEmpty(dmpDir))
                     {
-                        dmpDir = Path.Combine(testResultsDir, "Minidumps");
+                        dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
                         Log("[WARNING] No log path provided - using test results dir ({0})", dmpDir);
                     }
 
@@ -316,7 +314,6 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
 
                 if (test.SetTestContext != null)

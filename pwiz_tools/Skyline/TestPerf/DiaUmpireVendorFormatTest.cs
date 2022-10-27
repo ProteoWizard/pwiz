@@ -145,7 +145,7 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SetIntegrateAll(true));
 
             string documentBaseName = "DIA-" + InstrumentTypeName + "-format-test";
-            string documentFile = TestContext.GetTestPath(documentBaseName + SrmDocument.EXT);
+            string documentFile = TestContext.GetTestResultsPath(documentBaseName + SrmDocument.EXT);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
