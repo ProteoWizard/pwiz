@@ -10520,9 +10520,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
     <value>There was an error downloading the Skyline document specified in the skyp file: {0}.</value>
   </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline.</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>You do not have permissions to download this file from {0}.</value>
   </data>
@@ -11894,5 +11891,23 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
+  </data>
+  <data name="SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_" xml:space="preserve">
+	  <value>Path to skyp file cannot be empty.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
+	  <value>Would you like to add {0} as a Panorama server in Skyline?</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_" xml:space="preserve">
+	  <value>Credentials saved in Skyline for the Panorama server {0} are invalid.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_" xml:space="preserve">
+	  <value>Would you like to update the credentials?</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
+	  <value>Credentials saved in Skyline for the Panorama server {0} are for the user {1}. This user does not have permissions to download the file. The skyp file was downloaded by {2}.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
+	  <value>The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}.</value>
   </data>
 </root>

@@ -10487,9 +10487,6 @@
   <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
     <value>下载 skyp 文件中指定的 Skyline 文档时出现错误：{0}。</value>
   </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>您可能必须使用 Skyline 中 Tools （工具）&gt; Options （选项）菜单，添加 {0} 作为Panorama 服务器。</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>您无从 {0} 下载此文件的权限。</value>
   </data>

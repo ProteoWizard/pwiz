@@ -10479,9 +10479,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
     <value>以下のskypファイルで指定されたSkylineドキュメントをダウンロードする際にエラーが発生しました：{0}。</value>
   </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>Skylineで[ツール] &gt; [オプション]メニューを選択し、Panoramaサーバーとして{0}を追加する必要があります。</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>{0}からこのファイルをダウンロードする権限がありません。</value>
   </data>

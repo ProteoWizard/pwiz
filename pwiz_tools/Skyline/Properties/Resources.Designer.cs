@@ -30890,6 +30890,56 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Credentials saved in Skyline for the Panorama server {0} are for the user {1}. This user does not have permissions to download the file. The skyp file was downloaded by {2}..
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_se" +
+                        "rver__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_t" +
+                        "he_file__The_skyp_file_was_downloaded_by__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Credentials saved in Skyline for the Panorama server {0} are invalid..
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_se" +
+                        "rver__0__are_invalid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}..
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Cr" +
+                        "edentials_saved_in_Skyline_for_this_server_are_for_the_user__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to add {0} as a Panorama server in Skyline?.
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_i" +
+                        "n_Skyline_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to update the credentials?.
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline Document Pointer.
         /// </summary>
         public static string SkypFile_FILTER_SKYP_Skyline_Document_Pointer {
@@ -30966,16 +31016,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline..
-        /// </summary>
-        public static string SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_ {
-            get {
-                return ResourceManager.GetString("SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools_" +
-                        "__Options_menu_in_Skyline_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Downloading Skyline Document Archive.
         /// </summary>
         public static string SkypSupport_Open_Downloading_Skyline_Document_Archive {
@@ -30990,6 +31030,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkypSupport_Open_Failure_opening_skyp_file_ {
             get {
                 return ResourceManager.GetString("SkypSupport_Open_Failure_opening_skyp_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path to skyp file cannot be empty..
+        /// </summary>
+        public static string SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_", resourceCulture);
             }
         }
         
