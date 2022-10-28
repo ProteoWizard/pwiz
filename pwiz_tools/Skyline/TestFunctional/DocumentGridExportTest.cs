@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
             var firstPrecursor = SkylineWindow.Document.Molecules.First().TransitionGroups.First();
             Assert.AreEqual(firstPrecursor.PrecursorCharge.ToString(chargeFormat, CultureInfo.CurrentCulture), tsvReader.GetFieldByName(ColumnCaptions.PrecursorCharge));
             Assert.AreEqual(firstPrecursor.PrecursorMz.ToString(precursorMzFormat, CultureInfo.CurrentCulture), tsvReader.GetFieldByName(ColumnCaptions.PrecursorMz));
-            var csvFilePath = TestContext.GetTestPath("DocumentGridExportTest.csv");
+            var csvFilePath = TestContext.GetTestResultsPath("DocumentGridExportTest.csv");
             RunUI(()=>documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, csvFilePath, TextUtil.CsvSeparator));
             var csvReader = new CsvFileReader(csvFilePath);
             Assert.IsNotNull(csvReader.ReadLine());

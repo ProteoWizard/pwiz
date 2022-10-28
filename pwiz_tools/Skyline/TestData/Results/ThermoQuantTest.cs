@@ -46,22 +46,22 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoFileTypeTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string extRaw = ExtensionTestContext.ExtThermoRaw;
 
             // Do file type checks
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw)))
             {
                 Assert.IsTrue(msData.IsThermoFile);
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML")))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML")))
             {
                 Assert.IsTrue(msData.IsThermoFile);
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw)))
             {
                 Assert.IsTrue(msData.IsThermoFile);
             }
@@ -73,24 +73,23 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoFormatsTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Verify mzML and RAW contain same results
                 string extRaw = ExtensionTestContext.ExtThermoRaw;
                 AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
                                             0, 0);
                 // Verify mzXML and RAW contain same results (some small peaks are different)
                 AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
                                             2, 0);
             }
-            testFilesDir.Dispose();
         }
 
         /// <summary>
@@ -99,12 +98,12 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoCancelImportTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string resultsPath = testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" +
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string resultsPath = TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" +
                 ExtensionTestContext.ExtThermoRaw);
             string dirPath = Path.GetDirectoryName(resultsPath) ?? "";
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             // Give this two chances to succeed. It can succeed tens of thousands of times
             // in a row, but it still occasionally fails on nightly tests. Hopefully two
             // tries will make this extremely unlikely.
@@ -184,7 +183,6 @@ namespace pwiz.SkylineTestData.Results
                 }
             }
             // Cache file has been removed
-            testFilesDir.Dispose();
         }
 
         private static bool IsCacheOrTempFile(string path)
@@ -221,9 +219,9 @@ namespace pwiz.SkylineTestData.Results
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             SrmSettings settings = doc.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeInternalStandardTypes(new[]{IsotopeLabelType.light}));
             doc = doc.ChangeSettings(settings);
@@ -233,7 +231,7 @@ namespace pwiz.SkylineTestData.Results
                 var refine = new RefinementSettings();
                 doc = refine.ConvertToSmallMolecules(doc, TestContext.ResultsDirectory, smallMoleculesTestMode);
                 // This is our first example of a converted label doc - check roundtripping
-                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc, TestContext.ResultsDirectory, smallMoleculesTestMode);
+                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc, TestContext.GetTestResultsPath(), smallMoleculesTestMode);
                 AssertEx.Serializable(doc);
             }
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
@@ -243,12 +241,12 @@ namespace pwiz.SkylineTestData.Results
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                             new ChromatogramSet("rep05", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
                                                                              })
                                         };
@@ -304,7 +302,6 @@ namespace pwiz.SkylineTestData.Results
                     }
                 }
             }
-            testFilesDir.Dispose();
         }
 
         /// <summary>
@@ -314,15 +311,15 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoNonMatchingRTTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             string extRaw = ExtensionTestContext.ExtThermoRaw;
             var listChromatograms = new List<ChromatogramSet>
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                         };
@@ -355,23 +352,23 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoMixedPeptidesTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument docMixed = InitMixedDocument(testFilesDir, out docPath);
+            SrmDocument docMixed = InitMixedDocument(TestFilesDir, out docPath);
             FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
-            SrmDocument docUnmixed = InitUnmixedDocument(testFilesDir, out docPath);
+            SrmDocument docUnmixed = InitUnmixedDocument(TestFilesDir, out docPath);
             FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
             string extRaw = ExtensionTestContext.ExtThermoRaw;
             var listChromatograms = new List<ChromatogramSet>
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                             new ChromatogramSet("rep05", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
                                                                              })
                                         };

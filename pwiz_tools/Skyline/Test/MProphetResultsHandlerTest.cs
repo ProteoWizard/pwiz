@@ -55,8 +55,8 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMProphetResultsHandler()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            var documentFile = testFilesDir.GetTestPath("MProphetGold-trained.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var documentFile = TestFilesDir.GetTestPath("MProphetGold-trained.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(documentFile);
             // Load libraries
             doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libraries =>
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTest
                     var lib = libraries.Libraries[0];
                     return libraries.ChangeLibrarySpecs(new LibrarySpec[]
                         {
-                            new BiblioSpecLiteSpec(lib.Name, testFilesDir.GetTestPath(lib.FileNameHint))
+                            new BiblioSpecLiteSpec(lib.Name, TestFilesDir.GetTestPath(lib.FileNameHint))
                         });
                 }));
             // Load an empty doc, so that we can make a change and 
@@ -84,11 +84,11 @@ namespace pwiz.SkylineTest
                 if (IsSaveAll)
                 {
                     // For regenerating expected files if things change
-                    ReportToCsv(reportSpec, docNew, testFilesDir.GetTestPath(REPORT_EXPECTED), CultureInfo.GetCultureInfo("en-US"));
-                    ReportToCsv(reportSpec, docNew, testFilesDir.GetTestPathIntl(REPORT_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"));
+                    ReportToCsv(reportSpec, docNew, TestFilesDir.GetTestPath(REPORT_EXPECTED), CultureInfo.GetCultureInfo("en-US"));
+                    ReportToCsv(reportSpec, docNew, TestFilesDir.GetTestPathIntl(REPORT_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"));
                 }
-                string docNewActual = testFilesDir.GetTestPath(REPORT_ACTUAL);
-                string docNewExpected = testFilesDir.GetTestPathLocale(REPORT_EXPECTED);
+                string docNewActual = TestFilesDir.GetTestPath(REPORT_ACTUAL);
+                string docNewExpected = TestFilesDir.GetTestPathLocale(REPORT_EXPECTED);
                 ReportToCsv(reportSpec, docNew, docNewActual, CultureInfo.CurrentCulture);
                 AssertEx.FileEquals(docNewExpected, docNewActual);
 
@@ -101,13 +101,13 @@ namespace pwiz.SkylineTest
 
                 // 3. Export mProphet results gives expected file
                 var calcs = peakScoringModel.PeakFeatureCalculators;
-                var mProphetActual = testFilesDir.GetTestPath(MPROPHET_ACTUAL);
-                var mProphetExpected = testFilesDir.GetTestPathLocale(MPROPHET_EXPECTED);
+                var mProphetActual = TestFilesDir.GetTestPath(MPROPHET_ACTUAL);
+                var mProphetExpected = TestFilesDir.GetTestPathLocale(MPROPHET_EXPECTED);
                 if (IsSaveAll)
                 {
                     // For regenerating files
-                    SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPath(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("en-US"), calcs);
-                    SaveMProphetFeatures(resultsHandler, testFilesDir.GetTestPathIntl(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"), calcs);
+                    SaveMProphetFeatures(resultsHandler, TestFilesDir.GetTestPath(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("en-US"), calcs);
+                    SaveMProphetFeatures(resultsHandler, TestFilesDir.GetTestPathIntl(MPROPHET_EXPECTED), CultureInfo.GetCultureInfo("fr-FR"), calcs);
                 }
                 SaveMProphetFeatures(resultsHandler, mProphetActual, CultureInfo.CurrentCulture, calcs);
                 AssertEx.FileEquals(mProphetExpected, mProphetActual);

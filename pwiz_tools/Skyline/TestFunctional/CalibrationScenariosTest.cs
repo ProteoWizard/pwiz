@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Databinding;
@@ -59,21 +58,17 @@ namespace pwiz.SkylineTestFunctional
         private void RunScenario(string scenarioName)
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath(scenarioName + ".sky")));
-            if (null != TestContext.TestRunResultsDirectory)
+            TestContext.EnsureTestResultsDir();
+            string baseName = TestContext.GetTestResultsPath(scenarioName);
+            RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
+            var reports = new[]
             {
-                var directory = Path.Combine(TestContext.TestRunResultsDirectory, "CalibrationScenarioTest");
-                Directory.CreateDirectory(directory);
-                string baseName = Path.Combine(directory, scenarioName);
-                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
-                var reports = new[]
-                {
-                    "CalibrationCurves",
-                    "PeptideResultQuantification"
-                };
-                foreach (String report in reports)
-                {
-                    ExportReport(baseName, report);
-                }
+                "CalibrationCurves",
+                "PeptideResultQuantification"
+            };
+            foreach (String report in reports)
+            {
+                ExportReport(baseName, report);
             }
         }
 

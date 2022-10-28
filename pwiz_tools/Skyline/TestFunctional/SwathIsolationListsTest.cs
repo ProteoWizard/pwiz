@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
 
             // Open Export Method dialog, and set method to standard.
-            string exportPath = TestContext.GetTestPath(listName);
+            string exportPath = TestContext.GetTestResultsPath(listName);
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList));
             RunUI(() =>
             {

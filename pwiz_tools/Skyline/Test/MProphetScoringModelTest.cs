@@ -130,13 +130,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMProphetScoringModel()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             // Test our MProphet implementation against known good results.
             foreach (var fileWeights in _fileWeights)
             {
                 // Load transition groups from data file.
-                var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
+                var filePath = TestFilesDir.GetTestPath(fileWeights._fileName);
                 if (IsRecordMode)
                 {
                     Console.WriteLine();
@@ -170,14 +170,14 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMProphetRandomDiscard()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             var random = new Random();
 
             // Test our MProphet implementation against known good results.
             foreach (var fileWeights in _fileWeights)
             {
                 // Load transition groups from data file.
-                var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
+                var filePath = TestFilesDir.GetTestPath(fileWeights._fileName);
                 ScoredGroupPeaksSet targetTransitionGroups;
                 ScoredGroupPeaksSet decoyTransitionGroups;
                 LoadData(filePath, out targetTransitionGroups, out decoyTransitionGroups);
