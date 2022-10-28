@@ -20,9 +20,7 @@
 using System.ComponentModel;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
