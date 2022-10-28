@@ -177,7 +177,23 @@ namespace pwiz.SkylineTestUtil
             ThrowsException<TEx>(() => { throwEx(); return null; }, message);
         }
 
+        public static void ThrowsException<TEx>(Action throwEx, Action<TEx> checkException)
+            where TEx : Exception
+        {
+            ThrowsException(() => { throwEx(); return null; }, checkException);
+        }
+
         public static void ThrowsException<TEx>(Func<object> throwEx, string message = null)
+            where TEx : Exception
+        {
+            ThrowsException<TEx>(throwEx, x =>
+            {
+                if (message != null)
+                    AreComparableStrings(message, x.Message);
+            });
+        }
+
+        private static void ThrowsException<TEx>(Func<object> throwEx, Action<TEx> checkException)
             where TEx : Exception
         {
             bool exceptionThrown = false;
@@ -187,8 +203,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (TEx x)
             {
-                if (message != null)
-                    AreComparableStrings(message, x.Message);
+                checkException(x);
                 exceptionThrown = true;
             }
             // Assert that an exception was thrown. We do this outside of the catch block
@@ -1268,7 +1283,7 @@ namespace pwiz.SkylineTestUtil
             DocumentClonedLoadable(ref target, ref actual, null, false);
         }
         public static void DocumentClonedLoadable(ref SrmDocument target, ref SrmDocument actual, string testDir, bool forceFullLoad)
-            {
+        {
             for (var retry = 0; retry < 2;)
             {
                 try
