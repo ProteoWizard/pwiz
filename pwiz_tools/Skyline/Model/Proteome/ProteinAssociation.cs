@@ -81,26 +81,13 @@ namespace pwiz.Skyline.Model.Proteome
 
         public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
-            try
+            ResetMapping();
+            using var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fastaSource = new FastaSource(stream);
+            var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
+            if (proteinAssociations != null)
             {
-                ResetMapping();
-                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    var fastaSource = new FastaSource(stream);
-                    var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
-                    if (proteinAssociations != null)
-                    {
-                        AssociatedProteins = proteinAssociations;
-                    }
-                }
-            }
-            catch (InvalidDataException)
-            {
-                throw;
-            }
-            catch (Exception e)
-            {
-                throw new InvalidDataException(Resources.AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_, e);
+                AssociatedProteins = proteinAssociations;
             }
         }
 
