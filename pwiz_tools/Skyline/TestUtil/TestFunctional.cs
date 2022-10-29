@@ -1326,7 +1326,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         try
                         {
-                            dir?.Dispose();
+                            dir?.Cleanup();
                         }
                         catch (Exception x)
                         {
@@ -1457,7 +1457,7 @@ namespace pwiz.SkylineTestUtil
 
         private string AuditLogDir
         {
-            get { return Path.Combine(TestContext.TestRunResultsDirectory ?? TestContext.TestDir, "AuditLog"); }
+            get { return TestContext.GetTestResultsPath("AuditLog"); }
         }
 
         private string AuditLogTutorialDir

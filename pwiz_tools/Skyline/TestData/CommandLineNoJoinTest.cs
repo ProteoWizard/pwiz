@@ -41,9 +41,9 @@ namespace pwiz.SkylineTestData
             {
                 return;
             }
-            var testFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineNoJoinTest.zip");
-            string inDocPath = testFilesDir.GetTestPath("test.sky");
-            string rawFileRoot = testFilesDir.GetTestPath("RawFiles");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineNoJoinTest.zip");
+            string inDocPath = TestFilesDir.GetTestPath("test.sky");
+            string rawFileRoot = TestFilesDir.GetTestPath("RawFiles");
             string[] rawFiles = 
             {
                 Path.Combine(rawFileRoot, "160109_Mix1_calcurve_071.raw"),
@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestData
             {
                 string rawFile = rawFiles[iFile];
                 Assert.IsTrue(Directory.Exists(rawFile), rawFile);
-                string outFile = testFilesDir.GetTestPath("partial" + iFile + ".sky");
+                string outFile = TestFilesDir.GetTestPath("partial" + iFile + ".sky");
                 RunCommand("--in=" + inDocPath, "--import-file=" + rawFile, "--out=" + outFile, "--import-no-join");
                 Assert.IsTrue(File.Exists(outFile), rawFile);
                 string partialSkydFile = ChromatogramCache.PartPathForName(outFile, new MsDataFilePath(rawFile));
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestData
             Directory.Delete(rawFileRoot, true);
             Assert.IsFalse(Directory.Exists(rawFileRoot));
 
-            string completeFile = testFilesDir.GetTestPath("complete.sky");
+            string completeFile = TestFilesDir.GetTestPath("complete.sky");
             Assert.IsNotNull(completeFile);
             string completeSkyd = Path.ChangeExtension(completeFile, "skyd");
             Assert.IsFalse(File.Exists(completeFile));

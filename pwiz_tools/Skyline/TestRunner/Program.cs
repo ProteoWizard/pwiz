@@ -80,30 +80,46 @@ namespace TestRunner
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
         private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
 
-        struct ExpandedLeakCheck
+        class ExpandedLeakCheck
         {
-            public ExpandedLeakCheck(int iterations = LeakCheckIterations * 2, bool reportLeakEarly = false)
+            public ExpandedLeakCheck(int? iterations = null, bool reportLeakEarly = false)
             {
-                Iterations = iterations;
+                Iterations = iterations ?? LeakCheckIterations * 2;
                 ReportLeakEarly = reportLeakEarly;
             }
 
+            /// <summary>
+            /// Only if <see cref="ReportLeakEarly"/> is false, the number of
+            /// iterations used to detect a leak is extended to this value.
+            /// </summary>
             public int Iterations { get; set; }
+
+            /// <summary>
+            /// Leaks get reported at the normal number of iterations. If a leak
+            /// is detected testing begins an infinite loop on the failing test
+            /// to get more information on whether it is truly leaking.
+            /// </summary>
             public bool ReportLeakEarly { get; set; }
         }
 
         // These tests get extra runs to meet the leak thresholds
         private static Dictionary<string, ExpandedLeakCheck> LeakCheckIterationsOverrideByTestName = new Dictionary<string, ExpandedLeakCheck>
         {
+            // These tests check leaks at the normal time and then start an infinite
+            // loop when a leak is detected.
             {"TestGroupedStudiesTutorialDraft", new ExpandedLeakCheck(LeakCheckIterations * 4, true)},
-            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)}
+            {"TestInstrumentInfo", new ExpandedLeakCheck(LeakCheckIterations * 2, true)},
+            // These tests expand the number of iterations before reporting a leak
+            // with no potential for infinite looping on a detected leak.
+            {"TestLibraryExplorer", new ExpandedLeakCheck()},
+            {"TestLibraryExplorerAsSmallMolecules", new ExpandedLeakCheck()},
         };
 
         //  These tests only need to be run once, regardless of language, so they get turned off in pass 0 after a single invocation
         public static string[] RunOnceTestNames = { "AaantivirusTestExclusion", "CodeInspection" };
 
         // These tests are allowed to fail the total memory leak threshold, and extra iterations are not done to stabilize a spiky total memory distribution
-        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft" };
+        public static string[] MutedTotalMemoryLeakTestNames = { "TestMs1Tutorial", "TestGroupedStudiesTutorialDraft", "TestPermuteIsotopeModifications" };
 
         // These tests are allowed to fail the total handle leak threshold, and extra iterations are not done to stabilize a spiky total handle distribution
         public static string[] MutedTotalHandleLeakTestNames = { };
@@ -448,6 +464,12 @@ namespace TestRunner
             bool allTestsPassed = true;
             int CLIENT_WAIT_TIMEOUT = 10; // time to wait for a message from server before exiting, in seconds
 
+            Action<string> TeeLog = msg =>
+            {
+                Console.WriteLine(msg);
+                log.WriteLine(msg);
+            };
+
             string host;
             if (commandLineArgs.HasArg("queuehost"))
                 host = commandLineArgs.ArgAsString("queuehost");
@@ -478,7 +500,7 @@ namespace TestRunner
                             {
                                 if (!heartbeatReceiver.TrySendFrameEmpty(TimeSpan.FromSeconds(15)))
                                 {
-                                    Console.Error.WriteLine("Server heartbeat could not be sent.");
+                                    TeeLog("Server heartbeat could not be sent.");
                                     if (attempts == 2)
                                     {
                                         cts.Cancel();
@@ -502,7 +524,7 @@ namespace TestRunner
                 string ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList
                     .First(a => a.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6).ToString();
                 string workerId = $"{workerName}/{ip}/{tasksPort}/{resultsPort}/{heartbeatPort}";
-                Console.WriteLine($"Sending worker name and IP: {workerId}");
+                TeeLog($"Sending worker name and IP: {workerId}");
                 sender.SendFrame(workerId);
 
 
@@ -522,16 +544,17 @@ namespace TestRunner
                     var cargs = new CommandLineArgs(new[] { "test=" + testName }, commandLineOptions);
                     commandLineArgs.SetArg("language", testLanguage);
                     var testList = LoadTestList(cargs);
+                    TeeLog($"Starting test {testName}-{testLanguage}");
                     using (var testLogStream = new MemoryStream())
                     using (var testLog = new StreamWriter(testLogStream, new UTF8Encoding(false)))
                     {
                         bool passed = RunTestPasses(testList, testList, commandLineArgs, testLog, 1, 1);
                         allTestsPassed &= passed;
-                        log.Write(testLog);
+                        TeeLog(Encoding.UTF8.GetString(testLogStream.GetBuffer()));
                         var resultBuffer = testLogStream.GetBuffer().Prepend(Convert.ToByte(passed));
                         if (!sender2.TrySendFrame(TimeSpan.FromSeconds(CLIENT_WAIT_TIMEOUT), resultBuffer.ToArray(), (int) testLogStream.Length+1))
                         {
-                            Console.Error.WriteLine($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
+                            TeeLog($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
                             cts.Cancel();
                         }
                     }
@@ -543,7 +566,8 @@ namespace TestRunner
 
                 while (!cts.IsCancellationRequested)
                 {
-                    Console.WriteLine("Waiting for message");
+                    // This should be redundant with the new "Starting test" message, but may help debugging if there are connection issues
+                    // TeeLog("Waiting for message");
                     if (!sender2.TrySignalOK())
                     {
                         Thread.Sleep(2000);
@@ -552,7 +576,7 @@ namespace TestRunner
 
                     if (!receiver.Poll(TimeSpan.FromSeconds(CLIENT_WAIT_TIMEOUT)))
                     {
-                        Console.Error.WriteLine($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
+                        TeeLog($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
                         cts.Cancel();
                     }
                 }
@@ -590,7 +614,7 @@ namespace TestRunner
 
         private static void CheckDocker(CommandLineArgs commandLineArgs)
         {
-            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f json", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f \"{{json .}}\"", RunTests.IS_DOCKER_RUNNING_MESSAGE);
             var dockerVersionJson = JObject.Parse(dockerVersionOutput);
             if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
             {
@@ -634,11 +658,13 @@ namespace TestRunner
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
             string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
             string dockerRunRedirect = string.Empty;
+            string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
-                dockerRunRedirect = $"> c:\\pwiz\\TestRunner-{workerName}-docker.log 2>1";
+                testRunnerLog = @$"c:\pwiz\TestRunner-{workerName}-docker.log";
+
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
-            var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log=c:\AlwaysUpCLT\TestRunner-{workerName}.log";
+            var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
@@ -742,6 +768,12 @@ namespace TestRunner
                 }
             }
 
+            if (testQueue.Count < workerCount)
+            {
+                Console.WriteLine($"There are fewer test/language pairs ({testQueue.Count}) than the number of specified workers; reducing workercount to {testQueue.Count}.");
+                workerCount = testQueue.Count;
+            }
+
             // check docker daemon is working and build always_up_runner if necessary
             CheckDocker(commandLineArgs);
 
@@ -761,7 +793,7 @@ namespace TestRunner
                     return true;
                 }, true);
 
-                if (workerCount > 0)
+                if (workerCount > 1)
                 {
                     long availableBytesForNormalWorkers = MemoryInfo.AvailableBytes - MinBytesPerBigWorker;
 
@@ -1859,6 +1891,10 @@ Here is a list of recognized arguments:
     retrydatadownloads=[on|off]     Set retrydatadownloads=on to enable retry of data downloads
                                     on test failures, with the idea that the failure might be due
                                     to stale data sets.
+
+    originalurls=[on|off]           Set originalurls=on to use direct links to download-on-the-fly
+                                    dependencies like Crux and MSFragger. Otherwise a cached
+                                    location on AWS S3 will be used.
 
     profile=[on|off]                Set profile=on to enable memory profiling mode.
                                     TestRunner will pause for 10 seconds after the first
