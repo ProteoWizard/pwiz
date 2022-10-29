@@ -68,6 +68,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
+//            IsRecordMode = true;
 
             // ForceMzml = true;
             ExtMzml = @".mzXML";    // PRBB used .mzXML instead of .mzML
@@ -798,7 +799,25 @@ namespace TestPerf
 
             SaveBackup("PRM_Annotated");
         }
-        
+
+        private bool IsRecordMode { get; set; }
+
+        private double[] _g2mVsG1ExpectedValues =
+        {
+            1.4126022125838762, 4.8741132982321638, 5.0424478103497181, 4.8293170158752208, 15.126911528599191,
+            9.1791839486239279, 6.2296345732635485, 3.1161290456155295, 1.8189607341782479, 2.0644594385791533,
+            3.7649084396237988, 6.9299904926539737, 6.4036330881755932, 4.2893196515692162, 1.6064068091869139,
+            1.6281040373632159, 6.5174735762673706, 3.01571908714535, 1.8383738370494354
+        };
+
+        private double[] _sVsG1ExpectedValues =
+        {
+            1.1159764030783934, 1.6314748321839396, 2.3311870386518727, 1.6841367995234979, 4.8909495278818422,
+            3.2275682167523314, 2.3757882463140065, 1.5713835038262798, 1.017217922772327, 1.4498342648347344,
+            1.6399900918403256, 2.9023950735841626, 2.9069057246796444, 1.5243589451007142, 0.71120569210287388,
+            0.96378822722653923, 1.9613259766370852, 1.7862686219978938, 1.0616604140485391
+        };
+
         private void GroupComparison()
         {
             var docBeforeComparison = SkylineWindow.Document;
@@ -824,12 +843,14 @@ namespace TestPerf
 
             var foldChangeGrid1 = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName1));
             WaitForConditionUI(() => 19 == foldChangeGrid1.DataboundGridControl.RowCount);
+            VerifyFoldChangeValues(foldChangeGrid1, _g2mVsG1ExpectedValues, nameof(_g2mVsG1ExpectedValues));
             RunUI(() => foldChangeGrid1.Parent.Parent.Width = 383);
             PauseForScreenShot<FoldChangeGrid>(comparisonName1 + ":Grid", 37);
             OkDialog(foldChangeGrid1, () => foldChangeGrid1.Close());
 
             var foldChangeGrid2 = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName2));
             WaitForConditionUI(() => 19 == foldChangeGrid2.DataboundGridControl.RowCount);
+            VerifyFoldChangeValues(foldChangeGrid2, _sVsG1ExpectedValues, nameof(_sVsG1ExpectedValues));
             RunUI(() => foldChangeGrid2.Parent.Parent.Width = 383);
             PauseForScreenShot<FoldChangeGrid>(comparisonName2 + ":Grid", 37);
             OkDialog(foldChangeGrid2, () => foldChangeGrid2.Close());
@@ -955,6 +976,26 @@ namespace TestPerf
             Assert.IsTrue(SkylineWindow.Document.Settings.DataSettings.ViewSpecList.ViewSpecs
                 .Contains(s => Equals(REPORT_QUANT, s.Name)));
             RunUI(() => SkylineWindow.SaveDocument());
+        }
+
+        private void VerifyFoldChangeValues(FoldChangeGrid foldChangeGrid, double[] expectedValues, string variableName)
+        {
+            RunUI(() =>
+            {
+                var foldChangeRows = foldChangeGrid.FoldChangeBindingSource.GetBindingListSource().Cast<RowItem>()
+                    .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
+                double[] actualValues = foldChangeRows.Select(foldChangeResult => foldChangeResult.FoldChangeResult.FoldChange).ToArray();
+                if (IsRecordMode)
+                {
+                    var commaSeparatedValues = string.Join(",",
+                        actualValues.Select(value => value.ToString("R", CultureInfo.InvariantCulture)));
+                    Console.Out.WriteLine("private double[] {0} = {{ {1} }};", variableName, commaSeparatedValues);
+                }
+                else
+                {
+                    CollectionAssert.AreEqual(expectedValues, actualValues);
+                }
+            });
         }
     }
 }
