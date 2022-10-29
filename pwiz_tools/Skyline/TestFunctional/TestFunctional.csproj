@@ -179,6 +179,7 @@
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
+    <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />

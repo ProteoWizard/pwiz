@@ -36,12 +36,12 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void AgilentFileTypeTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string extRaw = ExtensionTestContext.ExtAgilentRaw;
 
             // Do file type check
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)))
             {
                 Assert.IsTrue(msData.IsAgilentFile);
             }
@@ -50,10 +50,10 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void AgilentFormatsTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument doc = InitAgilentDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitAgilentDocument(TestFilesDir, out docPath);
 
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestData.Results
                 var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
-                                        { new MsDataFilePath(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)),  }),
+                                        { new MsDataFilePath(TestFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw)),  }),
                                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
@@ -71,8 +71,6 @@ namespace pwiz.SkylineTestData.Results
                 AssertResult.IsDocumentResultsState(docResults, replicateName,
                     doc.PeptideCount, doc.PeptideTransitionGroupCount, 0, doc.PeptideTransitionCount, 0);
             }
-
-            testFilesDir.Dispose();
         }
 
         private static SrmDocument InitAgilentDocument(TestFilesDir testFilesDir, out string docPath)
