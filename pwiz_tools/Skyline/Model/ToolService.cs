@@ -491,7 +491,7 @@ namespace pwiz.Skyline.Model
                     }
                     else
                     {
-                        throw new ArgumentException(string.Format("Unsupported element {0}" + elementLocator));
+                        throw new ArgumentException(string.Format(Resources.ToolService_DeleteElementsNow_Unsupported_element__0_, elementLocator));
                     }
                 }
 
@@ -510,7 +510,7 @@ namespace pwiz.Skyline.Model
             {
                 _skylineWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
-                        "Import Properties from external tool"));
+                        Resources.ToolService_ImportProperties_Import_Properties_from_external_tool));
             }));
         }
 
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                throw new ArgumentException(string.Format("Unsupported element type '{0}'", elementType));
+                throw new ArgumentException(string.Format(Resources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
             }
 
             var selectedPath = _skylineWindow.SelectedPath;
