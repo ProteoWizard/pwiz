@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Remoting;
 using System.Xml;
 using pwiz.Skyline.Model;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
