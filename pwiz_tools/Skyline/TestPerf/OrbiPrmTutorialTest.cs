@@ -804,18 +804,14 @@ namespace TestPerf
 
         private double[] _g2mVsG1ExpectedValues =
         {
-            1.4126022125838762, 4.8741132982321638, 5.0424478103497181, 4.8293170158752208, 15.126911528599191,
-            9.1791839486239279, 6.2296345732635485, 3.1161290456155295, 1.8189607341782479, 2.0644594385791533,
-            3.7649084396237988, 6.9299904926539737, 6.4036330881755932, 4.2893196515692162, 1.6064068091869139,
-            1.6281040373632159, 6.5174735762673706, 3.01571908714535, 1.8383738370494354
+            1.424598, 4.87622, 5.036714, 4.731575, 15.126436, 9.179622, 6.222456, 3.118283, 1.83403, 2.063672, 3.77192,
+            6.862498, 6.342988, 4.290559, 1.607246, 1.627468, 6.561415, 2.996523, 1.828687
         };
 
         private double[] _sVsG1ExpectedValues =
         {
-            1.1159764030783934, 1.6314748321839396, 2.3311870386518727, 1.6841367995234979, 4.8909495278818422,
-            3.2275682167523314, 2.3757882463140065, 1.5713835038262798, 1.017217922772327, 1.4498342648347344,
-            1.6399900918403256, 2.9023950735841626, 2.9069057246796444, 1.5243589451007142, 0.71120569210287388,
-            0.96378822722653923, 1.9613259766370852, 1.7862686219978938, 1.0616604140485391
+            1.110167, 1.638361, 2.3357, 1.502291, 4.890918, 3.22766, 2.376104, 1.564117, 1.020532, 1.450117, 1.636825,
+            2.896941, 2.902895, 1.539992, 0.710891, 0.965499, 1.95952, 1.781784, 1.048573
         };
 
         private void GroupComparison()
@@ -982,18 +978,23 @@ namespace TestPerf
         {
             RunUI(() =>
             {
+                const double delta = 0.00001;
                 var foldChangeRows = foldChangeGrid.FoldChangeBindingSource.GetBindingListSource().Cast<RowItem>()
                     .Select(rowItem => (FoldChangeBindingSource.FoldChangeRow)rowItem.Value).ToList();
                 double[] actualValues = foldChangeRows.Select(foldChangeResult => foldChangeResult.FoldChangeResult.FoldChange).ToArray();
                 if (IsRecordMode)
                 {
                     var commaSeparatedValues = string.Join(",",
-                        actualValues.Select(value => value.ToString("R", CultureInfo.InvariantCulture)));
+                        actualValues.Select(value => value.ToString("0.######", CultureInfo.InvariantCulture)));
                     Console.Out.WriteLine("private double[] {0} = {{ {1} }};", variableName, commaSeparatedValues);
                 }
                 else
                 {
-                    CollectionAssert.AreEqual(expectedValues, actualValues);
+                    AssertEx.AreEqual(expectedValues.Length, actualValues.Length);
+                    for (int i = 0; i < expectedValues.Length; i++)
+                    {
+                        Assert.AreEqual(expectedValues[i], actualValues[i], delta, "Mismatch in {0} at position {1}", variableName, i);
+                    }
                 }
             });
         }
