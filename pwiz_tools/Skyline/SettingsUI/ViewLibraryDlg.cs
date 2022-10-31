@@ -1199,7 +1199,6 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
             specialionsContextMenuItem.Checked = set.ShowSpecialIons;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
             menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
@@ -1237,6 +1236,8 @@ namespace pwiz.Skyline.SettingsUI
                     menuStrip.Items.Remove(item);
             }
             ZedGraphClipboard.AddToContextMenu(GraphControl, menuStrip);
+            UpdateIonTypeMenu();
+            UpdateChargesMenu();
         }
 
         public void LockYAxis(bool lockY)
@@ -1528,7 +1529,7 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Mouse Click Events
 
-        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        public void UpdateIonTypeMenu()
         {
             if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
                 ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
@@ -1542,8 +1543,12 @@ namespace pwiz.Skyline.SettingsUI
                 ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
                 ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
                 ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
-                //ionTypeSelector.Invalidate();
             }
+        }
+
+        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            UpdateIonTypeMenu();
         }
 
         public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
@@ -1684,7 +1689,7 @@ namespace pwiz.Skyline.SettingsUI
                 msGraphExtension1.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
         }
 
-        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        public void UpdateChargesMenu()
         {
             var set = GraphSettings;
             if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
@@ -1698,6 +1703,11 @@ namespace pwiz.Skyline.SettingsUI
                 chargesContextMenuItem.DropDownItems.Add(selectorControl);
                 selectorControl.HostedControl.OnChargeChanged += IonChargeSelector_ionChargeChanged;
             }
+        }
+
+        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            UpdateChargesMenu();
         }
 
         private void ranksContextMenuItem_Click(object sender, EventArgs e)

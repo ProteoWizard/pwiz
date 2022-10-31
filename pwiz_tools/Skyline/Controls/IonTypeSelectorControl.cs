@@ -38,6 +38,12 @@ namespace pwiz.Skyline.Controls
         void Update(GraphSpectrumSettings set, PeptideSettings peptideSet);
     }
 
+    public interface IMenuControlImplementer
+    {
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new();
+        public void DisconnectHandlers();
+    }
+
     public class MenuControl<T> : ToolStripControlHost where T : Panel, IControlSize, new()
     {
         public MenuControl(GraphSpectrumSettings set, PeptideSettings peptideSet) : base(new T())
