@@ -47,6 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PeptideSettingsUI.LabelTypeComboDriver _driverLabelType;
         private readonly SkylineWindow _parent;
         private readonly UsageMode _usageMode;
+        private readonly IList<Adduct> _childAdducts;
 
         public enum UsageMode
         {
@@ -60,9 +61,9 @@ namespace pwiz.Skyline.SettingsUI
         /// For modifying at the Molecule level
         /// </summary>
         public EditCustomMoleculeDlg(SkylineWindow parent, string title,
-            SrmSettings settings, CustomMolecule molecule, ExplicitRetentionTimeInfo explicitRetentionTime) :
+            SrmSettings settings, CustomMolecule molecule, ExplicitRetentionTimeInfo explicitRetentionTime, IList<Adduct> childAdducts) :
             this(parent, UsageMode.moleculeEdit, title, null, null, 0, 0, null, molecule, Adduct.EMPTY, null, null,
-                explicitRetentionTime, null)
+                explicitRetentionTime, null, childAdducts)
         {
         }
 
@@ -76,7 +77,8 @@ namespace pwiz.Skyline.SettingsUI
             ExplicitTransitionGroupValues explicitTransitionGroupAttributes,
             ExplicitTransitionValues explicitTransitionAttributes,
             ExplicitRetentionTimeInfo explicitRetentionTime,
-            IsotopeLabelType defaultIsotopeLabelType)
+            IsotopeLabelType defaultIsotopeLabelType,
+            IList<Adduct> childAdducts = null)
         {
             Text = title;
             _parent = parent;
@@ -89,6 +91,7 @@ namespace pwiz.Skyline.SettingsUI
             _resultAdduct = Adduct.EMPTY;
             _resultCustomMolecule = molecule;
             _usageMode = usageMode;
+            _childAdducts = childAdducts;
 
             var enableFormulaEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit ||
                                        usageMode == UsageMode.fragment;
@@ -678,6 +681,24 @@ namespace pwiz.Skyline.SettingsUI
                 if (!_formulaBox.ValidateMonoText(helper))
                     return;
             }
+
+            // If editing the molecule, make sure that the formula makes sense with any child precursors (e.g. not removing more Carbons than are in the molecule)
+            if (_formulaBox.NeutralFormula != null && _childAdducts != null)
+            {
+                foreach (var childAdduct in _childAdducts)
+                {
+                    try
+                    {
+                        childAdduct.ApplyToFormula(_formulaBox.NeutralFormula);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        _formulaBox.ShowTextBoxErrorFormula(helper, e.Message);
+                        return;
+                    }
+                }
+            }
+
             var monoMass = new TypedMass(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
             var averageMass = new TypedMass(_formulaBox.AverageMass ?? 0, MassType.Average);
             if (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)
