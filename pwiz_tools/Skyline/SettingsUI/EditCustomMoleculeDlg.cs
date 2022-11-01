@@ -682,23 +682,6 @@ namespace pwiz.Skyline.SettingsUI
                     return;
             }
 
-            // If editing the molecule, make sure that the formula makes sense with any child precursors (e.g. not removing more Carbons than are in the molecule)
-            if (_formulaBox.NeutralFormula != null && _childAdducts != null)
-            {
-                foreach (var childAdduct in _childAdducts)
-                {
-                    try
-                    {
-                        childAdduct.ApplyToFormula(_formulaBox.NeutralFormula);
-                    }
-                    catch (InvalidOperationException e)
-                    {
-                        _formulaBox.ShowTextBoxErrorFormula(helper, e.Message);
-                        return;
-                    }
-                }
-            }
-
             var monoMass = new TypedMass(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
             var averageMass = new TypedMass(_formulaBox.AverageMass ?? 0, MassType.Average);
             if (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)
@@ -771,6 +754,23 @@ namespace pwiz.Skyline.SettingsUI
                     _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;
                 }
+
+                // If editing the molecule, make sure that the formula makes sense with any child precursors (e.g. not removing more Carbons than are in the molecule)
+                if (_childAdducts != null)
+                {
+                    foreach (var childAdduct in _childAdducts)
+                    {
+                        try
+                        {
+                            childAdduct.ApplyToFormula(_formulaBox.NeutralFormula);
+                        }
+                        catch (Exception e) // A number of different exceptions can happen during parsing of user-input formula and/or adduct
+                        {
+                            _formulaBox.ShowTextBoxErrorFormula(helper, e.Message);
+                            return;
+                        }
+                    }
+                }                
             }
             else
             {
