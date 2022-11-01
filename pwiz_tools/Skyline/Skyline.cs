@@ -1102,7 +1102,7 @@ namespace pwiz.Skyline
             base.OnClosing(e);
 
             foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
-                control.DisconnectHandlers();
+                control?.DisconnectHandlers();
         }
 
         protected override void OnClosed(EventArgs e)
