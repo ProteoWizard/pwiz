@@ -120,17 +120,21 @@ namespace pwiz.SkylineTestFunctional
             specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
             datafiles = specLibInfoDlg.GetGridView();
             Assert.AreEqual(4, datafiles.Count);
-            Assert.AreEqual(1, datafiles[0].CutoffScores.Count);
             Assert.AreEqual(1, datafiles[0].MatchedSpectrum);
             Assert.AreEqual(1, datafiles[0].BestSpectrum);
-            Assert.AreEqual(1, datafiles[1].CutoffScores.Count);
             Assert.AreEqual(10, datafiles[1].MatchedSpectrum);
             Assert.AreEqual(9, datafiles[1].BestSpectrum);
-            Assert.AreEqual(3, datafiles[1].CutoffScores.Count);
             Assert.AreEqual(3, datafiles[2].MatchedSpectrum);
             Assert.AreEqual(3, datafiles[2].BestSpectrum);
             Assert.AreEqual(1, datafiles[3].MatchedSpectrum);
             Assert.AreEqual(1, datafiles[3].BestSpectrum);
+            foreach (var datafile in datafiles)
+            {
+                Assert.AreEqual(1, datafile.CutoffScores.Count);
+                var cutoffScore = datafile.CutoffScores.First();
+                Assert.AreEqual(0.95, cutoffScore.Value);
+                Assert.AreEqual("MAXQUANT SCORE", cutoffScore.Key);
+            }
             OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
             OkDialog(libExplore, libExplore.CancelDialog);
         }
