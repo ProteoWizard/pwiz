@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Linq;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
