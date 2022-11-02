@@ -39,9 +39,9 @@ namespace pwiz.Common.Collections
 
         public Interval(T start, T end, MetricDelegate metric)
         {
-            Start =start;
-            End =end;
-            Metric =metric;
+            Start = start;
+            End = end;
+            Metric = metric;
         }
         public T Start { get; private set; }
         public T End { get; private set; }
