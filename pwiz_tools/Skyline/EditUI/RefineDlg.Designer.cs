@@ -102,7 +102,6 @@
             this.labelGroupComparison = new System.Windows.Forms.Label();
             this.btnEditGroupComparisons = new System.Windows.Forms.Button();
             this.checkedListBoxGroupComparisons = new System.Windows.Forms.CheckedListBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -630,7 +629,6 @@
             this.MinimizeBox = false;
             this.Name = "RefineDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabDocument.ResumeLayout(false);
             this.tabDocument.PerformLayout();

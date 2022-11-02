@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
@@ -305,6 +306,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return IsApplicable(aa, indexAA, len) && HasMod;
         }
 
+        public bool IsApplicableMod(string sequence, int indexAA)
+        {
+            return IsApplicable(sequence, indexAA); // allow loss-only mods in EditPepModsDlg - && HasMod;
+        }
+
+        public bool IsApplicableCrosslink(string sequence, int indexAA)
+        {
+            return IsApplicable(sequence, indexAA) && null != CrosslinkerSettings;
+        }
+
         /// <summary>
         /// True if this modification impacts the precursor mass value.
         /// </summary>
@@ -332,6 +343,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
+        private bool IsApplicable(string sequence, int indexAA)
+        {
+            if (indexAA < 0 || indexAA >= sequence.Length)
+            {
+                return false;
+            }
+
+            return IsApplicable(sequence[indexAA], indexAA, sequence.Length);
+        }
+
         /// <summary>
         /// True if this modification impacts fragment mass values different
         /// from the precursor modification through neutral loss.
@@ -347,6 +368,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public int PrecisionRequired { get { return _precisionRequired ?? 1; }}
 
         public CrosslinkerSettings CrosslinkerSettings { get; private set; }
+
+        public MoleculeMassOffset GetMoleculeMassOffset()
+        {
+            if (string.IsNullOrEmpty(Formula))
+            {
+                return new MoleculeMassOffset(Molecule.Empty, MonoisotopicMass ?? 0, AverageMass ?? 0);
+            }
+
+            return new MoleculeMassOffset(Molecule.ParseExpression(Formula), 0, 0);
+        }
 
         #region Property change methods
 
@@ -410,7 +441,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         [Track(defaultValues:typeof(DefaultValuesFalse))]
-        bool IsCrosslinker
+        public bool IsCrosslinker
         {
             get { return null != CrosslinkerSettings; }
         }
@@ -485,8 +516,6 @@ namespace pwiz.Skyline.Model.DocSettings
                         throw new InvalidDataException(Resources.StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses);
                     if (IsVariable)
                         throw new InvalidDataException(Resources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable);
-                    if (IsExplicit)
-                        throw new InvalidDataException(Resources.StaticMod_Validate_Loss_only_modifications_may_not_be_explicit);
                 }
             }
             else
@@ -873,6 +902,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
             IEnumerable<TypedExplicitModifications> heavyMods, bool isVariable = false)
         {
+            CrosslinkStructure = CrosslinkStructure.EMPTY;
             Peptide = peptide;
             IsVariableStaticMods = isVariable;
 
@@ -889,7 +919,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.AddRange(heavyMods);
             }
             _modifications = MakeReadOnly(modifications.ToArray());
-            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         /// <summary>
@@ -907,6 +936,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods,
             bool implicitOnly = false)
         {
+            CrosslinkStructure = CrosslinkStructure.EMPTY;
             Peptide = nodePep.Peptide;
 
             var modifications = new List<TypedExplicitModifications>();
@@ -934,7 +964,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
             }
             _modifications = MakeReadOnly(modifications.ToArray());
-            Crosslinks = GetLinkedPeptides(StaticModifications);
         }
 
         private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
@@ -988,6 +1017,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     char aa = seq[i];
                     foreach (StaticMod mod in mods)
                     {
+                        if (mod.CrosslinkerSettings != null)
+                        {
+                            // Crosslinkers never get implicitly added
+                            continue;
+                        }
                         // Skip explicit mods, since only considering implicit
                         if (mod.IsExplicit || !mod.IsMod(aa, i, seq.Length))
                             continue;
@@ -1005,6 +1039,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public Peptide Peptide { get; private set; }
 
+        /// <summary>
+        /// True if the static (i.e. light) modifications were not chosen by the user, but
+        /// were put there by Skyline permuting the Document's variable modifications.
+        /// </summary>
         public bool IsVariableStaticMods { get; private set; }
 
         public bool HasNeutralLosses { get { return StaticModifications != null && StaticModifications.Any(mod => mod.Modification.HasLoss); } }
@@ -1035,44 +1073,32 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
-        public ImmutableSortedList<ModificationSite, LinkedPeptide> Crosslinks
+        [TrackChildren(defaultValues:typeof(CrosslinkStructure.DefaultValuesEmpty))]
+        public CrosslinkStructure CrosslinkStructure
         {
             get; private set;
         }
 
-        public IEnumerable<KeyValuePair<ModificationSite, LinkedPeptide>> LinkedCrossslinks
+        public PeptideStructure GetPeptideStructure()
         {
-            get { return Crosslinks.Where(entry => entry.Value.Peptide != null); }
+            return new PeptideStructure(Peptide, this);
+        }
+
+        public ExplicitMods ChangeCrosslinkStructure(CrosslinkStructure crosslinks)
+        {
+            crosslinks = crosslinks ?? CrosslinkStructure.EMPTY;
+            ExplicitMods explicitMods = this;
+            if (crosslinks.HasCrosslinks && explicitMods.StaticModifications == null)
+            {
+                explicitMods = new ExplicitMods(explicitMods.Peptide, ImmutableList.Empty<ExplicitMod>(), explicitMods.GetHeavyModifications());
+            }
+
+            return ChangeProp(ImClone(explicitMods), im => im.CrosslinkStructure = crosslinks);
         }
 
         public bool HasCrosslinks
         {
-            get { return Crosslinks.Any(); }
-        }
-
-        public bool HasMultipleCrosslinks
-        {
-            get
-            {
-                if (Crosslinks.Count == 1)
-                {
-                    var linkedPeptide = Crosslinks.Values[0];
-                    return linkedPeptide.ExplicitMods != null && linkedPeptide.ExplicitMods.HasMultipleCrosslinks;
-                }
-
-                return Crosslinks.Count > 1;
-            }
-        }
-
-        public LinkedPeptide GetLinkedPeptide(ModificationSite modificationSite)
-        {
-            LinkedPeptide linkedPeptide;
-            if (!Crosslinks.TryGetValue(modificationSite, out linkedPeptide))
-            {
-                throw new ArgumentException(@"No linked peptide found at site " + modificationSite);
-            }
-
-            return linkedPeptide;
+            get { return !CrosslinkStructure.IsEmpty; }
         }
 
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
@@ -1202,7 +1228,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (iStaticMod == -1)
                         continue;
                     var staticMod = staticMods[iStaticMod];
-                    if(!staticMod.IsMod(Peptide.Sequence[mod.IndexAA], mod.IndexAA, Peptide.Sequence.Length))
+                    if(!staticMod.IsApplicableMod(Peptide.Sequence, mod.IndexAA))
                         continue;
                     modsNew.Add(mod.Modification.EquivalentAll(staticMod)
                         ? mod
@@ -1214,6 +1240,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 return explicitMods;
             return modsNew;
         }
+
+        
 
         #region Property change methods
 
@@ -1263,7 +1291,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
-                Equals(obj.Peptide.Target, Peptide.Target);
+                   Equals(obj.CrosslinkStructure, CrosslinkStructure) &&
+                   Equals(obj.Peptide?.Target, Peptide?.Target);
         }
 
         public override bool Equals(object obj)
@@ -1283,22 +1312,103 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     result = (result*397) ^ Peptide.Target.GetHashCode();
                 }
+
+                result = (result * 397) ^ CrosslinkStructure.GetHashCode();
                 return result;
             }
         }
 
         #endregion
 
-        private static ImmutableSortedList<ModificationSite, LinkedPeptide> GetLinkedPeptides(
-            IEnumerable<ExplicitMod> explicitMods)
+        #region v20.2 crosslink format
+        /// <summary>
+        /// Convert from the Version 20.2 format where crosslinks were represented on the <see cref="ExplicitMod.LinkedPeptide"/> elements
+        /// instead of <see cref="CrosslinkStructure"/>
+        /// </summary>
+        public ExplicitMods ConvertFromLegacyCrosslinkStructure()
         {
-            if (explicitMods == null)
+            if (null == StaticModifications || StaticModifications.All(mod => null == mod.LinkedPeptide))
             {
-                return ImmutableSortedList<ModificationSite, LinkedPeptide>.EMPTY;
+                return this;
             }
-            return ImmutableSortedList.FromValues(explicitMods.Where(mod => null != mod.LinkedPeptide)
-                .Select(mod => new KeyValuePair<ModificationSite, LinkedPeptide>(mod.ModificationSite, mod.LinkedPeptide)));
+            var sitePaths = new List<ImmutableList<ModificationSite>>();
+            var linkedPeptides = new List<Peptide>();
+            var linkedExplicitMods = new List<ExplicitMods>();
+            var crosslinks = new List<Crosslink>();
+            var queue = new List<Tuple<int, ExplicitMod, ImmutableList<ModificationSite>>>();
+            queue.AddRange(StaticModifications.Where(mod => mod.LinkedPeptide != null).Select(mod => Tuple.Create(0, mod, ImmutableList.Singleton(mod.ModificationSite))));
+            while (queue.Any())
+            {
+                var tuple = queue[0];
+                queue.RemoveAt(0);
+                var explicitMod = tuple.Item2;
+                var linkedPeptide = explicitMod.LinkedPeptide;
+                if (linkedPeptide.Peptide == null)
+                {
+                    crosslinks.Add(Crosslink.Looplink(explicitMod.Modification, tuple.Item1, explicitMod.IndexAA, linkedPeptide.IndexAa));
+                    continue;
+                }
+
+                int peptideIndex = linkedPeptides.Count + 1;
+                linkedPeptides.Add(linkedPeptide.Peptide);
+                crosslinks.Add(new Crosslink(explicitMod.Modification,
+                    new[]
+                    {
+                        new CrosslinkSite(tuple.Item1, explicitMod.IndexAA),
+                        new CrosslinkSite(peptideIndex, linkedPeptide.IndexAa)
+                    }));
+                sitePaths.Add(tuple.Item3);
+                var explicitMods = linkedPeptide.ExplicitMods;
+                if (explicitMods != null)
+                {
+                    queue.AddRange(linkedPeptide.ExplicitMods.StaticModifications.Where(mod => mod.LinkedPeptide != null).Select(mod => Tuple.Create(peptideIndex, mod, ImmutableList.ValueOf(tuple.Item3.Append(mod.ModificationSite)))));
+                    explicitMods =
+                        explicitMods.ChangeStaticModifications(
+                            explicitMods.StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList());
+                }
+                linkedExplicitMods.Add(explicitMods);
+            }
+
+            if (!crosslinks.Any())
+            {
+                return this;
+            }
+            var crosslinkStructure = new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
+            return new ExplicitMods(Peptide,
+                    StaticModifications.Where(mod => mod.LinkedPeptide == null).ToList(),
+                    GetHeavyModifications(), IsVariableStaticMods)
+                {
+                    LegacyCrosslinkMap = ImmutableList.ValueOf(sitePaths),
+                }
+                .ChangeCrosslinkStructure(crosslinkStructure);
         }
+        // Code for dealing with the way crosslinks were represented in Version 20.2
+        public ImmutableList<ImmutableList<ModificationSite>> LegacyCrosslinkMap { get; private set; }
+
+        public ExplicitMods RemoveLegacyCrosslinkMap()
+        {
+            if (LegacyCrosslinkMap == null)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im => im.LegacyCrosslinkMap = null);
+        }
+
+        /// <summary>
+        /// Throws an exception if this object has any old-format crosslinks that should have been converted to the new format.
+        /// </summary>
+        public bool VerifyNoLegacyData()
+        {
+            Assume.IsNull(LegacyCrosslinkMap);
+            if (StaticModifications != null)
+            {
+                Assume.IsFalse(StaticModifications.Any(mod=>null != mod.LinkedPeptide));
+            }
+
+            return true;
+        }
+        #endregion
     }
 
     public sealed class ExplicitMod : Immutable
@@ -1319,13 +1429,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public int IndexAA { get; private set; }
         public StaticMod Modification { get; private set; }
 
-        public LinkedPeptide LinkedPeptide { get; private set; }
-
         public ModificationSite ModificationSite
         {
             get { return new ModificationSite(IndexAA, Modification.Name); }
         }
-
         #region Property change methods
 
         public ExplicitMod ChangeModification(StaticMod prop)
@@ -1333,11 +1440,6 @@ namespace pwiz.Skyline.Model.DocSettings
             if (prop.IsExplicit)
                 prop = prop.ChangeExplicit(false);
             return ChangeProp(ImClone(this), (im, v) => im.Modification = v, prop);
-        }
-
-        public ExplicitMod ChangeLinkedPeptide(LinkedPeptide linkedPeptide)
-        {
-            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
         }
 
         #endregion
@@ -1373,6 +1475,15 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+        #region v20.2 crosslink format
+        // Code for dealing with the way crosslinks were represented in Version 20.2
+        public LegacyLinkedPeptide LinkedPeptide { get; private set; }
+
+        public ExplicitMod ChangeLinkedPeptide(LegacyLinkedPeptide linkedPeptide)
+        {
+            return ChangeProp(ImClone(this), im => im.LinkedPeptide = linkedPeptide);
+        }
+        #endregion
     }
 
     public class LoggableExplicitMod : IAuditLogObject, IAuditLogComparable
@@ -1385,12 +1496,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(ignoreName: true)]
         public ExplicitMod ExplicitMod { get; private set; }
-
-        [TrackChildren(defaultValues:typeof(DefaultValuesNull))]
-        public LinkedPeptide LinkedPeptide
-        {
-            get { return ExplicitMod.LinkedPeptide; }
-        }
 
         public string PeptideSequence { get; private set; }
 

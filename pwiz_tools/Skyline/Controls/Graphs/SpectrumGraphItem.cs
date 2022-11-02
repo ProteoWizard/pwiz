@@ -55,11 +55,27 @@ namespace pwiz.Skyline.Controls.Graphs
             return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
         }
 
-        public static string GetTitle(PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        protected override bool IsProteomic()
         {
-            string libraryNamePrefix = string.Empty;
-            //if (!string.IsNullOrEmpty(libraryNamePrefix))
-            //    libraryNamePrefix += @" - ";
+            return PeptideDocNode.IsProteomic;
+        }
+
+        public static string GetLibraryPrefix(string libraryName)
+        {
+            return !string.IsNullOrEmpty(libraryName) ? libraryName + @" - " : string.Empty;
+        }
+
+        public static string RemoveLibraryPrefix(string title, string libraryName)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
+            if (!string.IsNullOrEmpty(libraryNamePrefix) && title.StartsWith(libraryNamePrefix))
+                return title.Substring(libraryNamePrefix.Length);
+            return title;
+        }
+
+        public static string GetTitle(string libraryName, PeptideDocNode peptideDocNode, TransitionGroupDocNode transitionGroupDocNode, IsotopeLabelType labelType)
+        {
+            string libraryNamePrefix = GetLibraryPrefix(libraryName);
 
             TransitionGroup transitionGroup = transitionGroupDocNode.TransitionGroup;
             string sequence;
@@ -67,7 +83,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 sequence = transitionGroupDocNode.CustomMolecule.DisplayName;
             }
-            else if (peptideDocNode?.ExplicitMods != null && peptideDocNode.ExplicitMods.Crosslinks.Count != 0)
+            else if (peptideDocNode.CrosslinkStructure.HasCrosslinks)
             {
                 sequence = peptideDocNode.GetCrosslinkedSequence();
             }
@@ -90,22 +106,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override string Title
         {
-            get { return GetTitle(PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
+            get { return GetTitle(LibraryName, PeptideDocNode, TransitionGroupNode, SpectrumInfo.LabelType); }
         }
     }
     
     public abstract class AbstractSpectrumGraphItem : AbstractMSGraphItem
     {
         private const string FONT_FACE = "Arial";
-        private static readonly Color COLOR_A = Color.YellowGreen;
-        private static readonly Color COLOR_X = Color.Green;
-        private static readonly Color COLOR_B = Color.BlueViolet;
-        private static readonly Color COLOR_Y = Color.Blue;
-        private static readonly Color COLOR_C = Color.Orange;
-        private static readonly Color COLOR_Z = Color.OrangeRed;
-        private static readonly Color COLOR_OTHER_IONS = Color.DodgerBlue; // Other ion types, as in small molecule
-        private static readonly Color COLOR_PRECURSOR = Color.DarkCyan;
-        private static readonly Color COLOR_NONE = COLOR_A;
         public static readonly Color COLOR_SELECTED = Color.Red;
 
         private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;
@@ -119,33 +126,48 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
+        public bool ShowMassError { get; set; }
         public bool ShowDuplicates { get; set; }
         public float FontSize { get; set; }
         public bool Invert { get; set; }
+        public ICollection<string> ShowLosses { get; set; }
 
         // ReSharper disable InconsistentNaming
         private FontSpec _fontSpecA;
-        private FontSpec FONT_SPEC_A { get { return GetFontSpec(COLOR_A, ref _fontSpecA); } }
+        private FontSpec FONT_SPEC_A { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.a), ref _fontSpecA); } }
         private FontSpec _fontSpecX;
-        private FontSpec FONT_SPEC_X { get { return GetFontSpec(COLOR_X, ref _fontSpecX); } }
+        private FontSpec FONT_SPEC_X { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.x), ref _fontSpecX); } }
         private FontSpec _fontSpecB;
-        private FontSpec FONT_SPEC_B { get { return GetFontSpec(COLOR_B, ref _fontSpecB); } }
+        private FontSpec FONT_SPEC_B { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.b), ref _fontSpecB); } }
         private FontSpec _fontSpecY;
-        private FontSpec FONT_SPEC_Y { get { return GetFontSpec(COLOR_Y, ref _fontSpecY); } }
+        private FontSpec FONT_SPEC_Y { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.y), ref _fontSpecY); } }
         private FontSpec _fontSpecC;
-        private FontSpec FONT_SPEC_C { get { return GetFontSpec(COLOR_C, ref _fontSpecC); } }
-        private FontSpec _fontSpecZ;
-        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(COLOR_PRECURSOR, ref _fontSpecPrecursor); } }
+        private FontSpec FONT_SPEC_C { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.c), ref _fontSpecC); } }
         private FontSpec _fontSpecPrecursor;
-        private FontSpec FONT_SPEC_Z { get { return GetFontSpec(COLOR_Z, ref _fontSpecZ); } }
+        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.precursor), ref _fontSpecPrecursor); } }
+
+        private FontSpec _fontSpecZ;
+        private FontSpec FONT_SPEC_Z { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.z), ref _fontSpecZ); } }
+
+        private FontSpec _fontSpecZH;
+        private FontSpec FONT_SPEC_ZH { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.zh), ref _fontSpecZH); } }
+
+        private FontSpec _fontSpecZHH;
+        private FontSpec FONT_SPEC_ZHH { get { return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.zhh), ref _fontSpecZHH); } }
+
+
         private FontSpec _fontSpecOtherIons;
-        private FontSpec FONT_SPEC_OTHER_IONS { get { return GetFontSpec(COLOR_OTHER_IONS, ref _fontSpecOtherIons); } } // Small molecule fragments etc
         private FontSpec _fontSpecNone;
-        private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(COLOR_NONE, ref _fontSpecNone); } }
+        private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(IonTypeExtension.GetTypeColor(null), ref _fontSpecNone); } }
         private FontSpec _fontSpecSelected;
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
 
+        private FontSpec GetOtherIonsFontSpec(int rank = 0)
+        {
+            // Consider the rank of small molecule fragments when selecting the color for the FontSpec
+            return GetFontSpec(IonTypeExtension.GetTypeColor(IonType.custom, rank), ref _fontSpecOtherIons);
+        }
         protected AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
         {
             SpectrumInfo = spectrumInfo;
@@ -161,6 +183,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         protected abstract bool IsMatch(double predictedMz);
+        protected abstract bool IsProteomic();
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
@@ -211,19 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 var matchedIon = rmi.MatchedIons.First(IsVisibleIon);
 
-                Color color;
-                switch (matchedIon.IonType)
-                {
-                    default: color = COLOR_NONE; break;
-                    case IonType.a: color = COLOR_A; break;
-                    case IonType.x: color = COLOR_X; break;
-                    case IonType.b: color = COLOR_B; break;
-                    case IonType.y: color = COLOR_Y; break;
-                    case IonType.c: color = COLOR_C; break;
-                    case IonType.z: color = COLOR_Z; break;
-                    case IonType.custom: color = (rmi.Rank > 0) ? COLOR_OTHER_IONS : COLOR_NONE; break; // Small molecule fragments - only color if ranked
-                    case IonType.precursor: color = COLOR_PRECURSOR; break;
-                }
+                Color color = IonTypeExtension.GetTypeColor(matchedIon.IonType, rmi.Rank);
 
                 if (Invert)
                     color = InvertColor(color);
@@ -275,11 +286,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
+                case IonType.zh: fontSpec = FONT_SPEC_ZH; break;
+                case IonType.zhh: fontSpec = FONT_SPEC_ZHH; break;
                 case IonType.custom:
                     {
-                    if (rmi.Rank == 0 && !rmi.HasAnnotations)
+                    if (rmi.Rank == 0 && !rmi.HasAnnotations && !IsProteomic())
                         return null; // Small molecule fragments - only force annotation if ranked
-                    fontSpec = FONT_SPEC_OTHER_IONS;
+                    fontSpec = GetOtherIonsFontSpec(rmi.Rank);
                     }
                     break;
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
@@ -332,6 +345,14 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 sb.AppendLine().Append(GetDisplayMz(rmi.ObservedMz));
             }
+
+            if (ShowMassError)
+            {
+                var massError = rmi.MatchedIons.First().PredictedMz - rmi.ObservedMz;
+                massError = SequenceMassCalc.GetPpm(rmi.MatchedIons.First().PredictedMz, massError);
+                massError = Math.Round(massError, 1);
+                sb.AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm, (massError > 0 ? @"+" : string.Empty), massError));
+            }
             return sb.ToString();
         }
 
@@ -375,7 +396,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Show precursor ions when they are supposed to be shown, regardless of charge
             // N.B. for fragments, we look at abs value of charge. CONSIDER(bspratt): for small mol libs we may want finer per-adduct control
-            return mfi.Ordinal > 0 && ShowTypes.Contains(mfi.IonType) &&
+            return ((mfi.Ordinal > 0 || IonType.custom.Equals(mfi.IonType)) && ShowTypes.Contains(mfi.IonType)) && mfi.HasVisibleLoss(ShowLosses) &&
                 (mfi.IonType == IonType.precursor || ShowCharges.Contains(Math.Abs(mfi.Charge.AdductCharge)));
         }
     }

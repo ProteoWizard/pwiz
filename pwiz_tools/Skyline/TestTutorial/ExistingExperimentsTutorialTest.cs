@@ -32,14 +32,15 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -60,13 +61,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = false;
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/ExistingQuant-20_1.pdf";
 
             TestFilesZipPaths = new[]
                 {
                     UseRawFilesOrFullData
-                        ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
-                        : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip",
+                        ? "https://skyline.ms/tutorials/ExistingQuant.zip"
+                        : "https://skyline.ms/tutorials/ExistingQuantMzml.zip",
                     @"TestTutorial\ExistingExperimentsViews.zip"
                 };
             RunFunctionalTest();
@@ -108,6 +109,9 @@ namespace pwiz.SkylineTestTutorial
 
         private void DoMrmerTest()
         {
+            if (!IsPauseForScreenShots)
+                AllowInternetAccess = false;    // Keep the background proteome from getting updated from the web
+
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
@@ -145,32 +149,34 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => peptideSettingsUI.PickedHeavyMods = new[] { HEAVY_K, HEAVY_R });
             var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            WaitForDocumentChangeLoaded(docBeforePeptideSettings);
+            var docBeforeTrans = WaitForDocumentChangeLoaded(docBeforePeptideSettings);
+            WaitForBackgroundProteomeLoaderCompleted();
 
             // Inserting a Transition List With Associated Proteins, p. 6
-            RunUI(() =>
-            {
-                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
-                SetExcelFileClipboardText(filePath, "Fixed", 3, false); // Not L10N
-            });
+            // using (new DocChangeLogger("ShowInsertTransitionListDlg"))
             using (new CheckDocumentState(24, 44, 88, 296))
             {
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() =>
-                {
-                    pasteDlg.Height = 465;
-                    pasteDlg.IsMolecule = false;
-                    pasteDlg.PasteTransitions();  // Make sure it's ready to accept peptides rather than small molecules
-                });
-                PauseForScreenShot<PasteDlg.TransitionListTab>("Insert Transition List form", 8);
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
+                var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog.Size = new Size(600, 300));
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+                var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
+                string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
+                var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
+                WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for associate proteins to complete
+                Assert.IsTrue(colDlg.checkBoxAssociateProteins.Checked);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
+                OkDialog(colDlg, colDlg.OkDialog);
             }
+
+            Assert.IsTrue(SkylineWindow.Document.Children.All(c => c.Id is FastaSequence),
+                string.Format("Found {0} proteins without FASTA information", SkylineWindow.Document.Children.Count(c => !(c.Id is FastaSequence))));
+
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 SkylineWindow.Size = new Size(1035, 511);
             });
-            PauseForScreenShot("Main window with transitions added", 9);
+            PauseForScreenShot("Main window with transitions added", 10);
 
             FindNode("LWDVAT");
             RunUI(() =>
@@ -190,7 +196,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.GraphSpectrumSettings.ShowCharge2 = true;
             });
             RestoreViewOnScreen(10);
-            PauseForScreenShot<GraphSpectrum>("Main window with spectral library graph showing", 10);
+            PauseForScreenShot<GraphSpectrum>("Main window with spectral library graph showing", 11);
 
             // Importing Data, p. 10.
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(@"MRMer\MRMer.sky"))); // Not L10N
@@ -201,7 +207,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[5];
             });
-            PauseForScreenShot("Main window with data imported", 12);
+            PauseForScreenShot("Main window with data imported", 13);
 
             RunUI(() =>
             {
@@ -215,9 +221,9 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.StateImageIndex,
                     (int)SequenceTree.StateImageId.no_peak));
             });
-            PauseForScreenShot("Main window", 13);
+            PauseForScreenShot("Main window", 14);
 
-            // Removing a Transition with Interference, p. 13.
+            // Removing a Transition with Interference
             FindNode(string.Format("{0:F04}", 504.2664));   // I18N
             RunUI(() =>
             {
@@ -269,7 +275,7 @@ namespace pwiz.SkylineTestTutorial
                 }
             });
             RestoreViewOnScreen(15);
-            PauseForScreenShot("Main window", 15);
+            PauseForScreenShot("Main window", 16);
 
             FindNode("YVDP");
             RunUI(() =>
@@ -281,13 +287,22 @@ namespace pwiz.SkylineTestTutorial
 
         private void VerifyPrecursorRatio(TransitionGroupTreeNode precursorTreeNode, double ratioExpected)
         {
-            Assert.AreEqual(ratioExpected, precursorTreeNode.DocNode.Results[0][0].Ratio.Value, 0.005);
+            var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            var ratioActual = normalizedValueCalculator.GetTransitionGroupValue(
+                normalizedValueCalculator.GetFirstRatioNormalizationMethod(), precursorTreeNode.PepNode,
+                precursorTreeNode.DocNode, 0, precursorTreeNode.DocNode.Results[0][0]);
+            Assert.AreEqual(ratioExpected, ratioActual.Value, 0.005);
         }
 
         private void VerifyTransitionRatio(TransitionTreeNode transitionTreeNode, string ionName, double? ratioExpected = null)
         {
             Assert.AreEqual(ionName, transitionTreeNode.DocNode.FragmentIonName);
-            var ratioActual = transitionTreeNode.DocNode.Results[0][0].Ratio;
+            var normalizedValueCalculator = new NormalizedValueCalculator(SkylineWindow.Document);
+            var ratioActual = normalizedValueCalculator.GetTransitionValue(
+                normalizedValueCalculator.GetFirstRatioNormalizationMethod(), transitionTreeNode.PepNode,
+                transitionTreeNode.TransitionGroupNode, transitionTreeNode.DocNode,
+                0, transitionTreeNode.DocNode.Results[0][0]);
+
             if (ratioExpected.HasValue)
                 Assert.AreEqual(ratioExpected.Value, ratioActual.Value, 0.005);
             else
@@ -307,7 +322,7 @@ namespace pwiz.SkylineTestTutorial
             }
             var mod13Cr = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, false, null, LabelAtoms.C13,
                                           RelativeRT.Matching, null, null, null);
-            AddHeavyMod(mod13Cr, peptideSettingsUI1, "Edit Isotope Modification form", 18);
+            AddHeavyMod(mod13Cr, peptideSettingsUI1, "Edit Isotope Modification form", 19);
             RunUI(() =>
                       {
                           peptideSettingsUI1.PickedHeavyMods = new[] { "Label:13C(6) (C-term R)", HEAVY_K };
@@ -324,12 +339,20 @@ namespace pwiz.SkylineTestTutorial
                 SetExcelFileClipboardText(filePath, "Simple", 6, false);
                 clipboardSaveText = ClipboardEx.GetText();
             });
-
+            // We expect this to fail due to instrument settings rather than format issues eg "The product m/z 1519.78 is out of range for the instrument settings, in the peptide sequence YEVQGEVFTKPQLWP. Check the Instrument tab in the Transition Settings."
             {
-                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(SkylineWindow.Paste);
+                var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column list selection form", 20);
+
+                var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
+                AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
+                        Resources.MassListRowReader_CalcPrecursorExplanations_Check_the_Instrument_tab_in_the_Transition_Settings),
+                    messageDlg.ErrorList[0].ErrorMessage,
+                    2);
                 RunUI(() => messageDlg.Size = new Size(838, 192));
-                PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 19);
-                OkDialog(messageDlg, messageDlg.CancelDialog);
+                PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 20);
+                OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
+                OkDialog(transitionSelectdgl, transitionSelectdgl.CancelDialog); // Cancel the import
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);
@@ -340,16 +363,13 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
-            RunUI(() =>
-            {
-                SkylineWindow.Paste();
-                SkylineWindow.CollapsePeptides();
-            });
-            PauseForScreenShot("Targets tree (selected from main window)", 20);
+            PasteTransitionListSkipColumnSelect();
+            RunUI(SkylineWindow.CollapsePeptides);
+            PauseForScreenShot("Targets tree (selected from main window)", 21);
 
             // Adjusting Modifications Manually, p. 19.
             AdjustModifications("AGLCQTFVYGGCR", true, 'V', 747.348);
-            PauseForScreenShot("Target tree clipped from main window", 22);
+            PauseForScreenShot("Target tree clipped from main window", 24);
 
             AdjustModifications("IVGGWECEK", true, 'V', 541.763);
             AdjustModifications("YEVQGEVFTKPQLWP", false, 'L', 913.974);
@@ -367,7 +387,7 @@ namespace pwiz.SkylineTestTutorial
             if (UseRawFilesOrFullData)
             {
                 var importResultsSamplesDlg = ShowDialog<ImportResultsSamplesDlg>(openDataSourceDialog1.Open);
-                PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form", 24);
+                PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form", 25);
 
                 RunUI(() =>
                           {
@@ -410,7 +430,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
-                PauseForScreenShot<ImportResultsNameDlg>("Import Results Common prefix form", 25);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results Common prefix form", 26);
 
                 OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
             }
@@ -427,9 +447,12 @@ namespace pwiz.SkylineTestTutorial
             });
 
             if (!IsPauseForScreenShots && !IsFullData)
+            {
                 TestApplyToAll();
+                FindNode("YEVQGEVFTKPQLWP");
+            }
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 26);
+            PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 27);
             CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
@@ -473,24 +496,29 @@ namespace pwiz.SkylineTestTutorial
                     }
                 }
             });
-            PauseForScreenShot("Main window", 27);
+            PauseForScreenShot("Main window", 29);
 
             // Data Inspection with Peak Areas View, p. 29.
             RestoreViewOnScreen(28);
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(NormalizeGraphToHeavy);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 29);
-
-            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 30);
+
+
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
+            FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
+            WaitForGraphs();
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
 
             RunUI(SkylineWindow.ExpandPeptides);
             string hgflprLight = (363.7059).ToString(LocalizationHelper.CurrentCulture) + "++";  // HGFLPR - Not L10N
             FindNode(hgflprLight);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 31);
+            WaitForGraphs();
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph metafile", 32);
+
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 32);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph normalized metafile", 34);
 
             RunUI(() =>
             {
@@ -498,7 +526,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ActivateReplicate("E_03");
                 SkylineWindow.Size = new Size(757, 655);
             });
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile with interference", 32);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile with interference", 35);
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(true));
             RunUI(() =>
@@ -508,7 +536,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowCVValues(true);
                 SkylineWindow.ShowPeptideOrder(SummaryPeptideOrder.document);
             });
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Peptide Comparison graph metafile", 33);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas Peptide Comparison graph metafile", 36);
 
             float[] concentrations = { 0f, 60, 175, 513, 1500, 2760, 4980, 9060, 16500, 30000 };
             var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
@@ -552,7 +580,7 @@ namespace pwiz.SkylineTestTutorial
                 }
             });
             WaitForGraphs();
-            PauseForScreenShot<DocumentGridForm>("Document grid filled (scrolled to the end)", 35);
+            PauseForScreenShot<DocumentGridForm>("Document grid filled (scrolled to the end)", 36);
             RunUI(() => documentGrid.Close());
             
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
@@ -564,11 +592,11 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.GroupByReplicateValue(valConcentration);
                 NormalizeGraphToHeavy();
             });
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with CVs metafile", 36);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph with CVs metafile", 37);
             
             RunUI(() => SkylineWindow.ShowCVValues(false));
             RunUI(() => SkylineWindow.SaveDocument());
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph grouped by concentration metafile", 37);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas graph grouped by concentration metafile", 38);
             PauseForAuditLog();
             // Further Exploration, p. 33.
             RunUI(() =>
@@ -579,7 +607,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             RestoreViewOnScreen(38);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas peptide comparison graph metafile", 38);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas peptide comparison graph metafile", 39);
             FindNode("LSEPAELTDAVK");
             RunUI(() =>
             {
@@ -587,11 +615,11 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Width = 920;
                 SkylineWindow.ShowRTReplicateGraph();
             });
-            PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times replicate graph metafile", 38);
+            PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times replicate graph metafile", 39);
 
             FindNode("INDISHTQSVSAK");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas normalized to heave graph metafile", 39);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas normalized to heave graph metafile", 40);
 
             if (IsCoverShotMode)
             {
@@ -613,7 +641,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas no normalization graph metafile", 40);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas no normalization graph metafile", 41);
 
             FindNode(hgflprLight);
             RunUI(() =>
@@ -622,17 +650,17 @@ namespace pwiz.SkylineTestTutorial
                 NormalizeGraphToHeavy();
             });
             WaitForGraphs();
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 41);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Area Ratio to Heavy graph showing interference metafile", 42);
 
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
             RunUI(() => SkylineWindow.ActivateReplicate("E_ 03"));
             WaitForGraphs();
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile showing slight interference", 41);
+            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile showing slight interference", 42);
         }
 
         private static void NormalizeGraphToHeavy()
         {
-            AreaGraphController.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
+            SkylineWindow.AreaNormalizeOption = NormalizeOption.FromIsotopeLabelType(IsotopeLabelType.heavy);
             Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }
@@ -659,12 +687,12 @@ namespace pwiz.SkylineTestTutorial
             {
                 var editStaticModDlg = ShowDialog<EditStaticModDlg>(() => editPepModsDlg.AddNewModification(sequence.IndexOf(aa13C), IsotopeLabelType.heavy));
                 RunUI(() => editStaticModDlg.Modification = new StaticMod("Label:13C", null, null, LabelAtoms.C13)); // Not L10N
-                PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form", 21);
+                PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form", 22);
 
                 OkDialog(editStaticModDlg, editStaticModDlg.OkDialog);
                 // Make sure the right combo has the focus for the screen shot
                 RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "Label:13C")); // Not L10N
-                PauseForScreenShot<EditPepModsDlg>("Edit Modifications form", 21);
+                PauseForScreenShot<EditPepModsDlg>("Edit Modifications form", 23);
             }
             var doc = SkylineWindow.Document;
             RunUI(editPepModsDlg.OkDialog);

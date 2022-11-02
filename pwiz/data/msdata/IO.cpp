@@ -1727,12 +1727,16 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     ParamContainer paramContainer;
     DataProcessingPtr dataProcessingPtr;
     CVID cvidBinaryDataType;
+    BinaryDataFlag binaryDataFlag;
+    BinaryDataArray* binaryDataArray;
+    IntegerDataArray* integerDataArray;
 
-    HandlerBinaryDataArray(std::vector<BinaryDataArrayPtr>* binaryDataArrayPtrs = 0, std::vector<IntegerDataArrayPtr>* integerDataArrayPtrs = 0, const MSData* _msd = 0)
+    HandlerBinaryDataArray(std::vector<BinaryDataArrayPtr>* binaryDataArrayPtrs = 0, std::vector<IntegerDataArrayPtr>* integerDataArrayPtrs = 0, const MSData* _msd = 0, BinaryDataFlag binaryDataFlag = ReadBinaryData)
       : binaryDataArrayPtrs(binaryDataArrayPtrs),
         integerDataArrayPtrs(integerDataArrayPtrs),
         msd(_msd),
         defaultArrayLength(0),
+        binaryDataFlag(binaryDataFlag),
         arrayLength_(0),
         encodedLength_(0)
     {
@@ -1766,27 +1770,62 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             else if (name == "binary")
             {
                 if (msd) References::resolve(paramContainer, *msd);
+
                 config = getConfig();
+
+                CVID binaryArrayType;
+                if (binaryDataFlag == ReadBinaryDataOnly)
+                    binaryArrayType = paramContainer.cvParamChild(MS_binary_data_array).cvid;
 
                 switch (cvidBinaryDataType)
                 {
                     case MS_32_bit_float:
                     case MS_64_bit_float:
                     {
+                        if (binaryDataFlag == ReadBinaryDataOnly)
+                        {
+                            binaryDataArray = nullptr;
+                            for (const auto& arrayPtr : *binaryDataArrayPtrs)
+                                if (arrayPtr->hasCVParam(binaryArrayType))
+                                {
+                                    binaryDataArray = &*arrayPtr;
+                                    break;
+                                }
+
+                            if (binaryDataArray != nullptr)
+                                return Status::Ok;
+                        }
+
                         BinaryDataArrayPtr binaryDataArray = boost::make_shared<BinaryDataArray>();
                         binaryDataArrayPtrs->emplace_back(binaryDataArray);
                         swap(static_cast<ParamContainer&>(*binaryDataArray), paramContainer);
                         binaryDataArray->dataProcessingPtr = dataProcessingPtr;
+                        this->binaryDataArray = &*binaryDataArrayPtrs->back();
                     }
                     break;
 
                     case MS_32_bit_integer:
                     case MS_64_bit_integer:
                     {
+                        if (binaryDataFlag == ReadBinaryDataOnly)
+                        {
+                            integerDataArray = nullptr;
+                            for (const auto& arrayPtr : *integerDataArrayPtrs)
+                                if (arrayPtr->hasCVParam(binaryArrayType))
+                                {
+                                    integerDataArray = &*arrayPtr;
+                                    break;
+                                }
+
+                            if (integerDataArray != nullptr)
+                                return Status::Ok;
+                        }
+
                         IntegerDataArrayPtr binaryDataArray = boost::make_shared<IntegerDataArray>();
                         integerDataArrayPtrs->emplace_back(binaryDataArray);
                         swap(static_cast<ParamContainer&>(*binaryDataArray), paramContainer);
                         binaryDataArray->dataProcessingPtr = dataProcessingPtr;
+                        this->integerDataArray = &*integerDataArrayPtrs->back();
                     }
                     break;
 
@@ -1807,6 +1846,9 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
+        if (binaryDataFlag == IgnoreBinaryData)
+            return Status::Ok;
+
         BinaryDataEncoder encoder(config);
 
         switch (cvidBinaryDataType)
@@ -1814,7 +1856,6 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             case MS_32_bit_float:
             case MS_64_bit_float:
                 {
-                    auto& binaryDataArray = binaryDataArrayPtrs->back();
                     encoder.decode(text.c_str(), text.length(), binaryDataArray->data);
 
                     if (binaryDataArray->data.size() != arrayLength_)
@@ -1826,15 +1867,11 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             case MS_32_bit_integer:
             case MS_64_bit_integer:
                 {
-                    auto& binaryDataArray = integerDataArrayPtrs->back();
-                    encoder.decode(text.c_str(), text.length(), binaryDataArray->data);
+                    encoder.decode(text.c_str(), text.length(), integerDataArray->data);
 
-                    if (binaryDataArray->data.size() != arrayLength_)
+                    if (integerDataArray->data.size() != arrayLength_)
                         throw runtime_error((format("[IO::HandlerBinaryDataArray] At position %d: expected array of size %d, but decoded array is actually size %d.")
-                            % position % arrayLength_ % binaryDataArray->data.size()).str());
-
-                    swap(static_cast<ParamContainer&>(*binaryDataArray), paramContainer);
-                    binaryDataArray->dataProcessingPtr = dataProcessingPtr;
+                            % position % arrayLength_ % integerDataArray->data.size()).str());
                 }
                 break;
 
@@ -2154,13 +2191,11 @@ struct HandlerSpectrum : public HandlerParamContainer
             }
             else if (name == "binaryDataArray")
             {
-                if (binaryDataFlag == IgnoreBinaryData)
-                    return Status::Done;
-
                 handlerBinaryDataArray_.binaryDataArrayPtrs = &spectrum->binaryDataArrayPtrs;
                 handlerBinaryDataArray_.integerDataArrayPtrs = &spectrum->integerDataArrayPtrs;
                 handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
                 handlerBinaryDataArray_.msd = msd;
+                handlerBinaryDataArray_.binaryDataFlag = binaryDataFlag;
                 return Status(Status::Delegate, &handlerBinaryDataArray_);
             }
             else if (name == "binaryDataArrayList")
@@ -2303,12 +2338,10 @@ struct HandlerChromatogram : public HandlerParamContainer
         }
         else if (name == "binaryDataArray")
         {
-            if (binaryDataFlag == IgnoreBinaryData)
-                return Status::Done;
-
             handlerBinaryDataArray_.binaryDataArrayPtrs = &chromatogram->binaryDataArrayPtrs;
             handlerBinaryDataArray_.integerDataArrayPtrs = &chromatogram->integerDataArrayPtrs;
             handlerBinaryDataArray_.defaultArrayLength = chromatogram->defaultArrayLength;
+            handlerBinaryDataArray_.binaryDataFlag = binaryDataFlag;
             return Status(Status::Delegate, &handlerBinaryDataArray_);
         }
         else if (name == "binaryDataArrayList")
@@ -2367,7 +2400,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
 
         if (iterationListenerRegistry)
             status = iterationListenerRegistry->broadcastUpdateMessage(
-                IterationListener::UpdateMessage(i, spectrumList.size(), "converting spectra"));
+                IterationListener::UpdateMessage(i, spectrumList.size(), "writing spectra"));
 
         if (status == IterationListener::Status_Cancel)
             break;
@@ -2471,7 +2504,7 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
 
         if (iterationListenerRegistry)
             status = iterationListenerRegistry->broadcastUpdateMessage(
-                IterationListener::UpdateMessage(i, chromatogramList.size(), "converting chromatograms"));
+                IterationListener::UpdateMessage(i, chromatogramList.size(), "writing chromatograms"));
 
         if (status == IterationListener::Status_Cancel)
             break;

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -119,6 +121,10 @@ namespace pwiz.Skyline.Model.Lists
 
             protected virtual T ConvertValue(object value)
             {
+                if (value is DBNull)
+                {
+                    return default(T);
+                }
                 return (T)value;
             }
             public override int RowCount

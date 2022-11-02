@@ -21,10 +21,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using ZedGraph;
 
@@ -42,12 +44,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
-        private static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.BlueViolet;
+        public static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.FromArgb(30, Color.BlueViolet);
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
-
-        public static Color ColorSelected { get { return Color.Red; } }
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
@@ -361,7 +361,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         else
                         {
-                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct);
+                            string label = FormatTimeLabel(timeBest.DisplayTime, massError, dotProduct, Chromatogram.GetIonMobilityFilter());
 
                             text = new TextObj(label, timeBest.DisplayTime, intensityLabel,
                                 CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var height = graphPane.YAxis.Scale.Max;
             var originalPeakShadingBox = new BoxObj(start.DisplayTime, graphPane.YAxis.Scale.Max, width, height)
             {
-                Fill = new Fill(Color.FromArgb(30, COLOR_ORIGINAL_PEAK_SHADE)),
+                Fill = new Fill(COLOR_ORIGINAL_PEAK_SHADE),
                 ZOrder = ZOrder.F_BehindGrid,
                 Border = new Border { IsVisible = false },
                 IsClippedToChartRect = true,
@@ -474,7 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         Color color = COLOR_MSMSID_TIME;
                         if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
                         {
-                            color = ColorSelected;
+                            color = ColorScheme.ChromGraphItemSelected;
                         }
                         AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
                             Resources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
@@ -486,7 +486,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var retentionTime in MidasRetentionMsMs)
                     {
                         var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
-                            ? ColorSelected
+                            ? ColorScheme.ChromGraphItemSelected
                             : COLOR_MSMSID_TIME;
                         AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
                     }
@@ -690,7 +690,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         IsClippedToChartRect = true,
                         Location = { CoordinateFrame = CoordType.AxisXYScale },
                         ZOrder = ZOrder.A_InFront,
-                        Line = { Width = 1, Style = DashStyle.Dash, Color = ColorSelected},
+                        Line = { Width = 1, Style = DashStyle.Dash, Color = ColorScheme.ChromGraphItemSelected },
                         Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
                     };
                     annotations.Add(stick);
@@ -701,7 +701,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var isBold = !hasTimes; // Question mark if no times exist is visually clearer if bold
             TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight)
             {
-                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorSelected, isBold, false, false)
+                FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorScheme.ChromGraphItemSelected, isBold, false, false)
                 {
                     Border = new Border { IsVisible = false },
                     Fill = FontSpec.Fill
@@ -817,7 +817,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     float? massError = null;
                     if (Settings.Default.ShowMassError)
                         massError = Chromatogram.GetPeak(indexPeak).MassError;
-                    string label = FormatTimeLabel(point.X, massError, dotProduct);
+                    string label = FormatTimeLabel(point.X, massError, dotProduct, IonMobilityFilter.EMPTY);
                     return new PointAnnotation(label, FontSpec);
                 }
             }
@@ -825,16 +825,56 @@ namespace pwiz.Skyline.Controls.Graphs
             return null;
         }
 
-        public string FormatTimeLabel(double time, float? massError, double dotProduct)
+        public string FormatTimeLabel(double time, float? massError, double dotProduct, IonMobilityFilter ionMobilityfilter)
         {
-            string label = string.Format(@"{0:F01}", time);
+            // ReSharper disable LocalizableElement
+            var lines = new List<string> {string.Format($"{{0:F0{Settings.Default.ChromatogramDisplayRTDigits}}}", time)};
             if (massError.HasValue && !_isSummary)
-                // ReSharper disable LocalizableElement
-                label += string.Format("\n{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value);
+                lines.Add(string.Format("{0}{1} ppm", (massError.Value > 0 ? "+" : string.Empty), massError.Value));
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
-                // ReSharper restore LocalizableElement
-            return label;
+                lines.Add(string.Format("({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct));
+
+            // Ion mobility values
+            if (ionMobilityfilter.IonMobility.HasValue && !_isSummary && 
+                ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.waters_sonar && // SONAR data isn't really ion mobility, it just uses some of the same filter mechanisms
+                (Settings.Default.ShowCollisionCrossSection || Settings.Default.ShowIonMobility))
+            {
+                if (Settings.Default.ShowCollisionCrossSection && 
+                    ionMobilityfilter.IonMobilityUnits != eIonMobilityUnits.compensation_V) // CCS isn't measurable with FAIMS
+                {
+                    var ccsString = FormatCollisionCrossSectionValue(ionMobilityfilter);
+                    lines.Add(ccsString);
+                }
+                if (Settings.Default.ShowIonMobility)
+                {
+                    var imString = FormatIonMobilityValue(ionMobilityfilter);
+                    lines.Add(string.Format("IM {0}", imString));
+                }
+            }
+
+            // N.B.you might expect use of TextUtil.LineSeparate() here, but this string is parsed
+            // elsewhere with the expectation of \n as separator rather than \r\n
+            return string.Join("\n", lines); 
+
+            // ReSharper restore LocalizableElement
+        }
+
+        public static string FormatIonMobilityValue(IonMobilityFilter ionMobilityFilter)
+        {
+            var imString = ionMobilityFilter.IonMobility.HasValue
+                ? string.Format(@"{0:F02} {1}",
+                    ionMobilityFilter.IonMobility.Mobility, 
+                    IonMobilityValue.GetUnitsString(ionMobilityFilter.IonMobilityUnits).Replace(@"^2", @"²")) // Make "Vs/cm^2" into "Vs/cm²" to agree with CCS "Å²"
+                : @"IM unknown"; // Should never happen
+            return imString;
+        }
+
+        public static string FormatCollisionCrossSectionValue(IonMobilityFilter ionMobilityFilter)
+        {
+            var ccsString = ionMobilityFilter.CollisionalCrossSectionSqA.HasValue
+                ? string.Format(@"CCS {0:F02} Å²", ionMobilityFilter.CollisionalCrossSectionSqA.Value)
+                : @"CCS unknown"; // Should never happen, except for very old data
+            return ccsString;
         }
 
         public IdentityPath FindIdentityPath(TextObj label)

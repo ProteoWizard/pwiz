@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -34,7 +35,6 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
@@ -48,7 +48,6 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
@@ -122,6 +121,18 @@ namespace pwiz.Skyline.Properties
             catch (Exception)
             {
                 // Ignore exceptions
+            }
+        }
+
+        /// <summary>
+        /// Clears internal cache of original serialized settings values and resets all settings to their default value.
+        /// </summary>
+        public new void Reset()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reset();
             }
         }
 
@@ -516,6 +527,47 @@ namespace pwiz.Skyline.Properties
                 this[@"CustomMoleculeTransitionInsertColumnsList"] = value;
             }
         }
+
+        [UserScopedSettingAttribute]
+        // Used to make sure that last seen Transition List headers match the current headers
+        // before proceeding with using saved column locations
+        public List<string> CustomImportTransitionListHeaders
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListHeaders"] == null)
+                {
+                    var list = new List<string>();
+                    CustomImportTransitionListHeaders = list;
+                }
+                return (List<string>)this[@"CustomImportTransitionListHeaders"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListHeaders"] = value;
+            }
+        }
+
+        [UserScopedSettingAttribute]
+        // Saves column type positions between transition lists. This way when a user tell us the correct column positions they are carried
+        // on to the next transition list. Normally these are saved in invariant language (en) but we can read localized for backward compatibility
+        public List<string> CustomImportTransitionListColumnTypesList
+        {
+            get
+            {
+                if (this[@"CustomImportTransitionListColumnTypesList"] == null)
+                {
+                    var list = new List<string>();
+                    CustomImportTransitionListColumnTypesList = list;
+                }
+                return (List <string>)this[@"CustomImportTransitionListColumnTypesList"];
+            }
+            set
+            {
+                this[@"CustomImportTransitionListColumnTypesList"] = value;
+            }
+        }
+
         [UserScopedSettingAttribute]
         public EnzymeList EnzymeList
         {
@@ -800,8 +852,8 @@ namespace pwiz.Skyline.Properties
         {
             // Null return is valid for this list, and means no retention time
             // calculation should be applied.
-            RetentionTimeRegression regression;
-            if (RetentionTimeList.TryGetValue(name, out regression))
+            RetentionTimeRegression regression = null;
+            if (!string.IsNullOrEmpty(name) && RetentionTimeList.TryGetValue(name, out regression))
             {
                 if (regression.GetKey() == RetentionTimeList.GetDefault().GetKey())
                     regression = null;
@@ -1257,6 +1309,12 @@ namespace pwiz.Skyline.Properties
                                @"http://www.srmcollider.org/srmcollider/srmcollider.py",
                                ReportSpecList.SRM_COLLIDER_REPORT_NAME)
                        };
+        }
+
+        public void ResetDefaults()
+        {
+            Clear();
+            AddDefaults();
         }
 
         public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
@@ -2453,7 +2511,7 @@ namespace pwiz.Skyline.Properties
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
-            return new MeasuredIon(name, formula, null, null, Adduct.SINGLY_PROTONATED);
+            return new MeasuredIon(name, formula, null, null, Adduct.M_PLUS);
         }
 
         public override int RevisionIndexCurrent { get { return 1; } }
@@ -2907,7 +2965,8 @@ namespace pwiz.Skyline.Properties
                         new[] {IsotopeLabelType.heavy}
                     ),
                     new PeptideIntegration(null), 
-                    BackgroundProteome.NONE
+                    BackgroundProteome.NONE,
+                    ProteinAssociation.ParsimonySettings.DEFAULT
                 ),
                 new TransitionSettings
                 (
@@ -3015,6 +3074,10 @@ namespace pwiz.Skyline.Properties
 
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
+        /// <summary>
+        /// OBSOLETE: replaced by  <see cref="Settings.PersistedViews"></see> for reports management/>
+        /// </summary>
+
         public const string EXT_REPORTS = ".skyr";
         // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME
@@ -3209,6 +3272,161 @@ namespace pwiz.Skyline.Properties
         public ICollection<AnnotationDef> CreateEmptyList()
         {
             return new AnnotationDefList();
+        }
+    }
+
+    public class ColorSchemeList : SettingsList<ColorScheme>, IListSerializer<ColorScheme>
+    {
+        // Great websites for generating/finding schemes
+        // http://vrl.cs.brown.edu/color
+        // http://colorbrewer2.org
+        public static readonly ColorScheme DEFAULT = new ColorScheme(Resources.ColorSchemeList_DEFAULT_Skyline_classic).ChangePrecursorColors(new[]
+            {
+                Color.Red,
+                Color.Blue,
+                Color.Maroon,
+                Color.Purple,
+                Color.Orange,
+                Color.Green,
+                Color.Yellow,
+                Color.LightBlue,
+            })
+            .ChangeTransitionColors(new[]
+            {
+                Color.Blue,
+                Color.BlueViolet,
+                Color.Brown,
+                Color.Chocolate,
+                Color.DarkCyan,
+                Color.Green,
+                Color.Orange,
+//                Color.Navy,
+                Color.FromArgb(0x75, 0x70, 0xB3),
+                Color.Purple,
+                Color.LimeGreen,
+                Color.Gold,
+                Color.Magenta,
+                Color.Maroon,
+                Color.OliveDrab,
+                Color.RoyalBlue,
+            });
+        public override IEnumerable<ColorScheme> GetDefaults(int revisionIndex)
+        {
+            yield return DEFAULT;
+            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_Eggplant_lemonade).ChangePrecursorColors(new[]
+            {
+                Color.FromArgb(213,62,79),
+                Color.FromArgb(102,194,165),
+                Color.FromArgb(253,174,97),
+                Color.FromArgb(210, 242, 53),
+                Color.FromArgb(50,136,189)
+            }).ChangeTransitionColors(new[]
+            {
+                Color.FromArgb(94,79,162),
+                Color.FromArgb(50,136,189),
+                Color.FromArgb(102,194,165),
+                Color.FromArgb(171,221,164),
+                Color.FromArgb(210, 242, 53), 
+//                Color.FromArgb(249, 249, 84), 
+                Color.FromArgb(247, 207, 98),
+                Color.FromArgb(253,174,97),
+                Color.FromArgb(244,109,67),
+                Color.FromArgb(213,62,79),
+                Color.FromArgb(158,1,66)
+            });
+            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_Distinct).ChangePrecursorColors(new[]
+            {
+                Color.FromArgb(249, 104, 87),
+                Color.FromArgb(49, 191, 167),
+                Color.FromArgb(249, 155, 49),
+                Color.FromArgb(109, 95, 211),
+                Color.FromArgb(75, 159, 216),
+                Color.FromArgb(163, 219, 67),
+                Color.FromArgb(247, 138, 194),
+                Color.FromArgb(183, 183, 183),
+                Color.FromArgb(184, 78, 186),
+                Color.FromArgb(239, 233, 57),
+                Color.FromArgb(133, 211, 116)
+            }).ChangeTransitionColors(new[]
+            {
+                Color.FromArgb(49, 191, 167),
+                Color.FromArgb(249, 155, 49),
+                Color.FromArgb(109, 95, 211),
+                Color.FromArgb(249, 104, 87),
+                Color.FromArgb(75, 159, 216),
+                Color.FromArgb(163, 219, 67),
+                Color.FromArgb(247, 138, 194),
+                Color.FromArgb(183, 183, 183),
+                Color.FromArgb(184, 78, 186),
+                Color.FromArgb(239, 233, 57),
+                Color.FromArgb(133, 211, 116)
+            });
+            yield return DEFAULT.ChangeName(Resources.ColorSchemeList_GetDefaults_High_contrast).ChangePrecursorColors(new[]
+            {
+                Color.FromArgb(179,70,126),
+                Color.FromArgb(146,181,64),
+                Color.FromArgb(90,58,142),
+                Color.FromArgb(205,156,46),
+                Color.FromArgb(109,131,218),
+                Color.FromArgb(200,115,197),
+                Color.FromArgb(69,192,151)
+            }).ChangeTransitionColors(new[]
+            {
+                Color.FromArgb(179,70,126),
+                Color.FromArgb(146,181,64),
+                Color.FromArgb(90,58,142),
+                Color.FromArgb(205,156,46),
+                Color.FromArgb(109,131,218),
+                Color.FromArgb(200,115,197),
+                Color.FromArgb(69,192,151),
+                Color.FromArgb(212,84,78),
+                Color.FromArgb(90,165,84),
+                Color.FromArgb(153,147,63),
+                Color.FromArgb(221,91,107),
+                Color.FromArgb(202,139,71),
+                Color.FromArgb(159,55,74),
+                Color.FromArgb(193,86,45),
+                Color.FromArgb(150,73,41)
+            });
+        }
+
+        public override string Title
+        {
+            get { return @"Color Scheme"; }
+        }
+
+        public override string Label
+        {
+            get { return @"Color Scheme"; }
+        }
+
+        public override ColorScheme EditItem(Control owner, ColorScheme item, IEnumerable<ColorScheme> existing, object tag)
+        {
+            // < Edit List.. > selected
+            using (var dlg = new EditCustomThemeDlg(item, existing ?? this))
+            {
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return dlg.NewScheme;
+                }
+            }
+            return null;
+        }
+
+        public override ColorScheme CopyItem(ColorScheme item)
+        {
+            return item.ChangeName(string.Empty);
+        }
+
+        public Type SerialType { get { return typeof(ColorScheme); } }
+        public Type DeserialType
+        {
+            get { return typeof(ColorScheme); }
+        }
+
+        public ICollection<ColorScheme> CreateEmptyList()
+        {
+            return new ColorSchemeList();
         }
     }
 

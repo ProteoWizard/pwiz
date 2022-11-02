@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Windows.Forms;
 
 namespace SkylineTester
 {
@@ -36,6 +37,11 @@ namespace SkylineTester
 
             var testList = new List<string>();
             TabTests.GetCheckedTests(MainWindow.TutorialsTree.TopNode, testList);
+            if (testList.Count == 0)
+            {
+                MessageBox.Show(MainWindow, "Check at least one tutorial to run.");
+                return false;
+            }
 
             var args = new StringBuilder("offscreen=off loop=1 perftests=on language=");
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
@@ -50,11 +56,15 @@ namespace SkylineTester
                 int pauseSeconds = -1;
                 if (MainWindow.ModeTutorialsCoverShots.Checked)
                     pauseSeconds = -2; // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
-                else if (!MainWindow.PauseTutorialsScreenShots.Checked &&
-                         !Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
+                else if (MainWindow.PauseTutorialsScreenShots.Checked)
+                {
+                    int startingPage;
+                    if (Int32.TryParse(MainWindow.PauseStartingPage.Text, out startingPage) && startingPage > 1)
+                        args.Append(" startingpage=").Append(startingPage);
+                }
+                else if (!Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;
-                args.Append(" pause=");
-                args.Append(pauseSeconds);
+                args.Append(" pause=").Append(pauseSeconds);
             }
             args.Append(" screenshotlist=\"");
             args.Append(Path.Combine(MainWindow.RootDir, "ScreenShotForms.txt"));

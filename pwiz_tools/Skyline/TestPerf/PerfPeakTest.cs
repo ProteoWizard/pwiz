@@ -72,51 +72,51 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         private static readonly DataSetParams[] DataSets = 
         {
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap10mz.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/Overlap10mz.zip",
                 none, decoysAndSecond), 
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Overlap20mz.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/Overlap20mz.zip",
                 none, decoysAndSecond), 
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Ack.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/Schilling_Ack.zip",
                 peakView, secondOnly, new[] { 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Schilling_Mito.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/Schilling_Mito.zip",
                 peakView, secondOnly, new[] { 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/ReiterSPRG.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/ReiterSPRG.zip",
                 spectronaut, decoysAndSecond, new[] { 0 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/LudwigSPRG.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/LudwigSPRG.zip",
                 none, decoysAndSecond, new[] { 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathHeavy.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HasmikSwathHeavy.zip",
                 peakViewSpectronautOpenSwath, decoysAndSecond, new[] { 1, 1, 2 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeHeavy.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HasmikQeHeavy.zip",
                 spectronautOpenSwath, decoysAndSecond, new[] { 1, 2 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwath.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HasmikSwath.zip",
                 peakViewSpectronautOpenSwath, decoysAndSecond, new[] { 1, 1, 2 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQe.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HasmikQe.zip",
                 spectronaut, decoysAndSecond, new[] { 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikSwathLight.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HasmikSwathLight.zip",
                 peakViewSpectronaut, decoysAndSecond, new[] { 0, 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HasmikQeLight.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HasmikQeLight.zip",
                 spectronaut, decoysAndSecond, new[] { 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Water.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/OpenSWATH_Water.zip",
                 peakViewOpenSwath, decoysAndSecond, new List<int> { 2, 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Yeast.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/OpenSWATH_Yeast.zip",
                 peakViewOpenSwath, decoysAndSecond, new List<int> { 1, 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OpenSWATH_Human.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/OpenSWATH_Human.zip",
                 peakViewOpenSwath, decoysAndSecond, new List<int> { 2, 1 }),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course_vantage.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/Olga_srm_course_vantage.zip",
                 none, decoysAndSecond),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/Olga_srm_course.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/Olga_srm_course.zip",
                 none, decoysAndSecond),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HeartFailure.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HeartFailure.zip",
                 none, secondOnly),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/OvarianCancer.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/OvarianCancer.zip",
                 none, secondOnly),
-//            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/mProphetGS.zip",
+//            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/mProphetGS.zip",
 //                none, decoysAndSecond),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/MikeBHigh.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/MikeBHigh.zip",
                 none, secondOnly),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/SchillingDDA.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/SchillingDDA.zip",
                 none, secondOnly),
-            new DataSetParams(@"http://proteome.gs.washington.edu/software/test/skyline-perf/HeldDIA.zip",
+            new DataSetParams(@"https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/HeldDIA.zip",
                 peakView, decoysAndSecond, new List<int> { 4 })
         };
 
@@ -151,7 +151,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.TestDir, GetType().Name);
+            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.GetTestResultsPath(), GetType().Name);
             string resultsTable = Path.Combine(outDir, "results.txt");
             Directory.CreateDirectory(outDir); // In case it doesn't already exists
             File.Delete(resultsTable); // In case it does already exist
@@ -251,7 +251,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     TrainModel(modelName);
                 }
-                var comparePeakPickingDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.ShowCompareModelsDlg);
+                var comparePeakPickingDlg = ShowDialog<ComparePeakPickingDlg>(SkylineWindow.RefineMenu.ShowCompareModelsDlg);
                 foreach (var modelName in modelNames)
                 {
                     AddModel(comparePeakPickingDlg, modelName);

@@ -117,640 +117,697 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="labelQValueCutoff.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="labelQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 21</value>
-  </data>
-  <data name="labelQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>111, 20</value>
-  </data>
-  <data name="labelQValueCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="labelQValueCutoff.Text" xml:space="preserve">
-    <value>Q 值截止(&amp;Q)：</value>
-  </data>
-  <data name="&gt;&gt;labelQValueCutoff.Name" xml:space="preserve">
-    <value>labelQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;labelQValueCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelQValueCutoff.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelQValueCutoff.ZOrder" xml:space="preserve">
-    <value>19</value>
-  </data>
-  <data name="textQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 44</value>
-  </data>
-  <data name="textQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 26</value>
-  </data>
-  <data name="textQValueCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;textQValueCutoff.Name" xml:space="preserve">
-    <value>textQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;textQValueCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textQValueCutoff.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textQValueCutoff.ZOrder" xml:space="preserve">
-    <value>18</value>
-  </data>
-  <data name="textCvCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 135</value>
-  </data>
-  <data name="textCvCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 26</value>
-  </data>
-  <data name="textCvCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="&gt;&gt;textCvCutoff.Name" xml:space="preserve">
-    <value>textCvCutoff</value>
-  </data>
-  <data name="&gt;&gt;textCvCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textCvCutoff.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textCvCutoff.ZOrder" xml:space="preserve">
-    <value>16</value>
-  </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 112</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 20</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>CV 截止(&amp;C):</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>17</value>
-  </data>
-  <data name="checkShowMedian.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkShowMedian.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 55</value>
-  </data>
-  <data name="checkShowMedian.Size" type="System.Drawing.Size, System.Drawing">
-    <value>131, 24</value>
-  </data>
-  <data name="checkShowMedian.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="checkShowMedian.Text" xml:space="preserve">
-    <value>显示中位数(&amp;D)</value>
-  </data>
-  <data name="&gt;&gt;checkShowMedian.Name" xml:space="preserve">
-    <value>checkShowMedian</value>
-  </data>
-  <data name="&gt;&gt;checkShowMedian.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkShowMedian.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;checkShowMedian.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="checkShowCvCutoff.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkShowCvCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 25</value>
-  </data>
-  <data name="checkShowCvCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 24</value>
-  </data>
-  <data name="checkShowCvCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="checkShowCvCutoff.Text" xml:space="preserve">
-    <value>显示 CV 截止值(&amp;S)</value>
-  </data>
-  <data name="&gt;&gt;checkShowCvCutoff.Name" xml:space="preserve">
-    <value>checkShowCvCutoff</value>
-  </data>
-  <data name="&gt;&gt;checkShowCvCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkShowCvCutoff.Parent" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;checkShowCvCutoff.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 228</value>
-  </data>
-  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>200, 91</value>
-  </data>
-  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="groupBox1.Text" xml:space="preserve">
-    <value>标签和行(&amp;L)</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
-    <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
-    <value>14</value>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="label6.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 61</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
-  </data>
-  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>19</value>
-  </data>
-  <data name="btnCancel.Text" xml:space="preserve">
-    <value>取消</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
-    <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>483, 14</value>
-  </data>
-  <data name="btnOk.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
-  </data>
-  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>18</value>
-  </data>
-  <data name="btnOk.Text" xml:space="preserve">
-    <value>确定</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
-    <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="textMinLog10.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
-  </data>
-  <metadata name="colorDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="textMaxFrequency.Location" type="System.Drawing.Point, System.Drawing">
-    <value>279, 251</value>
-  </data>
-  <data name="textMaxFrequency.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 26</value>
-  </data>
-  <data name="textMaxFrequency.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
-  </data>
-  <data name="&gt;&gt;textMaxFrequency.Name" xml:space="preserve">
-    <value>textMaxFrequency</value>
-  </data>
-  <data name="&gt;&gt;textMaxFrequency.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaxFrequency.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textMaxFrequency.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
-  <data name="labelMaxFrequency.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelMaxFrequency.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelMaxFrequency.Location" type="System.Drawing.Point, System.Drawing">
-    <value>275, 228</value>
-  </data>
-  <data name="labelMaxFrequency.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 20</value>
-  </data>
-  <data name="labelMaxFrequency.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="labelMaxFrequency.Text" xml:space="preserve">
-    <value>最大频率(&amp;F)：</value>
-  </data>
-  <data name="&gt;&gt;labelMaxFrequency.Name" xml:space="preserve">
-    <value>labelMaxFrequency</value>
-  </data>
-  <data name="&gt;&gt;labelMaxFrequency.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelMaxFrequency.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelMaxFrequency.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="comboFontSize.Items" xml:space="preserve">
-    <value>超小</value>
-  </data>
-  <data name="comboFontSize.Items1" xml:space="preserve">
-    <value>小</value>
-  </data>
-  <data name="comboFontSize.Items2" xml:space="preserve">
-    <value>正常</value>
-  </data>
-  <data name="comboFontSize.Items3" xml:space="preserve">
-    <value>大</value>
-  </data>
-  <data name="comboFontSize.Items4" xml:space="preserve">
-    <value>超大</value>
-  </data>
-  <data name="comboFontSize.Location" type="System.Drawing.Point, System.Drawing">
-    <value>279, 45</value>
-  </data>
-  <data name="comboFontSize.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="comboFontSize.Size" type="System.Drawing.Size, System.Drawing">
-    <value>144, 28</value>
-  </data>
-  <data name="comboFontSize.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;comboFontSize.Name" xml:space="preserve">
-    <value>comboFontSize</value>
-  </data>
-  <data name="&gt;&gt;comboFontSize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboFontSize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;comboFontSize.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>275, 21</value>
-  </data>
-  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>78, 20</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>字体大小(&amp;F)：</value>
-  </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="labelCvCutoffPercent.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelCvCutoffPercent.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelCvCutoffPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>122, 138</value>
-  </data>
-  <data name="labelCvCutoffPercent.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 20</value>
-  </data>
-  <data name="labelCvCutoffPercent.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="labelCvCutoffPercent.Text" xml:space="preserve">
-    <value>%</value>
-  </data>
-  <data name="&gt;&gt;labelCvCutoffPercent.Name" xml:space="preserve">
-    <value>labelCvCutoffPercent</value>
-  </data>
-  <data name="&gt;&gt;labelCvCutoffPercent.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelCvCutoffPercent.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelCvCutoffPercent.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="textMaximumCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>279, 138</value>
-  </data>
-  <data name="textMaximumCv.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 26</value>
-  </data>
-  <data name="textMaximumCv.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="&gt;&gt;textMaximumCv.Name" xml:space="preserve">
-    <value>textMaximumCv</value>
-  </data>
-  <data name="&gt;&gt;textMaximumCv.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMaximumCv.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textMaximumCv.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>275, 115</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 20</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>最大 CV(&amp;V)：</value>
-  </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="checkBoxDecimalCvs.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="checkBoxDecimalCvs.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 167</value>
-  </data>
-  <data name="checkBoxDecimalCvs.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 24</value>
-  </data>
-  <data name="checkBoxDecimalCvs.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="checkBoxDecimalCvs.Text" xml:space="preserve">
-    <value>显示十进位 CV 值(&amp;D)</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDecimalCvs.Name" xml:space="preserve">
-    <value>checkBoxDecimalCvs</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDecimalCvs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDecimalCvs.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;checkBoxDecimalCvs.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
-  <data name="labelMaxCvPercent.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelMaxCvPercent.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelMaxCvPercent.Location" type="System.Drawing.Point, System.Drawing">
-    <value>385, 141</value>
-  </data>
-  <data name="labelMaxCvPercent.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 20</value>
-  </data>
-  <data name="labelMaxCvPercent.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="labelMaxCvPercent.Text" xml:space="preserve">
-    <value>%</value>
   </data>
   <data name="&gt;&gt;labelMaxCvPercent.Name" xml:space="preserve">
     <value>labelMaxCvPercent</value>
   </data>
-  <data name="&gt;&gt;labelMaxCvPercent.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="textMaximumCv.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
   </data>
-  <data name="&gt;&gt;labelMaxCvPercent.Parent" xml:space="preserve">
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMaxCvPercent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="&gt;&gt;textMaxFrequency.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="labelMaxCvPercent.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="textMaxFrequency.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.Name" xml:space="preserve">
+    <value>labelQValueCutoff</value>
+  </data>
+  <data name="checkBoxDecimalCvs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 109</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="&gt;&gt;textMaxFrequency.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelMaxLog10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 13</value>
+  </data>
+  <data name="&gt;&gt;comboFontSize.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>183, 75</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>最大 CV(&amp;V)：</value>
+  </data>
+  <data name="groupBox1.Text" xml:space="preserve">
+    <value>标签和行(&amp;L)</value>
+  </data>
+  <data name="textMaxFrequency.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
+    <value>354, 9</value>
+  </data>
+  <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;labelMaxCvPercent.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="labelMinLog10.AutoSize" type="System.Boolean, mscorlib">
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="comboFontSize.Items" xml:space="preserve">
+    <value>超小</value>
+  </data>
+  <data name="label4.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="&gt;&gt;textMaxLog10.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;labelCvCutoffPercent.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMaxLog10.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelMaxFrequency.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="textCvCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="comboFontSize.Location" type="System.Drawing.Point, System.Drawing">
+    <value>186, 29</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>面积 CV 图的属性</value>
+  </data>
+  <data name="checkBoxDecimalCvs.Text" xml:space="preserve">
+    <value>显示十进位 CV 值(&amp;D)</value>
+  </data>
+  <data name="comboFontSize.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textCvCutoff.Name" xml:space="preserve">
+    <value>textCvCutoff</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="textMinLog10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>295, 163</value>
+  </data>
+  <data name="textQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 29</value>
+  </data>
+  <data name="&gt;&gt;checkShowMedian.Name" xml:space="preserve">
+    <value>checkShowMedian</value>
+  </data>
+  <data name="textMaxLog10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="textMaxLog10.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.ZOrder" xml:space="preserve">
+    <value>19</value>
+  </data>
+  <data name="labelMaxCvPercent.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="labelMinLog10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>292, 148</value>
+  </data>
+  <data name="labelQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 14</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>17</value>
+  </data>
+  <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="textQValueCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="checkBoxDecimalCvs.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="&gt;&gt;textMaxFrequency.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;labelMaxFrequency.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="checkBoxDecimalCvs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>151, 17</value>
+  </data>
+  <data name="checkShowCvCutoff.Text" xml:space="preserve">
+    <value>显示 CV 截止值(&amp;S)</value>
+  </data>
+  <data name="labelMinLog10.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="btnOk.Text" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="labelMinLog10.Text" xml:space="preserve">
+    <value>最小 Log10 面积(&amp;A)：</value>
+  </data>
+  <data name="labelMaxLog10.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="comboFontSize.Items3" xml:space="preserve">
+    <value>大</value>
+  </data>
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="textMaxFrequency.Location" type="System.Drawing.Point, System.Drawing">
+    <value>186, 163</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textMaximumCv.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textMaxFrequency.Name" xml:space="preserve">
+    <value>textMaxFrequency</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMinLog10.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="labelMaxFrequency.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="labelMaxLog10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>292, 194</value>
+  </data>
+  <data name="textMinLog10.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="labelCvCutoffPercent.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="checkShowMedian.Text" xml:space="preserve">
+    <value>显示中位数(&amp;H)</value>
+  </data>
+  <data name="&gt;&gt;labelCvCutoffPercent.Name" xml:space="preserve">
+    <value>labelCvCutoffPercent</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>183, 14</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
+    <value>btnCancel</value>
+  </data>
+  <data name="textMaximumCv.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;checkShowMedian.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;labelCvCutoffPercent.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;labelMinLog10.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="labelCvCutoffPercent.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>AreaCVToolbarProperties</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="&gt;&gt;checkShowCvCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;textMinLog10.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelCvCutoffPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="textMaxLog10.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="&gt;&gt;comboFontSize.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelQValueCutoff.Text" xml:space="preserve">
+    <value>Q 值截止(&amp;Q)：</value>
+  </data>
+  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="comboFontSize.Items1" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="&gt;&gt;labelMaxFrequency.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="textMaxFrequency.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textCvCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="checkShowMedian.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelCvCutoffPercent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>81, 90</value>
+  </data>
+  <data name="&gt;&gt;textMaximumCv.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;checkShowCvCutoff.Name" xml:space="preserve">
+    <value>checkShowCvCutoff</value>
+  </data>
+  <data name="labelQValueCutoff.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelMinLog10.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="labelMinLog10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>438, 228</value>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>54, 13</value>
   </data>
-  <data name="labelMinLog10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>163, 20</value>
+  <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
+    <value>btnOk</value>
   </data>
-  <data name="labelMinLog10.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="labelMinLog10.Text" xml:space="preserve">
-    <value>最小 Log10 面积(&amp;A)：</value>
-  </data>
-  <data name="&gt;&gt;labelMinLog10.Name" xml:space="preserve">
-    <value>labelMinLog10</value>
-  </data>
-  <data name="&gt;&gt;labelMinLog10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelMinLog10.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelMinLog10.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="textMinLog10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>442, 251</value>
-  </data>
-  <data name="textMinLog10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 26</value>
-  </data>
-  <data name="textMinLog10.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="&gt;&gt;textMinLog10.Name" xml:space="preserve">
-    <value>textMinLog10</value>
-  </data>
-  <data name="&gt;&gt;textMinLog10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMinLog10.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textMinLog10.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="labelMaxLog10.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelMaxLog10.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelMaxLog10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>438, 299</value>
-  </data>
-  <data name="labelMaxLog10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 20</value>
-  </data>
-  <data name="labelMaxLog10.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="labelMaxLog10.Text" xml:space="preserve">
-    <value>最大 Log10 面积(&amp;E)：</value>
-  </data>
-  <data name="&gt;&gt;labelMaxLog10.Name" xml:space="preserve">
-    <value>labelMaxLog10</value>
-  </data>
-  <data name="&gt;&gt;labelMaxLog10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelMaxLog10.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;labelMaxLog10.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="textMaxLog10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>442, 322</value>
-  </data>
-  <data name="textMaxLog10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 26</value>
-  </data>
-  <data name="textMaxLog10.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="&gt;&gt;textMaxLog10.Name" xml:space="preserve">
-    <value>textMaxLog10</value>
+  <data name="&gt;&gt;textMaximumCv.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="&gt;&gt;textMaxLog10.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textMaxLog10.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;textMaxLog10.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
-  </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>608, 369</value>
-  </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
-  <data name="$this.Text" xml:space="preserve">
-    <value>面积 CV 图属性</value>
+  <data name="&gt;&gt;labelMaxLog10.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelMaxLog10.Text" xml:space="preserve">
+    <value>最大 Log10 面积(&amp;E)：</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="labelMaxCvPercent.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="checkShowMedian.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 17</value>
+  </data>
+  <data name="labelCvCutoffPercent.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecimalCvs.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="checkShowMedian.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="labelMaxFrequency.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="&gt;&gt;colorDialog1.Name" xml:space="preserve">
     <value>colorDialog1</value>
   </data>
+  <data name="checkShowMedian.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 36</value>
+  </data>
+  <data name="&gt;&gt;labelMaxFrequency.Name" xml:space="preserve">
+    <value>labelMaxFrequency</value>
+  </data>
+  <data name="labelMaxFrequency.Location" type="System.Drawing.Point, System.Drawing">
+    <value>183, 148</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="labelCvCutoffPercent.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelMaxLog10.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;label4.Name" xml:space="preserve">
+    <value>label4</value>
+  </data>
+  <data name="&gt;&gt;textMinLog10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelMaxFrequency.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="&gt;&gt;labelQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="textCvCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="checkShowCvCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="checkShowCvCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="checkBoxDecimalCvs.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="&gt;&gt;textCvCutoff.ZOrder" xml:space="preserve">
+    <value>16</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecimalCvs.Name" xml:space="preserve">
+    <value>checkBoxDecimalCvs</value>
+  </data>
+  <data name="&gt;&gt;checkShowMedian.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="groupBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="&gt;&gt;textCvCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="label6.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="btnCancel.Text" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="labelMaxFrequency.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="textMaximumCv.Location" type="System.Drawing.Point, System.Drawing">
+    <value>186, 90</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.ZOrder" xml:space="preserve">
+    <value>18</value>
+  </data>
+  <data name="labelMaxCvPercent.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="groupBox1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>CV 截止(&amp;C)：</value>
+  </data>
+  <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="labelQValueCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="&gt;&gt;checkShowCvCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="comboFontSize.Items2" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="labelMaxCvPercent.Location" type="System.Drawing.Point, System.Drawing">
+    <value>257, 92</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 73</value>
+  </data>
+  <data name="&gt;&gt;textMaximumCv.Name" xml:space="preserve">
+    <value>textMaximumCv</value>
+  </data>
+  <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="&gt;&gt;colorDialog1.Type" xml:space="preserve">
     <value>System.Windows.Forms.ColorDialog, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>AreaCVToolbarProperties</value>
+  <data name="&gt;&gt;labelMinLog10.Name" xml:space="preserve">
+    <value>labelMinLog10</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;textMaxLog10.Name" xml:space="preserve">
+    <value>textMaxLog10</value>
   </data>
+  <data name="&gt;&gt;labelMaxLog10.Name" xml:space="preserve">
+    <value>labelMaxLog10</value>
+  </data>
+  <data name="&gt;&gt;textCvCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;labelMinLog10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMinLog10.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="textMaxLog10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>295, 209</value>
+  </data>
+  <data name="&gt;&gt;checkShowCvCutoff.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="comboFontSize.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 21</value>
+  </data>
+  <data name="textCvCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 88</value>
+  </data>
+  <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecimalCvs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelMaxLog10.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="checkShowCvCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 16</value>
+  </data>
+  <data name="labelMaxCvPercent.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="comboFontSize.Items4" xml:space="preserve">
+    <value>超大</value>
+  </data>
+  <data name="labelMaxFrequency.Text" xml:space="preserve">
+    <value>最大频率(&amp;F)：</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>71, 13</value>
+  </data>
+  <data name="&gt;&gt;labelMaxCvPercent.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="checkShowMedian.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Name" xml:space="preserve">
+    <value>textQValueCutoff</value>
+  </data>
+  <data name="labelMaxLog10.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="checkBoxDecimalCvs.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="textMinLog10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="labelMinLog10.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelMinLog10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 13</value>
+  </data>
+  <data name="&gt;&gt;checkBoxDecimalCvs.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>437, 240</value>
+  </data>
+  <data name="&gt;&gt;checkShowMedian.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>77, 13</value>
+  </data>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>151, 59</value>
+  </data>
+  <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;labelMaxCvPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelMaxCvPercent.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>354, 40</value>
+  </data>
+  <data name="labelMinLog10.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="&gt;&gt;labelMaxLog10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQValueCutoff.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="textMaximumCv.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>68, 20</value>
+  </data>
+  <data name="checkShowCvCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="labelCvCutoffPercent.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="checkShowCvCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 17</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 13</value>
+  </data>
+  <data name="&gt;&gt;comboFontSize.Name" xml:space="preserve">
+    <value>comboFontSize</value>
+  </data>
+  <data name="textQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 148</value>
+  </data>
+  <data name="&gt;&gt;labelMaxLog10.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="labelMaxFrequency.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 13</value>
+  </data>
+  <data name="&gt;&gt;textMinLog10.Name" xml:space="preserve">
+    <value>textMinLog10</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>字体大小(&amp;O)：</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="labelCvCutoffPercent.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colorDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
 </root>

@@ -183,24 +183,19 @@ namespace analysis {
         return newParams;
     }
     
-    namespace {
-
-    /// Key-value pairs for transforming Optimization enums to strings and vice-versa
-    const std::map<SpectrumList_Demux::Params::Optimization, std::string> kOptimizationStrings = {
-        { SpectrumList_Demux::Params::Optimization::NONE, "none" },
-        { SpectrumList_Demux::Params::Optimization::OVERLAP_ONLY, "overlap_only" }
-    };
-
-    } // namespace
-
     std::string SpectrumList_Demux::Params::optimizationToString(SpectrumList_Demux::Params::Optimization opt)
     {
-        return enumToString<SpectrumList_Demux::Params::Optimization>(opt, kOptimizationStrings);
+        string result = opt.str();
+        bal::to_lower(result);
+        return result;
     }
 
     SpectrumList_Demux::Params::Optimization SpectrumList_Demux::Params::stringToOptimization(const std::string& s)
     {
-        return stringToEnum<SpectrumList_Demux::Params::Optimization>(s, kOptimizationStrings);
+        auto result = SpectrumList_Demux::Params::Optimization::get_by_name_case_insensitive(s.c_str());
+        if (!result)
+            throw invalid_argument("no optimization method corresponding to '" + s + "'");
+        return result.get();
     }
 
     SpectrumList_Demux::Impl::IndexMapper::IndexMapper(SpectrumListPtr originalIn, const IPrecursorMaskCodec& pmc)
@@ -292,7 +287,7 @@ namespace analysis {
         debugWriter_(boost::make_shared<DemuxDebugWriter>("DemuxDebugOutput.log"))
 #endif
     {
-        switch (params_.optimization)
+        switch (params_.optimization.index())
         {
         case Params::Optimization::NONE:
             pmc_ = boost::make_shared<PrecursorMaskCodec>(inner, GeneratePrecursorMaskCodecParams(params_));

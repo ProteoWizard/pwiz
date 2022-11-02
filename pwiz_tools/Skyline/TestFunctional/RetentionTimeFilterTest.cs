@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
     {
         private readonly string extension = ExtensionTestContext.ExtMz5;
         
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestRetentionTimeFilter()
         {
             TestFilesZip = @"TestFunctional\RetentionTimeFilterTest.zip";
@@ -138,7 +138,6 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var tuple in LoadAllChromatograms(document, chromatogramSet))
                 {
                     var prediction = new PeptidePrediction(null, true, 1);
-                    double windowRtIgnored;
 
                     var schedulingPeptide =
                         docForScheduling.Molecules.First(pep => ReferenceEquals(pep.Peptide, tuple.Item1.Peptide));
@@ -146,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                     double? predictedRt = prediction.PredictRetentionTime(docForScheduling, 
                         schedulingPeptide, 
                         schedulingTransitionGroup, 
-                        null, ExportSchedulingAlgorithm.Average, true, out windowRtIgnored);
+                        null, ExportSchedulingAlgorithm.Average, true, out _);
                     if (!predictedRt.HasValue)
                     {
                         countNull++;
@@ -249,7 +248,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     ChromatogramGroupInfo[] infos;
                     document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
-                        (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, true, out infos);
+                        (float) TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, out infos);
                     yield return new Tuple<PeptideDocNode, TransitionGroupDocNode, ChromatogramGroupInfo[]>(peptide, transitionGroup, infos);
                 }
             }

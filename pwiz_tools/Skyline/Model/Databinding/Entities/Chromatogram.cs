@@ -115,7 +115,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
                     return new Data(interpolatedTimeIntensities, GetLazyMsDataFileScanIds());
                 }
-                return new Data(timeIntensitiesGroup.TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex], GetLazyMsDataFileScanIds());
+                var chromInfo = _chromatogramInfo.Value;
+                if (null == chromInfo)
+                {
+                    return null;
+                }
+                return new Data(timeIntensitiesGroup.TransitionTimeIntensities[chromInfo.TransitionIndex], GetLazyMsDataFileScanIds());
             }
         }
 
@@ -129,12 +134,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             float tolerance = (float) Transition.DataSchema.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var chromatogramInfos = chromatogramGroupInfo.GetAllTransitionInfo(Transition.DocNode, tolerance,
                 ChromatogramGroup.PrecursorResult.GetResultFile().Replicate.ChromatogramSet.OptimizationFunction, TransformChrom.raw);
-            int index = chromatogramInfos.Length / 2 + ChromatogramGroup.PrecursorResult.OptStep;
-            if (index < 0 || index >= chromatogramInfos.Length)
-            {
-                return null;
-            }
-            return chromatogramInfos[index];
+            return chromatogramInfos.GetChromatogramForStep(0);
         }
 
         private Lazy<MsDataFileScanIds> GetLazyMsDataFileScanIds()

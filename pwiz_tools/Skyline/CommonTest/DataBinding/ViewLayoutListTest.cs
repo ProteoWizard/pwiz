@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.SkylineTestUtil;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Clustering;
 
 namespace CommonTest.DataBinding
 {
@@ -59,7 +60,12 @@ namespace CommonTest.DataBinding
             ).ChangeColumnFormats(new []
             {
                 Tuple.Create(new ColumnId("ColumnId1"), ColumnFormat.EMPTY.ChangeFormat("R").ChangeWidth(20))
-            });
+            }).ChangeClusterSpec(new ClusteringSpec(new []
+            {
+                new ClusteringSpec.ValueSpec(new ClusteringSpec.ColumnRef(new ColumnId("column_id_1")), "role1"), 
+                new ClusteringSpec.ValueSpec(new ClusteringSpec.ColumnRef(PropertyPath.Root.Property("property1")), "role2"), 
+            }).ChangeDistanceMetric("distance_metric"));
+               
             var viewLayoutList = new ViewLayoutList("Test").ChangeLayouts(new []{viewLayout})
                 .ChangeDefaultLayoutName("TestName");
             var roundTrip = RoundTripToXml(viewLayoutList);

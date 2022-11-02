@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ReportSpecList>
+  <revision index="1" />
+  <report name="UniqueReport">
+    <table name="T1">DbProtein</table>
+    <select>
+      <column name="T1">Description</column>
+      <column name="T1">Sequence</column>
+      <column name="T1">Note</column>
+    </select>
+  </report>
+</ReportSpecList>

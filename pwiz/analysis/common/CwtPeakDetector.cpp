@@ -160,6 +160,8 @@ void CwtPeakDetector::getScales( const vector <double> & mzData, const vector <d
             Xspacing[i] = mzData[i] - mzData[i-1];
             if (Xspacing[i] <= 0)
                 throw runtime_error("[CwtPeakDetector::getScales] m/z profile data are unsorted or contain duplicates");
+            if (Xspacing[i] > 10)
+                throw runtime_error("[CwtPeakDetector::getScales] m/z profile data seems to lack flanking zeros between peak profiles");
 
             lastXspacing = Xspacing[i];
         }

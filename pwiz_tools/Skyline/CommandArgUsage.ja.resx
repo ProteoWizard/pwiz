@@ -246,6 +246,9 @@
   <data name="_import_optimizing" xml:space="preserve">
     <value>インポート中のデータは、最適な衝突エネルギーまたはデクラスタリングポテンシャルを検出するための、追加のトランジションが含まれていることを示します。</value>
   </data>
+  <data name="_import_peak_boundaries" xml:space="preserve">
+    <value>カンマやタブで区切られたファイルのピーク境界を読み取る</value>	
+  </data>
   <data name="_import_process_count" xml:space="preserve">
     <value>多数のサブプロセスが単一ファイルのインポートで実行され、その後、各単一ファイルの結果がメインプロセスと結合されます。これにより、24コアNUMAサーバーでは10倍、i7プロセッサでも正しい条件の下では3～4倍に性能がアップされる可能性があります。お使いのシステムで必ずテストしてください。</value>
   </data>
@@ -257,6 +260,15 @@
   </data>
   <data name="_import_search_cutoff_score" xml:space="preserve">
     <value>ペプチド検索結果ファイルからスペクトルライブラリを構築する際に、使用されるカットオフスコア（0～1）を定義します。ここで、1は最も高い信頼性一致で、0はすべてを含みます。[デフォルトは0.95]</value>
+  </data>
+  <data name="_import_search_irts" xml:space="preserve">
+    <value>スペクトルライブラリを構築するときに使用するiRT標準の名前。</value>
+  </data>
+  <data name="_import_search_num_cirts" xml:space="preserve">
+    <value>CiRTペプチドをiRT標準としてスペクトルライブラリを構築する場合は、iRT標準として使用するCiRTペプチド数を指定します。</value>
+  </data>
+  <data name="_import_search_recalibrate_irts" xml:space="preserve">
+    <value>iRT標準を使ってスペクトルライブラリを構築する場合は、追加されるペプチドに対するiRT標準値を再キャリブレーションします。</value>
   </data>
   <data name="_import_search_file" xml:space="preserve">
     <value>開いているドキュメントにペプチド検索結果ファイルをインポートし、ドキュメント特有のスペクトルライブラリを構築します。これは複数ファイルに複数回、指定されている場合があります。ターゲットとして一致したペプチドを追加するには、–import-fasta引数を使用します。</value>
@@ -283,7 +295,7 @@
     <value>アッセイライブラリのインポート中に作成されるiRTカルキュレータの名前です。（オプション）デフォルト名はドキュメントのベース名です。</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>インポート済みのアッセイライブラリで使用する、既存のiRTカルキュレータ（.irtdbファイル）へのパスです。あるいは、–irt-standards-group-nameまたは–irt-standards-fileが使用される場合には、作成済みの.irtdbファイルの出力パスです。（オプション）iRTカルキュレータのデフォルトパスはpath/to/document.irtdbです。</value>
+    <value>インポート済みのアッセイライブラリで使用する、既存のiRTカルキュレータ（.irtdbファイル）へのパスです。あるいは、-–irt-standards-group-nameまたは-–irt-standards-fileが使用される場合には、作成済みの.irtdbファイルの出力パスです。（オプション）iRTカルキュレータのデフォルトパスはpath/to/document.irtdbです。</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>インポート済みのアッセイライブラリに適用されるiRT標準を含む別個のアッセイライブラリへのパスです。（オプション）</value>
@@ -803,5 +815,14 @@ Waters</value>
   </data>
   <data name="_refine_gc_p_value_cutoff" xml:space="preserve">
     <value>グループ比較調整されたp値が指定されたカットオフよりも低いターゲットのみを維持します。（グループ比較最適化の場合は必須）</value>
+  </data>
+  <data name="CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size" xml:space="preserve">
+    <value>結果ファイルサイズを最小にする</value>
+  </data>
+  <data name="_chromatograms_discard_unused" xml:space="preserve">
+    <value>使用しないクロマトグラムをドキュメントからすべて破棄します。</value>
+  </data>
+  <data name="_chromatograms_limit_noise" xml:space="preserve">
+    <value>クロマトグラムの長さを±分などクロマトグラムピーク周囲の長さに制限します。</value>
   </data>
 </root>

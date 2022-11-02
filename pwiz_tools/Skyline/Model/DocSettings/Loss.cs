@@ -105,6 +105,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public string FormulaNoNull
+        {
+            get { return _formula ?? Resources.Loss_FormulaUnknown; }
+        }
+
         [Track]
         public double MonoisotopicMass { get; private set; }
         [Track]
@@ -358,7 +363,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.Mass == Mass;
+            return other.Mass == Mass &&
+                   other.TotalCharge == TotalCharge;
         }
 
         public override bool Equals(object obj)
@@ -371,7 +377,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override int GetHashCode()
         {
-            return Mass.GetHashCode();
+            unchecked
+            {
+                int result = Mass.GetHashCode();
+                result = (result * 397) ^ TotalCharge.GetHashCode();
+                return result;
+            }
         }
 
         #endregion

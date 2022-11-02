@@ -210,7 +210,7 @@ namespace pwiz.Skyline.SettingsUI
                             dictNewNodePeps.Add(nodePepMatched.SequenceKey,
                                 new PeptideMatch(nodePepMatched, matchedProteins,
                                     pepInfo.LibInfo,
-                                    MatchesFilter(target, charge)));
+                                    MatchesFilter(nodePepMatched, charge)));
                         }
                         else
                         {
@@ -246,15 +246,21 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public bool MatchesFilter(Target target, Adduct charge)
+        public bool MatchesFilter(PeptideDocNode nodePep, Adduct charge)
         {
-            if (target.IsProteomic)
+            if (nodePep.IsProteomic)
             {
                 if (!Settings.TransitionSettings.Filter.PeptidePrecursorCharges.Contains(charge))
                     return false;
-                int missedCleavages = Settings.PeptideSettings.Enzyme.CountCleavagePoints(target.Sequence);
+                int missedCleavages = Settings.PeptideSettings.Enzyme.CountCleavagePoints(nodePep.Peptide.Sequence);
                 if (missedCleavages > Settings.PeptideSettings.DigestSettings.MaxMissedCleavages)
                     return false;
+                if (Settings.PeptideSettings.Libraries.Pick == PeptidePick.filter ||
+                    Settings.PeptideSettings.Libraries.Pick == PeptidePick.both)
+                {
+                    if (!Settings.PeptideSettings.Filter.Accept(Settings, nodePep.Peptide, nodePep.ExplicitMods, out _))
+                        return false;
+                }
                 return true;
             }
             return Settings.TransitionSettings.Filter.SmallMoleculePrecursorAdducts.Contains(charge);
@@ -289,7 +295,7 @@ namespace pwiz.Skyline.SettingsUI
             PeptideMatches = new Dictionary<PeptideSequenceModKey, PeptideMatch>
                                  {{nodePep.SequenceKey, new PeptideMatch(nodePep, matchedProteins, 
                                      pepInfo.LibInfo,
-                                     MatchesFilter(target, pepInfo.Key.Adduct))}};
+                                     MatchesFilter(nodePep, pepInfo.Key.Adduct))}};
             return nodePep;
         }
 

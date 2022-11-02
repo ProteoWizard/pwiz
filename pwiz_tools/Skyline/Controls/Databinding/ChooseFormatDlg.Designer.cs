@@ -35,7 +35,6 @@
             this.tbxCustomFormat = new System.Windows.Forms.TextBox();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -96,7 +95,6 @@
             this.Name = "ChooseFormatDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

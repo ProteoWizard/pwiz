@@ -347,4 +347,19 @@
   <data name="VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Star" xml:space="preserve">
     <value>星号</value>
   </data>
+  <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
+  <data name="NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards" xml:space="preserve">
+    <value>{0} 相对于总体标准品比率</value>
+    <comment>Example: Peak Area Ratio to Global Standards</comment>
+  </data>
+  <data name="NormalizationMethod_TIC_TIC_Normalized__0_" xml:space="preserve">
+    <value>TIC 归一化 {0}</value>
+    <comment>Example: TIC Normalized Peak Area</comment>
+  </data>
+  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
+	  <value>中位数归一化 {0}</value>
+      <comment>Example: Median Normalized Peak Area</comment>
+  </data>
 </root>

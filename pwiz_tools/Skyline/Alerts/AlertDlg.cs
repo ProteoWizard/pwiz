@@ -56,9 +56,13 @@ namespace pwiz.Skyline.Alerts
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
-        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message)
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
         {
-            AddMessageBoxButtons(messageBoxButtons);
+        }
+
+        public AlertDlg(string message, MessageBoxButtons messageBoxButtons, DialogResult defaultButton) : this(message)
+        {
+            AddMessageBoxButtons(messageBoxButtons, defaultButton);
         }
 
         public string Message
@@ -141,8 +145,7 @@ namespace pwiz.Skyline.Alerts
 
         public void CopyMessage()
         {
-            Clipboard.Clear();
-            Clipboard.SetText(GetTitleAndMessageDetail());
+            ClipboardHelper.SetSystemClipboardText(this, GetTitleAndMessageDetail());
         }
 
         public override string DetailedMessage
@@ -181,11 +184,19 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons) 
+        private void AddMessageBoxButtons(MessageBoxButtons messageBoxButtons, DialogResult defaultDialogResult)
         {
+            var buttons = new Dictionary<DialogResult, Button>();
             foreach (var dialogResult in GetDialogResults(messageBoxButtons).Reverse())
             {
-                AddButton(dialogResult);
+                buttons.Add(dialogResult, AddButton(dialogResult));
+            }
+
+            // Optionally define the button action when user hits Enter in a text edit etc.
+            // Default is the one most recently created by AddButton()
+            if (buttons.TryGetValue(defaultDialogResult, out var acceptButton))
+            {
+                AcceptButton = acceptButton;
             }
         }
 

@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 
 
 namespace pwiz.SkylineTestUtil
@@ -37,10 +38,47 @@ namespace pwiz.SkylineTestUtil
     {
         protected static string RunCommand(params string[] inputArgs)
         {
+            return RunCommand(null, inputArgs);
+        }
+
+        protected static string RunCommand(bool? expectSuccess, params string[] inputArgs)
+        {
             var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            CommandLineRunner.RunCommand(inputArgs, consoleOutput);
-            return consoleBuffer.ToString();
+            var consoleWriter = new CommandStatusWriter(new StringWriter(consoleBuffer));
+
+            var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleWriter, true);
+
+            var consoleOutput = consoleBuffer.ToString();
+            bool errorReported = consoleWriter.IsErrorReported;
+
+            ValidateRunExitStatus(expectSuccess, exitStatus, errorReported, consoleOutput);
+
+            return consoleOutput;
+        }
+
+        private static void ValidateRunExitStatus(bool? expectSuccess, int exitStatus, bool errorReported, string consoleOutput)
+        {
+            string message = null;
+            // Make sure exist status and text error reporting match
+            if (exitStatus == Program.EXIT_CODE_SUCCESS && errorReported ||
+                exitStatus != Program.EXIT_CODE_SUCCESS && !errorReported)
+            {
+                message = string.Format("{0} reported but exit status was {1}.",
+                    errorReported ? "Error" : "No error", exitStatus);
+            }
+            else if (expectSuccess.HasValue)
+            {
+                // Make sure expected exit status matches actual
+                if (expectSuccess.Value && exitStatus != Program.EXIT_CODE_SUCCESS)
+                    message = string.Format("Expecting successful command-line execution but got {0} exit code.", exitStatus);
+                else if (!expectSuccess.Value && exitStatus == Program.EXIT_CODE_SUCCESS)
+                    message = "Expecting command-line error but execution was successful.";
+            }
+
+            if (message != null)
+            {
+                Assert.Fail(TextUtil.LineSeparate(message, "Output: ", consoleOutput));
+            }
         }
 
         public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,
@@ -70,6 +108,13 @@ namespace pwiz.SkylineTestUtil
             docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
             var docSmallMol =
                 refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
+            if (docSmallMol.MeasuredResults != null)
+            {
+                foreach (var stream in docSmallMol.MeasuredResults.ReadStreams)
+                {
+                    stream.CloseStream();
+                }
+            }
             var listChromatograms = new List<ChromatogramSet>();
             if (dataPaths != null)
             {

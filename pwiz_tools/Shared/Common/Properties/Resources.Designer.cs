@@ -19,7 +19,7 @@ namespace pwiz.Common.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -361,6 +361,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Boolean.
+        /// </summary>
+        internal static string BooleanTransform_BooleanTransform_Boolean {
+            get {
+                return ResourceManager.GetString("BooleanTransform_BooleanTransform_Boolean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Name cannot be blank.
         /// </summary>
         internal static string ChooseViewsControl_listView1_AfterLabelEdit_Name_cannot_be_blank {
@@ -385,6 +394,87 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("close", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chebyshev distance (L-inf norm).
+        /// </summary>
+        internal static string ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_ {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Euclidean distance (L2 norm).
+        /// </summary>
+        internal static string ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_ {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to City block distance (L-1 norm).
+        /// </summary>
+        internal static string ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_ {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pearson correlation.
+        /// </summary>
+        internal static string ClusterMetricType_PEARSON_Pearson_correlation {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_PEARSON_Pearson_correlation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Column Header.
+        /// </summary>
+        internal static string ClusterRole_COLUMNHEADER_Column_Header {
+            get {
+                return ResourceManager.GetString("ClusterRole_COLUMNHEADER_Column_Header", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignored.
+        /// </summary>
+        internal static string ClusterRole_IGNORED_Ignored {
+            get {
+                return ResourceManager.GetString("ClusterRole_IGNORED_Ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log10.
+        /// </summary>
+        internal static string ClusterRole_LOGARITHM_Log10 {
+            get {
+                return ResourceManager.GetString("ClusterRole_LOGARITHM_Log10", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Value.
+        /// </summary>
+        internal static string ClusterRole_RAW_Raw_Value {
+            get {
+                return ResourceManager.GetString("ClusterRole_RAW_Raw_Value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Row Header.
+        /// </summary>
+        internal static string ClusterRole_ROWHEADER_Row_Header {
+            get {
+                return ResourceManager.GetString("ClusterRole_ROWHEADER_Row_Header", resourceCulture);
             }
         }
         
@@ -568,6 +658,16 @@ namespace pwiz.Common.Properties {
         internal static System.Drawing.Bitmap down_pro32 {
             get {
                 object obj = ResourceManager.GetObject("down_pro32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap DropImageNoBackground {
+            get {
+                object obj = ResourceManager.GetObject("DropImageNoBackground", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -1090,24 +1190,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} of {1}.
-        /// </summary>
-        internal static string RecordNavBar_UpdateNow__0__of__1_ {
-            get {
-                return ResourceManager.GetString("RecordNavBar_UpdateNow__0__of__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to (Filtered from {0}).
-        /// </summary>
-        internal static string RecordNavBar_UpdateNow__Filtered_from__0__ {
-            get {
-                return ResourceManager.GetString("RecordNavBar_UpdateNow__Filtered_from__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap restore {
@@ -1271,6 +1353,15 @@ namespace pwiz.Common.Properties {
         internal static string ViewGroup_BUILT_IN_Built_In_Views {
             get {
                 return ResourceManager.GetString("ViewGroup_BUILT_IN_Built_In_Views", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z-Score.
+        /// </summary>
+        internal static string ZScore_ZScore_Z_Score {
+            get {
+                return ResourceManager.GetString("ZScore_ZScore_Z_Score", resourceCulture);
             }
         }
     }

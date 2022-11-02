@@ -25,7 +25,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
-    public class CrosslinkSequenceParser
+    public static class CrosslinkSequenceParser
     {
         public static CrosslinkLibraryKey TryParseCrosslinkLibraryKey(string str, int charge)
         {
@@ -49,7 +49,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 return false;
             }
-            return FastaSequence.StripModifications(str).IndexOf('-') >= 0;
+
+            return str.IndexOf(@"-[", StringComparison.Ordinal) >= 0 || str.EndsWith(@"-", StringComparison.Ordinal);
         }
 
         public static CrosslinkLibraryKey ParseCrosslinkLibraryKey(string str, int charge)

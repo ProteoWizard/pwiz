@@ -22,7 +22,6 @@ using System.Drawing;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -96,6 +95,10 @@ namespace pwiz.Skyline.Model.Results
         public abstract bool IsSingleMzMatch { get; }
 
         public virtual bool HasMidasSpectra { get { return false; } }
+
+        public virtual bool HasSonarSpectra { get { return false; } }
+
+        public virtual bool IsSrm { get { return FileInfo.IsSrm; } }
 
         // Used for offering hints to user when document transition polarities don't agree with the raw data
         public abstract bool SourceHasPositivePolarityData { get; }
@@ -196,7 +199,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            if (times.Length == 0)
+            if (times.Length <= 1)
             {
                 return false;
             }
@@ -212,8 +215,9 @@ namespace pwiz.Skyline.Model.Results
 
         private MsDataFileImpl _dataFile;
         private GlobalChromatogramExtractor _globalChromatogramExtractor;
-        
+
         private readonly bool _hasMidasSpectra;
+        private readonly bool _hasSonarSpectra;
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
         private readonly eIonMobilityUnits _ionMobilityUnits;
@@ -222,18 +226,6 @@ namespace pwiz.Skyline.Model.Results
         /// The number of chromatograms read so far.
         /// </summary>
         private int _readChromatograms;
-
-        /// <summary>
-        /// Records the time at which chromatogram loading began to allow prediction
-        /// of how long the file load will take.
-        /// </summary>
-        private DateTime _readStartTime;
-
-        /// <summary>
-        /// If the predicted time to load this file ever exceeds this threshold,
-        /// a warning is shown.
-        /// </summary>
-        private readonly double _readMaxMinutes;
 
         public ChromatogramDataProvider(MsDataFileImpl dataFile,
                                         ChromFileInfo fileInfo,
@@ -245,11 +237,6 @@ namespace pwiz.Skyline.Model.Results
         {
             _dataFile = dataFile;
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
-
-            if (_dataFile.IsThermoFile)
-            {
-                _readMaxMinutes = 4;
-            }
 
             int len = dataFile.ChromatogramCount;
             _chromIndices = new int[len];
@@ -309,6 +296,8 @@ namespace pwiz.Skyline.Model.Results
 
             // CONSIDER(kaipot): Some way to support mzML files converted from MIDAS wiff files
             _hasMidasSpectra = (dataFile.IsABFile) && SpectraChromDataProvider.HasSpectrumData(dataFile);
+
+            _hasSonarSpectra = dataFile.IsWatersSonarData();
 
             _ionMobilityUnits = dataFile.IonMobilityUnits;
 
@@ -392,12 +381,6 @@ namespace pwiz.Skyline.Model.Results
 
         public override bool GetChromatogram(int id, Target modifiedSequence, Color color, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
-            // No mass errors in SRM
-            if (_readChromatograms == 0)
-            {
-                _readStartTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
-            }
-
             float[] times, intensities;
             if (!_globalChromatogramExtractor.GetChromatogram(id, out times, out intensities))
             {
@@ -409,18 +392,6 @@ namespace pwiz.Skyline.Model.Results
             // Assume that each chromatogram will be read once, though this may
             // not always be completely true.
             _readChromatograms++;
-
-            if (!System.Diagnostics.Debugger.IsAttached)
-            {
-                double predictedMinutes = ExpectedReadDurationMinutes;
-                if (_readMaxMinutes > 0 && predictedMinutes > _readMaxMinutes)
-                {
-                    // TODO: This warning isn't checked in the command line version of Skyline.  Maybe we should do that.
-                    if (Status is ChromatogramLoadingStatus)
-                        Status =
-                            ((ChromatogramLoadingStatus)Status).ChangeWarningMessage(Resources.ChromatogramDataProvider_GetChromatogram_This_import_appears_to_be_taking_longer_than_expected__If_importing_from_a_network_drive__consider_canceling_this_import__copying_to_local_disk_and_retrying_);
-                }
-            }
 
             if (_readChromatograms < _chromIds.Count)
                 SetPercentComplete(50 + _readChromatograms * 50 / _chromIds.Count);
@@ -438,11 +409,6 @@ namespace pwiz.Skyline.Model.Results
                     times,
                     intensities);
             return true;
-        }
-
-        private double ExpectedReadDurationMinutes
-        {
-            get { return DateTime.UtcNow.Subtract(_readStartTime).TotalMinutes * _chromIds.Count / _readChromatograms; }
         }
 
         public override double? MaxIntensity
@@ -465,9 +431,19 @@ namespace pwiz.Skyline.Model.Results
             get { return false; }
         }
 
+        public override bool IsSrm
+        {
+            get { return true; }
+        }
+
         public override bool HasMidasSpectra
         {
             get { return _hasMidasSpectra; }
+        }
+
+        public override bool HasSonarSpectra
+        {
+            get { return _hasSonarSpectra; }
         }
 
         public override bool SourceHasPositivePolarityData

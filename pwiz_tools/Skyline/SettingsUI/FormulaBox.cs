@@ -24,10 +24,12 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -57,8 +59,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="labelMonoText">Label text for the monoisotopic mass or m/z textedit control</param>
         /// <param name="adduct">If non-null, treat the average and monoisotopic textedits as describing m/z instead of mass</param>
         /// <param name="mode">Controls editing of the formula and/or adduct edit</param>
-        /// <param name="suggestOnlyAdductsWithMass">If presenting an adduct dropdown menu, do we include things like "[M+]"?</param>
-        public FormulaBox(bool isProteomic, string labelFormulaText, string labelAverageText, string labelMonoText, Adduct adduct, EditMode mode = EditMode.formula_only, bool suggestOnlyAdductsWithMass = true)
+        public FormulaBox(bool isProteomic, string labelFormulaText, string labelAverageText, string labelMonoText, Adduct adduct, EditMode mode = EditMode.formula_only)
         {
             InitializeComponent();
             if (isProteomic)
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 case EditMode.adduct_only:
                 case EditMode.formula_and_adduct:
-                    TransitionSettingsUI.AppendAdductMenus(contextFormula, suggestOnlyAdductsWithMass, adductStripMenuItem_Click);
+                    TransitionSettingsUI.AppendAdductMenus(contextFormula, adductStripMenuItem_Click);
                     break;
             }
 
@@ -167,7 +168,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (newTextFormulaText != null && textFormula.Text != newTextFormulaText)
                 {
-                    textFormula.Text = newTextFormulaText;
+                    SetFormulaText(newTextFormulaText);
                 }
                 else
                 {
@@ -242,7 +243,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     if (!Equals(textFormula.Text, DisplayFormula))
                     {
-                        textFormula.Text = DisplayFormula;
+                        SetFormulaText(DisplayFormula);
                     }
                 }
             }
@@ -377,6 +378,7 @@ namespace pwiz.Skyline.SettingsUI
             if (mi != null)
             {
                 var adduct =  mi.Text;
+                var formulaText = textFormula.Text;
                 if (!string.IsNullOrEmpty(textFormula.Text))
                 {
                     // Replacing an existing adduct declaration?
@@ -384,10 +386,11 @@ namespace pwiz.Skyline.SettingsUI
                     var end = textFormula.Text.IndexOf(@"]", StringComparison.Ordinal);
                     if (start >= 0 && end > start)
                     {
-                        textFormula.Text = textFormula.Text.Substring(0, start);
+                        formulaText = textFormula.Text.Substring(0, start);
                     }
                 }
-                textFormula.Text += adduct;
+                formulaText += adduct;
+                SetFormulaText(formulaText);
             }
         }
 
@@ -417,6 +420,19 @@ namespace pwiz.Skyline.SettingsUI
             textFormula.Focus();
             textFormula.SelectionLength = 0;
             textFormula.SelectionStart = insertAt + symbol.Length;
+        }
+
+        private void SetFormulaText(string text)
+        {
+            if (Equals(text, textFormula.Text))
+            {
+                return;
+            }
+            // Preserve cursor location
+            var insertAt = textFormula.SelectionStart;
+            textFormula.Text = text;
+            textFormula.SelectionLength = 0;
+            textFormula.SelectionStart = Math.Min(insertAt, text?.Length ?? 0);
         }
 
         private void hToolStripMenuItem_Click(object sender, EventArgs e)
@@ -497,18 +513,21 @@ namespace pwiz.Skyline.SettingsUI
         private void helpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var helpText = FormulaHelpText;
-            MessageBox.Show(this, helpText, Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help);
+
+            // CONSIDER(bspratt) use DocumentationViewer instead, this is quite a lot of text
+            MessageDlg.Show(this, helpText);
         }
 
         private string FormulaHelpText
         {
             get
             {
-                var helpText = Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__;
+                var helpText = TextUtil.LineSeparate(Resources.FormulaBox_helpToolStripMenuItem_Click_Formula_Help, 
+                    string.Empty,
+                    Resources.FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__);
                 if (_editMode != EditMode.formula_only)
                 {
-                    // ReSharper disable once LocalizableElement
-                    helpText += "\r\n\r\n" + Adduct.Tips; // Charge implies ion formula, so help with adduct descriptions as well
+                    helpText = TextUtil.LineSeparate(helpText, string.Empty, Adduct.Tips); // Charge implies ion formula, so help with adduct descriptions as well
                 }
                 return helpText;
             }
@@ -629,10 +648,10 @@ namespace pwiz.Skyline.SettingsUI
                 string neutralFormula;
                 Molecule ion;
                 Adduct adduct;
-                if (!IonInfo.IsFormulaWithAdduct(formula, out ion, out adduct, out neutralFormula))
+                if (!IonInfo.IsFormulaWithAdduct(formula, out ion, out adduct, out neutralFormula, true))
                 {
                     neutralFormula = formula;
-                    if (!Adduct.TryParse(userinput, out adduct))
+                    if (!Adduct.TryParse(userinput, out adduct, Adduct.ADDUCT_TYPE.non_proteomic, true))
                     {
                         adduct = Adduct.EMPTY;
                     }
@@ -675,7 +694,7 @@ namespace pwiz.Skyline.SettingsUI
                 textFormula.ForeColor = Color.Black;
                 if (_editMode == EditMode.adduct_only)
                 {
-                    textFormula.Text = userinput; // Enforce proper adduct formatting
+                    SetFormulaText(userinput);
                     if (adduct.IsEmpty)
                     {
                         valid = false; // Adduct did not parse

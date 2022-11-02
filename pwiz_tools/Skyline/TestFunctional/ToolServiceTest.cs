@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -35,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
         private const string FILE_NAME = "TestToolAPI.sky";
         private TestToolClient _testToolClient;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestToolService()
         {
             Run(@"TestFunctional\ToolServiceTest.zip"); 
@@ -77,8 +78,29 @@ namespace pwiz.SkylineTestFunctional
                 SelectPeptideReplicate(83, "TDFGIFR", "5600TT13-1076");
                 SelectPeptideReplicate(313, "SAPLPNDSQAR", "5600TT13-1073");
 
-                // Check document changes.
-                CheckDocumentChanges();
+                try
+                {
+                    // Check document changes.
+                    CheckDocumentChanges();
+                }
+                catch (Exception ex)
+                {
+                    // If this part of the test fails, then capture the contents of the Immediate Window
+                    // and see whether it says that it failed to send a change to a tool.
+                    int immediateWindowLineCount = -1;
+                    string immediateWindowContents = null;
+                    RunUI(() =>
+                    {
+                        if (SkylineWindow.ImmediateWindow != null)
+                        {
+                            immediateWindowLineCount = SkylineWindow.ImmediateWindow.LineCount;
+                            immediateWindowContents = SkylineWindow.ImmediateWindow.TextContent;
+                        }
+                    });
+                    string message = string.Format("Immediate Window line count: {0} contents {1}",
+                        immediateWindowLineCount, immediateWindowContents);
+                    throw new AssertFailedException(message, ex);
+                }
 
                 // Select insert node.
                 SelectInsertNode();
@@ -233,11 +255,11 @@ TTDFDGYWVNHNWYSIYEST*
             Assert.AreEqual(0, DocumentChangeCount);
             RunUI(SkylineWindow.EditDelete);
             const int GRACE_PERIOD_MSEC = 5 * 1000; // Normally this takes less than 1/2 second, but not always, esp. under debugger
-            WaitForCondition(GRACE_PERIOD_MSEC, () => 1 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==1");
-            Assert.AreEqual(1, DocumentChangeCount);
+            TryWaitForCondition(GRACE_PERIOD_MSEC, () => 1 == DocumentChangeCount);
+            AssertEx.AreEqual(1, DocumentChangeCount, "timed out waiting for DocumentChangeCount==1");
             RunUI(SkylineWindow.Undo);
-            WaitForCondition(GRACE_PERIOD_MSEC, () => 2 == DocumentChangeCount, "timed out waiting for DocumentChangeCount==2");
-            Assert.AreEqual(2, DocumentChangeCount);
+            TryWaitForCondition(GRACE_PERIOD_MSEC, () => 2 == DocumentChangeCount);
+            AssertEx.AreEqual(2, DocumentChangeCount, "timed out waiting for DocumentChangeCount==2");
         }
 
         private int DocumentChangeCount

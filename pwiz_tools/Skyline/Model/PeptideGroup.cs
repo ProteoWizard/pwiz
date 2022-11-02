@@ -166,11 +166,10 @@ namespace pwiz.Skyline.Model
         private readonly string _sequence;
         private readonly bool _isDecoy;
 
-        public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence) 
+        public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence)
             : this(name, description, alternatives, sequence, false)
         {
         }
-
 
         public FastaSequence(string name, string description, IList<ProteinMetadata> alternatives, string sequence, bool isDecoy)
         {
@@ -186,10 +185,12 @@ namespace pwiz.Skyline.Model
         }
 
         public override string Name { get { return _name; } }
+        public string DisplayName => string.IsNullOrEmpty(_name) ? _sequence : _name;
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
         public new bool IsDecoy { get { return _isDecoy; } }
         public ImmutableList<ProteinMetadata> Alternatives { get; private set; }
+        public virtual ImmutableList<FastaSequence> FastaSequenceList => ImmutableList<FastaSequence>.Singleton(this);
         public IEnumerable<string> AlternativesText
         {
             get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name ?? String.Empty, alt.Description ?? String.Empty)); }  // CONSIDER (bspratt) - include accession, preferredName etc?
@@ -294,6 +295,32 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// Returns the fraction of amino acids in the protein sequence which could belong to one
+        /// or more of the peptide sequences. If the protein sequence has repeats, and a particular
+        /// peptide sequence can be found within it multiple times, the peptide is considered to
+        /// cover all of its repeats.
+        /// </summary>
+        public static double CalculateSequenceCoverage(string proteinSequence, IEnumerable<string> peptideSequences)
+        {
+            var bools = new bool[proteinSequence.Length];
+            foreach (var peptide in peptideSequences)
+            {
+                if (string.IsNullOrEmpty(peptide))
+                {
+                    continue;
+                }
+                int ichNext = -1;
+                while ((ichNext = proteinSequence.IndexOf(peptide, ichNext + 1, StringComparison.Ordinal)) >= 0)
+                {
+                    ReadOnlyList.Create(peptide.Length, i => true).CopyTo(bools, ichNext);
+                }
+            }
+
+            double coveredCount = bools.Count(b => b);
+            return coveredCount / proteinSequence.Length;
+        }
+
         private void Validate()
         {
             ValidateSequence(Sequence);
@@ -305,11 +332,12 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj._name, _name) &&
-                Equals(obj._description, _description) &&
-                Equals(obj._sequence, _sequence) &&
-                ArrayUtil.EqualsDeep(obj.Alternatives, Alternatives) &&
-                obj.IsDecoy == IsDecoy;
+            var equal = Equals(obj._name, _name) &&
+                        Equals(obj._description, _description) &&
+                        Equals(obj._sequence, _sequence) &&
+                        ArrayUtil.EqualsDeep(obj.Alternatives, Alternatives) &&
+                        obj.IsDecoy == IsDecoy;
+            return equal;
         }
 
         public override bool Equals(object obj)
@@ -432,6 +460,52 @@ namespace pwiz.Skyline.Model
         {
             var alternativesNew = new List<ProteinMetadata>(Alternatives) {proteinMetadata};
             return new FastaSequence(_name, _description, alternativesNew, _sequence, _isDecoy);
+        }
+    }
+
+    public class FastaSequenceGroup : FastaSequence
+    {
+        private readonly string _name;
+        private ImmutableList<FastaSequence> _fastaSequenceList;
+
+        public FastaSequenceGroup(string name, IList<FastaSequence> fastaSequenceList) : base(name,
+            string.Format(Resources.ProteinAssociation_CalculateProteinGroups_Group_of__0__proteins, fastaSequenceList.Count),
+            null, fastaSequenceList[0].Sequence)
+        {
+            _name = name;
+            _fastaSequenceList = ImmutableList<FastaSequence>.ValueOf(fastaSequenceList);
+        }
+
+        public override string Name => _name;
+        public override ImmutableList<FastaSequence> FastaSequenceList => _fastaSequenceList;
+
+        public bool Equals(FastaSequenceGroup obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return base.Equals(obj) &&
+                   Equals(obj._name, _name) &&
+                   ArrayUtil.EqualsDeep(obj.FastaSequenceList, FastaSequenceList) &&
+                   obj.IsDecoy == IsDecoy;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(FastaSequenceGroup)) return false;
+            return Equals((FastaSequenceGroup) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode() ^ (_name != null ? _name.GetHashCode() : 0);
+                result = (result*397) ^ FastaSequenceList.GetHashCodeDeep();
+                result = (result*397) ^ IsDecoy.GetHashCode();
+                return result;
+            }
         }
     }
 

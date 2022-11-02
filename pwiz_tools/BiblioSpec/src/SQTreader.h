@@ -52,6 +52,7 @@ class SQTreader : public BuildParser {
   ~SQTreader();
 
   bool parseFile(); // impelement BuildParser virtual function
+  std::vector<PSM_SCORE_TYPE> getScoreTypes();
   void openRead(bool warnIfNotPercolated);
   void parseModifiedSeq(const char* modSeq, 
                         string& unmodSeq, 

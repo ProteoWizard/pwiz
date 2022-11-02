@@ -49,10 +49,10 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestCurrentXmlFormat()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            var doc08Path = testFilesDir.GetTestPath("Study7_for_xml_validation.sky");
-            var docCurrentPath = testFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
+            var doc08Path = TestFilesDir.GetTestPath("Study7_for_xml_validation.sky");
+            var docCurrentPath = TestFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
 
             // Test schema validation.
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestData
             TestPeptideModifications(docCurrentPath);
 
             // Import a results file and check instrument information written out to the xml document.
-            var resultsPath = testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.mzML");
+            var resultsPath = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.mzML");
             TestInstrumentInfo(resultsPath, docCurrentPath);
         }
 
@@ -82,11 +82,14 @@ namespace pwiz.SkylineTestData
                 var stringBuilder = new StringBuilder();
                 using (var xmlWriter = XmlWriter.Create(stringBuilder))
                 {
+                    // Some versions of ReSharper think XmlWriter.Create can return a null, others don't, disable this check to satisfy either
+                    // ReSharper disable PossibleNullReferenceException
                     xmlWriter.WriteStartDocument();
                     xmlWriter.WriteStartElement("TestDocument");
                     xmlWriter.WriteElements(listChromatograms, new XmlElementHelper<ChromatogramSet>());
                     xmlWriter.WriteEndElement();
                     xmlWriter.WriteEndDocument();
+                    // ReSharper restore PossibleNullReferenceException
                 }
                 var xmlReader = XmlReader.Create(new StringReader(stringBuilder.ToString()));
                 xmlReader.ReadStartElement();
@@ -308,10 +311,10 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestModificationsXml()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            var doc08Path = testFilesDir.GetTestPath("mods_test_08.sky");
-            var docCurrentPath = testFilesDir.GetTestPath("mods_test_current.sky");
+            var doc08Path = TestFilesDir.GetTestPath("mods_test_08.sky");
+            var docCurrentPath = TestFilesDir.GetTestPath("mods_test_current.sky");
 
             var doc08 = ResultsUtil.DeserializeDocument(doc08Path);
             Assert.IsNotNull(doc08);

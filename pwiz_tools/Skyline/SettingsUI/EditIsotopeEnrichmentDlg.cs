@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -160,7 +161,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InvalidCell(DataGridViewCell cell,
             string message, params object[] args)
         {            
-            MessageBox.Show(string.Format(message, args));
+            MessageDlg.Show(FormUtil.FindTopLevelOwner(this),string.Format(message, args));
             gridEnrichments.Focus();
             gridEnrichments.ClearSelection();
             cell.Selected = true;

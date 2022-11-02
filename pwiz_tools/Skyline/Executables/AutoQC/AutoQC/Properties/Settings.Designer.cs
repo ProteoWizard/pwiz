@@ -13,7 +13,7 @@ namespace AutoQC.Properties {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.8.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
@@ -26,24 +26,93 @@ namespace AutoQC.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SkylineInstallDir {
+        public string SkylineDailyRunnerPath {
             get {
-                return ((string)(this["SkylineInstallDir"]));
+                return ((string)(this["SkylineDailyRunnerPath"]));
             }
             set {
-                this["SkylineInstallDir"] = value;
+                this["SkylineDailyRunnerPath"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SkylineType {
+        public string SkylineRunnerPath {
             get {
-                return ((string)(this["SkylineType"]));
+                return ((string)(this["SkylineRunnerPath"]));
             }
             set {
-                this["SkylineType"] = value;
+                this["SkylineRunnerPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineAdminCmdPath {
+            get {
+                return ((string)(this["SkylineAdminCmdPath"]));
+            }
+            set {
+                this["SkylineAdminCmdPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineDailyAdminCmdPath {
+            get {
+                return ((string)(this["SkylineDailyAdminCmdPath"]));
+            }
+            set {
+                this["SkylineDailyAdminCmdPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SkylineCustomCmdPath {
+            get {
+                return ((string)(this["SkylineCustomCmdPath"]));
+            }
+            set {
+                this["SkylineCustomCmdPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SettingsUpgradeRequired {
+            get {
+                return ((bool)(this["SettingsUpgradeRequired"]));
+            }
+            set {
+                this["SettingsUpgradeRequired"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string InstalledVersion {
+            get {
+                return ((string)(this["InstalledVersion"]));
+            }
+            set {
+                this["InstalledVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("21.1")]
+        public decimal XmlVersion {
+            get {
+                return ((decimal)(this["XmlVersion"]));
             }
         }
     }

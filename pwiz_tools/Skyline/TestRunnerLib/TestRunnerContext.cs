@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRunnerLib
 {
-    class TestRunnerContext : TestContext
+    public class TestRunnerContext : TestContext
     {
         private readonly Dictionary<string, string> _dictionary;
 
@@ -34,6 +34,10 @@ namespace TestRunnerLib
         {
             _dictionary = new Dictionary<string, string>();
         }
+
+        public bool HasPassed { get; set; }
+
+        public override UnitTestOutcome CurrentTestOutcome => HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
 
         public override void WriteLine(string format, params object[] args)
         {

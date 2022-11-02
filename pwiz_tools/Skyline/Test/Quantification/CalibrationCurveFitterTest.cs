@@ -336,6 +336,10 @@ namespace pwiz.SkylineTest.Quantification
                     .ChangeNormalizationMethod(NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy))
                     .ChangeRegressionFit(RegressionFit.LINEAR)
                     .ChangeUnits("ng/mL"));
+            // Give each replicate an Analyte Concentration so that we can make sure that "Accuracy" works.
+            baseDocument = baseDocument.ChangeMeasuredResults(baseDocument.Settings.MeasuredResults.ChangeChromatograms(
+                baseDocument.Settings.MeasuredResults.Chromatograms
+                    .Select(c => c.AnalyteConcentration.HasValue ? c : c.ChangeAnalyteConcentration(10)).ToList()));
             var baseCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(baseDocument.Settings,
                 baseDocument.MoleculeGroups.First(), baseDocument.Molecules.First());
             var baseCurve = baseCurveFitter.GetCalibrationCurve();
@@ -352,7 +356,8 @@ namespace pwiz.SkylineTest.Quantification
             Assert.AreEqual(baseCurve.Intercept, dilutionFactorCurve.Intercept);
             for (int replicateIndex = 0; replicateIndex < baseDocument.MeasuredResults.Chromatograms.Count; replicateIndex++)
             {
-                var sampleType = baseDocument.MeasuredResults.Chromatograms[replicateIndex].SampleType;
+                var chromatogramSet = baseDocument.MeasuredResults.Chromatograms[replicateIndex];
+                var sampleType = chromatogramSet.SampleType;
                 var baseConcentration = baseCurveFitter.GetCalculatedConcentration(baseCurve, replicateIndex);
                 Assert.IsNotNull(baseConcentration);
                 var dilutionFactorConcentration =
@@ -366,6 +371,17 @@ namespace pwiz.SkylineTest.Quantification
                 {
                     Assert.AreEqual(1.5 * baseConcentration.Value, dilutionFactorConcentration.Value, epsilon);
                 }
+
+                QuantificationResult baseQuantificationResult = baseCurveFitter.GetPeptideQuantificationResult(replicateIndex);
+                AssertEx.AreEqual(baseConcentration, baseQuantificationResult.CalculatedConcentration);
+                QuantificationResult dilutionFactorQuantificationResult =
+                    dilutionFactorCurveFitter.GetPeptideQuantificationResult(replicateIndex);
+
+                var specifiedBaseConcentration = chromatogramSet.AnalyteConcentration.Value * baseCurveFitter.PeptideQuantifier.PeptideDocNode.ConcentrationMultiplier.GetValueOrDefault(1);
+                var specifiedDilutedConcentration =
+                    specifiedBaseConcentration * chromatogramSet.SampleDilutionFactor;
+                AssertEx.AreEqual(baseQuantificationResult.CalculatedConcentration.Value / specifiedBaseConcentration, baseQuantificationResult.Accuracy);
+                AssertEx.AreEqual(dilutionFactorQuantificationResult.CalculatedConcentration.Value / specifiedDilutedConcentration, dilutionFactorQuantificationResult.Accuracy);
             }
             AssertEx.ValidatesAgainstSchema(docWithDilutionFactor);
         }

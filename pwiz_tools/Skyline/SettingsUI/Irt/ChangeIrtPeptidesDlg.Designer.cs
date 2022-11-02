@@ -38,7 +38,6 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textPeptides = new System.Windows.Forms.TextBox();
             this.btnOk = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.SuspendLayout();
             // 
@@ -103,7 +102,6 @@
             this.Name = "ChangeIrtPeptidesDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

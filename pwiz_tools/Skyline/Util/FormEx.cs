@@ -63,7 +63,6 @@ namespace pwiz.Skyline.Util
             this._components = new System.ComponentModel.Container();
             this.modeUIHandler = new Helpers.ModeUIExtender(_components);
             this._modeUIHelper = new Helpers.ModeUIAwareFormHelper(modeUIHandler);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
         }
         #endregion
 
@@ -352,5 +351,24 @@ namespace pwiz.Skyline.Util
 
         public virtual string DetailedMessage { get { return null; } }
 
+        public static Control GetFocused(Control.ControlCollection controls)
+        {
+            foreach (Control c in controls)
+            {
+                if (c.Focused)
+                {
+                    // Return the focused control
+                    return c;
+                }
+                if (c.ContainsFocus)
+                {
+                    // If the focus is contained inside a control's children
+                    // return the child
+                    return GetFocused(c.Controls);
+                }
+            }
+            // No control on the form has focus
+            return null;
+        }
     }
 }

@@ -131,7 +131,6 @@ namespace pwiz.Skyline.SettingsUI
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -511,6 +510,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Controls.Add(this.tabQuantification);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.SelectedIndexChanged += new System.EventHandler(this.tabControl1_TabIndexChanged);
             // 
             // tabDigestion
             // 
@@ -911,7 +911,6 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "PeptideSettingsUI";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabDigestion.ResumeLayout(false);
             this.tabDigestion.PerformLayout();

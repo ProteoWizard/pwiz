@@ -17,178 +17,147 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Threading;
 using AutoQC;
+using SharedBatch;
+using SharedBatch.Properties;
+using SharedBatchTest;
 
 namespace AutoQCTest
 {
-    class TestLogger: IAutoQcLogger
+    public class TestUtils
     {
-        private readonly StringBuilder log = new StringBuilder();
-        private readonly  StringBuilder _programLog = new StringBuilder();
-
-        public void Log(string message, object[] args)
+        public static string GetTestFilePath(string fileName)
         {
-            AddToLog(message, args);
+            return Path.Combine(GetTestDataPath(), fileName);
         }
 
-        public void LogError(string message, object[] args)
+        private static string GetTestDataPath()
         {
-            AddToLog(message, args);
+            return Path.Combine(GetAutoQcPath(), "TestData");
         }
 
-        public void LogProgramError(string message, params object[] args)
+        private static string GetAutoQcPath()
         {
-            AddToProgramLog(message, args);
+            // ExtensionTestContext looks for paths relative to Skyline.sln.
+            return ExtensionTestContext.GetProjectDirectory(@"Executables\AutoQC");
         }
 
-        public void LogException(Exception exception, string message, params object[] args)
+        public static MainSettings GetTestMainSettings() => GetTestMainSettings(string.Empty, string.Empty, string.Empty);
+
+        public static MainSettings GetTestMainSettings(string changedVariable, string value) => GetTestMainSettings(string.Empty, changedVariable, value);
+
+        public static MainSettings GetTestMainSettings(string skyFilePath, string changedVariable, string value)
         {
-            AddToLog(message, args);
+            var skylineFilePath = !string.Empty.Equals(skyFilePath) ? skyFilePath : GetTestFilePath("emptyTemplate.sky");
+            var folderToWatch = changedVariable.Equals("folderToWatch")? value : GetTestDataPath();
+
+            var includeSubfolders = changedVariable.Equals("includeSubfolders") && value.Equals("true");
+            var fileFilter = MainSettings.GetDefaultQcFileFilter();
+            var resultsWindow = MainSettings.GetDefaultResultsWindow();
+            var removeResults = MainSettings.GetDefaultRemoveResults();
+            var acquisitionTime = "0"; // Set to 0 so that AutoQC does not wait to import results files
+            var instrumentType = MainSettings.GetDefaultInstrumentType();
+            
+            
+            return new MainSettings(skylineFilePath, folderToWatch, includeSubfolders, fileFilter, removeResults, resultsWindow, instrumentType, acquisitionTime);
         }
 
-        public string GetFile()
+        public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
-            throw new NotImplementedException();
+            var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
+            var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
+            var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
+            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
+
+            return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
         }
 
-        public void DisableUiLogging()
+        public static PanoramaSettings GetNoPublishPanoramaSettings()
         {
-            throw new NotImplementedException();
+            return new PanoramaSettings(false, null, null, null, null);
         }
 
-        public void LogToUi(IMainUiControl mainUi)
+        public static SkylineSettings GetTestSkylineSettings()
         {
-            throw new NotImplementedException();
+            if (SkylineInstallations.FindSkyline())
+            {
+                if (SkylineInstallations.HasSkyline)
+                    return new SkylineSettings(SkylineType.Skyline, null);
+                if (SkylineInstallations.HasSkylineDaily)
+                    return new SkylineSettings(SkylineType.SkylineDaily, null);
+            }
+
+            return null;
         }
 
-        public void DisplayLog()
+        public static AutoQcConfig GetTestConfig(string name)
         {
-            throw new NotImplementedException();
+            return new AutoQcConfig(name, false, DateTime.MinValue, DateTime.MinValue, GetTestMainSettings(), GetTestPanoramaSettings(), GetTestSkylineSettings());
         }
 
-        private void AddToLog(string message, params object[] args)
+        public static ConfigRunner GetTestConfigRunner(string configName = "Config")
         {
-            log.Append(string.Format(message, args)).AppendLine();
-            System.Diagnostics.Debug.WriteLine(message, args);
+            var testConfig = GetTestConfig(configName);
+            return new ConfigRunner(testConfig, GetTestLogger(testConfig));
         }
 
-        private void AddToProgramLog(string message, params object[] args)
+        public static Logger GetTestLogger(AutoQcConfig config)
         {
-            _programLog.Append(string.Format(message, args)).AppendLine();
+            var logFile = Path.Combine(config.GetConfigDir(), "AutoQC.log");
+            return new Logger(logFile, config.Name, false);
         }
 
-        public string GetLog()
+        public static List<AutoQcConfig> ConfigListFromNames(string[] names)
         {
-            return log.ToString();
+            var configList = new List<AutoQcConfig>();
+            foreach (var name in names)
+            {
+                configList.Add(GetTestConfig(name));
+            }
+            return configList;
         }
 
-        public void Clear()
+        public static AutoQcConfigManager GetTestConfigManager(List<AutoQcConfig> configs = null)
         {
-            log.Clear();
+            var testConfigManager = new AutoQcConfigManager();
+          
+            if (configs == null)
+            {
+                configs = new List<AutoQcConfig>
+                {
+                    GetTestConfig("one"),
+                    GetTestConfig("two"),
+                    GetTestConfig("three")
+                };
+            }
+
+            foreach (var config in configs)
+                testConfigManager.SetState(testConfigManager.State,
+                    testConfigManager.State.UserAddConfig(config, null));
+            
+            return testConfigManager;
+        }
+
+        public static void WaitForCondition(Func<bool> condition, TimeSpan timeout, int timestep, string errorMessage)
+        {
+            var startTime = DateTime.Now;
+            while (DateTime.Now - startTime < timeout)
+            {
+                if (condition()) return;
+                Thread.Sleep(timestep);
+            }
+            throw new Exception(errorMessage);
+        }
+
+        public static void InitializeSettingsImportExport()
+        {
+            ConfigList.Importer = AutoQcConfig.ReadXml;
+            ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
     }
-
-    class TestAppControl : IMainUiControl
-    {
-        private MainSettings _mainSettings = new MainSettings();
-        private PanoramaSettings _panoramaSettings = new PanoramaSettings();
-
-        public bool Waiting { get; set; }
-        public bool Stopped { get; set; }
-
-        private ConfigRunner.RunnerStatus _runnerStatus;
-
-        public void SetWaiting()
-        {
-            Waiting = true;
-        }
-
-        public void SetStopped()
-        {
-            Stopped = true;
-        }
-
-        public void SetUIMainSettings(MainSettings mainSettings)
-        {
-            _mainSettings = mainSettings;
-        }
-
-        public MainSettings GetUIMainSettings()
-        {
-            return _mainSettings;
-        }
-
-        public void SetUIPanoramaSettings(PanoramaSettings panoramaSettings)
-        {
-            _panoramaSettings = panoramaSettings;
-        }
-
-        public PanoramaSettings GetUIPanoramaSettings()
-        {
-            return _panoramaSettings;
-        }
-
-        public void DisablePanoramaSettings()
-        {
-            throw new NotImplementedException();
-        }
-
-        #region Implementation of IMainUiControl
-
-        public void ChangeConfigUiStatus(ConfigRunner configRunner)
-        {
-            _runnerStatus = configRunner.GetStatus();
-        }
-
-        public void AddConfiguration(AutoQcConfig config)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateConfiguration(AutoQcConfig oldConfig, AutoQcConfig newConfig)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdatePanoramaServerUrl(AutoQcConfig config)
-        {
-            throw new NotImplementedException();
-        }
-
-        public AutoQcConfig GetConfig(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogToUi(string text, bool scrollToEnd = true, bool trim = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogErrorToUi(string text, bool scrollToEnd = true, bool trim = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogLinesToUi(List<string> lines)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogErrorLinesToUi(List<string> lines)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisplayError(string title, string message)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
+    
     class TestImportContext : ImportContext
     {
         public DateTime OldestFileDate;
@@ -207,27 +176,4 @@ namespace AutoQCTest
         }
     }
 
-    class TestConfigRunner : IConfigRunner
-    {
-        private ConfigRunner.RunnerStatus _runnerStatus;
-        public void ChangeStatus(ConfigRunner.RunnerStatus status)
-        {
-            _runnerStatus = status;
-        }
-
-        public bool IsRunning()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsStopped()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDisconnected()
-        {
-            return false;
-        }
-    }
 }

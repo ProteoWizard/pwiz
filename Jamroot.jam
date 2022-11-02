@@ -79,31 +79,34 @@ ECHO
 ; # end of our own help text
 }
 
+import errors ;
+
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
 # set up explicit 32-bit or 64-bit builds
-if "address-model=64" in [ modules.peek : ARGV ] || ( ! ( $(.os) = "NT" ) && $(.platform:L) = "x86_64" )
+if "address-model=64" in [ modules.peek : ARGV ]
 {
     constant PROCESSOR_ARCHITECTURE : "AMD64" ;
     constant PLATFORM : "x64" ;
+    if "address-model=32" in [ modules.peek : ARGV ] { errors.user-error "Pick either address-model=32 or address-model=64, not both." ; }
 }
-else if "address-model=32" in [ modules.peek : ARGV ] || $(.platform:L) = "x86" || $(.os) = "NT" 
+else if "address-model=32" in [ modules.peek : ARGV ]
 {
     constant PROCESSOR_ARCHITECTURE : "x86" ;
     constant PLATFORM : "x86" ;
+    if "address-model=64" in [ modules.peek : ARGV ] { errors.user-error "Pick either address-model=32 or address-model=64, not both." ; }
 }
-else
+else if [ modules.peek : NT ] # require address-model to be specified on Windows
 {
-    echo "Unable to determine address-model for platform $(.platform:L). The only supported platforms are x86 and x86_64." ;
-    exit ;
+    errors.user-error "No address-model specified. Command-line must specify address-model=32 or address-model=64 (because B2 apparently changed the default MSVC address-model, breaking many pwiz assumptions)." ;
 }
 
 local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_67_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_76_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -176,8 +179,21 @@ rule without-binary-msdata ( properties * )
    }
 }
 
+local default_build_path = [ MATCH --build-path=(.*) : [ modules.peek : ARGV ] ] ;
+if $(default_build_path)
+{
+    path-constant PWIZ_BUILD_PATH : $(default_build_path) ;
+}
+else if [ modules.peek : NT ]
+{
+    path-constant PWIZ_BUILD_PATH : build-nt-x86 ; # force x86 since .NET projects assume that location
+}
+else
+{
+    path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
+}
+
 path-constant PWIZ_ROOT_PATH : . ;
-path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
 path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 
 
@@ -258,6 +274,12 @@ if ! [ modules.peek : NT ]
     [ predef-check "BOOST_COMP_GNUC >= 4.9" : : <cxxflags>-fdiagnostics-color=always ]
     ;
 }
+else
+{
+    # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+    # also, catch(...) will catch SEH exceptions with this on
+    DEFAULT_ASYNCH_EXCEPTIONS = <asynch-exceptions>on ;
+}
 
 
 project pwiz 
@@ -273,13 +295,11 @@ project pwiz
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
 
-        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
-        # also, catch(...) will catch SEH exceptions with this on
-        <toolset>msvc:<asynch-exceptions>on
-
         # avoid deprecation warnings
         <define>BOOST_NO_AUTO_PTR
-        <define>_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING # TODO: remove this next time Boost is updated
+        <define>BOOST_BIND_GLOBAL_PLACEHOLDERS
+
+        <define>BOOST_REGEX_MATCH_EXTRA                 # enable access to all captures
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -305,6 +325,11 @@ project pwiz
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.1:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.2:<define>_HAS_TR1
+        <toolset>msvc,<toolset-msvc:version>14.3:<define>_HAS_TR1
+
+        # link-time optimization for release builds
+        #<variant>release:<lto>on
 
         # target Windows 7 or later
         <toolset>msvc:<define>_WIN32_WINNT=_WIN32_WINNT_WIN7
@@ -312,12 +337,22 @@ project pwiz
         
         <conditional>@secure-scl-throws
 
-        <toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
+        # TODO: figure out a way to only apply this to 3rd party headers
+        #<toolset>gcc:<cxxflags>-Wno-uninitialized       # warning: '__cur' might be used uninitialized in this function 
+
+        <toolset>gcc:<define>_DEFAULT_SOURCE
+        <toolset>clang:<define>_DEFAULT_SOURCE
+
+        # msparser uses old libstd++ API, so with GCC 5+, the entire project has to use it as well
+        <toolset>gcc:<define>_GLIBCXX_USE_CXX11_ABI=0
 
         # set standard to C++14
         <toolset>gcc:<cxxflags>-std=c++14
         <toolset>darwin:<cxxflags>-std=c++14
         <toolset>clang:<cxxflags>-std=c++14
+
+        # prevent warning about _BSD_SOURCE deprecation
+        <toolset>gcc:<define>_DEFAULT_SOURCE
 
         # disable "warning: suggest parentheses around '&&' within '||'"
         <toolset>gcc:<cxxflags>-Wno-parentheses
@@ -327,6 +362,9 @@ project pwiz
         # avoid warnings like concept_check.hpp ... warning: unused typedef 'boost_concept_check'
         <toolset>clang:<cxxflags>-Wno-unused-local-typedef
         <toolset>darwin:<cxxflags>-Wno-unused-local-typedef
+
+        # avoid unused parameter warnings (especially annoying for stub functions)
+        <toolset>clang:<cxxflags>-Wunused-parameter
 
         # avoid C++1x deprecation warnings
         <toolset>gcc:<cxxflags>-Wno-deprecated-declarations
@@ -384,6 +422,8 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
         <threading>multi
+        <response-file>file               # auto-detection of max command-line length broken on Windows Server?
+        $(DEFAULT_ASYNCH_EXCEPTIONS)
     ;
 
 
@@ -479,7 +519,7 @@ version-tag = $(numeric-version-tag) $(PWIZ_GIT_REV) ;
 constant PWIZ_NUMERIC_VERSION_TAG : $(numeric-version-tag:J=.) ;
 constant PWIZ_VERSION_TAG : $(version-tag:J=.) ;
 
-echo ProteoWizard $(version-tag:J=.) $(PWIZ_GIT_BRANCH) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) ;
+echo ProteoWizard $(version-tag:J=.) $(PWIZ_GIT_BRANCH) $(PLATFORM) $(PROCESSOR_ARCHITECTURE) $(.os) ;
 
 import generate-version ;
 generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV) : $(PWIZ_GIT_BRANCH) ;
@@ -524,6 +564,7 @@ if [ modules.peek : NT ]
             if ! --without-sciex in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_ABI.7z" ; }
             if ! --without-agilent in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Agilent.7z" ; }
             if ! --without-bruker in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Bruker.7z" ; }
+# Waiting for CCS<->DT support in .mbi reader #            if ! --without-mobilion in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Mobilion.7z" ; }
             if ! --without-shimadzu in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Shimadzu.7z" ; }
             if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
             #if ! --without-unifi in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_UNIFI.7z" ; }
@@ -678,6 +719,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+# wait for CCS<->DT support in Mobllion #         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Mobilion ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Mobilion//install_pwiz_vendor_api_mbi/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/Shimadzu ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Shimadzu//install_pwiz_vendor_api_shimadzu/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/UIMF ] { dependencies += <dependency>$(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/UIMF//install_pwiz_vendor_api_uimf/$(location) ; }
@@ -712,7 +754,7 @@ rule pwiz-bindings-dependency ( properties * )
 
 rule dotNET-dependencies ( properties * )
 {
-    if <toolset-msvc:version>12.0 in $(properties) || <toolset-msvc:version>14.0 in $(properties) || <toolset-msvc:version>14.1 in $(properties)
+    if [ msvc-has-current-dotnet $(properties) ]
     {
         local location = [ install-location $(properties) ] ;
         return <dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location)
@@ -898,13 +940,27 @@ rule secure-scl-throws ( properties * )
        ! ( <toolset-msvc:version>11.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>12.0 in $(properties) ) &&
        ! ( <toolset-msvc:version>14.0 in $(properties) ) &&
-       ! ( <toolset-msvc:version>14.1 in $(properties) )
+       ! ( <toolset-msvc:version>14.1 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.2 in $(properties) ) &&
+       ! ( <toolset-msvc:version>14.3 in $(properties) )
     {
         return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
                <define>_SECURE_SCL_THROWS=1 ;
     }
 }
 
+# newer OS/GCC versions have PIE enabled by default, but msparser was compiled without PIE, so we must also compile without PIE
+obj has-pie : $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : <cflags>-fno-pie <cxxflags>-fno-pie <linkflags>-no-pie ;
+explicit has-pie ;
+
+if [ check-target-builds has-pie "GCC has -no-pie" : <cflags>-no-pie <cxxflags>-no-pie <linkflags>-no-pie ]
+{
+    .pic-options = -fPIC -no-pie -fno-pie ;
+}
+else
+{
+    .pic-options = -fPIC ;
+}
 
 # any GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
@@ -912,7 +968,7 @@ rule static-with-fpic ( properties * )
     if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
        <link>static in $(properties)
     {
-        return <cflags>-fPIC <cxxflags>-fPIC <linkflags>-fPIC ;
+        return <cflags>$(.pic-options) <cxxflags>$(.pic-options) <linkflags>$(.pic-options) ;
     }
 }
 
@@ -923,30 +979,36 @@ rule msvc-requirement ( properties * )
     if ! <toolset>msvc in $(properties) { return <build>no ; }
 }
 
+rule msvc-has-current-dotnet ( properties * )
+{
+    # require VS 2017 or higher because of .NET Framework version
+    if <toolset>msvc in $(properties) && 
+       [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.1" "14.2" "14.3"
+    {
+        return 1 ;
+    }
+}
+
 # predicate for use as a <conditional> requirement of targets that must only build with MSVC and current .NET Framework
 rule msvc-dotnet-requirement ( properties * )
 {
-    # require VS 2013 because of .NET Framework version
-    if ! ( <toolset-msvc:version>12.0 in $(properties) ||
-           <toolset-msvc:version>14.0 in $(properties) ||
-           <toolset-msvc:version>14.1 in $(properties) ||
-           <toolset-msvc:version>14.2 in $(properties) )
-    { return <build>no ; }
+    if ! [ msvc-has-current-dotnet $(properties) ] { return <build>no ; }
 }
 
 # predicate for use as a <conditional> requirement of targets that must only build with non-express version of MSVC
 rule no-express-requirement ( properties * )
 {
-    # only the latest, non-express version of MSVC
-    if ! ( <toolset-msvc:version>12.0 in $(properties) || 
-           <toolset-msvc:version>14.0 in $(properties) || 
-           <toolset-msvc:version>14.1 in $(properties) )
-    { return <build>no ; }
+    # only non-express version of MSVC since 2017
+    if ! [ msvc-has-current-dotnet $(properties) ] { return <build>no ; }
     if 12.0express in $(properties:G=) { return <build>no ; }
 }
 
 # CONSIDER: would be nice to access msvc.jam's setup logic, but that would seem to require significant refactoring
-constant MSVC_CURRENT_SETUP_SCRIPT : "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) >nul" ;
+rule get-current-msvc-setup-script ( properties * )
+{
+    local platformToolsetVersion = [ regex.replace [ feature.get-values <toolset-msvc:version> : $(properties) ] "\\." "" ] ;
+    return "CALL $(PWIZ_ROOT_PATH)\\libraries\\msvc_setup_script.bat $(PROCESSOR_ARCHITECTURE:L) $(platformToolsetVersion) >nul" ;
+}
 
 # special support for MSFileReader on Windows
 if [ modules.peek : NT ]
@@ -959,24 +1021,15 @@ if [ modules.peek : NT ]
 
     if ( [ MATCH (x64) : $(PLATFORM) ] )
     {
-        # HACK: we can't just look at the PROCESSOR_ARCHITECTURE environment variable, because it is
-        #       set to "x86" even on a 64-bit machine, probably because bjam is running in 32-bit mode
-        if ( ! $(ProgramFilesX86) && [ MATCH (x86) : $(ProgramFiles) ] ) # infer 64-bit machine from (x86) appended to ProgramFiles
-        {
-            EXIT "\n*** ERROR: It is not possible to build or run a 64-bit build on 32-bit Windows." ;
-        }
-        
-        # MSFileReader install directory
-        constant ProgramFilesLibs : "C:\\Program Files" ;
-        constant MSFILEREADER_SUFFIX : "_x64" ;
+        constant ProgramFilesLibs : "C:\\Program Files" ; # still needed for MascotParser
     }
     else
     {
         # MSFileReader install directory
         constant ProgramFilesLibs : "$(ProgramFilesX86)" ;
         constant MSFILEREADER_SUFFIX : "" ;
+        constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
     }
-    constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
 } # if NT
 
 # HACK: find location of WiffFileDataReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
@@ -997,6 +1050,16 @@ rule unifi-dll-location ( api-path : properties * )
     local result = $(api-path) ;
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        [ path.exists $(result)\\unifi-protobuf-net.dll ]
+    {
+        return $(result) ;
+    }
+}
+
+rule mbi-dll-location ( api-path : properties * )
+{
+    local result = $(api-path) ;
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+       [ path.exists $(api-path)\\MBICore.dll ]
     {
         return $(result) ;
     }
@@ -1038,7 +1101,7 @@ rule shimadzu-dll-location ( api-path : properties * )
 
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
        $(result) &&
-       [ path.exists $(result)\\DataReader.dll ]
+       [ path.exists $(result)\\CompressedTLMRawDataReader.dll ]
     {
         return $(result) ;
     }
@@ -1117,7 +1180,7 @@ rule msparser-path ( properties * )
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
         }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1"
+        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
         {
             lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2015" ;
         }
@@ -1270,21 +1333,21 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x86/api-ms-win-crt-string-l1-1-0.dll 
     Microsoft.VC140.CRT/x86/api-ms-win-crt-time-l1-1-0.dll 
     Microsoft.VC140.CRT/x86/api-ms-win-crt-utility-l1-1-0.dll 
-    Microsoft.VC140.CRT/x86/concrt140.dll
-    Microsoft.VC140.CRT/x86/mfc140.dll 
+    #Microsoft.VC140.CRT/x86/concrt140.dll
+    #Microsoft.VC140.CRT/x86/mfc140.dll 
     Microsoft.VC140.CRT/x86/msvcp140.dll 
     Microsoft.VC140.CRT/x86/ucrtbase.dll 
     Microsoft.VC140.CRT/x86/vcomp140.dll 
     Microsoft.VC140.CRT/x86/vcruntime140.dll 
-    Microsoft.VC90.CRT/x86/msvcm90.dll 
-    Microsoft.VC90.CRT/x86/msvcp90.dll 
-    Microsoft.VC90.CRT/x86/msvcr90.dll 
-    Microsoft.VC90.CRT/x86/vcomp90.dll 
-    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
-    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    #Microsoft.VC140.CRT/x86/msvcp140_1.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_2.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_atomic_wait.dll
+    #Microsoft.VC140.CRT/x86/msvcp140_codecvt_ids.dll
+    #Microsoft.VC140.CRT/x86/vccorlib140.dll
     Microsoft.VC90.MFC/x86/Microsoft.VC90.MFC.manifest
-    Microsoft.VC90.MFC/x86/mfc90.dll 
     Microsoft.VC90.MFC/x86/mfc90u.dll 
+    Microsoft.VC90.CRT/x86/msvcp90.dll # used by MSFileReader
+    Microsoft.VC90.CRT/x86/msvcr90.dll # used by MSFileReader
     ;
 
 .msvcrt-x64 =
@@ -1333,20 +1396,37 @@ searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@
     Microsoft.VC140.CRT/x64/api-ms-win-crt-string-l1-1-0.dll
     Microsoft.VC140.CRT/x64/api-ms-win-crt-time-l1-1-0.dll
     Microsoft.VC140.CRT/x64/api-ms-win-crt-utility-l1-1-0.dll
-    Microsoft.VC140.CRT/x64/concrt140.dll
-    Microsoft.VC140.CRT/x64/mfc140.dll
+    #Microsoft.VC140.CRT/x64/concrt140.dll
+    #Microsoft.VC140.CRT/x64/mfc140.dll
     Microsoft.VC140.CRT/x64/msvcp140.dll
     Microsoft.VC140.CRT/x64/ucrtbase.dll
     Microsoft.VC140.CRT/x64/vcomp140.dll
     Microsoft.VC140.CRT/x64/vcruntime140.dll
-    Microsoft.VC90.CRT/x64/msvcm90.dll
-    Microsoft.VC90.CRT/x64/msvcp90.dll
-    Microsoft.VC90.CRT/x64/msvcr90.dll
-    Microsoft.VC90.CRT/x64/vcomp90.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_1.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_2.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_atomic_wait.dll
+    #Microsoft.VC140.CRT/x64/msvcp140_codecvt_ids.dll
+    Microsoft.VC140.CRT/x64/vcruntime140_1.dll
+    #Microsoft.VC140.CRT/x64/vccorlib140.dll
+    ;
+
+.msvcrt-x86-cxt =    
+    Microsoft.VC90.CRT/x86/msvcm90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x86/vcomp90.dll # used by CompassXtract
+    Microsoft.VC90.MFC/x86/mfc90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.CRT.manifest
+    Microsoft.VC90.CRT/x86/Microsoft.VC90.OpenMP.manifest
+    ;
+
+.msvcrt-x64-cxt =
+    Microsoft.VC90.CRT/x64/msvcm90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/msvcp90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/msvcr90.dll # used by CompassXtract
+    Microsoft.VC90.CRT/x64/vcomp90.dll # used by CompassXtract
+    Microsoft.VC90.MFC/x64/mfc90.dll # used by CompassXtract
     Microsoft.VC90.CRT/x64/Microsoft.VC90.CRT.manifest
     Microsoft.VC90.CRT/x64/Microsoft.VC90.OpenMP.manifest
     Microsoft.VC90.MFC/x64/Microsoft.VC90.MFC.manifest
-    Microsoft.VC90.MFC/x64/mfc90.dll
     ;
 
 rule msvc-runtime-dlls ( properties * )
@@ -1354,13 +1434,16 @@ rule msvc-runtime-dlls ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
+        local xbit = "x86" ;
         if <address-model>64 in $(properties)
         {
-            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+            xbit = "x64" ;
         }
-        else
+
+        result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)) ;
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result = <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+            result += <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)-cxt) ;
         }
     }
     return $(result) ;
@@ -1371,13 +1454,16 @@ rule install-msvc-runtime-dlls-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
+        local xbit = "x86" ;
         if <address-model>64 in $(properties)
         {
-            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x64) ;
+            xbit = "x64" ;
         }
-        else
+
+        result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)) ;
+        if ! --without-compassxtract in [ modules.peek : ARGV ]
         {
-            result = <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-x86) ;
+            result += <source>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/$(.msvcrt-$(xbit)-cxt) ;
         }
     }
     return $(result) ;
@@ -1539,6 +1625,8 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     "exclude:pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Agilent/x*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Bruker/x*"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Mobilion/*.dll"
+    "exclude:pwiz_aux/msrc/utility/vendor_api/Mobilion/*.lib"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.dll"
     "exclude:pwiz_aux/msrc/utility/vendor_api/Shimadzu/x*"
     "exclude:pwiz_aux/msrc/utility/vendor_api/thermo/x64"
@@ -1608,11 +1696,10 @@ constant .common-sources :
 
     "path-anchor:$(PWIZ_BUILD_PATH)"
     $(PWIZ_BUILD_PATH)/SUBSET
-
-    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .l = 
+    "path-anchor:$(PWIZ_ROOT_PATH)"
     $(PWIZ_LIBRARIES_PATH)/boost-build
     $(PWIZ_LIBRARIES_PATH)/boost_aux
     $(PWIZ_LIBRARIES_PATH)/predef
@@ -1625,8 +1712,6 @@ constant .common-sources :
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     "path-anchor:$(BOOST_SUBSET_PATH)"
     $(BOOST_SUBSET_PATH)/libraries
-
-    "path-anchor:$(PWIZ_ROOT_PATH)"
 ;
 
 .no-t = 
@@ -1642,6 +1727,7 @@ constant .common-sources :
     "exclude:vendor_api/ABI"
     "exclude:vendor_api/Agilent"
     "exclude:vendor_api/Bruker"
+    "exclude:vendor_api/Mobilion"
     "exclude:vendor_api/Shimadzu"
     "exclude:vendor_api/thermo"
     "exclude:vendor_api/UIMF"
@@ -1654,7 +1740,7 @@ constant .common-sources :
 # l = without libraries, t = without tests, v = without vendor APIs
 tar.create pwiz-src.tar.bz2             : $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-l.tar.bz2   : $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-l-$(version-tag:J=_).tar.bz2 ;
-tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.pwiz-sources)  : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-ltv.tar.bz2 : $(.no-t) $(.no-v) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-ltv-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-lv.tar.bz2  : $(.no-v) $(.pwiz-sources) : $(.common-requirements) <name>pwiz-src-without-lv-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-t.tar.bz2   : $(.no-t) $(.pwiz-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-t-$(version-tag:J=_).tar.bz2 ;

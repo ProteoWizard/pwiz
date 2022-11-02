@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromInfo ChromInfo { get; private set; }
         public ChromatogramSet ChromatogramSet { get { return MeasuredResults.Chromatograms[ReplicateIndex]; } }
         public abstract int OptimizationStep { get; }
-        public abstract RetentionTimeValues? GetRetentionTimes();
+        public abstract RetentionTimeValues GetRetentionTimes();
 
         public PeptideDocNode PeptideDocNode { get; private set; }
         public TransitionGroupDocNode TransitionGroupDocNode { get; private set; }
@@ -94,9 +94,9 @@ namespace pwiz.Skyline.Model.Results
             return list;
         }
 
-        public override RetentionTimeValues? GetRetentionTimes()
+        public override RetentionTimeValues GetRetentionTimes()
         {
-            return RetentionTimeValues.GetValues(ChromInfo);
+            return RetentionTimeValues.FromTransitionChromInfo(ChromInfo);
         }
 
         public TransitionDocNode TransitionDocNode { get; private set; }
@@ -146,9 +146,9 @@ namespace pwiz.Skyline.Model.Results
             return list;
         }
 
-        public override RetentionTimeValues? GetRetentionTimes()
+        public override RetentionTimeValues GetRetentionTimes()
         {
-            return RetentionTimeValues.GetValues(ChromInfo);
+            return RetentionTimeValues.FromTransitionGroupChromInfo(ChromInfo);
         }
     }
 
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
             get { return 0; }
         }
 
-        public override RetentionTimeValues? GetRetentionTimes()
+        public override RetentionTimeValues GetRetentionTimes()
         {
             return null;
         }

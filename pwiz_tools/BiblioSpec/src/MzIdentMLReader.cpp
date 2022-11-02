@@ -46,6 +46,7 @@ MzIdentMLReader::MzIdentMLReader
 
     lookUpBy_ = NAME_ID;
     scoreThreshold_ = 0;
+    isScoreLookup_ = false;
 }
 
 MzIdentMLReader::~MzIdentMLReader()
@@ -82,33 +83,7 @@ bool MzIdentMLReader::parseFile(){
         }
     }
 
-    PSM_SCORE_TYPE scoreType = UNKNOWN_SCORE_TYPE;
-    switch (analysisType_) {
-        case SCAFFOLD_ANALYSIS:
-            scoreType = SCAFFOLD_SOMETHING;
-            break;
-        case BYONIC_ANALYSIS:
-            scoreType = BYONIC_PEP;
-            break;
-        case MSGF_ANALYSIS:
-            scoreType = MSGF_SCORE;
-            break;
-        case PEPTIDESHAKER_ANALYSIS:
-            scoreType = PEPTIDE_SHAKER_CONFIDENCE;
-            break;
-        case MASCOT_ANALYSIS:
-            scoreType = MASCOT_IONS_SCORE;
-            break;
-        case PEAKS_ANALYSIS:
-            scoreType = PEAKS_CONFIDENCE_SCORE;
-            break;
-        case PROT_PILOT_ANALYSIS:
-            scoreType = PROTEIN_PILOT_CONFIDENCE;
-            break;
-        case GENERIC_QVALUE_ANALYSIS:
-            scoreType = GENERIC_QVALUE;
-            break;
-    }
+    PSM_SCORE_TYPE scoreType = analysisToScoreType(analysisType_);
 
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
     vector<std::string> specExtensions;
@@ -139,13 +114,24 @@ bool MzIdentMLReader::parseFile(){
 
         // move from map to psms_
         psms_ = fileIterator->second;
-        if (sourceFile.empty())
-            buildTables(scoreType);
-        else
-            buildTables(scoreType, sourceFile);
+        if (!isScoreLookup_) {
+            if (sourceFile.empty())
+                buildTables(scoreType);
+            else
+                buildTables(scoreType, sourceFile);
+        }
     }
 
     return true;
+}
+
+vector<PSM_SCORE_TYPE> MzIdentMLReader::getScoreTypes() {
+    isScoreLookup_ = true;
+    try {
+        parseFile();
+    } catch (SAXHandler::EndEarlyException) {
+    }
+    return vector<PSM_SCORE_TYPE>(1, analysisToScoreType(analysisType_));
 }
 
 /**
@@ -338,7 +324,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
         {
             case MS_PeptideShaker_PSM_confidence:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = PEPTIDESHAKER_ANALYSIS;
+                    setAnalysisType(PEPTIDESHAKER_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(PEPTIDE_SHAKER);
                 }
                 if (analysisType_ == PEPTIDESHAKER_ANALYSIS)
@@ -347,7 +333,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
             case MS_Scaffold_Peptide_Probability:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = SCAFFOLD_ANALYSIS;
+                    setAnalysisType(SCAFFOLD_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(SCAFFOLD);
                 }
                 if (analysisType_ == SCAFFOLD_ANALYSIS)
@@ -357,7 +343,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
             case MS_Byonic__Peptide_AbsLogProb:
             case MS_Byonic__Peptide_AbsLogProb2D:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = BYONIC_ANALYSIS;
+                    setAnalysisType(BYONIC_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(BYONIC);
                 }
                 if (analysisType_ == BYONIC_ANALYSIS)
@@ -366,7 +352,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
             case MS_MS_GF_QValue:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = MSGF_ANALYSIS;
+                    setAnalysisType(MSGF_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(MSGF);
                 }
                 if (analysisType_ == MSGF_ANALYSIS)
@@ -375,7 +361,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
             case MS_Mascot_expectation_value:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = MASCOT_ANALYSIS;
+                    setAnalysisType(MASCOT_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(MASCOT);
                 }
                 if (analysisType_ == MASCOT_ANALYSIS)
@@ -384,7 +370,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
             case MS_PEAKS_peptideScore:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = PEAKS_ANALYSIS;
+                    setAnalysisType(PEAKS_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(PEAKS);
                 }
                 if (analysisType_ == PEAKS_ANALYSIS)
@@ -393,7 +379,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
             case MS_Paragon_confidence:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = PROT_PILOT_ANALYSIS;
+                    setAnalysisType(PROT_PILOT_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(PROT_PILOT);
                 }
                 if (analysisType_ == PROT_PILOT_ANALYSIS)
@@ -403,7 +389,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
             case MS_PSM_level_q_value:
             case MS_percolator_Q_value:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = GENERIC_QVALUE_ANALYSIS;
+                    setAnalysisType(GENERIC_QVALUE_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(GENERIC_QVALUE_INPUT);
                 }
                 if (analysisType_ == GENERIC_QVALUE_ANALYSIS)
@@ -422,7 +408,7 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
         {
             case MS_MS_GF_EValue:
                 if (analysisType_ == UNKNOWN_ANALYSIS) {
-                    analysisType_ = MSGF_ANALYSIS;
+                    setAnalysisType(MSGF_ANALYSIS);
                     scoreThreshold_ = getScoreThreshold(MSGF);
                 }
                 if (analysisType_ == MSGF_ANALYSIS)
@@ -435,6 +421,36 @@ double MzIdentMLReader::getScore(const SpectrumIdentificationItem& item){
 
     Verbosity::error(".mzid file contains an unsupported score type");
     return 0;
+}
+
+void MzIdentMLReader::setAnalysisType(ANALYSIS analysisType) {
+    analysisType_ = analysisType;
+    if (isScoreLookup_) {
+        throw SAXHandler::EndEarlyException();
+    }
+}
+
+PSM_SCORE_TYPE MzIdentMLReader::analysisToScoreType(ANALYSIS analysisType) {
+    switch (analysisType) {
+        case SCAFFOLD_ANALYSIS:
+            return SCAFFOLD_SOMETHING;
+        case BYONIC_ANALYSIS:
+            return BYONIC_PEP;
+        case MSGF_ANALYSIS:
+            return MSGF_SCORE;
+        case PEPTIDESHAKER_ANALYSIS:
+            return PEPTIDE_SHAKER_CONFIDENCE;
+        case MASCOT_ANALYSIS:
+            return MASCOT_IONS_SCORE;
+        case PEAKS_ANALYSIS:
+            return PEAKS_CONFIDENCE_SCORE;
+        case PROT_PILOT_ANALYSIS:
+            return PROTEIN_PILOT_CONFIDENCE;
+        case GENERIC_QVALUE_ANALYSIS:
+            return GENERIC_QVALUE;
+        default:
+            return UNKNOWN_SCORE_TYPE;
+    }
 }
 
 bool MzIdentMLReader::passThreshold(double score)

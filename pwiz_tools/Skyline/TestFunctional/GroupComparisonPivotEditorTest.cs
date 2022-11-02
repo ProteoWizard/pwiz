@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -63,18 +65,38 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(pivotEditor, pivotEditor.OkDialog);
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+
+            string originalFormat = foldChangeGrid.DataboundGridControl.DataGridView.Columns[1].DefaultCellStyle.Format;
+            const string newFormat = "0.0000E+0";
+            Assert.AreNotEqual(newFormat, originalFormat);
+
             int columnCount = foldChangeGrid.DataboundGridControl.ColumnCount;
             for (int i = 1; i < columnCount; i++)
             {
                 var chooseFormatDlg = ShowDialog<ChooseFormatDlg>(() =>
                     foldChangeGrid.DataboundGridControl.ShowFormatDialog(foldChangeGrid.DataboundGridControl
                         .DataGridView.Columns[i]));
-                RunUI(() => chooseFormatDlg.FormatText = "0.0000E+0");
+                RunUI(() => chooseFormatDlg.FormatText = newFormat);
                 OkDialog(chooseFormatDlg, ()=>chooseFormatDlg.DialogResult = DialogResult.OK);
                 RunUI(()=>foldChangeGrid.DataboundGridControl.DataGridView.Columns[i].Width += i);
             }
-            var nameLayoutForm =
-                ShowDialog<NameLayoutForm>(foldChangeGrid.DataboundGridControl.NavBar.RememberCurrentLayout);
+            RunUI(() =>
+            {
+                foldChangeGrid.DataboundGridControl.SetSortDirection(foldChangeGrid.DataboundGridControl.BindingListSource.ItemProperties[0], ListSortDirection.Ascending);
+            });
+            WaitForCondition(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            RunUI(() =>
+            {
+                foldChangeGrid.DataboundGridControl.SetSortDirection(foldChangeGrid.DataboundGridControl.BindingListSource.ItemProperties[0], ListSortDirection.Descending);
+            });
+            WaitForCondition(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            for (int i = 1; i < columnCount; i++)
+            {
+                Assert.AreEqual(newFormat,
+                    foldChangeGrid.DataboundGridControl.DataGridView.Columns[i].DefaultCellStyle.Format);
+            }
+
+            var nameLayoutForm = ShowDialog<NameLayoutForm>(foldChangeGrid.DataboundGridControl.NavBar.RememberCurrentLayout);
             RunUI(()=>nameLayoutForm.LayoutName = "TestLayout");
             OkDialog(nameLayoutForm, nameLayoutForm.OkDialog);
             RunUI(()=>SkylineWindow.SaveDocument());

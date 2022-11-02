@@ -23,7 +23,7 @@ namespace pwiz.Common.DataBinding.Attributes
     /// <summary>
     /// Allows the name of a property to be overridden.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class | AttributeTargets.Struct)]
     public class InvariantDisplayNameAttribute : InUiModesAttribute
     {
         public InvariantDisplayNameAttribute(string displayName)

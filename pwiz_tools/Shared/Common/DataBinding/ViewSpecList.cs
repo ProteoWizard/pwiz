@@ -56,6 +56,7 @@ namespace pwiz.Common.DataBinding
             get { return Views.Select(vsl => vsl.ViewSpec); }
         }
 
+        [TrackChildren]
         public IEnumerable<ViewLayoutList> ViewLayouts
         {
             get { return Views.Select(vsl => vsl.ViewLayoutList).Where(vll => !vll.IsEmpty); }

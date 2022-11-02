@@ -583,7 +583,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
 string xml_root_element(const string& fileheader)
 {
-    const static bxp::sregex e = bxp::sregex::compile("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
+    const static bxp::sregex e = bxp::sregex::compile("(?:<\\?xml.*?>)?.*?<([^?!]\\S+?)[\\s>]");
 
     // convert Unicode to ASCII
     string asciiheader;
@@ -597,7 +597,7 @@ string xml_root_element(const string& fileheader)
     bxp::smatch m;
     if (bxp::regex_search(asciiheader, m, e))
         return m[1];
-    throw runtime_error("[xml_root_element] Root element not found (header is not well-formed XML)");
+    throw xml_root_error("[xml_root_element] Root element not found (header is not well-formed XML)");
 }
 
 string xml_root_element(istream& is)
@@ -612,7 +612,7 @@ string xml_root_element_from_file(const string& filepath)
 {
     pwiz::util::random_access_compressed_ifstream file(filepath.c_str());
     if (!file)
-        throw runtime_error("[xml_root_element_from_file] Error opening file");
+        throw xml_root_error("[xml_root_element_from_file] Error opening file");
     return xml_root_element(file);
 }
 

@@ -71,6 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new []{TestFilesDir.GetTestPath("ProxlTest.proxl.xml") });
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
@@ -97,8 +98,8 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Document.Peptides.Where(peptide => peptide.Peptide.Sequence == "HAVSEGTKAVTKYTSAK").ToList();
             Assert.AreEqual(1, peptides.Count);
             Assert.AreNotEqual(null, peptides[0].ExplicitMods);
-            Assert.AreEqual(1, peptides[0].ExplicitMods.Crosslinks.Count);
-            Assert.AreEqual(null, peptides[0].ExplicitMods.Crosslinks.Values[0].Peptide);
+            Assert.AreEqual(1, peptides[0].ExplicitMods.CrosslinkStructure.Crosslinks.Count);
+            Assert.AreEqual(0, peptides[0].ExplicitMods.CrosslinkStructure.LinkedPeptides.Count);
         }
     }
 }

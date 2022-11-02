@@ -72,8 +72,10 @@ namespace ZedGraph
 		/// <seealso cref="Scale.IsOrdinal"/>
 		LinearAsOrdinal,
 		/// <summary> An exponential axis </summary>
-		Exponent
-	}
+		Exponent,
+        /// <summary> An axis that can be defined by the user using SetUserDefinedAxis.</summary>
+        UserDefined
+    }
 
 	/// <summary>
 	/// Enumeration type for the various types of fills that can be used with <see cref="Bar"/>

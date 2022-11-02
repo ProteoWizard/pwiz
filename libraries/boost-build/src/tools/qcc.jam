@@ -1,10 +1,11 @@
 #  Copyright (c) 2001 David Abrahams.
 #  Copyright (c) 2002-2003 Rene Rivera.
 #  Copyright (c) 2002-2003 Vladimir Prus.
+#  Copyright (c) 2020 Alexander Karzhenkov.
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import "class" : new ;
 import common ;
@@ -47,6 +48,45 @@ generators.register-c-compiler qcc.compile.c   : C   : OBJ : <toolset>qcc ;
 generators.register-c-compiler qcc.compile.asm : ASM : OBJ : <toolset>qcc ;
 
 
+# Select QCC target platform
+
+# Configuration checks don't use explicit value of QCC-TARGET-PLATFORM
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>/<address-model> : NA ;
+
+# Combinations supported by both QNX 6.5.0 and QNX 7.0.0
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>x86/<address-model>32 : -Vgcc_ntox86 ;
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>32 : -Vgcc_ntoarmv7le ;
+
+# Combinations supported by QNX 7.0.0
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>x86/<address-model>64 : -Vgcc_ntox86_64 ;
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>64 : -Vgcc_ntoaarch64le ;
+
+# Combinations supported by QNX 6.5.0
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>power/<address-model>32 : -Vgcc_ntoppcbe ;
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vgcc_ntomipsle ;
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips1/<address-model>32 : -Vgcc_ntomipsle ;
+
+# There are also excluded alternatives (supported by QNX 6.5.0)
+# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>32 : -Vgcc_ntoarmle ;
+# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>power/<address-model>32 : -Vgcc_ntoppcbespe ;
+# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vgcc_ntomipsbe ;
+# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips1/<address-model>32 : -Vgcc_ntomipsbe ;
+
+local rule check-target-platform
+{
+    local opt = [ on $(1) return $(QCC-TARGET-PLATFORM) ] ;
+
+    if $(opt) = NA
+    {
+        # Configuration checks are performed
+        QCC-TARGET-PLATFORM on $(1) = ;
+    }
+    else if ! $(opt)
+    {
+        errors.user-error "Unsupported achitecture / address model" ;
+    }
+}
+
 # Declare flags for compilation.
 toolset.flags qcc.compile OPTIONS <debug-symbols>on : -gstabs+ ;
 
@@ -61,6 +101,8 @@ toolset.flags qcc.compile OPTIONS <inlining>full : -Wc,-finline-functions -Wc,-W
 
 toolset.flags qcc.compile OPTIONS <warnings>off : -w ;
 toolset.flags qcc.compile OPTIONS <warnings>all : -Wc,-Wall ;
+toolset.flags qcc.compile OPTIONS <warnings>extra : -Wc,-Wall -Wc,-Wextra ;
+toolset.flags qcc.compile OPTIONS <warnings>pedantic : -Wc,-Wall -Wc,-Wextra -Wc,-pedantic ;
 toolset.flags qcc.compile OPTIONS <warnings-as-errors>on : -Wc,-Werror ;
 
 toolset.flags qcc.compile OPTIONS <profiling>on : -p ;
@@ -96,21 +138,33 @@ rule compile.c++
     {
         TEMPLATE_DEPTH on $(1) = 128 ;
     }
+
+    check-target-platform $(1) ;
 }
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -Wc,-ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) -Wc,-ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+rule compile.c
+{
+    check-target-platform $(1) ;
 }
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -lang-c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) -lang-c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+rule compile.asm
+{
+    check-target-platform $(1) ;
 }
 
 actions compile.asm
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 
@@ -188,15 +242,12 @@ toolset.flags qcc.link RPATH_LINK : <xdll-path> : unchecked ;
 rule link ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only qcc links while it might
-    # be a good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>qcc-link-semaphore ;
+    check-target-platform $(1) ;
 }
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)
 }
 
 
@@ -220,17 +271,23 @@ if [ os.name ] = NT
 #
 # Use qcc driver to create archive, see
 #     http://www.qnx.com/developers/docs/6.3.2/neutrino/utilities/q/qcc.html
+
+rule archive
+{
+    check-target-platform $(1) ;
+}
+
 actions piecemeal archive
 {
     $(RM) "$(<)"
-    "$(CONFIG_COMMAND)" -A "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) -A "$(<)" "$(>)"
 }
 
 
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>qcc-link-semaphore ;
+    check-target-platform $(1) ;
 }
 
 
@@ -238,5 +295,5 @@ rule link.dll ( targets * : sources * : properties * )
 #
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)
 }

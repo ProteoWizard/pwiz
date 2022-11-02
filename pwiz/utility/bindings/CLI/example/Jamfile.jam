@@ -23,7 +23,7 @@
 import modules ;
 if [ modules.peek : NT ]
 {
-    import path feature svnrev sequence ;
+    import path feature sequence ;
     path-constant THIS_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI/example ;
 
     rule do_example_build ( targets + : sources * : properties * )
@@ -42,6 +42,7 @@ if [ modules.peek : NT ]
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
         INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+        MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
     }
 
     actions do_example_build
@@ -72,11 +73,8 @@ if [ modules.peek : NT ]
     {
 @($(STDOUT):E=
 This example project is bundled with the vendor DLLs in order to show you how to use them in a C# project,
-but use of these DLLs in your derived works is subject to license agreements. In particular, the Thermo license
-requires each developer to download MSFileReader separately and agree to the license on their site. Then you can
-distribute the MSFileReader DLLs in your non-commercial binary distributions. The other licenses do not require
-developers to download the DLLs separately, but you must agree to each vendor's license agreement and have your
-end users agree to them as well.
+but use of these DLLs in your derived works is subject to license agreements. You must agree to each vendor's
+license agreement and have your end users agree to them as well.
 ) > "$(<)"
     }
 

@@ -63,5 +63,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return StartTime == 0 && EndTime == 0; }
         }
+
+        public override string ToString()
+        {
+            return string.Format(@"[{0:F04},{1:F04}]:{2:F04}", StartTime, EndTime, Score);
+        }
     }
 }

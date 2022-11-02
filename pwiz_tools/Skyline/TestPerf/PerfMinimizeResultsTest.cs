@@ -34,7 +34,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfMinimizeResultsTest : AbstractFunctionalTest
     {
-        private const string ZIP_FILE = @"https://skyline.gs.washington.edu/perftests/PerfMinimizeResultsTest.zip";
+        private static string ZIP_FILE = GetPerfTestDataURL(@"PerfMinimizeResultsTest.zip");
 
         [TestMethod]
         public void TestMinimizeResultsPerformance()

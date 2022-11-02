@@ -214,7 +214,7 @@
     <value>4</value>
   </data>
   <data name="labelSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline (64-bit : developer build) 19.0.0.000 (abc123456)</value>
+    <value>Skyline (64-bit : developer build) 22.0.0.000 (abc123456)</value>
   </data>
   <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
     <value>labelSoftwareVersion</value>
@@ -247,37 +247,28 @@
     <value>5</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
-    <value>AB Sciex
-WIFF File Reader Library
-Copyright © 2010 by AB Sciex LLC.
-All rights reserved.
-http://www.absciex.com/
-
-Agilent Technologies
+    <value>Agilent Technologies
 Mass Hunter Data Access Component
-http://www.agilent.com
+Copyright © 2017 by Agilent Technologies
+https://www.agilent.com
 
 BiblioSpec
 Spectral Library Building
-http://proteome.gs.washington.edu/software/bibliospec
+https://skyline.ms/build-blib.url
 
 Bruker
 CompassXtract Data Reader Library
-Copyright © 2011 by Bruker Daltonik GmbH.
+Copyright © 2020 by Bruker Daltonik GmbH.
 All rights reserved.
-http://www.bruker.com/
-
-Crawdad
-Peak Detection
-http://proteome.gs.washington.edu/software/crawdad
+https://www.bruker.com/
 
 DigitalRune Software
 Docking Windows
-http://www.digitalrune.com
+https://github.com/DigitalRune
 
 DotNetZip Library
 ZIP compression &amp; extraction
-http://www.codeplex.com/DotNetZip
+https://www.nuget.org/packages/DotNetZip/
 
 James Newton-King
 Json.NET
@@ -285,46 +276,52 @@ http://james.newtonking.com
 
 JetBrains Software
 Development tools: ReSharper, dotTrace and dotCover
-http://www.jetbrains.com/index.html
+https://www.jetbrains.com/
 
 Matrix Science
 Mascot Parser
-http://www.matrixscience.com
+https://www.matrixscience.com
 
 NHibernate
 Object Relational Mapping
-http://www.nhibernate.org
+https://nhibernate.info/
 
 ProteoWizard
 Mass Spectrometry Data Import
 https://github.com/ProteoWizard
 
+SCIEX
+WIFF File Reader Library
+Copyright © 2020 by AB Sciex LLC.
+All rights reserved.
+https://sciex.com/
+
 Shimadzu Corporation
 Shimadzu's file converter software
-Copyright © 2014 by Shimadzu Coporation
+Copyright © 2020 by Shimadzu Coporation
 All rights reserved.
-http://www.shimadzu.com
+https://www.shimadzu.com
 
 SQLite
 Single File and In-Memory RDBMS
-http://www.sqlite.org
+https://www.sqlite.org
 
 SQLite.NET
 ADO.NET Provider for SQLite
-http://sqlite.phxsoftware.com
+https://system.data.sqlite.org/
 
 Thermo Fisher Scientific
 MSFileReader file reading tool
-Copyright © 2009 by Thermo Fisher Scientific, Inc.
+Copyright © 2019 by Thermo Fisher Scientific, Inc.
 All rights reserved.
-http://www.thermo.com
+https://www.thermofisher.com/
 
 Waters Technologies Corporation
 Method export library
 Waters Raw Data Access Component
-Copyright © 2010 by Waters Corporation.
+Copyright © 2021 by Waters Corporation.
 All rights reserved.
-http://www.waters.com
+https://www.waters.com/
 
 ZedGraph
 Chart Plotting
@@ -332,7 +329,7 @@ http://zedgraph.org
 
 Zlib
 Data Compression
-http://www.zlib.net</value>
+https://www.zlib.net</value>
   </data>
   <data name="&gt;&gt;textBox1.Name" xml:space="preserve">
     <value>textBox1</value>
@@ -467,7 +464,7 @@ http://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2020 University of Washington, all rights reserved
+    <value>Copyright © 2008-2022 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 

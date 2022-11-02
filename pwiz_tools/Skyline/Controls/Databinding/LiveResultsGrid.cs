@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
-            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = new SkylineWindowDataSchema(skylineWindow);
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             BindingListSource.ListChanged += bindingListSource_ListChanged;
             BindingListSource.CurrentChanged += bindingListSource_CurrentChanged;
@@ -63,8 +63,15 @@ namespace pwiz.Skyline.Controls.Databinding
             contextMenuStrip.Opening += contextMenu_Opening;
         }
 
-        // TODO(nicksh): replace this with ResultsGrid.IStateProvider
         public SkylineWindow SkylineWindow { get; private set; }
+
+        public override DataGridId DataGridId
+        {
+            get
+            {
+                return new DataGridId(DataGridType.RESULTS_GRID, null);
+            }
+        }
 
         protected override void OnHandleCreated(EventArgs e)
         {

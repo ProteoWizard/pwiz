@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model
                 var rowList = new List<GroupComparisonRow>();
                 foreach (var row in foldChangeRows)
                 {
-                    rowList.Add(new GroupComparisonRow(row.Protein.DocNode, row.Peptide.DocNode, row.MsLevel, row.FoldChangeResult));
+                    rowList.Add(new GroupComparisonRow(row.Protein.DocNode, row.Peptide?.DocNode, row.MsLevel, row.FoldChangeResult));
                 }
 
                 rows = rowList.ToArray();

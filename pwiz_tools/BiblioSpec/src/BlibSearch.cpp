@@ -74,100 +74,122 @@ string getTargetReportName(const string& specFileName,
  */
 int main(int argc, char* argv[])
 {
-    bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
-    pwiz::util::enable_utf8_path_operations();
+    try
+    {
+        bnw::args utf8ArgWrapper(argc, argv); // modifies argv in-place with UTF-8 version on Windows
+        pwiz::util::enable_utf8_path_operations();
 
-    // declare storage for options values
-    ops::variables_map options_table;
+        // declare storage for options values
+        ops::variables_map options_table;
 
-    ParseCommandline(argc, argv, options_table);
+        ParseCommandline(argc, argv, options_table);
 
-    // get input files
-    string specFileName = options_table["spectrum-file"].as<string>();
-    vector<string> libraryNames = options_table["library"].as< vector<string> >();
-    checkFileExtensions(specFileName, libraryNames);
+        // get input files
+        string specFileName = options_table["spectrum-file"].as<string>();
+        vector<string> libraryNames = options_table["library"].as< vector<string> >();
+        checkFileExtensions(specFileName, libraryNames);
 
-    // print status
-    ostringstream stringBuilder;
-    stringBuilder << libraryNames;
-    string concatLibNames = stringBuilder.str();
-    BiblioSpec::Verbosity::status("Using library(s) %s.", 
-                                  concatLibNames.c_str());
+        // print status
+        ostringstream stringBuilder;
+        stringBuilder << libraryNames;
+        string concatLibNames = stringBuilder.str();
+        BiblioSpec::Verbosity::status("Using library(s) %s.",
+            concatLibNames.c_str());
 
-    // open the report files
-    BiblioSpec::Reportfile targetReport(options_table);
-    BiblioSpec::Reportfile decoyReport(options_table);
-    string reportFileName = getTargetReportName(specFileName, options_table);
-    string finalReport = reportFileName;
-    string tmpReport = reportFileName;
-    tmpReport += ".tmp";
-    reportFileName = tmpReport;
-    targetReport.open(reportFileName.c_str());
-    if( options_table["decoys-per-target"].as<int>() > 0 ){
-        string decoyReportName = finalReport;
-        BiblioSpec::replaceExtension(decoyReportName,"decoy.report");
-        decoyReport.open(decoyReportName.c_str());
-    }
+        string reportFileName = getTargetReportName(specFileName, options_table);
+        string finalReport = reportFileName;
+        string tmpReport = reportFileName;
+        tmpReport += ".tmp";
+        reportFileName = tmpReport;
 
-    // Initialize a .psm file (sqlite db), if requested
-    BiblioSpec::PsmFile* psmFile = NULL;
-    if( options_table.count("psm-result-file") ){
-        psmFile = 
-            new BiblioSpec::PsmFile(options_table["psm-result-file"].as<string>().c_str(),
-                        options_table );
-    }
+        {
+            // open the report files
+            BiblioSpec::Reportfile targetReport(options_table);
+            BiblioSpec::Reportfile decoyReport(options_table);
+            targetReport.open(reportFileName.c_str());
+            if (options_table["decoys-per-target"].as<int>() > 0) {
+                string decoyReportName = finalReport;
+                BiblioSpec::replaceExtension(decoyReportName, "decoy.report");
+                decoyReport.open(decoyReportName.c_str());
+            }
 
-    // Initialize a searcher with libraries and options
-    BiblioSpec::SearchLibrary searcher(libraryNames, options_table);
+            // Initialize a .psm file (sqlite db), if requested
+            BiblioSpec::PsmFile* psmFile = NULL;
+            if (options_table.count("psm-result-file")) {
+                psmFile =
+                    new BiblioSpec::PsmFile(options_table["psm-result-file"].as<string>().c_str(),
+                        options_table);
+            }
 
-    // TODO replace with a SpecFileReader
-    PwizReader* fileReader = new PwizReader();
-    fileReader->setIdType(INDEX_ID); // for getNextSpectrum look up
-    bool mzSort = (options_table.count("preserve-order") == 0);
-    fileReader->openFile(specFileName.c_str(), mzSort);
+            // Initialize a searcher with libraries and options
+            BiblioSpec::SearchLibrary searcher(libraryNames, options_table);
 
-    BiblioSpec::Verbosity::status("Searching spectra in '%s'.", 
-                                  specFileName.c_str());
+            // TODO replace with a SpecFileReader
+            PwizReader* fileReader = new PwizReader();
+            fileReader->setIdType(INDEX_ID); // for getNextSpectrum look up
+            bool mzSort = (options_table.count("preserve-order") == 0);
+            fileReader->openFile(specFileName.c_str(), mzSort);
 
-    // TODO include a progress indicator
-    BiblioSpec::Spectrum curSpectrum;
-    while( fileReader->getNextSpectrum(curSpectrum) ) {
-        
-        searcher.searchSpectrum(curSpectrum);
+            BiblioSpec::Verbosity::status("Searching spectra in '%s'.",
+                specFileName.c_str());
 
-        const vector<BiblioSpec::Match>& targetMatches = searcher.getTargetMatches();
-        const vector<BiblioSpec::Match>& decoyMatches = searcher.getDecoyMatches();
-        
-        if(targetMatches.size() == 0){
-            curSpectrum.clear();
-            continue;
+            // TODO include a progress indicator
+            BiblioSpec::Spectrum curSpectrum;
+            while (fileReader->getNextSpectrum(curSpectrum)) {
+
+                searcher.searchSpectrum(curSpectrum);
+
+                const vector<BiblioSpec::Match>& targetMatches = searcher.getTargetMatches();
+                const vector<BiblioSpec::Match>& decoyMatches = searcher.getDecoyMatches();
+
+                if (targetMatches.size() == 0) {
+                    curSpectrum.clear();
+                    continue;
+                }
+
+                // write to the .report file
+                targetReport.writeMatches(targetMatches);
+                decoyReport.writeMatches(decoyMatches);
+
+                // write to the .psm file
+                if (psmFile) {
+                    psmFile->insertMatches(targetMatches);
+                    psmFile->insertMatches(decoyMatches);
+                    // restore this eventually
+                    //psmFile->insertSpecData(curSpectrum, allMatches, searcher);
+                }
+                curSpectrum.clear();
+            } // next spectrum
+
+            if (psmFile)
+                psmFile->commit();
+
+            // todo close report file
+            delete fileReader;
+            delete psmFile;
         }
 
-        // write to the .report file
-        targetReport.writeMatches(targetMatches);
-        decoyReport.writeMatches(decoyMatches);
+        bfs::rename(tmpReport, finalReport);
 
-        // write to the .psm file
-        if(psmFile) {
-            psmFile->insertMatches(targetMatches);
-            psmFile->insertMatches(decoyMatches);
-            // restore this eventually
-            //psmFile->insertSpecData(curSpectrum, allMatches, searcher);
-        }
-        curSpectrum.clear();
-    } // next spectrum
-
-    if( psmFile )
-        psmFile->commit();
-    
-    // todo close report file
-    delete fileReader;
-    delete psmFile;
-    
-    rename(tmpReport.c_str(), finalReport.c_str());
-    
-    return 0;
-
+        return 0;
+    }
+    catch (std::exception& e)
+    {
+        cerr << e.what() << endl;
+    }
+    catch (const char* msg)
+    {
+        cerr << msg << endl;
+    }
+    catch (string msg)
+    {
+        cerr << msg << endl;
+    }
+    catch (...)
+    {
+        cerr << "Caught unknown exception." << endl;
+    }
+    return 1;
 }// end main
 
 
@@ -346,10 +368,11 @@ void  checkFileExtensions(string specFileName, vector<string> libraryNames){
         !BiblioSpec::hasExtension(specFileName, ".mzML") &&
         !BiblioSpec::hasExtension(specFileName, ".mzXML") &&
         !BiblioSpec::hasExtension(specFileName, ".MGF") &&
-        !BiblioSpec::hasExtension(specFileName, ".wiff")
-        ) {
+        !BiblioSpec::hasExtension(specFileName, ".mz5") &&
+        !BiblioSpec::hasExtension(specFileName, ".wiff") &&
+        !BiblioSpec::hasExtension(specFileName, ".wiff2")) {
         BiblioSpec::Verbosity::error("Spectrum file '%s' must be of type .ms2,"
-                         " .cms2, .bms2, .mzML, .mzXML, .MGF, or .wiff.",
+                         " .cms2, .bms2, .mzML, .mzXML, .MGF, .mz5, or .wiff/.wiff2.",
                          specFileName.c_str());
     }
 

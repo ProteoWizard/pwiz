@@ -47,6 +47,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly PeptideSettingsUI.LabelTypeComboDriver _driverLabelType;
         private readonly SkylineWindow _parent;
         private readonly UsageMode _usageMode;
+        private readonly IList<Adduct> _childAdducts;
 
         public enum UsageMode
         {
@@ -60,9 +61,9 @@ namespace pwiz.Skyline.SettingsUI
         /// For modifying at the Molecule level
         /// </summary>
         public EditCustomMoleculeDlg(SkylineWindow parent, string title,
-            SrmSettings settings, CustomMolecule molecule, ExplicitRetentionTimeInfo explicitRetentionTime) :
+            SrmSettings settings, CustomMolecule molecule, ExplicitRetentionTimeInfo explicitRetentionTime, IList<Adduct> childAdducts) :
             this(parent, UsageMode.moleculeEdit, title, null, null, 0, 0, null, molecule, Adduct.EMPTY, null, null,
-                explicitRetentionTime, null)
+                explicitRetentionTime, null, childAdducts)
         {
         }
 
@@ -76,7 +77,8 @@ namespace pwiz.Skyline.SettingsUI
             ExplicitTransitionGroupValues explicitTransitionGroupAttributes,
             ExplicitTransitionValues explicitTransitionAttributes,
             ExplicitRetentionTimeInfo explicitRetentionTime,
-            IsotopeLabelType defaultIsotopeLabelType)
+            IsotopeLabelType defaultIsotopeLabelType,
+            IList<Adduct> childAdducts = null)
         {
             Text = title;
             _parent = parent;
@@ -89,12 +91,12 @@ namespace pwiz.Skyline.SettingsUI
             _resultAdduct = Adduct.EMPTY;
             _resultCustomMolecule = molecule;
             _usageMode = usageMode;
+            _childAdducts = childAdducts;
 
             var enableFormulaEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.moleculeEdit ||
                                        usageMode == UsageMode.fragment;
             var enableAdductEditing = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor ||
                                       usageMode == UsageMode.fragment;
-            var suggestOnlyAdductsWithMass = usageMode != UsageMode.fragment;
             var needExplicitTransitionValues = usageMode == UsageMode.fragment;
             var needExplicitTransitionGroupValues = usageMode == UsageMode.moleculeNew || usageMode == UsageMode.precursor;
 
@@ -245,8 +247,7 @@ namespace pwiz.Skyline.SettingsUI
                     labelAverage,
                     labelMono,
                     defaultCharge,
-                    editMode,
-                    suggestOnlyAdductsWithMass)
+                    editMode)
                 {
                     NeutralFormula = defaultFormula,
                     AverageMass = averageMass,
@@ -505,6 +506,12 @@ namespace pwiz.Skyline.SettingsUI
             return (dval <= 0) ? string.Empty : dval.ToString(LocalizationHelper.CurrentCulture);
         }
 
+        private static string EmptyForNullOrZero(double? value)
+        {
+            double dval = (value ?? 0);
+            return (dval == 0) ? string.Empty : dval.ToString(LocalizationHelper.CurrentCulture);
+        }
+
         public double? CollisionEnergy
         {
             get { return NullForEmpty(textCollisionEnergy.Text); }
@@ -570,7 +577,33 @@ namespace pwiz.Skyline.SettingsUI
         public double? IonMobility
         {
             get { return NullForEmpty(textIonMobility.Text); }
-            set { textIonMobility.Text = EmptyForNullOrNonPositive(value); }
+            set { textIonMobility.Text = EmptyForNullOrZero(value); }
+        }
+
+        private void PopulateIonMobilityUnits()
+        {
+            if (!string.IsNullOrEmpty(textIonMobility.Text) && Equals(IonMobilityUnits, eIonMobilityUnits.none))
+            {
+                // Try to set a reasonable value for ion mobility units
+
+                // First look for any other explicit ion mobility values in the document
+                var doc = _parent?.Document;
+                var node =
+                    doc?.MoleculeTransitionGroups.FirstOrDefault(n =>
+                        n.ExplicitValues.IonMobilityUnits != eIonMobilityUnits.none);
+                if (node != null)
+                {
+                    IonMobilityUnits = node.ExplicitValues.IonMobilityUnits;
+                    return;
+                }
+
+                // Then try the ion mobility library if any
+                var filters = doc?.Settings.TransitionSettings.IonMobilityFiltering;
+                if (filters != null)
+                {
+                    IonMobilityUnits = filters.GetFirstSeenIonMobilityUnits();
+                }
+            }
         }
 
         public double? IonMobilityHighEnergyOffset
@@ -599,7 +632,12 @@ namespace pwiz.Skyline.SettingsUI
         public double? PrecursorCollisionEnergy
         {
             get { return NullForEmpty(textBoxPrecursorCollisionEnergy.Text); }
-            set { textBoxPrecursorCollisionEnergy.Text = EmptyForNullOrNonPositive(value); }
+            set
+            {
+                textBoxPrecursorCollisionEnergy.Text = value.HasValue && !value.Value.Equals(0)
+                    ? value.Value.ToString(LocalizationHelper.CurrentCulture)
+                    : string.Empty;
+            }
         }
 
         public double? CollisionalCrossSectionSqA
@@ -643,6 +681,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!_formulaBox.ValidateMonoText(helper))
                     return;
             }
+
             var monoMass = new TypedMass(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
             var averageMass = new TypedMass(_formulaBox.AverageMass ?? 0, MassType.Average);
             if (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)
@@ -674,6 +713,26 @@ namespace pwiz.Skyline.SettingsUI
                         .SkylineWindow_AddMolecule_The_precursor_m_z_for_this_molecule_is_out_of_range_for_your_instrument_settings_);
                 return;
             }
+
+            // Ion mobility value must have ion mobility units
+            if (textIonMobility.Visible && IonMobility.HasValue)
+            {
+                if (IonMobilityUnits == eIonMobilityUnits.none)
+                {
+                    helper.ShowTextBoxError(textIonMobility, Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_);
+                    comboBoxIonMobilityUnits.Focus();
+                    return;
+                }
+
+                if (IonMobility.Value == 0 ||
+                    (IonMobility.Value < 0 && !IonMobilityFilter.AcceptNegativeMobilityValues(IonMobilityUnits)))
+                {
+                    helper.ShowTextBoxError(textIonMobility, 
+                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, IonMobility));
+                    textIonMobility.Focus();
+                    return;
+                }
+            }
             if (_usageMode == UsageMode.precursor)
             {
                 // Only the adduct should be changing
@@ -695,6 +754,23 @@ namespace pwiz.Skyline.SettingsUI
                     _formulaBox.ShowTextBoxErrorFormula(helper, x.Message);
                     return;
                 }
+
+                // If editing the molecule, make sure that the formula makes sense with any child precursors (e.g. not removing more Carbons than are in the molecule)
+                if (_childAdducts != null)
+                {
+                    foreach (var childAdduct in _childAdducts)
+                    {
+                        try
+                        {
+                            childAdduct.ApplyToFormula(_formulaBox.NeutralFormula);
+                        }
+                        catch (Exception e) // A number of different exceptions can happen during parsing of user-input formula and/or adduct
+                        {
+                            _formulaBox.ShowTextBoxErrorFormula(helper, e.Message);
+                            return;
+                        }
+                    }
+                }                
             }
             else
             {
@@ -842,6 +918,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void textIonMobility_TextChanged(object sender, EventArgs e)
+        {
+            PopulateIonMobilityUnits(); // Try to set reasonable ion mobility units if user is adding an ion mobility value
+        }
 
         #region For Testing
 

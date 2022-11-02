@@ -48,7 +48,6 @@ namespace pwiz.Skyline.SettingsUI
             this.availableFieldsTree1 = new pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree();
             this.lblCalculatedAppliesTo = new System.Windows.Forms.Label();
             this.comboAppliesTo = new System.Windows.Forms.ComboBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageEditable.SuspendLayout();
             this.tabPageCalculated.SuspendLayout();
@@ -194,7 +193,6 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "DefineAnnotationDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPageEditable.ResumeLayout(false);
             this.tabPageEditable.PerformLayout();

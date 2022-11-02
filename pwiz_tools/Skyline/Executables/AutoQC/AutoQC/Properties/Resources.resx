@@ -117,196 +117,500 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="MainForm_btnOpenFolder_Click_Directory_Not_Found" xml:space="preserve">
-    <value>Directory Not Found</value>
+  <data name="SkylineSettings_Unable_to_find_Skyline_Daily_installation_" xml:space="preserve">
+    <value>Unable to find Skyline-daily installation.</value>
   </data>
-  <data name="MainForm_btnImport_Click_Import_Configurations_Error" xml:space="preserve">
-    <value>Import Configurations Error</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Delete.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="MainForm_btnImport_Click_Import_Configurations" xml:space="preserve">
-    <value>Import Configurations</value>
-  </data>
-  <data name="MainForm_ViewLog_Error_Reading_Log" xml:space="preserve">
-    <value>Error Reading Log</value>
-  </data>
-  <data name="MainForm_cb_keepRunning_CheckedChanged_Error_Changing_Settings" xml:space="preserve">
-    <value>Error Changing Settings</value>
-  </data>
-  <data name="MainForm_btnOpenFolder_Click_Directory_does_not_exist___0_" xml:space="preserve">
-    <value>Directory does not exist: {0}</value>
-  </data>
-  <data name="MainForm_btnDelete_Click_Cannot_Delete" xml:space="preserve">
-    <value>Cannot Delete</value>
-  </data>
-  <data name="MainForm_btnDelete_Click_Configuration___0___is_running__Please_stop_the_configuration_and_try_again__" xml:space="preserve">
-    <value>Configuration "{0}" is running. Please stop the configuration and try again. </value>
-  </data>
-  <data name="MainForm_btnDelete_Click_Please_wait_for_the_configuration___0___to_stop_and_try_again_" xml:space="preserve">
-    <value>Please wait for the configuration "{0}" to stop and try again.</value>
-  </data>
-  <data name="MainForm_btnDelete_Click_Confirm_Delete" xml:space="preserve">
-    <value>Confirm Delete</value>
-  </data>
-  <data name="MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_configuration___0___" xml:space="preserve">
-    <value>Are you sure you want to delete configuration "{0}"?</value>
-  </data>
-  <data name="MainForm_listViewConfigs_ItemCheck_Please_Wait" xml:space="preserve">
-    <value>Please Wait</value>
-  </data>
-  <data name="MainForm_listViewConfigs_ItemCheck_Configuration_is__0___Please_wait_" xml:space="preserve">
-    <value>Configuration is {0}. Please wait.</value>
-  </data>
-  <data name="MainForm_listViewConfigs_ItemCheck_starting" xml:space="preserve">
-    <value>starting</value>
-  </data>
-  <data name="MainForm_listViewConfigs_ItemCheck_stopping" xml:space="preserve">
-    <value>stopping</value>
-  </data>
-  <data name="MainForm_listViewConfigs_ItemCheck_Confirm_Stop" xml:space="preserve">
-    <value>Confirm Stop</value>
-  </data>
-  <data name="MainForm_listViewConfigs_ItemCheck_Are_you_sure_you_want_to_stop_configuration___0___" xml:space="preserve">
-    <value>Are you sure you want to stop configuration "{0}"?</value>
-  </data>
-  <data name="MainForm_ViewLog_No_configuration_found_for_name___0__" xml:space="preserve">
-    <value>No configuration found for name "{0}"</value>
-  </data>
-  <data name="MainForm_ViewLog_Log_for_this_configuration_is_not_yet_initialized_" xml:space="preserve">
-    <value>Log for this configuration is not yet initialized.</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_OK" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Cancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Yes" xml:space="preserve">
-    <value>Yes</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_No" xml:space="preserve">
-    <value>No</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Abort" xml:space="preserve">
-    <value>Abort</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Retry" xml:space="preserve">
-    <value>Retry</value>
-  </data>
-  <data name="AlertDlg_GetDefaultButtonText_Ignore" xml:space="preserve">
-    <value>Ignore</value>
-  </data>
-  <data name="AlertDlg_TruncateMessage_Message_truncated__Press_Ctrl_C_to_copy_entire_message_to_the_clipboard_" xml:space="preserve">
-    <value>Message truncated. Press Ctrl+C to copy entire message to the clipboard.</value>
-  </data>
-  <data name="AutoQcConfigForm_ShowErrorDialog_Configuration_Validation_Error" xml:space="preserve">
-    <value>Configuration Validation Error</value>
-  </data>
-  <data name="AutoQcConfigForm_GetMainSettingsFromUI_Results_Window" xml:space="preserve">
-    <value>Results Window</value>
-  </data>
-  <data name="AutoQcConfigForm_GetMainSettingsFromUI_Acquisition_Time" xml:space="preserve">
-    <value>Acquisition Time</value>
-  </data>
-  <data name="AutoQcConfigForm_ValidateIntTextField_Invalid_value_for___0_____1__" xml:space="preserve">
-    <value>Invalid value for "{0}": {1}.</value>
-  </data>
-  <data name="AutoQcConfigForm_btnSkylineFilePath_Click_Skyline_Files___sky____sky_All_Files__________" xml:space="preserve">
-    <value>Skyline Files(*.sky)|*.sky|All Files (*.*)|*.*</value>
-  </data>
-  <data name="AutoQcConfigForm_btnFolderToWatch_Click_Directory_where_the_instrument_will_write_QC_files_" xml:space="preserve">
-    <value>Directory where the instrument will write QC files.</value>
-  </data>
-  <data name="AutoQcConfigForm_ValidateConfigName_A_configuration_with_this_name_already_exists_" xml:space="preserve">
-    <value>A configuration with this name already exists.</value>
-  </data>
-  <data name="MainForm_btnImport_Click_The_following_configurations_already_exist_and_were_not_imported_" xml:space="preserve">
-    <value>The following configurations already exist and were not imported:</value>
-  </data>
-  <data name="MainForm_btnImport_Click_The_following_configurations_could_not_be_validated_and_were_not_imported_" xml:space="preserve">
-    <value>The following configurations could not be validated and were not imported:</value>
-  </data>
-  <data name="MainForm_btnImport_Click_Number_of_configurations_imported__" xml:space="preserve">
-    <value>Number of configurations imported: </value>
-  </data>
-  <data name="MainForm_StartConfigRunner_More_details_can_be_found_in_the_program_log___0_" xml:space="preserve">
-    <value>More details can be found in the program log: {0}</value>
-  </data>
-  <data name="MainForm_StartConfigRunner_Error_Starting_Configuration___0__" xml:space="preserve">
-    <value>Error Starting Configuration "{0}"</value>
-  </data>
-  <data name="MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_" xml:space="preserve">
-    <value>Error enabling "Keep {0} running"</value>
-  </data>
-  <data name="MainForm_cb_keepRunning_CheckedChanged_Error_disabling__Keep__0__running_" xml:space="preserve">
-    <value>Error disabling "Keep {0} running"</value>
-  </data>
-  <data name="MainForm_ApplyChangesToSkylineSettings_Cannot_Update__0__Settings" xml:space="preserve">
-    <value>Cannot Update {0} Settings</value>
-  </data>
-  <data name="MainForm_ApplyChangesToSkylineSettings__0__Settings_Updated" xml:space="preserve">
-    <value>{0} Settings Updated</value>
-  </data>
-  <data name="MainForm_ApplyChangesToSkylineSettings__0__settings_were_updated_successfully_" xml:space="preserve">
-    <value>{0} settings were updated successfully!</value>
-  </data>
-  <data name="MainForm_buttonFileDialogSkylineInstall_click_Select_the__0__installation_directory_" xml:space="preserve">
-    <value>Select the {0} installation directory.</value>
-  </data>
-  <data name="MainForm_TabMain_Deselecting__0__Settings_Not_Initialized" xml:space="preserve">
-    <value>{0} Settings Not Initialized</value>
-  </data>
-  <data name="MainForm_TabMain_Deselecting_An_installation_of__0__or__1__is_required_to_use__2___Please_select__3__installation_details_to_continue_" xml:space="preserve">
-    <value>An installation of {0} or {1} is required to use {2}. Please select {3} installation details to continue.</value>
-  </data>
-  <data name="MainForm_TabMain_Deselecting_Unsaved__0__Settings" xml:space="preserve">
-    <value>Unsaved {0} Settings</value>
-  </data>
-  <data name="MainForm_TabMain_Deselecting__0__settings_have_not_been_saved__Would_you_like_to_save_them_" xml:space="preserve">
-    <value>{0} settings have not been saved. Would you like to save them?</value>
-  </data>
-  <data name="Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___" xml:space="preserve">
-    <value>AutoQC Loader encountered an unexpected error. Error details may be found in the {0} file in this directory : </value>
+  <data name="SkylineSettings_Unable_to_find_Skyline_installation_at__0__" xml:space="preserve">
+    <value>Unable to find Skyline installation at {0}</value>
   </data>
   <data name="Program_Main_Another_instance_of__0__is_already_running_" xml:space="preserve">
     <value>Another instance of {0} is already running.</value>
   </data>
-  <data name="Program_Main__0__Error" xml:space="preserve">
-    <value>{0} Error</value>
+  <data name="SkylineData" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SkylineData.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Program_Main__0__Update_Error" xml:space="preserve">
-    <value>{0} Update Error</value>
+  <data name="SkylineDoc" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SkylineDoc.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MainForm_ViewLog_Log_Truncated" xml:space="preserve">
+    <value>... Log truncated ...</value>
+  </data>
+  <data name="SkylineSettings_Unable_to_find_Skyline_installation_" xml:space="preserve">
+    <value>Unable to find Skyline installation.</value>
+  </data>
+  <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\add.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_" xml:space="preserve">
+    <value>... Log truncated. Full log is in {0}</value>
+  </data>
+  <data name="MainForm_StartConfigRunner_More_details_can_be_found_in_the_program_log___0_" xml:space="preserve">
+    <value>More details can be found in the program log: {0}</value>
+  </data>
+  <data name="OpenFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OpenFolder.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Program_Main_Unable_to_update__0__shortcut___Error_was___1_" xml:space="preserve">
     <value>Unable to update {0} shortcut.  Error was: {1}</value>
   </data>
-  <data name="Program_InitSkylineSettings__0__requires__1__or__2__to_be_installed_on_the_computer_" xml:space="preserve">
-    <value>{0} requires {1} or {2} to be installed on the computer.</value>
+  <data name="Program_Main_AutoQC_Loader_encountered_an_unexpected_error__Error_details_may_be_found_in_the__0__file_in_this_directory___" xml:space="preserve">
+    <value>AutoQC Loader encountered an unexpected error. Error details may be found in the {0} file in this directory : </value>
   </data>
-  <data name="Program_InitSkylineSettings_Unable_to_find__0__at_any_of_the_following_locations__" xml:space="preserve">
-    <value>Unable to find {0} at any of the following locations: </value>
+  <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Program_InitSkylineSettings_Please_install__0__or__1__to_use__2_" xml:space="preserve">
-    <value>Please install {0} or {1} to use {2}</value>
+  <data name="AutoQCFileSystemWatcher_Restart_FileSystemWatcher_canceled_" xml:space="preserve">
+    <value>FileSystemWatcher canceled.</value>
   </data>
-  <data name="Program_InitSkylineSettings_Unable_To_Find__0_" xml:space="preserve">
-    <value>Unable To Find {0}</value>
+  <data name="AutoQCFileSystemWatcher_Restart_Re_initializing_FileSystemWatcher___" xml:space="preserve">
+    <value>Re-initializing FileSystemWatcher...</value>
   </data>
-  <data name="MainForm_btnImport_Click_No_configurations_were_found_in_file__0__" xml:space="preserve">
-    <value>No configurations were found in file {0}.</value>
+  <data name="AutoQCFileSystemWatcher_Restart_Getting_raw_data_added_since__0__" xml:space="preserve">
+    <value>Getting raw data added since {0}.</value>
   </data>
-  <data name="MainForm_btnImport_Click_Could_not_import_configurations_from_file__0_" xml:space="preserve">
-    <value>Could not import configurations from file {0}</value>
+  <data name="AutoQCFileSystemWatcher_Restart_Adding__0__" xml:space="preserve">
+    <value>Adding {0}.</value>
   </data>
-  <data name="MainForm_btnExport_Click_Save_configurations___" xml:space="preserve">
-    <value>Save configurations...</value>
+  <data name="AutoQCFileSystemWatcher_FileAdded__0__added_to_directory_" xml:space="preserve">
+    <value>{0} added to directory.</value>
   </data>
-  <data name="MainForm_UpdateButtons_Edit" xml:space="preserve">
-    <value>Edit</value>
+  <data name="AutoQCFileSystemWatcher_WaitForFileReady__0__is_being_acquired__Waiting___" xml:space="preserve">
+    <value>{0} is being acquired. Waiting...</value>
   </data>
-  <data name="MainForm_UpdateButtons_View" xml:space="preserve">
-    <value>View</value>
+  <data name="AutoQCFileSystemWatcher_WaitForFileReady__0__is_ready" xml:space="preserve">
+    <value>{0} is ready</value>
   </data>
-  <data name="AutoQcLogger_LogTruncatedMessage_____Log_truncated__Full_log_is_in__0_" xml:space="preserve">
-    <value>... Log truncated. Full log is in {0}</value>
+  <data name="AutoQCFileSystemWatcher_WaitForNetworkPath_Watched_folder_is_available___0__" xml:space="preserve">
+    <value>Watched folder is available: {0}.</value>
+  </data>
+  <data name="AutoQCFileSystemWatcher_WaitForNetworkPath_Watched_folder_is_not_available___0___Waiting___" xml:space="preserve">
+    <value>Watched folder is not available: {0}. Waiting...</value>
+  </data>
+  <data name="AutoQCFileSystemWatcher_OnFileWatcherError_There_was_an_error_watching_the_folder__0__" xml:space="preserve">
+    <value>There was an error watching the folder {0}.</value>
+  </data>
+  <data name="AutoQCFileSystemWatcher_CheckDrive_Restarting_file_watcher_for_configuration___0___" xml:space="preserve">
+    <value>Restarting file watcher for configuration "{0}".</value>
+  </data>
+  <data name="AutoQCFileSystemWatcher_TryConnect_Re_connected_drive__0__for_configuration___1_____Restarting_file_watcher_" xml:space="preserve">
+    <value>Re-connected drive {0} for configuration "{1}".  Restarting file watcher.</value>
+  </data>
+  <data name="AutoQCFileSystemWatcher_AddToReimportQueue_File_already_exists_in_re_import_queue___0_" xml:space="preserve">
+    <value>File already exists in re-import queue: {0}</value>
+  </data>
+  <data name="ConfigManager_RemoveSelected_Removing_configuration___0__" xml:space="preserve">
+    <value>Removing configuration "{0}"</value>
+  </data>
+  <data name="ConfigManager_RemoveConfig_Cannot_delete___0___because_the_configuration_does_not_exist_" xml:space="preserve">
+    <value>Cannot delete "{0}" because the configuration does not exist.</value>
+  </data>
+  <data name="ConfigManager_UpdateSelectedEnabled_starting" xml:space="preserve">
+    <value>starting</value>
+  </data>
+  <data name="ConfigManager_UpdateSelectedEnabled_stopping" xml:space="preserve">
+    <value>stopping</value>
+  </data>
+  <data name="ConfigManager_Import_Number_of_configurations_imported__" xml:space="preserve">
+    <value>Number of configurations imported: </value>
+  </data>
+  <data name="ConfigManager_Import_The_following_configurations_already_exist_and_were_not_imported_" xml:space="preserve">
+    <value>The following configurations already exist and were not imported:</value>
+  </data>
+  <data name="ConfigManager_Import_Please_remove_the_configurations_you_would_like_to_import_" xml:space="preserve">
+    <value>Please remove the configurations you would like to import.</value>
+  </data>
+  <data name="ConfigManager_Import_Configurations_with_errors_that_could_not_be_imported_" xml:space="preserve">
+    <value>Configurations with errors that could not be imported:</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_There_are_no_configurations_selected_" xml:space="preserve">
+    <value>There are no configurations selected.</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Please_select_the_configurations_you_would_like_to_share_" xml:space="preserve">
+    <value>Please select the configurations you would like to share.</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Could_not_save_configurations_to_" xml:space="preserve">
+    <value>Could not save configurations to:</value>
+  </data>
+  <data name="ConfigManager_ExportConfigs_Please_provide_a_path_to_a_file_inside_an_existing_folder_" xml:space="preserve">
+    <value>Please provide a path to a file inside an existing folder.</value>
+  </data>
+  <data name="ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_" xml:space="preserve">
+    <value>There is no configuration at index: {0}</value>
+  </data>
+  <data name="ConfigManager_AssertConfigSelected_There_is_no_configuration_selected_" xml:space="preserve">
+    <value>There is no configuration selected.</value>
+  </data>
+  <data name="ConfigManager_InsertConfiguration_Configuration___0___already_exists_" xml:space="preserve">
+    <value>Configuration "{0}" already exists.</value>
+  </data>
+  <data name="ConfigManager_InsertConfiguration_Please_enter_a_unique_name_for_the_configuration_" xml:space="preserve">
+    <value>Please enter a unique name for the configuration.</value>
+  </data>
+  <data name="ConfigManager_InsertConfiguration_Adding_configuration___0__" xml:space="preserve">
+    <value>Adding configuration "{0}"</value>
+  </data>
+  <data name="ConfigManager_StartConfig_Starting_configuration___0__" xml:space="preserve">
+    <value>Starting configuration "{0}"</value>
+  </data>
+  <data name="ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__" xml:space="preserve">
+    <value>An error occurred while importing configurations from {0}:</value>
+  </data>
+  <data name="ConfigManager_Import_No_configurations_were_found_in__0_" xml:space="preserve">
+    <value>No configurations were found in {0}</value>
+  </data>
+  <data name="ConfigRunner_TryReimportOldFiles_Attempting_to_re_import__0__" xml:space="preserve">
+    <value>Attempting to re-import {0}.</value>
+  </data>
+  <data name="ConfigRunner_TryReimportOldFiles__0__failed_to_import_successfully__Skipping___" xml:space="preserve">
+    <value>{0} failed to import successfully. Skipping...</value>
+  </data>
+  <data name="ConfigRunner_TryReimportOldFiles_Adding__0__to_the_re_import_queue_" xml:space="preserve">
+    <value>Adding {0} to the re-import queue.</value>
+  </data>
+  <data name="ConfigRunner_TryReimportOldFiles__0__no_longer_exists__Skipping___" xml:space="preserve">
+    <value>{0} no longer exists. Skipping...</value>
+  </data>
+  <data name="ConfigRunner_ProcessFilesCompleted_An_error_occurred_while_running_configuration_" xml:space="preserve">
+    <value>An error occurred while running configuration.</value>
+  </data>
+  <data name="ConfigRunner_ProcessFilesCompleted_An_error_occurred__Stopping_configuration_" xml:space="preserve">
+    <value>An error occurred. Stopping configuration.</value>
+  </data>
+  <data name="ConfigRunner_ProcessFilesCompleted_Canceled_configuration_" xml:space="preserve">
+    <value>Canceled configuration.</value>
+  </data>
+  <data name="ConfigRunner_ProcessFilesCompleted_There_was_an_error_uploading_the_document_to_Panorama__Stopping_configuration_" xml:space="preserve">
+    <value>There was an error uploading the document to Panorama. Stopping configuration.</value>
+  </data>
+  <data name="ConfigRunner_ProcessFilesCompleted_Finished_running_configuration_" xml:space="preserve">
+    <value>Finished running configuration.</value>
+  </data>
+  <data name="ConfigRunner_ProcessExistingFiles_Importing_existing_files___" xml:space="preserve">
+    <value>Importing existing files...</value>
+  </data>
+  <data name="ConfigRunner_ProcessExistingFiles_No_existing_files_found_" xml:space="preserve">
+    <value>No existing files found.</value>
+  </data>
+  <data name="ConfigRunner_ProcessExistingFiles__0__was_acquired___1___before_the_acquisition_date___2___on_the_last_imported_file_in_the_Skyline_document__Skipping___" xml:space="preserve">
+    <value>{0} was acquired ({1}) before the acquisition date ({2}) on the last imported file in the Skyline document. Skipping...</value>
+  </data>
+  <data name="ConfigRunner_ProcessExistingFiles_Finished_importing_existing_files___" xml:space="preserve">
+    <value>Finished importing existing files...</value>
+  </data>
+  <data name="ConfigRunner_ImportFile__0__does_not_exist_" xml:space="preserve">
+    <value>{0} does not exist.</value>
+  </data>
+  <data name="ConfigRunner_ImportFile_Error_getting_status_of_file__0__" xml:space="preserve">
+    <value>Error getting status of file {0}.</value>
+  </data>
+  <data name="ConfigRunner_IsIntegrateAllChecked_Error_reading_file__0__" xml:space="preserve">
+    <value>Error reading file {0}.</value>
+  </data>
+  <data name="ConfigRunner_IsIntegrateAllChecked__Integrate_all__is_not_checked_for_the_Skyline_document__This_setting_is_under_the__Settings__menu_in_Skyline__and_should_be_checked_for__documents_with_QC_results_" xml:space="preserve">
+    <value>"Integrate all" is not checked for the Skyline document. This setting is under the "Settings" menu in Skyline, and should be checked for  documents with QC results.</value>
+  </data>
+  <data name="ConfigRunner_ReadLastAcquiredFileDate_Getting_the_acquisition_date_on_the_newest_file_imported_into_the_Skyline_document_" xml:space="preserve">
+    <value>Getting the acquisition date on the newest file imported into the Skyline document.</value>
+  </data>
+  <data name="ConfigRunner_ReadLastAcquiredFileDate_Could_not_get_path_to_the_Skyline_report_file_" xml:space="preserve">
+    <value>Could not get path to the Skyline report file.</value>
+  </data>
+  <data name="ConfigRunner_ReadLastAcquiredFileDate_Could_not_find_report_output__0_" xml:space="preserve">
+    <value>Could not find report output {0}</value>
+  </data>
+  <data name="ConfigRunner_ReadLastAcquiredFileDate_The_most_recent_acquisition_date_in_the_Skyline_document_is__0_" xml:space="preserve">
+    <value>The most recent acquisition date in the Skyline document is {0}</value>
+  </data>
+  <data name="ConfigRunner_ReadLastAcquiredFileDate_The_Skyline_document_does_not_have_any_imported_results_" xml:space="preserve">
+    <value>The Skyline document does not have any imported results.</value>
+  </data>
+  <data name="ConfigRunner_GetLastAcquiredFileDate_Error_parsing_acquired_time_from_Skyline_report___0_" xml:space="preserve">
+    <value>Error parsing acquired time from Skyline report: {0}</value>
+  </data>
+  <data name="InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___" xml:space="preserve">
+    <value>Would you like to replace:
+{0}
+with:
+{1}?</value>
+  </data>
+  <data name="MainForm_MainForm_Loading_configurations_from_saved_settings_" xml:space="preserve">
+    <value>Loading configurations from saved settings.</value>
+  </data>
+  <data name="MainForm_TryExecuteOperation_Cannot_add___0___because_there_is_another_configuration_with_the_same_name_" xml:space="preserve">
+    <value>Cannot add "{0}" because there is another configuration with the same name.</value>
+  </data>
+  <data name="MainForm_TryExecuteOperation_Please_choose_a_unique_name_" xml:space="preserve">
+    <value>Please choose a unique name.</value>
+  </data>
+  <data name="MainForm_SwitchLogger_Error_reading_log_" xml:space="preserve">
+    <value>Error reading log:</value>
+  </data>
+  <data name="MainForm_btnOpenFolder_Click_File_location_does_not_exist___0_" xml:space="preserve">
+    <value>File location does not exist: {0}</value>
+  </data>
+  <data name="MainForm_cb_keepRunning_CheckedChanged_Error_enabling__Keep__0__running_" xml:space="preserve">
+    <value>Error enabling. Keep {0} running.</value>
+  </data>
+  <data name="MainForm_cb_keepRunning_CheckedChanged_Error_disabling__Keep__0__running_" xml:space="preserve">
+    <value>Error disabling. Keep {0} running.</value>
+  </data>
+  <data name="MainSettings_MainSettings_results_window" xml:space="preserve">
+    <value>results window</value>
+  </data>
+  <data name="MainSettings_MainSettings_acquisition_time" xml:space="preserve">
+    <value>acquisition time</value>
+  </data>
+  <data name="MainSettings_ValidateIntTextField_Invalid_value_for__0____1_" xml:space="preserve">
+    <value>Invalid value for {0}: {1}</value>
+  </data>
+  <data name="MainSettings_ValidateSettings__Results_time_window__cannot_be_less_than__0__days_" xml:space="preserve">
+    <value>"Results time window" cannot be less than {0} days.</value>
+  </data>
+  <data name="MainSettings_ValidateSettings_The_results_time_window_is_too_big__Please_enter_a_smaller_number_" xml:space="preserve">
+    <value>The results time window is too big. Please enter a smaller number.</value>
+  </data>
+  <data name="MainSettings_ValidateSettings__Expected_acquisition_time__cannot_be_less_than_0_minutes_" xml:space="preserve">
+    <value>"Expected acquisition time" cannot be less than 0 minutes.</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile_Skyline_file_name_cannot_be_empty__Please_specify_path_to_a_Skyline_file_" xml:space="preserve">
+    <value>Skyline file name cannot be empty. Please specify path to a Skyline file.</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile_The_Skyline_file__0__does_not_exist_" xml:space="preserve">
+    <value>The Skyline file {0} does not exist.</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile_Please_enter_a_path_to_an_existing_file_" xml:space="preserve">
+    <value>Please enter a path to an existing file.</value>
+  </data>
+  <data name="MainSettings_ValidateFolderToWatch_The_folder_to_watch_cannot_be_empty__Please_specify_path_to_a_folder_where_mass_spec__files_will_be_written_" xml:space="preserve">
+    <value>The folder to watch cannot be empty. Please specify path to a folder where mass spec. files will be written.</value>
+  </data>
+  <data name="MainSettings_ValidateFolderToWatch_The_folder_to_watch___0__does_not_exist_" xml:space="preserve">
+    <value>The folder to watch: {0} does not exist.</value>
+  </data>
+  <data name="MainSettings_ValidateFolderToWatch_Please_enter_a_path_to_an_existing_folder_" xml:space="preserve">
+    <value>Please enter a path to an existing folder.</value>
+  </data>
+  <data name="AccumulationWindow_Get_Results_time_window_size_has_be_greater_than_0_" xml:space="preserve">
+    <value>Results time window size has be greater than 0.</value>
+  </data>
+  <data name="AccumulationWindow_Get_Results_time_window_is_too_big_" xml:space="preserve">
+    <value>Results time window is too big.</value>
+  </data>
+  <data name="AllFileFilter_FilterName_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="RegexFilter_RegexFilter_Invalid_regular_expression_for_QC_file_names" xml:space="preserve">
+    <value>Invalid regular expression for QC file names</value>
+  </data>
+  <data name="StartsWithFilter_FilterName_Starts_with" xml:space="preserve">
+    <value>Starts with</value>
+  </data>
+  <data name="EndsWithFilter_FilterName_Ends_with" xml:space="preserve">
+    <value>Ends with</value>
+  </data>
+  <data name="ContainsFilter_FilterName_Contains" xml:space="preserve">
+    <value>Contains</value>
+  </data>
+  <data name="RegexFilter_FilterName_Regular_expression" xml:space="preserve">
+    <value>Regular expression</value>
+  </data>
+  <data name="PanoramaSettings_ValidateSettings_The__0__cannot_be_empty__Please_specify_a__0__" xml:space="preserve">
+    <value>The {0} cannot be empty. Please specify a {0}.</value>
+  </data>
+  <data name="PanoramaSettings_ValidateSettings_Panorama_server_Url" xml:space="preserve">
+    <value>Panorama server Url</value>
+  </data>
+  <data name="PanoramaSettings_ValidateSettings_Panorama_login_email" xml:space="preserve">
+    <value>Panorama login email</value>
+  </data>
+  <data name="PanoramaSettings_ValidateSettings_Panorama_user_password" xml:space="preserve">
+    <value>Panorama user password</value>
+  </data>
+  <data name="PanoramaSettings_ValidateSettings_folder_on_the_Panorama_server" xml:space="preserve">
+    <value>folder on the Panorama server</value>
+  </data>
+  <data name="PanoramaPinger_PingPanoramaServer_Successfully_pinged_Panorama_server_" xml:space="preserve">
+    <value>Successfully pinged Panorama server.</value>
+  </data>
+  <data name="PanoramaPinger_PingPanoramaServer_Error_pinging_Panorama_server_" xml:space="preserve">
+    <value>Error pinging Panorama server </value>
+  </data>
+  <data name="ProcessRunner_RunProcess_Running__0__with_args__" xml:space="preserve">
+    <value>Running {0} with args: </value>
+  </data>
+  <data name="ProcessRunner_RunProcess_There_was_an_exception_running_the_process__0_" xml:space="preserve">
+    <value>There was an exception running the process {0}</value>
+  </data>
+  <data name="ProcessRunner_RunProcess__0__exited_with_error_code__1__" xml:space="preserve">
+    <value>{0} exited with error code {1}.</value>
+  </data>
+  <data name="ProcessRunner_RunProcess__0__exited_with_code__1___Error_reported_" xml:space="preserve">
+    <value>{0} exited with code {1}. Error reported.</value>
+  </data>
+  <data name="ProcessRunner_RunProcess__0__exited_with_code__1___Skyline_document_import_failed_" xml:space="preserve">
+    <value>{0} exited with code {1}. Skyline document import failed.</value>
+  </data>
+  <data name="ProcessRunner_RunProcess__0__exited_with_code__1___Panorama_upload_failed_" xml:space="preserve">
+    <value>{0} exited with code {1}. Panorama upload failed.</value>
+  </data>
+  <data name="ProcessRunner_RunProcess__0__exited_successfully_" xml:space="preserve">
+    <value>{0} exited successfully.</value>
+  </data>
+  <data name="PanoramaUtil_VerifyServerInformation_Username_and_password_cannot_be_null__Please_enter_a_username_and_password_" xml:space="preserve">
+    <value>Username and password cannot be null. Please enter a username and password.</value>
+  </data>
+  <data name="PanoramaUtil_VerifyServerInformation_The_server__0__does_not_exist_" xml:space="preserve">
+    <value>The server {0} does not exist.</value>
+  </data>
+  <data name="PanoramaUtil_VerifyServerInformation_Unknown_error_connecting_to_the_server__0__" xml:space="preserve">
+    <value>Unknown error connecting to the server {0}.</value>
+  </data>
+  <data name="PanoramaUtil_VerifyServerInformation_The_server__0__is_not_a_Panorama_server_" xml:space="preserve">
+    <value>The server {0} is not a Panorama server.</value>
+  </data>
+  <data name="PanoramaUtil_VerifyServerInformation_Unknown_error_while_checking_if_server__0__is_a_Panorama_server_" xml:space="preserve">
+    <value>Unknown error while checking if server {0} is a Panorama server.</value>
+  </data>
+  <data name="MainForm_toolStripLogFolder_Click_Cannot_open_the_log_folder_of_an_invalid_configuration_" xml:space="preserve">
+    <value>Cannot open the log folder of an invalid configuration.</value>
+  </data>
+  <data name="MainForm_btnOpenResults_Click_Skyline_file" xml:space="preserve">
+    <value>Skyline file</value>
+  </data>
+  <data name="MainForm_btnOpenPanoramaFolder_Click_Panorama_folder" xml:space="preserve">
+    <value>Panorama folder</value>
+  </data>
+  <data name="MainForm_toolStripFolderToWatch_Click_folder_to_watch" xml:space="preserve">
+    <value>folder to watch</value>
+  </data>
+  <data name="MainForm_toolStripLogFolder_Click_log_folder" xml:space="preserve">
+    <value>log folder</value>
+  </data>
+  <data name="Program_InitSkylineSettings_Please_install_Skyline_to_run__0__" xml:space="preserve">
+    <value>Please install Skyline to run {0}.</value>
+  </data>
+  <data name="Program_InitSkylineSettings__0__requires_Skyline_to_run_" xml:space="preserve">
+    <value>{0} requires Skyline to run.</value>
+  </data>
+  <data name="AutoQcConfigManager_ReplaceSkylineSettings_The_following_configurations_are_running_and_could_not_be_updated_" xml:space="preserve">
+    <value>The following configurations are running and could not be updated:</value>
+  </data>
+  <data name="MainForm_FileOpened_Do_you_want_to_import_configurations_from__0__" xml:space="preserve">
+    <value>Do you want to import configurations from {0}?</value>
+  </data>
+  <data name="Program_AddFileTypesToRegistry_AutoQC_Configuration_File" xml:space="preserve">
+    <value>AutoQC Configuration File</value>
+  </data>
+  <data name="MainSettings_ValidateSettings_Please_enter_a_value_greater_than_or_equal_to__0__" xml:space="preserve">
+    <value>Please enter a value greater than or equal to {0}.</value>
+  </data>
+  <data name="AutoQcConfig_AutoQcConfig_Configuration_name_cannot_be_blank__Please_enter_a_name_for_the_configuration_" xml:space="preserve">
+    <value>Configuration name cannot be blank. Please enter a name for the configuration.</value>
+  </data>
+  <data name="AutoQcConfig_Validate_Please_enter_a_name_for_the_configuration_" xml:space="preserve">
+    <value>Please enter a name for the configuration.</value>
+  </data>
+  <data name="MainSettings_ValidateSettings_The_file_filter___0___cannot_have_an_empty_pattern__Please_enter_a_pattern_" xml:space="preserve">
+    <value>The file filter "{0}" cannot have an empty pattern. Please enter a pattern.</value>
+  </data>
+  <data name="PanoramaSettings_ValidateAndGetServerUri_Panorama_server_URL_is_invalid___0____1_" xml:space="preserve">
+    <value>Panorama server URL is invalid: {0}. {1}</value>
+  </data>
+  <data name="PanoramaSettings_ValidateAndGetServerUri_Error_verifying_server_information___0_" xml:space="preserve">
+    <value>Error verifying server information. {0}</value>
+  </data>
+  <data name="PanoramaSettings_ValidateAndGetServerUri_Error_verifying_Panorama_folder_information___0_" xml:space="preserve">
+    <value>Error verifying Panorama folder information. {0}</value>
+  </data>
+  <data name="PanoramaServerException_ServerError_Server_validation_passed_without_errors_" xml:space="preserve">
+    <value>Server validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_The_username_and_password_could_not_be_authenticated_with_the_Panorama_server_" xml:space="preserve">
+    <value>The username and password could not be authenticated with the Panorama server.</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_Unknown_error_validating_user_permissions_on_the_Panorama_server_" xml:space="preserve">
+    <value>Unknown error validating user permissions on the Panorama server.</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_User_validation_passed_without_errors_" xml:space="preserve">
+    <value>User validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_PanoramaStateError_Panorama_server_validation_passed_without_errors_" xml:space="preserve">
+    <value>Panorama server validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_ServerError_Encountered_unknown_server_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown server validation state {0}.</value>
+  </data>
+  <data name="PanoramaServerException_UserValidationError_Encountered_unknown_user_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown user validation state {0}.</value>
+  </data>
+  <data name="PanoramaServerException_PanoramaStateError_Encountered_unknown_Panorama_server_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown Panorama server validation state {0}.</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_Folder___0___does_not_exist_on_the_Panorama_server__1__" xml:space="preserve">
+    <value>Folder "{0}" does not exist on the Panorama server {1}.</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder___1___" xml:space="preserve">
+    <value>User {0} does not have permissions to upload to the Panorama folder "{1}".</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError___0___is_not_a_Panorama_folder_" xml:space="preserve">
+    <value>"{0}" is not a Panorama folder.</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_Folder_validation_passed_without_errors_" xml:space="preserve">
+    <value>Folder validation passed without errors!</value>
+  </data>
+  <data name="PanoramaServerException_FolderValidationError_Encountered_unknown_folder_validation_state__0__" xml:space="preserve">
+    <value>Encountered unknown folder validation state {0}.</value>
+  </data>
+  <data name="AutoQcConfigManager_StartConfiguration_Cannot_start_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_" xml:space="preserve">
+    <value>Cannot start a configuration that is {0}. Please wait for the action to complete.</value>
+  </data>
+  <data name="AutoQcConfigManager_StartConfiguration_There_was_an_error_running_the_configuration___0___" xml:space="preserve">
+    <value>There was an error running the configuration "{0}".</value>
+  </data>
+  <data name="ConfigRunner_RunConfiguration_There_was_an_error_running_configuration___0___" xml:space="preserve">
+    <value>There was an error running configuration "{0}".</value>
+  </data>
+  <data name="AutoQcConfigForm_AutoQcConfigForm_The_configuration_is__0__and_cannot_be_edited_" xml:space="preserve">
+    <value>The configuration is {0} and cannot be edited.</value>
+  </data>
+  <data name="AutoQcConfigManager_UserRemoveAt_The_configuration___0___is__1___Please_wait_for_the_action_to_complete_and_try_again_" xml:space="preserve">
+    <value>The configuration "{0}" is {1}. Please wait for the action to complete and try again.</value>
+  </data>
+  <data name="AutoQcConfigManager_UserRemoveAt_The_configuration___0___is_running__Please_stop_the_configuration_and_try_again_" xml:space="preserve">
+    <value>The configuration "{0}" is running. Please stop the configuration and try again.</value>
+  </data>
+  <data name="AutoQcConfigManager_StopConfiguration_Cannot_stop_a_configuration_that_is__0___Please_wait_for_the_action_to_complete_" xml:space="preserve">
+    <value>Cannot stop a configuration that is {0}. Please wait for the action to complete.</value>
+  </data>
+  <data name="MainForm_HandleEditEvent_Configuration___0___is_invalid__It_cannot_be_running___Please_stop_the_configuration_and_fix_the_errors_" xml:space="preserve">
+    <value>Configuration "{0}" is invalid. It cannot be running.  Please stop the configuration and fix the errors.</value>
+  </data>
+  <data name="MainForm_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_" xml:space="preserve">
+    <value>Do you want to use this Skyline version for all configurations?</value>
+  </data>
+  <data name="AutoQcConfigManager_StartConfig_Could_not_find_a_config_runner_for_configuration_name___0___" xml:space="preserve">
+    <value>Could not find a config runner for configuration name "{0}".</value>
+  </data>
+  <data name="ConfigRunner_CreateConfigDir_Configuration_directory___0___could_not_be_created_for_configuration___1___" xml:space="preserve">
+    <value>Configuration directory "{0}" could not be created for configuration "{1}".</value>
+  </data>
+  <data name="ConfigRunner_RunConfiguration_Error_validating_configuration___0___" xml:space="preserve">
+    <value>Error validating configuration "{0}".</value>
+  </data>
+  <data name="ConfigRunner_RunConfiguration_There_was_an_error_looking_for_files_for_configuration___0___" xml:space="preserve">
+    <value>There was an error looking for files for configuration "{0}".</value>
+  </data>
+  <data name="AutoQcConfigManager_StopConfiguration_Are_you_sure_you_want_to_stop_the_configuration___0___" xml:space="preserve">
+    <value>Are you sure you want to stop the configuration "{0}"?</value>
+  </data>
+  <data name="MainForm_btnDelete_Click_Are_you_sure_you_want_to_delete_the_configuration___0___" xml:space="preserve">
+    <value>Are you sure you want to delete the configuration "{0}"?</value>
+  </data>
+  <data name="AutoQcConfig_ReadXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_" xml:space="preserve">
+    <value>The version of the imported file {0} was not recognized. No configurations will be imported.</value>
   </data>
 </root>

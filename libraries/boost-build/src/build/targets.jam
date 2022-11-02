@@ -1,8 +1,8 @@
 # Copyright Vladimir Prus 2002.
 # Copyright Rene Rivera 2006.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Supports 'abstract' targets, which are targets explicitly defined in a
 # Jamfile.
@@ -342,7 +342,7 @@ class project-target : abstract-target
             self.alternative-names += [ $(target-instance).name ] ;
         }
     }
-    
+
     # Checks if an alternative was declared for the target.
     # Unlike checking for a main target this does not require
     # building the main targets. And hence can be used in/directly
@@ -887,7 +887,8 @@ rule resolve-reference ( target-reference : project )
     local id = $(split[1]) ;
     if ! $(split) || ! $(id)
     {
-        error "Malformed target reference $(target-reference)" ;
+        import errors ;
+        errors.error "Malformed target reference $(target-reference)" ;
     }
     local sproperties = ;
     if $(split[3])
@@ -1319,8 +1320,25 @@ class basic-target : abstract-target
                     [ $(rproperties).raw ] ;
             }
 
-            if ( $(rproperties[1]) != "@error" ) && ( [ $(rproperties).get
-                <build> ] != no )
+            local skip ;
+            local skip-downstream ;
+            if $(rproperties[1]) = "@error"
+            {
+                ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
+                    "cannot compute common properties" ;
+                skip = true ;
+                skip-downstream = true ;
+            }
+            else if [ $(rproperties).get <build> ] = no
+            {
+                # If we just see <build>no, we cannot produce any reasonable
+                # diagnostics. The code that adds this property is expected
+                # to explain why a target is not built, for example using
+                # the configure.log-component-configuration function.
+                skip = true ;
+                skip-downstream = true ;
+            }
+            else
             {
                 local source-targets ;
                 local properties = [ $(rproperties).non-dependency ] ;
@@ -1339,102 +1357,97 @@ class basic-target : abstract-target
                         $(self.name)": " $(usage-requirements) ;
                 }
 
-                rproperties = [ property-set.create $(properties)
-                    $(usage-requirements) ] ;
-                usage-requirements = [ property-set.create $(usage-requirements)
-                    ] ;
-
-                if [ modules.peek : .debug-building ]
+                #  Skipping this target if a dependency is skipped.
+                #  Subclasses can override this behavior. E.g.
+                #  alias-target-class overrides this to not be skipped if a
+                #  dependency is skipped.
+                if <build>no in $(usage-requirements)
                 {
-                    ECHO [ targets.indent ] "Build properties: "
-                        [ $(rproperties).raw ] ;
+                    skip = [ skip-from-usage-requirements ] ;
+                    skip-downstream = true ;
                 }
 
-                local extra = [ $(rproperties).get <source> ] ;
-                source-targets += $(extra:G=) ;
-                # We might get duplicate sources, for example if we link to two
-                # libraries having the same <library> usage requirement. Use
-                # stable sort, since for some targets the order is important,
-                # e.g. RUN_PY targets need a python source to come first.
-                source-targets = [ sequence.unique $(source-targets) : stable ]
-                    ;
-
-                local result = [ construct $(self.name) : $(source-targets) :
-                    $(rproperties) ] ;
-
-                if $(result)
+                if ! $(skip)
                 {
-                    local gur = $(result[1]) ;
-                    result = $(result[2-]) ;
+                    rproperties = [ property-set.create $(properties)
+                        $(usage-requirements) ] ;
+                    usage-requirements = [ property-set.create $(usage-requirements)
+                        ] ;
 
-                    # Relevant is automatically applied to usage requirements
-                    # and only applies for propagated features
-                    local relevant = [ propagated-relevant
-                        [ $(gur).get <relevant> ]
-                        [ $(rproperties).get <relevant> ] ] ;
-                    gur = [ property-set.create
-                        [ property.change [ $(gur).raw ] : <relevant> ]
-                        <relevant>$(relevant) ] ;
-
-                    local s = [ create-subvariant $(result)
-                        : [ virtual-target.recent-targets ]
-                        : $(property-set) : $(source-targets)
-                        : $(rproperties) : $(usage-requirements) ] ;
-                    virtual-target.clear-recent-targets ;
-
-                    if $(self.always)
-                    {
-                        for local t in [ $(s).created-targets ]
-                        {
-                            $(t).always ;
-                        }
-                    }
-
-                    local ur = [ compute-usage-requirements $(s) ] ;
-                    ur = [ $(ur).add $(gur) ] ;
-                    $(s).set-usage-requirements $(ur) ;
                     if [ modules.peek : .debug-building ]
                     {
-                        ECHO [ targets.indent ] "Usage requirements from"
-                            $(self.name)": " [ $(ur).raw ] ;
+                        ECHO [ targets.indent ] "Build properties: "
+                            [ $(rproperties).raw ] ;
                     }
 
-                    self.generated.$(property-set) = $(ur) $(result) ;
+                    local extra = [ $(rproperties).get <source> ] ;
+                    source-targets += $(extra:G=) ;
+                    # We might get duplicate sources, for example if we link to two
+                    # libraries having the same <library> usage requirement. Use
+                    # stable sort, since for some targets the order is important,
+                    # e.g. RUN_PY targets need a python source to come first.
+                    source-targets = [ sequence.unique $(source-targets) : stable ]
+                        ;
+
+                    local result = [ construct $(self.name) : $(source-targets) :
+                        $(rproperties) ] ;
+
+                    if $(result)
+                    {
+                        local gur = $(result[1]) ;
+                        result = $(result[2-]) ;
+
+                        # Relevant is automatically applied to usage requirements
+                        # and only applies for propagated features
+                        local relevant = [ propagated-relevant
+                            [ $(gur).get <relevant> ]
+                            [ $(rproperties).get <relevant> ] ] ;
+                        gur = [ property-set.create
+                            [ property.change [ $(gur).raw ] : <relevant> ]
+                            <relevant>$(relevant) ] ;
+
+                        local s = [ create-subvariant $(result)
+                            : [ virtual-target.recent-targets ]
+                            : $(property-set) : $(source-targets)
+                            : $(rproperties) : $(usage-requirements) ] ;
+                        virtual-target.clear-recent-targets ;
+
+                        if $(self.always)
+                        {
+                            for local t in [ $(s).created-targets ]
+                            {
+                                $(t).always ;
+                            }
+                        }
+
+                        local ur = [ compute-usage-requirements $(s) ] ;
+                        if $(skip-downstream)
+                        {
+                            ur = [ $(ur).add [ property-set.create <build>no ]
+                                ] ;
+                        }
+                        ur = [ $(ur).add $(gur) ] ;
+                        $(s).set-usage-requirements $(ur) ;
+                        if [ modules.peek : .debug-building ]
+                        {
+                            ECHO [ targets.indent ] "Usage requirements from"
+                                $(self.name)": " [ $(ur).raw ] ;
+                        }
+
+                        self.generated.$(property-set) = $(ur) $(result) ;
+                    }
                 }
             }
-            else
-            {
-                if $(rproperties[1]) = "@error"
-                {
-                    ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
-                        "cannot compute common properties" ;
-                }
-                else if [ $(rproperties).get <build> ] = no
-                {
-                    # If we just see <build>no, we cannot produce any reasonable
-                    # diagnostics. The code that adds this property is expected
-                    # to explain why a target is not built, for example using
-                    # the configure.log-component-configuration function.
-                }
-                else
-                {
-                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ]
-                        " unknown reason" ;
-                }
 
+            if $(skip)
+            {
                 # We are here either because there has been an error computing
-                # properties or there is <build>no in properties. In the latter
-                # case we do not want any diagnostic. In the former case, we
-                # need diagnostics. FIXME
+                # properties or there is <build>no in properties or usage
+                # requirements. In the latter case we do not want any
+                # diagnostic. In the former case, we need diagnostics. FIXME
 
                 # If this target fails to build, add <build>no to properties to
-                # cause any parent target to fail to build. Except that it
-                # - does not work now, since we check for <build>no only in
-                #   common properties, but not in properties that came from
-                #   dependencies
-                # - it is not clear if that is a good idea anyway. The alias
-                #   target, for example, should not fail to build if a
-                #   dependency fails.
+                # cause any parent target to fail to build.
                 self.generated.$(property-set) = [ property-set.create <build>no
                     ] ;
             }
@@ -1584,6 +1597,14 @@ class basic-target : abstract-target
         import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
+
+    # Determines if build of this target should be skipped when there is
+    # <build>no in usage requirements. This should usually be true, unless
+    # the target is some kind of grouping, e.g. alias targets.
+    rule skip-from-usage-requirements ( )
+    {
+        return true ;
+    }
 }
 
 
@@ -1634,7 +1655,7 @@ class typed-target : basic-target
                 ECHO "error: no generators were found for type '$(self.type)'" ;
                 ECHO "error: and the requested properties" ;
                 ECHO "error: make sure you've configured the needed tools" ;
-                ECHO "See http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
+                ECHO "See https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.overview.configuration" ;
                 EXIT "To debug this problem, try the --debug-generators option."
                     ;
             }

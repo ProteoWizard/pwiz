@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -11,19 +11,20 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_COMP_PGI`]
+/* tag::reference[]
+= `BOOST_COMP_PGI`
 
-[@http://en.wikipedia.org/wiki/The_Portland_Group Portland Group C/C++] compiler.
+http://en.wikipedia.org/wiki/The_Portland_Group[Portland Group C/{CPP}] compiler.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__PGI`] [__predef_detection__]]
+| `+__PGI+` | {predef_detection}
 
-    [[`__PGIC__`, `__PGIC_MINOR__`, `__PGIC_PATCHLEVEL__`] [V.R.P]]
-    ]
- */
+| `+__PGIC__+`, `+__PGIC_MINOR__+`, `+__PGIC_PATCHLEVEL__+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_COMP_PGI BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -49,13 +50,12 @@ http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_COMP_PGI_NAME "Portland Group C/C++"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_PGI,BOOST_COMP_PGI_NAME)
 
 #ifdef BOOST_COMP_PGI_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_PGI_EMULATED,BOOST_COMP_PGI_NAME)
-#endif
-
-
 #endif

@@ -45,7 +45,6 @@
             this.lblReplacement = new System.Windows.Forms.Label();
             this.tbxReplacement = new System.Windows.Forms.TextBox();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView1)).BeginInit();
@@ -165,7 +164,6 @@
             this.Name = "MetadataRuleEditor";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView1)).EndInit();

@@ -406,7 +406,7 @@
     <value>12</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>グラフ化(&amp;G)...</value>
+    <value>グラフ化(&amp;G)…</value>
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>

@@ -1,7 +1,7 @@
 /* Copyright 2003. Vladimir Prus
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "native.h"
@@ -12,7 +12,7 @@
 
 
 void declare_native_rule( char const * module, char const * rule,
-    char const * * args, LIST * (*f)( FRAME *, int ), int version )
+    char const * * args, LIST * (*f)( FRAME *, int32_t ), int32_t version )
 {
     OBJECT * const module_obj = module ? object_new( module ) : 0 ;
     module_t * m = bindmodule( module_obj );
@@ -23,7 +23,7 @@ void declare_native_rule( char const * module, char const * rule,
 
     {
         OBJECT * const name = object_new( rule );
-        int found;
+        int32_t found;
         native_rule_t * const np = (native_rule_t *)hash_insert(
             m->native_rules, name, &found );
         np->name = name;

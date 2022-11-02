@@ -141,6 +141,9 @@
   <data name="eIonMobilityUnits_unknown" xml:space="preserve">
     <value>不明</value>
   </data>
+  <data name="eIonMobilityUnits_waters_sonar" xml:space="preserve">
+    <value>Waters SONAR</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>
@@ -151,7 +154,7 @@
     <value>なし</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
-    <value>ターゲット</value>
+    <value>ターゲット（旧）</value>
   </data>
   <data name="FullScanMassAnalyzerType_centroided" xml:space="preserve">
     <value>セントロイド化</value>
@@ -239,6 +242,9 @@
   </data>
   <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
     <value>分位値</value>
+  </data>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>総イオン電流</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>なし</value>
@@ -534,6 +540,9 @@
   <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
     <value>比率</value>
   </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>総イオン電流</value>
+  </data>
   <data name="AreaCVMsLevel_precursors" xml:space="preserve">
     <value>プリカーサー</value>
   </data>
@@ -569,5 +578,83 @@
   </data>
   <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
     <value>なし</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>チェビシェフ</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>シティブロック</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>ピアソン</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>ユークリッド</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA生データ (ライブラリの検索と構築)</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA生データ (ライブラリのデコンボリューション、検索、構築)</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>検索結果 (ライブラリを直接構築)</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
+    <value>SureQuant</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
+    <value>PRM</value>
+  </data>
+  <data name="SearchEngine_MSAmanda" xml:space="preserve">
+    <value>MS Amanda</value>
+  </data>
+  <data name="SearchEngine_MSFragger" xml:space="preserve">
+    <value>MSFragger</value>
+  </data>
+  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
+    <value>MS-GF+</value>
+  </data>
+  <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
+    <value>ペプチドの最も多いタンパク質に割当て</value>
+  </data>
+  <data name="SharedPeptides_AssignedToFirstProtein" xml:space="preserve">
+    <value>最初のタンパク質に割当て</value>
+  </data>
+  <data name="SharedPeptides_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>タンパク質間で重複</value>
+  </data>
+  <data name="SharedPeptides_Removed" xml:space="preserve">
+    <value>削除済み (ペプチドは特定のタンパク質に固有の必要がある)</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToBestProtein" xml:space="preserve">
+    <value>ペプチドの最も多いタンパク質グループに割当て</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToFirstProtein" xml:space="preserve">
+    <value>最初のタンパク質グループに割当て</value>
+  </data>
+  <data name="SharedPeptidesGroup_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>タンパク質グループ間で重複</value>
+  </data>
+  <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
+    <value>削除済み (ペプチドは特定のタンパク質グループに固有の必要がある)</value>
   </data>
 </root>

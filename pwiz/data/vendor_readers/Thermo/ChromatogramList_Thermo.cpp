@@ -115,24 +115,26 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 if (detailLevel < DetailLevel_FullMetadata)
                     return result;
 
-                CVID intensityUnits = ci.controllerType == Controller_MS ? MS_number_of_detector_counts : UO_microampere;
+                CVID intensityUnits = ci.controllerType == Controller_MS ? MS_number_of_detector_counts : UO_picoampere;
                 ChromatogramDataPtr cd = rawfile_->getChromatogramData(Type_TIC, ci.filter, 0, 0, 0, rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData)
                 {
                     result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, intensityUnits);
 
-                    auto msLevelArray = boost::make_shared<IntegerDataArray>();
-                    result->integerDataArrayPtrs.emplace_back(msLevelArray);
-                    msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
-                    msLevelArray->data.resize(cd->times().size());
-                    for (size_t i = 0; i < cd->times().size(); ++i)
-                        msLevelArray->data[i] = rawfile_->getMSOrder(rawfile_->scanNumber(cd->times()[i]));
+                    if (ci.controllerType == Controller_MS)
+                    {
+                        auto msLevelArray = boost::make_shared<IntegerDataArray>();
+                        result->integerDataArrayPtrs.emplace_back(msLevelArray);
+                        msLevelArray->set(MS_non_standard_data_array, "ms level", UO_dimensionless_unit);
+                        msLevelArray->data.resize(cd->times().size());
+                        for (size_t i = 0; i < cd->times().size(); ++i)
+                            msLevelArray->data[i] = rawfile_->getMSOrder(rawfile_->scanNumber(cd->times()[i]));
+                    }
 
-                    if (intensityUnits == UO_microampere)
+                    if (intensityUnits == UO_picoampere)
                     {
                         // Thermo seems to store CAD intensities as attoAmps but shows them as picoAmps in QualBrowser;
-                        // Convert atto to microamperes until UO gets picoampere
-                        boost::range::for_each(result->getIntensityArray()->data, [&](auto& v) {v *= 1e-12;});
+                        boost::range::for_each(result->getIntensityArray()->data, [&](auto& v) {v *= 1e-6;});
                     }
                 }
                 else result->defaultArrayLength = cd->size();
@@ -179,7 +181,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                 setActivationType(activationType, hasSupplemental ? scanInfo->supplementalActivationType() : ActivationType_Unknown, result->precursor.activation);
                 if (activationType == ActivationType_CID)
                     result->precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(0));
-                if (hasSupplemental && !scanInfo->supplementalActivationEnergy() > 0)
+                if (hasSupplemental && !(scanInfo->supplementalActivationEnergy() > 0))
                     result->precursor.activation.set(MS_supplemental_collision_energy, scanInfo->supplementalActivationEnergy());
 
                 result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
@@ -242,6 +244,60 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                     rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
                 if (getBinaryData) result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, UO_absorbance_unit);
                 else result->defaultArrayLength = cd->size();
+            }
+            break;
+
+            case MS_pressure_chromatogram: // ADCard: generate "pressure" chromatogram for entire run
+            {
+                ChromatogramDataPtr cd = rawfile_->getChromatogramData(
+                    Type_ECD, "", 0, 0, 0,
+                    rawfile_->getFirstScanTime(), rawfile_->getLastScanTime());
+                const auto& times = cd->times();
+                const auto& intensities = cd->intensities();
+                int redundantSamples = 0;
+                for (int i = 1; i + 1 < cd->size(); ++i)
+                {
+                    double prevIntensity = intensities[i - 1];
+                    double intensity = intensities[i];
+                    double nextIntensity = intensities[i + 1];
+                    if (intensity == prevIntensity && intensity == nextIntensity)
+                        ++redundantSamples;
+                }
+
+                if (getBinaryData)
+                {
+                    result->setTimeIntensityArrays(vector<double>(), vector<double>(), UO_minute, UO_pascal);
+                    auto& timeArray = result->getTimeArray()->data;
+                    auto& intensityArray = result->getIntensityArray()->data;
+                    timeArray.reserve(cd->size() - redundantSamples);
+                    intensityArray.reserve(cd->size() - redundantSamples);
+
+                    // I observed pressure traces with many redundant data points (same Y value for many X values in a row),
+                    // so I only copy the non-redundant ones
+
+                    // convert bar to pascal (1 bar = 100000 Pa) because there's no bar term in UO
+                    timeArray.push_back(times[0]);
+                    intensityArray.push_back(intensities[0] * 1e5);
+                    for (int i = 1; i+1 < cd->size(); ++i)
+                    {
+                        double prevIntensity = intensities[i - 1];
+                        double intensity = intensities[i];
+                        double nextIntensity = intensities[i + 1];
+                        if (intensity != prevIntensity || intensity != nextIntensity)
+                        {
+                            timeArray.push_back(times[i]);
+                            intensityArray.push_back(intensities[i] * 1e5);
+                        }
+                    }
+                    timeArray.push_back(times.back());
+                    intensityArray.push_back(intensities.back() * 1e5);
+                    result->defaultArrayLength = timeArray.size();
+
+                    // original code that copies all data points including redundant ones
+                    //result->setTimeIntensityArrays(cd->times(), cd->intensities(), UO_minute, UO_pascal);
+                    //boost::range::for_each(result->getIntensityArray()->data, [&](auto& v) {v *= 1e5;});
+                }
+                else result->defaultArrayLength = cd->size() - redundantSamples;
             }
             break;
         }
@@ -401,6 +457,8 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                 }
                 break; // case Controller_PDA
 
+                case Controller_Analog:
+                case Controller_ADCard:
                 case Controller_UV:
                 {
                     auto instrumentData = rawfile_->getInstrumentData();
@@ -408,16 +466,16 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                     {
                         addChromatogram("UV " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_emission_chromatogram, "");
                     }
-                    else if (instrumentData.AxisLabelY == "pA") // picoamperes?
+                    else if (bal::ends_with(instrumentData.AxisLabelY, "pA")) // picoamperes?
                     {
                         addChromatogram("CAD " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_TIC_chromatogram, "");
                     }
-                    else
+                    else if (bal::icontains(instrumentData.AxisLabelY, "Pressure"))
                     {
-                        // TODO: pressure/flow chromatogram
+                        addChromatogram("Pump Pressure " + lexical_cast<string>(n), (ControllerType)controllerType, n, MS_pressure_chromatogram, "");
                     }
                 }
-                break; // case Controller_UV
+                break; // case Controller_UV Controller_ADCard Controller_Analog
 
                 default:
                     // TODO: are there sensible default chromatograms for other controller types?
@@ -488,6 +546,7 @@ size_t ChromatogramList_Thermo::size() const {return 0;}
 const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const {return emptyIdentity;}
 size_t ChromatogramList_Thermo::find(const string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
+ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
 
 } // detail
 } // msdata

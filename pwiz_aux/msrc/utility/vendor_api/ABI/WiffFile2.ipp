@@ -31,6 +31,7 @@ using namespace System::Collections::Generic;
 
 #ifdef __INTELLISENSE__
 #using <SCIEX.Apis.Data.v1.dll>
+#include "WiffFile.hpp"
 #endif
 #include "pwiz/utility/misc/Filesystem.hpp"
 
@@ -47,13 +48,24 @@ class WiffFile2Impl : public WiffFile
     WiffFile2Impl(const std::string& wiffpath);
     ~WiffFile2Impl()
     {
-        DataReader()->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
+        auto dataReader = DataReader();
+        if (dataReader != nullptr)
+            dataReader->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
         System::GC::Collect();
     }
 
     ISampleDataApi^ DataReader() const
     {
         static gcroot<ISampleDataApi^> dataReader = (gcnew DataApiFactory())->CreateSampleDataApi();
+        try
+        {
+            if (!dataReader)
+                return nullptr;
+        }
+        catch (System::InvalidOperationException^)
+        {
+            return nullptr;
+        }
         return dataReader;
     }
 
@@ -61,6 +73,8 @@ class WiffFile2Impl : public WiffFile
     mutable gcroot<IList<ISample^>^> allSamples;
     mutable gcroot<ISample^> msSample;
     mutable gcroot<IList<IExperiment^>^> currentSampleExperiments;
+
+    virtual std::string getWiffPath() const { return wiffpath_; }
 
     virtual int getSampleCount() const;
     virtual int getPeriodCount(int sample) const;
@@ -80,7 +94,9 @@ class WiffFile2Impl : public WiffFile
 
     virtual int getADCTraceCount(int sampleIndex) const { return 0; }
     virtual std::string getADCTraceName(int sampleIndex, int traceIndex) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
-    virtual void getADCTrace(int sampleIndex, int traceIndex, ADCTrace& trace) const { throw std::out_of_range("WIFF2 does not support ADC traces"); };
+    virtual void getADCTrace(int sampleIndex, int traceIndex, ADCTrace& trace) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
+
+    virtual void getTWC(int sample, ADCTrace& totalWavelengthChromatogram) const {}
 
     void setSample(int sample) const;
     void setPeriod(int sample, int period) const;
@@ -205,8 +221,8 @@ struct Spectrum2Impl : public Spectrum
             if (spectraReader->MoveNext())
                 msSpectrum = spectraReader->GetCurrent();
             else
-                throw gcnew Exception(String::Format("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} returned null spectrum",
-                                                     spectrumRequest->SampleId, spectrumRequest->ExperimentId, cycle));
+                throw gcnew Exception(String::Format("[WiffFile2::getSpectrumWithOptions] sample={0} experiment={1} cycle={2} scanTime={3} returned null spectrum",
+                                                     spectrumRequest->SampleId, spectrumRequest->ExperimentId, cycle, scanTime));
         }
 
         lastSpectrum = msSpectrum;
@@ -411,7 +427,7 @@ std::string WiffFile2Impl::getInstrumentSerialNumber() const
             }
         }
         if (instrumentDetails == nullptr)
-            throw gcnew Exception("no MS instrument details");
+            return "";
 
         return ToStdString(instrumentDetails->SerialNumber);
     }
@@ -679,8 +695,8 @@ void Spectrum2Impl::getIsolationInfo(double& centerMz, double& lowerLimit, doubl
         if (isolationWindow == nullptr)
             return;
         centerMz = isolationWindow->IsolationWindowTarget;
-        lowerLimit = centerMz - isolationWindow->LowerOffset;
-        upperLimit = centerMz + isolationWindow->UpperOffset;
+        lowerLimit = isolationWindow->LowerOffset;
+        upperLimit = isolationWindow->UpperOffset;
 
         auto collisionEnergyRamp = precursor->CollisionEnergy;
         if (collisionEnergyRamp == nullptr)

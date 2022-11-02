@@ -24,11 +24,54 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
 {
+    public class MeasuredPeptide : IPeptideData
+    {
+        public MeasuredPeptide()
+        {
+        }
+
+        public MeasuredPeptide(Target seq, double rt)
+        {
+            Target = seq;
+            RetentionTime = rt;
+        }
+
+        public MeasuredPeptide(MeasuredPeptide other) : this(other.Target, other.RetentionTime)
+        {
+        }
+
+        public Target Target { get; set; }
+        public double RetentionTime { get; set; }
+        public string Sequence { get { return Target == null ? string.Empty : Target.ToSerializableString(); } }
+
+        public static string ValidateSequence(Target sequence)
+        {
+            if (sequence.IsEmpty)
+                return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
+            if (sequence.IsProteomic)
+            {
+                if (!FastaSequence.IsExSequence(sequence.Sequence))
+                    return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
+            }
+            return null;
+        }
+
+        public static string ValidateRetentionTime(string rtText, bool allowNegative)
+        {
+            double rtValue;
+            if (rtText == null || !double.TryParse(rtText, out rtValue))
+                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
+            if (!allowNegative && rtValue <= 0)
+                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
+            return null;
+        }
+    }
+
     public class IrtPeptidePicker
     {
         private ScoredPeptide[] _scoredPeptides;
@@ -78,7 +121,7 @@ namespace pwiz.Skyline.Model.Irt
             foreach (var nodePep in doc.Molecules.Where(pep => pep.PercentileMeasuredRetentionTime.HasValue && !pep.IsDecoy))
             {
                 var allStats = doc.MeasuredResults.MSDataFileInfos
-                    .Select(info => mProphetResultsHandler.GetPeakFeatureStatistics(nodePep.Id.GlobalIndex, info.FileId.GlobalIndex))
+                    .Select(info => mProphetResultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, info.FileId))
                     .Where(stats => stats != null).ToArray();
                 var value = float.MaxValue;
                 if (allStats.Length > 0)

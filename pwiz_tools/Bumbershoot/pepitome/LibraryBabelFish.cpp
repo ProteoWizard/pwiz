@@ -501,7 +501,7 @@ namespace freicore
 
             //copy original library to merged file, except for last line
             string nextLine;
-            getline(originalLib, nextLine);
+            getlinePortable(originalLib, nextLine);
             while (!originalLib.eof())
             {
                 /*if (nextLine != "")
@@ -512,7 +512,7 @@ namespace freicore
                     continue;
                 }*/
                 mergedLibrary << nextLine << "\n";
-                getline(originalLib, nextLine);
+                getlinePortable(originalLib, nextLine);
             }
             originalLib.close();
 
@@ -615,7 +615,7 @@ namespace freicore
             map<int,string> iTraqMods;
             bool report = false;
 
-            getline(inFile,newLine);
+            getlinePortable(inFile,newLine);
             int writeIndex = 0;
 
             //go through file
@@ -945,7 +945,7 @@ namespace freicore
                         decoyStream << newLine << endl;
                     }
                 }
-                getline(inFile,newLine);
+                getlinePortable(inFile,newLine);
             }
             inFile.close();
             outFile.close();

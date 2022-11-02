@@ -71,6 +71,7 @@
             // 
             // dataGridViewProperties
             // 
+            resources.ApplyResources(this.dataGridViewProperties, "dataGridViewProperties");
             this.dataGridViewProperties.AutoGenerateColumns = false;
             this.dataGridViewProperties.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridViewProperties.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -78,7 +79,6 @@
             this.colPropertyName,
             this.colPropertyType});
             this.dataGridViewProperties.DataSource = this.bindingSourceListProperties;
-            resources.ApplyResources(this.dataGridViewProperties, "dataGridViewProperties");
             this.dataGridViewProperties.Name = "dataGridViewProperties";
             // 
             // colPropertyName
@@ -98,6 +98,7 @@
             // 
             // bindingNavigator1
             // 
+            resources.ApplyResources(this.bindingNavigator1, "bindingNavigator1");
             this.bindingNavigator1.AddNewItem = this.bindingNavigatorAddNewItem;
             this.bindingNavigator1.BindingSource = this.bindingSourceListProperties;
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
@@ -114,7 +115,6 @@
             this.bindingNavigatorSeparator2,
             this.bindingNavigatorAddNewItem,
             this.bindingNavigatorDeleteItem});
-            resources.ApplyResources(this.bindingNavigator1, "bindingNavigator1");
             this.bindingNavigator1.MoveFirstItem = this.bindingNavigatorMoveFirstItem;
             this.bindingNavigator1.MoveLastItem = this.bindingNavigatorMoveLastItem;
             this.bindingNavigator1.MoveNextItem = this.bindingNavigatorMoveNextItem;
@@ -124,37 +124,37 @@
             // 
             // bindingNavigatorAddNewItem
             // 
-            this.bindingNavigatorAddNewItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.bindingNavigatorAddNewItem, "bindingNavigatorAddNewItem");
+            this.bindingNavigatorAddNewItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorAddNewItem.Name = "bindingNavigatorAddNewItem";
             // 
             // bindingNavigatorCountItem
             // 
-            this.bindingNavigatorCountItem.Name = "bindingNavigatorCountItem";
             resources.ApplyResources(this.bindingNavigatorCountItem, "bindingNavigatorCountItem");
+            this.bindingNavigatorCountItem.Name = "bindingNavigatorCountItem";
             // 
             // bindingNavigatorDeleteItem
             // 
-            this.bindingNavigatorDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.bindingNavigatorDeleteItem, "bindingNavigatorDeleteItem");
+            this.bindingNavigatorDeleteItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorDeleteItem.Name = "bindingNavigatorDeleteItem";
             // 
             // bindingNavigatorMoveFirstItem
             // 
-            this.bindingNavigatorMoveFirstItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.bindingNavigatorMoveFirstItem, "bindingNavigatorMoveFirstItem");
+            this.bindingNavigatorMoveFirstItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorMoveFirstItem.Name = "bindingNavigatorMoveFirstItem";
             // 
             // bindingNavigatorMovePreviousItem
             // 
-            this.bindingNavigatorMovePreviousItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.bindingNavigatorMovePreviousItem, "bindingNavigatorMovePreviousItem");
+            this.bindingNavigatorMovePreviousItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorMovePreviousItem.Name = "bindingNavigatorMovePreviousItem";
             // 
             // bindingNavigatorSeparator
             // 
-            this.bindingNavigatorSeparator.Name = "bindingNavigatorSeparator";
             resources.ApplyResources(this.bindingNavigatorSeparator, "bindingNavigatorSeparator");
+            this.bindingNavigatorSeparator.Name = "bindingNavigatorSeparator";
             // 
             // bindingNavigatorPositionItem
             // 
@@ -163,25 +163,25 @@
             // 
             // bindingNavigatorSeparator1
             // 
-            this.bindingNavigatorSeparator1.Name = "bindingNavigatorSeparator1";
             resources.ApplyResources(this.bindingNavigatorSeparator1, "bindingNavigatorSeparator1");
+            this.bindingNavigatorSeparator1.Name = "bindingNavigatorSeparator1";
             // 
             // bindingNavigatorMoveNextItem
             // 
-            this.bindingNavigatorMoveNextItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.bindingNavigatorMoveNextItem, "bindingNavigatorMoveNextItem");
+            this.bindingNavigatorMoveNextItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorMoveNextItem.Name = "bindingNavigatorMoveNextItem";
             // 
             // bindingNavigatorMoveLastItem
             // 
-            this.bindingNavigatorMoveLastItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             resources.ApplyResources(this.bindingNavigatorMoveLastItem, "bindingNavigatorMoveLastItem");
+            this.bindingNavigatorMoveLastItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.bindingNavigatorMoveLastItem.Name = "bindingNavigatorMoveLastItem";
             // 
             // bindingNavigatorSeparator2
             // 
-            this.bindingNavigatorSeparator2.Name = "bindingNavigatorSeparator2";
             resources.ApplyResources(this.bindingNavigatorSeparator2, "bindingNavigatorSeparator2");
+            this.bindingNavigatorSeparator2.Name = "bindingNavigatorSeparator2";
             // 
             // btnCancel
             // 

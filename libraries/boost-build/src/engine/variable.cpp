@@ -9,8 +9,8 @@
  * Copyright 2005 Reece H. Dunn.
  * Copyright 2005 Rene Rivera.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -38,7 +38,7 @@
 #include "modules.h"
 #include "parse.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #include <stdio.h>
@@ -90,7 +90,7 @@ void var_defines( struct module_t * module, const char * const * e, int preproce
         )
         {
             LIST * l = L0;
-            size_t const len = strlen( val + 1 );
+            int32_t const len = int32_t(strlen( val + 1 ));
             int const quoted = ( val[ 1 ] == '"' ) && ( val[ len ] == '"' ) &&
                 ( len > 1 );
 

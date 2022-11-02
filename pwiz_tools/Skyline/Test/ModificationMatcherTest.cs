@@ -233,12 +233,12 @@ namespace pwiz.SkylineTest
                 mod.Modification.AminoAcids.Contains(c => c == 'I')));
 
 
-            using (var testDir = new TestFilesDir(TestContext, ZIP_FILE))
-            using (var modMatchDocContainer = InitMatchDocContainer(testDir))
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            using (var modMatchDocContainer = InitMatchDocContainer(TestFilesDir))
             {
                 var libkeyModMatcher = new LibKeyModificationMatcher();
-                var anlLibSpec = new BiblioSpecLiteSpec("ANL_Combo", testDir.GetTestPath("ANL_Combined.blib"));
-                var yeastLibSpec = new BiblioSpecLiteSpec("Yeast", testDir.GetTestPath("Yeast_atlas_small.blib"));
+                var anlLibSpec = new BiblioSpecLiteSpec("ANL_Combo", TestFilesDir.GetTestPath("ANL_Combined.blib"));
+                var yeastLibSpec = new BiblioSpecLiteSpec("Yeast", TestFilesDir.GetTestPath("Yeast_atlas_small.blib"));
                 modMatchDocContainer.ChangeLibSpecs(new[] { anlLibSpec, yeastLibSpec });
                 var docLibraries = modMatchDocContainer.Document.Settings.PeptideSettings.Libraries.Libraries;
                 int anlLibIndex = docLibraries.IndexOf(library => Equals(library.Name, anlLibSpec.Name));
@@ -272,6 +272,54 @@ namespace pwiz.SkylineTest
             }
         }
 
+        [TestMethod]
+        public void TestNeutralLossModificationMatcher()
+        {
+            var srmSettings = SrmSettingsList.GetDefault();
+            var staticMods =
+                srmSettings.PeptideSettings.Modifications.StaticModifications
+                    .Append(UniMod.GetModification("Water Loss (D, E, S, T)", true))
+                    .Append(UniMod.GetModification("Oxidation (M)", true).ChangeVariable(true))
+                    .ToList();
+            srmSettings = srmSettings.ChangePeptideSettings(
+                srmSettings.PeptideSettings.ChangeModifications(
+                    srmSettings.PeptideSettings.Modifications.ChangeStaticModifications(staticMods)));
+            var modificationMatcher = new ModificationMatcher();
+            var peptideSequences = new List<string>
+            {
+                "PEPTIDECK", // No explicit mods C should be modified
+                "PEPC[+57]IMEK",    // No need for variable mods because M unmodified
+                "C[+57]EDM[+16]K",  // No explicit losses M variably modified
+                "C[+57]EDS[+80]K",   // Explicit phospho modification on S and losses
+                "CEDM[+16]K",  // Explicitly modified due to no mod on C
+            };
+            modificationMatcher.CreateMatches(srmSettings, peptideSequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            for (int i = 0; i < peptideSequences.Count; i++)
+            {
+                string sequence = peptideSequences[i];
+                var peptideDocNode = modificationMatcher.GetModifiedNode(sequence);
+                Assert.IsNotNull(peptideDocNode, sequence);
+                if (i < 2)
+                    Assert.IsFalse(peptideDocNode.HasExplicitMods, sequence);
+                else
+                {
+                    if (i < 3)
+                    {
+                        Assert.IsTrue(peptideDocNode.HasVariableMods, sequence);
+                        // Static mods aren't included in the variable mods
+                        Assert.AreEqual(1, peptideDocNode.ExplicitMods.StaticModifications.Count, sequence);
+                    }
+                    else
+                    {
+                        Assert.IsTrue(peptideDocNode.HasExplicitMods && !peptideDocNode.HasVariableMods, sequence);
+                        Assert.IsTrue(peptideDocNode.ExplicitMods.HasNeutralLosses);
+                        Assert.AreEqual(sequence.Count(c => c == '[' || c == 'E' || c == 'D'),
+                            peptideDocNode.ExplicitMods.StaticModifications.Count, sequence);
+                    }
+                }
+            }
+        }
+
         private const string ZIP_FILE = @"Test\ModMatch.zip";
 
         private static void UpdateMatcherFail(string seq)
@@ -299,7 +347,7 @@ namespace pwiz.SkylineTest
 
         private static void UpdateMatcher(
             StaticMod[] docStatMods, StaticMod[] docHeavyMods, 
-            StaticMod[] globalStatMods, StaticMod[] globalHeavyMods, IEnumerable<string> seqs)
+            StaticMod[] globalStatMods, StaticMod[] globalHeavyMods, IList<string> seqs)
         {
             docStatMods = docStatMods ?? new StaticMod[0];
             docHeavyMods = docHeavyMods ?? new StaticMod[0];

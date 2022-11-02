@@ -583,7 +583,7 @@
     <value>高エネルギースペクトルのオフセットイオン移動度値</value>
   </data>
   <data name="cbOffsetHighEnergySpectra.ToolTip" xml:space="preserve">
-    <value>高CEイオンがドリフト管の後少し速く飛行するようなWaters IMSで有用</value>
+    <value>高CEイオンがドリフトチューブ後に少し速く飛行するようなWaters IMSで有用</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.Name" xml:space="preserve">
     <value>cbOffsetHighEnergySpectra</value>

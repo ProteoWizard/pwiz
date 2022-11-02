@@ -23,17 +23,17 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MSAmanda.Utils;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    public partial class DDASearchControl : UserControl
+    public partial class DDASearchControl : UserControl, IProgressMonitor
     {
         private ImportPeptideSearch ImportPeptideSearch;
 
-        public delegate void UpdateUIDelegate(IProgressStatus status);
-        public UpdateUIDelegate UpdateUI;
+        public Action<IProgressStatus> UpdateUI;
 
         public delegate void SearchFinishedDelegate(bool success);
         public event SearchFinishedDelegate OnSearchFinished;
@@ -66,6 +66,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             UpdateUI = UpdateSearchEngineProgress;
         }
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <remarks>Moved from .Designer.cs file.</remarks>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            cancelToken?.Cancel();
+
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         protected virtual void UpdateTaskbarProgress(TaskbarProgress.TaskbarStates state, int? percentComplete)
         {
             if (Program.MainWindow != null)
@@ -74,11 +90,33 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void UpdateSearchEngineProgress(IProgressStatus status)
         {
-            var newEntry = new ProgressEntry(DateTime.Now, status.Message);
+            string message = status.IsError ? status.ErrorException.ToString() : status.Message;
+
+            if (status.IsError)
+            {
+                MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
+                return;
+            }
+
+            if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
+                return;
+
+            var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
             txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
-            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, status.PercentComplete);
-            progressBar.Value = status.PercentComplete;
+
+            int percentComplete = status.PercentComplete;
+            if (status.SegmentCount > 0)
+                percentComplete = status.Segment * 100 / status.SegmentCount + status.ZoomedPercentComplete / status.SegmentCount;
+
+            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, percentComplete);
+            if (status.PercentComplete == -1)
+                progressBar.Style = ProgressBarStyle.Marquee;
+            else
+            {
+                progressBar.Value = percentComplete;
+                progressBar.Style = ProgressBarStyle.Continuous;
+            }
         }
 
         private InstrumentSetting GenerateIntrumentSettings()
@@ -95,30 +133,68 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = true;
-
-            ProgressStatus status = new ProgressStatus(Resources.DDASearchControl_SearchProgress_Starting_search);
-            progressBar.Visible = true;
-
-            UpdateSearchEngineProgress(status);
             cancelToken = new CancellationTokenSource();
-            t = Task<bool>.Factory.StartNew(() => ImportPeptideSearch.SearchEngine.Run(cancelToken),cancelToken.Token);
-            await t;
-            if (cancelToken.IsCancellationRequested)
+            IProgressStatus status = new ProgressStatus();
+            progressBar.Visible = true;
+            bool success = true;
+
+            if (ImportPeptideSearch.DdaConverter != null)
             {
-                UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
-                progressBar.Visible = false;
-            }
-            else if (!t.Result)
-            {
-                UpdateSearchEngineProgress(status.ChangeWarningMessage(Resources.DDASearchControl_SearchProgress_Search_failed));
+                status = status.ChangeSegments(0, ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length * 2);
+
+                t = Task<bool>.Factory.StartNew((statusObj) => ImportPeptideSearch.DdaConverter.Run(this, statusObj as IProgressStatus), status, cancelToken.Token);
+                await t;
+                success = t.Result;
+
+                if (cancelToken.IsCancellationRequested)
+                {
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_cancelled_));
+                    progressBar.Visible = false;
+                    success = false;
+                }
+                else if (!t.Result)
+                {
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_failed_));
+                    Cancel();
+                }
+                else
+                {
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_finished_).Complete());
+                    status = status.ChangeSegments(ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length,
+                        ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length * 2);
+                }
             }
             else
+                status = status.ChangeSegments(0, ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length);
+
+            if (success && !cancelToken.IsCancellationRequested)
             {
-                UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).Complete());
+                status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Starting_search);
+                UpdateSearchEngineProgress(status);
+
+                t = Task<bool>.Factory.StartNew(() => ImportPeptideSearch.SearchEngine.Run(cancelToken, status), cancelToken.Token);
+                await t;
+                success = t.Result;
+
+                if (cancelToken.IsCancellationRequested)
+                {
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
+                    progressBar.Visible = false;
+                    success = false;
+                }
+                else if (!t.Result)
+                {
+                    UpdateSearchEngineProgress(status.ChangeWarningMessage(Resources.DDASearchControl_SearchProgress_Search_failed));
+                    Cancel();
+                }
+                else
+                {
+                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).ChangeSegments(0, 0).Complete());
+                }
             }
             UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
             btnCancel.Enabled = false;
-            OnSearchFinished?.Invoke(t.Result);
+            OnSearchFinished?.Invoke(success);
             ImportPeptideSearch.SearchEngine.SearchProgressChanged -= SearchEngine_MessageNotificationEvent;
         }
 
@@ -132,7 +208,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void Cancel()
         {
-            cancelToken.Cancel();
+            cancelToken?.Cancel();
             btnCancel.Enabled = false;
         }
 
@@ -151,6 +227,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.Clear();
             foreach (var entry in _progressTextItems)
                 txtSearchProgress.AppendText($@"{entry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+        }
+
+        public string LogText => txtSearchProgress.Text;
+
+        public bool HasUI => true;
+        public bool IsCanceled => cancelToken.IsCancellationRequested;
+
+        /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
+        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        {
+            if (IsCanceled)
+                return UpdateProgressResponse.cancel;
+
+            if (InvokeRequired)
+                Invoke(new MethodInvoker(() => UpdateProgress(status)));
+            else
+                UpdateSearchEngineProgress(status.ChangeMessage(status.Message));
+
+            return UpdateProgressResponse.normal;
         }
     }
 }

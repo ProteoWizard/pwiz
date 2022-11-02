@@ -739,11 +739,10 @@ void test_v3(SpectrumListPtr sl, int msLevel)
             {
                 charges.push_back(param.value);
             }
-            if (param.cvid == MS_accurate_mass_OBSOLETE)
-            {
-              masses.push_back(lexical_cast<double>(param.value));
-            }
         }
+        auto massParam = precursor0.selectedIons[0].userParam("accurate mass");
+        if (!massParam.empty())
+            masses.push_back(lexical_cast<double>(massParam.value));
         unit_assert(charges.size() == 1);
         vector<string>::const_iterator charge_it = charges.begin();
 		unit_assert(*charge_it == "1");			
@@ -815,11 +814,10 @@ void test_v3(SpectrumListPtr sl, int msLevel)
             {
                 charges.push_back(param.value);
             }
-            if (param.cvid == MS_accurate_mass_OBSOLETE)
-            {
-              masses.push_back(lexical_cast<double>(param.value));
-            }
           }
+          auto massParam = si.userParam("accurate mass");
+          if (!massParam.empty())
+              masses.push_back(lexical_cast<double>(massParam.value));
         }
         unit_assert(charges.size() == 2);
         vector<string>::const_iterator charge_it = charges.begin();

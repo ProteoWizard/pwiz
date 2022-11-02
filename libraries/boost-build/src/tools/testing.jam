@@ -3,7 +3,7 @@
 # Copyright 2014-2015 Rene Rivera
 # Copyright 2014 Microsoft Corporation
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This module implements regression testing framework. It declares a number of
 # main target rules which perform some action and, if the results are OK,
@@ -137,7 +137,7 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
 
     local t = [ targets.create-typed-target [ type.type-from-rule-name
         $(target-type) ] : $(project) : $(real-name) : $(sources) :
-        $(requirements) $(location-prefix)
+        $(requirements) $(location-prefix)$(.TEST-DIR-SUFFIX)
         <relevant>toolset ] ;
 
     # The alias to the real target, per period replacement above.
@@ -598,7 +598,6 @@ local rule remove-test-targets ( target )
 {
     rmtemp-sources $(target) : [ get-test-targets $(target) ] ;
 }
-
 local rule rmtemp-sources ( target : sources * )
 {
     if $(sources)
@@ -815,7 +814,7 @@ rule unit-test ( target : source : properties * )
     if [ feature.get-values preserve-test-targets : $(properties) ] = off
     {
         REMOVE_TEST_TARGETS on $(target) = [ remove-test-targets-shell $(target) ] ;
-    }
+}
 }
 
 

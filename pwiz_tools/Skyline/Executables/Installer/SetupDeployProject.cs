@@ -35,33 +35,32 @@ namespace SetupDeployProject
     {
         static int Main(string[] args)
         {
-            if (args.Length != 5)
+            if (args.Length != 6)
             {
-                Console.Error.WriteLine("Usage: SetupDeployProject <Skyline path> <pwiz build path> <version string> <address-model> <target-name>");
+                Console.Error.WriteLine(String.Join(" ", args));
+                Console.Error.WriteLine("Usage: SetupDeployProject <Skyline path> <Skyline build path> <pwiz build path> <version string> <address-model> <target-name>");
                 return 1;
             }
 
             try
             {
                 string skylinePath = Path.GetFullPath(args[0]);
-                string pwizBuildPath = args[1];
-                string version = args[2];
-                string addressModel = args[3];
-                string targetName = args[4];
+                string skylineBuildPath = args[1];
+                string pwizBuildPath = args[2];
+                string version = args[3];
+                string addressModel = args[4];
+                string targetName = args[5];
                 string platform = addressModel == "64" ? "x64" : "x86";
                 string installerSuffix = addressModel == "64" ? "-x86_64" : "-x86";
 
                 string templateDirectory = Path.Combine(skylinePath, "Executables/Installer");
                 string templatePath = Path.Combine(templateDirectory, "Product-template.wxs");
-                string skylineBuildPath = Path.Combine(skylinePath, "bin", platform, "Release");
                 string installerOutputDirectory = Path.Combine(skylinePath, "bin", platform);
 
                 string filelistPath = Path.Combine(templateDirectory, "FileList64-template.txt");
-                string testSettingsPath = Path.Combine(skylinePath, $"TestSettings_{platform}-template.testsettings");
 
                 var wxsVendorDlls = new StringBuilder();
                 var filelistDlls = new List<string>();
-                var testSettingDlls = new StringBuilder();
                 foreach (var line in File.ReadAllText(pwizBuildPath + "/without-cxt/" + platform + "/INSTALLER_VENDOR_FILES.txt").Trim().Split('\n'))
                 {
                     string filename = line.Trim();
@@ -70,9 +69,10 @@ namespace SetupDeployProject
                     {
                         wxsVendorDlls.AppendLine($"<Component><File Source=\"{filepath}\" KeyPath=\"yes\"/></Component>");
                         filelistDlls.Add(filename);//$"{filename} (included automatically from ProteoWizard; DO NOT ADD TO TEMPLATE!)");
-                        testSettingDlls.AppendLine($"<DeploymentItem filename=\"{filename}\" />");
                     }
                     // if file doesn't exist, assume it's not needed or is already taken care of by non-dynamic elements
+                    else
+                        Console.Error.WriteLine($"File '{filepath}' specified by INSTALLER_VENDOR_FILES does not exist. Does it need to be added to Skyline.csproj?");
                 }
 
                 var wxsTemplate = new StringBuilder(File.ReadAllText(templatePath));
@@ -97,10 +97,6 @@ namespace SetupDeployProject
                     }
                     File.WriteAllText(filelistPath.Replace("-template", ""), filelistTemplate.ToString());
                 }
-
-                var testSettingsTemplate = new StringBuilder(File.ReadAllText(testSettingsPath));
-                testSettingsTemplate.Replace("__VENDOR_DLLS__", testSettingDlls.ToString());
-                File.WriteAllText(testSettingsPath.Replace("-template", ""), testSettingsTemplate.ToString());
 
                 /*var httpSources = Regex.Matches(wxsTemplate.ToString(), "Name=\"(.*)\" Source=\"(http://.*?)\"");
                 WebClient webClient = null;

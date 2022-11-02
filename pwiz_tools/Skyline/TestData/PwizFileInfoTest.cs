@@ -32,12 +32,14 @@ namespace pwiz.SkylineTestData
     [TestClass]
     public class PwizFileInfoTest : AbstractUnitTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestInstrumentInfo()
         {
+            if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentInfo)))
+                return;
             const string testZipPath = @"TestData\PwizFileInfoTest.zip";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Waters file (.raw directory) and mz5 equivalent
             foreach (
@@ -45,13 +47,19 @@ namespace pwiz.SkylineTestData
                     new[]
                     {ExtensionTestContext.ExtWatersRaw, ExtensionTestContext.ExtMz5})
             {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ext),
+                VerifyInstrumentInfo(TestFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ext),
                     "Waters instrument model", "", "", "");
             }
 
             // ABI .wiff file
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("051309_digestion" + ExtensionTestContext.ExtAbWiff),
                 "4000 QTRAP", "electrospray ionization", "quadrupole/quadrupole/axial ejection linear ion trap", "electron multiplier");
+
+/* Waiting for CCS<->DT support in .mbi reader
+            // Mobilion .mbi file
+            VerifyInstrumentInfo(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Mobilion, "ExampleTuneMix_binned5" + ExtensionTestContext.ExtMobilionRaw),
+                "Agilent 6545", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
+*/
 
             // Sciex .wiff2 file
             string wiff2Ext = ExtensionTestContext.CanImportAbWiff2 ? ".wiff2" : "-sample-centroid.mzML";
@@ -59,15 +67,15 @@ namespace pwiz.SkylineTestData
                 "X500R QTOF", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "electron multiplier");
 
             // MzWiff generated mzXML files
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
                 "4000 Q Trap", "electrospray ionization", "TOFMS", "");
 
             // Agilent file (.d directory)
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw),
                 "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
 
             // Shimadzu TOF file (.lcd file)
-            VerifyInstrumentInfo(testFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
+            VerifyInstrumentInfo(TestFilesDir.GetTestPath("10nmol_Negative_MS_ID_ON_055" + ExtensionTestContext.ExtShimadzuRaw),
                 "Shimadzu instrument model", "electrospray ionization", "quadrupole/quadrupole/time-of-flight", "microchannel plate detector");
 
             // Thermo .raw|mzML file
@@ -76,7 +84,7 @@ namespace pwiz.SkylineTestData
                     new[]
                     {ExtensionTestContext.ExtThermoRaw, ExtensionTestContext.ExtMzml})
             {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ext),
+                VerifyInstrumentInfo(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ext),
                     "TSQ Vantage", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
             }
         }
@@ -91,6 +99,9 @@ namespace pwiz.SkylineTestData
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "ImsSynthAllIons.d"), 49, 369032);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Agilent, "GFb_4Scan_TimeSegs_1530_100ng.d"), 63, 56163792);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Bruker, "Hela_QC_PASEF_Slot1-first-6-frames.d"), 1, 23340182);
+/* Waiting for CCS<->DT support in .mbi reader
+            VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Mobilion, "ExampleTuneMix_binned5" + ExtensionTestContext.ExtMobilionRaw), 29, 61158643);
+*/
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Thermo, "090701-LTQVelos-unittest-01.raw"), 30, 32992246);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "MSe_Short.raw"), 2, 3286253);
             VerifyTicChromatogram(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.Waters, "HDMRM_Short_noLM.raw"), 0, 0);
@@ -116,9 +127,9 @@ namespace pwiz.SkylineTestData
         {
             const string testZipPath = @"TestData\PressureTracesTest.zip";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
-            using (var msDataFile = new MsDataFileImpl(testFilesDir.GetTestPath("PressureTrace1" + ExtensionTestContext.ExtAbWiff)))
+            using (var msDataFile = new MsDataFileImpl(TestFilesDir.GetTestPath("PressureTrace1" + ExtensionTestContext.ExtAbWiff)))
             {
                 var pressureTraces = msDataFile.GetQcTraces();
 
@@ -129,7 +140,7 @@ namespace pwiz.SkylineTestData
                 VerifyQcTrace(pressureTraces[4], "Pump A Flowrate (channel 5)", 3508, 0, 29.225, 7038, 7833, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
                 VerifyQcTrace(pressureTraces[5], "Pump B Flowrate (channel 6)", 3508, 0, 29.225, 680, 151, MsDataFileImpl.QcTraceQuality.FlowRate, MsDataFileImpl.QcTraceUnits.MicrolitersPerMinute);
 
-                string docPath = testFilesDir.GetTestPath("PressureTrace1.sky");
+                string docPath = TestFilesDir.GetTestPath("PressureTrace1.sky");
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
                 AssertEx.IsDocumentState(doc, 0, 1, 3, 9);
 
@@ -140,7 +151,7 @@ namespace pwiz.SkylineTestData
                     var chromSets = new[]
                     {
                         new ChromatogramSet(replicateName, new[]
-                            { new MsDataFilePath(testFilesDir.GetTestPath("PressureTrace1" + extRaw)),  }),
+                            { new MsDataFilePath(TestFilesDir.GetTestPath("PressureTrace1" + extRaw)),  }),
                     };
                     var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                     Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
@@ -170,11 +181,17 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestInstrumentSerialNumbers()
         {
+            if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentSerialNumbers)))
+                return;
             if (Skyline.Program.NoVendorReaders)
                 return;
 
-            const string testZipPath = @"TestData\PwizFileInfoTest.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDirs = new []
+            {
+                new TestFilesDir(TestContext, @"TestData\PwizFileInfoTest.zip"),
+                new TestFilesDir(TestContext, @"TestData\Results\ThermoQuant.zip")
+            };
+            var testFilesDir = TestFilesDirs[0];
 
             if (ExtensionTestContext.CanImportAbWiff2)
                 VerifySerialNumber(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.ABI, "swath.api.wiff2"), "CI231606PT"); // WIFF2 file with empty serial number
@@ -195,8 +212,7 @@ namespace pwiz.SkylineTestData
             {
                 VerifySerialNumber(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.raw"), null); // Thermo RAW file with empty serial number
 
-                const string testZipPath2 = @"TestData\Results\ThermoQuant.zip";
-                var testFilesDir2 = new TestFilesDir(TestContext, testZipPath2);
+                var testFilesDir2 = TestFilesDirs[1];
                 VerifySerialNumber(testFilesDir2.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.raw"), "TQU00490");
             }
         }
@@ -225,7 +241,7 @@ namespace pwiz.SkylineTestData
             {
                 var tic = msDataFile.GetTotalIonCurrent();
                 Assert.AreEqual(count, tic.Length);
-                Assert.AreEqual(maxIntensity, tic.Length > 0 ? tic.Max() : 0);
+                Assert.AreEqual(maxIntensity, tic.Length > 0 ? tic.Max() : 0, maxIntensity * 1e-7);
             }
         }
 

@@ -89,6 +89,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Colors\ColorPalettes.cs" />
+    <Compile Include="Colors\ColorScheme.cs" />
+    <Compile Include="Colors\DiscreteColorScheme.cs" />
+    <Compile Include="Colors\NumericColorScheme.cs" />
+    <Compile Include="Controls\Clustering\DendrogramControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\LiteDropDownList.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
+    <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
+    <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
+    <Compile Include="Controls\Clustering\DendrogramScale.cs" />
     <Compile Include="Controls\CommonDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -98,20 +112,25 @@
     <Compile Include="Controls\DoubleBufferedListView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\FindBox.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\FindBox.Designer.cs">
-      <DependentUpon>FindBox.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\IFormView.cs" />
-    <Compile Include="Controls\RecordNavBar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\RecordNavBar.Designer.cs">
-      <DependentUpon>RecordNavBar.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\ColumnLimitExceededColumn.cs" />
+    <Compile Include="DataAnalysis\alglib\alglibinternal.cs" />
+    <Compile Include="DataAnalysis\alglib\alglibmisc.cs" />
+    <Compile Include="DataAnalysis\alglib\ap.cs" />
+    <Compile Include="DataAnalysis\alglib\dataanalysis.cs" />
+    <Compile Include="DataAnalysis\alglib\diffequations.cs" />
+    <Compile Include="DataAnalysis\alglib\fasttransforms.cs" />
+    <Compile Include="DataAnalysis\alglib\integration.cs" />
+    <Compile Include="DataAnalysis\alglib\interpolation.cs" />
+    <Compile Include="DataAnalysis\alglib\linalg.cs" />
+    <Compile Include="DataAnalysis\alglib\optimization.cs" />
+    <Compile Include="DataAnalysis\alglib\solvers.cs" />
+    <Compile Include="DataAnalysis\alglib\specialfunctions.cs" />
+    <Compile Include="DataAnalysis\alglib\statistics.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterDataSet.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterMetricType.cs" />
+    <Compile Include="DataAnalysis\Clustering\ClusterRole.cs" />
+    <Compile Include="DataAnalysis\Clustering\PcaResults.cs" />
     <Compile Include="DataAnalysis\LinearFitResult.cs" />
     <Compile Include="DataAnalysis\FoldChange\FoldChangeDataSet.cs" />
     <Compile Include="DataAnalysis\FoldChange\DesignMatrix.cs" />
@@ -125,7 +144,6 @@
     <Compile Include="DataAnalysis\PValues.cs" />
     <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
-    <Compile Include="DataAnalysis\ThreadingHelper.cs" />
     <Compile Include="Database\NHibernate\AbstractSessionWithLock.cs" />
     <Compile Include="Database\NHibernate\SessionFactoryFactory.cs" />
     <Compile Include="Database\NHibernate\SessionWithLock.cs" />
@@ -143,10 +161,21 @@
     <Compile Include="DataBinding\Attributes\OneToManyAttribute.cs" />
     <Compile Include="DataBinding\Attributes\UiModeAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HiddenAttribute.cs" />
+    <Compile Include="DataBinding\CaptionedValues.cs" />
     <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\Clustering\ClusteredProperties.cs" />
+    <Compile Include="DataBinding\Clustering\ClusteredReportResults.cs" />
+    <Compile Include="DataBinding\Clustering\ClusteringSpec.cs" />
+    <Compile Include="DataBinding\Clustering\ReportColorScheme.cs" />
     <Compile Include="DataBinding\CollectionInfo.cs" />
     <Compile Include="DataBinding\ColumnFormats.cs" />
     <Compile Include="DataBinding\ColumnSelector.cs" />
+    <Compile Include="DataBinding\Controls\ClusteringEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ClusteringEditor.Designer.cs">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataBinding\Controls\ColumnListEditor.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -254,7 +283,7 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataBinding\DataFormat.cs" />
+    <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
     <Compile Include="DataBinding\Documentation\DocumentationGenerator.cs" />
@@ -267,17 +296,19 @@
     <Compile Include="DataBinding\Internal\AbstractQuery.cs" />
     <Compile Include="DataBinding\Internal\BackgroundQuery.cs" />
     <Compile Include="DataBinding\Internal\BindingListView.cs" />
+    <Compile Include="DataBinding\Clustering\Clusterer.cs" />
     <Compile Include="DataBinding\Internal\ForegroundQuery.cs" />
     <Compile Include="DataBinding\Internal\GroupAndTotaler.cs" />
     <Compile Include="DataBinding\Internal\GroupedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\GroupedRow.cs" />
     <Compile Include="DataBinding\Internal\IndexedPropertyDescriptor.cs" />
     <Compile Include="DataBinding\Internal\IQueryRequest.cs" />
-    <Compile Include="DataBinding\Internal\PivotedRows.cs" />
     <Compile Include="DataBinding\Internal\Pivoter.cs" />
     <Compile Include="DataBinding\Internal\QueryRequestor.cs" />
     <Compile Include="DataBinding\Internal\QueryResults.cs" />
+    <Compile Include="DataBinding\ItemProperties.cs" />
     <Compile Include="DataBinding\IUiModeInfo.cs" />
+    <Compile Include="DataBinding\CaptionedDendrogramData.cs" />
     <Compile Include="DataBinding\Layout\RowFilter.cs" />
     <Compile Include="DataBinding\Internal\RowSourceWrapper.cs" />
     <Compile Include="DataBinding\IRowSource.cs" />
@@ -286,11 +317,13 @@
     <Compile Include="DataBinding\Layout\TransformStack.cs" />
     <Compile Include="DataBinding\Layout\ViewLayoutList.cs" />
     <Compile Include="DataBinding\NewRowHandler.cs" />
+    <Compile Include="DataBinding\PivotedColumnId.cs" />
     <Compile Include="DataBinding\PivotKey.cs" />
     <Compile Include="DataBinding\Layout\PivotSpec.cs" />
     <Compile Include="DataBinding\PropertyPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\QueryLock.cs" />
+    <Compile Include="DataBinding\ReportResults.cs" />
     <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
     <Compile Include="DataBinding\RowItemValues.cs" />
@@ -299,6 +332,7 @@
     <Compile Include="DataBinding\RowSources\PropertyChangeSupport.cs" />
     <Compile Include="DataBinding\SerializableViewGroups.cs" />
     <Compile Include="DataBinding\SortableBindingList.cs" />
+    <Compile Include="DataBinding\Clustering\PivotedProperties.cs" />
     <Compile Include="DataBinding\TotalOperation.cs" />
     <Compile Include="DataBinding\TransformResults.cs" />
     <Compile Include="DataBinding\Layout\ColumnId.cs" />
@@ -330,26 +364,14 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Controls\FindBox.ja.resx">
-      <DependentUpon>FindBox.cs</DependentUpon>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.ja.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\FindBox.resx">
-      <DependentUpon>FindBox.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Controls\FindBox.zh-CHS.resx">
-      <DependentUpon>FindBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\RecordNavBar.ja.resx">
-      <DependentUpon>RecordNavBar.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\RecordNavBar.resx">
-      <DependentUpon>RecordNavBar.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Controls\RecordNavBar.zh-CHS.resx">
-      <DependentUpon>RecordNavBar.cs</DependentUpon>
+    <EmbeddedResource Include="DataBinding\Controls\ClusteringEditor.zh-CHS.resx">
+      <DependentUpon>ClusteringEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\ColumnListEditor.ja.resx">
       <DependentUpon>ColumnListEditor.cs</DependentUpon>
@@ -504,7 +526,10 @@
     <None Include="Resources\up-pro32.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\DropImageNoBackground.png" />
     <Content Include="Resources\HiddenColumns.bmp" />
+    <Content Include="Resources\Cluster.bmp" />
+    <None Include="Resources\Alphabetical.bmp" />
     <Content Include="Resources\UnknownUiMode.png" />
     <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
     <Content Include="Resources\agg_mean.bmp" />
@@ -546,6 +571,7 @@
       <Name>CommonUtil</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

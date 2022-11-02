@@ -141,6 +141,9 @@
   <data name="eIonMobilityUnits_unknown" xml:space="preserve">
     <value>未知</value>
   </data>
+  <data name="eIonMobilityUnits_waters_sonar" xml:space="preserve">
+    <value>Waters SONAR</value>
+  </data>
   <data name="FullScanAcquisitionMethod_DDA" xml:space="preserve">
     <value>DDA</value>
   </data>
@@ -151,7 +154,7 @@
     <value>无</value>
   </data>
   <data name="FullScanAcquisitionMethod_Targeted" xml:space="preserve">
-    <value>定向的</value>
+    <value>定向(已过时)</value>
   </data>
   <data name="FullScanMassAnalyzerType_centroided" xml:space="preserve">
     <value>棒状图形式</value>
@@ -239,6 +242,9 @@
   </data>
   <data name="SingletonNormalizationMethod_quantile" xml:space="preserve">
     <value>分位数</value>
+  </data>
+  <data name="SingletonNormalizationMethod_tic" xml:space="preserve">
+    <value>总离子电流</value>
   </data>
   <data name="OptimizedMethodType_None" xml:space="preserve">
     <value>无</value>
@@ -534,6 +540,9 @@
   <data name="AreaCVNormalizationMethod_ratio" xml:space="preserve">
     <value>比率</value>
   </data>
+  <data name="AreaCVNormalizationMethod_tic" xml:space="preserve">
+    <value>总离子电流</value>
+  </data>
   <data name="AreaCVMsLevel_precursors" xml:space="preserve">
     <value>母离子</value>
   </data>
@@ -569,5 +578,83 @@
   </data>
   <data name="IonMobilityWindowWidthType_none" xml:space="preserve">
     <value>无</value>
+  </data>
+  <data name="ClusterMetricType_chebyshev" xml:space="preserve">
+    <value>Chebyshev</value>
+  </data>
+  <data name="ClusterMetricType_manhattan" xml:space="preserve">
+    <value>城市街区</value>
+  </data>
+  <data name="ClusterMetricType_pearson" xml:space="preserve">
+    <value>Pearson</value>
+  </data>
+  <data name="ClusterMetricType_euclidean" xml:space="preserve">
+    <value>Euclidean</value>
+  </data>
+  <data name="InputFile_dda_raw" xml:space="preserve">
+    <value>DDA 原始（搜索和构建库）</value>
+  </data>
+  <data name="InputFile_dia_raw" xml:space="preserve">
+    <value>DIA 原始（去卷积、搜索和构建库）</value>
+  </data>
+  <data name="InputFile_search_result" xml:space="preserve">
+    <value>搜索结果（直接构建库）</value>
+  </data>
+  <data name="InstrumentPreset_OrbitrapLTQ" xml:space="preserve">
+    <value>Orbitrap LTQ</value>
+  </data>
+  <data name="InstrumentPreset_QExactive" xml:space="preserve">
+    <value>Q Exactive</value>
+  </data>
+  <data name="InstrumentPreset_TripleTOF" xml:space="preserve">
+    <value>TripleTOF</value>
+  </data>
+  <data name="Protocol_dia_umpire" xml:space="preserve">
+    <value>DIA-Umpire</value>
+  </data>
+  <data name="Protocol_msconvert" xml:space="preserve">
+    <value>MSConvert</value>
+  </data>
+  <data name="Protocol_none" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_SureQuant" xml:space="preserve">
+    <value>SureQuant</value>
+  </data>
+  <data name="FullScanAcquisitionMethod_PRM" xml:space="preserve">
+    <value>PRM</value>
+  </data>
+  <data name="SearchEngine_MSAmanda" xml:space="preserve">
+    <value>MS Amanda</value>
+  </data>
+  <data name="SearchEngine_MSFragger" xml:space="preserve">
+    <value>MSFragger</value>
+  </data>
+  <data name="SearchEngine_MSGFPlus" xml:space="preserve">
+    <value>MS-GF+</value>
+  </data>
+  <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
+    <value>已分配给肽段最多的蛋白质</value>
+  </data>
+  <data name="SharedPeptides_AssignedToFirstProtein" xml:space="preserve">
+    <value>已分配给第一个蛋白质</value>
+  </data>
+  <data name="SharedPeptides_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>重复的蛋白质</value>
+  </data>
+  <data name="SharedPeptides_Removed" xml:space="preserve">
+    <value>已删除（肽段必须为单一蛋白质独有）</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToBestProtein" xml:space="preserve">
+    <value>已分配给肽段最多的蛋白质组</value>
+  </data>
+  <data name="SharedPeptidesGroup_AssignedToFirstProtein" xml:space="preserve">
+    <value>已分配给第一个蛋白质组</value>
+  </data>
+  <data name="SharedPeptidesGroup_DuplicatedBetweenProteins" xml:space="preserve">
+    <value>重复的蛋白质组</value>
+  </data>
+  <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
+    <value>已删除（肽段必须为单一蛋白质组独有）</value>
   </data>
 </root>

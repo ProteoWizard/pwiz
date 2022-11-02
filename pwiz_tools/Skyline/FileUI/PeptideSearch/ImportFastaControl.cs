@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -53,7 +54,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             ImportFastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, helpTipFasta);
 
-            tbxFastaHeightDifference = Height - tbxFasta.Height;
+            tbxFastaHeightDifference = Height - (panelError.Bottom - tbxFasta.Top);
 
             _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
             _driverEnzyme.LoadList(DocumentContainer.Document.Settings.PeptideSettings.Enzyme.GetKey());
@@ -63,6 +64,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbDecoyMethod.Items.Add(DecoyGeneration.SHUFFLE_SEQUENCE);
             cbDecoyMethod.Items.Add(DecoyGeneration.REVERSE_SEQUENCE);
             cbDecoyMethod.SelectedIndex = 0;
+
+            tbxFasta.Resize += TbxFasta_Resize;
         }
 
         private IModifyDocumentContainer DocumentContainer { get; set; }
@@ -77,15 +80,48 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get { return !tbxFasta.Multiline; }
             set
             {
+                if (tbxFasta.Multiline != value)
+                    return;
+
                 tbxFasta.Multiline = !value;
                 if (tbxFasta.Multiline)
+                {
                     tbxFasta.Height = Height - tbxFastaHeightDifference;
+                    clearBtn.Visible = true;
+                }
+                else
+                {
+                    int buttonTextboxOffset = tbxFastaTargets.Location.Y - browseFastaTargetsBtn.Location.Y;
+                    tbxFasta.Location = new System.Drawing.Point(tbxFasta.Location.X, browseFastaBtn.Location.Y + buttonTextboxOffset);
+                    clearBtn.Visible = false;
+                }
             }
         }
         private readonly int tbxFastaHeightDifference;
+        private bool _decoyGenerationEnabled;
+        private bool _isDdaSearch;
+
+        private void TbxFasta_Resize(object sender, EventArgs e)
+        {
+            targetFastaPanel.Location = new System.Drawing.Point(targetFastaPanel.Location.X, tbxFasta.Bounds.Bottom + 8);
+            targetFastaPanel.Width = browseFastaBtn.Right + (targetFastaPanel.Width - browseFastaTargetsBtn.Right); // Make sure browse buttons align
+        }
 
         public bool ContainsFastaContent { get { return !string.IsNullOrWhiteSpace(tbxFasta.Text); } }
-        public bool IsDDASearch { get; set; }
+
+        public bool IsDDASearch
+        {
+            get => _isDdaSearch;
+            set
+            {
+                _isDdaSearch = value;
+                _fastaFile = true;
+
+                targetFastaPanel.Visible = _isDdaSearch;
+            }
+        }
+
+        public AssociateProteinsSettings AssociateProteinsSettings { get; private set; }
 
         public ImportFastaSettings ImportSettings
         {
@@ -95,7 +131,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public class ImportFastaSettings
         {
             public ImportFastaSettings(ImportFastaControl control) : this(control.Enzyme, control.MaxMissedCleavages,
-                control.FastaFile, control.FastaText, control.DecoyGenerationMethod, control.NumDecoys,
+                control.FastaFile, control.FastaText, control.FastaImportTargetsFile, control.DecoyGenerationMethod, control.NumDecoys,
                 control.AutoTrain)
             {
             }
@@ -103,15 +139,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public static ImportFastaSettings GetDefault(PeptideSettings peptideSettings)
             {
                 return new ImportFastaSettings(peptideSettings.Enzyme,
-                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, string.Empty, null, false);
+                    peptideSettings.DigestSettings.MaxMissedCleavages, null, null, null, string.Empty, null, false);
             }
 
-            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string decoyGenerationMethod, double? numDecoys, bool autoTrain)
+            public ImportFastaSettings(Enzyme enzyme, int maxMissedCleavages, string fastaFile, string fastaText, string fastaImportTargetsFile, string decoyGenerationMethod, double? numDecoys, bool autoTrain)
             {
                 Enzyme = enzyme;
                 MaxMissedCleavages = maxMissedCleavages;
                 FastaFile = AuditLogPath.Create(fastaFile);
                 FastaText = fastaText;
+                FastaImportTargetsFile = AuditLogPath.Create(fastaImportTargetsFile);
                 DecoyGenerationMethod = decoyGenerationMethod;
                 NumDecoys = numDecoys;
                 AutoTrain = autoTrain;
@@ -133,6 +170,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public AuditLogPath FastaFile { get; private set; }
             [Track(defaultValues: typeof(FastaTextDefault))]
             public string FastaText { get; private set; }
+            [Track(defaultValues: typeof(DefaultValuesNull))]
+            public AuditLogPath FastaImportTargetsFile { get; private set; }
             [Track]
             public string DecoyGenerationMethod { get; private set; }
             [Track]
@@ -160,10 +199,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public bool RequirePrecursorTransition { private get; set; }
 
+        public bool IsImportingResults { private get; set; }
+
         public bool DecoyGenerationEnabled
         {
-            get { return panelDecoys.Visible; }
-            set { panelDecoys.Visible = value; }
+            get { return _decoyGenerationEnabled; }
+            set { panelDecoys.Visible = _decoyGenerationEnabled = value; }
         }
 
         public string DecoyGenerationMethod
@@ -182,7 +223,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 double numDecoys;
-                return DecoyGenerationEnabled && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
+                return !string.IsNullOrEmpty(DecoyGenerationMethod) && double.TryParse(txtNumDecoys.Text, out numDecoys) ? (double?) numDecoys : null;
             }
             set { txtNumDecoys.Text = value.ToString(); }
         }
@@ -196,7 +237,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string FastaFile { get; private set; }
         public string FastaText { get; private set; }
 
-        private void browseFastaBtn_Click(object sender, EventArgs e)
+        public string FastaImportTargetsFile
+        {
+            get { return tbxFastaTargets.Text; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    tbxFastaTargets.Text = string.Empty;
+                    cbImportFromSeparateFasta.Checked = browseFastaTargetsBtn.Visible = false;
+                }
+                else
+                {
+                    tbxFastaTargets.Text = value;
+                    cbImportFromSeparateFasta.Checked = browseFastaTargetsBtn.Visible = true;
+                }
+            }
+        }
+
+        private bool browseForFasta(out string fastaFilepath)
         {
             string initialDir = Settings.Default.FastaDirectory;
             if (string.IsNullOrEmpty(initialDir))
@@ -207,27 +266,44 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 Title = Resources.ImportFastaControl_browseFastaBtn_Click_Open_FASTA,
                 InitialDirectory = initialDir,
-                CheckPathExists = true
-                // FASTA files often have no extension as well as .fasta and others
+                CheckPathExists = true,
+                Filter = @"FASTA files|*.fasta;*.fa;*.faa|All files|*.*"
             })
             {
                 if (dlg.ShowDialog(WizardForm) == DialogResult.OK)
                 {
-                    SetFastaContent(dlg.FileName);
+                    fastaFilepath = dlg.FileName;
+                    return true;
                 }
             }
 
+            fastaFilepath = null;
+            return false;
+        }
+
+        private void browseFastaBtn_Click(object sender, EventArgs e)
+        {
+            if (browseForFasta(out string fastaFilepath))
+                SetFastaContent(fastaFilepath);
         }
 
         private void tbxFasta_TextChanged(object sender, EventArgs e)
         {
             ImportFastaHelper.ClearFastaError();
+            if (_fastaFile)
+            {
+                FastaFile = tbxFasta.Text;
+                if (!File.Exists(FastaFile))
+                    ImportFastaHelper.ShowFastaError(Resources.ToolDescription_RunTool_File_not_found_);
+        }
         }
 
         public void SetFastaContent(string fastaFilePath)
         {
             try
             {
+                FastaFile = fastaFilePath;
+
                 var fileInfo = new FileInfo(fastaFilePath);
                 if (IsDDASearch || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
                 {
@@ -239,8 +315,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     _fastaFile = false;
                     tbxFasta.Text = GetFastaFileContent(fastaFilePath);
                 }
-
-                FastaFile = fastaFilePath;
             }
             catch (Exception x)
             {
@@ -286,7 +360,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return doc.PeptideTransitions.Any(nodeTran => nodeTran.Transition.IonType == IonType.precursor);
         }
 
-        public bool ImportFasta(IrtStandard irtStandard)
+        public void UpdateDigestSettings()
         {
             var settings = DocumentContainer.Document.Settings;
             var peptideSettings = settings.PeptideSettings;
@@ -299,6 +373,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DocumentContainer.ModifyDocumentNoUndo(doc =>
                     doc.ChangeSettings(settings.ChangePeptideSettings(peptideSettings)));
             }
+        }
+
+        public bool ImportFasta(IrtStandard irtStandard)
+        {
+            UpdateDigestSettings();
 
             if (!string.IsNullOrEmpty(DecoyGenerationMethod))
             {
@@ -316,6 +395,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             }
 
+            bool hasExistingProteinAssociations = DocumentContainer.Document.PeptideGroups.Any(p => p.IsProtein);
+
             if (!ContainsFastaContent) // The user didn't specify any FASTA content
             {
                 var docCurrent = DocumentContainer.Document;
@@ -331,9 +412,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return false;
                 }
 
-                if (MessageBox.Show(WizardForm, TextUtil.LineSeparate(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_,
+                if (MultiButtonMsgDlg.Show(WizardForm, TextUtil.LineSeparate(Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_,
                                                                       Resources.ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_),
-                                    Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                    MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return false;
 
                 DocumentContainer.ModifyDocumentNoUndo(doc => ImportPeptideSearch.ChangeAutoManageChildren(doc, PickLevel.transitions, true));
@@ -344,95 +425,110 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 // FASTA, set FragmentType='p' and AutoSelect=true
                 var docCurrent = DocumentContainer.Document;
                 var docNew = ImportPeptideSearch.PrepareImportFasta(docCurrent);
-
                 var nodeInsert = _sequenceTree.SelectedNode as SrmTreeNode;
                 IdentityPath selectedPath = nodeInsert != null ? nodeInsert.Path : null;
                 var newPeptideGroups = new List<PeptideGroupDocNode>();
 
-                if (!_fastaFile)
+                // if user provided FASTA content, write it to a temporary file
+                string fastaFilepath = _fastaFile ? tbxFasta.Text : Path.GetTempFileName();
+                try
                 {
-                    FastaText = tbxFasta.Text;
-                    PasteError error = null;
-                    // Import FASTA as content
-                    using (var longWaitDlg = new LongWaitDlg(DocumentContainer) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
+                    if (!_fastaFile)
                     {
-                        var docImportFasta = docNew;
-                        longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
+                        FastaText = tbxFasta.Text;
+
+                        using (var fasta = new StreamWriter(fastaFilepath, false, Encoding.ASCII))
                         {
-                            docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, longWaitBroker, ref selectedPath, out newPeptideGroups, out error);
-                        });
-                        docNew = docImportFasta;
-                    }
-                    // Document will be null if there was an error
-                    if (docNew == null)
-                    {
-                        ImportFastaHelper.ShowFastaError(error);
-                        return false;
-                    }
-                }
-                else
-                {
-                    // Import FASTA as file
-                    var fastaPath = tbxFasta.Text;
-                    try
-                    {
-                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer) {Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA})
+                            fasta.WriteLine(FastaText);
+                        }
+
+                        PasteError error = null;
+                        // Import FASTA as content
+                        using (var longWaitDlg = new LongWaitDlg(DocumentContainer) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
                         {
-                            IdentityPath to = selectedPath;
                             var docImportFasta = docNew;
                             longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
                             {
-                                IdentityPath nextAdd;
-                                docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, longWaitBroker, to, out selectedPath, out nextAdd, out newPeptideGroups);
+                                docImportFasta = ImportFastaHelper.AddFasta(docImportFasta, irtStandard, longWaitBroker,
+                                    ref selectedPath, out newPeptideGroups, out error);
                             });
                             docNew = docImportFasta;
                         }
+                        // Document will be null if there was an error
+                        if (docNew == null)
+                        {
+                            ImportFastaHelper.ShowFastaError(error);
+                            return false;
+                        }
                     }
-                    catch (Exception x)
+                    else
                     {
-                        MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
-                                                            fastaPath, x.Message), x);
+                        // Import FASTA as file
+                        var fastaPath = string.IsNullOrEmpty(FastaImportTargetsFile) ? tbxFasta.Text : FastaImportTargetsFile;
+                        try
+                        {
+                            using (var longWaitDlg = new LongWaitDlg(DocumentContainer) { Text = Resources.ImportFastaControl_ImportFasta_Insert_FASTA })
+                            {
+                                IdentityPath to = selectedPath;
+                                var docImportFasta = docNew;
+                                longWaitDlg.PerformWork(WizardForm, 1000, longWaitBroker =>
+                                {
+                                    docImportFasta = ImportPeptideSearch.ImportFasta(docImportFasta, fastaPath, irtStandard,
+                                        longWaitBroker, to, out selectedPath, out _, out newPeptideGroups);
+                                });
+                                docNew = docImportFasta;
+                            }
+                        }
+                        catch (Exception x)
+                        {
+                            MessageDlg.ShowWithException(this, string.Format(Resources.SkylineWindow_ImportFastaFile_Failed_reading_the_file__0__1__,
+                                fastaPath, x.Message), x);
+                            return false;
+                        }
+                    }
+
+                    if (!newPeptideGroups.Any())
+                    {
+                        MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_);
                         return false;
                     }
+                    
+                    // Filter proteins based on number of peptides and add decoys
+                    using (var dlg = new AssociateProteinsDlg(docNew, fastaFilepath, irtStandard, DecoyGenerationMethod,
+                               NumDecoys ?? 0, !_fastaFile, hasExistingProteinAssociations))
+                    {
+                        if (dlg.ShowDialog(WizardForm) != DialogResult.OK)
+                            return false;
+                        AssociateProteinsSettings = dlg.FormSettings;
+                        docNew = dlg.DocumentFinal;
+                    }
                 }
-
-                if (!newPeptideGroups.Any())
+                finally
                 {
-                    MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Importing_the_FASTA_did_not_create_any_target_proteins_);
-                    return false;
+                    // delete the temporary file after import or error
+                    if (!_fastaFile)
+                        FileEx.SafeDelete(fastaFilepath);
                 }
 
-                // Filter proteins based on number of peptides and add decoys
-                using (var dlg = new PeptidesPerProteinDlg(docNew, newPeptideGroups, DecoyGenerationMethod, NumDecoys ?? 0))
-                {
-                    docNew = dlg.ShowDialog(WizardForm) == DialogResult.OK ? dlg.DocumentFinal : null;
-                }
-
-                // Document will be null if user was given option to keep or remove empty proteins and pressed cancel
+                // Document will be null if user pressed OK on AssociateProteinsDlg when there are no document peptides 
                 if (docNew == null)
                     return false;
 
-                // Add iRT standards if not present
-                if (irtStandard != null && irtStandard.HasDocument)
-                {
-                    var standardMap = new TargetMap<bool>(irtStandard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
-                    var docStandards = new TargetMap<bool>(docNew.Peptides
-                        .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget)).Select(nodePep =>
-                            new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
-                    if (irtStandard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
-                    {
-                        docNew = irtStandard.ImportTo(docNew);
-                    }
-                }
-
+                var hasDecoys = docNew.Peptides.Any(pep => pep.IsDecoy);
                 if (AutoTrain)
                 {
-                    if (!docNew.Peptides.Any(pep => pep.IsDecoy))
+                    if (!hasDecoys)
                     {
                         MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_Cannot_automatically_train_mProphet_model_without_decoys__but_decoy_options_resulted_in_no_decoys_being_generated__Please_increase_number_of_decoys_per_target__or_disable_automatic_training_of_mProphet_model_);
                         return false;
                     }
-                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(integration => integration.ChangeAutoTrain(true)));
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(i =>
+                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.mprophet_model)));
+                }
+                else if (hasDecoys)
+                {
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideIntegration(i =>
+                        i.ChangeAutoTrain(PeptideIntegration.AutoTrainType.default_model)));
                 }
 
                 DocumentContainer.ModifyDocumentNoUndo(doc =>
@@ -451,8 +547,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void clearBtn_Click(object sender, EventArgs e)
         {
+            _fastaFile = IsDDASearch;
             tbxFasta.Clear();
-            _fastaFile = false;
         }
 
         private void enzyme_SelectedIndexChanged(object sender, EventArgs e)
@@ -467,6 +563,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             cbAutoTrain.Enabled = decoys;
             if (!decoys)
             {
+                cbAutoTrain.Checked = false;
+            }
+        }
+
+        private void browseFastaTargetsBtn_Click(object sender, EventArgs e)
+        {
+            if (browseForFasta(out string fastaFilepath))
+                FastaImportTargetsFile = fastaFilepath;
+        }
+
+        private void cbImportFromSeparateFasta_CheckedChanged(object sender, EventArgs e)
+        {
+            browseFastaTargetsBtn.Visible = tbxFastaTargets.Visible = cbImportFromSeparateFasta.Checked;
+        }
+
+        private void cbAutoTrain_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!IsImportingResults && !IsDDASearch && cbAutoTrain.Checked)
+            {
+                MessageDlg.Show(WizardForm,
+                    Resources.ImportFastaControl_cbAutoTrain_CheckedChanged_Cannot_automatically_train_mProphet_model_since_no_results_files_are_being_imported__Continue_without_automatically_training_an_mProphet_model__or_go_back_and_add_at_least_one_results_file_);
                 cbAutoTrain.Checked = false;
             }
         }

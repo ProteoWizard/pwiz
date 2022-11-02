@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -34,7 +35,7 @@ namespace SkylineNightly
     /// been modified for a long period of time (indicating that a test is hanging) and are sent by
     /// posting to the sendEmailNotification action of the TestResults module.
     /// </summary>
-    public class LogFileMonitor
+    public class LogFileMonitor : IDisposable
     {
         private readonly string _oldLog;
         private readonly string _logDir;
@@ -44,10 +45,15 @@ namespace SkylineNightly
 
         private string _testerLog;
         private FileStream _fileStream;
-        private DateTime _lastReportedHang;
+        private bool _isHang;
+        private bool _hangNotificationSent;
+        private bool _debuggerAttached;
         private readonly byte[] _buffer;
         private readonly StringBuilder _builder;
+        private string _logEntire;
         private string _logTail;
+        private readonly Regex _testLineRegex;
+        private string _lastTest;
 
         private readonly Timer _logChecker;
 
@@ -60,20 +66,32 @@ namespace SkylineNightly
             _testerLog = null;
             _lock = new object();
             _fileStream = null;
-            _lastReportedHang = new DateTime();
+            _isHang = false;
+            _hangNotificationSent = false;
+            _debuggerAttached = false;
             _buffer = new byte[8192];
             _builder = new StringBuilder();
+            _logEntire = string.Empty;
             _logTail = "";
+            _testLineRegex = new Regex(@"\[\d\d:\d\d\] +\d+.\d+ +(\S+) +\(\w\w\)", RegexOptions.Compiled | RegexOptions.RightToLeft);
+            _lastTest = null;
             _logChecker = new Timer(10000); // check log file every 10 seconds
-            _logChecker.Elapsed += IntervalElapsed;
+            _logChecker.Elapsed += CheckLog;
+
+            Start();
         }
 
-        public void Start()
+        private void Start()
         {
             lock (_lock)
             {
                 _logChecker.Start();
             }
+        }
+
+        public void Dispose()
+        {
+            Stop();
         }
 
         public void Stop()
@@ -85,28 +103,44 @@ namespace SkylineNightly
             }
         }
 
-        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 30 : 60;
+        private int HangThreshold => _runMode != Nightly.RunMode.perf && _runMode != Nightly.RunMode.release_perf && _runMode != Nightly.RunMode.integration_perf ? 60 : 90;
         private string RunModeName => Enum.GetName(typeof(Nightly.RunMode), _runMode);
 
-        public bool ExtendNightlyEndTime()
+        public bool IsHang
         {
-            try
+            get
             {
-                return File.GetLastWriteTime(_testerLog).Equals(_lastReportedHang);
-            }
-            catch
-            {
-                return false;
+                lock (_lock)
+                {
+                    return _isHang;
+                }
             }
         }
 
-        private void IntervalElapsed(object source, ElapsedEventArgs e)
+        public bool IsDebugger
+        {
+            get
+            {
+                if (_debuggerAttached)
+                    return true;
+
+                CheckLog(null, null);
+                lock (_lock)
+                {
+                    return _debuggerAttached;
+                }
+            }
+        }
+
+        private void CheckLog(object source, ElapsedEventArgs e)
         {
             if (!Monitor.TryEnter(_lock))
                 return;
 
             try
             {
+                var signalTime = e?.SignalTime ?? DateTime.Now;
+
                 if (_fileStream == null)
                 {
                     var log = Nightly.GetLatestLog(_logDir);
@@ -114,30 +148,48 @@ namespace SkylineNightly
                         return;
                     _testerLog = log;
                     _fileStream = new FileStream(log, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    _logEntire = string.Empty;
                 }
 
                 if (HangThreshold > 0)
                 {
                     var lastWrite = File.GetLastWriteTime(_testerLog);
-                    if (lastWrite.AddMinutes(HangThreshold) <= e.SignalTime)
+                    // Compare both local and UTC times to avoid false detections of hangs during DST transitions
+                    _isHang = lastWrite.AddMinutes(HangThreshold) <= signalTime &&
+                              lastWrite.ToUniversalTime().AddMinutes(HangThreshold) <= signalTime.ToUniversalTime();
+                    if (_isHang)
                     {
-                        if (lastWrite > _lastReportedHang)
+                        if (!_hangNotificationSent)
                         {
-                            _lastReportedHang = lastWrite;
+                            _hangNotificationSent = true;
+
                             Log("Hang detected, posting to " + Nightly.LABKEY_EMAIL_NOTIFICATION_URL);
+                            var subject = string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName);
+                            if (!string.IsNullOrEmpty(_lastTest))
+                                subject += string.Format(" ({0})", _lastTest);
                             var message = new StringBuilder();
                             message.AppendFormat("{0} ({1})", Environment.MachineName, RunModeName);
                             message.AppendLine();
                             message.AppendLine("Hang detected");
                             message.AppendLine();
-                            message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, e.SignalTime.ToShortDateString(), e.SignalTime.ToShortTimeString());
+                            message.AppendFormat("Current time: {0} {1}" + Environment.NewLine, signalTime.ToShortDateString(), signalTime.ToShortTimeString());
                             message.AppendFormat("Log last modified: {0} {1}" + Environment.NewLine, lastWrite.ToShortDateString(), lastWrite.ToShortTimeString());
                             message.AppendLine();
-                            message.AppendLine("----------------------------------------");
-                            message.AppendLine("...");
-                            message.Append(_logTail);
-                            message.AppendLine();
-                            SendEmailNotification(string.Format("[{0} ({1})] !!! TestResults alert", Environment.MachineName, RunModeName), message.ToString());
+                            if (string.IsNullOrEmpty(_lastTest))
+                            {
+                                message.AppendLine("No tests found. Complete log follows:");
+                                message.AppendLine("----------------------------------------");
+                                message.Append(_logEntire);
+                                message.AppendLine();
+                            }
+                            else
+                            {
+                                message.AppendLine("----------------------------------------");
+                                message.AppendLine("...");
+                                message.Append(_logTail);
+                                message.AppendLine();
+                            }
+                            SendEmailNotification(subject, message.ToString());
                         }
                         return;
                     }
@@ -156,6 +208,11 @@ namespace SkylineNightly
                     return;
 
                 var s = _builder.ToString();
+                _logEntire += s;
+
+                var match = _testLineRegex.Match(s);
+                if (match.Success)
+                    _lastTest = match.Groups[1].Value;
 
                 _logTail += s.Substring(s.Length - totalN);
                 const int tailLineCount = 20;
@@ -170,6 +227,10 @@ namespace SkylineNightly
                 foreach (var line in s.Substring(0, lastBreak).Split(new[] {"\r", "\n", "\r\n"}, StringSplitOptions.None))
                 {
                     // process lines
+                    if (!_debuggerAttached && line.Contains("#!!!!! DEBUGGING STARTED !!!!!"))
+                    {
+                        _debuggerAttached = true;
+                    }
                 }
             }
             catch

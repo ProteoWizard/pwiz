@@ -46,22 +46,22 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoFileTypeTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string extRaw = ExtensionTestContext.ExtThermoRaw;
 
             // Do file type checks
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw)))
             {
                 Assert.IsTrue(msData.IsThermoFile);
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML")))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML")))
             {
                 Assert.IsTrue(msData.IsThermoFile);
             }
 
-            using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw)))
+            using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw)))
             {
                 Assert.IsTrue(msData.IsThermoFile);
             }
@@ -73,24 +73,23 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoFormatsTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Verify mzML and RAW contain same results
                 string extRaw = ExtensionTestContext.ExtThermoRaw;
                 AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
                                             0, 0);
                 // Verify mzXML and RAW contain same results (some small peaks are different)
                 AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
-                                            testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw),
+                                            TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
                                             2, 0);
             }
-            testFilesDir.Dispose();
         }
 
         /// <summary>
@@ -99,12 +98,12 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoCancelImportTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string resultsPath = testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" +
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string resultsPath = TestFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" +
                 ExtensionTestContext.ExtThermoRaw);
             string dirPath = Path.GetDirectoryName(resultsPath) ?? "";
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             // Give this two chances to succeed. It can succeed tens of thousands of times
             // in a row, but it still occasionally fails on nightly tests. Hopefully two
             // tries will make this extremely unlikely.
@@ -184,7 +183,6 @@ namespace pwiz.SkylineTestData.Results
                 }
             }
             // Cache file has been removed
-            testFilesDir.Dispose();
         }
 
         private static bool IsCacheOrTempFile(string path)
@@ -221,9 +219,9 @@ namespace pwiz.SkylineTestData.Results
         [MethodImpl(MethodImplOptions.NoOptimization)]
         public void DoThermoRatioTest(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             SrmSettings settings = doc.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeInternalStandardTypes(new[]{IsotopeLabelType.light}));
             doc = doc.ChangeSettings(settings);
@@ -233,7 +231,7 @@ namespace pwiz.SkylineTestData.Results
                 var refine = new RefinementSettings();
                 doc = refine.ConvertToSmallMolecules(doc, TestContext.ResultsDirectory, smallMoleculesTestMode);
                 // This is our first example of a converted label doc - check roundtripping
-                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc, TestContext.ResultsDirectory, smallMoleculesTestMode);
+                AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOrig, doc, TestContext.GetTestResultsPath(), smallMoleculesTestMode);
                 AssertEx.Serializable(doc);
             }
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
@@ -243,12 +241,12 @@ namespace pwiz.SkylineTestData.Results
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                             new ChromatogramSet("rep05", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
                                                                              })
                                         };
@@ -257,58 +255,10 @@ namespace pwiz.SkylineTestData.Results
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
 
-                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.InstrumentSerialNumber == "TQU00490"));
-                Assert.IsTrue(docResults.MeasuredResults.CachedFileInfos.All(fi => fi.SampleId == "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid"));
-
-                // Make sure all groups have at least 5 transitions (of 6) with ratios
-                int ratioGroupMissingCount = 0;
-                foreach (var nodeGroup in docResults.MoleculeTransitionGroups)
-                {
-                    if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                    {
-                        foreach (var result in nodeGroup.Results)
-                            Assert.IsFalse(result[0].Ratio.HasValue, "Light group found with a ratio");
-                        foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                        {
-                            foreach (var resultTran in nodeTran.Results)
-                                Assert.IsFalse(resultTran[0].Ratio.HasValue, "Light transition found with a ratio");
-                        }
-                    }
-                    else
-                    {
-                        bool missingRatio = false;
-                        foreach (ChromInfoList<TransitionGroupChromInfo> chromInfoList in nodeGroup.Results)
-                        {
-                            var ratioHeavy = chromInfoList[0].Ratio;
-                            if (!ratioHeavy.HasValue)
-                                missingRatio = true;
-                        }
-                        int ratioCount1 = 0;
-                        int ratioCount2 = 0;
-                        foreach (TransitionDocNode nodeTranHeavy in nodeGroup.Children)
-                        {
-                            float? ratioHeavy = nodeTranHeavy.Results[0][0].Ratio;
-                            if (ratioHeavy.HasValue)
-                            {
-                                Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
-                                ratioCount1++;
-                            }
-                            ratioHeavy = nodeTranHeavy.Results[1][0].Ratio;
-                            if (ratioHeavy.HasValue)
-                            {
-                                Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
-                                ratioCount2++;
-                            }
-                        }
-                        Assert.AreEqual(3, ratioCount1);
-                        if (ratioCount2 < 2)
-                            ratioGroupMissingCount++;
-                        else
-                            Assert.IsFalse(missingRatio, "Precursor missing ratio when transitions have ratios");
-                    }
-                }
-                // 3 groups with less than 2 transition ratios
-                Assert.AreEqual(0, ratioGroupMissingCount);
+                AssertEx.AreEqualDeep(new[] { "TQU00490" },
+                    docResults.MeasuredResults.CachedFileInfos.Select(fi => fi.InstrumentSerialNumber).Distinct().ToList());
+                AssertEx.AreEqualDeep(new[] { "10 fmol/ul peptides in 3% ACN/0.1% Formic Acid" },
+                    docResults.MeasuredResults.CachedFileInfos.Select(fi => fi.SampleId).Distinct().ToList());
 
                 // Remove the first light transition, checking that this removes the ratio
                 // from the corresponding heavy transition, but not the entire group, until
@@ -318,40 +268,20 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreEqual(2, nodePep.Children.Count);
                 var nodeGroupLight = (TransitionGroupDocNode)nodePep.Children[0];
                 IdentityPath pathGroupLight = new IdentityPath(pathFirstPep, nodeGroupLight.TransitionGroup);
-                Assert.IsNull(nodeGroupLight.Results[0][0].Ratio, "Light group has ratio");
                 var nodeGroupHeavy = (TransitionGroupDocNode)nodePep.Children[1];
                 IdentityPath pathGroupHeavy = new IdentityPath(pathFirstPep, nodeGroupHeavy.TransitionGroup);
-                float? ratioStart = nodeGroupHeavy.Results[0][0].Ratio;
-                Assert.IsTrue(ratioStart.HasValue, "No starting heavy group ratio");
                 var expectedValues = new[] { 1.403414, 1.38697791, 1.34598482 };
                 for (int i = 0; i < 3; i++)
                 {
                     var pathLight = docResults.GetPathTo((int)SrmDocument.Level.Transitions, 0);
                     var pathHeavy = docResults.GetPathTo((int)SrmDocument.Level.Transitions, 3);
                     TransitionDocNode nodeTran = (TransitionDocNode)docResults.FindNode(pathHeavy);
-                    float? ratioTran = nodeTran.Results[0][0].Ratio;
-                    Assert.IsTrue(ratioTran.HasValue, "Expected transition ratio not found");
-                    Assert.AreEqual(ratioTran.Value, expectedValues[i], 1.0e-5);
                     docResults = (SrmDocument)docResults.RemoveChild(pathLight.Parent, docResults.FindNode(pathLight));
-                    nodeTran = (TransitionDocNode)docResults.FindNode(pathHeavy);
-                    Assert.IsFalse(nodeTran.Results[0][0].Ratio.HasValue, "Unexpected transiton ratio found");
                     Assert.AreEqual(pathGroupHeavy, pathHeavy.Parent, "Transition found outside expected group");
                     //                nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
                     nodeGroupHeavy = (TransitionGroupDocNode)docResults.FindNode(pathGroupHeavy);
                     //                Assert.AreEqual(nodePep.Results[0][0].RatioToStandard, nodeGroupHeavy.Results[0][0].Ratio,
                     //                                "Peptide and group ratios not equal");
-                    if (i < 2)
-                    {
-                        float? ratioGroup = nodeGroupHeavy.Results[0][0].Ratio;
-                        Assert.IsTrue(ratioGroup.HasValue, "Group ratio removed with transition ratios");
-                        Assert.AreEqual(ratioStart.Value, ratioGroup.Value, 0.1,
-                                        "Unexpected group ratio change by more than 0.1");
-                    }
-                    else
-                    {
-                        Assert.IsFalse(nodeGroupHeavy.Results[0][0].Ratio.HasValue,
-                                       "Group ratio still present with no transition ratios");
-                    }
                 }
                 bool asSmallMolecules = (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none);
                 if (!asSmallMolecules) // GetTransitions() doesn't work the same way for small molecules - it only lists existing ones
@@ -368,17 +298,10 @@ namespace pwiz.SkylineTestData.Results
                         // Add the first transition, and then the original transitions
                         docResults = (SrmDocument)docResults.Add(pathGroupLight, nodeTran);
                         nodeGroupHeavy = (TransitionGroupDocNode)docResults.FindNode(pathGroupHeavy);
-                        if (firstAdd)
-                            Assert.IsNull(nodeGroupHeavy.Results[0][0].Ratio, "Unexpected heavy ratio found");
-                        else
-                            Assert.IsNotNull(nodeGroupHeavy.Results[0][0].Ratio,
-                                "Heavy ratio null after adding light children");
                         firstAdd = false;
                     }
-                    Assert.AreEqual(ratioStart, nodeGroupHeavy.Results[0][0].Ratio);
                 }
             }
-            testFilesDir.Dispose();
         }
 
         /// <summary>
@@ -388,15 +311,15 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoNonMatchingRTTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmDocument doc = InitThermoDocument(TestFilesDir, out docPath);
             string extRaw = ExtensionTestContext.ExtThermoRaw;
             var listChromatograms = new List<ChromatogramSet>
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                         };
@@ -429,39 +352,39 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void ThermoMixedPeptidesTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
-            SrmDocument docMixed = InitMixedDocument(testFilesDir, out docPath);
+            SrmDocument docMixed = InitMixedDocument(TestFilesDir, out docPath);
             FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
-            SrmDocument docUnmixed = InitUnmixedDocument(testFilesDir, out docPath);
+            SrmDocument docUnmixed = InitUnmixedDocument(TestFilesDir, out docPath);
             FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
             string extRaw = ExtensionTestContext.ExtThermoRaw;
             var listChromatograms = new List<ChromatogramSet>
                                         {
                                             new ChromatogramSet("rep03", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_03" + extRaw))
                                                                              }),
                                             new ChromatogramSet("rep05", new[]
                                                                              {
-                                                                                 MsDataFileUri.Parse(testFilesDir.GetTestPath(
+                                                                                 MsDataFileUri.Parse(TestFilesDir.GetTestPath(
                                                                                      "Site20_STUDY9P_PHASEII_QC_05" + extRaw))
                                                                              })
                                         };
             var docResults = docMixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
+            SrmDocument docMixedUnmixed;
             using (var docContainerMixed = new ResultsTestDocumentContainer(docMixed, docPath))
             {
                 Assert.IsTrue(docContainerMixed.SetDocument(docResults, docMixed, true));
                 docContainerMixed.AssertComplete();
                 docMixed = docContainerMixed.Document;
+                docMixedUnmixed = (SrmDocument)docMixed.ChangeChildren(new DocNode[0]);
+                docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
+                    out _, out _);
+                docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             }
-            SrmDocument docMixedUnmixed = (SrmDocument) docMixed.ChangeChildren(new DocNode[0]);
-            IdentityPath tempPath;
-            docMixedUnmixed = docMixedUnmixed.AddPeptideGroups(docUnmixed.PeptideGroups, true, IdentityPath.ROOT,
-                out tempPath, out tempPath);
 
-            docResults = docUnmixed.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
             using (var docContainerUnmixed = new ResultsTestDocumentContainer(docUnmixed, docPath))
             {
                 Assert.IsTrue(docContainerUnmixed.SetDocument(docResults, docUnmixed, true));

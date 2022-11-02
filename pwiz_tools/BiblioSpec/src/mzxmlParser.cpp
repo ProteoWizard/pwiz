@@ -50,6 +50,15 @@ bool MzXMLParser::getSpectrum(int identifier, SpecData& returnData, SPEC_ID_TYPE
             returnData.ionMobility = driftTime.valueAs<float>();
             returnData.ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
         }
+        else
+        {
+            CVParam invK0 = s->scanList.scans[0].cvParam(MS_inverse_reduced_ion_mobility);
+            if (!invK0.empty())
+            {
+                returnData.ionMobility = invK0.valueAs<float>();
+                returnData.ionMobilityType = IONMOBILITY_INVERSEREDUCED_VSECPERCM2;
+            }
+        }
 
         UserParam ccs = s->scanList.scans[0].userParam("CCS");
         if (!ccs.empty())

@@ -274,14 +274,6 @@
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
     <value>Are you sure you want to delete these {0} reports?</value>
   </data>
-  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
-    <value>(Filtered from {0})</value>
-  </data>
-  <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
-    <value>{0} of {1}</value>
-    <comment>Example : 1 of 10
-</comment>
-  </data>
   <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
     <value>Has Any Value</value>
   </data>
@@ -516,5 +508,41 @@
   </data>
   <data name="UnknownUiMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_" xml:space="preserve">
+    <value>Chebyshev distance (L-inf norm)</value>
+  </data>
+  <data name="ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_" xml:space="preserve">
+    <value>City block distance (L-1 norm)</value>
+  </data>
+  <data name="ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_" xml:space="preserve">
+    <value>Euclidean distance (L2 norm)</value>
+  </data>
+  <data name="ClusterMetricType_PEARSON_Pearson_correlation" xml:space="preserve">
+    <value>Pearson correlation</value>
+  </data>
+  <data name="ClusterRole_IGNORED_Ignored" xml:space="preserve">
+    <value>Ignored</value>
+  </data>
+  <data name="ClusterRole_ROWHEADER_Row_Header" xml:space="preserve">
+    <value>Row Header</value>
+  </data>
+  <data name="ClusterRole_COLUMNHEADER_Column_Header" xml:space="preserve">
+    <value>Column Header</value>
+  </data>
+  <data name="ClusterRole_RAW_Raw_Value" xml:space="preserve">
+    <value>Raw Value</value>
+  </data>
+  <data name="ClusterRole_LOGARITHM_Log10" xml:space="preserve">
+    <value>Log10</value>
+  </data>
+  <data name="BooleanTransform_BooleanTransform_Boolean" xml:space="preserve">
+    <value>Boolean</value>
+  </data>
+  <data name="ZScore_ZScore_Z_Score" xml:space="preserve">
+    <value>Z-Score</value>
+  </data>
+  <data name="DropImageNoBackground" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DropImageNoBackground.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

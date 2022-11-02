@@ -17,31 +17,35 @@
  * limitations under the License.
  */
 
+using System;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
     /// <summary>
-    /// Holds the retention time, start/end retention times, and an 
-    /// optional full width half max (fwhm).
+    /// Holds the retention time, start/end retention times, and optional Fwhm.
+    /// Additionally, it holds the "Height", which can be used by a precursor to
+    /// decide which Transition's chromInfo to use for reporting "BestRetentionTime".
     /// </summary>
-    public struct RetentionTimeValues
+    public class RetentionTimeValues : Immutable
     {
-        public RetentionTimeValues(double retentionTime, 
-            double startRetentionTime, double endRetentionTime, 
-            double? fwhm) : this()
+        public RetentionTimeValues(double retentionTime, double startRetentionTime, double endRetentionTime, double height, double? fwhm)
         {
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
+            Height = height;
             Fwhm = fwhm;
         }
         public double RetentionTime { get; private set; }
         public double StartRetentionTime { get; private set; }
         public double EndRetentionTime { get; private set; }
-        public double? Fwhm { get; private set; }
+        public double Height { get; private set; }
         public double Fwb { get { return EndRetentionTime - StartRetentionTime; } }
+
+        public double? Fwhm { get; private set; }
 
         public RetentionTimeValues Scale(IRegressionFunction regressionFunction)
         {
@@ -63,28 +67,41 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 fwhm = null;
             }
-            return new RetentionTimeValues
-                {
-                    RetentionTime = retentionTime,
-                    StartRetentionTime = startRetentionTime,
-                    EndRetentionTime = endRetentionTime,
-                    Fwhm = fwhm,
-                };
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.RetentionTime = retentionTime;
+                im.StartRetentionTime = startRetentionTime;
+                im.EndRetentionTime = endRetentionTime;
+                im.Fwhm = fwhm;
+            });
         }
 
-        public static RetentionTimeValues? GetValues(TransitionChromInfo transitionChromInfo)
+        public static RetentionTimeValues FromTransitionChromInfo(TransitionChromInfo transitionChromInfo)
         {
-            if (null == transitionChromInfo || transitionChromInfo.StartRetentionTime == 0 ||
-                transitionChromInfo.EndRetentionTime == 0)
+            if (null == transitionChromInfo || transitionChromInfo.IsEmpty)
             {
                 return null;
             }
-            return new RetentionTimeValues(transitionChromInfo.RetentionTime, 
-                transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime, 
-                transitionChromInfo.Fwhm);
+
+            double apexTime;
+            if (transitionChromInfo.Height == 0)
+            {
+                // TransitionChromInfo.RetentionTime cannot be trusted if the height is zero, so always
+                // set it to the midpoint between the start and end times.
+                apexTime = (transitionChromInfo.StartRetentionTime + transitionChromInfo.EndRetentionTime) / 2;
+            }
+            else
+            {
+                apexTime = transitionChromInfo.RetentionTime;
+            }
+
+            return new RetentionTimeValues(apexTime,
+                transitionChromInfo.StartRetentionTime, transitionChromInfo.EndRetentionTime,
+                transitionChromInfo.Height, transitionChromInfo.Fwhm);
         }
 
-        public static RetentionTimeValues? GetValues(TransitionGroupChromInfo transitionGroupChromInfo)
+        public static RetentionTimeValues FromTransitionGroupChromInfo(TransitionGroupChromInfo transitionGroupChromInfo)
         {
             if (null == transitionGroupChromInfo ||
                 !transitionGroupChromInfo.RetentionTime.HasValue ||
@@ -93,9 +110,45 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return null;
             }
+
             return new RetentionTimeValues(transitionGroupChromInfo.RetentionTime.Value,
                 transitionGroupChromInfo.StartRetentionTime.Value, transitionGroupChromInfo.EndRetentionTime.Value,
-                transitionGroupChromInfo.Fwhm);
+                transitionGroupChromInfo.Height ?? 0, transitionGroupChromInfo.Fwhm);
+        }
+
+        /// <summary>
+        /// Returns a RetentionTimeValues which is the result of merging the passed in set of values.
+        /// The returned merge things will have a start and end time which encompasses all of the values.
+        /// The RetentionTime and Fwhm will be set from the RetentionTimeValues with the greatest Height.
+        /// </summary>
+        public static RetentionTimeValues Merge(params RetentionTimeValues[] values)
+        {
+            RetentionTimeValues best = null;
+
+            foreach (var value in values)
+            {
+                if (value == null)
+                {
+                    continue;
+                }
+
+                if (best == null || value.Height > best.Height)
+                {
+                    best = value;
+                }
+
+                if (best.StartRetentionTime > value.StartRetentionTime ||
+                    best.EndRetentionTime < value.EndRetentionTime)
+                {
+                    best = ChangeProp(ImClone(best), im =>
+                    {
+                        im.StartRetentionTime = Math.Min(best.StartRetentionTime, value.StartRetentionTime);
+                        im.EndRetentionTime = Math.Max(best.EndRetentionTime, value.EndRetentionTime);
+                    });
+                }
+            }
+
+            return best;
         }
     }
 }

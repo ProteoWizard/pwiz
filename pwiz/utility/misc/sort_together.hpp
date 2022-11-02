@@ -34,13 +34,17 @@ namespace util {
     };
 
     template<typename ContainerT, typename ContainerOfContainerTIterator>
-    void sort_together(ContainerT& sortValues, ContainerOfContainerTIterator cosortValuesItrRangeBegin, ContainerOfContainerTIterator cosortValuesItrRangeEnd)
+    void sort_together(ContainerT& sortValues, ContainerOfContainerTIterator cosortValuesItrRangeBegin, ContainerOfContainerTIterator cosortValuesItrRangeEnd, bool stable = false)
     {
         size_t size = sortValues.size();
         vector<size_t> indices(size);
         for (size_t i = 0; i < size; ++i)
             indices[i] = i;
-        std::sort(indices.begin(), indices.end(), SortByOther<typename ContainerT::iterator>(sortValues.begin()));
+
+        if (stable)
+            std::stable_sort(indices.begin(), indices.end(), SortByOther<typename ContainerT::iterator>(sortValues.begin()));
+        else
+            std::sort(indices.begin(), indices.end(), SortByOther<typename ContainerT::iterator>(sortValues.begin()));
 
         ContainerT tmpSortValues(size);
         size_t numRanges = cosortValuesItrRangeEnd - cosortValuesItrRangeBegin;
@@ -68,15 +72,15 @@ namespace util {
     }
 
     template<typename ContainerT, typename ContainerOfContainerT>
-    void sort_together(ContainerT& sortValues, ContainerOfContainerT cosortValuesItrRange)
+    void sort_together(ContainerT& sortValues, ContainerOfContainerT cosortValuesItrRange, bool stable = false)
     {
-        sort_together(sortValues, std::begin(cosortValuesItrRange), std::end(cosortValuesItrRange));
+        sort_together(sortValues, std::begin(cosortValuesItrRange), std::end(cosortValuesItrRange), stable);
     }
 
     template<typename ContainerT>
-    void sort_together(ContainerT& sortValues, ContainerT& cosortValues)
+    void sort_together(ContainerT& sortValues, ContainerT& cosortValues, bool stable = false)
     {
-        sort_together(sortValues, vector<ContainerT> { cosortValues });
+        sort_together(sortValues, std::vector<boost::iterator_range<typename ContainerT::iterator>> { cosortValues }, stable);
     }
 
 } // namespace util

@@ -26,6 +26,7 @@
 
 
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
+#include <boost/pointer_cast.hpp>
 #include <stdexcept>
 
 
@@ -67,10 +68,24 @@ class PWIZ_API_DECL SpectrumListWrapper : public SpectrumListBase
             return inner();
     }
 
+    /// return true if either the wrapper implementation would benefit from using multiple threads, or if the inner wrapped list would
+    virtual bool benefitsFromWorkerThreads() const
+    {
+        return innerBenefitsFromWorkerThreads();
+    }
+
     protected:
 
     SpectrumListPtr inner_;
+
+    bool innerBenefitsFromWorkerThreads() const
+    {
+        auto innerAsWrapper = boost::dynamic_pointer_cast<SpectrumListWrapper>(inner_);
+        return innerAsWrapper != nullptr ? innerAsWrapper->benefitsFromWorkerThreads() : false;
+    }
 };
+
+typedef boost::shared_ptr<SpectrumListWrapper> SpectrumListWrapperPtr;
 
 
 } // namespace msdata 

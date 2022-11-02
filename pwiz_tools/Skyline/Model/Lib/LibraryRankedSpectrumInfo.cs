@@ -236,9 +236,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public string FragmentName { get; private set; } // For small molecules
 
-        public ComplexFragmentIonName ComplexFragmentIonName { get; private set; }
+        public IonChain ComplexFragmentIonName { get; private set; }
 
-        public MatchedFragmentIon ChangeComplexFragmentIonName(ComplexFragmentIonName complexFragmentIonName)
+        public MatchedFragmentIon ChangeComplexFragmentIonName(IonChain complexFragmentIonName)
         {
             return ChangeProp(ImClone(this), im => im.ComplexFragmentIonName = complexFragmentIonName);
         }
@@ -247,5 +247,11 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ChangeProp(ImClone(this), im => im.PredictedMz = predictedMz);
         }
+        public bool HasVisibleLoss(ICollection<string> showLosses)
+        {
+            return showLosses == null || Losses == null ||
+                   Losses.Losses.Any(loss => showLosses.Contains(loss.Loss.Formula));
+        }
+
     }
 }

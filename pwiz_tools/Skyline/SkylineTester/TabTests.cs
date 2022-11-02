@@ -22,6 +22,8 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
+using TestRunnerLib;
 
 namespace SkylineTester
 {
@@ -34,7 +36,7 @@ namespace SkylineTester
 
         public override bool Run()
         {
-            if (MainWindow.RunFullQualityPass.Checked)
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Quality"))
             {
                 MainWindow.QualityPassDefinite.Checked = true;
                 MainWindow.QualityPassCount.Value = 1;
@@ -63,8 +65,12 @@ namespace SkylineTester
                 args.Append(loop);
             }
 
-            if (MainWindow.RunDemoMode.Checked)
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Demo"))
                 args.Append(" demo=on");
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Screenshots"))
+                args.Append(" pause=-1"); // Magic number that tells TestRunner to pause and show UI for a manual screenshot
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Covershot"))
+                args.Append(" pause=-2"); // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
 
             if (MainWindow.TestsRunSmallMoleculeVersions.Checked)
                 args.Append(" runsmallmoleculeversions=on");
@@ -79,11 +85,9 @@ namespace SkylineTester
             if (!int.TryParse(MainWindow.TestsRepeatCount.Text, out count))
                 count = 0;
             if (count > 0)
-               args.Append(" repeat=" + MainWindow.TestsRepeatCount.Text);
+                args.Append(" repeat=" + MainWindow.TestsRepeatCount.Text);
 
             var cultures = new List<CultureInfo>();
-            if (MainWindow.TestsEnglish.Checked)
-                cultures.Add(new CultureInfo("en-US"));
             if (MainWindow.TestsChinese.Checked)
                 cultures.Add(new CultureInfo("zh-CHS"));
             if (MainWindow.TestsFrench.Checked)
@@ -92,11 +96,43 @@ namespace SkylineTester
                 cultures.Add(new CultureInfo("ja"));
             if (MainWindow.TestsTurkish.Checked)
                 cultures.Add(new CultureInfo("tr-TR"));
+            if (MainWindow.TestsEnglish.Checked || cultures.Count == 0)
+                cultures.Insert(0, new CultureInfo("en-US"));
 
             args.Append(" language=");
             args.Append(String.Join(",", cultures));
             if (GetTestList().Length > 0)
                 args.Append(" perftests=on"); // In case any perf tests were explicitly selected - no harm if they weren't
+
+            if (MainWindow.RunParallel.Checked)
+            {
+                // CONSIDER: Should we add a checkbox for this?
+                // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
+                args.AppendFormat(" parallelmode=server workercount={0}", MainWindow.RunParallelWorkerCount.Value);
+                try
+                {
+                    var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+                    if (!dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME))
+                    {
+                        MainWindow.CommandShell.Log($"'{RunTests.DOCKER_IMAGE_NAME}' is missing; building it now.");
+                        if (!File.Exists(RunTests.ALWAYS_UP_SERVICE_EXE))
+                        {
+                            MainWindow.CommandShell.Log("Prompting for AlwaysUpCLT password. " +
+                                                        "Get it from https://skyline.ms/parallelmode.url");
+                            MainWindow.CommandShell.UpdateLog();
+                            var passwordDictionary = new Dictionary<string, string[]> { { "Password", new[] { "" } } };
+                            KeyValueGridDlg.Show(MainWindow, "Enter password for AlwaysUpCLT", passwordDictionary, v => v[0], (s, v) => v[0] = s);
+                            args.AppendFormat(" alwaysupcltpassword=\"{0}\"", passwordDictionary["Password"][0]);
+                        }
+                    }
+                }
+                catch (InvalidOperationException e)
+                {
+                    MainWindow.CommandShell.Log(e.Message);
+                    MainWindow.CommandShell.UpdateLog();
+                    return false;
+                }
+            }
 
             args.Append(GetTestList());
 

@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -41,21 +42,22 @@ namespace pwiz.Skyline.FileUI
     public partial class MinimizeResultsDlg : FormEx
     {
         private readonly BindingList<GridRowItem> _rowItems;
-        private ChromCacheMinimizer.Settings _settings;
-        private ChromCacheMinimizer _chromCacheMinimizer;
-        private BackgroundWorker _statisticsCollector;
-        private bool _blockStatisticsCollection;
+        private MinimizeResults _minimizeResults;
+        private ChromCacheMinimizer.MinStatistics _minStatistics;
+        private bool _updatePending;
+
+        private ILongWaitBroker _longWaitBroker;
 
         public MinimizeResultsDlg(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
-            Settings = new ChromCacheMinimizer.Settings()
-                .ChangeDiscardUnmatchedChromatograms(true)
-                .ChangeDiscardAllIonsChromatograms(false)
-                .ChangeNoiseTimeRange(null);
+            _minimizeResults = new MinimizeResults(documentUIContainer, OnProgress);
+            Settings = _minimizeResults.Settings
+                .ChangeDiscardUnmatchedChromatograms(true);
             DocumentUIContainer = documentUIContainer;
             bindingSource1.DataSource = _rowItems = new BindingList<GridRowItem>();
+            _minimizeResults.StartStatisticsCollection();
         }
 
         public IDocumentUIContainer DocumentUIContainer { get; private set; }
@@ -66,7 +68,7 @@ namespace pwiz.Skyline.FileUI
             if (DocumentUIContainer != null)
             {
                 DocumentUIContainer.ListenUI(OnDocumentChanged);
-                SetDocument(DocumentUIContainer.Document);
+                UpdateMinimizeButtons();
             }
         }
 
@@ -88,23 +90,20 @@ namespace pwiz.Skyline.FileUI
 
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
         {
-            if (!_blockStatisticsCollection)
-                SetDocument(DocumentUIContainer.DocumentUI);
+            if (!_minimizeResults.BlockStatisticsCollection)
+            {
+                _minimizeResults.SetDocument(DocumentUIContainer.DocumentUI);
+                UpdateMinimizeButtons();
+            }
         }
 
-        private void SetDocument(SrmDocument document)
-        {
-            ChromCacheMinimizer = document.Settings.HasResults
-                                      ? document.Settings.MeasuredResults.GetChromCacheMinimizer(document)
-                                      : null;
-        }
 
         private bool _changingOptimizeSettings;
         public ChromCacheMinimizer.Settings Settings
         {
             get
             {
-                return _settings;
+                return _minimizeResults.Settings;
             }
             set
             {
@@ -119,7 +118,7 @@ namespace pwiz.Skyline.FileUI
                 try
                 {
                     _changingOptimizeSettings = true;
-                    _settings = value;
+                    _minimizeResults.Settings = value;
                     // ReSharper disable once PossibleNullReferenceException
                     cbxDiscardUnmatchedChromatograms.Checked = Settings.DiscardUnmatchedChromatograms;
                     if (Settings.NoiseTimeRange.HasValue)
@@ -133,10 +132,6 @@ namespace pwiz.Skyline.FileUI
                         tbxNoiseTimeRange.Enabled = false;
                         cbxLimitNoiseTime.Checked = false;
                     }
-                    if (ChromCacheMinimizer != null)
-                    {
-                        StatisticsCollector = new BackgroundWorker(this, null);
-                    }
                 }
                 finally
                 {
@@ -145,63 +140,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private ChromCacheMinimizer ChromCacheMinimizer
+        private void UpdateMinimizeButtons()
         {
-            get { return _chromCacheMinimizer; }
-            set
+            if (_minimizeResults.ChromCacheMinimizer != null)
             {
-                if (ReferenceEquals(value, _chromCacheMinimizer))
-                {
-                    return;
-                }
-                if (ChromCacheMinimizer != null)
-                {
-                    StatisticsCollector = null;
-                }
-                _chromCacheMinimizer = value;
-                if (ChromCacheMinimizer != null)
-                {
-                    StatisticsCollector = new BackgroundWorker(this, null);
-                    btnMinimize.Enabled = btnMinimizeAs.Enabled = true;
-                }
-                else
-                {
-                    btnMinimize.Enabled = btnMinimizeAs.Enabled = false;
-                    lblCurrentCacheFileSize.Text = Resources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
-                    lblSpaceSavings.Text = string.Empty;
-                }
+                btnMinimize.Enabled = btnMinimizeAs.Enabled = true;
             }
-        }
-
-        private BackgroundWorker StatisticsCollector
-        {
-            get { return _statisticsCollector; }
-            set
+            else
             {
-                if (ReferenceEquals(value, _statisticsCollector))
-                {
-                    return;
-                }
-                if (StatisticsCollector != null)
-                {
-                    StatisticsCollector.Dispose();
-                }
-                _statisticsCollector = value;
-                if (StatisticsCollector != null)
-                {
-                    ActionUtil.RunAsync(StatisticsCollector.CollectStatistics, @"Collect statistics");
-                }
-            }
-        }
-
-        private bool BlockStatisticsCollection
-        {
-            get { return _blockStatisticsCollection; }
-            set
-            {
-                _blockStatisticsCollection = value;
-                if (value)
-                    StatisticsCollector = null;
+                btnMinimize.Enabled = btnMinimizeAs.Enabled = false;
+                lblCurrentCacheFileSize.Text = Resources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
+                lblSpaceSavings.Text = string.Empty;
             }
         }
 
@@ -259,9 +208,9 @@ namespace pwiz.Skyline.FileUI
             }
             if (!Settings.DiscardUnmatchedChromatograms && !Settings.NoiseTimeRange.HasValue)
             {
-                if (MessageBox.Show(this, 
+                if (MultiButtonMsgDlg.Show(this, 
                     Resources.MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue, 
-                    Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                    MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {
                     return;
                 }
@@ -294,13 +243,12 @@ namespace pwiz.Skyline.FileUI
         {
             // First dispose of statistics collection to avoid it consuming disk reads
             // while actual minimizing is happening.
-            BlockStatisticsCollection = true;
+            _minimizeResults.PauseStatisticsCollection();
             if (!TryMinimizeToFile(targetFile))
             {
                 // Restore statistics calculation if minimizing didn't happen and the
                 // form is to remain open
-                BlockStatisticsCollection = false;
-                StatisticsCollector = new BackgroundWorker(this, null);
+                _minimizeResults.StartStatisticsCollection();
                 return;
             }
             DialogResult = DialogResult.OK;
@@ -308,73 +256,138 @@ namespace pwiz.Skyline.FileUI
 
         public bool TryMinimizeToFile(string targetFile)
         {
-            var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
-            using (var skydSaver = new FileSaver(targetSkydFile))
-            using (var scansSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCANS_EXT, true))
-            using (var peaksSaver = new FileSaver(targetSkydFile + ChromatogramCache.PEAKS_EXT, true))
-            using (var scoreSaver = new FileSaver(targetSkydFile + ChromatogramCache.SCORES_EXT, true))
+            using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
             {
-                skydSaver.Stream = File.OpenWrite(skydSaver.SafeName);
-                using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
-                {
-                    longWaitDlg.PerformWork(this, 1000,
-                        longWaitBroker =>
-                        {
-                            longWaitBroker.Message = Resources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
-                            try
-                            {
-                                using (var backgroundWorker =
-                                    new BackgroundWorker(this, longWaitBroker))
-                                {
-                                    backgroundWorker.RunBackground(skydSaver.Stream,
-                                        scansSaver.FileStream, peaksSaver.FileStream, scoreSaver.FileStream);
-                                }
-                            }
-                            catch (ObjectDisposedException)
-                            {
-                                if (!longWaitBroker.IsCanceled)
-                                {
-                                    throw;
-                                }
-                            }
-                        });
-
-                    if (longWaitDlg.IsCanceled)
+                longWaitDlg.PerformWork(this, 1000,
+                    longWaitBroker =>
                     {
-                        return false;
+                        _longWaitBroker = longWaitBroker;
+                        longWaitBroker.Message = Resources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
+                        _minimizeResults.MinimizeCacheFile(targetFile);
+                    });
+
+                if (longWaitDlg.IsCanceled)
+                {
+                    return false;
+                }
+            }
+
+            var skylineWindow = (SkylineWindow)DocumentUIContainer;
+            if (!skylineWindow.SaveDocument(targetFile, false))
+            {
+                return false;
+            }
+
+            try
+            {
+                _minimizeResults.SetMeasuredResults(targetFile);
+            }
+            catch (Exception e)
+            {
+                var message = TextUtil.LineSeparate(
+                    string.Format(
+                        Resources
+                            .MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
+                        targetFile),
+                    e.Message);
+                MessageDlg.ShowWithException(this, message, e);
+                return false;
+            }
+            skylineWindow.InvalidateChromatogramGraphs();
+            
+            return true;
+        }
+
+        public void OnProgress(ChromCacheMinimizer.MinStatistics minStatistics, MinimizeResults.BackgroundWorker worker)
+        {
+            lock (worker)
+            {
+                CheckDisposed();
+                bool updateUi = _minStatistics == null || 
+                                _minStatistics.PercentComplete != minStatistics.PercentComplete ||
+                                _minStatistics.MinimizedRatio != minStatistics.MinimizedRatio;
+                _minStatistics = minStatistics;
+                var _this = this;
+                if (ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
+                {
+                    if (updateUi && !_updatePending)
+                    {
+                        //_updatePending = true;
+                        try
+                        {
+                            BeginInvoke(new Action(() => UpdateStatistics(worker)));
+                        }
+                        catch (Exception x)
+                        {
+                            throw new ObjectDisposedException(_this.GetType().FullName, x);
+                        }
                     }
                 }
-
-                var skylineWindow = (SkylineWindow) DocumentUIContainer;
-                if (!skylineWindow.SaveDocument(targetFile, false))
-                {
-                    return false;
-                }
-                try
-                {
-                    var measuredResults =
-                        DocumentUIContainer.Document.Settings.MeasuredResults.CommitCacheFile(skydSaver);
-                    SrmDocument docOrig, docNew;
-                    do
-                    {
-                        docOrig = DocumentUIContainer.Document;
-                        docNew = docOrig.ChangeMeasuredResults(measuredResults);
-                    } while (!DocumentUIContainer.SetDocument(docNew, docOrig));
-                }
-                catch (Exception x)
-                {
-                    var message = TextUtil.LineSeparate(
-                        string.Format(
-                            Resources
-                                .MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
-                            targetFile),
-                        x.Message);
-                    MessageDlg.ShowWithException(this, message, x);
-                    return false;
-                }
-                skylineWindow.InvalidateChromatogramGraphs();
             }
-            return true;
+            if (worker.IsMinimizingFile)
+            {
+                _longWaitBroker.ProgressValue = minStatistics.PercentComplete;
+                if (_longWaitBroker.IsCanceled)
+                {
+                    worker.Cancel();
+                    throw new ObjectDisposedException(GetType().FullName);
+                }
+            }
+        }
+
+        public void UpdateStatistics(MinimizeResults.BackgroundWorker worker)
+        {
+            ChromCacheMinimizer.MinStatistics minStatistics;
+            lock (worker)
+            {
+                _updatePending = false;
+                if (!ReferenceEquals(_minimizeResults.StatisticsCollector, worker))
+                {
+                    return;
+                }
+
+                Debug.Assert(!InvokeRequired);
+                minStatistics = _minStatistics;
+            }
+
+            lblCurrentCacheFileSize.Text = string.Format(FileSize.FormatProvider,
+                Resources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs,
+                minStatistics.OriginalFileSize);
+            if (minStatistics.PercentComplete == 100)
+            {
+                lblSpaceSavings.Text = string.Format(
+                    Resources
+                        .BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size,
+                    minStatistics.MinimizedRatio);
+            }
+            else
+            {
+                lblSpaceSavings.Text = string.Format(
+                    Resources.BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete,
+                    minStatistics.PercentComplete);
+            }
+
+            var newGridRowItems = minStatistics.Replicates.Select(r => new GridRowItem(r))
+                .ToArray();
+            if (_rowItems.Count != newGridRowItems.Length)
+            {
+                _rowItems.Clear();
+            }
+
+            for (int i = 0; i < newGridRowItems.Length; i++)
+            {
+                if (i >= _rowItems.Count)
+                {
+                    _rowItems.Add(newGridRowItems[i]);
+                }
+                else
+                {
+                    if (!Equals(_rowItems[i], newGridRowItems[i]))
+                    {
+                        _rowItems[i] = newGridRowItems[i];
+                    }
+                }
+            }
         }
 
         #region Functional Test Support
@@ -392,127 +405,6 @@ namespace pwiz.Skyline.FileUI
         }
 
         #endregion
-
-        /// <summary>
-        /// Handles the task of either estimating the space savings the user will achieve
-        /// when they minimize the cache file, and actually doing to the work to minimize
-        /// the file.
-        /// The work that this class is doing can be cancelled by calling <see cref="IDisposable.Dispose"/>.
-        /// </summary>
-        private class BackgroundWorker : MustDispose
-        {
-            private readonly MinimizeResultsDlg _dlg;
-            private readonly ILongWaitBroker _longWaitBroker;
-            private ChromCacheMinimizer.MinStatistics _minStatistics;
-            private bool _updatePending;
-
-            public BackgroundWorker(MinimizeResultsDlg dlg, ILongWaitBroker longWaitBroker)
-            {
-                _dlg = dlg;
-                _longWaitBroker = longWaitBroker;
-            }
-
-
-            void OnProgress(ChromCacheMinimizer.MinStatistics minStatistics)
-            {
-                lock(this)
-                {
-                    CheckDisposed();
-                    bool updateUi = _minStatistics == null || _minStatistics.PercentComplete != minStatistics.PercentComplete;
-                    _minStatistics = minStatistics;
-                    if (ReferenceEquals(_dlg.StatisticsCollector, this))
-                    {
-                        if (updateUi && !_updatePending)
-                        {
-                            //_updatePending = true;
-                            try
-                            {
-                                _dlg.BeginInvoke(new Action(UpdateStatistics));
-                            }
-                            catch (Exception x)
-                            {                                
-                                throw new ObjectDisposedException(_dlg.GetType().FullName, x);
-                            }
-                        }
-                    }
-                }
-                if (_longWaitBroker != null)
-                {
-                    _longWaitBroker.ProgressValue = minStatistics.PercentComplete;
-                    if (_longWaitBroker.IsCanceled)
-                    {
-                        throw new ObjectDisposedException(GetType().FullName);
-                    }
-                }
-            }
-
-            public void RunBackground(Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
-            {
-                _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream, outputStreamScans, outputStreamPeaks, outputStreamScores);
-            }
-
-            public void CollectStatistics()
-            {
-                try
-                {
-                    RunBackground(null, null, null, null);
-                }
-                catch (ObjectDisposedException)
-                {
-                    
-                }
-                catch (Exception e)
-                {
-                    Program.ReportException(e);
-                }
-            }
-
-            private void UpdateStatistics()
-            {
-                ChromCacheMinimizer.MinStatistics minStatistics;
-                lock(this)
-                {
-                    _updatePending = false;
-                    if (!ReferenceEquals(_dlg.StatisticsCollector, this))
-                    {
-                        return;
-                    }
-                    Debug.Assert(!_dlg.InvokeRequired);
-                    minStatistics = _minStatistics;
-                }
-                _dlg.lblCurrentCacheFileSize.Text = string.Format(FileSize.FormatProvider,
-                    Resources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs, minStatistics.OriginalFileSize);
-                if (minStatistics.PercentComplete == 100)
-                {
-                    _dlg.lblSpaceSavings.Text = string.Format(Resources.BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size,
-                                                              minStatistics.MinimizedRatio);
-                }
-                else
-                {
-                    _dlg.lblSpaceSavings.Text = string.Format(Resources.BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete, 
-                                                              minStatistics.PercentComplete);
-                }
-                var newGridRowItems = minStatistics.Replicates.Select(r => new GridRowItem(r)).ToArray();
-                if (_dlg._rowItems.Count != newGridRowItems.Length)
-                {
-                    _dlg._rowItems.Clear();
-                }
-                for (int i = 0; i < newGridRowItems.Length; i++)
-                {
-                    if (i >= _dlg._rowItems.Count)
-                    {
-                        _dlg._rowItems.Add(newGridRowItems[i]);
-                    }
-                    else
-                    {
-                        if (!Equals(_dlg._rowItems[i], newGridRowItems[i]))
-                        {
-                            _dlg._rowItems[i] = newGridRowItems[i];
-                        }
-                    }
-                }
-            }
-        }
 
         /// <summary>
         /// Data items which are displayed in the DataGridView.

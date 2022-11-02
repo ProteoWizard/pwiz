@@ -135,7 +135,7 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection;
+            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges, activationMethod, windowWideness, driftTime, collisionalCrossSection, invK0;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
@@ -144,6 +144,7 @@ struct HandlerPrecursor : public SAXParser::Handler
             getAttribute(attributes, "windowWideness", windowWideness);
             getAttribute(attributes, "DT", driftTime);
             getAttribute(attributes, "CCS", collisionalCrossSection);
+            getAttribute(attributes, "invK0", invK0);
 
             if (!precursorScanNum.empty()) // precursorScanNum is an optional element
                 precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
@@ -195,6 +196,8 @@ struct HandlerPrecursor : public SAXParser::Handler
 
             if (!driftTime.empty())
                 scan->set(MS_ion_mobility_drift_time, driftTime, UO_millisecond);
+            else if (!invK0.empty())
+                scan->set(MS_inverse_reduced_ion_mobility, invK0, MS_Vs_cm_2);
 
             if (!collisionalCrossSection.empty())
                 scan->userParams.emplace_back("CCS", collisionalCrossSection);
@@ -327,8 +330,9 @@ class HandlerScan : public SAXParser::Handler
 {
     public:
 
-    HandlerScan(const MSData& msd, Spectrum& spectrum, const SpectrumIdentityFromMzXML &spectrum_id, bool getBinaryData,size_t peakscount)
+    HandlerScan(const MSData& msd, const SpectrumList_mzXMLImpl& sl, Spectrum& spectrum, const SpectrumIdentityFromMzXML &spectrum_id, bool getBinaryData,size_t peakscount)
     :   msd_(msd),
+        sl_(sl),
         spectrum_(spectrum), 
         spectrum_id_(spectrum_id),
         getBinaryData_(getBinaryData),
@@ -436,6 +440,11 @@ class HandlerScan : public SAXParser::Handler
             {
                 spectrum_.set(MS_product_ion_spectrum);
                 scan.set(MS_product_ion_spectrum);
+            }
+            else
+            {
+                sl_.warn_once(("invalid scanType attribute '" + scanType + "'; assuming full scan").c_str());
+                spectrum_.set(msLevel == "1" ? MS_MS1_spectrum : MS_MSn_spectrum);
             }
 
             // TODO: make this more robust
@@ -551,6 +560,7 @@ class HandlerScan : public SAXParser::Handler
 
     private:
     const MSData& msd_;
+    const SpectrumList_mzXMLImpl& sl_;
     Spectrum& spectrum_;
     const SpectrumIdentityFromMzXML& spectrum_id_; // for noting binary data position
     bool getBinaryData_;
@@ -639,7 +649,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
     if (!*is_)
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
 
-    HandlerScan handler(msd_, *result, id, binaryDataFlag!=IO::IgnoreBinaryData, peakscount);
+    HandlerScan handler(msd_, *this, *result, id, binaryDataFlag!=IO::IgnoreBinaryData, peakscount);
     SAXParser::parse(*is_, handler);
 
     // note the binary data size in case we come back around to read full data

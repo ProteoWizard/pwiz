@@ -30,6 +30,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -39,6 +40,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -65,12 +67,12 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleReplicateOutTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = testFilesDir.GetTestPath("Imported_single.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("Imported_single.sky");
 
             // Import the first RAW file (or mzML for international)
-            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+            string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
             RunCommand("--in=" + docPath,
@@ -86,7 +88,7 @@ namespace pwiz.SkylineTestData
 
 
             //Test --import-append
-            var dataFile2 = testFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
+            var dataFile2 = TestFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
                 ExtensionTestContext.ExtThermoRaw);
 
             RunCommand("--in=" + outPath,
@@ -117,14 +119,16 @@ namespace pwiz.SkylineTestData
 
             var outFilesDir = new TestFilesDir(TestContext, outPath);
             AssertEx.FileExists(outFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky"));
+            // Let base class handle cleanup
+            TestFilesDirs = new[] { testFilesDir, outFilesDir };
         }
 
         [TestMethod]
         public void ConsoleRemoveResultsTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("Remove_Test.sky");
-            string outPath = testFilesDir.GetTestPath("Remove_Test_Out.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("Remove_Test.sky");
+            string outPath = TestFilesDir.GetTestPath("Remove_Test_Out.sky");
             string[] allFiles =
             {
                 "FT_2012_0311_RJ_01.raw",
@@ -174,18 +178,17 @@ namespace pwiz.SkylineTestData
             Assert.IsNull(doc.Settings.MeasuredResults);
         }
 
-        // TODO: Enable this again once file locking issues have been resolved
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleSetLibraryTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = testFilesDir.GetTestPath("SetLib_Out.sky");
-            string libPath = testFilesDir.GetTestPath("sample.blib");
-            string libPath2 = testFilesDir.GetTestPath("sample2.blib");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("SetLib_Out.sky");
+            string libPath = TestFilesDir.GetTestPath("sample.blib");
+            string libPath2 = TestFilesDir.GetTestPath("sample2.blib");
             const string libName = "namedlib";
             string fakePath = docPath + ".fake";
-            string libPathRedundant = testFilesDir.GetTestPath("sample.redundant.blib");
+            string libPathRedundant = TestFilesDir.GetTestPath("sample.redundant.blib");
 
             // Test error (name without path)
             string output = RunCommand("--in=" + docPath,
@@ -224,8 +227,8 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
                 doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
             Assert.AreEqual(1, doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
-            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
-            Assert.AreEqual(libPath, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].Name);
+            Assert.AreEqual(Path.GetFileName(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].FileNameHint);
 
             // Add another library with name
             output = RunCommand("--in=" + outPath,
@@ -241,10 +244,10 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(doc.Settings.PeptideSettings.Libraries.Libraries.Count,
                 doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
             Assert.AreEqual(2, doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Count);
-            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
-            Assert.AreEqual(libPath, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath);
-            Assert.AreEqual(libName, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
-            Assert.AreEqual(libPath2, doc.Settings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath);
+            Assert.AreEqual(Path.GetFileNameWithoutExtension(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].Name);
+            Assert.AreEqual(Path.GetFileName(libPath), doc.Settings.PeptideSettings.Libraries.Libraries[0].FileNameHint);
+            Assert.AreEqual(libName, doc.Settings.PeptideSettings.Libraries.Libraries[1].Name);
+            Assert.AreEqual(Path.GetFileName(libPath2), doc.Settings.PeptideSettings.Libraries.Libraries[1].FileNameHint);
 
             // Test error (library with conflicting name)
             output = RunCommand("--in=" + outPath,
@@ -256,10 +259,10 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAddFastaTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = testFilesDir.GetTestPath("AddFasta_Out.sky");
-            string fastaPath = testFilesDir.GetTestPath("sample.fasta");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("AddFasta_Out.sky");
+            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
 
 
             string output = RunCommand("--in=" + docPath,
@@ -289,12 +292,12 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleReportExportTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = testFilesDir.GetTestPath("Exported_test_report.csv");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("Exported_test_report.csv");
 
             // Import the first RAW file (or mzML for international)
-            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+            string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
             const string replicate = "Single";
 
@@ -324,7 +327,7 @@ namespace pwiz.SkylineTestData
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
             IProgressStatus status = new ProgressStatus("Exporting report");
-            viewContext.Export(CancellationToken.None, null, ref status, viewInfo, writer, viewContext.GetCsvWriter());
+            viewContext.Export(CancellationToken.None, null, ref status, viewInfo, writer, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
             var programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,
@@ -341,13 +344,13 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleChromatogramExportTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = testFilesDir.GetTestPath("Exported_chromatograms.csv");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("Exported_chromatograms.csv");
 
             // Import the first RAW file (or mzML for international)
             string rawFile = "ah_20101011y_BSA_MS-MS_only_5-2" + ExtensionTestContext.ExtThermoRaw;
-            string rawPath = testFilesDir.GetTestPath(rawFile);
+            string rawPath = TestFilesDir.GetTestPath(rawFile);
             const string replicate = "Single";
 
             //Attach replicate
@@ -391,9 +394,9 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleAddDecoysTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = testFilesDir.GetTestPath("DecoysAdded.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("DecoysAdded.sky");
             string output = RunCommand("--in=" + docPath,
                                        "--decoys-add",
                                        "--out=" + outPath);
@@ -447,17 +450,17 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleMassListTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             var doc = ResultsUtil.DeserializeDocument(docPath);
 
             // Import the first RAW file (or mzML for international)
-            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+            string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                                                       ExtensionTestContext.ExtThermoRaw);
 
             /////////////////////////
             // Thermo test
-            string thermoPath = testFilesDir.GetTestPath("Thermo_test.csv");
+            string thermoPath = TestFilesDir.GetTestPath("Thermo_test.csv");
 
             string output = RunCommand("--in=" + docPath,
                                        "--import-file=" + rawPath,
@@ -471,7 +474,7 @@ namespace pwiz.SkylineTestData
 
             /////////////////////////
             // Agilent test
-            string agilentPath = testFilesDir.GetTestPath("Agilent_test.csv");
+            string agilentPath = TestFilesDir.GetTestPath("Agilent_test.csv");
 
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath,
@@ -486,7 +489,7 @@ namespace pwiz.SkylineTestData
 
             /////////////////////////
             // AB Sciex test
-            string sciexPath = testFilesDir.GetTestPath("AB_Sciex_test.csv");
+            string sciexPath = TestFilesDir.GetTestPath("AB_Sciex_test.csv");
 
 
             output = RunCommand("--in=" + docPath,
@@ -502,7 +505,7 @@ namespace pwiz.SkylineTestData
 
             /////////////////////////
             // Waters test
-            string watersPath = testFilesDir.GetTestPath("Waters_test.csv");
+            string watersPath = TestFilesDir.GetTestPath("Waters_test.csv");
             var cmd = new[] {
                 "--in=" + docPath,
                 "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
@@ -517,7 +520,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(doc.MoleculeTransitionCount + 1, File.ReadAllLines(watersPath).Length);
 
             // Run it again as a mixed polarity document
-            MixedPolarityTest(doc, testFilesDir, docPath, watersPath, cmd, false, false);
+            MixedPolarityTest(doc, TestFilesDir, docPath, watersPath, cmd, false, false);
         }
 
         private static void MixedPolarityTest(SrmDocument doc, TestFilesDir testFilesDir, string inPath, string outPath, string[]cmds, 
@@ -614,7 +617,7 @@ namespace pwiz.SkylineTestData
         public void ConsoleMethodTest()
         {
             //Here I'll only test Agilent for now
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
 
             /////////////////////////
             // Thermo test
@@ -638,9 +641,9 @@ namespace pwiz.SkylineTestData
             
             /////////////////////////
             // Agilent test
-            string docPath2 = commandFilesDir.GetTestPath("WormUnrefined.sky");
-            string agilentTemplate = commandFilesDir.GetTestPath("43mm-40nL-30min-opt.m");
-            string agilentOut = commandFilesDir.GetTestPath("Agilent_test.m");
+            string docPath2 = TestFilesDir.GetTestPath("WormUnrefined.sky");
+            string agilentTemplate = TestFilesDir.GetTestPath("43mm-40nL-30min-opt.m");
+            string agilentOut = TestFilesDir.GetTestPath("Agilent_test.m");
 
             // Try this a few times, because Agilent method building seems to fail under stress
             // about 10% of the time.
@@ -654,7 +657,9 @@ namespace pwiz.SkylineTestData
                                  "--exp-file=" + agilentOut,
                                  "--exp-dwell-time=20",
                                  "--exp-strategy=buckets",
-                                 "--exp-max-trans=75"};
+                                 "--exp-max-trans=75",
+                                 "--import-warn-on-failure"
+                };
                 output = RunCommand(cmd);
 
                 //check for success
@@ -669,7 +674,7 @@ namespace pwiz.SkylineTestData
                     {
                         // Run it again as a mixed polarity document
                         var doc = ResultsUtil.DeserializeDocument(docPath2);
-                        MixedPolarityTest(doc, commandFilesDir, docPath2, agilentOut, cmd, false, true);
+                        MixedPolarityTest(doc, TestFilesDir, docPath2, agilentOut, cmd, false, true);
                     }
                     catch (Exception)
                     {
@@ -680,18 +685,17 @@ namespace pwiz.SkylineTestData
 
             if (!success)
             {
-// ReSharper disable LocalizableElement
-                Console.WriteLine("Failed to write Agilent method: {0}", output);   // Not L10N
-// ReSharper restore LocalizableElement
-                Assert.IsTrue(success);
+                Assert.Fail("Failed to write Agilent method: {0}", output);
             }
 
             // Test order by m/z
-            var mzOrderOut = commandFilesDir.GetTestPath("export-order-by-mz.txt");
+            var mzOrderOut = TestFilesDir.GetTestPath("export-order-by-mz.txt");
             var cmd2 = new[] {"--in=" + docPath2,
                 "--exp-translist-instrument=Thermo",
                 "--exp-order-by-mz",
-                "--exp-file=" + mzOrderOut};
+                "--exp-file=" + mzOrderOut,
+                "--import-warn-on-failure"
+            };
             output = RunCommand(cmd2);
 
             //check for success
@@ -826,6 +830,8 @@ namespace pwiz.SkylineTestData
             // Run it again as a mixed polarity document
             MixedPolarityTest(doc, testFilesDir, docPath, agilentIsolationPath, cmd, true, false);
 
+            // Let base class handle cleanup
+            TestFilesDirs = new[] { testFilesDir, commandFilesDir };
         }
 
         private static void AssertErrorCount(int expectedErrorsInOutput, string output, string failureMessage)
@@ -839,7 +845,12 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsolePathCoverage()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDirs = new[]
+            {
+                new TestFilesDir(TestContext, ZIP_FILE),
+                new TestFilesDir(TestContext, COMMAND_FILE)
+            };
+            var testFilesDir = TestFilesDirs[0];
             string bogusPath = testFilesDir.GetTestPath("bogus_file.sky");
             string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             string outPath = testFilesDir.GetTestPath("Output_file.sky");
@@ -849,16 +860,16 @@ namespace pwiz.SkylineTestData
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
-
             //Error: file does not exist
-            string output = RunCommand("--in=" + bogusPath);
+            var output = RunCommand("--in=" + bogusPath);
             Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_, bogusPath)));
 
-            //Error: no raw file
+            //Error: raw file does not exist
+            var pathNotExists = rawPath + "x";
             output = RunCommand("--in=" + docPath,
-                                "--import-file=" + rawPath + "x",
+                                "--import-file=" + pathNotExists,
                                 "--import-replicate-name=Single");
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_CanReadFile_Error__File_does_not_exist___0__,rawPath+"x")));
+            Assert.IsTrue(output.Contains(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, pathNotExists)));
 
             //Error: no reportfile
             output = RunCommand("--in=" + docPath,
@@ -910,7 +921,7 @@ namespace pwiz.SkylineTestData
             Assert.IsFalse(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
 
             //Error: can't schedule instrument type
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            var commandFilesDir = TestFilesDirs[1];
             string thermoTemplate = commandFilesDir.GetTestPath("20100329_Protea_Peptide_targeted.meth");
             output = RunCommand("--in=" + docPath,
                                 "--exp-method-instrument=" + ExportInstrumentType.THERMO_LTQ,
@@ -1128,18 +1139,18 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        // TODO: Test the case where the imported replicate has the wrong path without Lorenzo's data
+        // Historical: Test the case where the imported replicate has the wrong path without Lorenzo's data
         //[TestMethod]
         public void TestLorenzo()
         {
             var consoleBuffer = new StringBuilder();
             var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
 
-            var testFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
 
-            string docPath = testFilesDir.GetTestPath("VantageQCSkyline.sky");
-            string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
-            string dataPath = testFilesDir.GetTestPath("VantageQCSkyline.skyd");
+            string docPath = TestFilesDir.GetTestPath("VantageQCSkyline.sky");
+            string tsvPath = TestFilesDir.GetTestPath("Exported_test_report.csv");
+            string dataPath = TestFilesDir.GetTestPath("VantageQCSkyline.skyd");
 
             var args = new[]
                            {
@@ -1177,7 +1188,7 @@ namespace pwiz.SkylineTestData
             {
                 const string testZipPath = @"TestData\ImportAllCmdLineTest.zip";
 
-                var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+                TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
                 // Contents:
                 // ImportAllCmdLineTest
@@ -1198,26 +1209,26 @@ namespace pwiz.SkylineTestData
                 //   -- FullScan_folder
                 //       -- FullScan.RAW|mzML (should not be imported)
 
-                var docPath = testFilesDir.GetTestPath("test.sky");
+                var docPath = TestFilesDir.GetTestPath("test.sky");
 
-                var rawPath = testFilesDir.GetTestPath("bad_file.raw");
+                var rawPath = TestFilesDir.GetTestPath("bad_file.raw");
 
                 var msg = RunCommand("--in=" + docPath,
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath));
+                AssertEx.Contains(msg, string.Format(Resources.CommandLine_ImportResultsFile_Error__Failed_importing_the_results_file__0__, rawPath));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsFalse(doc.Settings.HasResults);
 
                 msg = RunCommand("--in=" + docPath,
-                                 "--import-all=" + testFilesDir.FullPath,
+                                 "--import-all=" + TestFilesDir.FullPath,
                                  "--import-warn-on-failure",
                                  "--save");
 
-                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Cannot_read_file__0____Ignoring___, rawPath);
+                string expected = string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath);
                 AssertEx.Contains(msg, expected);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults, TextUtil.LineSeparate("No results found.", "Output:", msg));
@@ -1247,7 +1258,7 @@ namespace pwiz.SkylineTestData
             string testZipPath = useRaw
                                     ? @"TestData\ImportAllCmdLineTest.zip"
                                     : @"TestData\ImportAllCmdLineTestMzml.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Contents:
             // ImportAllCmdLineTest
@@ -1269,10 +1280,10 @@ namespace pwiz.SkylineTestData
             //       -- FullScan.RAW|mzML (should not be imported)
 
             
-            var docPath = testFilesDir.GetTestPath("test.sky");
-            var outPath = testFilesDir.GetTestPath("import_nonSRM_file.sky");
+            var docPath = TestFilesDir.GetTestPath("test.sky");
+            var outPath = TestFilesDir.GetTestPath("import_nonSRM_file.sky");
 
-            var rawPath = testFilesDir.GetTestPath("FullScan" + extRaw);
+            var rawPath = TestFilesDir.GetTestPath("FullScan" + extRaw);
 
             // Try to import FullScan.RAW|mzML
             var msg = RunCommand("--in=" + docPath,
@@ -1287,7 +1298,7 @@ namespace pwiz.SkylineTestData
 
             // Import all files in the directory. FullScan.RAW|mzML should not be imported
             msg = RunCommand("--in=" + outPath,
-                             "--import-all=" + testFilesDir.FullPath,
+                             "--import-all=" + TestFilesDir.FullPath,
                              "--import-warn-on-failure",
                              "--save");
              CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ImportResultsFile_Warning__Failed_importing_the_results_file__0____Ignoring___, rawPath), msg);
@@ -1321,7 +1332,7 @@ namespace pwiz.SkylineTestData
                                 ? ".raw"
                                 : ".mzML";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
 
             // Contents:
@@ -1345,23 +1356,23 @@ namespace pwiz.SkylineTestData
 
 
 
-            var docPath = testFilesDir.GetTestPath("test.sky");
-            var outPath0 = testFilesDir.GetTestPath("Imported_multiple0.sky");
+            var docPath = TestFilesDir.GetTestPath("test.sky");
+            var outPath0 = TestFilesDir.GetTestPath("Imported_multiple0.sky");
             FileEx.SafeDelete(outPath0);
-            var outPath1 = testFilesDir.GetTestPath("Imported_multiple1.sky");
+            var outPath1 = TestFilesDir.GetTestPath("Imported_multiple1.sky");
             FileEx.SafeDelete(outPath1);
-            var outPath2 = testFilesDir.GetTestPath("Imported_multiple2.sky");
+            var outPath2 = TestFilesDir.GetTestPath("Imported_multiple2.sky");
             FileEx.SafeDelete(outPath2);
-            var outPath4 = testFilesDir.GetTestPath("Imported_multiple4.sky");
+            var outPath4 = TestFilesDir.GetTestPath("Imported_multiple4.sky");
             FileEx.SafeDelete(outPath4);
 
-            var rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
+            var rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
             
             // Test: Cannot use --import-file and --import-all options simultaneously
             var msg = RunCommand("--in=" + docPath,
                                  "--import-file=" + rawPath.FilePath,
                                  "--import-replicate-name=Unscheduled01",
-                                 "--import-all=" + testFilesDir.FullPath,
+                                 "--import-all=" + TestFilesDir.FullPath,
                                  "--out=" + outPath1);
             Assert.IsTrue(msg.Contains(CommandArgs.ErrorArgsExclusiveText(CommandArgs.ARG_IMPORT_FILE, CommandArgs.ARG_IMPORT_ALL)), msg);
             // output file should not exist
@@ -1373,7 +1384,7 @@ namespace pwiz.SkylineTestData
             const string singleName = "Unscheduled01";
             msg = RunCommand("--in=" + docPath,
                              "--import-replicate-name=" + singleName,
-                             "--import-all=" + testFilesDir.GetTestPath("REP01"),
+                             "--import-all=" + TestFilesDir.GetTestPath("REP01"),
                              "--out=" + outPath0);
             // Used to give this error
 //            Assert.IsTrue(msg.Contains(Resources.CommandArgs_ParseArgsInternal_Error____import_replicate_name_cannot_be_used_with_the___import_all_option_), msg);
@@ -1400,7 +1411,7 @@ namespace pwiz.SkylineTestData
 
             // Test: invalid regular expression (1)
             msg = RunCommand("--in=" + docPath,
-                                 "--import-all=" + testFilesDir.FullPath,
+                                 "--import-all=" + TestFilesDir.FullPath,
                                  "--import-naming-pattern=A",
                                  "--out=" + outPath1);
             // output file should not exist
@@ -1411,7 +1422,7 @@ namespace pwiz.SkylineTestData
 
             // Test: invalid regular expression (2)
             msg = RunCommand("--in=" + docPath,
-                      "--import-all=" + testFilesDir.FullPath,
+                      "--import-all=" + TestFilesDir.FullPath,
                       "--import-naming-pattern=invalid",
                       "--out=" + outPath1);
             // output file should not exist
@@ -1424,7 +1435,7 @@ namespace pwiz.SkylineTestData
             // Test: Import files in the "REP01" directory; 
             // Use a naming pattern that will cause the replicate names of the two files to be the same
             msg = RunCommand("--in=" + docPath,
-                             "--import-all=" + testFilesDir.GetTestPath("REP01"),
+                             "--import-all=" + TestFilesDir.GetTestPath("REP01"),
                              "--import-naming-pattern=.*_(REP[0-9]+)_(.+)",
                              "--out=" + outPath1);
             AssertEx.FileNotExists(outPath1);
@@ -1435,7 +1446,7 @@ namespace pwiz.SkylineTestData
 
             // Test: Import files in the "REP01" directory; Use a naming pattern
             msg = RunCommand("--in=" + docPath,
-                             "--import-all=" + testFilesDir.GetTestPath("REP01"),
+                             "--import-all=" + TestFilesDir.GetTestPath("REP01"),
                              "--import-naming-pattern=.*_([0-9]+)",
                              "--out=" + outPath1);
             AssertEx.FileExists(outPath1, msg);
@@ -1465,7 +1476,7 @@ namespace pwiz.SkylineTestData
             }
 
             // Import another single file. 
-            var rawPath2 = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
+            var rawPath2 = MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
             msg = RunCommand("--in=" + outPath2,
                        "--import-file=" + rawPath2.GetFilePath(),
                        "--import-replicate-name=160109_Mix1_calcurve_070",
@@ -1485,7 +1496,7 @@ namespace pwiz.SkylineTestData
             // The document should also already contain replicate "160109_Mix1_calcurve_070".
             // There should be notes about ignoring the two files that are already in the document.
             msg = RunCommand("--in=" + outPath2,
-                             "--import-all=" + testFilesDir.FullPath,
+                             "--import-all=" + TestFilesDir.FullPath,
                              "--import-warn-on-failure",
                              "--save");
             // ExtensionTestContext.ExtThermo raw uses different case from file on disk
@@ -1517,28 +1528,28 @@ namespace pwiz.SkylineTestData
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
-                new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
+                new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
                                                             extRaw))));
             // REP012 should have the file REP01\CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
             doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out index);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
             Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
-                GetThermoDiskPath(new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw)))));
+                GetThermoDiskPath(new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw)))));
  
 
             // Test: Import non-recursive
             // Make sure only files directly in the folder get imported
-            string badFilePath = testFilesDir.GetTestPath("bad_file" + extRaw);
+            string badFilePath = TestFilesDir.GetTestPath("bad_file" + extRaw);
             string badFileMoved = badFilePath + ".save";
             if (File.Exists(badFilePath))
                 File.Move(badFilePath, badFileMoved);
-            string fullScanPath = testFilesDir.GetTestPath("FullScan" + extRaw);
+            string fullScanPath = TestFilesDir.GetTestPath("FullScan" + extRaw);
             string fullScanMoved = fullScanPath + ".save";
             File.Move(fullScanPath, fullScanMoved);
 
             msg = RunCommand("--in=" + docPath,
-                "--import-all-files=" + testFilesDir.FullPath,
+                "--import-all-files=" + TestFilesDir.FullPath,
                 "--out=" + outPath4);
 
             AssertEx.FileExists(outPath4, msg);
@@ -1563,7 +1574,7 @@ namespace pwiz.SkylineTestData
                 ? ".raw"
                 : ".mzML";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Contents:
             // ImportAllCmdLineTest
@@ -1584,11 +1595,11 @@ namespace pwiz.SkylineTestData
             //   -- FullScan_folder
             //       -- FullScan.RAW|mzML (should not be imported)
 
-            var docPath = testFilesDir.GetTestPath("test.sky");
-            var outPath = testFilesDir.GetTestPath("out.sky");
+            var docPath = TestFilesDir.GetTestPath("test.sky");
+            var outPath = TestFilesDir.GetTestPath("out.sky");
             FileEx.SafeDelete(outPath);
 
-            var rawPath = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
+            var rawPath = MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
             // Test: invalid regex
             var msg = RunCommand("--in=" + docPath,
                 "--import-file=" + rawPath.GetFilePath(),
@@ -1599,22 +1610,28 @@ namespace pwiz.SkylineTestData
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-filename-pattern"), msg);
 
-            var log = new StringBuilder();
-            var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
-
-            IList<KeyValuePair<string, MsDataFileUri[]>> dataSourceList = DataSourceUtil.GetDataSources(testFilesDir.FullPath).ToArray();
-            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
-
-            // Regex 1 - nothing should match
+            // Regex 1 - given raw file does not match the pattern
+            // Call RunCommand instead of just testing the ApplyFileAndSampleNameRegex method so that we test 
+            // that the error reporting and returned exit status are in sync.
             var pattern = "QC.*";
-            commandLine.ApplyFileAndSampleNameRegex(new Regex(pattern), null, ref listNamedPaths);
-            Assert.AreEqual(0, listNamedPaths.Count);
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-filename-pattern=" + pattern,
+                "--out=" + outPath);
             CheckRunCommandOutputContains(
                 string.Format(
                     Resources.CommandLine_ApplyFileNameRegex_File_name___0___does_not_match_the_pattern___1____Ignoring__2_,
-                    rawPath.GetFileName(), pattern, rawPath), log.ToString());
+                    rawPath.GetFileName(), pattern, rawPath), msg);
             CheckRunCommandOutputContains(
-                   string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_file_name_pattern___0___, pattern), log.ToString());
+                string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_file_name_pattern___0___, pattern), msg);
+
+
+
+            var log = new StringBuilder();
+            var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
+
+            IList<KeyValuePair<string, MsDataFileUri[]>> dataSourceList = DataSourceUtil.GetDataSources(TestFilesDir.FullPath).ToArray();
+            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>(dataSourceList);
 
             // Regex 2
             log.Clear();
@@ -1670,19 +1687,19 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     Resources.CommandLine_ApplySampleNameRegex_File___0___does_not_have_a_sample__Cannot_apply_sample_name_pattern__Ignoring_,
                     rawPath), log.ToString());
-            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
+            CheckRunCommandOutputContains(string.Format(Resources.CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___, pattern), log.ToString());
         }
 
         [TestMethod]
         public void ConsoleSampleNameRegexImportTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineWiffTest.zip");
-            var docPath = testFilesDir.GetTestPath("wiffcmdtest.sky");
-            var outPath = testFilesDir.GetTestPath("out.sky");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineWiffTest.zip");
+            var docPath = TestFilesDir.GetTestPath("wiffcmdtest.sky");
+            var outPath = TestFilesDir.GetTestPath("out.sky");
             FileEx.SafeDelete(outPath);
-            var rawPath = MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion.wiff"));
+            var rawPath = MsDataFileUri.Parse(TestFilesDir.GetTestPath("051309_digestion.wiff"));
             // Make a copy of the wiff file
-            var rawPath2 = MsDataFileUri.Parse(testFilesDir.GetTestPath(rawPath.GetFileNameWithoutExtension() + "_copy.wiff"));
+            var rawPath2 = MsDataFileUri.Parse(TestFilesDir.GetTestPath(rawPath.GetFileNameWithoutExtension() + "_copy.wiff"));
             File.Copy(rawPath.GetFilePath(), rawPath2.GetFilePath());
             AssertEx.FileExists(rawPath2.GetFilePath());
             
@@ -1700,9 +1717,23 @@ namespace pwiz.SkylineTestData
                     Resources.CommandArgs_ParseRegexArgument_Error__Regular_expression___0___for__1__cannot_be_parsed_,
                     "*", "--import-samplename-pattern"), msg);
 
+            // Test: No match found for given sample name regex.  This will also test that the error reporting and 
+            // returned exit status are in sync.
+            var pattern = "QC.*";
+            msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.GetFilePath(),
+                "--import-samplename-pattern=" + pattern,
+                "--out=" + outPath);
+            CheckRunCommandOutputContains(
+                string.Format(
+                    Resources
+                        .CommandLine_ApplyFileAndSampleNameRegex_Error__No_files_match_the_sample_name_pattern___0___,
+                    pattern), msg);
+
+
             var log = new StringBuilder();
             var commandLine = new CommandLine(new CommandStatusWriter(new StringWriter(log)));
-            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = DataSourceUtil.GetDataSources(testFilesDir.FullPath).ToArray();
+            IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = DataSourceUtil.GetDataSources(TestFilesDir.FullPath).ToArray();
 
             // Apply regex filters on file and sample names. There are two files in the folder (051309_digestion.wiff and 051309_digestion_copy.wiff)
             // Samples "blank" and "test" from only one of the files (051309_digestion_copy.wiff) should be selected
@@ -1745,7 +1776,7 @@ namespace pwiz.SkylineTestData
             string testZipPath = useRaw
                 ? @"TestData\ImportAllCmdLineTest.zip"
                 : @"TestData\ImportAllCmdLineTestMzml.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Contents:
             // ImportAllCmdLineTest
@@ -1766,20 +1797,20 @@ namespace pwiz.SkylineTestData
             //   -- FullScan_folder
             //       -- FullScan.RAW|mzML (should not be imported)
 
-            var docPath = testFilesDir.GetTestPath("test.sky");
-            var outPath = testFilesDir.GetTestPath("out.sky");
+            var docPath = TestFilesDir.GetTestPath("test.sky");
+            var outPath = TestFilesDir.GetTestPath("out.sky");
             FileEx.SafeDelete(outPath);
-            var rawPath = MsDataFileUri.Parse(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
+            var rawPath = MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
 
             // Folder 1
-            var folder1Path = testFilesDir.GetTestPath(@"Folder1\Rep1");
+            var folder1Path = TestFilesDir.GetTestPath(@"Folder1\Rep1");
             Directory.CreateDirectory(folder1Path);
             Assert.IsTrue(Directory.Exists(folder1Path));
             var rawPath1 = MsDataFileUri.Parse(Path.Combine(folder1Path, rawPath.GetFileName()));
             File.Copy(rawPath.GetFilePath(), rawPath1.GetFilePath());
 
             // Folder 2
-            var folder2Path = testFilesDir.GetTestPath(@"Folder2\Rep1");
+            var folder2Path = TestFilesDir.GetTestPath(@"Folder2\Rep1");
             Directory.CreateDirectory(folder2Path);
             Assert.IsTrue(Directory.Exists(folder2Path));
             var rawPath2 = MsDataFileUri.Parse(Path.Combine(folder2Path, rawPath.GetFileName()));
@@ -1788,7 +1819,7 @@ namespace pwiz.SkylineTestData
             
             // Test: Import all in Folder 1
             RunCommand("--in=" + docPath,
-                "--import-all=" + testFilesDir.GetTestPath("Folder1"),
+                "--import-all=" + TestFilesDir.GetTestPath("Folder1"),
                 "--save");
             var doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(1, doc.MeasuredResults.Chromatograms.Count);
@@ -1797,7 +1828,7 @@ namespace pwiz.SkylineTestData
 
             // Test: Import all in Folder2
             var msg = RunCommand("--in=" + docPath,
-                "--import-all=" + testFilesDir.GetTestPath("Folder2"),
+                "--import-all=" + TestFilesDir.GetTestPath("Folder2"),
                 "--save");
             doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(2, doc.MeasuredResults.Chromatograms.Count);
@@ -1823,7 +1854,7 @@ namespace pwiz.SkylineTestData
             var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
 
             var testZipPath = @"TestData\ImportCommandLineSameName.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // ImportCommandLineSameName.zip
             // Contents:
@@ -1838,15 +1869,15 @@ namespace pwiz.SkylineTestData
             //        |-- A
             //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
 
-            var docPath = testFilesDir.GetTestPath(@"test.sky");
+            var docPath = TestFilesDir.GetTestPath(@"test.sky");
 
-            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            var rawPath1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.raw"));
-            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzml1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var rawPath1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.raw"));
+            var mzxml_subdir1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
             var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
 
 
-            var outPath = testFilesDir.GetTestPath("ImportFile.sky");
+            var outPath = TestFilesDir.GetTestPath("ImportFile.sky");
             FileEx.SafeDelete(outPath);
 
             // -------------------------------------------------------------------------// 
@@ -1988,8 +2019,7 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(
                 msg.Contains(string.Format(
-                    Resources
-                        .CommandLine_ImportResultsFile_Warning__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
+                    Resources.CommandLine_ImportDataFilesWithAppend_Error__The_replicate__0__already_exists_in_the_given_document_and_the___import_append_option_is_not_specified___The_replicate_will_not_be_added_to_the_document_,
                     replicateName)), msg);
 
             // ------------------------------------------------------------------------------------
@@ -2007,6 +2037,8 @@ namespace pwiz.SkylineTestData
                     Resources
                         .CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___,
                     replicateName, mzml1.FilePath)), msg);
+            Assert.IsTrue(
+                msg.Contains(Resources.CommandLine_ImportResults_Error__No_files_left_to_import_), msg);
 
 
             if (useRaw)
@@ -2040,7 +2072,7 @@ namespace pwiz.SkylineTestData
             var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
 
             var testZipPath = @"TestData\ImportCommandLineSameName.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // ImportCommandLineSameName.zip
             // Contents:
@@ -2055,21 +2087,21 @@ namespace pwiz.SkylineTestData
             //        |-- A
             //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
 
-            var docPath = testFilesDir.GetTestPath(@"test.sky");
+            var docPath = TestFilesDir.GetTestPath(@"test.sky");
 
-            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzml1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
             var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
             var replicateName = "Replicate01";
-            var subDir1 = testFilesDir.GetTestPath("Subdir1");
-            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            var subDir2 = testFilesDir.GetTestPath("Subdir2");
-            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var subDir1 = TestFilesDir.GetTestPath("Subdir1");
+            var mzxml_subdir1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var subDir2 = TestFilesDir.GetTestPath("Subdir2");
+            var mzxml_subdir2 = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
 
             // -------------------------------------------------------------------------// 
             // -------------------------- Import all files in a directory ------------- //
             // -------------------------- --import-all-files -------------------------- //
             // -------------------------------------------------------------------------// 
-            var outPath = testFilesDir.GetTestPath("ImportFilesInDir.sky");
+            var outPath = TestFilesDir.GetTestPath("ImportFilesInDir.sky");
             FileEx.SafeDelete(outPath);
             // ------------------------------------------------------------------------------------
             // 1. Import Subdir1 that has a single file CE_Vantage_15mTorr_0001_REP1_01.mzML
@@ -2163,7 +2195,7 @@ namespace pwiz.SkylineTestData
                 // CE_Vantage_15mTorr_0001_REP1_013  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
                 // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
                 msg = RunCommand("--in=" + outPath,
-                    "--import-all-files=" + testFilesDir.FullPath,
+                    "--import-all-files=" + TestFilesDir.FullPath,
                     "--save");
                 doc = ResultsUtil.DeserializeDocument(outPath);
                 Assert.AreEqual(5, doc.Settings.MeasuredResults.Chromatograms.Count);
@@ -2189,7 +2221,7 @@ namespace pwiz.SkylineTestData
             var useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
 
             var testZipPath = @"TestData\ImportCommandLineSameName.zip";
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // ImportCommandLineSameName.zip
             // Contents:
@@ -2204,23 +2236,23 @@ namespace pwiz.SkylineTestData
             //        |-- A
             //            |-- CE_Vantage_15mTorr_0001_REP1_01.mzML
 
-            var docPath = testFilesDir.GetTestPath(@"test.sky");
+            var docPath = TestFilesDir.GetTestPath(@"test.sky");
 
-            var mzml1 = new MsDataFilePath(testFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzml1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"CE_Vantage_15mTorr_0001_REP1_01.mzML"));
             var defaultReplicateName = mzml1.GetFileNameWithoutExtension();
             var replicateName = "Replicate01";
-            var subDir1 = testFilesDir.GetTestPath("Subdir1");
-            var subDir2 = testFilesDir.GetTestPath("Subdir2");
-            var mzxml_subdir1 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            var mzxml_subdir1a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            var mzxml_subdir2 = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
-            var mzxml_subdir2a = new MsDataFilePath(testFilesDir.GetTestPath(@"Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var subDir1 = TestFilesDir.GetTestPath("Subdir1");
+            var subDir2 = TestFilesDir.GetTestPath("Subdir2");
+            var mzxml_subdir1 = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir1\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir1a = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir1\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir2 = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir2\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
+            var mzxml_subdir2a = new MsDataFilePath(TestFilesDir.GetTestPath(@"Subdir2\A\CE_Vantage_15mTorr_0001_REP1_01.mzML"));
 
             // -------------------------------------------------------------------------// 
             // -------------------------- Import all files and sub-directories -------- //
             // -------------------------- --import-all -------------------------------- //
             // -------------------------------------------------------------------------// 
-            var outPath = testFilesDir.GetTestPath("ImportFilesAndSubdirsInDir.sky");
+            var outPath = TestFilesDir.GetTestPath("ImportFilesAndSubdirsInDir.sky");
             FileEx.SafeDelete(outPath);
             
             // ------------------------------------------------------------------------------------
@@ -2330,7 +2362,7 @@ namespace pwiz.SkylineTestData
                 // CE_Vantage_15mTorr_0001_REP1_014  -> CE_Vantage_15mTorr_0001_REP1_01.mzML|.raw
                 // ------------------------------------------------------------------------------------
                 msg = RunCommand("--in=" + outPath,
-                    "--import-all=" + testFilesDir.FullPath,
+                    "--import-all=" + TestFilesDir.FullPath,
                     "--save");
                 doc = ResultsUtil.DeserializeDocument(outPath);
                 Assert.AreEqual(7, doc.Settings.MeasuredResults.Chromatograms.Count);
@@ -2358,8 +2390,8 @@ namespace pwiz.SkylineTestData
         }
 
 
-        //[TestMethod]
-        // TODO: Uncomment this test when it can clean up before/after itself
+        // CONSIDER: Uncomment this test when it can clean up before/after itself on Panorama
+        // [TestMethod]
         public void ConsolePanoramaImportTest()
         {
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
@@ -2370,7 +2402,7 @@ namespace pwiz.SkylineTestData
                                 ? ".raw"
                                 : ".mzML";
 
-            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Contents:
             // ImportAllCmdLineTest
@@ -2391,10 +2423,10 @@ namespace pwiz.SkylineTestData
             //   -- FullScan_folder
             //       -- FullScan.RAW|mzML (should not be imported)
 
-            var docPath = testFilesDir.GetTestPath("test.sky");
+            var docPath = TestFilesDir.GetTestPath("test.sky");
 
             // Test: Import a file to an empty document and upload to the panorama server
-            var rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
+            var rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
             var msg = RunCommand("--in=" + docPath,
                              "--import-file=" + rawPath.FilePath,
                 //"--import-on-or-after=1/1/2014",
@@ -2410,7 +2442,7 @@ namespace pwiz.SkylineTestData
 
 
             // Test: Import a second file and upload to the panorama server
-            rawPath = new MsDataFilePath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw));
+            rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw));
             msg = RunCommand("--in=" + docPath,
                              "--import-file=" + rawPath.FilePath,
                              "--save",
@@ -2564,7 +2596,7 @@ namespace pwiz.SkylineTestData
             try
             {
                 Settings.Default.ToolList.Clear();
-                var testFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+                TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
                 {
                     // Test bad input
                     const string badFileName = "BadFilePath";
@@ -2574,14 +2606,14 @@ namespace pwiz.SkylineTestData
                     Assert.IsTrue(output.Contains(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_does_not_exist__Please_verify_the_file_location_and_try_again_));
                 }
                 {
-                    string notZip = testFilesDir.GetTestPath("Broken_file.sky");
+                    string notZip = TestFilesDir.GetTestPath("Broken_file.sky");
                     AssertEx.FileExists(notZip);
                     string command = "--tool-add-zip=" + notZip;
                     string output = RunCommand(command);
                     Assert.IsTrue(output.Contains(Resources.CommandLine_ImportToolsFromZip_Error__the_file_specified_with_the___tool_add_zip_command_is_not_a__zip_file__Please_specify_a_valid__zip_file_));
                 }
                 {
-                    var uniqueReportZip = testFilesDir.GetTestPath("UniqueReport.zip");
+                    var uniqueReportZip = TestFilesDir.GetTestPath("UniqueReport.zip");
                     AssertEx.FileExists(uniqueReportZip);
                     string command = "--tool-add-zip=" + uniqueReportZip;
                     string output = RunCommand(command);
@@ -2620,7 +2652,7 @@ namespace pwiz.SkylineTestData
                 }
                 {
                     //Test working with packages and ProgramPath Macro.
-                    var testCommandLine = testFilesDir.GetTestPath("TestCommandLine.zip");
+                    var testCommandLine = TestFilesDir.GetTestPath("TestCommandLine.zip");
                     AssertEx.FileExists(testCommandLine);
                     string command = "--tool-add-zip=" + testCommandLine;
                     string output = RunCommand(command);
@@ -2631,7 +2663,7 @@ namespace pwiz.SkylineTestData
                         "Bogus",
                         "2.15.2"));
 
-                    string path = testFilesDir.GetTestPath("NumberWriter.exe");
+                    string path = TestFilesDir.GetTestPath("NumberWriter.exe");
                     string output2 = RunCommand(command, "--tool-ignore-required-packages",
                                                 "--tool-program-macro=Bogus,2.15.2",
                                                 "--tool-program-path=" + path);
@@ -2650,7 +2682,7 @@ namespace pwiz.SkylineTestData
                 }
                 {
                     //Test working with annotations.
-                    var testCommandLine = testFilesDir.GetTestPath("TestAnnotations.zip");
+                    var testCommandLine = TestFilesDir.GetTestPath("TestAnnotations.zip");
                     AssertEx.FileExists(testCommandLine);
                     string command = "--tool-add-zip=" + testCommandLine;
                     string output = RunCommand(command);
@@ -2660,7 +2692,7 @@ namespace pwiz.SkylineTestData
                     Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ImportToolsFromZip_Installed_tool__0_, "AnnotationTest\\Tool4")));
                 }
                 {
-                    var conflictingAnnotations = testFilesDir.GetTestPath("ConflictAnnotations.zip");
+                    var conflictingAnnotations = TestFilesDir.GetTestPath("ConflictAnnotations.zip");
                     AssertEx.FileExists(conflictingAnnotations);
                     string command = "--tool-add-zip=" + conflictingAnnotations;
                     string output = RunCommand(command);
@@ -2691,75 +2723,101 @@ namespace pwiz.SkylineTestData
             }
         }
 
-        // TODO: Don removed this test because it was failing in multiple runs under TestRunner
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleAddSkyrTest()
         {
-            int initialNumber = Settings.Default.ReportSpecList.Count;
+            Settings.Default.PersistedViews.ResetDefaults();
+            var existingReports = ReportSharing.GetExistingReports();
+            int initialNumber = existingReports.Count;
+            const string reportName = "TextREportexam";
+            var viewName = new ViewName(PersistedViews.MainGroup.Id, "TextREportexam");
             // Assumes the title TextREportexam is a unique title. 
-            // Add test.skyr which only has one report type named TextREportexam
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
-            var skyrFile = commandFilesDir.GetTestPath("test.skyr");
-            string output = RunCommand("--report-add=" + skyrFile);
-            Assert.AreEqual(initialNumber+1, Settings.Default.ReportSpecList.Count);
-            Assert.AreEqual("TextREportexam", Settings.Default.ReportSpecList.Last().GetKey());
-            Assert.IsTrue(output.Contains("Success"));
-            var skyrAdded = Settings.Default.ReportSpecList.Last();
+            Assert.IsFalse(existingReports.Keys.Contains(v => Equals(reportName, v.Name)));
 
-            // Attempt to add the same skyr again.
-            string output2 = RunCommand("--report-add=" + skyrFile);
-            Assert.IsTrue(output2.Contains("Error"));
-            // Do want to use == to show it is the same object, unchanged
-            Assert.IsTrue(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
+            // Add test.skyr which only has one report type named TextREportexam
+            TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            var skyrFile = TestFilesDir.GetTestPath("test.skyr");
+            var overwriteFile = TestFilesDir.GetTestPath("overwrite.skyr");
+            File.WriteAllText(overwriteFile, File.ReadAllText(skyrFile).Replace(">Description<", ">Name<"));
+            string output = RunCommand("--report-add=" + skyrFile);
+            existingReports = ReportSharing.GetExistingReports();
+            Assert.AreEqual(initialNumber+1, existingReports.Count);
+            Assert.IsTrue(existingReports.ContainsKey(viewName));
+            AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportSkyr_Success__Imported_Reports_from__0_, Path.GetFileName(skyrFile)));
+            var skyrAdded = existingReports[viewName].ViewSpecLayout;
+            Assert.IsNotNull(skyrAdded);
+
+            // Attempt to add a skyr file that would change the report
+            string output2 = RunCommand("--report-add=" + overwriteFile);
+            AssertEx.Contains(output2, Resources.ImportSkyrHelper_ResolveImportConflicts_Use_command);
+            existingReports = ReportSharing.GetExistingReports();
+            Assert.AreEqual(skyrAdded, existingReports[viewName].ViewSpecLayout);
 
             // Specify skip
-            string output4 = RunCommand("--report-add=" + skyrFile,
+            string output4 = RunCommand("--report-add=" + overwriteFile,
                 "--report-conflict-resolution=skip");
-            Assert.IsTrue(output4.Contains("skipping"));
-            // Do want to use == to show it is the same object, unchanged
-            Assert.IsTrue(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
-
+            AssertEx.Contains(output4, Resources.ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_skipping_);
+            existingReports = ReportSharing.GetExistingReports();
+            Assert.AreEqual(skyrAdded, existingReports[viewName].ViewSpecLayout);
 
             // Specify overwrite
-            string output3 = RunCommand("--report-add=" + skyrFile,
+            string output3 = RunCommand("--report-add=" + overwriteFile,
                 "--report-conflict-resolution=overwrite");
-            Assert.IsTrue(output3.Contains("overwriting"));
-            // Do want to use == to show it is not the same object, changed
-            Assert.IsFalse(ReferenceEquals(skyrAdded, Settings.Default.ReportSpecList.Last()));
-
+            AssertEx.Contains(output3, Resources.ImportSkyrHelper_ResolveImportConflicts_Resolving_conflicts_by_overwriting_);
+            var existingOverwriteReports = ReportSharing.GetExistingReports();
+            Assert.AreNotEqual(skyrAdded, existingOverwriteReports[viewName].ViewSpecLayout);
+            Settings.Default.PersistedViews.ResetDefaults();
         }
 
-        // TODO: Don removed this test because it was failing in multiple runs under TestRunner
-        //[TestMethod]
+        [TestMethod]
         public void ConsoleRunCommandsTest()
         {
+            Settings.Default.ToolList.ResetDefaults();
             int toolListCount = Settings.Default.ToolList.Count;
-            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
-            var commandsToRun = commandFilesDir.GetTestPath("ToolList2.txt");
-            string output = RunCommand("--batch-commands=" + commandsToRun);            
-            Assert.IsTrue(output.Contains("NeWtOOl was added to the Tools Menu"));
-            Assert.IsTrue(output.Contains("iHope was added to the Tools Menu"));
-            Assert.IsTrue(output.Contains("thisWorks was added to the Tools Menu"));
-            Assert.IsTrue(output.Contains("FirstTry was added to the Tools Menu"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "thisWorks"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
-            Assert.AreEqual(toolListCount+4, Settings.Default.ToolList.Count);
-
-            // run the same command again. this time each should be skipped.
-            string output2 = RunCommand("--batch-commands=" + commandsToRun);
-            Assert.IsFalse(output2.Contains("NeWtOOl was added to the Tools Menu"));
-            Assert.IsFalse(output2.Contains("iHope was added to the Tools Menu"));
-            Assert.IsFalse(output2.Contains("thisWorks was added to the Tools Menu"));
-            Assert.IsFalse(output2.Contains("FirstTry was added to the Tools Menu"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "thisWorks"));
-            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
-            // the number of tools is unchanged.
+            TestFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            var commandsToRun = TestFilesDir.GetTestPath("ToolList2.txt");
+            string output = RunCommand(CommandArgs.ARG_BATCH.GetArgumentTextWithValue(commandsToRun));
+            const string toolCommand = @"C:\Windows\Notepad.exe";
+            const string toolArgs = "$(DocumentDir)";
+            const string toolDir = @"C:\";
+            ValidateToolAdded(output, "NeWtOOl", toolCommand, toolArgs, toolDir);
+            ValidateToolAdded(output, "iHope", toolCommand);
+            ValidateToolAdded(output, "thisWorks");
+            ValidateToolAdded(output, "FirstTry");
             Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
 
+            // run the same command again. this time each should be skipped.
+            output = RunCommand(CommandArgs.ARG_BATCH.GetArgumentTextWithValue(commandsToRun));
+            ValidateToolSkipped(output, "NeWtOOl", toolCommand, toolArgs, toolDir);
+            ValidateToolSkipped(output, "iHope", toolCommand);
+            ValidateToolSkipped(output, "thisWorks");
+            ValidateToolSkipped(output, "FirstTry");
+            // the number of tools is unchanged.
+            Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
+        }
+
+        private static void ValidateToolAdded(string output, string toolName,
+            string toolCommand = null, string toolArgs = null, string toolDir = null)
+        {
+            AssertEx.Contains(output,
+                string.Format(Resources.CommandLine_ImportTool__0__was_added_to_the_Tools_Menu_, toolName));
+            CheckToolExists(toolName, toolCommand, toolArgs, toolDir);
+        }
+
+        private static void ValidateToolSkipped(string output, string toolName,
+            string toolCommand = null, string toolArgs = null, string toolDir = null)
+        {
+            AssertEx.Contains(output,
+                string.Format(Resources.CommandLine_ImportTool_Warning__skipping_tool__0__due_to_a_name_conflict_, toolName));
+            CheckToolExists(toolName, toolCommand, toolArgs, toolDir);
+        }
+
+        private static void CheckToolExists(string toolName, string toolCommand, string toolArgs, string toolDir)
+        {
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == toolName &&
+                                                             (toolCommand == null || t.Command == toolCommand) &&
+                                                             (toolArgs == null || t.Arguments == toolArgs) &&
+                                                             (toolDir == null || t.InitialDirectory == toolDir)));
         }
 
         [TestMethod]
@@ -2922,8 +2980,8 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsolePanoramaArgsTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
 
             // Error: missing panorama args
             var output = RunCommand("--in=" + docPath,
@@ -2967,6 +3025,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2979,6 +3038,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
                             serverUri.AbsoluteUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -2991,6 +3051,7 @@ namespace pwiz.SkylineTestData
                     .Contains(
                         Resources
                             .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3000,7 +3061,8 @@ namespace pwiz.SkylineTestData
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.PanoramaHelper_ValidateServer_, "GetServerState threw an exception")));
+                        string.Format(Resources.PanoramaHelper_ValidateServer_Exception_, "GetServerState threw an exception")));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
             
@@ -3015,6 +3077,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
                             folder, client.ServerUri)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3028,6 +3091,7 @@ namespace pwiz.SkylineTestData
                         string.Format(
                             Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
                             "user", folder)));
+            TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
 
@@ -3039,8 +3103,66 @@ namespace pwiz.SkylineTestData
                 buffer.ToString()
                     .Contains(string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
                         folder)));
+            TestOutputHasErrorLine(buffer.ToString());
+        }
 
+        [TestMethod]
+        public void SkylineRunnerErrorDetectionTest()
+        {
+            TestSkylineRunnerErrorDetection(null);
+            TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+        }
 
+        private void TestSkylineRunnerErrorDetection(CultureInfo ci)
+        {
+            TestDetectError(false, false, ci); // no timestamp or memstamp
+            TestDetectError(true, false, ci);  // only timestamp
+            TestDetectError(false, true, ci);  // only memstamp
+            TestDetectError(true, true, ci);   // both timestamp and memstamp
+        }
+
+        /// <summary>
+        /// Tests that "IsErrorLine" works when the commandline is invoked in a particular culture.
+        /// Note that this code uses LocalizationHelper.CallWithCulture instead of the "--culture" commandline
+        /// argument because the latter does not set the culture back to its original value.
+        /// </summary>
+        private void TestDetectError(bool timestamp, bool memstamp, CultureInfo cultureInfo)
+        {
+            Func<string> testFunc = () =>
+            {
+                // --timestamp, --memstamp and arguments have to be before the --in argument
+                var command =
+                    $"{(timestamp ? "--timestamp" : "")} " +
+                    $"{(memstamp ? "--memstamp" : "")} " +
+                    "--in";
+                var argsArray = command.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                return RunCommand(argsArray);
+            };
+            string output = cultureInfo == null
+                ? testFunc()
+                : LocalizationHelper.CallWithCulture(cultureInfo, testFunc);
+            var errorLine = TestOutputHasErrorLine(output);
+
+            // The error should be about the missing value for the --in argument
+            var resourceErrString = cultureInfo == null
+                ? Resources.ValueMissingException_ValueMissingException_ // Resource string for the culture that the test is running under
+                : Resources.ResourceManager.GetString(@"ValueMissingException_ValueMissingException_", cultureInfo);
+
+            Assert.IsNotNull(resourceErrString, "Expected to find a resources string for culture '{0}'.",
+                (cultureInfo ?? CultureInfo.CurrentUICulture).Name);
+            Assert.IsTrue(errorLine.Contains(string.Format(resourceErrString, "--in")));
+        }
+
+        private string TestOutputHasErrorLine(string output)
+        {
+            var outputLines = output.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+
+            // The IsErrorLine method from ErrorChecker.cs in the SkylineRunner project should detect an error
+            var errorLine = outputLines.FirstOrDefault(ErrorChecker.IsErrorLine);
+            Assert.IsFalse(string.IsNullOrEmpty(errorLine),
+                string.Format("Expected to find an error line in output: {0}", output));
+            return errorLine;
         }
 
         private static string GetTitleHelper()

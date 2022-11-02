@@ -73,19 +73,19 @@ namespace pwiz.SkylineTestTutorial
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
-//            PauseStartPage = 16;
+//            PauseStartingPage = 16;
 //            IsCoverShotMode = true;
             CoverShotName = "AuditLog";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     
-            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/AuditLog.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/AuditLogMzml.zip",
+                    ? @"https://skyline.ms/tutorials/AuditLog.zip"
+                    : @"https://skyline.ms/tutorials/AuditLogMzml.zip",
                 @"TestTutorial\AuditLogViews.zip"
             };
 
@@ -470,7 +470,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
             else
             {
-                PauseTest("Enter password. (manual) No screen shot.");
+                PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
 
                 var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
                 WaitForCondition(() => publishDialog.IsLoaded);

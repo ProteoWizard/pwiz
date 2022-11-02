@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -39,6 +40,7 @@ namespace pwiz.Skyline.SettingsUI
             Key = key;
             LibInfo = libInfo;
             UnmodifiedTargetText = GetUnmodifiedTargetText(key.LibraryKey);
+            KeyString = key.ToString();
         }
 
         public LibKey Key { get; private set; }
@@ -69,28 +71,60 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
+        /// A dictionary of key names (like HMDB, SMILES) and key values associated with a molecule
+        /// </summary>
+        public Dictionary<string, string> OtherKeysDict { get; set; }
+
+        /// <summary>
         /// Returns the unmodified peptide sequence. This, plus the Adduct is what gets displayed
         /// in the list box.
         /// </summary>
         public string UnmodifiedTargetText { get; private set; }
+
+        public string KeyString { get; private set; } // Used in sorting, may be expensive to calculate so we cache it here
 
         public string DisplayText
         {
             get
             {
                 return UnmodifiedTargetText + (Key.Adduct.IsEmpty
-                           ? string.Empty
-                           : Transition.GetChargeIndicator(Key.Adduct));
+                    ? string.Empty
+                    : Transition.GetChargeIndicator(Key.Adduct));
             }
         }
 
         /// <summary>
-        /// The charge state of the peptide matched to a spectrum
+        /// The precursor m/z of the peptide or small molecule associated with a spectrum
+        /// </summary>
+        public double PrecursorMz { get; set; }
+
+        /// <summary>
+        /// Ion mobility value for a spectrum
+        /// </summary>
+        public double? IonMobility { get; set; }
+
+        /// <summary>
+        /// The collision cross section value for a spectrum
+        /// </summary>
+        public double? CCS { get; set; }
+
+        /// <summary>
+        /// The units of the ion mobility value for a spectrum
+        /// </summary>
+        public string IonMobilityUnits { get; set; }
+
+        public int Charge
+        {
+            get { return Key.Adduct.AdductCharge; }
+        }
+
+        /// <summary>
+        /// The charge state of the peptide or molecule matched to a spectrum
         /// </summary>
         public Adduct Adduct { get { return Key.Adduct; } }
 
         /// <summary>
-        /// The modified peptide sequence associated with a spectrum
+        /// The modified peptide sequence or small molecule associated with a spectrum
         /// </summary>
         public Target Target { get { return Key.Target; } }
 
@@ -100,6 +134,36 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public bool IsModified { get { return Key.IsModified; } }
 
+        /// <summary>
+        /// Formula representation of an adduct which is used when filtering by adduct
+        /// </summary>
+        public string AdductAsFormula
+        {
+            get { return Key.Adduct.AsFormula(); }
+        }
+
+        /// <summary>
+        /// International Chemical Identifier Key
+        /// </summary>
+        public string InchiKey
+        {
+            get { return Key.SmallMoleculeLibraryAttributes.InChiKey; }
+        }
+
+        /// <summary>
+        /// The molecular formula associated with a spectrum
+        /// </summary>
+        public string Formula
+        {
+            get { return Key.SmallMoleculeLibraryAttributes.ChemicalFormula; }
+        }
+        /// <summary>
+        /// Other Keys such as CAS registry number
+        /// </summary>
+        public string OtherKeys
+        {
+            get { return Key.SmallMoleculeLibraryAttributes.OtherKeys; }
+        }
         /// <summary>
         /// True if a <see cref="PeptideDocNode"/> has been successfully associated
         /// with this entry

@@ -376,7 +376,7 @@ namespace pwiz.SkylineTestFunctional
 
             using (ZipFile zipFile = ZipFile.Read(zipPath))
             {
-                Assert.AreEqual(origFileSet.Count + (expectAuditLog ? 1 : 0), zipFile.Count);
+                AssertEx.AreEqual(origFileSet.Count + (expectAuditLog ? 1 : 0), zipFile.Count);
                 newFileSet.Clear();
                 foreach (ZipEntry zipEntry in zipFile)
                 {

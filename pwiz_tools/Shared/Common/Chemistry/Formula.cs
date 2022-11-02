@@ -52,7 +52,8 @@ namespace pwiz.Common.Chemistry
         public TValue GetElementCount(String element)
         {
             TValue atomCount;
-            TryGetValue(element, out atomCount);
+            if (!TryGetValue(element, out atomCount))
+                atomCount = default(TValue);
             return atomCount;
         }
 
@@ -108,6 +109,11 @@ namespace pwiz.Common.Chemistry
             protected set 
             { 
                 _dict = value;
+                if (_dict.Values.Contains(default(TValue)))
+                {
+                    // Zeroes should have been filtered out before getting here.
+                    throw new ArgumentException(string .Format(@"The formula {0} cannot contain zero", this));
+                }
                 _hashCode = value.GetHashCode();
             }
         }
@@ -251,7 +257,7 @@ namespace pwiz.Common.Chemistry
         // Handle formulae which may contain subtractions, as is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
         public static T ParseExpression(String formula)
         {
-            return new T { Dictionary = ImmutableSortedList.FromValues(ParseExpressionToDictionary(formula)) };
+            return FromDict(ParseExpressionToDictionary(formula));
         }
 
         public static Dictionary<String, int> ParseExpressionToDictionary(string expression)
@@ -270,7 +276,15 @@ namespace pwiz.Common.Chemistry
                     int previous;
                     if (result.TryGetValue(element.Key, out previous))
                     {
-                        result[element.Key] = previous - element.Value;
+                        int newCount = previous - element.Value;
+                        if (newCount == 0)
+                        {
+                            result.Remove(element.Key);
+                        }
+                        else
+                        {
+                            result[element.Key] = newCount;
+                        }
                     }
                     else
                     {
@@ -287,27 +301,24 @@ namespace pwiz.Common.Chemistry
             var resultDict = new Dictionary<string, int>(this);
             foreach (var kvp in other)
             {
-                int count;
-                if (TryGetValue(kvp.Key, out count))
+                TryGetValue(kvp.Key, out int count);
+                count -= kvp.Value;
+                if (count == 0)
                 {
-                    resultDict[kvp.Key] = count - kvp.Value;
+                    resultDict.Remove(kvp.Key);
                 }
                 else
                 {
-                    resultDict.Add(kvp.Key, -kvp.Value);
+                    resultDict[kvp.Key] = count;
                 }
             }
-            return new T { Dictionary = new ImmutableSortedList<string, int>(resultDict) };
-        }
 
-        public static T FromDict(ImmutableSortedList<string, int> dict)
-        {
-            return new T {Dictionary = dict};
+            return FromDict(resultDict);
         }
 
         public static T FromDict(IDictionary<string, int> dict)
         {
-            return new T {Dictionary = ImmutableSortedList.FromValues(dict)};
+            return new T {Dictionary = ImmutableSortedList.FromValues(dict.Where(entry=>entry.Value != 0))};
         }
 
         public static string AdjustElementCount(string formula, string element, int delta)
@@ -337,20 +348,43 @@ namespace pwiz.Common.Chemistry
             // Consider C2C'4H5 to be same as H5C'4C2, or "C10H30Si5O5H-CH4" same as "C9H26O5Si5", etc
             var left = ParseExpression(formulaLeft);
             var right = ParseExpression(formulaRight);
-            return left.Difference(right).All(atom => atom.Value == 0);
+            return left.Equals(right);
         }
 
         public override string ToString()
         {
             var result = new StringBuilder();
+            bool anyNegative = false;
             foreach (var entry in this)
             {
-                if (entry.Value > 0)
+                if (entry.Value >= 0)
                 {
                     result.Append(entry.Key);
                     if (entry.Value != 1)
                     {
                         result.Append(entry.Value);
+                    }
+                }
+                else
+                {
+                    anyNegative = true;
+                }
+            }
+
+            if (!anyNegative)
+            {
+                return result.ToString();
+            }
+
+            result.Append("-");
+            foreach (var entry in this)
+            {
+                if (entry.Value < 0)
+                {
+                    result.Append(entry.Key);
+                    if (entry.Value != -1)
+                    {
+                        result.Append(-entry.Value);
                     }
                 }
             }

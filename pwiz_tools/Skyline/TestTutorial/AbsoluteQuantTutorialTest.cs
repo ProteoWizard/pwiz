@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -54,13 +55,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
                                                     
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-1_4.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AbsoluteQuant-20_1.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuantMzml.zip",
+                    ? @"https://skyline.ms/tutorials/AbsoluteQuant.zip"
+                    : @"https://skyline.ms/tutorials/AbsoluteQuantMzml.zip",
                 @"TestTutorial\AbsoluteQuantViews.zip"
             };
             RunFunctionalTest();
@@ -74,6 +75,7 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             var folderAbsoluteQuant = UseRawFiles ? "AbsoluteQuant" : "AbsoluteQuantMzml";
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
             // Generating a Transition List, p. 5, 6
             {
                 var doc = SkylineWindow.Document;

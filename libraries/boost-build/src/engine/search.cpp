@@ -7,8 +7,8 @@
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "jam.h"
@@ -20,7 +20,7 @@
 #include "lists.h"
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "timestamp.h"
 #include "variable.h"
 #include "output.h"
@@ -98,7 +98,7 @@ void set_explicit_binding( OBJECT * target, OBJECT * locate )
 
     /* Root the target path at the given location. */
     f->f_root.ptr = object_str( locate );
-    f->f_root.len = strlen( object_str( locate ) );
+    f->f_root.len = int32_t(strlen( object_str( locate ) ));
 
     path_build( f, buf );
     boundname = object_new( buf->value );
@@ -164,7 +164,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
     {
         OBJECT * key;
         f->f_root.ptr = object_str( list_front( varlist ) );
-        f->f_root.len = strlen( object_str( list_front( varlist ) ) );
+        f->f_root.len = int32_t(strlen( object_str( list_front( varlist ) ) ));
 
         path_build( f, buf );
 
@@ -189,7 +189,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
             OBJECT * test_path;
 
             f->f_root.ptr = object_str( list_item( iter ) );
-            f->f_root.len = strlen( object_str( list_item( iter ) ) );
+            f->f_root.len = int32_t(strlen( object_str( list_item( iter ) ) ));
 
             string_truncate( buf, 0 );
             path_build( f, buf );

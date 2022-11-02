@@ -19,7 +19,7 @@ namespace pwiz.Skyline {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class CommandArgUsage {
@@ -129,6 +129,24 @@ namespace pwiz.Skyline {
         internal static string _chromatogram_tics {
             get {
                 return ResourceManager.GetString("_chromatogram_tics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discard all unused chromatograms from the document..
+        /// </summary>
+        internal static string _chromatograms_discard_unused {
+            get {
+                return ResourceManager.GetString("_chromatograms_discard_unused", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes..
+        /// </summary>
+        internal static string _chromatograms_limit_noise {
+            get {
+                return ResourceManager.GetString("_chromatograms_limit_noise", resourceCulture);
             }
         }
         
@@ -565,6 +583,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Read peak boundaries from a comma or tab separated file.
+        /// </summary>
+        internal static string _import_peak_boundaries {
+            get {
+                return ResourceManager.GetString("_import_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
         /// </summary>
         internal static string _import_process_count {
@@ -709,6 +736,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
+        /// </summary>
+        internal static string _ionmobility_library_create {
+            get {
+                return ResourceManager.GetString("_ionmobility_library_create", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name to give the ion mobility library in an –-ionmobility-library-create operation..
+        /// </summary>
+        internal static string _ionmobility_library_name {
+            get {
+                return ResourceManager.GetString("_ionmobility_library_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The name for the iRT calculator created during assay library import. (optional) The default name is the document base name..
         /// </summary>
         internal static string _irt_calc_name {
@@ -718,7 +763,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if –irt-standards-group-name or –irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
+        ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if -–irt-standards-group-name or -–irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
         /// </summary>
         internal static string _irt_database_path {
             get {
@@ -1661,6 +1706,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Creating an ion mobility library.
+        /// </summary>
+        internal static string CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adding decoy peptides.
         /// </summary>
         internal static string CommandArgs_GROUP_DECOYS {
@@ -1766,6 +1820,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimizing results file size.
+        /// </summary>
+        internal static string CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size", resourceCulture);
             }
         }
         

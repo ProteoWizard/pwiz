@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.IonMobility
                 PeptideModifiedSequence = string.Empty;
                 var smallMoleculeLibraryAttributes = target.Molecule.GetSmallMoleculeLibraryAttributes();
                 MoleculeName = smallMoleculeLibraryAttributes.MoleculeName ?? string.Empty;
-                ChemicalFormula = smallMoleculeLibraryAttributes.ChemicalFormula ?? string.Empty;
+                ChemicalFormula = smallMoleculeLibraryAttributes.ChemicalFormulaOrMassesString ?? string.Empty;
                 InChiKey = smallMoleculeLibraryAttributes.InChiKey ?? string.Empty;
                 OtherKeys = smallMoleculeLibraryAttributes.OtherKeys ?? string.Empty;
             }
@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Model.IonMobility
             get
             {
                 return string.IsNullOrEmpty(PeptideModifiedSequence)
-                    ? new Target(SmallMoleculeLibraryAttributes.Create(MoleculeName, ChemicalFormula, null, null, InChiKey, OtherKeys))
+                    ? new Target(SmallMoleculeLibraryAttributes)
                     : new Target(PeptideModifiedSequence);
             }
         }
@@ -254,8 +254,10 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             get
             {
+                SmallMoleculeLibraryAttributes.ParseMolecularFormulaOrMassesString(ChemicalFormula,
+                    out var molecularFormula, out var massMono, out var massAverage);
                 return string.IsNullOrEmpty(PeptideModifiedSequence)
-                    ? SmallMoleculeLibraryAttributes.Create(MoleculeName, ChemicalFormula, null, null, InChiKey, OtherKeys)
+                    ? SmallMoleculeLibraryAttributes.Create(MoleculeName, molecularFormula, massMono, massAverage, InChiKey, OtherKeys)
                     : SmallMoleculeLibraryAttributes.EMPTY;
             }
         }
@@ -264,7 +266,7 @@ namespace pwiz.Skyline.Model.IonMobility
         // For NHibernate use
         public virtual string PeptideModifiedSequence { get; set; }
         public virtual string MoleculeName { get; set; }
-        public virtual string ChemicalFormula { get; set; }
+        public virtual string ChemicalFormula { get; set; } // Chemical formula, or encoded mono and average masses if no formula availalbe
         public virtual string InChiKey { get; set; }
         public virtual string OtherKeys { get; set; }
 

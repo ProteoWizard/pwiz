@@ -58,7 +58,7 @@ ProteinPilotReader::ProteinPilotReader(
     curPSM_ = NULL;
     curSpec_ = NULL;
     lookUpBy_ = NAME_ID;
-
+    initializeMod();
     // point to self as spec reader
     delete specReader_;
     specReader_ = this;
@@ -88,7 +88,14 @@ bool ProteinPilotReader::parseFile()
 
     Verbosity::debug("ProteinPilotReader is parsing %s (%d kb).", filename.c_str(), filesize);
     bool success = parse();
-    Verbosity::debug("ProteinPilotReader finished parsing %s.", filename.c_str());
+    if (success)
+    {
+        Verbosity::debug("ProteinPilotReader finished parsing %s.", filename.c_str());
+    }
+    else
+    {
+        Verbosity::debug("ProteinPilotReader failed to parse %s.", filename.c_str());
+    }
 
     if( ! success ){
         return success;
@@ -107,6 +114,14 @@ bool ProteinPilotReader::parseFile()
         buildTables(PROTEIN_PILOT_CONFIDENCE, filename);
     }
     return true;
+}
+
+vector<PSM_SCORE_TYPE> ProteinPilotReader::getScoreTypes() {
+    return getScoreTypesHelper();
+}
+
+vector<PSM_SCORE_TYPE> ProteinPilotReader::getScoreTypesHelper() {
+    return vector<PSM_SCORE_TYPE>(1, PROTEIN_PILOT_CONFIDENCE);
 }
 
 void ProteinPilotReader::startElement(const XML_Char* name, 
@@ -487,20 +502,24 @@ void ProteinPilotReader::addElement(double& mass, string element, int count){
     mass += (count * newMass);
 }
 
+void ProteinPilotReader::initializeMod() {
+    curMod_.name.clear();
+    curMod_.deltaMass = 0;
+}
+
 void ProteinPilotReader::addMod(){
     // first check to see if we already have one for this mod
     map<string, double>::iterator found = modTable_.find(curMod_.name);
     if( found != modTable_.end() && //if it was found and has different mass
-        found->second != modTable_[curMod_.name] ){
+        found->second != curMod_.deltaMass ){
         throw BlibException(false, "Two entries for a modification named %s,"
-                            "one with delta mass %d and one with %d.",
-                            found->second, modTable_[curMod_.name]);
+                            "one with delta mass %f and one with %f.",
+                            curMod_.name.c_str(), found->second, modTable_[curMod_.name]);
     }
 
     // else add it
     modTable_[curMod_.name] = curMod_.deltaMass;
-    curMod_.name.clear();
-    curMod_.deltaMass = 0;
+    initializeMod();
 }
 
 // SpecFileReader functions

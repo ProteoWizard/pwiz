@@ -65,6 +65,10 @@ namespace pwiz.SkylineTestUtil
         {
             if (!Equals(expected, actual))
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = string.Format(@"AssertEx.AreEqual failed, expected: {0} actual: {1}", expected, actual);
+                }
                 if (Assume.InvokeDebuggerOnFail)
                 {
                     Assume.Fail(message); // Handles the debugger launch
@@ -77,6 +81,10 @@ namespace pwiz.SkylineTestUtil
         {
             if (Equals(expected, actual))
             {
+                if (string.IsNullOrEmpty(message))
+                {
+                    message = string.Format(@"AssertEx.AreNotEqual failed, expected: {0} actual: {1}", expected, actual);
+                }
                 if (Assume.InvokeDebuggerOnFail)
                 {
                     Assume.Fail(message); // Handles the debugger launch
@@ -89,11 +97,12 @@ namespace pwiz.SkylineTestUtil
         {
             if (!ReferenceEquals(expected, actual))
             {
+                var message = string.Format(@"AssertEx.AreNotSame failed, expected: {0} actual: {1}", expected, actual);
                 if (Assume.InvokeDebuggerOnFail)
                 {
-                    Assume.Fail(); // Handles the debugger launch
+                    Assume.Fail(message); // Handles the debugger launch
                 }
-                Assert.AreNotSame(expected, actual);
+                Assert.AreNotSame(expected, actual, message);
             }
         }
 
@@ -141,14 +150,14 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void IsTrue(bool expected, string message = null)
+        public static void IsTrue(bool actual, string message = null)
         {
-            AreEqual(expected, true, message);
+            AreEqual(true, actual, message);
         }
 
-        public static void IsFalse(bool expected, string message = null)
+        public static void IsFalse(bool actual, string message = null)
         {
-            AreEqual(expected, false, message);
+            AreEqual(false, actual, message);
         }
 
         public static void IsNull(object obj, string message = null)
@@ -168,7 +177,23 @@ namespace pwiz.SkylineTestUtil
             ThrowsException<TEx>(() => { throwEx(); return null; }, message);
         }
 
+        public static void ThrowsException<TEx>(Action throwEx, Action<TEx> checkException)
+            where TEx : Exception
+        {
+            ThrowsException(() => { throwEx(); return null; }, checkException);
+        }
+
         public static void ThrowsException<TEx>(Func<object> throwEx, string message = null)
+            where TEx : Exception
+        {
+            ThrowsException<TEx>(throwEx, x =>
+            {
+                if (message != null)
+                    AreComparableStrings(message, x.Message);
+            });
+        }
+
+        private static void ThrowsException<TEx>(Func<object> throwEx, Action<TEx> checkException)
             where TEx : Exception
         {
             bool exceptionThrown = false;
@@ -178,8 +203,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (TEx x)
             {
-                if (message != null)
-                    AreComparableStrings(message, x.Message);
+                checkException(x);
                 exceptionThrown = true;
             }
             // Assert that an exception was thrown. We do this outside of the catch block
@@ -353,7 +377,6 @@ namespace pwiz.SkylineTestUtil
         {
             Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
-            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
             // Make sure to serialize the document the other way, and make sure it's still the same.
             bool wasCompactFormat = CompactFormatOption.FromSettings().UseCompactFormat(doc);
@@ -407,7 +430,6 @@ namespace pwiz.SkylineTestUtil
             var actual = RoundTrip(target, skylineVersion, ref asXML);
             DocumentClonedLoadable(ref target, ref actual, testPath, forceFullLoad);
             VerifyModifiedSequences(target);
-            NormalizedValueCalculatorVerifier.VerifyRatioCalculations(target);
             // Validate document against indicated schema
             if (checkAgainstSkylineSchema)
                 ValidatesAgainstSchema(actual, skylineVersion.SrmDocumentVersion, nameof(SrmDocument), asXML);
@@ -668,20 +690,24 @@ namespace pwiz.SkylineTestUtil
             where TObj : class
         {
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
-            StringBuilder sb = new StringBuilder();
-            using (XmlTextWriter writer = new XmlTextWriter(new StringWriter(sb)))
+            using (var memStream = new MemoryStream())
             {
+                XmlTextWriter writer = new XmlTextWriter(memStream, Encoding.UTF8);
                 writer.Formatting = Formatting.Indented;
 
                 try
                 {
                     ser.Serialize(writer, target);
+                    memStream.Seek(0, SeekOrigin.Begin);
+                    string xmlString = string.Empty;
+                    using (var reader = new StreamReader(memStream))
+                        xmlString = reader.ReadToEnd();
+
                     if (String.IsNullOrEmpty(expected))
-                        expected = sb.ToString();
+                        expected = xmlString;
                     else
-                        NoDiff(expected, sb.ToString());
-                    var s = sb.ToString();
-                    using (TextReader reader = new StringReader(s))
+                        NoDiff(expected, xmlString);
+                    using (TextReader reader = new StringReader(xmlString))
                     {
                         TObj copy = (TObj)ser.Deserialize(reader);
                         return copy;
@@ -741,7 +767,7 @@ namespace pwiz.SkylineTestUtil
             IdentityPath pathAdded;
             var inputs = new MassListInputs(DuplicateAndReverseLines(transitionList, exporter.HasHeaders),
                 CultureInfo.InvariantCulture, TextUtil.SEPARATOR_CSV);
-            docImport = docImport.ImportMassList(inputs, IdentityPath.ROOT, out pathAdded);
+            docImport = docImport.ImportMassList(inputs, null, IdentityPath.ROOT, out pathAdded);
 
             IsDocumentState(docImport, 1,
                                      docExport.MoleculeGroupCount,
@@ -799,73 +825,91 @@ namespace pwiz.SkylineTestUtil
                     string lineTarget = readerTarget.ReadLine();
                     string lineActual = readerActual.ReadLine();
                     if (lineTarget == null && lineActual == null)
-                        return;
-                    if (lineTarget == null)
-                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
-                    if (lineActual == null)
-                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
-                    if (lineTarget != lineActual)
                     {
-                        // If only difference appears to be a generated GUID, let it pass
-                        var regexLSID = new Regex(@"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
-                        var matchTarget = regexLSID.Match(lineTarget ?? string.Empty);
-                        var matchActual = regexLSID.Match(lineActual ?? string.Empty);
-                        if (matchTarget.Success && matchActual.Success
-                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-                        {
-                            continue;
-                        }
-
-                        // If only difference appears to be a generated ISO timestamp, let it pass
-                        // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
-                        var regexTimestamp = new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
-                        matchTarget = regexTimestamp.Match(lineTarget ?? string.Empty);
-                        matchActual = regexTimestamp.Match(lineActual ?? string.Empty);
-                        if (matchTarget.Success && matchActual.Success
-                                                && Equals(matchTarget.Groups[1].ToString(), matchActual.Groups[1].ToString())
-                                                && Equals(matchTarget.Groups[2].ToString(), matchActual.Groups[2].ToString()))
-                        {
-                            continue;
-                        }
-                        
-                        bool failed = true;
-                        if (columnTolerances != null)
-                        {
-                            // ReSharper disable PossibleNullReferenceException
-                            var colsActual = lineActual.Split('\t');
-                            var colsTarget = lineTarget.Split('\t');
-                            // ReSharper restore PossibleNullReferenceException
-                            if (colsTarget.Length == colsActual.Length)
-                            {
-                                failed = false; // May yet be saved by tolerance check
-                                for (var c = 0; c < colsActual.Length; c++)
-                                {
-                                    if (colsActual[c] != colsTarget[c])
-                                    {
-                                        double valActual, valTarget;
-                                        if (!columnTolerances.ContainsKey(c) ||
-                                            !(double.TryParse(colsActual[c], out valActual) && 
-                                              double.TryParse(colsTarget[c], out valTarget)) ||
-                                            (Math.Abs(valActual - valTarget) > columnTolerances[c] + columnTolerances[c]/1000)) // Allow for rounding cruft
-                                        {
-                                            failed = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if (failed)
-                            Fail(helpMsg + "Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                        return; // We're done
                     }
-
+                    if (lineTarget == null)
+                    {
+                        Fail(GetEarlyEndingMessage(helpMsg, "Expected", count-1, lineEqualLast, lineActual, readerActual));
+                    }
+                    if (lineActual == null)
+                    {
+                        Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
+                    }
+                    // If only difference appears to be generated GUIDs or timestamps, let it pass
+                    if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
+                    {
+                        Fail(string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                    }
                     lineEqualLast = lineTarget;
                     count++;
                 }
 
             }
+        }
+
+        private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
+            Dictionary<int, double> columnTolerances = null)
+        {
+            if (string.Equals(lineExpected, lineActual))
+            {
+                return true; // Identical
+            }
+
+            // If only difference appears to be a generated GUID, let it pass
+            var regexGUID =
+                new Regex(
+                    @"(.*)\:[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*-[0123456789abcdef]*\:(.*)");
+            var matchExpected = regexGUID.Match(lineExpected);
+            var matchActual = regexGUID.Match(lineActual);
+            if (matchExpected.Success && matchActual.Success
+                                      && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                      && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+            {
+                return true;
+            }
+
+            // If only difference appears to be a generated ISO timestamp, let it pass
+            // e.g. 2020-07-10T10:40:03Z or 2020-07-10T10:40:03-07:00 etc
+            var regexTimestamp =
+                new Regex(@"(.*"")\d\d\d\d\-\d\d\-\d\dT\d\d\:\d\d\:\d\d(?:Z|(?:[\-\+]\d\d\:\d\d))("".*)");
+            matchExpected = regexTimestamp.Match(lineExpected);
+            matchActual = regexTimestamp.Match(lineActual);
+            if (matchExpected.Success && matchActual.Success
+                                      && Equals(matchExpected.Groups[1].ToString(), matchActual.Groups[1].ToString())
+                                      && Equals(matchExpected.Groups[2].ToString(), matchActual.Groups[2].ToString()))
+            {
+                return true;
+            }
+
+            if (columnTolerances != null)
+            {
+                // ReSharper disable PossibleNullReferenceException
+                var colsActual = lineActual.Split('\t');
+                var colsExpected = lineExpected.Split('\t');
+                // ReSharper restore PossibleNullReferenceException
+                if (colsExpected.Length == colsActual.Length)
+                {
+                    for (var c = 0; c < colsActual.Length; c++)
+                    {
+                        if (colsActual[c] != colsExpected[c])
+                        {
+                            double valActual, valExpected;
+                            if (!columnTolerances.ContainsKey(c) || // No tolerance given
+                                !(double.TryParse(colsActual[c], out valActual) &&
+                                  double.TryParse(colsExpected[c], out valExpected)) || // One or both don't parse as doubles
+                                (Math.Abs(valActual - valExpected) >
+                                 columnTolerances[c] + columnTolerances[c] / 1000)) // Allow for rounding cruft
+                            {
+                                return false; // Can't account for difference
+                            }
+                        }
+                    }
+                    return true; // Differences accounted for
+                }
+            }
+
+            return false; // Could not account for difference
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)
@@ -883,6 +927,102 @@ namespace pwiz.SkylineTestUtil
             string file1 = File.ReadAllText(path1);
             string file2 = File.ReadAllText(path2);
             NoDiff(file1, file2, null, columnTolerances);
+        }
+
+        /// <summary>
+        /// Compare two DSV files, accounting for possible L10N differences
+        /// </summary>
+        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders)
+        {
+            var lines1 = File.ReadAllLines(path1);
+            var lines2 = File.ReadAllLines(path2);
+            AreEqual(lines1.Length, lines2.Length, "Expected same line count");
+            if (lines1.Length == 0)
+            {
+                return;
+            }
+
+            var sep1 = DetermineDsvDelimiter(lines1, out var colCount1);
+            var sep2 = DetermineDsvDelimiter(lines2, out var colCount2);
+            for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
+            {
+                var cols1 = lines1[lineNum].ParseDsvFields(sep1);
+                var cols2 = lines2[lineNum].ParseDsvFields(sep2);
+                AreEqual(cols1.Length, cols2.Length, $"Expected same column count at line {lineNum}");
+                if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
+                {
+                    continue; // Don't expect localized headers to match 
+                }
+                for (var colNum = 0; colNum < cols1.Length; colNum++)
+                {
+                    var same = Equals(cols1[colNum], cols2[colNum]);
+
+                    if (!same)
+                    {
+                        // Possibly a decimal value, or even a field like "1.234[M+H]" vs "1,234[M+H]"
+                        string Dotted(string val)
+                        {
+                            return val.Replace(CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator, @"_dot_").
+                                Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, @"_dot_");
+                        }
+                        same = Equals(Dotted(cols1[colNum]), Dotted(cols2[colNum]));
+                    }
+
+                    if (!same)
+                    {
+                        AreEqual(cols1[colNum], cols2[colNum], $"Difference at row {lineNum} column {colNum}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Examine the lines of a DSV file an attempt to determine what kind of delimiter it uses
+        /// N.B. NOT ROBUST ENOUGH FOR GENERAL USE - would likely fail, for example, on data that has
+        /// irregular column counts. But still useful in the test context where we aren't handed random
+        /// data sets from users.
+        /// </summary>
+        /// <param name="lines">lines of the file</param>
+        /// <param name="columnCount">return value: column count</param>
+        /// <returns>the identified delimiter</returns>
+        /// <exception cref="LineColNumberedIoException">thrown when we can't figure it out</exception>
+        public static char DetermineDsvDelimiter(string[] lines, out int columnCount)
+        {
+
+            // If a candidate delimiter yields different column counts line to line, it's probably not the right one.
+            // So parse some distance in to see which delimiters give a consistent column count.
+            // NOTE we do see files like that in the wild, but not in our test suite
+            var countsPerLinePerCandidateDelimiter = new Dictionary<char, List<int>>
+            {
+                { TextUtil.SEPARATOR_CSV, new List<int>()},
+                { TextUtil.SEPARATOR_SPACE, new List<int>()},
+                { TextUtil.SEPARATOR_TSV, new List<int>()},
+                { TextUtil.SEPARATOR_CSV_INTL, new List<int>()}
+            };
+
+            for (var lineNum = 0; lineNum < Math.Min(100, lines.Length); lineNum++)
+            {
+                foreach (var sep in countsPerLinePerCandidateDelimiter.Keys)
+                {
+                    countsPerLinePerCandidateDelimiter[sep].Add((new DsvFileReader(new StringReader(lines[lineNum]), sep)).NumberOfFields);
+                }
+            }
+
+            var likelyCandidates =
+                countsPerLinePerCandidateDelimiter.Where(kvp => kvp.Value.Distinct().Count() == 1).ToArray();
+            if (likelyCandidates.Length > 0)
+            {
+                // The candidate that yields the highest column count wins
+                var maxColumnCount = likelyCandidates.Max(kvp => kvp.Value[0]);
+                if (likelyCandidates.Count(kvp => Equals(maxColumnCount, kvp.Value[0])) == 1)
+                {
+                    var delimiter = likelyCandidates.First(kvp => Equals(maxColumnCount, kvp.Value[0])).Key;
+                    columnCount = maxColumnCount;
+                    return delimiter;
+                }
+            }
+
+            throw new LineColNumberedIoException(Resources.TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file, 1, 1);
         }
 
         public static void FieldsEqual(string target, string actual, int countFields, bool allowForNumericPrecisionDifferences = false)
@@ -1143,7 +1283,7 @@ namespace pwiz.SkylineTestUtil
             DocumentClonedLoadable(ref target, ref actual, null, false);
         }
         public static void DocumentClonedLoadable(ref SrmDocument target, ref SrmDocument actual, string testDir, bool forceFullLoad)
-            {
+        {
             for (var retry = 0; retry < 2;)
             {
                 try
@@ -1156,6 +1296,10 @@ namespace pwiz.SkylineTestUtil
                         target = ForceDocumentLoad(target, testDir);
                         actual = ForceDocumentLoad(actual, testDir);
                     }
+
+                    target = ResultsUtil.ClearFileImportTimes(target);
+                    actual = ResultsUtil.ClearFileImportTimes(actual);
+
                     SettingsCloned(target.Settings, actual.Settings);
                     Cloned(target, actual);
                     return;
@@ -1180,6 +1324,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.PeptideSettings.Libraries, copy.PeptideSettings.Libraries, defPep.Libraries);
             Cloned(target.PeptideSettings.Modifications, copy.PeptideSettings.Modifications, defPep.Modifications);
             Cloned(target.PeptideSettings.Prediction, copy.PeptideSettings.Prediction, defPep.Prediction);
+            Cloned(target.PeptideSettings.ProteinAssociationSettings, target.PeptideSettings.ProteinAssociationSettings);
             Cloned(target.PeptideSettings, copy.PeptideSettings);
             var defTran = defSet.TransitionSettings;
             Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction, defTran.Prediction);

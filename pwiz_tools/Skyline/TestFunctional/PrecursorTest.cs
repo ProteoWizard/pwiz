@@ -139,8 +139,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Paste the transition list
             SetClipboardTextUI(File.ReadAllText(tranListPath));
-            RunUI(() => SkylineWindow.Paste());
-
+            PasteTransitionListSkipColumnSelect();
+            WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
             Assert.AreEqual(2, GetPrecursorTranstionCount());
             Assert.AreEqual(docCurrent.PeptideTransitionCount, SkylineWindow.Document.PeptideTransitionCount);
             Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.PeptideTransitions)[0].Transition.IonType,

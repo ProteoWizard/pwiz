@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DocSettings;
@@ -45,12 +46,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class PerfImportBrukerPasefMascotTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPasefMascotImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerPasefMascot.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfImportBrukerPasefMascot.zip");
             TestFilesPersistent = new[] { ".d", ".dat" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -120,12 +120,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var searchResultsList = new[] {searchResults};
             RunUI(() =>
             {
-                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                ImportPeptideSearchDlg.Pages.spectra_page);
+                AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchResultsList);
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
+            });
+            WaitForConditionUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.Grid.ScoreTypesLoaded);
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.BuildPepSearchLibControl.Grid.SetScoreThreshold(0.05);
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = false;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             var ambiguousDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck); // Expect the ambiguous matches dialog
             OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
@@ -160,7 +164,16 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 RunUI(() => importPeptideSearchDlg.ClickNextButtonNoCheck());
             }
-            // Modifications are already set up, so that page should get skipped.
+
+            // Skip Match Modifications page.
+            RunUI(() =>
+            {
+                AssertEx.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage);
+                AssertEx.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            RunUI(() => AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page));
+
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new []{2,3,4,5});
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof);
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetUseSpectralLibraryIonMobilities(true));
@@ -179,13 +192,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 AssertEx.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("human_and_yeast.fasta"));
             });
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             WaitForClosedForm(importPeptideSearchDlg);
             var doc1 = WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
-            AssertEx.IsDocumentState(doc1, null, 7906, 28510, 28510, 85530);
+            AssertEx.IsDocumentState(doc1, null, 7939, 28410, 28410, 85230);
             loadStopwatch.Stop();
             DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);
             var errmsg = "";
@@ -229,7 +242,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out var chromGroupInfo));
+                    tolerance, out var chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

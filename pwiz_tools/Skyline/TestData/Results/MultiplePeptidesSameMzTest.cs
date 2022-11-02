@@ -49,11 +49,11 @@ namespace pwiz.SkylineTestData.Results
             if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none)
                 TestDirectoryName = asSmallMolecules.ToString();
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
-            SrmDocument document = InitMultiplePeptidesSameMzDocument(testFilesDir, out docPath);
-            document = new RefinementSettings().ConvertToSmallMolecules(document, testFilesDir.FullPath, asSmallMolecules);
+            SrmDocument document = InitMultiplePeptidesSameMzDocument(TestFilesDir, out docPath);
+            document = new RefinementSettings().ConvertToSmallMolecules(document, TestFilesDir.FullPath, asSmallMolecules);
             using (var docContainer = new ResultsTestDocumentContainer(document, docPath))
             {
                 var doc = docContainer.Document;
@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestData.Results
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
                     Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
+                        tolerance, out chromGroupInfo));
                     Assert.AreEqual(1, chromGroupInfo.Length);  // without the fix, only the first pair will have a chromatogram
                 }
                 // now drill down for specific values
@@ -88,7 +88,6 @@ namespace pwiz.SkylineTestData.Results
                 }
                 Assert.AreEqual(3, nPeptides); // without the fix this will give just one result
             }
-            testFilesDir.Dispose();
         }
 
         private static SrmDocument InitMultiplePeptidesSameMzDocument(TestFilesDir testFilesDir, out string docPath)

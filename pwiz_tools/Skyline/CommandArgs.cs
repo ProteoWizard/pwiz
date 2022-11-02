@@ -34,6 +34,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -118,10 +119,10 @@ namespace pwiz.Skyline
 
         public static readonly Argument ARG_IN = new DocArgument(@"in", PATH_TO_DOCUMENT,
             (c, p) => c.SkylineFile = p.ValueFullPath);
-        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => c.Saving = true);
+        public static readonly Argument ARG_SAVE = new DocArgument(@"save", (c, p) => { c.Saving = true; });
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
-            (c, p) => c.SaveFile = p.ValueFullPath);
+            (c, p) => { c.SaveFile = p.ValueFullPath; });
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
             (c, p) =>
             {
@@ -215,6 +216,23 @@ namespace pwiz.Skyline
         public string SharedFile { get; private set; }
         public ShareType SharedFileType { get; private set; }
 
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", () => GetPathToFile(IonMobilityDb.EXT),
+            (c, p) => c.ImsDbFile = p.ValueFullPath);
+
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_IMSDB_NAME = new DocArgument(@"ionmobility-library-name", NAME_VALUE,
+            (c, p) => c.ImsDbName = p.Value);
+
+        private static readonly ArgumentGroup GROUP_CREATE_IMSDB = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library, false,
+            ARG_IMSDB_CREATE, ARG_IMSDB_NAME)
+        {
+            Dependencies =
+            {
+                {  ARG_IMSDB_NAME, ARG_IMSDB_CREATE },
+            },
+        };
+
         public static readonly Argument ARG_IMPORT_FILE = new DocArgument(@"import-file", PATH_TO_FILE,
             (c, p) => c.ParseImportFile(p));
         public static readonly Argument ARG_IMPORT_REPLICATE_NAME = new DocArgument(@"import-replicate-name", NAME_VALUE,
@@ -259,12 +277,15 @@ namespace pwiz.Skyline
             (c, p) => c.LockmassNegative = p.ValueDouble);
         public static readonly Argument ARG_IMPORT_LOCKMASS_TOLERANCE = new DocArgument(@"import-lockmass-tolerance", NUM_VALUE,
             (c, p) => c.LockmassTolerance = p.ValueDouble);
+        public static readonly Argument ARG_IMPORT_PEAK_BOUNDARIES = new DocArgument(@"import-peak-boundaries", PATH_TO_FILE,
+            (c, p) => c.ImportPeakBoundariesPath = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
             ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILENAME_PATTERN, ARG_IMPORT_SAMPLENAME_PATTERN,
             ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN, ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS,
-            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
+            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE, 
+            ARG_IMPORT_PEAK_BOUNDARIES);
 
         public static readonly Argument ARG_REMOVE_BEFORE = new DocArgument(@"remove-before", DATE_VALUE,
             (c, p) => c.SetRemoveBefore(p.ValueDate));
@@ -301,6 +322,42 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public static readonly Argument ARG_CHROMATOGRAMS_LIMIT_NOISE = new DocArgument(@"chromatograms-limit-noise", NUM_VALUE,
+            (c, p) => c.LimitNoise = p.ValueDouble);
+
+        public static readonly Argument ARG_CHROMATOGRAMS_DISCARD_UNUSED = new DocArgument(@"chromatograms-discard-unused",
+            (c, p) => c.ChromatogramsDiscard = true );
+
+        private static readonly ArgumentGroup GROUP_MINIMIZE_RESULTS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_MINIMIZE_RESULTS_Minimizing_results_file_size, false,
+            ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_CHROMATOGRAMS_DISCARD_UNUSED)
+        {
+            Validate = c => c.ValidateMinimizeResultsArgs()
+        };
+        
+        private bool ValidateMinimizeResultsArgs()
+        {
+            if (Minimizing)
+            {
+                if (!_seenArguments.Contains(ARG_SAVE) && !_seenArguments.Contains(ARG_OUT))
+                {
+                    // Has minimize argument(s), but no --save or --out command
+                    if (ChromatogramsDiscard)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_DISCARD_UNUSED, ARG_SAVE, ARG_OUT);
+                    }
+                    if (LimitNoise.HasValue)
+                    {
+                        WarnArgRequirement(ARG_CHROMATOGRAMS_LIMIT_NOISE, ARG_SAVE, ARG_OUT);
+                    }
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public string ImsDbFile { get; private set; }
+        public string ImsDbName { get; private set; }
+
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public int ImportThreads { get; private set; }
@@ -312,8 +369,11 @@ namespace pwiz.Skyline
         public Regex ImportFileNamePattern { get; private set; }
         public Regex ImportSampleNamePattern { get; private set; }
         public bool ImportWarnOnFailure { get; private set; }
+        public string ImportPeakBoundariesPath { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
+        public bool ChromatogramsDiscard{ get; private set; }
+        public double? LimitNoise { get; private set; }
         public DateTime? ImportBeforeDate { get; private set; }
         public DateTime? ImportOnOrAfterDate { get; private set; }
         // Waters lockmass correction
@@ -516,6 +576,10 @@ namespace pwiz.Skyline
         {
             get { return !string.IsNullOrEmpty(AddDecoysType); }
         }
+        public bool CreatingIMSDB
+        {
+            get { return !string.IsNullOrEmpty(ImsDbFile); }
+        }
         public bool ImportingResults
         {
             get { return ImportingReplicateFile || ImportingSourceDirectory; }
@@ -664,6 +728,7 @@ namespace pwiz.Skyline
         public List<IPeakFeatureCalculator> ExcludeFeatures { get; private set; }
 
         public bool Reintegrating { get { return !string.IsNullOrEmpty(ReintegrateModelName); } }
+        public bool Minimizing { get { return ChromatogramsDiscard || LimitNoise.HasValue; } }
 
 
         private List<double> ParseNumberList(NameValuePair pair)
@@ -962,8 +1027,8 @@ namespace pwiz.Skyline
                 var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
                 if (serverUri == null)
                 {
-                    WriteLine(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_,
-                        PanoramaServerUri);
+                    WriteLine(Resources.CommandLine_GeneralException_Error___0_, 
+                        string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, PanoramaServerUri));
                     return false;
                 }
 
@@ -1032,11 +1097,11 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
-                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_, x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_Exception_, x.Message);
                 }
 
                 return null;
@@ -1051,12 +1116,12 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException x)
                 {
-                    _statusWriter.WriteLine(x.Message);
+                    _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateFolder_PanoramaServerException_, x.Message);
                 }
                 catch (Exception x)
                 {
                     _statusWriter.WriteLine(
-                        Resources.PanoramaHelper_ValidateFolder_,
+                        Resources.PanoramaHelper_ValidateFolder_Exception_,
                         panoramaFolder, panoramaClient.ServerUri,
                         x.Message);
                 }
@@ -1736,12 +1801,14 @@ namespace pwiz.Skyline
                     GROUP_IMPORT,
                     GROUP_REINTEGRATE,
                     GROUP_REMOVE,
+                    GROUP_MINIMIZE_RESULTS,
                     GROUP_IMPORT_DOC,
                     GROUP_ANNOTATIONS,
                     GROUP_FASTA,
                     GROUP_IMPORT_SEARCH,
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
+                    GROUP_CREATE_IMSDB,
                     GROUP_DECOYS,
                     GROUP_REFINEMENT,
                     GROUP_REFINEMENT_W_RESULTS,
@@ -1852,7 +1919,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                // Unexpected behavior, but better to output the error then appear to crash, and
+                // Unexpected behavior, but better to output the error than appear to crash, and
                 // have Windows write it to the application event log.
                 WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
                 WriteLine(x.StackTrace);
@@ -1923,15 +1990,26 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public static string WarnArgRequirementText(Argument usedArg, Argument requiredArg)
+        public static string WarnArgRequirementText(Argument usedArg, params Argument[] requiredArgs)
         {
-            return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
-                usedArg.ArgumentText, requiredArg.ArgumentText);
+            if (requiredArgs.Length == 1)
+                return string.Format(Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                    usedArg.ArgumentText, requiredArgs[0].ArgumentText);
+
+            var requiredArgsText = new List<string>()
+            {
+                string.Format(
+                    Resources
+                        .CommandArgs_WarnArgRequirementText_Use_of_the_argument__0__requires_one_of_the_following_arguments_,
+                    usedArg.ArgumentText)
+            };
+            requiredArgsText.AddRange(requiredArgs.Select(i => i.ArgumentText).ToList());
+            return TextUtil.LineSeparate(requiredArgsText);
         }
 
-        private void WarnArgRequirement(Argument usedArg, Argument requiredArg)
+        private void WarnArgRequirement(Argument usedArg, params Argument[] requiredArgs)
         {
-            WriteLine(WarnArgRequirementText(usedArg, requiredArg));
+            WriteLine(WarnArgRequirementText(usedArg, requiredArgs));
         }
 
         public static string ErrorArgsExclusiveText(Argument arg1, Argument arg2)
@@ -2508,10 +2586,33 @@ namespace pwiz.Skyline
                 // ReSharper restore LocalizableElement
             }
 
+            // Regular expression for an argument: a hyphen surrounded by zero or more word characters
+            // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
+            private static readonly Regex REGEX_ARGUMENT = new Regex("[\\w-]*-[\\w-]*",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            /// <summary>
+            /// HTML encodes the string.
+            /// Also, puts &lt;nobr> tags around everything that contains a hyphen so that argument names do not get broken across lines.
+            /// </summary>
             private static string HtmlEncode(string str)
             {
-                string encodedText = HttpUtility.HtmlEncode(str ?? string.Empty);
-                return encodedText.Replace(@"-", @"&#8209;");   // Use non-breaking hyphens
+                str = str ?? string.Empty;
+                var result = new StringBuilder();
+                int charIndex = 0;
+                var matchCollection = REGEX_ARGUMENT.Matches(str);
+                foreach (Match match in matchCollection)
+                {
+                    result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex, match.Index - charIndex)));
+                    // ReSharper disable LocalizableElement
+                    result.Append("<nobr>");
+                    result.Append(HttpUtility.HtmlEncode(match.Value));
+                    result.Append("</nobr>");
+                    // ReSharper restore LocalizableElement
+                    charIndex = match.Index + match.Length;
+                }
+
+                result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex)));
+                return result.ToString();
             }
         }
 

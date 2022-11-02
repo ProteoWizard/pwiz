@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class InstallToolsTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestInstallTools()
         {
             TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
@@ -322,7 +322,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, Settings.Default.ToolList.Count);
             string toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
 
-            WaitForCondition(5*1000, () => !Directory.Exists(toolsDir));
+            WaitForCondition(5*1000, () => !Directory.Exists(toolsDir), $@"Directory ""{toolsDir}"" should not exist");
         }
 
         private void ClearAllTools()

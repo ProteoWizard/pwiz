@@ -501,6 +501,9 @@ pair<string,string> stringToPair(const string& nameValuePair)
 
 PWIZ_API_DECL map<string,string> parse(const string& id)
 {
+    if (id.empty())
+        throw runtime_error("[MSData::parse] Empty id");
+
     vector<string> pairs;
     boost::split(pairs, id, boost::is_any_of(" \t\n\r"));
 
@@ -552,6 +555,9 @@ PWIZ_API_DECL string translateScanNumberToNativeID(CVID nativeIdFormat, const st
         case MS_scan_number_only_nativeID_format:
             return "scan=" + scanNumber;
 
+        case MS_Bruker_TSF_nativeID_format:
+            return "frame=" + scanNumber;
+
         default:
             return "";
     }
@@ -581,6 +587,9 @@ PWIZ_API_DECL string translateNativeIDToScanNumber(CVID nativeIdFormat, const st
         case MS_Bruker_BAF_nativeID_format:
         case MS_scan_number_only_nativeID_format:
             return value(id, "scan");
+
+        case MS_Bruker_TSF_nativeID_format:
+            return value(id, "frame");
 
         default:
             if (bal::starts_with(id, "scan=")) return value(id, "scan");
@@ -1088,21 +1097,27 @@ PWIZ_API_DECL size_t SpectrumList::findAbbreviated(const string& abbreviatedId, 
     if (empty()) return size();
 
     // "sample=1 period=1 cycle=123 experiment=2" splits to { sample, 1, period, 1, cycle, 123, experiment, 2 }
-    string firstId = spectrumIdentity(0).id;
-    bal::split(actualTokens, firstId, bal::is_any_of(" ="));
-
-    if (actualTokens.size() != abbreviatedTokens.size() * 2)
+    for (size_t s = size(); s-- > 0;) // Some files contain mixed scan types - e.g. Waters where lockmass scans may be non-IMS and others IMS, so we may need to search a bit to find a format match
     {
-        // TODO log this since I assume Skyline devs/uers don't want to see it
-        //warn_once(("[SpectrumList::findAbbreviated] abbreviated id (" + abbreviatedId + ") has different number of terms from spectrum list (" + firstId + ")").c_str());
-        return size();
+        string firstId = spectrumIdentity(s).id;
+        bal::split(actualTokens, firstId, bal::is_any_of(" ="));
+
+        if (actualTokens.size() != abbreviatedTokens.size() * 2)
+        {
+            // TODO log this since I assume Skyline devs/uers don't want to see it
+            //warn_once(("[SpectrumList::findAbbreviated] abbreviated id (" + abbreviatedId + ") has different number of terms from spectrum list (" + firstId + ")").c_str());
+            if (s==0)
+                return size();
+        }
+
+        string fullId(actualTokens[0] + "=" + abbreviatedTokens[0]);
+        for (size_t i = 1; i < abbreviatedTokens.size(); ++i)
+            fullId += " " + actualTokens[2*i] + "=" + abbreviatedTokens[i];
+
+        size_t result = find(fullId);
+        if ((result >= 0 && result < size()) || s == 0)
+            return result;
     }
-
-    string fullId(actualTokens[0] + "=" + abbreviatedTokens[0]);
-    for (size_t i = 1; i < abbreviatedTokens.size(); ++i)
-        fullId += " " + actualTokens[2*i] + "=" + abbreviatedTokens[i];
-
-    return find(fullId);
 }
 
 
@@ -1180,6 +1195,10 @@ PWIZ_API_DECL DetailLevel SpectrumList::min_level_accepted(std::function<boost::
     throw runtime_error("[SpectrumList::min_level_accepted] no spectrum satisfied the given predicate at any DetailLevel");
 }
 
+PWIZ_API_DECL bool SpectrumList::calibrationSpectraAreOmitted() const
+{
+    return false; // Default implementation, currently only Waters lockmass functions are actually handled
+}
 
 //
 // SpectrumListSimple
@@ -1353,6 +1372,25 @@ PWIZ_API_DECL vector<DataProcessingPtr> MSData::allDataProcessingPtrs() const
         if (sldp.get() && std::find_if(result.begin(), result.end(), HasID<DataProcessing>(sldp->id)) == result.end())
             result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
     }
+
+    /* CONSIDER: alternate merging approach
+    if (run.spectrumListPtr.get() && run.spectrumListPtr->dataProcessingPtr().get())
+    {
+        // if SpectrumList::dataProcessingPtr() is not in MSData::dataProcessingPtrs, add it
+        const shared_ptr<const DataProcessing> sldp = run.spectrumListPtr->dataProcessingPtr();
+        auto dpInMsdItr = std::find_if(result.begin(), result.end(), HasID<DataProcessing>(sldp->id));
+        if (dpInMsdItr != result.end())
+        {
+            Diff<DataProcessing, DiffConfig> diff(*sldp, **dpInMsdItr);
+            if (diff)
+            {
+                (*dpInMsdItr)->id += "_old";
+                result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
+            }
+        }
+        else
+            result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
+    }*/
 
     if (run.chromatogramListPtr.get())
     {

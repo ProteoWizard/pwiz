@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -587,7 +588,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" variable=\"true\" />");
             // Loss only failures
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\" variable=\"true\"><potential_loss formula=\"NH3\"/></static_modification>");
-            AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\" explicit_decl=\"true\"><potential_loss formula=\"NH3\"/></static_modification>");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\" explicit_decl=\"true\"><potential_loss formula=\"NH3\"/></static_modification>", true, true, structuralModificationType);
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"LossInclusion\" aminoacid=\"T, S\" formula=\"HPO3\"><potential_loss formula=\"HP3O4\" inclusion=\"Sometimes\"/></static_modification>");
         }
 
@@ -905,6 +906,8 @@ namespace pwiz.SkylineTest
                 "precursor_res=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
                 "precursor_res=\"" + validHiRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
+                "precursor_res=\"" + validHiRes + "\" ignore_sim_scans=\"true\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\"/>");  // Use defaults
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
@@ -952,6 +955,8 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"Unknown\" " +
                 "product_resolution=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" ignore_sim_scans=\"true\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 "Unknown" + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
@@ -1103,7 +1108,7 @@ namespace pwiz.SkylineTest
 
         TransitionIonMobilityFiltering CheckIonMobilitySettingsBackwardCompatibility(string xml, string expectError = null)
         {
-            var testFilesDir = TestContext.GetTestPath(string.Empty);
+            var testFilesDir = TestContext.GetTestResultsPath(string.Empty);
 
             if (expectError != null)
             {
@@ -1136,10 +1141,51 @@ namespace pwiz.SkylineTest
         }
 
 
+        [TestMethod]
+        public void SerializeProteinAssociationSettingsTest()
+        {
+            const string proteinAssociationSerialized = "<srm_settings>\n" +
+                                                        "  <settings_summary name=\"Default\">\n" +
+                                                        "    <peptide_settings>\n" +
+                                                        "      <protein_association min_peptides_per_protein=\"0\" " +
+                                                        "group_proteins=\"true\" " +
+                                                        "find_minimal_protein_list=\"true\" " +
+                                                        "remove_subset_proteins=\"true\" " +
+                                                        "shared_peptides=\"AssignedToBestProtein\" />\n" +
+                                                        "    </peptide_settings>\n" +
+                                                        "  </settings_summary>\n" +
+                                                        "</srm_settings>";
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.PROTEIN_GROUPS);
+
+            var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
+            var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
+            Assert.AreEqual(0, parsimonySettings.MinPeptidesPerProtein);
+            Assert.AreEqual(true, parsimonySettings.GroupProteins);
+            Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
+            Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
+
+            // test ProteinAssociationSettings removed from formats before 22_13
+            string xml = null;
+            var actual = AssertEx.RoundTrip(doc, SkylineVersion.V21_2, ref xml);
+            Assert.AreEqual(false, actual.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+
+            const string proteinAssociationMinPeptidesErrorSerialized = "<protein_association min_peptides_per_protein=\"-1\" />";
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(proteinAssociationMinPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
+                string.Format(Resources.ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__, -1,
+                    PropertyNames.ParsimonySettings_MinPeptidesPerProtein, 0));
+
+            const string proteinAssociationSharedPeptidesErrorSerialized = "<protein_association shared_peptides=\"SomethingIsWrong\" />";
+            AssertEx.DeserializeError<ProteinAssociation.ParsimonySettings>(
+                proteinAssociationSharedPeptidesErrorSerialized, DocumentFormat.PROTEIN_GROUPS,
+                string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__,
+                    "SomethingIsWrong", "shared_peptides"));
+        }
+
         /// <summary>
         /// Test serialization of ion mobility data
         /// </summary>
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void SerializeIonMobilityTest()
         {
 
@@ -1150,7 +1196,7 @@ namespace pwiz.SkylineTest
 
             var pred = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test\" resolving_power=\"100\"></predict_drift_time>");
             var libFileName = "test"+IonMobilityDb.EXT;
-            Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.FilePath);
+            Assert.AreEqual(TestContext.GetTestResultsPath(libFileName), pred.IonMobilityLibrary.FilePath);
             Assert.AreEqual("test", pred.IonMobilityLibrary.Name);
             Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
             Assert.AreEqual(0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
@@ -1202,7 +1248,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(widthAtDt0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
             Assert.AreEqual(widthAtDtMax, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueMax);
             Assert.AreEqual(100, pred.FilterWindowWidthCalculator.ResolvingPower);
-            AssertEx.DeserializeError<DriftTimePredictor>(predictor3.Replace("100", "0"), Resources.DriftTimePredictor_Validate_Resolving_power_must_be_greater_than_0_);
+            AssertEx.DeserializeNoError<DriftTimePredictor>(predictor3.Replace("100", "0"), DocumentFormat.VERSION_19_1); // Accept 0 resolving power as "no IMS filtering, thanks"
 
             predictor3 = predictor3.Replace("\"resolving_power\"", "\"linear_range\"");
             pred = CheckIonMobilitySettingsBackwardCompatibility(predictor3);
@@ -1222,7 +1268,9 @@ namespace pwiz.SkylineTest
             var tmpFile19 = "V19_1.sky";
             var tmpFileCurrent = "V20_13.sky";
             var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
-            var testPath = TestContext.TestDir;
+            var testPath = TestContext.GetTestResultsPath();
+            if (!File.Exists(testPath))
+                Directory.CreateDirectory(testPath);
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.V19_1); // Round trip with IMS info in peptide settings
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.CURRENT); // Round trip with IMS info in transition settings
             oldDoc.SerializeToFile(tmpFile19, tmpFile19, SkylineVersion.V19_1, null);

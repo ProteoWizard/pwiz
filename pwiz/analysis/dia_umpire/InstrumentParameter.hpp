@@ -3,26 +3,28 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <cmath>
+#include <string>
+
 
 namespace DiaUmpire {
 
 struct InstrumentParameter
 {
-    int Resolution;
-    float MS1PPM;
-    float MS2PPM;
-    float SNThreshold;
-    float MinMSIntensity;
-    float MinMSMSIntensity;
+    int Resolution = 0;
+    float MS1PPM = 0;
+    float MS2PPM = 0;
+    float SN = 0;
+    float MinMSIntensity = 0;
+    float MinMSMSIntensity = 0;
     int NoPeakPerMin = 150;
-    float MinRTRange;
+    float MinRTRange = 0;
     int StartCharge = 2;
     int EndCharge = 5;
     int MS2StartCharge = 2;
     int MS2EndCharge = 4;
     float MaxCurveRTRange = 2;
-    float RTtol;
-    float MS2SNThreshold;
+    float RTtol = 0;
+    float MS2SN = 0;
     int MaxNoPeakCluster = 4;
     int MinNoPeakCluster = 2;
     int MaxMS2NoPeakCluster = 3;
@@ -34,11 +36,11 @@ struct InstrumentParameter
     bool Deisotoping = false;
     bool BoostComplementaryIon = true;
     bool AdjustFragIntensity = true;
-    int PrecursorRank = 25;
-    int FragmentRank = 300;
-    float RTOverlapThreshold = (float) 0.1;
-    float CorrThreshold = (float) 0.1;
-    float ApexDelta = (float) 0.6;
+    int RPmax = 25;
+    int RFmax = 300;
+    float RTOverlap = (float) 0.3;
+    float CorrThreshold = (float) 0.2;
+    float DeltaApex = (float) 0.6;
     float SymThreshold = (float) 0.3;
     int NoMissedScan = 1;
     int MinPeakPerPeakCurve = 1;
@@ -56,8 +58,8 @@ struct InstrumentParameter
     int TopNLocal = 6;
     int TopNLocalRange = 100;
     float IsoPattern = (float) 0.3;
-    float startRT = 0;
-    float endRT = 9999;
+    float StartRT = 0;
+    float EndRT = 9999;
     bool TargetIDOnly = false;
     bool MassDefectFilter = true;
     float MinPrecursorMass = 600;
@@ -69,6 +71,8 @@ struct InstrumentParameter
     float MassDefectOffset = (float) 0.1;
     int MS2PairTopN = 5;
     bool MS2Pairing = true;
+
+    std::map<std::string, std::string> GetParameterMap() const;
 
 
     static float CalcPPM(float valueA, float valueB)

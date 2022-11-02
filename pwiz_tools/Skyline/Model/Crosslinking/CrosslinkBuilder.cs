@@ -27,107 +27,94 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Crosslinking
 {
+    /// <summary>
+    /// Calculates molecule and fragment formulas for a crosslinked peptide.
+    /// </summary>
     public class CrosslinkBuilder
     {
-        private IDictionary<ModificationSite, CrosslinkBuilder> _childBuilders = new Dictionary<ModificationSite, CrosslinkBuilder>();
+        private readonly List<CrosslinkPeptideBuilder> _peptideBuilders;
 
-        private IDictionary<Tuple<IonType, int>, MoleculeMassOffset> _fragmentedMolecules =
-            new Dictionary<Tuple<IonType, int>, MoleculeMassOffset>();
+        public CrosslinkBuilder(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods,
+            IsotopeLabelType labelType) : this(settings, new PeptideStructure(peptide, explicitMods), labelType)
+        {
 
-        private MassDistribution _precursorMassDistribution;
-        public CrosslinkBuilder(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, IsotopeLabelType labelType)
+        }
+        public CrosslinkBuilder(SrmSettings settings, PeptideStructure peptideStructure, IsotopeLabelType labelType)
         {
             Settings = settings;
-            Peptide = peptide;
-            ExplicitMods = explicitMods;
+            PeptideStructure = peptideStructure;
             LabelType = labelType;
+            _peptideBuilders = new List<CrosslinkPeptideBuilder>();
+            for (int i = 0; i < PeptideStructure.Peptides.Count; i++)
+            {
+                _peptideBuilders.Add(new CrosslinkPeptideBuilder(settings, PeptideStructure.Peptides[i], PeptideStructure.ExplicitModList[i], labelType));
+            }
         }
 
-        public SrmSettings Settings { get; private set; }
-        public Peptide Peptide { get; private set; }
-        public ExplicitMods ExplicitMods { get; private set; }
-        public IsotopeLabelType LabelType { get; private set; }
+        public SrmSettings Settings { get; }
+        public PeptideStructure PeptideStructure { get; }
+        public IsotopeLabelType LabelType { get;  }
 
-        public TransitionDocNode MakeTransitionDocNode(ComplexFragmentIon complexFragmentIon, IsotopeDistInfo isotopeDist = null)
+        public TransitionDocNode MakeTransitionDocNode(ComplexFragmentIon chargedIon, IsotopeDistInfo isotopeDist = null)
         {
-            return MakeTransitionDocNode(complexFragmentIon, isotopeDist, Annotations.EMPTY,
+            return MakeTransitionDocNode(chargedIon, isotopeDist, Annotations.EMPTY,
                 TransitionDocNode.TransitionQuantInfo.DEFAULT, ExplicitTransitionValues.EMPTY, null);
         }
 
-        public TransitionDocNode MakeTransitionDocNode(ComplexFragmentIon complexFragmentIon,
+        public TransitionDocNode MakeTransitionDocNode(TransitionGroup group, NeutralFragmentIon complexFragmentIon, Adduct adduct, IsotopeDistInfo isotopeDist = null)
+        {
+            var transition = complexFragmentIon.MakeTransition(group, adduct);
+            var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, PeptideStructure);
+            return MakeTransitionDocNode(chargedIon);
+        }
+
+        public TransitionDocNode MakeTransitionDocNode(
+            ComplexFragmentIon chargedIon,
             IsotopeDistInfo isotopeDist, 
             Annotations annotations,
             TransitionDocNode.TransitionQuantInfo transitionQuantInfo,
             ExplicitTransitionValues explicitTransitionValues,
             Results<TransitionChromInfo> results)
         {
-            var neutralFormula = GetNeutralFormula(complexFragmentIon);
+            var neutralFormula = GetNeutralFormula(chargedIon.NeutralFragmentIon);
             var productMass = GetFragmentMassFromFormula(Settings, neutralFormula);
-            if (complexFragmentIon.Children.Count > 0)
+            if (chargedIon.NeutralFragmentIon.IsMs1 && Settings.TransitionSettings.FullScan.IsHighResPrecursor)
             {
-                complexFragmentIon = complexFragmentIon.CloneTransition();
-            }
-
-            if (complexFragmentIon.IsMs1 && Settings.TransitionSettings.FullScan.IsHighResPrecursor)
-            {
-                isotopeDist = isotopeDist ?? GetPrecursorIsotopeDistInfo(complexFragmentIon.Transition.Adduct, 0);
-                productMass = isotopeDist.GetMassI(complexFragmentIon.Transition.MassIndex, complexFragmentIon.Transition.DecoyMassShift);
+                isotopeDist = isotopeDist ?? GetPrecursorIsotopeDistInfo(chargedIon.Adduct, 0);
+                productMass = isotopeDist.GetMassI(chargedIon.MassIndex, chargedIon.DecoyMassShift);
                 transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(new TransitionIsotopeDistInfo(
-                    isotopeDist.GetRankI(complexFragmentIon.Transition.MassIndex), isotopeDist.GetProportionI(complexFragmentIon.Transition.MassIndex)));
+                    isotopeDist.GetRankI(chargedIon.MassIndex), isotopeDist.GetProportionI(chargedIon.MassIndex)));
             }
-            return new TransitionDocNode(complexFragmentIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
+            else
+            {
+                if (null != transitionQuantInfo.IsotopeDistInfo)
+                {
+                    transitionQuantInfo = transitionQuantInfo.ChangeIsotopeDistInfo(null);
+                }
+            }
+            return new TransitionDocNode(chargedIon, annotations, productMass, transitionQuantInfo, explicitTransitionValues, results);
         }
 
-        public MoleculeMassOffset GetNeutralFormula(ComplexFragmentIon complexFragmentIon)
+        public MoleculeMassOffset GetNeutralFormula(NeutralFragmentIon complexFragmentIon)
         {
-            var result = GetSimpleFragmentFormula(complexFragmentIon);
-            foreach (var child in complexFragmentIon.Children)
+            MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
+            for (int i = 0; i < complexFragmentIon.IonChain.Count; i++)
             {
-                var childBuilder = GetChildBuilder(child.Key);
-                result = result.Plus(childBuilder.GetNeutralFormula(child.Value));
+                result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
+            }
+            result = SubtractLosses(result, complexFragmentIon.Losses);
+            foreach (var crosslink in PeptideStructure.Crosslinks)
+            {
+                if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
+                {
+                    result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                }
             }
 
-            result = SubtractLosses(result, complexFragmentIon.TransitionLosses);
             return result;
         }
 
-        /// <summary>
-        /// Returns the chemical formula for this fragment and none of its children.
-        /// </summary>
-        private MoleculeMassOffset GetSimpleFragmentFormula(ComplexFragmentIon complexFragmentIon)
-        {
-            if (complexFragmentIon.IsOrphan)
-            {
-                return MoleculeMassOffset.EMPTY;
-            }
-
-            var key = Tuple.Create(complexFragmentIon.Transition.IonType, complexFragmentIon.Transition.CleavageOffset);
-            MoleculeMassOffset moleculeMassOffset;
-            if (_fragmentedMolecules.TryGetValue(key, out moleculeMassOffset))
-            {
-                return moleculeMassOffset;
-            }
-
-            var fragmentedMolecule = GetSimplePrecursorMolecule().ChangeFragmentIon(complexFragmentIon.Transition.IonType, complexFragmentIon.Transition.Ordinal);
-            moleculeMassOffset = new MoleculeMassOffset(fragmentedMolecule.FragmentFormula, 0, 0);
-            _fragmentedMolecules.Add(key, moleculeMassOffset);
-            return moleculeMassOffset;
-        }
-
-        private FragmentedMolecule _precursorMolecule;
-        public FragmentedMolecule GetSimplePrecursorMolecule()
-        {
-            if (_precursorMolecule == null)
-            {
-                var modifiedSequence = ModifiedSequence.GetModifiedSequence(Settings, Peptide.Sequence, ExplicitMods, LabelType)
-                    .SeverCrosslinks();
-                _precursorMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
-            }
-
-            return _precursorMolecule;
-        }
-
-        public TypedMass GetFragmentMass(ComplexFragmentIon complexFragmentIon)
+        public TypedMass GetFragmentMass(NeutralFragmentIon complexFragmentIon)
         {
             var neutralFormula = GetNeutralFormula(complexFragmentIon);
             return GetFragmentMassFromFormula(Settings, neutralFormula);
@@ -171,6 +158,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new TypedMass(mass, massType);
         }
 
+        private MassDistribution _precursorMassDistribution;
         public MassDistribution GetPrecursorMassDistribution()
         {
             if (_precursorMassDistribution == null)
@@ -185,15 +173,18 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetPrecursorFormula()
         {
-            var moleculeMassOffset = new MoleculeMassOffset(GetSimplePrecursorMolecule().PrecursorFormula);
-            if (ExplicitMods != null)
+            var moleculeMassOffset = MoleculeMassOffset.EMPTY;
+            for (int i = 0; i < PeptideStructure.Peptides.Count; i++)
             {
-                foreach (var child in ExplicitMods.LinkedCrossslinks)
-                {
-                    moleculeMassOffset = moleculeMassOffset.Plus(GetChildBuilder(child.Key).GetPrecursorFormula());
-                }
+                moleculeMassOffset =
+                    moleculeMassOffset.Plus(
+                        new MoleculeMassOffset(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula));
             }
 
+            foreach (var crosslink in PeptideStructure.Crosslinks)
+            {
+                moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+            }
             return moleculeMassOffset;
         }
 
@@ -202,31 +193,41 @@ namespace pwiz.Skyline.Model.Crosslinking
             return FragmentedMolecule.Settings.FromSrmSettings(Settings);
         }
 
-        private CrosslinkBuilder GetChildBuilder(ModificationSite modificationSite)
+        public IEnumerable<NeutralFragmentIon> GetComplexFragmentIons(TransitionGroup transitionGroup,
+            double precursorMz,
+            bool useFilter)
         {
-            CrosslinkBuilder childBuilder;
-            if (!_childBuilders.TryGetValue(modificationSite, out childBuilder))
+            var simpleTransitions = new List<IList<SingleFragmentIon>>();
+            for (int i = 0; i < _peptideBuilders.Count; i++)
             {
-                LinkedPeptide linkedPeptide;
-                ExplicitMods.Crosslinks.TryGetValue(modificationSite, out linkedPeptide);
-                childBuilder = new CrosslinkBuilder(Settings, linkedPeptide.Peptide, linkedPeptide.ExplicitMods, LabelType);
-                _childBuilders.Add(modificationSite, childBuilder);
+                var builder = _peptideBuilders[i];
+                TransitionGroup peptideTransitionGroup;
+                if (i == 0)
+                {
+                    peptideTransitionGroup = transitionGroup;
+                }
+                else
+                {
+                    peptideTransitionGroup = builder.MakeTransitionGroup(transitionGroup.LabelType, Adduct.SINGLY_PROTONATED);
+                }
+                simpleTransitions.Add(_peptideBuilders[i].GetSingleFragmentIons(peptideTransitionGroup, useFilter).ToList());
             }
 
-            return childBuilder;
+            return PermuteTransitions(simpleTransitions, Settings.PeptideSettings.Modifications.MaxNeutralLosses);
         }
 
-        public IEnumerable<TransitionDocNode> GetComplexTransitions(TransitionGroup transitionGroup,
+        public IEnumerable<TransitionDocNode> GetTransitionDocNodes(TransitionGroup transitionGroup,
             double precursorMz,
             IsotopeDistInfo isotopeDist,
             Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-            IEnumerable<TransitionDocNode> simpleTransitions,
             bool useFilter)
         {
+            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, precursorMz, useFilter);
+            
             var allTransitions =
                 RemoveUnmeasurable(precursorMz,
                         RemoveDuplicates(
-                            GetAllComplexTransitions(transitionGroup, isotopeDist, simpleTransitions, useFilter)))
+                            MakeTransitionDocNodes(transitionGroup, isotopeDist, complexFragmentIons, useFilter)))
                     .OrderBy(tran => tran.ComplexFragmentIon)
                     .ToList();
             
@@ -239,7 +240,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 if (Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                 {
                     ms1transitions = ms1transitions.SelectMany(tran =>
-                        ExpandPrecursorIsotopes(tran, isotopeDist, useFilter)).ToList();
+                        RemoveUnmeasurable(precursorMz, ExpandPrecursorIsotopes(tran, isotopeDist, useFilter))).ToList();
                 }
             }
             else
@@ -259,64 +260,62 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return ms1transitions.Concat(ms2transitions);
-
         }
 
-        public IEnumerable<TransitionDocNode> GetAllComplexTransitions(
-            TransitionGroup transitionGroup,
-            IsotopeDistInfo isotopeDist,
-            IEnumerable<TransitionDocNode> simpleTransitions, 
-            bool useFilter)
+        public IEnumerable<NeutralFragmentIon> PermuteTransitions(IList<IList<SingleFragmentIon>> startingIons, int maxFragmentationEventCount)
         {
-            var startingFragmentIons = new List<ComplexFragmentIon>();
-            var productAdducts = Settings.TransitionSettings.Filter.PeptideProductCharges.ToHashSet();
-            var precursorLosses = new HashSet<TransitionLosses>();
-
-            foreach (var simpleTransition in simpleTransitions)
+            var result = new List<NeutralFragmentIon>() {null};
+            for (int iPeptide = 0; iPeptide < startingIons.Count; iPeptide++)
             {
-                var startingFragmentIon = simpleTransition.ComplexFragmentIon
-                    .ChangeCrosslinkStructure(ExplicitMods.Crosslinks);
-                startingFragmentIons.Add(startingFragmentIon);
-                if (startingFragmentIon.IsIonTypePrecursor)
+                var newResult = new List<NeutralFragmentIon>();
+                foreach (var left in result)
                 {
-                    precursorLosses.Add(startingFragmentIon.TransitionLosses);
+                    foreach (var right in startingIons[iPeptide])
+                    {
+                        var concat = right.Prepend(left);
+                        if (concat.CountFragmentationEvents() > maxFragmentationEventCount)
+                        {
+                            continue;
+                        }
+
+                        if (!concat.IsAllowed(PeptideStructure))
+                        {
+                            continue;
+                        }
+                        newResult.Add(concat);
+                    }
                 }
+
+                result = newResult;
             }
 
+            return result;
+        }
+
+        public IEnumerable<TransitionDocNode> MakeTransitionDocNodes(
+            TransitionGroup transitionGroup,
+            IsotopeDistInfo isotopeDist,
+            IEnumerable<NeutralFragmentIon> complexFragmentIons,
+            bool useFilter)
+        {
             bool excludePrecursors = false;
-            IEnumerable<Adduct> allProductAdducts;
+            HashSet<Adduct> productAdducts = new HashSet<Adduct>(Settings.TransitionSettings.Filter.PeptideProductCharges);
             if (useFilter)
             {
-                allProductAdducts = Settings.TransitionSettings.Filter.PeptideProductCharges;
                 excludePrecursors = !Settings.TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor);
             }
             else
             {
-                allProductAdducts = Settings.TransitionSettings.Filter.PeptideProductCharges
-                    .Concat(Transition.DEFAULT_PEPTIDE_CHARGES);
+                productAdducts.UnionWith(Transition.DEFAULT_PEPTIDE_CHARGES);
             }
 
-            allProductAdducts = allProductAdducts.Append(transitionGroup.PrecursorAdduct);
-
-            // Add ions representing the precursor waiting to be joined with a crosslinked peptide
-            foreach (var productAdduct in allProductAdducts.Distinct())
+            foreach (var complexFragmentIon in complexFragmentIons)
             {
-                foreach (var transitionLosses in precursorLosses)
+                if (!complexFragmentIon.IsConnected(PeptideStructure))
                 {
-                    if (productAdduct.IsValidProductAdduct(transitionGroup.PrecursorAdduct, null))
-                    {
-                        var precursorTransition = new Transition(transitionGroup, IonType.precursor,
-                            Peptide.Sequence.Length - 1, 0, productAdduct);
-
-                        startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, transitionLosses, ExplicitMods.Crosslinks, true));
-                        startingFragmentIons.Add(new ComplexFragmentIon(precursorTransition, transitionLosses, ExplicitMods.Crosslinks));
-                    }
+                    continue;
                 }
-            }
-
-            foreach (var complexFragmentIon in LinkedPeptide.PermuteComplexFragmentIons(ExplicitMods, Settings,
-                Settings.PeptideSettings.Modifications.MaxNeutralLosses, useFilter, startingFragmentIons.Distinct()).Distinct())
-            {
+                ICollection<Adduct> adducts;
                 bool isPrecursor = complexFragmentIon.IsIonTypePrecursor;
                 if (isPrecursor)
                 {
@@ -325,61 +324,28 @@ namespace pwiz.Skyline.Model.Crosslinking
                         continue;
                     }
                     var expectedCharge = transitionGroup.PrecursorAdduct.AdductCharge;
-                    if (complexFragmentIon.TransitionLosses != null)
+                    if (complexFragmentIon.Losses != null)
                     {
-                        if (complexFragmentIon.Transition.MassIndex != 0)
-                        {
-                            continue;
-                        }
-                        expectedCharge -= complexFragmentIon.TransitionLosses.TotalCharge;
+                        expectedCharge -= complexFragmentIon.Losses.TotalCharge;
                     }
 
-                    if (expectedCharge != complexFragmentIon.Transition.Adduct.AdductCharge)
+                    if (expectedCharge <= 0)
                     {
                         continue;
                     }
+
+                    adducts = new[] {Adduct.FromChargeProtonated(expectedCharge)};
                 }
                 else
                 {
-                    if (complexFragmentIon.Transition.MassIndex != 0)
-                    {
-                        continue;
-                    }
-                    if (useFilter)
-                    {
-                        if (!productAdducts.Contains(complexFragmentIon.Transition.Adduct))
-                        {
-                            continue;
-                        }
-                    }
+                    adducts = productAdducts;
                 }
-
-                if (!complexFragmentIon.Transition.Adduct.IsValidProductAdduct(transitionGroup.PrecursorAdduct,
-                    complexFragmentIon.TransitionLosses))
+                foreach (var adduct in adducts)
                 {
-                    continue;
+                    yield return MakeTransitionDocNode(transitionGroup, complexFragmentIon, adduct, isotopeDist);
                 }
-
-                var complexTransitionDocNode = MakeTransitionDocNode(complexFragmentIon, isotopeDist);
-                yield return complexTransitionDocNode;
             }
         }
-
-        public IEnumerable<ComplexFragmentIon> PermuteComplexFragmentIons(int maxFragmentationCount, bool useFilter, IEnumerable<ComplexFragmentIon> startingFragmentIons)
-        {
-            var result = startingFragmentIons;
-            if (ExplicitMods != null)
-            {
-                foreach (var crosslinkMod in ExplicitMods.Crosslinks)
-                {
-                    result = crosslinkMod.Value.PermuteFragmentIons(Settings, maxFragmentationCount, useFilter,
-                        crosslinkMod.Key, result);
-                }
-            }
-
-            return result.Where(cfi => !cfi.IsEmptyOrphan);
-        }
-
 
         public IEnumerable<TransitionDocNode> ExpandPrecursorIsotopes(TransitionDocNode transitionNode, IsotopeDistInfo isotopeDist, bool useFilter)
         {

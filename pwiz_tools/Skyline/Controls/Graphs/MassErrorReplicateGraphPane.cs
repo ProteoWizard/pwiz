@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -164,7 +165,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else if (docNode.Equals(selectedNode) && step == 0)
                     {
-                        color = ChromGraphItem.ColorSelected;
+                        color = ColorScheme.ChromGraphItemSelected;
                     }
                     else
                     {
@@ -207,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
                });
            }
 
-	        XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = selectionChanged;
+            XAxis.Scale.MinAuto = XAxis.Scale.MaxAuto = selectionChanged;
             YAxis.Scale.MinAuto = YAxis.Scale.MaxAuto = true;
             if (Settings.Default.MinMassError != 0)
                 YAxis.Scale.Min = Settings.Default.MinMassError;

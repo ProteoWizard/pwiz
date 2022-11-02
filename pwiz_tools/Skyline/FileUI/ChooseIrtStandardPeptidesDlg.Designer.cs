@@ -38,7 +38,6 @@
             this.btnBrowseTransitionList = new System.Windows.Forms.Button();
             this.radioExisting = new System.Windows.Forms.RadioButton();
             this.comboExisting = new System.Windows.Forms.ComboBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -124,7 +123,6 @@
             this.MinimizeBox = false;
             this.Name = "ChooseIrtStandardPeptidesDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

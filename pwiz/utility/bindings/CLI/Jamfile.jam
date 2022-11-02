@@ -44,11 +44,11 @@ local bound_libs =
 
         # analysis
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/$(bound_lib_requirements)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/$(bound_lib_requirements)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing//pwiz_analysis_chromatogram_processing/$(bound_lib_requirements)
 
         # chemistry
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/$(bound_lib_requirements)
 
         # proteome
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/$(bound_lib_requirements)
@@ -74,10 +74,10 @@ local data_libs =
 
         # analysis
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/$(bound_lib_requirements)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing//pwiz_analysis_chromatogram_processing/$(bound_lib_requirements)
 
         # chemistry
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry/$(bound_lib_requirements)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/$(bound_lib_requirements)
 
         # HACK: not needed when using hacked tss_pe.cpp
         #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage
@@ -208,6 +208,7 @@ rule merge_xdc_files ( targets + : sources * : properties * )
 {
     local target-path = [ path.make [ on $(targets[1]) return $(LOCATE) ] ] ;
     OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 if ( ! --incremental in [ modules.peek : ARGV ] )
@@ -237,6 +238,7 @@ rule merge_xdc_data_files ( targets + : sources * : properties * )
 {
     local target-path = [ path.make [ on $(targets[1]) return $(LOCATE) ] ] ;
     OUTPUT_PATH on $(targets[1]) = [ path.native [ path.relative-to [ path.make [ path.pwd ] ] $(target-path) ] ] ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
 }
     
 if ( ! --incremental in [ modules.peek : ARGV ] )

@@ -2,11 +2,29 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AutoQC.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="SkylineInstallDir" Type="System.String" Scope="User">
+    <Setting Name="SkylineDailyRunnerPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="SkylineType" Type="System.String" Scope="User">
+    <Setting Name="SkylineRunnerPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SkylineAdminCmdPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SkylineDailyAdminCmdPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SkylineCustomCmdPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="SettingsUpgradeRequired" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="InstalledVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="XmlVersion" Type="System.Decimal" Scope="Application">
+      <Value Profile="(Default)">21.1</Value>
     </Setting>
   </Settings>
 </SettingsFile>

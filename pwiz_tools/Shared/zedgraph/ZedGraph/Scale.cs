@@ -816,7 +816,9 @@ namespace ZedGraph
 					return new DateAsOrdinalScale( oldScale, _ownerAxis );
 				case AxisType.LinearAsOrdinal:
 					return new LinearAsOrdinalScale( oldScale, _ownerAxis );
-				default:
+                case AxisType.UserDefined:
+                    throw new Exception("UserDefined scales cannot be created by this method.");
+                default:
 					throw new Exception( "Implementation Error: Invalid AxisType" );
 			}
 		}
@@ -1830,7 +1832,7 @@ namespace ZedGraph
 		/// false to just get the bounding box without rotation
 		/// </param>
 		/// <returns>the maximum width of the text in pixel units</returns>
-		internal SizeF GetScaleMaxSpace( Graphics g, GraphPane pane, float scaleFactor,
+		public virtual SizeF GetScaleMaxSpace( Graphics g, GraphPane pane, float scaleFactor,
 							bool applyAngle )
 		{
 			if ( _isVisible )
@@ -2259,7 +2261,7 @@ namespace ZedGraph
 		/// The number of pixels to shift to account for non-primary axis position (e.g.,
 		/// the second, third, fourth, etc. <see cref="YAxis" /> or <see cref="Y2Axis" />.
 		/// </param>
-		internal void Draw( Graphics g, GraphPane pane, float scaleFactor, float shiftPos )
+		public virtual void Draw( Graphics g, GraphPane pane, float scaleFactor, float shiftPos )
 		{
 			MajorGrid majorGrid = _ownerAxis._majorGrid;
 			MajorTic majorTic = _ownerAxis._majorTic;

@@ -43,9 +43,11 @@ namespace TestPerf
         {
             // RunPerfTests = true; // Enables perftests to run from the IDE (you don't want to commit this line without commenting it out)
 
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries-20_2.pdf";
+
             TestFilesZipPaths = new[]
             {
-                @"https://skyline.ms/perftests/DriftTimePredictorSmallMoleculesTest.zip",
+                GetPerfTestDataURL(@"DriftTimePredictorSmallMoleculesTest.zip"),
             };
 
             TestFilesPersistent = new[] { SULFA_MIX };

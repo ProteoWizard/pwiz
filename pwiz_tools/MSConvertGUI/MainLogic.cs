@@ -516,6 +516,8 @@ namespace MSConvertGUI
 
                         SpectrumListFactory.wrap(msd, config.Filters, ilr);
 
+                        config.WriteConfig.useWorkerThreads = msd.run.spectrumList.benefitsFromWorkerThreads();
+
                         if ((msd.run.spectrumList == null) || msd.run.spectrumList.empty())
                         {
                             if ((msd.run.chromatogramList != null) && !msd.run.chromatogramList.empty())

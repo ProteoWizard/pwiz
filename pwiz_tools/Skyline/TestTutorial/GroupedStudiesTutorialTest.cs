@@ -43,7 +43,6 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestGroupedStudiesTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
@@ -53,7 +52,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     UseRawFiles
                                ? @"https://skyline.gs.washington.edu/tutorials/GroupedStudies.zip"
-                               : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzml.zip",
+                               : @"https://skyline.gs.washington.edu/tutorials/GroupedStudiesMzmlV2.zip", // V2 has updated WIFF->mzML including machine serial #
                     @"TestTutorial\GroupedStudiesViews.zip"
                 };
             RunFunctionalTest();
@@ -98,9 +97,9 @@ namespace pwiz.SkylineTestTutorial
 
             SetTransitionClipboardText(new[] {0, 1, 7, 8});
 
+            PasteTransitionListSkipColumnSelect();
             RunUI(() =>
             {
-                SkylineWindow.Paste();
                 SkylineWindow.CollapsePeptides();
             });
             PauseForScreenShot();
@@ -126,7 +125,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                         editIrtCalcDlg.CalcName = irtCalcName;
-                        editIrtCalcDlg.CreateDatabase(GetOcRawTestPath("iRT-OC-Study.irtdb")); // Not L10N
+                        editIrtCalcDlg.CreateDatabase(GetTestPath("iRT-OC-Study.irtdb")); // Not L10N
                         SetTransitionClipboardText(new[] {15, 17}, c =>
                             {
                                 if (string.Equals(c[8], "protein_name"))
@@ -201,17 +200,20 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
             }
 
-            RunUI(() => SkylineWindow.SaveDocument(GetOcRawTestPath("OC-study.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(GetTestPath("OC-study.sky")));
 
             // Importing Data
             ImportResultsFiles(GetOcRawTestPath(), ExtAbWiff,
                 IsFullData ? "R201217" : "R201217_plasma_revision_A", true);
             WaitForCondition(5*60*1000, () =>
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForDocumentLoaded();
+
             ImportResultsFiles(GetOcRawTestPath(), ExtAbWiff,
                 IsFullData ? "R201203" : "R201203_plasma_revision_F", true);
             WaitForCondition(2*60*1000, () =>
                 SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForDocumentLoaded();
 
             PauseForScreenShot();
         }

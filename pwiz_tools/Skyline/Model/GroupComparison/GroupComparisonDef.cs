@@ -43,6 +43,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         public GroupComparisonDef(string name) : base(name)
         {
             NormalizationMethod = NormalizationMethod.NONE;
+            SummarizationMethod = SummarizationMethod.AVERAGING;
+            ConfidenceLevelTimes100 = 95;
+            ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY;
         }
 
         [Track]

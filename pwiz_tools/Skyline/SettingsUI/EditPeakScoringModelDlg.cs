@@ -234,8 +234,7 @@ namespace pwiz.Skyline.SettingsUI
 
 
             // Need to regenerate the targets and decoys if the set of calculators has changed (backward compatibility)
-            if (!PeakScoringModelSpec.AreSameCalculators(peakScoringModel.PeakFeatureCalculators, 
-                                                         _targetDecoyGenerator.FeatureCalculators))
+            if (!peakScoringModel.PeakFeatureCalculators.Equals(_targetDecoyGenerator.FeatureCalculators))
             {
                 if (!SetScoringModel(this, peakScoringModel))
                     return;
@@ -243,15 +242,15 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             // Get scores for target and decoy groups.
-            List<IList<float[]>> targetTransitionGroups;
-            List<IList<float[]>> decoyTransitionGroups;
+            List<IList<FeatureScores>> targetTransitionGroups;
+            List<IList<FeatureScores>> decoyTransitionGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetTransitionGroups, out decoyTransitionGroups);
             // If decoy box is checked and no decoys, throw an error
             if (decoyCheckBox.Checked && decoyTransitionGroups.Count == 0)
                 throw new InvalidDataException(string.Format(Resources.EditPeakScoringModelDlg_TrainModel_There_are_no_decoy_peptides_in_the_current_document__Uncheck_the_Use_Decoys_Box_));
             // Use decoys for training only if decoy box is checked
             if (!decoyCheckBox.Checked)
-                decoyTransitionGroups = new List<IList<float[]>>();
+                decoyTransitionGroups = new List<IList<FeatureScores>>();
 
             // Set intial weights based on previous model (with NaN's reset to 0)
             var initialWeights = new double[peakScoringModel.PeakFeatureCalculators.Count];
@@ -384,11 +383,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public static bool IsUnknown(double d)
-        {
-            return (double.IsNaN(d) || double.IsInfinity(d));
-        }
-
         /// <summary>
         /// Has this weight been assigned a score opposite to that expected in its definition?
         /// </summary>
@@ -406,7 +400,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private static void ProcessScores(double score, ref double min, ref double max, ref int countUnknownScores)
         {
-            if (IsUnknown(score))
+            if (TargetDecoyGenerator.IsUnknown(score))
                 countUnknownScores++;
             else
             {
@@ -684,10 +678,7 @@ namespace pwiz.Skyline.SettingsUI
             ClearGraphPane(graphPane);
 
             HistogramGroup modelHistograms;
-            HistogramGroup pHistograms;
-            HistogramGroup qHistograms;
-            PointPairList nullDensity;
-            GetPoints(_selectedCalculator, out modelHistograms, out pHistograms, out qHistograms, out nullDensity);
+            GetPoints(_selectedCalculator, out modelHistograms, out _, out _, out _);
             var targetPoints = modelHistograms.BinGroups[0];
             var decoyPoints = modelHistograms.BinGroups[1];
             var secondBestPoints = modelHistograms.BinGroups[2];
@@ -768,10 +759,15 @@ namespace pwiz.Skyline.SettingsUI
             var targetScores = new List<double>(_targetDecoyGenerator.TargetCount);
             var decoyScores = new List<double>(_targetDecoyGenerator.DecoyCount);
             var secondBestScores = new List<double>(_targetDecoyGenerator.TargetCount);
-            // Invert the score if its "natural" sign as specified in the calculator's definition is negative
-            bool invert = selectedCalculator != -1 && _peakScoringModel.PeakFeatureCalculators[selectedCalculator].IsReversedScore;
+            if (selectedCalculator == -1)
+            {
+                _targetDecoyGenerator.GetScores(calculatorParameters, targetScores, decoyScores, secondBestScores);
+            }
+            else
+            {
+                _targetDecoyGenerator.GetScoresForCalculator(selectedCalculator, targetScores, decoyScores, secondBestScores);
+            }
             // Evaluate each score on the best peak according to that score (either individual calculator or composite)
-            _targetDecoyGenerator.GetScores(calculatorParameters, calculatorParameters, targetScores, decoyScores, secondBestScores, invert);
             var scoreGroups = new List<List<double>> {targetScores, decoyScores, secondBestScores};
             scoreHistograms = new HistogramGroup(scoreGroups);
             if (selectedCalculator == -1)
@@ -927,7 +923,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 foreach (var score in Scores)
                 {
-                    if (IsUnknown(score))
+                    if (TargetDecoyGenerator.IsUnknown(score))
                         continue;
                     int bin = Math.Max(0, Math.Min(listBins.Count - 1, (int)((score - min) / binWidth)));
                     listBins[bin].Y++;
@@ -950,7 +946,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private int GetUnsortedIndex(int sortedIndex)
         {
-            return _peakScoringModel.PeakFeatureCalculators.IndexOf(p => p.Name == PeakCalculatorWeights[sortedIndex].Name);
+            return _peakScoringModel.PeakFeatureCalculators.IndexOf(PeakCalculatorWeights[sortedIndex].Calculator);
         }
 
         private void UpdateCalculatorGrid()
@@ -974,9 +970,16 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var cell = gridPeakCalculators.Rows[row].Cells[i];
                     cell.Style = new DataGridViewCellStyle();
-                    cell.ReadOnly = false;
-                    cell.ToolTipText = string.Empty;
+                    if (i == IsEnabled.Index)
+                    {
+                        cell.ReadOnly = false;
+                    }
+                    cell.ToolTipText = null;
                 }
+
+                var calculator = PeakScoringModel.PeakFeatureCalculators[unsortedIndex];
+                gridPeakCalculators.Rows[row].Cells[PeakCalculatorName.Index].ToolTipText =
+                    FeatureTooltips.ResourceManager.GetString(calculator.HeaderName);
                 // Show row in red if weight is the wrong sign
                 if (IsWrongSignWeight(row))
                 {
@@ -984,7 +987,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = warningStyle;
-                        cell.ToolTipText = Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
+                        cell.ToolTipText = cell.ToolTipText ?? Resources.EditPeakScoringModelDlg_OnDataBindingComplete_Unexpected_Coefficient_Sign;
                     }
                 }
                 // Show row in disabled style if the score is not eligible
@@ -994,7 +997,10 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         var cell = gridPeakCalculators.Rows[row].Cells[i];
                         cell.Style = inactiveStyle;
-                        cell.ReadOnly = true;
+                        if (i == IsEnabled.Index)
+                        {
+                            cell.ReadOnly = true;
+                        }
                     }
                 }
             }
@@ -1216,18 +1222,22 @@ namespace pwiz.Skyline.SettingsUI
 
         public int GetTargetCount()
         {
-            List<IList<float[]>> targetGroups, decoyGroups;
+            List<IList<FeatureScores>> targetGroups, decoyGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
             return targetGroups.Count;
         }
 
         public int GetDecoyCount()
         {
-            List<IList<float[]>> targetGroups, decoyGroups;
+            List<IList<FeatureScores>> targetGroups, decoyGroups;
             _targetDecoyGenerator.GetTransitionGroups(out targetGroups, out decoyGroups);
             return decoyGroups.Count;
         }
 
+        public bool SelectedCalculatorHasUnknownScores
+        {
+            get { return _hasUnknownScores; }
+        }
         #endregion
 
         private class PeakCalculatorGridViewDriver : SimpleGridViewDriver<PeakCalculatorWeight>
@@ -1239,7 +1249,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var calculators = PeakFeatureCalculator.Calculators.ToArray();
                 for (int i = 0; i < calculators.Length; i++) 
-                    Items.Add(new PeakCalculatorWeight(calculators[i].Name, null, null, true));
+                    Items.Add(new PeakCalculatorWeight(calculators[i], null, null, true));
             }
 
             protected override void DoPaste()

@@ -45,7 +45,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
         [TestMethod]
         public void TestThermoFAIMS()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/perftests/PerfThermoFAIMS.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfThermoFAIMS.zip");
             TestFilesPersistent = new[] { "032818_Lumos_FAIMS_SILAC_3CVstep_fx_03.pdResult", "032818_Lumos_FAIMS_SILAC_3CVstep_fx_03.raw" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             RunFunctionalTest();
         }
@@ -120,7 +120,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // Add all peptides
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides);
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            using (new CheckDocumentState(1, 8756, 10988, 43894))
+            using (new CheckDocumentState(1, 8433, 10882, 43484))
             {
                 RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
                 {
@@ -145,11 +145,11 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // build the document library.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
-                Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton());
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsEarlyFinishButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton()));
             WaitForClosedForm(importPeptideSearchDlg);
 
             VerifyDocumentLibraryBuilt(documentFile);

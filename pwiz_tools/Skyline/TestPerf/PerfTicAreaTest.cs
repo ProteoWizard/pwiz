@@ -38,7 +38,7 @@ namespace TestPerf
         {
             TestFilesZipPaths = new[]
             {
-                "https://skyline.gs.washington.edu/perftests/PerfTicAreaTest.zip"
+                GetPerfTestDataURL(@"PerfTicAreaTest.zip")
             };
             RunFunctionalTest();
         }

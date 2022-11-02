@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -155,10 +154,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 sequences.Add(new Tuple<string, bool>(nodePep.ModifiedTarget.DisplayName, nodePep.IsProteomic));
             var uniquePrefixGenerator = new UniquePrefixGenerator(sequences, 3);
             var textLabels = new List<string>();
-            var rows = _bindingListSource.OfType<RowItem>()
-                .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.FoldChangeRow>()
-                .ToArray();
+            var rows = GetFoldChangeRows(_bindingListSource).ToArray();
             bool showLabelType = rows.Select(row => row.IsotopeLabelType).Distinct().Count() > 1;
             bool showMsLevel = rows.Select(row => row.MsLevel).Distinct().Count() > 1;
             bool showGroup = rows.Select(row => row.Group).Distinct().Count() > 1;

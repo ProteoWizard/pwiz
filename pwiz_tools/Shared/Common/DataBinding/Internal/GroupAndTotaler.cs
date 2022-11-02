@@ -71,9 +71,7 @@ namespace pwiz.Common.DataBinding.Internal
                 var rowValues = rowGroup.Key.ToList();
                 foreach (RowItem row in rowGroup)
                 {
-                    // ReSharper disable AccessToForEachVariableInClosure
                     var columnHeader = ImmutableList.ValueOf(ColumnHeaders.Select(pd => pd.GetValue(row)));
-                    // ReSharper restore AccessToForEachVariableInClosure
                     int columnHeaderIndex;
                     if (!columnHeaders.TryGetValue(columnHeader, out columnHeaderIndex))
                     {
@@ -88,6 +86,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                     for (int iAggColumn = 0; iAggColumn < AggregateColumns.Count; iAggColumn++)
                     {
+                        CancellationToken.ThrowIfCancellationRequested();
                         var value = AggregateColumns[iAggColumn].Item1.GetValue(row);
                         if (value != null)
                         {
@@ -121,22 +120,27 @@ namespace pwiz.Common.DataBinding.Internal
             PropertyDescriptor originalPropertyDescriptor, IColumnCaption caption, AggregateOperation aggregateOperation)
         {
             IColumnCaption qualifiedCaption;
+            PivotedColumnId pivotedColumnId = null;
             if (columnHeaderKey.Count == 0)
             {
                 qualifiedCaption = caption;
             }
             else
             {
-                qualifiedCaption = new CaptionComponentList(columnHeaderKey.Concat(new[] {caption})
-                    .Select(CaptionComponentList.MakeCaptionComponent));
+                var pivotCaptionComponents = columnHeaderKey.Select(CaptionComponentList.MakeCaptionComponent).ToList();
+                qualifiedCaption = new CaptionComponentList(pivotCaptionComponents.Append(caption));
+                pivotedColumnId = new PivotedColumnId(columnHeaderKey,
+                    new CaptionComponentList(pivotCaptionComponents),
+                    caption,
+                    caption);
             }
             var attributes = DataSchema.GetAggregateAttributes(originalPropertyDescriptor, aggregateOperation).ToArray();
             return new IndexedPropertyDescriptor(DataSchema, index, aggregateOperation.GetPropertyType(originalPropertyDescriptor.PropertyType), 
-                qualifiedCaption, attributes);
+                qualifiedCaption, pivotedColumnId, attributes);
         }
 
-        public static PivotedRows GroupAndTotal(CancellationToken cancellationToken, DataSchema dataSchema,
-            PivotSpec pivotSpec, PivotedRows input)
+        public static ReportResults GroupAndTotal(CancellationToken cancellationToken, DataSchema dataSchema,
+            PivotSpec pivotSpec, ReportResults input)
         {
             if (pivotSpec.IsEmpty)
             {
@@ -145,7 +149,7 @@ namespace pwiz.Common.DataBinding.Internal
             var groupAndTotaller = new GroupAndTotaler(cancellationToken, dataSchema, pivotSpec, input.ItemProperties);
             var newProperties = new List<DataPropertyDescriptor>();
             var newRows = ImmutableList.ValueOf(groupAndTotaller.GroupAndTotal(input.RowItems, newProperties));
-            return new PivotedRows(newRows, newProperties);
+            return new ReportResults(newRows, newProperties);
         }
     }
 }

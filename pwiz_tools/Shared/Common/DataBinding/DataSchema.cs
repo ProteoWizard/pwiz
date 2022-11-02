@@ -88,6 +88,7 @@ namespace pwiz.Common.DataBinding
             {
                 return new PropertyDescriptor[0];
             }
+
             var propertyDescriptors = new List<PropertyDescriptor>();
             foreach (PropertyDescriptor propertyDescriptor in TypeDescriptor.GetProperties(type))
             {

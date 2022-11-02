@@ -350,4 +350,16 @@
   <data name="NormalizationMethod_TIC_Total_Ion_Current" xml:space="preserve">
     <value>Total Ion Current</value>
   </data>
+  <data name="NormalizationMethod_GLOBAL_STANDARDS__0__Ratio_to_Global_Standards" xml:space="preserve">
+    <value>{0} Ratio to Global Standards</value>
+    <comment>Example: Peak Area Ratio to Global Standards</comment>
+  </data>
+  <data name="NormalizationMethod_TIC_TIC_Normalized__0_" xml:space="preserve">
+    <value>TIC Normalized {0}</value>
+    <comment>Example: TIC Normalized Peak Area</comment>
+  </data>
+  <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
+	  <value>Median Normalized {0}</value>
+      <comment>Example: Median Normalized Peak Area</comment>
+  </data>
 </root>

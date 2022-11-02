@@ -24,6 +24,7 @@
 #include "MSData.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "../analysis/spectrum_processing.hpp"
 
 
 using System::Exception;
@@ -741,6 +742,20 @@ void SpectrumList::setDataProcessing(DataProcessing^ dp)
     if (sl) sl->setDataProcessingPtr(CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, dp));
 }
 
+bool SpectrumList::benefitsFromWorkerThreads()
+{
+    auto slAsWrapper = boost::dynamic_pointer_cast<b::SpectrumListWrapper>(*base_);
+    if (slAsWrapper != nullptr)
+        return slAsWrapper->benefitsFromWorkerThreads();
+    else
+        return false;
+}
+
+// Currently only supported for Waters lockmass functions, as in msconvert with --ignoreCalibrationSpectra
+bool SpectrumList::calibrationSpectraAreOmitted()
+{
+    try {return (*base_)->calibrationSpectraAreOmitted();} CATCH_AND_FORWARD
+}
 
 SpectrumListSimple::SpectrumListSimple()
 : SpectrumList(new boost::shared_ptr<b::SpectrumList>(new b::SpectrumListSimple()))

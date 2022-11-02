@@ -74,8 +74,9 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(new []{TestFilesDir.GetTestPath("modless.pride.xml")});
-                importPeptideSearchDlg.ClickNextButton();
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
             WaitForDocumentLoaded();

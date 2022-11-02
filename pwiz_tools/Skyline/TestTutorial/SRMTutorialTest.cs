@@ -42,7 +42,6 @@ namespace pwiz.SkylineTestTutorial
     public class SrmTutorialTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestSrmTutorialLegacy()
         {
             //Set true to look at tutorial screenshots
@@ -272,7 +271,6 @@ namespace pwiz.SkylineTestTutorial
             {
                 buildLibraryDlg.LibraryPath = GetTestPath("Skyline");
                 buildLibraryDlg.LibraryName = "Mtb_hDP_20140210";
-                buildLibraryDlg.LibraryCutoff = 0.9;
             });
             PauseForScreenShot("Build Library Window", 2);
             RunUI(() =>
@@ -280,6 +278,8 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddDirectory(GetTestPath("Tutorial-3_Library"));
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
+            RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(0.9));
             PauseForScreenShot("Build Library Window Next", 2);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             RunUI(() =>
@@ -338,16 +338,21 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Edit Collision Energy Equation Window", 2);
             OkDialog(editCollisionEnergy, editCollisionEnergy.OkDialog);
             OkDialog(transitionSettings, transitionSettings.OkDialog);
-
+            
             SetExcelFileClipboardText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
                 false);
-            var insertTransitionDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() => insertTransitionDlg.IsMolecule = false); // Make sure it's ready to accept peptides, not small molecules
-            RunUI(insertTransitionDlg.PasteTransitions);
-            OkDialog(insertTransitionDlg, insertTransitionDlg.OkDialog);
+
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            string impliedLabeled = GetExcelFileText(GetTestPath("Tutorial-4_Parameters\\transition_list_for_CEO.xlsx"), "Sheet1", 3,
+                false);
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = impliedLabeled);
+            WaitForConditionUI(() => col4Dlg.AssociateProteinsPreviewCompleted); // Wait for initial associate proteins to complete
+
+            OkDialog(col4Dlg, col4Dlg.OkDialog);
 
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 10, 30, 30, 143);
 
+            
             var exportDlg3 = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             RunUI(() =>
             {
@@ -463,5 +468,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForDocumentLoaded();
             WaitForClosedForm<AllChromatogramsGraph>();
         }
+        
     }
 }

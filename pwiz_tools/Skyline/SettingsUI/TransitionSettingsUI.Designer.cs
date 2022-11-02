@@ -111,7 +111,7 @@
             this.textMaxTrans = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.textMzMatchTolerance = new System.Windows.Forms.TextBox();
-            this.label16 = new System.Windows.Forms.Label();
+            this.lblMethodMatchTolerance = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.textMaxMz = new System.Windows.Forms.TextBox();
@@ -122,7 +122,6 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -560,6 +559,7 @@
             this.radioAllAndFiltered.Name = "radioAllAndFiltered";
             this.radioAllAndFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioAllAndFiltered, resources.GetString("radioAllAndFiltered.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioAllAndFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
@@ -568,6 +568,7 @@
             this.radioFiltered.Name = "radioFiltered";
             this.radioFiltered.TabStop = true;
             this.helpTip.SetToolTip(this.radioFiltered, resources.GetString("radioFiltered.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioFiltered, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -576,6 +577,7 @@
             this.radioAll.Name = "radioAll";
             this.radioAll.TabStop = true;
             this.helpTip.SetToolTip(this.radioAll, resources.GetString("radioAll.ToolTip"));
+            this.modeUIHandler.SetUIMode(this.radioAll, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14
@@ -631,7 +633,7 @@
             this.tabInstrument.Controls.Add(this.textMaxTrans);
             this.tabInstrument.Controls.Add(this.label17);
             this.tabInstrument.Controls.Add(this.textMzMatchTolerance);
-            this.tabInstrument.Controls.Add(this.label16);
+            this.tabInstrument.Controls.Add(this.lblMethodMatchTolerance);
             this.tabInstrument.Controls.Add(this.label10);
             this.tabInstrument.Controls.Add(this.label11);
             this.tabInstrument.Controls.Add(this.textMaxMz);
@@ -646,6 +648,7 @@
             this.cbxTriggeredAcquisition.Name = "cbxTriggeredAcquisition";
             this.helpTip.SetToolTip(this.cbxTriggeredAcquisition, resources.GetString("cbxTriggeredAcquisition.ToolTip"));
             this.cbxTriggeredAcquisition.UseVisualStyleBackColor = true;
+            this.cbxTriggeredAcquisition.CheckedChanged += new System.EventHandler(this.cbxTriggeredAcquisition_CheckedChanged);
             // 
             // textMaxInclusions
             // 
@@ -729,10 +732,10 @@
             this.textMzMatchTolerance.Name = "textMzMatchTolerance";
             this.helpTip.SetToolTip(this.textMzMatchTolerance, resources.GetString("textMzMatchTolerance.ToolTip"));
             // 
-            // label16
+            // lblMethodMatchTolerance
             // 
-            resources.ApplyResources(this.label16, "label16");
-            this.label16.Name = "label16";
+            resources.ApplyResources(this.lblMethodMatchTolerance, "lblMethodMatchTolerance");
+            this.lblMethodMatchTolerance.Name = "lblMethodMatchTolerance";
             // 
             // label10
             // 
@@ -775,6 +778,7 @@
             this.ionMobilityFilteringControl.IsUseSpectralLibraryIonMobilities = false;
             resources.ApplyResources(this.ionMobilityFilteringControl, "ionMobilityFilteringControl");
             this.ionMobilityFilteringControl.Name = "ionMobilityFilteringControl";
+            this.ionMobilityFilteringControl.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
             // helpTip
             // 
@@ -806,7 +810,6 @@
             this.MinimizeBox = false;
             this.Name = "TransitionSettingsUI";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabGeneral.ResumeLayout(false);
             this.tabGeneral.PerformLayout();
@@ -875,7 +878,7 @@
         private System.Windows.Forms.TextBox textIonCount;
         private System.Windows.Forms.CheckBox cbLibraryPick;
         private System.Windows.Forms.Panel panelPick;
-        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label lblMethodMatchTolerance;
         private System.Windows.Forms.TextBox textMzMatchTolerance;
         private System.Windows.Forms.ComboBox comboOptimizeType;
         private System.Windows.Forms.CheckBox cbUseOptimized;

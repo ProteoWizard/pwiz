@@ -36,20 +36,25 @@ namespace pwiz.Skyline.Util
         private string[] _originalTextLabels;
         private string _maxLengthLabel;
 
-        public AxisLabelScaler(GraphPane graphPane)
+        public AxisLabelScaler(GraphPane graphPane) : this (graphPane, graphPane.XAxis)
+        {
+        }
+
+        public AxisLabelScaler(GraphPane graphPane, Axis axis)
         {
             _graphPane = graphPane;
+            Axis = axis;
         }
 
         public int FirstDataIndex { get; set; }
         public bool IsRepeatRemovalAllowed { get; set; }
 
-        public RectangleF Rect
+        public bool AxisIsHorizontal
         {
-            get { return _graphPane.Rect; }
+            get { return Axis is XAxis || Axis is X2Axis; }
         }
 
-        public XAxis XAxis { get { return _graphPane.XAxis; } }
+        public Axis Axis { get; private set; }
         public Chart Chart { get { return _graphPane.Chart; } }
 
         public string[] OriginalTextLabels
@@ -65,71 +70,94 @@ namespace pwiz.Skyline.Util
         public void ScaleAxisLabels()
         {
             int countLabels = 0;
-            if (XAxis.Scale.TextLabels != null)
+            if (Axis.Scale.TextLabels != null)
             {
-                countLabels = XAxis.Scale.TextLabels.Length;
+                countLabels = Axis.Scale.TextLabels.Length;
 
                 // Reset the text labels to their original values.
-                if (_reducedTextLabels != null && ArrayUtil.ReferencesEqual(XAxis.Scale.TextLabels, _reducedTextLabels))
+                if (_reducedTextLabels != null && ArrayUtil.ReferencesEqual(Axis.Scale.TextLabels, _reducedTextLabels))
                 {
-                    Array.Copy(_originalTextLabels, XAxis.Scale.TextLabels, _originalTextLabels.Length);
+                    Array.Copy(_originalTextLabels, Axis.Scale.TextLabels, _originalTextLabels.Length);
                 }
                 // Keep the original text.
-                else if (!ArrayUtil.ReferencesEqual(XAxis.Scale.TextLabels, _originalTextLabels))
+                else if (!ArrayUtil.ReferencesEqual(Axis.Scale.TextLabels, _originalTextLabels))
                 {
-                    OriginalTextLabels = XAxis.Scale.TextLabels.ToArray();
+                    OriginalTextLabels = Axis.Scale.TextLabels.ToArray();
                 }
             }
 
             _reducedTextLabels = null;
 
-            float dyAvailable = Rect.Height * MAX_HEIGHT_LABEL_PROPORTION;
-            float dxAvailable = Chart.Rect.Width / Math.Max(1, countLabels);
+            float depthAvailable = (AxisIsHorizontal ? _graphPane.Rect.Height : _graphPane.Rect.Width) * MAX_HEIGHT_LABEL_PROPORTION;
 
-            float dpAvailable = Math.Max(dxAvailable, dyAvailable);
+            var fontSpec = Axis.Scale.FontSpec;
 
-            var fontSpec = XAxis.Scale.FontSpec;
-
-            var originalTextCopy = XAxis.Scale.TextLabels != null ? _originalTextLabels.ToArray() : null;
+            var originalTextCopy = Axis.Scale.TextLabels != null ? _originalTextLabels.ToArray() : null;
             int pointSize;
             for (pointSize = (int)Settings.Default.AreaFontSize; pointSize > 4; pointSize--)
             {
                 // Start over with the original labels and a smaller font
-                if (XAxis.Scale.TextLabels != null)
-                    XAxis.Scale.TextLabels = originalTextCopy;
+                if (Axis.Scale.TextLabels != null)
+                    Axis.Scale.TextLabels = originalTextCopy;
 
                 using (var font = new Font(fontSpec.Family, pointSize))
                 {
-                    // See if the original labels fit with this font
                     int maxWidth = _maxLengthLabel != null
-                        ? MaxWidth(font, new[] {_maxLengthLabel}, out _maxLengthLabel)
-                        : MaxWidth(font, XAxis.Scale.TextLabels, out _maxLengthLabel);
-
-                    if (maxWidth <= dpAvailable)
+                        ? MaxWidth(font, new[] { _maxLengthLabel }, out _maxLengthLabel)
+                        : MaxWidth(font, Axis.Scale.TextLabels, out _maxLengthLabel);
+                    if (AxisIsHorizontal)
                     {
-                        ScaleToWidth(maxWidth, dxAvailable);
-                        break;
+                        float lengthPerLabel = Chart.Rect.Width / Math.Max(1, countLabels);
+                        float dpAvailable = Math.Max(lengthPerLabel, depthAvailable);
+                        if (maxWidth <= dpAvailable)
+                        {
+                            ScaleToWidth(maxWidth, lengthPerLabel);
+                            break;
+                        }
+
+                        if (IsRepeatRemovalAllowed)
+                        {
+                            // See if they can be shortened to fit horizontally or vertically
+                            if (RemoveRepeatedLabelText(font, lengthPerLabel, lengthPerLabel) ||
+                                RemoveRepeatedLabelText(font, depthAvailable, lengthPerLabel))
+                            {
+                                break;
+                            }
+                            originalTextCopy = _originalTextLabels.ToArray();
+                        }
                     }
-
-                    if (IsRepeatRemovalAllowed)
+                    else
                     {
-                        // See if they can be shortened to fit horizontally or vertically
-                        if (RemoveRepeatedLabelText(font, dxAvailable, dxAvailable) ||
-                            RemoveRepeatedLabelText(font, dyAvailable, dxAvailable))
+                        if (maxWidth <= depthAvailable)
                         {
                             break;
                         }
-                        originalTextCopy = _originalTextLabels.ToArray();
+                        if (IsRepeatRemovalAllowed)
+                        {
+                            // See if they can be shortened to fit horizontally or vertically
+                            if (RemoveRepeatedLabelText(font, depthAvailable, depthAvailable))
+                            {
+                                break;
+                            }
+                            originalTextCopy = _originalTextLabels.ToArray();
+                        }
                     }
                 }
             }
 
-            if (XAxis.Scale.TextLabels != null && !ArrayUtil.ReferencesEqual(XAxis.Scale.TextLabels, _originalTextLabels))
+            if (Axis.Scale.TextLabels != null && !ArrayUtil.ReferencesEqual(Axis.Scale.TextLabels, _originalTextLabels))
             {
-                _reducedTextLabels = XAxis.Scale.TextLabels.ToArray();
+                _reducedTextLabels = Axis.Scale.TextLabels.ToArray();
             }
 
-            XAxis.Scale.FontSpec.Size = pointSize;
+            try
+            {
+                Axis.Scale.FontSpec.Size = pointSize;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(string.Format(@"Unable to set Axis.Scale.FontSpec.Size to {0} for AreaFontSize {1}", pointSize, Settings.Default.AreaFontSize), e);
+            }
         }
 
         private static int MaxWidth(Font font, IEnumerable<String> labels, out string maxString)
@@ -160,23 +188,23 @@ namespace pwiz.Skyline.Util
 
         private bool RemoveRepeatedLabelText(Font font, float dpAvailable, float dxAvailable)
         {
-            var startLabels = XAxis.Scale.TextLabels.ToArray();
+            var startLabels = Axis.Scale.TextLabels.ToArray();
             int maxWidth = RemoveRepeatedLabelText(font, dpAvailable);
             if (maxWidth <= dpAvailable)
             {
                 ScaleToWidth(maxWidth, dxAvailable);
                 return true;
             }
-            XAxis.Scale.TextLabels = startLabels;
+            Axis.Scale.TextLabels = startLabels;
             return false;
         }
 
         private int RemoveRepeatedLabelText(Font font, float dpAvailable)
         {
-            while (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
+            while (Helpers.RemoveRepeatedLabelText(Axis.Scale.TextLabels, FirstDataIndex))
             {
                 string maxLabel;
-                int maxWidth = MaxWidth(font, XAxis.Scale.TextLabels, out maxLabel);
+                int maxWidth = MaxWidth(font, Axis.Scale.TextLabels, out maxLabel);
                 if (maxWidth <= dpAvailable)
                 {
                     return maxWidth;
@@ -188,15 +216,15 @@ namespace pwiz.Skyline.Util
 
         private void ScaleToWidth(float textWidth, float dxAvailable)
         {
-            if (textWidth > dxAvailable)
+            if (AxisIsHorizontal && textWidth > dxAvailable)
             {
-                XAxis.Scale.FontSpec.Angle = 90;
-                XAxis.Scale.Align = AlignP.Inside;
+                Axis.Scale.FontSpec.Angle = 90;
+                Axis.Scale.Align = AlignP.Inside;
             }
             else
             {
-                XAxis.Scale.FontSpec.Angle = 0;
-                XAxis.Scale.Align = AlignP.Center;
+                Axis.Scale.FontSpec.Angle = AxisIsHorizontal ? 0 : 90;
+                Axis.Scale.Align = AlignP.Center;
             }
         }
     }

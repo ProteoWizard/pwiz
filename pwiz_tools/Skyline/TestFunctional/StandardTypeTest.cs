@@ -62,9 +62,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void RunTestStandardType(bool asSmallMolecules)
         {
-            if (asSmallMolecules && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules && SkipSmallMoleculeTestVersions())
             {
-                System.Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -254,9 +253,14 @@ namespace pwiz.SkylineTestFunctional
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var editReportListDlg = ShowDialog<ManageViewsForm>(exportReportDlg.EditList);
             var viewEditor = ShowDialog<ViewEditor>(editReportListDlg.AddView);
-            var documentationViewer = ShowDialog<DocumentationViewer>(() => viewEditor.ShowColumnDocumentation(true));
-            Assert.IsNotNull(documentationViewer);
-            OkDialog(documentationViewer, documentationViewer.Close);
+
+            // don't launch browser when running as a service under AlwaysUp
+            if (System.IO.Directory.GetCurrentDirectory().Equals(System.Environment.SystemDirectory, System.StringComparison.CurrentCultureIgnoreCase))
+            {
+                var documentationViewer = ShowDialog<DocumentationViewer>(() => viewEditor.ShowColumnDocumentation(true));
+                Assert.IsNotNull(documentationViewer);
+                OkDialog(documentationViewer, documentationViewer.Close);
+            }
 
             var columnsToAdd = new[]
                     {
@@ -344,9 +348,9 @@ namespace pwiz.SkylineTestFunctional
                                 string labelType = row.Cells[iLabelType].Value.ToString();
                                 float precursorRatio = (float)(double)row.Cells[iPrecRatio].Value;
                                 if (string.Equals(labelType, IsotopeLabelType.light.Name))
-                                    Assert.AreEqual(peptideLightRatio, precursorRatio);
+                                    Assert.AreEqual(peptideLightRatio, precursorRatio, .000001);
                                 else
-                                    Assert.AreEqual(peptideHeavyRatio, precursorRatio);
+                                    Assert.AreEqual(peptideHeavyRatio.Value, precursorRatio, .000001);
                                 if (iPeptide == SELECTED_PEPTIDE_INDEX)
                                 {
                                     Assert.AreEqual(lightValues[i], peptideLightRatio);

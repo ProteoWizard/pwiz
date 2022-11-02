@@ -30,7 +30,7 @@ namespace AutoQC
 
     class AcquisitionTimeFileStatus : IResultFileStatus
     {
-        // Expected aquisition time in minutes. This is how long we will wait till we consider the file ready for import.
+        // Expected acquisition time in minutes. This is how long we will wait till we consider the file ready for import.
         private readonly int _acquisitionTime;
 
         public AcquisitionTimeFileStatus(int acquisitionTime)

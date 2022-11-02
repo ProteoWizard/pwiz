@@ -46,9 +46,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestDemuxAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -57,31 +56,31 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoTestDemux(bool asSmallMolecules)
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPathMsx = testFilesDir.GetTestPath("MsxTest.sky");
-            string dataPathMsx = testFilesDir.GetTestPath("MsxTest.mzML");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPathMsx = TestFilesDir.GetTestPath("MsxTest.sky");
+            string dataPathMsx = TestFilesDir.GetTestPath("MsxTest.mzML");
             string cachePathMsx = ChromatogramCache.FinalPathForName(docPathMsx, null);
             FileEx.SafeDelete(cachePathMsx);
             SrmDocument docMsx = ResultsUtil.DeserializeDocument(docPathMsx);
             if (asSmallMolecules)
             {
                 var refine = new RefinementSettings();
-                docMsx = refine.ConvertToSmallMolecules(docMsx, testFilesDir.FullPath);
+                docMsx = refine.ConvertToSmallMolecules(docMsx, TestFilesDir.FullPath);
             }
             var fullScanInitialMsx = docMsx.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitialMsx.IsEnabledMsMs);
             
             TestMsx(docMsx, dataPathMsx);
 
-            string docPathOverlap = testFilesDir.GetTestPath("OverlapTest.sky");
-            string dataPathOverlap = testFilesDir.GetTestPath("OverlapTest.mzML");
+            string docPathOverlap = TestFilesDir.GetTestPath("OverlapTest.sky");
+            string dataPathOverlap = TestFilesDir.GetTestPath("OverlapTest.mzML");
             string cachePathOverlap = ChromatogramCache.FinalPathForName(docPathOverlap, null);
             FileEx.SafeDelete(cachePathOverlap);
             SrmDocument docOverlap = ResultsUtil.DeserializeDocument(docPathOverlap);
             if (asSmallMolecules)
             {
                 var refine = new RefinementSettings();
-                docOverlap = refine.ConvertToSmallMolecules(docOverlap, testFilesDir.FullPath);
+                docOverlap = refine.ConvertToSmallMolecules(docOverlap, TestFilesDir.FullPath);
             }
             var fullScanInitialOverlap = docMsx.Settings.TransitionSettings.FullScan;
             Assert.IsTrue(fullScanInitialOverlap.IsEnabledMsMs);

@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Threading;
+
 namespace pwiz.Common.SystemUtil
 {
     public enum UpdateProgressResponse { normal, cancel, option1, option2 }
@@ -47,9 +50,19 @@ namespace pwiz.Common.SystemUtil
 
     public class SilentProgressMonitor : IProgressMonitor
     {
+        public SilentProgressMonitor() : this(CancellationToken.None) {}
+        public SilentProgressMonitor(CancellationToken cancellationToken)
+        {
+            CancellationToken = cancellationToken;
+        }
+
+        public CancellationToken CancellationToken
+        {
+            get;
+        }
         public bool IsCanceled
         {
-            get { return false; }
+            get { return CancellationToken.IsCancellationRequested; }
         }
 
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)

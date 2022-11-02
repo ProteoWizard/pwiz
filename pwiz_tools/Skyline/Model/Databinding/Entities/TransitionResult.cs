@@ -19,9 +19,11 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
@@ -32,17 +34,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [AnnotationTarget(AnnotationDef.AnnotationTarget.transition_result)]
     public class TransitionResult : Result
     {
-        private readonly CachedValue<TransitionChromInfo> _chromInfo;
-        private readonly CachedValue<Chromatogram> _chromatogram;
+        private readonly CachedValues _cachedValues = new CachedValues();
         public TransitionResult(Transition transition, ResultFile resultFile) : base(transition, resultFile)
         {
-            _chromInfo = CachedValue.Create(DataSchema, () => GetResultFile().FindChromInfo(transition.DocNode.Results));
-            _chromatogram = CachedValue.Create(DataSchema, 
-                () => new Chromatogram(new ChromatogramGroup(PrecursorResult), Transition));
         }
 
         [Browsable(false)]
-        public TransitionChromInfo ChromInfo { get { return _chromInfo.Value; } }
+        public TransitionChromInfo ChromInfo { get { return _cachedValues.GetValue(this); } }
 
         public void ChangeChromInfo(EditDescription editDescription, Func<TransitionChromInfo, TransitionChromInfo> newChromInfo)
         {
@@ -64,7 +62,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? Background { get { return ChromInfo.IsEmpty ? (double?)null : ChromInfo.BackgroundArea; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
-        public double? AreaRatio { get { return ChromInfo.Ratio; } }
+        public double? AreaRatio 
+        {
+            get
+            {
+                var firstInternalStandard = DataSchema.NormalizedValueCalculator.RatioInternalStandardTypes.FirstOrDefault();
+                if (firstInternalStandard != null)
+                {
+                    return GetNormalizedArea(new NormalizationMethod.RatioToLabel(firstInternalStandard));
+                }
+                return GetNormalizedArea(NormalizationMethod.GLOBAL_STANDARDS);
+            }
+        }
         [Format(Formats.PEAK_AREA_NORMALIZED, NullValue = TextUtil.EXCEL_NA)]
         public double? AreaNormalized
         {
@@ -84,6 +93,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public int OptStep { get { return ChromInfo.OptimizationStep; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PointsAcrossPeak { get { return ChromInfo.PointsAcrossPeak; } }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? CycleTimeAcrossPeak { get { return (EndTime - StartTime) * 60 / PointsAcrossPeak; } }
 
         public bool Coeluting { get { return !ChromInfo.IsForcedIntegration; } }
 
@@ -99,7 +110,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public Chromatogram Chromatogram
         {
-            get { return _chromatogram.Value; }
+            get { return _cachedValues.GetValue1(this); }
         }
 
         [InvariantDisplayName("TransitionReplicateNote")]
@@ -111,6 +122,22 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 ChangeChromInfo(EditColumnDescription(nameof(Note), value),
                     chromInfo=>chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(value)));
+            }
+        }
+
+        public bool TransitionResultIsQuantitative
+        {
+            get
+            {
+                return Transition.DocNode.IsQuantitative(SrmDocument.Settings);
+            }
+        }
+
+        public bool TransitionResultIsMs1
+        {
+            get
+            {
+                return SrmDocument.Settings.GetChromSource(Transition.DocNode) == ChromSource.ms1;
             }
         }
 
@@ -153,6 +180,35 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override bool IsEmpty()
         {
             return ChromInfo.IsEmpty;
+        }
+
+        public double? GetNormalizedArea(NormalizationMethod normalizationMethod)
+        {
+            if (normalizationMethod == null)
+            {
+                return null;
+            }
+
+            return DataSchema.NormalizedValueCalculator.GetTransitionValue(normalizationMethod,
+                Transition.Precursor.Peptide.DocNode, Transition.Precursor.DocNode, Transition.DocNode, GetResultFile().Replicate.ReplicateIndex, ChromInfo);
+        }
+
+        private class CachedValues : CachedValues<TransitionResult, TransitionChromInfo, Chromatogram>
+        {
+            protected override SrmDocument GetDocument(TransitionResult owner)
+            {
+                return owner.SrmDocument;
+            }
+
+            protected override TransitionChromInfo CalculateValue(TransitionResult owner)
+            {
+                return owner.GetResultFile().FindChromInfo(owner.Transition.DocNode.Results);
+            }
+
+            protected override Chromatogram CalculateValue1(TransitionResult owner)
+            {
+                return new Chromatogram(new ChromatogramGroup(owner.PrecursorResult), owner.Transition);
+            }
         }
     }
 }

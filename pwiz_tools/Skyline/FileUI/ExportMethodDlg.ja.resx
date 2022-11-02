@@ -154,7 +154,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioSingle.ZOrder" xml:space="preserve">
-    <value>31</value>
+    <value>32</value>
   </data>
   <data name="radioProtein.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -185,7 +185,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioProtein.ZOrder" xml:space="preserve">
-    <value>30</value>
+    <value>31</value>
   </data>
   <data name="radioBuckets.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -215,7 +215,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;radioBuckets.ZOrder" xml:space="preserve">
-    <value>29</value>
+    <value>30</value>
   </data>
   <data name="textMaxTransitions.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 174</value>
@@ -240,7 +240,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textMaxTransitions.ZOrder" xml:space="preserve">
-    <value>28</value>
+    <value>29</value>
   </data>
   <data name="labelMaxTransitions.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -267,7 +267,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMaxTransitions.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>264, 41</value>
@@ -276,7 +276,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>34</value>
+    <value>33</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>キャンセル</value>
@@ -291,7 +291,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>26</value>
+    <value>27</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>264, 11</value>
@@ -300,7 +300,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
-    <value>33</value>
+    <value>32</value>
   </data>
   <data name="btnOk.Text" xml:space="preserve">
     <value>OK</value>
@@ -315,7 +315,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
-    <value>27</value>
+    <value>28</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -342,7 +342,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>25</value>
+    <value>26</value>
   </data>
   <data name="comboTargetType.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 319</value>
@@ -369,16 +369,16 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboTargetType.ZOrder" xml:space="preserve">
-    <value>24</value>
+    <value>25</value>
   </data>
   <data name="textRunLength.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 321</value>
+    <value>200, 321</value>
   </data>
   <data name="textRunLength.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="textRunLength.TabIndex" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>24</value>
   </data>
   <data name="textRunLength.ToolTip" xml:space="preserve">
     <value>分単位で表したグラジエント全体の実行時間であり、スケジュール化されていないThermoおよびWatersメソッドで必須です。</value>
@@ -396,7 +396,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textRunLength.ZOrder" xml:space="preserve">
-    <value>23</value>
+    <value>24</value>
   </data>
   <data name="textDwellTime.Location" type="System.Drawing.Point, System.Drawing">
     <value>359, 319</value>
@@ -405,7 +405,7 @@
     <value>100, 20</value>
   </data>
   <data name="textDwellTime.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
+    <value>25</value>
   </data>
   <data name="textDwellTime.ToolTip" xml:space="preserve">
     <value>ミリ秒で表したトランジション毎のドウェル時間であり、スケジュール化されていないAgilentおよびSCIEXメソッドで必要です。</value>
@@ -423,7 +423,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textDwellTime.ZOrder" xml:space="preserve">
-    <value>22</value>
+    <value>23</value>
   </data>
   <data name="labelDwellTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -435,7 +435,7 @@
     <value>80, 13</value>
   </data>
   <data name="labelDwellTime.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>23</value>
   </data>
   <data name="labelDwellTime.Text" xml:space="preserve">
     <value>取り込み時間 (ms)(&amp;D)：</value>
@@ -453,7 +453,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelDwellTime.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>22</value>
   </data>
   <data name="comboInstrument.Items" xml:space="preserve">
     <value>ABI</value>
@@ -489,7 +489,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboInstrument.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>21</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -516,7 +516,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>20</value>
   </data>
   <data name="labelTemplateFile.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -528,7 +528,7 @@
     <value>70, 13</value>
   </data>
   <data name="labelTemplateFile.TabIndex" type="System.Int32, mscorlib">
-    <value>30</value>
+    <value>29</value>
   </data>
   <data name="labelTemplateFile.Text" xml:space="preserve">
     <value>テンプレートファイル(&amp;E)：</value>
@@ -543,7 +543,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelTemplateFile.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>19</value>
   </data>
   <data name="textTemplateFile.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 407</value>
@@ -552,7 +552,7 @@
     <value>196, 20</value>
   </data>
   <data name="textTemplateFile.TabIndex" type="System.Int32, mscorlib">
-    <value>31</value>
+    <value>30</value>
   </data>
   <data name="textTemplateFile.ToolTip" xml:space="preserve">
     <value>エクスポートされたメソッドで使用される設定を含む既存のメソッドファイルです。
@@ -568,7 +568,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textTemplateFile.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="btnBrowseTemplate.Location" type="System.Drawing.Point, System.Drawing">
     <value>218, 406</value>
@@ -577,7 +577,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>75, 23</value>
   </data>
   <data name="btnBrowseTemplate.TabIndex" type="System.Int32, mscorlib">
-    <value>32</value>
+    <value>31</value>
   </data>
   <data name="btnBrowseTemplate.Text" xml:space="preserve">
     <value>参照(&amp;B)...</value>
@@ -592,7 +592,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBrowseTemplate.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="cbIgnoreProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -601,7 +601,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>False</value>
   </data>
   <data name="cbIgnoreProteins.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 117</value>
+    <value>200, 117</value>
   </data>
   <data name="cbIgnoreProteins.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 17</value>
@@ -626,7 +626,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbIgnoreProteins.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="cbEnergyRamp.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -696,7 +696,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>5, 6</value>
   </data>
   <data name="cbExportMultiQuant.Size" type="System.Drawing.Size, System.Drawing">
-    <value>152, 17</value>
+    <value>149, 17</value>
   </data>
   <data name="cbExportMultiQuant.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -737,7 +737,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>0</value>
   </data>
   <data name="cbUseStartAndEndRts.Text" xml:space="preserve">
-    <value>保持時間の開始時間と終了時間を使用します</value>
+    <value>保持時間の開始時間と終了時間を使用します(&amp;R)</value>
   </data>
   <data name="cbUseStartAndEndRts.ToolTip" xml:space="preserve">
     <value>保持時間とウィンドウではなく開始･終了時間をエクスポートします。</value>
@@ -791,7 +791,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboPolarityFilter.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="cbTune3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -830,7 +830,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>True</value>
   </data>
   <data name="cbSortByMz.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 93</value>
+    <value>200, 93</value>
   </data>
   <data name="cbSortByMz.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>1, 1, 1, 1</value>
@@ -857,7 +857,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbSortByMz.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="cbSlens.Location" type="System.Drawing.Point, System.Drawing">
     <value>538, 245</value>
@@ -866,7 +866,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>131, 24</value>
   </data>
   <data name="cbSlens.TabIndex" type="System.Int32, mscorlib">
-    <value>22</value>
+    <value>21</value>
   </data>
   <data name="cbSlens.Text" xml:space="preserve">
     <value>S-レンズ値を書き込む(&amp;L)</value>
@@ -885,7 +885,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbSlens.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="comboTuning.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 14</value>
@@ -956,7 +956,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>176, 31</value>
   </data>
   <data name="cbWriteCoV.TabIndex" type="System.Int32, mscorlib">
-    <value>28</value>
+    <value>27</value>
   </data>
   <data name="cbWriteCoV.Text" xml:space="preserve">
     <value>FAIMS CV値を書き込む</value>
@@ -977,7 +977,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbWriteCoV.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textPrimaryCount.Location" type="System.Drawing.Point, System.Drawing">
     <value>34, 4</value>
@@ -1003,6 +1003,75 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;textPrimaryCount.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="textMs1RepetitionTime.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 17</value>
+  </data>
+  <data name="textMs1RepetitionTime.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textMs1RepetitionTime.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="textMs1RepetitionTime.ToolTip" xml:space="preserve">
+    <value>PRMのMS/MSスペクトル間に散在しているMS1スペクトル取得間で許可されている最大時間 (デフォルトは10ms)</value>
+  </data>
+  <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
+    <value>textMs1RepetitionTime</value>
+  </data>
+  <data name="&gt;&gt;textMs1RepetitionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textMs1RepetitionTime.Parent" xml:space="preserve">
+    <value>panelBrukerTimsTof</value>
+  </data>
+  <data name="&gt;&gt;textMs1RepetitionTime.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textIntensityThresholdMin.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 94</value>
+  </data>
+  <data name="textIntensityThresholdMin.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 20</value>
+  </data>
+  <data name="textIntensityThresholdMin.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="textIntensityThresholdMin.ToolTip" xml:space="preserve">
+    <value>この最小値よりも低い強度閾値が最小値に設定されます。</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThresholdMin.Name" xml:space="preserve">
+    <value>textIntensityThresholdMin</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThresholdMin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThresholdMin.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThresholdMin.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textIntensityThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 47</value>
+  </data>
+  <data name="textIntensityThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 20</value>
+  </data>
+  <data name="textIntensityThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.Name" xml:space="preserve">
+    <value>textIntensityThreshold</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;textIntensityThreshold.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="comboOptimizing.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 250</value>
   </data>
@@ -1022,7 +1091,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboOptimizing.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="labelOptimizing.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1049,7 +1118,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelOptimizing.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="labelMethods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1076,7 +1145,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMethods.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="labelMethodNum.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1103,7 +1172,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelMethodNum.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="panelThermoColumns.Location" type="System.Drawing.Point, System.Drawing">
     <value>532, 335</value>
@@ -1112,7 +1181,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>138, 54</value>
   </data>
   <data name="panelThermoColumns.TabIndex" type="System.Int32, mscorlib">
-    <value>29</value>
+    <value>28</value>
   </data>
   <data name="panelThermoColumns.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1127,7 +1196,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoColumns.ZOrder" xml:space="preserve">
-    <value>33</value>
+    <value>34</value>
   </data>
   <data name="panelAbSciexTOF.Location" type="System.Drawing.Point, System.Drawing">
     <value>532, 289</value>
@@ -1136,7 +1205,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>155, 28</value>
   </data>
   <data name="panelAbSciexTOF.TabIndex" type="System.Int32, mscorlib">
-    <value>23</value>
+    <value>22</value>
   </data>
   <data name="panelAbSciexTOF.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1151,7 +1220,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAbSciexTOF.ZOrder" xml:space="preserve">
-    <value>32</value>
+    <value>33</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1208,7 +1277,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>2</value>
   </data>
   <data name="panelTriggered.Location" type="System.Drawing.Point, System.Drawing">
-    <value>332, 261</value>
+    <value>195, 261</value>
   </data>
   <data name="panelTriggered.Size" type="System.Drawing.Size, System.Drawing">
     <value>138, 27</value>
@@ -1229,7 +1298,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelTriggered.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <data name="panelThermoRt.Location" type="System.Drawing.Point, System.Drawing">
     <value>347, 226</value>
@@ -1253,7 +1322,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelThermoRt.ZOrder" xml:space="preserve">
-    <value>34</value>
+    <value>35</value>
   </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1304,7 +1373,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelSciexTune.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="panelWaters.Location" type="System.Drawing.Point, System.Drawing">
     <value>358, 163</value>
@@ -1328,7 +1397,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelWaters.ZOrder" xml:space="preserve">
-    <value>35</value>
+    <value>36</value>
   </data>
   <data name="labelPolarityFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1358,7 +1427,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelPolarityFilter.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="panelTuneColumns.Location" type="System.Drawing.Point, System.Drawing">
     <value>599, 150</value>
@@ -1370,7 +1439,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>156, 34</value>
   </data>
   <data name="panelTuneColumns.TabIndex" type="System.Int32, mscorlib">
-    <value>27</value>
+    <value>26</value>
   </data>
   <data name="panelTuneColumns.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -1385,7 +1454,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelTuneColumns.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="btnGraph.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 346</value>
@@ -1397,7 +1466,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>18</value>
   </data>
   <data name="btnGraph.Text" xml:space="preserve">
-    <value>グラフ化(&amp;G )...</value>
+    <value>グラフ化(&amp;G)…</value>
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>
@@ -1409,28 +1478,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnGraph.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="textMs1RepetitionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 17</value>
-  </data>
-  <data name="textMs1RepetitionTime.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textMs1RepetitionTime.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
-    <value>textMs1RepetitionTime</value>
-  </data>
-  <data name="&gt;&gt;textMs1RepetitionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textMs1RepetitionTime.Parent" xml:space="preserve">
-    <value>panelBrukerTimsTof</value>
-  </data>
-  <data name="&gt;&gt;textMs1RepetitionTime.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1481,6 +1529,135 @@ Skylineで制御されないトランジション値に対しては、単一の�
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelBrukerTimsTof.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="cbSureQuant.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbSureQuant.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 3</value>
+  </data>
+  <data name="cbSureQuant.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 17</value>
+  </data>
+  <data name="cbSureQuant.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="cbSureQuant.Text" xml:space="preserve">
+    <value>SureQuantメソッドの作成(&amp;Q)</value>
+  </data>
+  <data name="&gt;&gt;cbSureQuant.Name" xml:space="preserve">
+    <value>cbSureQuant</value>
+  </data>
+  <data name="&gt;&gt;cbSureQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbSureQuant.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;cbSureQuant.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="lblIntensityThresholdMin.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblIntensityThresholdMin.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 77</value>
+  </data>
+  <data name="lblIntensityThresholdMin.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 13</value>
+  </data>
+  <data name="lblIntensityThresholdMin.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblIntensityThresholdMin.Text" xml:space="preserve">
+    <value>最小強度閾値</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdMin.Name" xml:space="preserve">
+    <value>lblIntensityThresholdMin</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdMin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdMin.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdMin.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblIntensityThresholdType.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblIntensityThresholdType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>33, 49</value>
+  </data>
+  <data name="lblIntensityThresholdType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="lblIntensityThresholdType.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblIntensityThresholdType.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdType.Name" xml:space="preserve">
+    <value>lblIntensityThresholdType</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdType.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdType.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 30</value>
+  </data>
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>133, 13</value>
+  </data>
+  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>相対強度閾値</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="panelSureQuant.Location" type="System.Drawing.Point, System.Drawing">
+    <value>666, 12</value>
+  </data>
+  <data name="panelSureQuant.Size" type="System.Drawing.Size, System.Drawing">
+    <value>163, 122</value>
+  </data>
+  <data name="panelSureQuant.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.Name" xml:space="preserve">
+    <value>panelSureQuant</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panelSureQuant.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">

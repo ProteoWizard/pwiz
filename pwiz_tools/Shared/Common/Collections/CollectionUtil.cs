@@ -202,12 +202,29 @@ namespace pwiz.Common.Collections
             {
                 return 1;
             }
-            return Comparer.Default.Compare(o1.ToString(), o2.ToString());
+            // Compare using natural non-lexicographical order for easier human readability.
+            // Compatible with both numbers (which have priority) as well as letter
+            // e.g. (a1b,a20b,a3b --> a1b,a3b,a20b).
+            return NaturalComparer.Compare(o1.ToString(), o2.ToString()); 
         }
 
         public static Comparer<object> ColumnValueComparer
         {
             get { return Comparer<object>.Create(CompareColumnValues); }
+        }
+
+        public static Dictionary<TKey, TValue> SafeToDictionary<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> entries)
+        {
+            var dictionary = new Dictionary<TKey, TValue>();
+            foreach (var entry in entries)
+            {
+                if (!dictionary.ContainsKey(entry.Key))
+                {
+                    dictionary.Add(entry.Key, entry.Value);
+                }
+            }
+
+            return dictionary;
         }
     }
 }

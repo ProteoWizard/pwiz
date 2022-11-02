@@ -138,7 +138,11 @@ namespace pwiz.Common.DataBinding.Internal
                 }
                 else
                 {
-                    pivotKeys = rowItem.PivotKeys.Where(key => key.Last.Key.Equals(parent.PropertyPath)).ToArray();
+                    pivotKeys = rowItem.PivotKeys.Where(key => key.Last.Key.Equals(parent.PropertyPath)).ToList();
+                    if (pivotKeys.Count == 0)
+                    {
+                        pivotKeys = new PivotKey[] {null};
+                    }
                 }
                 foreach (var pivotKey in pivotKeys)
                 {
@@ -189,13 +193,13 @@ namespace pwiz.Common.DataBinding.Internal
             return filteredRows;
         }
 
-        public PivotedRows ExpandAndPivot(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems)
+        public ReportResults ExpandAndPivot(CancellationToken cancellationToken, IEnumerable<RowItem> rowItems)
         {
             var expandedItems = rowItems.SelectMany(rowItem => Expand(cancellationToken, rowItem, 0)).ToArray();
             var pivotedItems = expandedItems.Select(item => Pivot(cancellationToken, item));
             var filteredItems = Filter(cancellationToken, pivotedItems);
             var rows = ImmutableList.ValueOf(filteredItems);
-            var result = new PivotedRows(rows, GetItemProperties(rows));
+            var result = new ReportResults(rows, GetItemProperties(rows));
             if (ViewInfo.HasTotals)
             {
                 result = GroupAndTotal(cancellationToken, result);
@@ -203,7 +207,7 @@ namespace pwiz.Common.DataBinding.Internal
             return result;
         }
 
-        public PivotedRows GroupAndTotal(CancellationToken cancellationToken, PivotedRows pivotedRows)
+        public ReportResults GroupAndTotal(CancellationToken cancellationToken, ReportResults pivotedRows)
         {
             IDictionary<IList<Tuple<PropertyPath, PivotKey, object>>, List<GroupedRow>> allReportRows
                 = new Dictionary<IList<Tuple<PropertyPath, PivotKey, object>>, List<GroupedRow>>();
@@ -337,7 +341,7 @@ namespace pwiz.Common.DataBinding.Internal
                     }
                 }
             }
-            return new PivotedRows(allReportRows.SelectMany(entry=>entry.Value.Select(
+            return new ReportResults(allReportRows.SelectMany(entry=>entry.Value.Select(
                 reportRow=>new RowItem(reportRow))), 
                 reportItemProperties);
         }

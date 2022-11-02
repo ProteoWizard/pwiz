@@ -39,14 +39,14 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfNegativeIonDIA.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfNegativeIonDIA.zip");
             TestFilesPersistent = new[] { "neg.mzML", "pos.mzML" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
-            var testFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
+            TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, null, TestFilesPersistent);
 
-            RunUI(() => SkylineWindow.OpenFile(testFilesDir.GetTestPath("Test positive-negative.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Test positive-negative.sky")));
             WaitForDocumentLoaded();
 
-            ImportResultsFiles(TestFilesPersistent.Select(file => MsDataFileUri.Parse(testFilesDir.GetTestPath(file))));
+            ImportResultsFiles(TestFilesPersistent.Select(file => MsDataFileUri.Parse(TestFilesDir.GetTestPath(file))));
             
             // Verify that pos ion has a chromatogram for pos replicate, and neg ion has one for neg replicate
             var doc = WaitForDocumentLoaded(400000);
@@ -59,7 +59,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var index = pair.NodeGroup.PrecursorCharge < 0 ? negIndex : posIndex;
                 var message = "expected a chromatogram for precursor and for product in replicate \"" + results.Chromatograms[index].Name +"\"";
                 ChromatogramGroupInfo[] chromGroupInfo;
-                Assert.IsTrue(results.TryLoadChromatogram(index, pair.NodePep, pair.NodeGroup,tolerance, true, out chromGroupInfo), message) ;
+                Assert.IsTrue(results.TryLoadChromatogram(index, pair.NodePep, pair.NodeGroup, tolerance, out chromGroupInfo), message);
                 foreach (var chromGroup in chromGroupInfo)
                 {
                     Assert.AreEqual(2, chromGroup.TransitionPointSets.Count(), message);

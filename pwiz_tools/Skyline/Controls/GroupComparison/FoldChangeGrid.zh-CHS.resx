@@ -117,71 +117,70 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="databoundGridControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="databoundGridControl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 32</value>
-  </data>
-  <data name="databoundGridControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="databoundGridControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1114, 516</value>
-  </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="databoundGridControl.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;databoundGridControl.Name" xml:space="preserve">
-    <value>databoundGridControl</value>
-  </data>
-  <data name="&gt;&gt;databoundGridControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;databoundGridControl.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;databoundGridControl.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="toolButtonVolcano.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 29</value>
-  </data>
-  <data name="toolButtonVolcano.Text" xml:space="preserve">
-    <value>火山图</value>
-  </data>
   <data name="toolStripButtonChangeSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 29</value>
+    <value>36, 22</value>
   </data>
-  <data name="toolStripButtonChangeSettings.Text" xml:space="preserve">
-    <value>设置</value>
+  <data name="&gt;&gt;toolStripButtonChangeSettings.Name" xml:space="preserve">
+    <value>toolStripButtonChangeSettings</value>
   </data>
-  <data name="toolButtonShowGraph.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 29</value>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
   </data>
-  <data name="toolButtonShowGraph.Text" xml:space="preserve">
-    <value>条状图</value>
+  <data name="toolStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>743, 25</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonChangeSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>FoldChangeGrid</value>
   </data>
   <data name="toolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="toolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>1114, 32</value>
+  <data name="toolButtonShowGraph.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 22</value>
   </data>
-  <data name="toolStrip.TabIndex" type="System.Int32, mscorlib">
+  <data name="databoundGridControl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 25</value>
+  </data>
+  <data name="toolButtonVolcano.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 22</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>743, 356</value>
+  </data>
+  <data name="toolStripButtonChangeSettings.Text" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="&gt;&gt;toolStrip.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.Name" xml:space="preserve">
+    <value>databoundGridControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.GroupComparison.FoldChangeForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="toolStrip.Text" xml:space="preserve">
     <value>toolStrip</value>
   </data>
-  <data name="&gt;&gt;toolStrip.Name" xml:space="preserve">
-    <value>toolStrip</value>
+  <data name="&gt;&gt;databoundGridControl.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;toolButtonVolcano.Name" xml:space="preserve">
+    <value>toolButtonVolcano</value>
+  </data>
+  <data name="databoundGridControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>743, 331</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="databoundGridControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="&gt;&gt;toolStrip.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
@@ -189,43 +188,53 @@
   <data name="&gt;&gt;toolStrip.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;toolStrip.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
+  <data name="toolButtonShowGraph.Text" xml:space="preserve">
+    <value>条状图</value>
   </data>
-  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>1114, 548</value>
+  <data name="&gt;&gt;databoundGridControl.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="databoundGridControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="toolButtonVolcano.Text" xml:space="preserve">
+    <value>火山图</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>4, 5, 4, 5</value>
   </data>
-  <data name="&gt;&gt;toolButtonShowGraph.Name" xml:space="preserve">
-    <value>toolButtonShowGraph</value>
-  </data>
-  <data name="&gt;&gt;toolButtonShowGraph.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolButtonVolcano.Name" xml:space="preserve">
-    <value>toolButtonVolcano</value>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="toolStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
   </data>
   <data name="&gt;&gt;toolButtonVolcano.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonChangeSettings.Name" xml:space="preserve">
-    <value>toolStripButtonChangeSettings</value>
+  <data name="&gt;&gt;databoundGridControl.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonChangeSettings.Type" xml:space="preserve">
+  <data name="&gt;&gt;toolButtonShowGraph.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;$this.Name" xml:space="preserve">
-    <value>FoldChangeGrid</value>
+  <data name="&gt;&gt;toolButtonShowGraph.Name" xml:space="preserve">
+    <value>toolButtonShowGraph</value>
   </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.GroupComparison.FoldChangeForm, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  <data name="databoundGridControl.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
+  <data name="&gt;&gt;toolStrip.Name" xml:space="preserve">
+    <value>toolStrip</value>
+  </data>
+  <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
 </root>

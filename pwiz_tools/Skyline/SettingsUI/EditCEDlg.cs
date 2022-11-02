@@ -209,7 +209,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InvalidCell(DataGridViewCell cell,
             string message, params object[] args)
         {            
-            MessageBox.Show(string.Format(message, args));
+            MessageDlg.Show(FormUtil.FindTopLevelOwner(this),string.Format(message, args));
             gridRegression.Focus();
             gridRegression.ClearSelection();
             cell.Selected = true;
@@ -346,8 +346,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageBox.Show(this, Resources.EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression,
-                                Program.Name);
+                MessageDlg.Show(this, Resources.EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression);
                 return null;
             }
 

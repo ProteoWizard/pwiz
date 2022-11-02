@@ -38,20 +38,38 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
 : BuildParser(maker, datFileName, parent_progress)
 {
     Verbosity::comment(V_DETAIL, "Creating a MascotResultsReader.");
+    ms_params_ = NULL;
+    readSpecProgress_ = NULL;
+}
 
+MascotResultsReader::~MascotResultsReader()
+{
+    delete ms_params_;
+    // the spec reader will delete the results and file
+
+    // Delete all the mod tables
+    map<string, ModTable* >::iterator it = methodModsMaps_.begin();
+    while (it != methodModsMaps_.end())
+    {
+        delete it->second;
+        it++;
+    }
+    delete readSpecProgress_;
+}
+
+void MascotResultsReader::initParse() {
     // Create the ms_file
-    unsigned int cacheFlag = getCacheFlag(datFileName, 
-                                          maker.getCacheThreshold()); 
+    unsigned int cacheFlag = getCacheFlag(getFileName(), blibMaker_.getCacheThreshold()); 
     const char* cachePath = getPsmFilePath();
     if( *cachePath == '\0' ){
         cachePath = ".";
     }
 
-    string datFileNameStr(datFileName), realDatFilePath;
-    if (pwiz::util::findUnicodeBytes(datFileNameStr) != datFileNameStr.end())
+    string realDatFilePath(getFileName());
+    if (pwiz::util::findUnicodeBytes(getFileName()) != getFileName().end())
     {
-        Verbosity::warn("Mascot Parser does not support Unicode in filepaths ('%s'): copying file to a temporary non-Unicode path", datFileName);
-        string sanitizedFilename = bfs::path(datFileNameStr).filename().string();
+        Verbosity::warn("Mascot Parser does not support Unicode in filepaths ('%s'): copying file to a temporary non-Unicode path", getFileName().c_str());
+        string sanitizedFilename = bfs::path(getFileName()).filename().string();
         string::const_iterator unicodeByteItr;
         while ((unicodeByteItr = pwiz::util::findUnicodeBytes(sanitizedFilename)) != sanitizedFilename.end())
         {
@@ -61,12 +79,10 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
         realDatFilePath = (bfs::temp_directory_path() / sanitizedFilename).string();
         if (!bfs::exists(realDatFilePath))
         {
-            bfs::copy_file(datFileNameStr, realDatFilePath);
+            bfs::copy_file(getFileName(), realDatFilePath);
             tmpDatFile_.reset(new TempFileDeleter(realDatFilePath));
         }
     }
-    else
-        realDatFilePath = datFileNameStr;
 
     ms_file_ = new ms_mascotresfile(realDatFilePath.c_str(), 0, "",
                                     cacheFlag,
@@ -170,23 +186,8 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
     initReadAddProgress();
 }
 
-
-MascotResultsReader::~MascotResultsReader()
-{
-    delete ms_params_;
-    // the spec reader will delete the results and file
-
-    // Delete all the mod tables
-    map<string, ModTable* >::iterator it = methodModsMaps_.begin();
-    while (it != methodModsMaps_.end())
-    {
-        delete it->second;
-        it++;
-    }
-    delete readSpecProgress_;
-}
-
 bool MascotResultsReader::parseFile(){
+    initParse();
 
     // track the progress of reading the file
     int nQueries = ms_file_->getNumQueries();
@@ -298,6 +299,10 @@ bool MascotResultsReader::parseFile(){
     return true;
 }
 
+vector<PSM_SCORE_TYPE> MascotResultsReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, MASCOT_IONS_SCORE);
+}
+
 /**
  * Translate the modstr into a set of SeqMod's and add them to the
  * psm-mods vector.  Also add any static mods which can be looked up
@@ -320,9 +325,9 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
 
     // first parse the terminal character
     if( modstr.at(0) == 'X' ){
-        addErrorTolerantMod(psm, readableModStr, first_mod_pos);
+        addErrorTolerantMod(psm, readableModStr, 0);
     } else {
-        addVarMod(psm, modstr.at(0), first_mod_pos);
+        addVarMod(psm, modstr.at(0), 0);
     }
 
     // for characters first to last in modstr, 
@@ -337,17 +342,24 @@ void MascotResultsReader::parseMods(PSM* psm, string modstr,
 
     // now get terminal character at the other end
     if( modstr.at(last_mod_pos+1) == 'X' ){
-        addErrorTolerantMod(psm, readableModStr, last_mod_pos);
+        addErrorTolerantMod(psm, readableModStr, psm->unmodSeq.length()+1);
     } else {
-        addVarMod(psm, modstr.at(last_mod_pos+1), last_mod_pos);
+        addVarMod(psm, modstr.at(last_mod_pos+1), psm->unmodSeq.length()+1);
     }
 
     // for static mods look up each residue in the staticMods collection
     for (size_t i = 0; i < psm->unmodSeq.length(); i++) {
-        addStaticMods(psm, psm->unmodSeq[i], i + 1, true);
+        addStaticMods(psm, psm->unmodSeq[i], i + 1);
     }
-    addStaticMods(psm, N_TERM_POS, 1, false);
-    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length(), false);
+    addStaticMods(psm, N_TERM_POS, 0);
+    addStaticMods(psm, C_TERM_POS, psm->unmodSeq.length()+1);
+
+    // now consolidate terminal mods with residue-terminal mods (i.e. position 0 to 1, position N+1 to N)
+    for (auto& mod : psm->mods)
+        if (mod.position == 0)
+            mod.position = 1;
+        else if (mod.position == psm->unmodSeq.length() + 1)
+            mod.position = psm->unmodSeq.length();
 }
 
 /**
@@ -373,14 +385,13 @@ void MascotResultsReader::addVarMod(PSM* psm,
  * A-Z, N_TERM_POS, or C_TERM_POS that will be used to look up all masses of mods
  * for that particular residue. aaPosition is the location of this mod in the peptide.
  */
-void MascotResultsReader::addStaticMods(PSM* psm, char staticLookUpChar, int aaPosition, bool checkExisting){
-    if (checkExisting) {
-        for (vector<SeqMod>::const_iterator i = psm->mods.begin(); i != psm->mods.end(); i++) {
-            if (i->position == aaPosition) {
-                return; // don't add any static mods if there is already a mod at this position
-            }
+void MascotResultsReader::addStaticMods(PSM* psm, char staticLookUpChar, int aaPosition){
+    for (vector<SeqMod>::const_iterator i = psm->mods.begin(); i != psm->mods.end(); i++) {
+        if (i->position == aaPosition) {
+            return; // don't add any static mods if there is already a mod at this position
         }
     }
+
     MultiModTable::iterator found = staticMods_.find(staticLookUpChar);
     if (found != staticMods_.end())
     {
@@ -849,12 +860,11 @@ string MascotResultsReader::getErrorMessage(int errorCode){
     return message;
 }
 
-
 /**
  * Returns the correct flag to use for initializing the msresfile object.
  * If the input file is larger than a cutoff, use caching.  Otherwise do not.
  */
-unsigned int MascotResultsReader::getCacheFlag(const char* filename, 
+unsigned int MascotResultsReader::getCacheFlag(const string& filename, 
                                                int threshold){
   unsigned int flag = ms_mascotresfile::RESFILE_NOFLAG;
 
@@ -870,25 +880,7 @@ unsigned int MascotResultsReader::getCacheFlag(const char* filename,
   return flag;
 }
 
-
-
 } // namespace
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
  * Local Variables:

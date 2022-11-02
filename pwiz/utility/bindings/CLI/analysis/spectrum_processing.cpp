@@ -54,6 +54,7 @@ SpectrumListWrapper::SpectrumListWrapper(SpectrumList^ inner)
 {
     base_ = new SpectrumListWrapperDefault(*inner->base_);
     SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
 }
 
 
@@ -85,6 +86,9 @@ void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper)
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper, util::IterationListenerRegistry^ ilr)
 {
     b::SpectrumListFactory::wrap(msd->base(), ToStdString(wrapper), ilr ? &ilr->base() : nullptr);
+    System::GC::KeepAlive(ilr);
+    System::GC::KeepAlive(wrapper);
+    System::GC::KeepAlive(msd);
 }
 
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers)
@@ -98,6 +102,9 @@ void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic
     for each(System::String^ wrapper in wrappers)
         nativeWrappers.push_back(ToStdString(wrapper));
     b::SpectrumListFactory::wrap(msd->base(), nativeWrappers, ilr ? &ilr->base() : nullptr);
+    System::GC::KeepAlive(ilr);
+    System::GC::KeepAlive(wrappers);
+    System::GC::KeepAlive(msd);
 }
 
 System::String^ SpectrumListFactory::usage()
@@ -208,11 +215,13 @@ SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_Activa
     base_ = new b::SpectrumList_FilterPredicate_ActivationType(nativeSet, hasNoneOf);
 }
 
-SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem)
+SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem, System::String^ msLevelSet)
 {
+    IntegerSet parsedMsLevelSet;
+    parsedMsLevelSet.parse(ToStdString(msLevelSet));
     std::set<pwiz::cv::CVID> nativeSet;
     for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID) d);
-    base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet);
+    base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet, parsedMsLevelSet);
 }
 
 SpectrumList_FilterPredicate_Polarity::SpectrumList_FilterPredicate_Polarity(CVID polarity)
@@ -271,18 +280,26 @@ SpectrumList_Filter::SpectrumList_Filter(msdata::SpectrumList^ inner,
                                          SpectrumList_FilterAcceptSpectrum^ predicate)
 : msdata::SpectrumList(0), impl_(gcnew Impl(predicate))
 {
+    try {
     SpectrumList_FilterAcceptSpectrumWrapper^ wrapper = gcnew SpectrumList_FilterAcceptSpectrumWrapper(impl_, &SpectrumList_Filter::Impl::marshal);
     System::IntPtr predicatePtr = System::Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(wrapper);
     base_ = new b::SpectrumList_Filter(*inner->base_, SpectrumList_FilterPredicate_Custom(predicatePtr.ToPointer()));
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    System::GC::KeepAlive(predicate);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_Filter::SpectrumList_Filter(msdata::SpectrumList^ inner,
                                          SpectrumList_FilterPredicate^ predicate)
 : msdata::SpectrumList(0), impl_(gcnew Impl(predicate))
 {
+    try {
     base_ = new b::SpectrumList_Filter(*inner->base_, *impl_->managedPredicate->base_);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    System::GC::KeepAlive(predicate);
+    } CATCH_AND_FORWARD
 }
 
 
@@ -332,10 +349,12 @@ SpectrumList_Sorter::SpectrumList_Sorter(msdata::SpectrumList^ inner,
                                          SpectrumList_Sorter_LessThan^ predicate)
 : msdata::SpectrumList(0), managedPredicate(predicate)
 {
+    try {
     SpectrumList_Sorter_LessThanWrapper^ wrapper = gcnew SpectrumList_Sorter_LessThanWrapper(this, &SpectrumList_Sorter::marshal);
     System::IntPtr predicatePtr = System::Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(wrapper);
     base_ = new b::SpectrumList_Sorter(*inner->base_, SpectrumList_SorterPredicate(predicatePtr.ToPointer()));
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    } CATCH_AND_FORWARD
 }*/
 
 
@@ -346,11 +365,13 @@ SpectrumList_Smoother::SpectrumList_Smoother(msdata::SpectrumList^ inner,
                                              System::Collections::Generic::IEnumerable<int>^ msLevelsToSmooth)
 : msdata::SpectrumList(0)
 {
+    try {
     pwiz::util::IntegerSet msLevelSet;
     for each(int i in msLevelsToSmooth)
         msLevelSet.insert(i);
     base_ = new b::SpectrumList_Smoother(*inner->base_, *algorithm->base_, msLevelSet);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    } CATCH_AND_FORWARD
 }
 
 bool SpectrumList_Smoother::accept(msdata::SpectrumList^ inner)
@@ -367,11 +388,15 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(msdata::SpectrumList^ inner,
                                                  System::Collections::Generic::IEnumerable<int>^ msLevelsToPeakPick)
 : msdata::SpectrumList(0)
 {
+    try {
     pwiz::util::IntegerSet msLevelSet;
     for each(int i in msLevelsToPeakPick)
         msLevelSet.insert(i);
     base_ = new b::SpectrumList_PeakPicker(*inner->base_, *algorithm->base_, preferVendorPeakPicking, msLevelSet);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    System::GC::KeepAlive(algorithm);
+    } CATCH_AND_FORWARD
 }
 
 bool SpectrumList_PeakPicker::accept(msdata::SpectrumList^ inner)
@@ -390,8 +415,11 @@ bool SpectrumList_PeakPicker::supportsVendorPeakPicking(System::String^ rawpath)
 SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(msdata::SpectrumList^ inner, double lockmassMzPosScans, double lockmassMzNegScans, double lockmassTolerance)
     : msdata::SpectrumList(0)
 {
-        base_ = new b::SpectrumList_LockmassRefiner(*inner->base_, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance);
+    try {
+    base_ = new b::SpectrumList_LockmassRefiner(*inner->base_, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    } CATCH_AND_FORWARD
 }
 
 bool SpectrumList_LockmassRefiner::accept(msdata::SpectrumList^ inner)
@@ -410,6 +438,7 @@ SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalculator(
                                    double intensityFractionBelowPrecursorForSinglyCharged)
 : msdata::SpectrumList(0)
 {
+    try {
     base_ = new b::SpectrumList_ChargeStateCalculator(
                 *inner->base_, 
                 overrideExistingChargeState,
@@ -417,6 +446,8 @@ SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalculator(
                 minMultipleCharge,
                 intensityFractionBelowPrecursorForSinglyCharged);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    } CATCH_AND_FORWARD
 }
 
 bool SpectrumList_ChargeStateCalculator::accept(msdata::SpectrumList^ inner)
@@ -439,8 +470,11 @@ ContinuousInterval::ContinuousInterval(double begin, double end)
 SpectrumList_3D::SpectrumList_3D(msdata::SpectrumList^ inner)
     : msdata::SpectrumList(0)
 {
+    try {
     base_ = new b::SpectrumList_3D(*inner->base_);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    } CATCH_AND_FORWARD
 }
 
 Spectrum3D^ SpectrumList_3D::spectrum3d(double scanStartTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ ionMobilityRanges)
@@ -472,8 +506,11 @@ bool SpectrumList_3D::accept(msdata::SpectrumList^ inner)
 SpectrumList_IonMobility::SpectrumList_IonMobility(msdata::SpectrumList^ inner)
     : msdata::SpectrumList(0)
 {
+    try {
     base_ = new b::SpectrumList_IonMobility(*inner->base_);
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_IonMobility::IonMobilityUnits SpectrumList_IonMobility::getIonMobilityUnits()
@@ -501,24 +538,69 @@ double SpectrumList_IonMobility::ccsToIonMobility(double ccs, double mz, int cha
     try { return base_->ccsToIonMobility(ccs, mz, charge); } CATCH_AND_FORWARD
 }
 
+bool SpectrumList_IonMobility::isWatersSonarData()
+{
+    try { return base_->isWatersSonarData(); } CATCH_AND_FORWARD
+}
+
+void SpectrumList_IonMobility::sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh)
+{
+    try
+    {
+        std::pair<int, int> range = base_->sonarMzToBinRange(precursorMz, tolerance);
+        binRangeLow = range.first;
+        binRangeHigh = range.second;
+    } CATCH_AND_FORWARD
+}
+
+void SpectrumList_IonMobility::sonarBinToPrecursorMz(int bin, double% result)
+{
+    try
+    {
+        result = base_->sonarBinToPrecursorMz(bin);
+    } CATCH_AND_FORWARD
+}
+
 bool SpectrumList_IonMobility::accept(msdata::SpectrumList^ inner)
 {
     return b::SpectrumList_IonMobility::accept(*inner->base_);
 }
 
 
+SpectrumList_DiaUmpire::Config::TargetWindow::TargetWindow(double start, double end)
+{
+    base_ = new DiaUmpire::TargetWindow(DiaUmpire::MzRange(start, end));
+}
+
+SpectrumList_DiaUmpire::Config::TargetWindowList^ SpectrumList_DiaUmpire::Config::diaVariableWindows::get()
+{
+    return gcnew SpectrumList_DiaUmpire::Config::TargetWindowList(&base().diaVariableWindows, this);
+}
+
+SpectrumList_DiaUmpire::Config::Config()
+{
+    base_ = new DiaUmpire::Config();
+}
+
 SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::SpectrumList^ inner, Config^ config)
     : msdata::SpectrumList(0)
 {
-    base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base());
+    try { base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base()); } CATCH_AND_FORWARD
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(inner);
+    System::GC::KeepAlive(config);
+    System::GC::KeepAlive(msd);
 }
 
 SpectrumList_DiaUmpire::SpectrumList_DiaUmpire(msdata::MSData^ msd, msdata::SpectrumList^ inner, Config^ config, util::IterationListenerRegistry^ ilr)
     : msdata::SpectrumList(0)
 {
-    base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base(), &ilr->base());
+    try { base_ = new b::SpectrumList_DiaUmpire(msd->base(), *inner->base_, config->base(), ilr ? &ilr->base() : nullptr); } CATCH_AND_FORWARD
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+    System::GC::KeepAlive(ilr);
+    System::GC::KeepAlive(inner);
+    System::GC::KeepAlive(config);
+    System::GC::KeepAlive(msd);
 }
 
 
@@ -527,6 +609,7 @@ ChromatogramList_XICGenerator::ChromatogramList_XICGenerator(msdata::Chromatogra
 {
     base_ = new b::ChromatogramList_XICGenerator(*inner->base_);
     msdata::ChromatogramList::base_ = new boost::shared_ptr<pwiz::msdata::ChromatogramList>(base_);
+    System::GC::KeepAlive(inner);
 }
 
 msdata::Chromatogram^ ChromatogramList_XICGenerator::xic(double startTime, double endTime, System::Collections::Generic::IEnumerable<ContinuousInterval>^ massRanges, int msLevel)

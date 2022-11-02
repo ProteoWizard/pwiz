@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <metadata name="menuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="reintegrateToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="reintegrateToolStripMenuItem.Text" xml:space="preserve">
+    <value>重新整合(&amp;R)…</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="generateDecoysMenuItem.RightToLeftAutoMirrorImage" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="generateDecoysMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="generateDecoysMenuItem.Text" xml:space="preserve">
+    <value>添加诱饵(&amp;D)…</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="compareModelsToolStripMenuItem.Text" xml:space="preserve">
+    <value>比较峰得分(&amp;O)…</value>
+  </data>
+  <data name="toolStripSeparator59.Size" type="System.Drawing.Size, System.Drawing">
+    <value>243, 6</value>
+  </data>
+  <data name="removeMissingResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="removeMissingResultsMenuItem.Text" xml:space="preserve">
+    <value>删除缺少的结果(&amp;M)</value>
+  </data>
+  <data name="toolStripSeparator45.Size" type="System.Drawing.Size, System.Drawing">
+    <value>243, 6</value>
+  </data>
+  <data name="acceptProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="acceptProteinsMenuItem.Text" xml:space="preserve">
+    <value>接受蛋白质(&amp;P)…</value>
+  </data>
+  <data name="removeEmptyProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="removeEmptyProteinsMenuItem.Text" xml:space="preserve">
+    <value>删除空蛋白质(&amp;E)</value>
+  </data>
+  <data name="associateFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="associateFASTAMenuItem.Text" xml:space="preserve">
+    <value>关联蛋白质(&amp;T)…</value>
+  </data>
+  <data name="renameProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="renameProteinsMenuItem.Text" xml:space="preserve">
+    <value>重命名蛋白质(&amp;N)…</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="sortProteinsByNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>按名称(&amp;N)</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="sortProteinsByAccessionToolStripMenuItem.Text" xml:space="preserve">
+    <value>按编号(&amp;A)</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="sortProteinsByPreferredNameToolStripMenuItem.Text" xml:space="preserve">
+    <value>按首选名称(&amp;P)</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="sortProteinsByGeneToolStripMenuItem.Text" xml:space="preserve">
+    <value>按基因(&amp;G)</value>
+  </data>
+  <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="sortProteinsMenuItem.Text" xml:space="preserve">
+    <value>肽段排序(&amp;S)</value>
+  </data>
+  <data name="toolStripSeparator43.Size" type="System.Drawing.Size, System.Drawing">
+    <value>243, 6</value>
+  </data>
+  <data name="acceptPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="acceptPeptidesMenuItem.Text" xml:space="preserve">
+    <value>接受肽段(&amp;C)…</value>
+  </data>
+  <data name="removeEmptyPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="removeEmptyPeptidesMenuItem.Text" xml:space="preserve">
+    <value>删除空肽段(&amp;V)</value>
+  </data>
+  <data name="removeDuplicatePeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="removeDuplicatePeptidesMenuItem.Text" xml:space="preserve">
+    <value>删除重复肽段(&amp;U)</value>
+  </data>
+  <data name="removeDuplicatePeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>所有在文档中不是唯一的肽段
+都将被删除。</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.Text" xml:space="preserve">
+    <value>删除重复的肽段(&amp;I)</value>
+  </data>
+  <data name="removeRepeatedPeptidesMenuItem.ToolTipText" xml:space="preserve">
+    <value>将删除所有重复的肽段以仅留下
+首次出现的任何肽段。</value>
+  </data>
+  <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
+    <value>243, 6</value>
+  </data>
+  <data name="permuteIsotopeModificationsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="permuteIsotopeModificationsMenuItem.Text" xml:space="preserve">
+    <value>置换同位素修饰(&amp;F)…</value>
+  </data>
+  <data name="refineAdvancedMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>246, 22</value>
+  </data>
+  <data name="refineAdvancedMenuItem.Text" xml:space="preserve">
+    <value>高级(&amp;A)…</value>
+  </data>
+  <data name="refineToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 20</value>
+  </data>
+  <data name="refineToolStripMenuItem.Text" xml:space="preserve">
+    <value>调整(&amp;R)</value>
+  </data>
+  <data name="menuStrip1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="menuStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>150, 24</value>
+  </data>
+  <data name="menuStrip1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="menuStrip1.Text" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Name" xml:space="preserve">
+    <value>menuStrip1</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.MenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;menuStrip1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;refineToolStripMenuItem.Name" xml:space="preserve">
+    <value>refineToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;refineToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;reintegrateToolStripMenuItem.Name" xml:space="preserve">
+    <value>reintegrateToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;reintegrateToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;generateDecoysMenuItem.Name" xml:space="preserve">
+    <value>generateDecoysMenuItem</value>
+  </data>
+  <data name="&gt;&gt;generateDecoysMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;compareModelsToolStripMenuItem.Name" xml:space="preserve">
+    <value>compareModelsToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;compareModelsToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Name" xml:space="preserve">
+    <value>toolStripSeparator59</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator59.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeMissingResultsMenuItem.Name" xml:space="preserve">
+    <value>removeMissingResultsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeMissingResultsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator45.Name" xml:space="preserve">
+    <value>toolStripSeparator45</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator45.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;acceptProteinsMenuItem.Name" xml:space="preserve">
+    <value>acceptProteinsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;acceptProteinsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeEmptyProteinsMenuItem.Name" xml:space="preserve">
+    <value>removeEmptyProteinsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeEmptyProteinsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;associateFASTAMenuItem.Name" xml:space="preserve">
+    <value>associateFASTAMenuItem</value>
+  </data>
+  <data name="&gt;&gt;associateFASTAMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;renameProteinsMenuItem.Name" xml:space="preserve">
+    <value>renameProteinsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;renameProteinsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByNameToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByAccessionToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByAccessionToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByAccessionToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByPreferredNameToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByPreferredNameToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByPreferredNameToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByGeneToolStripMenuItem.Name" xml:space="preserve">
+    <value>sortProteinsByGeneToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;sortProteinsByGeneToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator43.Name" xml:space="preserve">
+    <value>toolStripSeparator43</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator43.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;acceptPeptidesMenuItem.Name" xml:space="preserve">
+    <value>acceptPeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;acceptPeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeEmptyPeptidesMenuItem.Name" xml:space="preserve">
+    <value>removeEmptyPeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeEmptyPeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeDuplicatePeptidesMenuItem.Name" xml:space="preserve">
+    <value>removeDuplicatePeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeDuplicatePeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeRepeatedPeptidesMenuItem.Name" xml:space="preserve">
+    <value>removeRepeatedPeptidesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeRepeatedPeptidesMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator35.Name" xml:space="preserve">
+    <value>toolStripSeparator35</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator35.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;permuteIsotopeModificationsMenuItem.Name" xml:space="preserve">
+    <value>permuteIsotopeModificationsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;permuteIsotopeModificationsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;refineAdvancedMenuItem.Name" xml:space="preserve">
+    <value>refineAdvancedMenuItem</value>
+  </data>
+  <data name="&gt;&gt;refineAdvancedMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>RefineMenu</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

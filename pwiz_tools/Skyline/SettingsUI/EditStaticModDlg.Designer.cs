@@ -58,7 +58,6 @@
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.comboMod = new System.Windows.Forms.ComboBox();
             this.cbCrosslinker = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.panelAtoms.SuspendLayout();
             this.panelLoss.SuspendLayout();
             this.toolBarLosses.SuspendLayout();
@@ -296,7 +295,6 @@
             this.MinimizeBox = false;
             this.Name = "EditStaticModDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.panelAtoms.ResumeLayout(false);
             this.panelAtoms.PerformLayout();
             this.panelLoss.ResumeLayout(false);

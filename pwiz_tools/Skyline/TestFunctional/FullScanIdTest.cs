@@ -74,6 +74,8 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.AddInputFiles(new [] { pepXmlPath });
             });
+            WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
+            WaitForOpenForm<BuildLibraryDlg>(); // Files page
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
             Assert.IsTrue(WaitForCondition(() =>
                 peptideSettingsUI.AvailableLibraries.Contains(libraryName)));

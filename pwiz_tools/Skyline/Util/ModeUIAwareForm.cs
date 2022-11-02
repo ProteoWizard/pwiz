@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
 
         [ProvideProperty("UIMode", typeof(Component))]   // Custom component property that appears in Designer (via IExtenderProvider)
-        public class ModeUIExtender : Component, ISupportInitialize, IExtenderProvider // Behaves like a ToolTip, in that its presence in a form allows us to tag components with ModeUI info in the designer
+        public class ModeUIExtender : Component, IExtenderProvider // Behaves like a ToolTip, in that its presence in a form allows us to tag components with ModeUI info in the designer
         {
             private Dictionary<IComponent, MODE_UI_HANDLING_TYPE> _handledComponents = new Dictionary<IComponent, MODE_UI_HANDLING_TYPE>();
             private Dictionary<IComponent, string> _originalToolStripText = new Dictionary<IComponent, string>();
@@ -103,14 +103,6 @@ namespace pwiz.Skyline.Util
             public void AddHandledComponent(IComponent component, MODE_UI_HANDLING_TYPE type)
             {
                 _handledComponents[component] = type;
-            }
-
-            public void BeginInit() // Required by ISupportInitialize
-            {
-            }
-
-            public void EndInit() // Required by ISupportInitialize
-            {
             }
         }
 

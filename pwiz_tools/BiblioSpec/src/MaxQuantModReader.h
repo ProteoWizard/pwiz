@@ -84,6 +84,7 @@ struct MaxQuantLabelingState
 public:
     vector<string> modsStrings;
     vector<const MaxQuantModification*> mods;
+    map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> > modsByPosition;
 };
 
 /**
@@ -116,6 +117,16 @@ public:
     void addMods(vector<MaxQuantLabelingState>::iterator iter, vector<const MaxQuantModification*> modsToAdd)
     {
         iter->mods = modsToAdd;
+
+        // initialize fixed mod vectors for supported positions
+        iter->modsByPosition[MaxQuantModification::ANYWHERE].clear();
+        iter->modsByPosition[MaxQuantModification::ANY_N_TERM].clear();
+        iter->modsByPosition[MaxQuantModification::ANY_C_TERM].clear();
+        iter->modsByPosition[MaxQuantModification::NOT_N_TERM].clear();
+        iter->modsByPosition[MaxQuantModification::NOT_C_TERM].clear();
+
+        for (const auto& mod : modsToAdd)
+            iter->modsByPosition[mod->position].push_back(mod);
     }
 
     /**

@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7AB2D7AD-6760-450E-BCCD-B08502307B99}</ProjectGuid>
+    <ProjectGuid>{87D6B185-C2D3-48A9-95B3-A0F528F3F446}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AutoQC</RootNamespace>
@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <TargetFrameworkProfile />
-    <PublishUrl>X:\labkey\static\software\AutoQC\</PublishUrl>
+    <PublishUrl>Z:\labkey\static\software\AutoQC-test\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -23,13 +23,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC/</InstallUrl>
+    <InstallUrl>http://skyline.gs.washington.edu/software/AutoQC-test/</InstallUrl>
+    <SupportUrl>https://panoramaweb.org/support.url</SupportUrl>
     <ProductName>AutoQC</ProductName>
     <PublisherName>University of Washington</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <ApplicationRevision>5</ApplicationRevision>
+    <ApplicationVersion>1.0.0.5</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -59,7 +60,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>828D97D15AA50E99C25127B6A71E0A6DFC12027E</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>19870CA6C934F1DFEADFC678B704FD5CEF4C7F0B</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>
@@ -69,7 +70,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>AutoQC.ico</ApplicationIcon>
@@ -81,39 +82,59 @@
     <Content Include="AutoQCStarter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Resources\Copy.bmp" />
-    <Content Include="SkylineDailyRunner.exe">
+    <Content Include="AutoQC_configs.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\SharedBatch\LaunchBatch\obj\$(Configuration)\LaunchBatch.exe">
+      <Link>LaunchBatch.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="SkylineDailyRunner.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="SkylineRunner.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="InvalidConfigSetupForm.resx">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="Resources\Copy.bmp" />
+    <None Include="Resources\add.bmp" />
+    <None Include="Resources\Delete.bmp" />
+    <None Include="Resources\OpenFolder.bmp" />
+    <None Include="Resources\SkylineData.ico" />
+    <None Include="Resources\SkylineDoc.ico" />
+    <None Include="Resources\Panorama.bmp" />
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="AlertDlg.resx">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="AutoQC-daily.ico" />
+    <Content Include="AutoQC_release.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="FileAcquisitionTime.skyr">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="University of Washington %28MacCoss Lab%29.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlertDlg.cs">
+    <Compile Include="AutoQcConfig.cs" />
+    <Compile Include="AutoQcConfigManager.cs" />
+    <Compile Include="InvalidConfigSetupForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="AlertDlg.Designer.cs">
-      <DependentUpon>AlertDlg.cs</DependentUpon>
+    <Compile Include="InvalidConfigSetupForm.Designer.cs">
+      <DependentUpon>InvalidConfigSetupForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="AutoQcConfig.cs" />
-    <Compile Include="AutoQcLogger.cs" />
-    <Compile Include="SkylineSettings.cs" />
+    <Compile Include="PanoramaControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PanoramaControl.Designer.cs">
+      <DependentUpon>PanoramaControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="StartupManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -136,9 +157,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResultFileStatus.cs" />
     <Compile Include="Properties\Settings.cs" />
-    <Compile Include="ConfigSettings.cs" />
     <Compile Include="MainSettings.cs" />
-    <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -150,8 +169,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="TextUtil.cs" />
-    <Compile Include="XmlUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="log4net">
@@ -162,7 +179,15 @@
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="SharedBatch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SharedBatch\SharedBatch\bin\Debug\SharedBatch.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
@@ -170,6 +195,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
     <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -194,6 +220,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.zh-Hans.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PanoramaControl.resx">
+      <DependentUpon>PanoramaControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>
@@ -221,7 +250,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <COMReference Include="IWshRuntimeLibrary">
       <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
@@ -234,6 +262,10 @@
     </COMReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

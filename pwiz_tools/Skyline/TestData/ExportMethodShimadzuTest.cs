@@ -31,16 +31,18 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestExportMethodShimadzu()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            var docPath = testFilesDir.GetTestPath("bgal.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = TestFilesDir.GetTestPath("bgal.sky");
             var doc = ResultsUtil.DeserializeDocument(docPath);
 
-            var outPath = testFilesDir.GetTestPath("out.lcm");
-            var templatePath = testFilesDir.GetTestPath("40.lcm");
+            var outPath = TestFilesDir.GetTestPath("out.lcm");
+            var templatePath = TestFilesDir.GetTestPath("40.lcm");
             var exporter = new ShimadzuMethodExporter(doc) {RunLength = 30};
             exporter.ExportMethod(outPath, templatePath, null);
 
-            Assert.AreEqual(540672, new FileInfo(outPath).Length);
+            // Exported method is a binary file, just check that it's 500-600 kb.
+            var size = new FileInfo(outPath).Length;
+            Assert.IsTrue(500000 <= size && size <= 600000);
         }
     }
 }

@@ -159,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize modification settings
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
-            _driverStaticMod.LoadList(null, Modifications.StaticModifications.Where(mod=>null == mod.CrosslinkerSettings).ToList());
+            _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(LabelTypeComboDriver.UsageType.ModificationsPicker, comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
@@ -177,12 +177,6 @@ namespace pwiz.Skyline.SettingsUI
 
             IsShowLibraryExplorer = false;
             FormUtil.RemoveTabPage(tabIntegration, helpTip);
-            comboNormalizationMethod.Items.AddRange(
-                NormalizationMethod.ListNormalizationMethods(parent.DocumentUI).ToArray());
-            if (!comboNormalizationMethod.Items.Contains(_peptideSettings.Quantification.NormalizationMethod))
-            {
-                comboNormalizationMethod.Items.Add(_peptideSettings.Quantification.NormalizationMethod);
-            }
             comboNormalizationMethod.SelectedItem = _peptideSettings.Quantification.NormalizationMethod;
             comboWeighting.Items.AddRange(RegressionWeighting.All.Cast<object>().ToArray());
             comboWeighting.SelectedItem = _peptideSettings.Quantification.RegressionWeighting;
@@ -197,6 +191,7 @@ namespace pwiz.Skyline.SettingsUI
             tbxMaxLoqCv.Text = _peptideSettings.Quantification.MaxLoqCv.ToString();
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
+            UpdateComboNormalizationMethod();
         }
 
         /// <summary>
@@ -378,7 +373,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdatePeptideUniquenessEnabled();
 
             // Validate and hold prediction settings
-            string nameRT = comboRetentionTime.SelectedItem.ToString();
+            string nameRT = comboRetentionTime.SelectedItem?.ToString();
             RetentionTimeRegression retentionTime =
                 Settings.Default.GetRetentionTimeByName(nameRT);
             if (retentionTime != null && retentionTime.Calculator != null)
@@ -508,7 +503,7 @@ namespace pwiz.Skyline.SettingsUI
                 ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
                 : _driverLabelType.InternalStandardTypes;
             PeptideModifications modifications = new PeptideModifications(
-                _driverStaticMod.Chosen.Where(mod=>null == mod.CrosslinkerSettings).ToList(), maxVariableMods, maxNeutralLosses,
+                _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
                 _driverLabelType.GetHeavyModifications(), standardTypes);
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?
@@ -565,7 +560,7 @@ namespace pwiz.Skyline.SettingsUI
 
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
-            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome)
+            return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
                     .ChangeAbsoluteQuantification(quantification);
         }
 
@@ -632,7 +627,7 @@ namespace pwiz.Skyline.SettingsUI
                 list.SetValue(calcNew);
                 // Automatically add new RT regression using this calculator
                 var regressionName = Helpers.GetUniqueName(calcNew.Name, name => !_driverRT.List.Contains(r => Equals(r.Name, name)));
-                var regression = new RetentionTimeRegression(regressionName, calcNew, null, null, EditRTDlg.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
+                var regression = new RetentionTimeRegression(regressionName, calcNew, null, null, ImportPeptideSearch.DEFAULT_RT_WINDOW, new List<MeasuredRetentionTime>());
                 Settings.Default.RetentionTimeList.Add(regression);
                 _driverRT.LoadList(regression.GetKey());
             }
@@ -735,6 +730,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                    {
+                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList) {LibraryPath = dlg.AddLibraryFile})
+                        {
+                            if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                                _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                            }
+                        }
+                        return;
+                    }
+
                     IsBuildingLibrary = true;
 
                     var builder = dlg.Builder;
@@ -923,7 +931,7 @@ namespace pwiz.Skyline.SettingsUI
                     var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides,
                                                                       rankId),
                                                         Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not);
-                    if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) == DialogResult.OK)
+                    if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.OK)
                     {
                         foreach (int i in listLibraries.CheckedIndices)
                         {
@@ -1111,6 +1119,59 @@ namespace pwiz.Skyline.SettingsUI
             _driverPeakScoringModel.SelectedIndexChangedEvent(sender, e);
         }
 
+        /// <summary>
+        /// Update the Items in comboNormalizationMethod to include not only the options that were available when this dialog
+        /// first came up, but also those options that would be available if the user were to OK the dialog right now.
+        /// </summary>
+        private void UpdateComboNormalizationMethod()
+        {
+            var currentNormalizationMethod = 
+                comboNormalizationMethod.SelectedItem as NormalizationMethod 
+                ?? _parent.DocumentUI.Settings.PeptideSettings.Quantification.NormalizationMethod
+                ?? NormalizationMethod.NONE;
+
+            IEnumerable<NormalizationMethod> availableNormalizationMethods = NormalizationMethod.ListNormalizationMethods(_parent.DocumentUI);
+
+            // If the user has checked any isotope modifications, then some new ratio to label options may be available
+            if (_driverLabelType != null && _driverLabelType.GetHeavyModifications().Any(mods=>mods.Modifications.Count > 0))
+            {
+                IEnumerable<IsotopeLabelType> ratioInternalStandardTypes = SmallMoleculeLabelsTabEnabled
+                    ? _driverSmallMolInternalStandardTypes.InternalStandardTypes
+                    : _driverLabelType.InternalStandardTypes;
+                if (!ratioInternalStandardTypes.Any())
+                {
+                    // Duplicate the logic of "PeptideModifications.RatioInternalStandardTypes": if none of the isotope label types are internal standards,
+                    // then all heavy label types are available for normalization
+                    ratioInternalStandardTypes = _driverLabelType.GetHeavyModifications().Select(mods => mods.LabelType);
+                }
+
+                availableNormalizationMethods = availableNormalizationMethods.Concat(
+                    ratioInternalStandardTypes.Select(NormalizationMethod.GetNormalizationMethod));
+            }
+
+            var newComboItems = availableNormalizationMethods.Distinct().ToList();
+            if (!newComboItems.Contains(currentNormalizationMethod))
+            {
+                newComboItems.Add(currentNormalizationMethod);
+            }
+
+            if (newComboItems.SequenceEqual(comboNormalizationMethod.Items.OfType<object>()))
+            {
+                return;
+            }
+
+            comboNormalizationMethod.Items.Clear();
+            comboNormalizationMethod.Items.AddRange(newComboItems.ToArray());
+            comboNormalizationMethod.SelectedItem = currentNormalizationMethod;
+        }
+
+        private void tabControl1_TabIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedTab == tabQuantification)
+            {
+                UpdateComboNormalizationMethod();
+            }
+        }
         #region Functional testing support
 
         public IFormView ShowingFormView
@@ -1633,7 +1694,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     for (int i = 0; i < Combo.Items.Count; i++)
                     {
-                        if (Equals(value, ((TypedModifications)Combo.Items[i]).LabelType.Name))
+                        if (Combo.Items[i] is TypedModifications && // Watch out for "Edit List"
+                            Equals(value, ((TypedModifications)Combo.Items[i]).LabelType.Name))
                         {
                             Combo.SelectedIndex = i;
                             break;
@@ -1653,7 +1715,8 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     for (int i = 1; i < ComboIS.Items.Count; i++)
                     {
-                        if (Equals(value, ((IsotopeLabelType)ComboIS.Items[i]).Name))
+                        if (ComboIS.Items[i] is IsotopeLabelType && // Watch out for "Edit List"
+                            Equals(value, ((IsotopeLabelType)ComboIS.Items[i]).Name))
                         {
                             ComboIS.SelectedIndex = i;
                             break;

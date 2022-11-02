@@ -18,17 +18,18 @@
  */
 
 using System.Collections.Generic;
-using System.Windows.Forms;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -57,16 +58,15 @@ namespace pwiz.SkylineTestFunctional
                     buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast";
                     buildBackgroundProteomeDlg.OkDialog();
                 });
-            RunUI(peptideSettingsUI.OkDialog);
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForBackgroundProteomeLoaderCompleted(); // Allow protDB file to populate protein metadata first
 
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);
-            var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
 
             using (new CheckDocumentState(6, 9, 9, 28))
             {
                 // Keep all peptides.
+                var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
                 Assert.AreEqual(10, insertPeptidesDlg.PeptideRowCount);
                 Assert.IsTrue(insertPeptidesDlg.PeptideRowsContainProtein(string.IsNullOrEmpty));
@@ -74,83 +74,84 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(insertPeptidesDlg, insertPeptidesDlg.OkDialog);
             }
 
-            // Keep only first protein.
-            var insertPeptidesDlg1 = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
-            PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.FirstOccurence, true, true);
-            Assert.AreEqual(8, insertPeptidesDlg1.PeptideRowCount);
-            Assert.IsFalse(insertPeptidesDlg1.PeptideRowsContainProtein(protein => Equals(protein, "YHR174W")));
-            RunUI(insertPeptidesDlg1.ClearRows);
-            // Filter peptides with multiple matches.
-            PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.NoDuplicates, true, true);
-            Assert.AreEqual(6, insertPeptidesDlg1.PeptideRowCount);
-            Assert.IsFalse(insertPeptidesDlg1.PeptideRowsContainProtein(protein => Equals(protein, "YGR254W")));
-            RunUI(insertPeptidesDlg1.ClearRows);
-            // Filter unmatched.
-            PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.AddToAll, false, true);
-            Assert.IsFalse(insertPeptidesDlg1.PeptideRowsContainProtein(string.IsNullOrEmpty));
-            RunUI(insertPeptidesDlg1.ClearRows);
-            // Filter peptides not matching settings.
-            PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, false);
-            Assert.AreEqual(9, insertPeptidesDlg1.PeptideRowCount);
-            Assert.IsFalse(insertPeptidesDlg1.PeptideRowsContainPeptide(peptide => 
-                !SkylineWindow.Document.Settings.Accept(peptide)));
-            RunUI(insertPeptidesDlg1.ClearRows);
-            // Pasting garbage should throw an error then disallow the paste.
-            SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT_GARBAGE);
-            RunDlg<MessageDlg>(insertPeptidesDlg1.PastePeptides, messageDlg => messageDlg.OkDialog());
-            Assert.AreEqual(1, insertPeptidesDlg1.PeptideRowCount);
-            OkDialog(insertPeptidesDlg1, insertPeptidesDlg1.Close);
-
-            // Test pasting a transition list.
-            SetClipboardTextUI(TransitionsClipboardText);
-            var insertTransitionListDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            PasteTransitions(insertTransitionListDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
-            Assert.AreEqual(25, insertTransitionListDlg.TransitionRowCount);
-            RunUI(insertTransitionListDlg.ValidateCells);
-            WaitForConditionUI(() => insertTransitionListDlg.ErrorText != null);
-            RunUI(() => Assert.IsTrue(insertTransitionListDlg.ErrorText.Contains((506.7821).ToString(LocalizationHelper.CurrentCulture)), 
-                string.Format("Unexpected error: {0}", insertTransitionListDlg.ErrorText)));
-
-            RunUI(() =>
             {
-                // Test validation, OkDialog. This used to throw an exception.
-                insertTransitionListDlg.OkDialog();
-                insertTransitionListDlg.OkDialog();
-                Assert.IsTrue(insertTransitionListDlg.DialogResult == DialogResult.None, "Second call to PasteDlg.OkDialog succeeded unexpectedly");
-                insertTransitionListDlg.ClearRows();
-                insertTransitionListDlg.OkDialog();
-                Assert.IsTrue(insertTransitionListDlg.DialogResult == DialogResult.OK, "Third call to PastDlg.OkDialog did not succeed");
-            });
-            WaitForClosedForm(insertTransitionListDlg);
+                // Keep only first protein.
+                var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
+                PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.FirstOccurence, true, true);
+                Assert.AreEqual(8, insertPeptidesDlg.PeptideRowCount);
+                Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainProtein(protein => Equals(protein, "YHR174W")));
+                RunUI(insertPeptidesDlg.ClearRows);
+                // Filter peptides with multiple matches.
+                PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.NoDuplicates, true, true);
+                Assert.AreEqual(6, insertPeptidesDlg.PeptideRowCount);
+                Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainProtein(protein => Equals(protein, "YGR254W")));
+                RunUI(insertPeptidesDlg.ClearRows);
+                // Filter unmatched.
+                PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, false, true);
+                Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainProtein(string.IsNullOrEmpty));
+                RunUI(insertPeptidesDlg.ClearRows);
+                // Filter peptides not matching settings.
+                PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, false);
+                Assert.AreEqual(9, insertPeptidesDlg.PeptideRowCount);
+                Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(peptide =>
+                    !SkylineWindow.Document.Settings.Accept(peptide)));
+                RunUI(insertPeptidesDlg.ClearRows);
+                // Pasting garbage should throw an error then disallow the paste.
+                SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT_GARBAGE);
+                RunDlg<MessageDlg>(insertPeptidesDlg.PastePeptides, messageDlg => messageDlg.OkDialog());
+                Assert.AreEqual(1, insertPeptidesDlg.PeptideRowCount);
+                OkDialog(insertPeptidesDlg, insertPeptidesDlg.Close);
+            }
 
-            // Test modification matching
-            IList<TypedModifications> heavyMod = new[]
             {
-                new TypedModifications(IsotopeLabelType.heavy, new List<StaticMod>
+                var pasteText = TransitionsClipboardText;
+                var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(columnSelectDlg.OkDialog); // Some peptides aren't in background proteome
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(associateProteinsDlg.OkDialog);
+                RunUI(() =>
                 {
-                    new StaticMod("Label:13C(6)15N(4)", "R", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null)
-                })
-            };
-            SrmDocument document = SkylineWindow.Document;
-            RunUI(() =>
-            {
-                SkylineWindow.ModifyDocument("Add modification", doc =>
-                    doc.ChangeSettings(doc.Settings.ChangePeptideModifications(mods => new PeptideModifications(mods.StaticModifications, heavyMod))));
-                SkylineWindow.Document.Settings.UpdateDefaultModifications(true);
-            });
-            WaitForDocumentChange(document);
+                    var allErrorText = TextUtil.LineSeparate(errDlg.ErrorList.Select(e => e.ErrorMessage));
+                    Assert.AreEqual(12, errDlg.ErrorList.Count, string.Format("Expecting 12 errors\r\ngot \"{0}\"", allErrorText));
+                    const double expectedPrecursor = 506.7821;
+                    string expectedPrecursorText = expectedPrecursor.ToString(LocalizationHelper.CurrentCulture);
+                    Assert.IsTrue(allErrorText.Contains(expectedPrecursorText),
+                        string.Format("Unexpected value in paste dialog error window:\r\nexpected \"{0}\"\r\ngot \"{1}\"",
+                            expectedPrecursorText, allErrorText));
+                });
+                OkDialog(errDlg, errDlg.CancelDialog);
+                OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+            }
 
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            SetClipboardTextUI("LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator));
-            RunUI(() =>
             {
-                pasteDlg.IsMolecule = false;
-                pasteDlg.PasteTransitions();
-                pasteDlg.ValidateCells();
-                Assert.AreEqual(Resources.PasteDlg_ShowNoErrors_No_errors, pasteDlg.ErrorText);
-                pasteDlg.CancelDialog();
-            });
-            WaitForClosedForm(pasteDlg);
+                // Test modification matching
+                var heavyMod = new[]
+                {
+                    new TypedModifications(IsotopeLabelType.heavy, new List<StaticMod>
+                    {
+                        new StaticMod("Label:13C(6)15N(4)", "R", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null)
+                    })
+                };
+                SrmDocument document = SkylineWindow.Document;
+                RunUI(() =>
+                {
+                    SkylineWindow.ModifyDocument("Add modification", doc =>
+                        doc.ChangeSettings(doc.Settings.ChangePeptideModifications(mods => new PeptideModifications(mods.StaticModifications, heavyMod))));
+                    SkylineWindow.Document.Settings.UpdateDefaultModifications(true);
+                });
+                WaitForDocumentChange(document);
+
+                var pasteText = "LGPGRPLPTFPTSEC[+57]TS[+80]DVEPDTR[+10]\t907.081803\t1387.566968\tDDX54_CL02".Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = pasteText);
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                var associateProteinsDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => columnSelectDlg.CheckForErrors()); // Some peptides aren't in background proteome
+                var noErrDlg = ShowDialog<MessageDlg>(associateProteinsDlg.OkDialog);
+                Assert.AreEqual(Skyline.Properties.Resources.PasteDlg_ShowNoErrors_No_errors, noErrDlg.Message);
+                OkDialog(noErrDlg, noErrDlg.OkDialog);
+                OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog);
+            }
         }
 
         private static void PastePeptides(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter, 
@@ -164,22 +165,7 @@ namespace pwiz.SkylineTestFunctional
                 filterMatchedPeptidesDlg.OkDialog();
             });
         }
-
-        private static void PasteTransitions(PasteDlg pasteDlg, BackgroundProteome.DuplicateProteinsFilter duplicateProteinsFilter,
-            bool addUnmatched, bool addFiltered)
-        {
-            RunUI(() => pasteDlg.IsMolecule = false); // Make sure it's ready for peptides, not small molecules
-            RunDlg<FilterMatchedPeptidesDlg>(pasteDlg.PasteTransitions, filterMatchedPeptidesDlg =>
-            {
-                // Make sure we only count each peptide once for the FilterMatchedPeptidesDlg.
-                Assert.AreEqual(NUM_UNMATCHED_EXPECTED, filterMatchedPeptidesDlg.UnmatchedCount);
-                filterMatchedPeptidesDlg.DuplicateProteinsFilter = duplicateProteinsFilter;
-                filterMatchedPeptidesDlg.AddUnmatched = addUnmatched;
-                filterMatchedPeptidesDlg.AddFiltered = addFiltered;
-                filterMatchedPeptidesDlg.OkDialog();
-            });
-        }
-
+        
         private string TransitionsClipboardText
         {
             get

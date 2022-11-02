@@ -23,6 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "SpectrumListBase.hpp"
+#include "pwiz/utility/misc/String.hpp"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -44,17 +45,30 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
     if (result < size() || size() == 0)
         return result;
 
-    {
-        boost::lock_guard<boost::mutex> g(m);
-
-        // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
-        if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
-            return size();
-    }
+    if (id.empty())
+        return size();
 
     try
     {
         const auto& firstId = spectrumIdentity(0).id;
+
+        bool triedToFindScanByIndex = bal::starts_with(firstId, "scan=") && bal::starts_with(id, "index=");
+        bool triedToFindIndexByScan = bal::starts_with(firstId, "index=") && bal::starts_with(id, "scan=");
+
+        // HACK: special behavior if actual ids are scan/index and searched ids are index/scan (respectively)
+        if (triedToFindScanByIndex)
+            return find("scan=" + pwiz::util::toString(lexical_cast<int>(pwiz::msdata::id::value(id, "index")) + 1));
+        else if (triedToFindIndexByScan)
+            return find("index=" + pwiz::util::toString(lexical_cast<int>(pwiz::msdata::id::value(id, "scan")) - 1));
+        else
+        {
+            boost::lock_guard<boost::mutex> g(m);
+
+            // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
+            if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
+                return size();
+        }
+
         auto actualId = pwiz::msdata::id::parse(firstId);
         auto actualIdKeys = actualId | boost::adaptors::map_keys;
         auto actualIdKeySet = std::set<std::string>(actualIdKeys.begin(), actualIdKeys.end());
@@ -69,12 +83,12 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
             std::back_inserter(missingIdKeys));
 
         if (!missingIdKeys.empty())
-            warn_once(("[SpectrumList::find]: mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
+            warn_once(("[SpectrumList::find] mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
         return size();
     }
     catch (std::exception& e)
     {
-        warn_once(e.what()); // TODO: log exception
+        warn_once((std::string("[SpectrumList::find] error checking for spectrum id conformance: ") + e.what()).c_str()); // TODO: log exception
         return size();
     }
 }

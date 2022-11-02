@@ -57,7 +57,6 @@ namespace pwiz.Skyline.SettingsUI
             this.chooseViewsControl = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
             this.tabPageResultFileRules.SuspendLayout();
@@ -289,7 +288,6 @@ namespace pwiz.Skyline.SettingsUI
             this.Name = "DocumentSettingsDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.tabControl.ResumeLayout(false);
             this.tabPageAnnotations.ResumeLayout(false);
             this.tabPageResultFileRules.ResumeLayout(false);

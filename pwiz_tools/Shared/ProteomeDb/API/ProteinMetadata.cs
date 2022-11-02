@@ -39,72 +39,84 @@ namespace pwiz.ProteomeDatabase.API
     /// which gave us accession ID P0A7T9
     ///
     /// </summary>
-    public sealed class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>, IAuditLogComparable
+    public class ProteinMetadata : Immutable, IEquatable<ProteinMetadata>, IAuditLogComparable
     {
         public static readonly ProteinMetadata EMPTY = new ProteinMetadata();
         [Track]
-        public string Name { get; private set; } // as read from fasta header line '>[name] [description]'
+        public virtual string Name { get; private set; } // as read from fasta header line '>[name] [description]'
         [Track]
-        public string Description { get; private set; }// as read from fasta header line '>[name] [description]'
+        public virtual string Description { get; private set; }// as read from fasta header line '>[name] [description]'
         // stuff that may be buried in description, or pulled from a webservice
         [Track]
-        public string PreferredName { get; private set; }
+        public virtual string PreferredName { get; private set; }
         [Track]
-        public string Accession { get; private set; }
+        public virtual string Accession { get; private set; }
         [Track]
-        public string Gene { get; private set; }
+        public virtual string Gene { get; private set; }
         [Track]
-        public string Species { get; private set; }
+        public virtual string Species { get; private set; }
         // if this does not start with the "search complete" tag, we owe a trip to the internet to try to dig out more metadata
-        public WebSearchInfo WebSearchInfo { get; private set; }
+        public virtual WebSearchInfo WebSearchInfo { get; private set; }
 
-        public ProteinMetadata ChangeName(string name)
+        /// <summary>
+        /// For a single protein, returns an ImmutableList with just that protein's ProteinMetadata.
+        /// For a protein group, returns all of the group's proteins' ProteinMetadata
+        /// </summary>
+        public virtual ImmutableList<ProteinMetadata> ProteinMetadataList => ImmutableList<ProteinMetadata>.Singleton(this);
+        
+        public virtual ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata other)
+        {
+            return new ProteinMetadata(other.Name, other.Description, other.PreferredName, other.Accession, other.Gene,
+                other.Species, other.WebSearchInfo.ToString());
+        }
+
+        public virtual ProteinMetadata ChangeName(string name)
         {
             return new ProteinMetadata(this){Name = name};
         }
 
-        public ProteinMetadata ChangeDescription(string descr)
+        public virtual ProteinMetadata ChangeDescription(string descr)
         {
             return new ProteinMetadata(this) { Description = descr };
         }
         
-        public ProteinMetadata ChangePreferredName(string preferredname)
+        public virtual ProteinMetadata ChangePreferredName(string preferredname)
         {
             return new ProteinMetadata(this) { PreferredName = preferredname };
         }
 
-        public ProteinMetadata ChangeAccession(string accession)
+        public virtual ProteinMetadata ChangeAccession(string accession)
         {
             return new ProteinMetadata(this) { Accession = accession };
         }
 
-        public ProteinMetadata ChangeGene(string gene)
+        public virtual ProteinMetadata ChangeGene(string gene)
         {
             return new ProteinMetadata(this) { Gene = gene };
         }
 
-        public ProteinMetadata ChangeSpecies(string species)
+        public virtual ProteinMetadata ChangeSpecies(string species)
         {
             return new ProteinMetadata(this){Species = species};
         }
 
-        public ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
+        public virtual ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
         {
             return new ProteinMetadata(this) { WebSearchInfo = webSearchInfo };
         }
 
-        public ProteinMetadata ClearWebSearchInfo()
+        public virtual ProteinMetadata ClearWebSearchInfo()
         {
             // sometimes all you really want is to initialize
             return new ProteinMetadata(this) { WebSearchInfo = WebSearchInfo.EMPTY };
         }
 
-        public ProteinMetadata SetWebSearchCompleted()
+        public virtual ProteinMetadata SetWebSearchCompleted()
         {
             return new ProteinMetadata(this) { WebSearchInfo = WebSearchInfo.SetSearchCompleted() };
         }
 
-        public ProteinMetadata SetWebSearchTerm(WebSearchTerm search)
+        public virtual ProteinMetadata SetWebSearchTerm(WebSearchTerm search)
         {
             return new ProteinMetadata(this) { WebSearchInfo = WebSearchInfo.SetSearchTerm(search) };
         }
@@ -162,7 +174,7 @@ namespace pwiz.ProteomeDatabase.API
         /// </summary>
         /// <param name="source">the source to merge from</param>
         /// <returns>a copy of this merged with source, with this winning when fields conflict</returns>
-        public ProteinMetadata Merge(ProteinMetadata source)
+        public virtual ProteinMetadata Merge(ProteinMetadata source)
         {
             if (source==null)
                 return this;
@@ -177,6 +189,11 @@ namespace pwiz.ProteomeDatabase.API
                 // extend the search history of this by adding that of source
                 WebSearchInfo = WebSearchInfo.Merge(source.WebSearchInfo)
             };
+        }
+
+        public virtual ProteinMetadata Merge(string name, string description)
+        {
+            return Merge(new ProteinMetadata(name, description));
         }
 
         public bool HasMissingMetadata()
@@ -260,7 +277,7 @@ namespace pwiz.ProteomeDatabase.API
             return EMPTY;
         }
 
-        public bool Equals(ProteinMetadata other)
+        public virtual bool Equals(ProteinMetadata other)
         {
             if (other == null)
                 return false;
@@ -293,7 +310,6 @@ namespace pwiz.ProteomeDatabase.API
         {
             return String.Format(@"name='{0}' accession='{1}' preferredname='{2}' description='{3}' gene='{4}' species='{5}' websearch='{6}'", Name, Accession, PreferredName, Description, Gene, Species, WebSearchInfo);
         }
-
     }
 
     /// <summary>
@@ -307,6 +323,19 @@ namespace pwiz.ProteomeDatabase.API
         {
             Service = service;
             Query = query;
+            if (service == WebEnabledFastaImporter.UNIPROTKB_TAG && query != null)
+            {
+                // UniprotKB has gotten tweaky about SGD yeast entries, as of 6/28/2022 only
+                // wants to see "S000000001" from "SGD:S000000001" or "SGDID:S000000001"
+                if (query.StartsWith(@"SGD:"))
+                {
+                    Query = query.Substring(4);
+                }
+                else if (query.StartsWith(@"SGDID:"))
+                {
+                    Query = query.Substring(6);
+                }
+            }
         }
         public char Service { get; private set; }
         public string Query { get; private set; } // an accession id, gi number etc

@@ -19,13 +19,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Colors;
 using pwiz.Common.Controls;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -40,8 +45,9 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private BindingListSource _bindingListSource;
         private IViewContext _viewContext;
-        private ImmutableList<DataPropertyDescriptor> _itemProperties;
+        private ItemProperties _itemProperties;
         private ImmutableList<ColumnFormat> _columnFormats;
+        private CancellationTokenSource _colorSchemeCancellationTokenSource;
 
         public BoundDataGridView()
         {
@@ -86,40 +92,76 @@ namespace pwiz.Common.DataBinding.Controls
         private void BindingListSourceOnAllRowsChanged(object sender, EventArgs eventArgs)
         {
             Invalidate();
+            UpdateColorScheme();
         }
 
+        private bool _inUpdateColumns;
         protected virtual void UpdateColumns()
         {
-            var bindingListSource = DataSource as BindingListSource;
-            if (DesignMode)
+            if (_inUpdateColumns)
             {
                 return;
             }
-            if (null == bindingListSource || null == _viewContext)
+
+            try
             {
-                return;
-            }
-            var newItemProperties = bindingListSource.ItemProperties;
-            if (!Equals(newItemProperties, _itemProperties))
-            {
-                var newColumns = new List<DataGridViewColumn>();
-                for (int i = 0; i < newItemProperties.Count; i++)
+                _inUpdateColumns = true;
+                var bindingListSource = DataSource as BindingListSource;
+                if (DesignMode)
                 {
-                    var propertyDescriptor = newItemProperties[i];
-                    var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
-                    if (null != column)
-                    {
-                        newColumns.Add(column);
-                    }
+                    return;
                 }
-				if (newColumns.Count > 0)
-				{
-					Columns.Clear();
-					AddColumns(newColumns.ToArray());
-				}
-				_itemProperties = newItemProperties;
+
+                if (null == bindingListSource || null == _viewContext)
+                {
+                    return;
+                }
+
+                var columnsToHide = new HashSet<string>();
+                var clusteredProperties =
+                    (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
+                if (clusteredProperties != null)
+                {
+                    columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p => p.Name));
+                }
+
+                var newItemProperties = bindingListSource.ItemProperties;
+                if (!Equals(newItemProperties, _itemProperties))
+                {
+                    var newColumns = new List<DataGridViewColumn>();
+                    for (int i = 0; i < newItemProperties.Count; i++)
+                    {
+                        var propertyDescriptor = newItemProperties[i];
+                        if (columnsToHide.Contains(propertyDescriptor.Name))
+                        {
+                            continue;
+                        }
+
+                        var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
+                        if (null != column)
+                        {
+                            newColumns.Add(column);
+                        }
+                    }
+
+                    if (newColumns.Count > 0)
+                    {
+                        Columns.Clear();
+                        AddColumns(newColumns.ToArray());
+                    }
+
+                    _itemProperties = newItemProperties;
+                }
+
+                UpdateColumnFormats(false);
+                UpdateColorScheme();
+
             }
-            UpdateColumnFormats(false);
+            finally
+            {
+                _inUpdateColumns = false;
+            }
+
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -279,5 +321,130 @@ namespace pwiz.Common.DataBinding.Controls
             }
             base.OnCellErrorTextNeeded(e);
         }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+            if (ReportColorScheme == null)
+            {
+                return;
+            }
+
+            if (e.ColumnIndex < 0 || e.ColumnIndex >= ColumnCount)
+            {
+                return;
+            }
+            var reportResults = (DataSource as BindingListSource)?.ReportResults;
+            if (reportResults == null)
+            {
+                return;
+            }
+
+            if (e.RowIndex < 0 || e.RowIndex >= reportResults.RowCount)
+            {
+                return;
+            }
+
+            var column = Columns[e.ColumnIndex];
+            if (column == null)
+            {
+                return;
+            }
+            var propertyDescriptor = reportResults.ItemProperties.FindByName(Columns[e.ColumnIndex].DataPropertyName);
+            if (propertyDescriptor == null)
+            {
+                return;
+            }
+
+            var color = ReportColorScheme.GetColor(propertyDescriptor, reportResults.RowItems[e.RowIndex]);
+            if (color.HasValue)
+            {
+                e.CellStyle.BackColor = color.Value;
+                var linkColumn = column as DataGridViewLinkColumn;
+                if (ColorPalettes.GetColorBrightness(color.Value) < .5)
+                {
+                    e.CellStyle.ForeColor = Color.White;
+                    if (linkColumn != null)
+                    {
+                        var row = Rows[e.RowIndex];
+                        // "row" has now been unshared, and we can safely change its LinkColor
+                        var linkCell = row.Cells[e.ColumnIndex] as DataGridViewLinkCell;
+                        if (linkCell != null)
+                        {
+                            linkCell.LinkColor = Color.White;
+                        }
+                    }
+                }
+                else
+                {
+                    if (linkColumn != null)
+                    {
+                        var sharedRow = Rows.SharedRow(e.RowIndex);
+                        // If the row has been unshared (i.e. its index is not -1), then we might need to set its LinkColor back to its original value
+                        if (sharedRow.Index != -1)
+                        {
+                            var linkCell = sharedRow.Cells[e.ColumnIndex] as DataGridViewLinkCell;
+                            if (linkCell != null)
+                            {
+                                linkCell.LinkColor = linkColumn.LinkColor;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void UpdateColorScheme()
+        {
+            _colorSchemeCancellationTokenSource?.Cancel();
+            _colorSchemeCancellationTokenSource = null;
+            var reportResults = (DataSource as BindingListSource)?.ReportResults as ClusteredReportResults;
+            if (reportResults == null)
+            {
+                ReportColorScheme = null;
+            }
+            else
+            {
+                var dataSchema = (DataSource as BindingListSource)?.ViewInfo?.DataSchema;
+                if (dataSchema == null)
+                {
+                    return;
+                }
+
+                _colorSchemeCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(dataSchema.QueryLock.CancellationToken);
+                var cancellationToken = _colorSchemeCancellationTokenSource.Token;
+                CommonActionUtil.RunAsync(() =>
+                {
+                    using (dataSchema.QueryLock.GetReadLock())
+                    {
+                        GetColorScheme(cancellationToken, reportResults);
+                    }
+                });
+            }
+        }
+
+        private void GetColorScheme(CancellationToken cancellationToken, ClusteredReportResults reportResults)
+        {
+            try
+            {
+                var reportColorScheme = ReportColorScheme.FromClusteredResults(cancellationToken, reportResults);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    CommonActionUtil.SafeBeginInvoke(this, () =>
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            ReportColorScheme = reportColorScheme;
+                            Invalidate();
+                        }
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        public ReportColorScheme ReportColorScheme { get; set; }
     }
 }

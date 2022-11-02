@@ -17,11 +17,20 @@
  * limitations under the License.
  */
 
+using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
+using pwiz.MSGraph;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using System.Collections.Generic;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -36,6 +45,19 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            var y4 = "y4";
+            var y4Annotated = "y4" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 9));
+
+            var ionsAnnotated = new[]
+            {
+                "y1" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 1)),
+                "y1++" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 2)),
+                "y5++" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 3)),
+                "y7" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 6)),
+                "y11" + TextUtil.SEPARATOR_SPACE + string.Format(@"({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, 21))
+            };
+
+
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
             OpenDocument("BlibDriftTimeTest.sky");
             ImportResults("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5);
@@ -43,6 +65,25 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
 
             CloseSpectrumGraph();
+
+            // Check ion mobility details display
+            var expectedIonMobility =
+                IonMobilityFilter.GetIonMobilityFilter(3.48, eIonMobilityUnits.drift_time_msec, 0, null);
+            for (var loop = 0; loop < 4; loop++)
+            {
+                bool wantCCS = loop < 2;
+                bool wantIM = loop % 2 == 0;
+                RunUI(() => SkylineWindow.ShowIonMobility = wantIM);
+                RunUI(() => SkylineWindow.ShowCollisionCrossSection = wantCCS);
+                WaitForGraphs();
+                var graphChrom = SkylineWindow.GetGraphChrom("ID12692_01_UCA168_3727_040714");
+                var pane = graphChrom.GraphPane as MSGraphPane;
+                var annotation = pane?.GetAnnotationLabelStrings().First() ?? string.Empty;
+                AssertEx.AreEqual(wantIM, annotation.Contains(ChromGraphItem.FormatIonMobilityValue(expectedIonMobility)),
+                    "did not find expected IMS information display");
+                AssertEx.AreEqual(wantCCS, annotation.Contains(ChromGraphItem.FormatCollisionCrossSectionValue(expectedIonMobility)),
+                    " did not find expected CCS information display");
+            }
 
             // Simulate click on a peak in GraphChromatogram form.
             ClickChromatogram(32.95, 134.6);
@@ -95,14 +136,61 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(false);
             SetScanType(ChromSource.fragment, 33.23, 27.9);
             ClickFullScan(517, 1000);
+
+            //test mass error in un-annotated spectrum
+            TestAnnotations(new[] {y4});
+            RunUI(() => SkylineWindow.SetShowMassError(true));
+            TestAnnotations((new [] { new StringBuilder(y4).AppendLine().Append(string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,
+                "", -43.5)).ToString() }));
+            RunUI(() => SkylineWindow.SetShowMassError(false));
+            TestAnnotations(new[] { y4 });
+
             TestScale(516, 520, 0, 80);
+
+            var noVendorCentroidedMessage = ShowDialog<MessageDlg>(() =>
+                SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided));
+            OkDialog(noVendorCentroidedMessage, noVendorCentroidedMessage.OkDialog);
+
+            //Check the annotation functionality if we run in onscreen mode
+            SetShowAnnotations(true);
+            TestAnnotations(new []{ y4Annotated });
+            RunUI(() => SkylineWindow.SetShowMassError(true));
+            TestAnnotations(new []{new StringBuilder(y4Annotated).AppendLine().Append(
+                        string.Format(Resources.GraphSpectrum_MassErrorFormat_ppm,"+", 155.5)).ToString()});
+            RunUI(() => SkylineWindow.SetShowMassError(false));
+            SetZoom(false);
+            TestAnnotations(ionsAnnotated);
+            ClickFullScan(618, 120);
+            RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(500, 700)));
+            TestScale(500, 700, 0, 1050.5);
+            SetShowAnnotations(false);
+            TestAnnotations(new[] { "y5" });
 
             // Check split graph
             ShowSplitChromatogramGraph(true);
+            SetZoom(true);
+
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             TestScale(529, 533, 0, 50);
             ClickChromatogram(33.06, 68.8, PaneKey.PRECURSORS);
             TestScale(452, 456, 0, 300);
+
+            //test sync m/z scale
+            RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
+            WaitForGraphs();
+            RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphFullScan));  // Sync from the full scan viewer to the library match
+            WaitForGraphs();
+            Assert.AreEqual(SkylineWindow.GraphFullScan.Range, SkylineWindow.GraphSpectrum.Range);
+            var testRange = new MzRange(100, 200);
+            RunUI(() => SkylineWindow.GraphSpectrum.SetMzScale(testRange));
+            RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum)); // Sync from the library match to the full scan viewer
+            WaitForGraphs();
+            Assert.AreEqual(SkylineWindow.GraphSpectrum.Range, SkylineWindow.GraphFullScan.Range);
+            Assert.AreEqual(testRange, SkylineWindow.GraphFullScan.Range);
+
+            RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum, false)); // Sync from the library match to the full scan viewer
+            //annotations are not shown in the offscreen mode
+            TestSpecialIonsAnnotations();
         }
 
         private static void ClickFullScan(double x, double y)
@@ -152,6 +240,22 @@ namespace pwiz.SkylineTestFunctional
             CheckFullScanSelection(x, y);
         }
 
+        private static void SetShowAnnotations(bool isChecked)
+        {
+            RunUI(() => SkylineWindow.GraphFullScan.SetShowAnnotations(isChecked));
+        }
+
+        private static void TestAnnotations(string[] annotationText)
+        {
+            var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
+            Assert.IsTrue(annotationText.All(txt => graphLabels.Contains(txt)));
+        }
+
+        private void TestLibraryMatchAnnotations(string[] annotationText)
+        {
+            var ionLabels = SkylineWindow.GraphSpectrum.IonLabels.ToHashSet();
+            Assert.IsTrue(annotationText.All(txt => ionLabels.Contains(txt)));
+        }
         private static void SetFilter(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetFilter(isChecked));
@@ -165,6 +269,35 @@ namespace pwiz.SkylineTestFunctional
         private static void SetSpectrum(bool isChecked)
         {
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(isChecked));
+        }
+
+        private void TestSpecialIonsAnnotations()
+        {
+            var testIon = new MeasuredIon("Reporter_Test", "C31H47N14O4", 679.3899, 679.3899, Adduct.M_PLUS, true);
+            //Add special ion to the document settings
+            RunUI(() =>
+            {
+                var settings = SkylineWindow.DocumentUI.Settings;
+                var newFilter = settings.TransitionSettings.Filter.ChangeMeasuredIons(new List<MeasuredIon>(new[] { testIon }));
+                var newSettings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeFilter(newFilter));
+                SkylineWindow.ModifyDocument("Set test settings",
+                    doc => doc.ChangeSettings(newSettings));
+            });
+
+
+            WaitForDocumentLoaded();
+            WaitForGraphs();
+            RunUI(SkylineWindow.HideFullScanGraph);
+            Settings.Default.ShowSpecialIons = true;
+            SetShowAnnotations(true);
+            SetZoom(true);
+            FindNode("679");
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
+            RunUI(() => SkylineWindow.GraphFullScan.SetMzScale(new MzRange(670, 680)));
+            WaitForGraphs();
+            //check that the special ion annotation shows in both library and full scan viewers
+            TestAnnotations(new [] {"Reporter_Test+"});
+            TestLibraryMatchAnnotations(new[] { "Reporter_Test+" });
         }
     }
 }

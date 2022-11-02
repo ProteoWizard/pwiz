@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ColumnToolTips {
@@ -75,6 +75,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string AbsLog2FoldChange {
             get {
                 return ResourceManager.GetString("AbsLog2FoldChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value for this replicate which was used to calculate the fold change. The number depends on the normalization method, and whether the fold change is being calculated at the protein or peptide level..
+        /// </summary>
+        public static string Abundance {
+            get {
+                return ResourceManager.GetString("Abundance", resourceCulture);
             }
         }
         
@@ -320,9 +329,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
-        ///containing protein sequence, or #N/A if no protein sequence is available.
-        ///    .
+        ///   Looks up a localized string similar to The zero-based position of the first (N-terminal) amino acid of the peptide within its
+        ///containing protein sequence, or #N/A if no protein sequence is available..
         /// </summary>
         public static string BeginPos {
             get {
@@ -370,11 +378,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A set of peaks with the same start and end time from the transition chromatograms of a set of precursors belonging to the same peptide or molecule..
+        /// </summary>
+        public static string CandidatePeakGroup {
+            get {
+                return ResourceManager.GetString("CandidatePeakGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         public static string CAS {
             get {
                 return ResourceManager.GetString("CAS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True if the peak boundaries of the candidate peak are the same as the integration boundaries that are used for all of the transitions in the peak group..
+        /// </summary>
+        public static string Chosen {
+            get {
+                return ResourceManager.GetString("Chosen", resourceCulture);
             }
         }
         
@@ -415,7 +441,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unitys of the chromatogram ion mobility and chromatogram ion mobility extraction width.
+        ///   Looks up a localized string similar to Units of the chromatogram ion mobility and chromatogram ion mobility extraction width.
         /// </summary>
         public static string ChromatogramIonMobilityUnits {
             get {
@@ -475,6 +501,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string CollisionalCrossSection {
             get {
                 return ResourceManager.GetString("CollisionalCrossSection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The collision cross section of the precursor.
+        /// </summary>
+        public static string CollisionCrossSection {
+            get {
+                return ResourceManager.GetString("CollisionCrossSection", resourceCulture);
             }
         }
         
@@ -629,6 +664,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cycle time (in seconds) across the integrated peak..
+        /// </summary>
+        public static string CycleTimeAcrossPeak {
+            get {
+                return ResourceManager.GetString("CycleTimeAcrossPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Declustering Potential for the precursor ion according to
         ///instrument/vendor specific default declustering potential equation within Skyline.
         /// </summary>
@@ -721,7 +765,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
+        ///   Looks up a localized string similar to The zero-based position of the last (C-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         /// </summary>
         public static string EndPos {
@@ -905,6 +949,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collection of properties of the peak group which can be assigned a numerical score to be used in assessing peak quality..
+        /// </summary>
+        public static string Features {
+            get {
+                return ResourceManager.GetString("Features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The limits of detection and quantification for the peptide or molecule. The method for calculating these quantities can be chosen on the Quantification tab of the Peptide Settings..
         /// </summary>
         public static string FiguresOfMerit {
@@ -946,6 +999,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Files {
             get {
                 return ResourceManager.GetString("Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The position of the first (N-terminal) amino acid of the peptide within its
+        ///containing protein sequence, or #N/A if no protein sequence is available..
+        /// </summary>
+        public static string FirstPosition {
+            get {
+                return ResourceManager.GetString("FirstPosition", resourceCulture);
             }
         }
         
@@ -1196,6 +1259,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The high energy offset for the precursor from the ion mobility library.
+        /// </summary>
+        public static string IonMobilityHighEnergyOffset {
+            get {
+                return ResourceManager.GetString("IonMobilityHighEnergyOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Center of the ion mobility filter window used in chromatogram extraction for a precursor ion..
         /// </summary>
         public static string IonMobilityMS1 {
@@ -1210,6 +1282,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string IonMobilityUnits {
             get {
                 return ResourceManager.GetString("IonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ion mobility of the precursor.
+        /// </summary>
+        public static string IonMobilityValue {
+            get {
+                return ResourceManager.GetString("IonMobilityValue", resourceCulture);
             }
         }
         
@@ -1313,6 +1394,25 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
+        ///containing protein sequence, or #N/A if no protein sequence is available.
+        /// </summary>
+        public static string LastPosition {
+            get {
+                return ResourceManager.GetString("LastPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The collision cross section for the precursor from the ion mobility library.
+        /// </summary>
+        public static string LibraryCollisionCrossSection {
+            get {
+                return ResourceManager.GetString("LibraryCollisionCrossSection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The dot-product between the individual transition peak areas
         ///of the precursor and the intensities of the matching ion peaks in the matched MS/MS
         ///spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
@@ -1334,6 +1434,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LibraryIntensity {
             get {
                 return ResourceManager.GetString("LibraryIntensity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ion mobility information for the precursor from the ion mobility library.
+        /// </summary>
+        public static string LibraryIonMobility {
+            get {
+                return ResourceManager.GetString("LibraryIonMobility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The high energy offset for the precursor from the ion mobility library.
+        /// </summary>
+        public static string LibraryIonMobilityHighEnergyOffset {
+            get {
+                return ResourceManager.GetString("LibraryIonMobilityHighEnergyOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The units of the Library Ion Mobility Value.
+        /// </summary>
+        public static string LibraryIonMobilityUnits {
+            get {
+                return ResourceManager.GetString("LibraryIonMobilityUnits", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ion mobility of the precursor from the ion mobility library.
+        /// </summary>
+        public static string LibraryIonMobilityValue {
+            get {
+                return ResourceManager.GetString("LibraryIonMobilityValue", resourceCulture);
             }
         }
         
@@ -1691,6 +1827,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The median transition peak area of transition results in the particular result file.
+        ///This median peak area is used when the normalization method is &quot;Equalize Medians&quot;.
+        ///If there is an internal standard label type, then the median peak area is calculated using only the peak areas from transitions whose precursor&apos;s label type is an internal standard.
+        ///If there are no internal standard peak areas, then the median transition peak area is calculated from all transition peak areas..
+        /// </summary>
+        public static string MedianPeakArea {
+            get {
+                return ResourceManager.GetString("MedianPeakArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         public static string Min {
@@ -1751,6 +1899,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string MissedCleavages {
             get {
                 return ResourceManager.GetString("MissedCleavages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The sum of the feature values weighted according to the currently selected peak scoring model..
+        /// </summary>
+        public static string ModelScore {
+            get {
+                return ResourceManager.GetString("ModelScore", resourceCulture);
             }
         }
         
@@ -2029,6 +2186,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number which observed values are divided by when using the default normalization method.
+        ///The default normalization method is specified on the Quantification tab of the Peptide or Molecule settings dialog..
+        /// </summary>
+        public static string NormalizationDivisor {
+            get {
+                return ResourceManager.GetString("NormalizationDivisor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Override of the normalization method to use with this particular molecule for absolute quantification and group comparisons..
         /// </summary>
         public static string NormalizationMethod {
@@ -2097,6 +2264,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximum end time of the individual peaks in the peak group..
+        /// </summary>
+        public static string PeakGroupEndTime {
+            get {
+                return ResourceManager.GetString("PeakGroupEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The retention time of the peak with the maximum height of all transitions in a peak group.
+        /// </summary>
+        public static string PeakGroupRetentionTime {
+            get {
+                return ResourceManager.GetString("PeakGroupRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum start time of the individual peaks in the peak group..
+        /// </summary>
+        public static string PeakGroupStartTime {
+            get {
+                return ResourceManager.GetString("PeakGroupStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The estimate q-value (false discovery rate) that a peak with this score would get if it were the peak chosen by Skyline..
+        /// </summary>
+        public static string PeakQValue {
+            get {
+                return ResourceManager.GetString("PeakQValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The rank based on Area of this transition among all other transitions of the
         ///same precursor..
         /// </summary>
@@ -2112,6 +2315,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakRankByLevel {
             get {
                 return ResourceManager.GetString("PeakRankByLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The features and their scores for the peak group..
+        /// </summary>
+        public static string PeakScores {
+            get {
+                return ResourceManager.GetString("PeakScores", resourceCulture);
             }
         }
         
@@ -2741,6 +2953,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The fraction of amino acids in the protein sequence which could be part of one or more of the sequences of the child peptides..
+        /// </summary>
+        public static string ProteinSequenceCoverage {
+            get {
+                return ResourceManager.GetString("ProteinSequenceCoverage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein Species.
         /// </summary>
         public static string ProteinSpecies {
@@ -2927,6 +3148,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Information about the values from the replicate which were used to calculate the fold change.
+        /// </summary>
+        public static string ReplicateAbundance {
+            get {
+                return ResourceManager.GetString("ReplicateAbundance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A collection of values from individual replicates which were used to calculate the fold change.
+        /// </summary>
+        public static string ReplicateAbundances {
+            get {
+                return ResourceManager.GetString("ReplicateAbundances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The calibration curve made using the replicates that have the same Batch Name as this replicate.
         ///If the Precursor Concentration is specified on any of the Precursors in this Peptide then the Calibration Curve will be an isotopolog response curve..
         /// </summary>
@@ -2951,6 +3190,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ReplicateErrorMessage {
             get {
                 return ResourceManager.GetString("ReplicateErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The cohort to which the Replicate Abundance belongs.
+        /// </summary>
+        public static string ReplicateGroup {
+            get {
+                return ResourceManager.GetString("ReplicateGroup", resourceCulture);
             }
         }
         
@@ -3032,6 +3280,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Replicates {
             get {
                 return ResourceManager.GetString("Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The biological replicate for the Replicate Abundance.
+        /// </summary>
+        public static string ReplicateSampleIdentity {
+            get {
+                return ResourceManager.GetString("ReplicateSampleIdentity", resourceCulture);
             }
         }
         
@@ -3142,6 +3399,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleType {
             get {
                 return ResourceManager.GetString("SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The numerical value for the particular feature..
+        /// </summary>
+        public static string Score {
+            get {
+                return ResourceManager.GetString("Score", resourceCulture);
             }
         }
         
@@ -3524,6 +3790,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Whether this result was obtained from an MS1 scan..
+        /// </summary>
+        public static string TransitionResultIsMs1 {
+            get {
+                return ResourceManager.GetString("TransitionResultIsMs1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether this result is treated as quantitative, based on the user-modifiable Quantitative property of the Transition and whether the MS/MS Full Scan Acquisition Method is DDA which treats all fragment ions as non-quantitative..
+        /// </summary>
+        public static string TransitionResultIsQuantitative {
+            get {
+                return ResourceManager.GetString("TransitionResultIsQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unique identifier of the transition result within the document. This begins with &quot;TransitionResult:&quot; and usually ends with the replicate name, but may have additional attributes for the optimization step and result file..
         /// </summary>
         public static string TransitionResultLocator {
@@ -3639,6 +3923,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string UTCTime {
             get {
                 return ResourceManager.GetString("UTCTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The numerical weighting for the feature assigned by the peak scoring model..
+        /// </summary>
+        public static string Weight {
+            get {
+                return ResourceManager.GetString("Weight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A combination of the feature score and its weight..
+        /// </summary>
+        public static string WeightedFeature {
+            get {
+                return ResourceManager.GetString("WeightedFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A collection of the features that have been assigned weights by the peak scoring model..
+        /// </summary>
+        public static string WeightedFeatures {
+            get {
+                return ResourceManager.GetString("WeightedFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The product of the feature score and the feature weight.
+        /// </summary>
+        public static string WeightedScore {
+            get {
+                return ResourceManager.GetString("WeightedScore", resourceCulture);
             }
         }
     }

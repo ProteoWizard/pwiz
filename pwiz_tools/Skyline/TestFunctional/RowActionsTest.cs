@@ -24,9 +24,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Databinding.RowActions;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestFunctional
         {
             TestDeletePeptides();
             TestRemovePrecursorPeaks();
+            TestRemovePeptidePeaks();
             TestRemovePivotedPeptides();
         }
 
@@ -161,6 +162,76 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
+        /// Tests using the "Remove Peptide Peaks" button.
+        /// This test removes peaks from "GNP..." and "GLV..." peptides in replicate S_2.
+        /// </summary>
+        private void TestRemovePeptidePeaks()
+        {
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("RowActionsTest.sky")));
+            WaitForDocumentLoaded();
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(PersistedViews.MainGroup.Id,
+                "TransitionAreas")));
+            WaitForConditionUI(() => documentGrid.IsComplete);
+
+            var peptides = SkylineWindow.Document.Peptides.Where(pep => pep.Peptide.Sequence.StartsWith("G")).ToList();
+            Assert.AreEqual(2, peptides.Count);
+            foreach (var peptide in peptides)
+            {
+                Assert.AreEqual(3, peptide.Results.Count);
+                for (int iReplicate = 0; iReplicate < 3; iReplicate++)
+                {
+                    Assert.AreEqual(1, peptide.Results[iReplicate].Count);
+                    var peptideChromInfo = peptide.Results[iReplicate].First();
+                    AssertEx.IsNotNull(peptideChromInfo.RetentionTime);
+                }
+            }
+            RunUI(() =>
+            {
+                var colPeptide = documentGrid.FindColumn(PropertyPath.Parse("Precursor.Peptide"));
+                AssertEx.IsNotNull(colPeptide);
+                var colReplicate = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate"));
+                AssertEx.IsNotNull(colReplicate);
+                for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
+                {
+                    var row = documentGrid.DataGridView.Rows[iRow];
+                    var peptide = (Skyline.Model.Databinding.Entities.Peptide)row.Cells[colPeptide.Index].Value;
+                    var replicate = (Replicate)row.Cells[colReplicate.Index].Value;
+                    if (peptide.Sequence.StartsWith("G") && replicate?.Name == "S_2")
+                    {
+                        row.Selected = true;
+                    }
+                }
+            });
+            var menuItem = GetDropDownItems(documentGrid.NavBar.ActionsButton)
+                .FirstOrDefault(item => item.Text == RemovePeaksAction.Peptides.GetMenuItemText(SrmDocument.DOCUMENT_TYPE.proteomic));
+            Assert.IsNotNull(menuItem);
+            var confirmDialog = ShowDialog<AlertDlg>(menuItem.PerformClick);
+            string expectedMessage = string.Format(
+                Resources.RemovePeptides_GetConfirmRemoveMessage_Are_you_sure_you_want_to_remove_these__0__peaks_from__1__peptides_,
+                2, 2);
+            Assert.AreEqual(expectedMessage, confirmDialog.Message);
+            OkDialog(confirmDialog, confirmDialog.ClickOk);
+            peptides = SkylineWindow.Document.Peptides.Where(pep => pep.Peptide.Sequence.StartsWith("G")).ToList();
+            Assert.AreEqual(2, peptides.Count);
+            foreach (var peptide in peptides)
+            {
+                Assert.AreEqual(3, peptide.Results.Count);
+                for (int iReplicate = 0; iReplicate < 3; iReplicate++)
+                {
+                    Assert.AreEqual(1, peptide.Results[iReplicate].Count);
+                    var peptideChromInfo = peptide.Results[iReplicate].First();
+                    bool shouldHaveValue = iReplicate != 1;
+                    Assert.AreEqual(shouldHaveValue, peptideChromInfo.RetentionTime.HasValue);
+                }
+            }
+            var alertDlg = ShowDialog<AlertDlg>(SkylineWindow.NewDocument);
+            OkDialog(alertDlg, alertDlg.ClickNo);
+        }
+
+
+        /// <summary>
         /// Tests deleting peptides when the view has been pivoted.
         /// This test deletes the peptides which are in rows 4 through 9.
         /// </summary>
@@ -183,7 +254,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>documentGrid.DataboundGridControl.BindingListSource.ApplyLayout(layout));
             WaitForConditionUI(() => documentGrid.IsComplete);
             WaitForConditionUI(() => 3 == documentGrid.DataGridView.ColumnCount);
-            Assert.AreEqual(12, documentGrid.DataGridView.RowCount);
+            Assert.AreEqual(13, documentGrid.DataGridView.RowCount);
             RunUI(() =>
             {
                 for (int i = 0; i < documentGrid.DataGridView.RowCount; i++)

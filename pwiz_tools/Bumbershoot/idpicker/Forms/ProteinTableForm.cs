@@ -1038,10 +1038,9 @@ namespace IDPicker.Forms
                 var itr = stats.second.Find(rowId);
                 if (itr.IsValid)
                 {
-                    double value;
                     if (itr.Current.Value.IsArray)
                     {
-                        value = ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
+                        double value = ((double[]) itr.Current.Value.Value)[Convert.ToInt32(pivotColumn.DataPropertyName)];
                         if (ReferenceColumn != null)
                         {
                             var referenceStats = ReferenceColumn.Tag as Pair<bool, Map<long, PivotData>>;
@@ -1053,11 +1052,11 @@ namespace IDPicker.Forms
                                     value /= refValue;
                             }
                         }
-                    }
-                    else
-                        value = (double) itr.Current.Value.Value;
 
-                    return value;
+                        return value;
+                    }
+
+                    return itr.Current.Value.Value;
                 }
             }
             else if (baseRow is ClusterRow)

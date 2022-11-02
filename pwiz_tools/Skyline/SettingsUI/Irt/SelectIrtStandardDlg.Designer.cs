@@ -33,7 +33,6 @@
             this.comboStandards = new System.Windows.Forms.ComboBox();
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -76,7 +75,6 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "SelectIrtStandardDlg";
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

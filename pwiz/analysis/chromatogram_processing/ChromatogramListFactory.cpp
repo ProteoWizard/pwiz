@@ -288,7 +288,8 @@ string ChromatogramListFactory::usage(bool detailedHelp, const char *morehelp_pr
 
     oss << endl;
 
-    oss << "FILTER OPTIONS" << endl;
+    oss << "Chromatogram List Filters\n"
+           "=========================\n";
     if (!detailedHelp)
     {
         if (morehelp_prompt)

@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestUtil
         }
 
 
-        public void TakeNextShot(Form activeWindow, string pathToSave = null, Action<Bitmap> processShot = null, double? scale = null)
+        public Bitmap TakeNextShot(Form activeWindow, string pathToSave = null, Action<Bitmap> processShot = null, double? scale = null)
         {
             _skylineWindow = Program.MainWindow;
             if (activeWindow == null)
@@ -316,6 +316,8 @@ namespace pwiz.SkylineTestUtil
             if (shotPic != null)
             {
                 processShot?.Invoke(shotPic);
+                CleanupBorder(shotPic); // Tidy up annoying variations in screen shot boarder due to underlying windows
+
                 if (scale.HasValue)
                 {
                     shotPic = new Bitmap(shotPic,
@@ -334,6 +336,54 @@ namespace pwiz.SkylineTestUtil
                     clipThread.Start();
                     clipThread.Join();
                 }
+            }
+
+            return shotPic;
+        }
+
+        private static void CleanupBorder(Bitmap shotPic)
+        {
+            // Determine border color, then make it consistently that color
+            var stats = new Dictionary<Color, int>();
+
+            void UpdateStats(int x, int y)
+            {
+                var c = shotPic.GetPixel(x, y);
+                if (stats.ContainsKey(c))
+                {
+                    stats[c]++;
+                }
+                else
+                {
+                    stats[c] = 1;
+                }
+            }
+
+            for (var x = 0; x < shotPic.Width; x++)
+            {
+                UpdateStats(x, 0);
+                UpdateStats(x, shotPic.Height - 1);
+            }
+
+            for (var y = 0; y < shotPic.Height; y++)
+            {
+                UpdateStats(0, y);
+                UpdateStats(shotPic.Width - 1, y);
+            }
+
+            var color = stats.FirstOrDefault(kvp => kvp.Value == stats.Values.Max()).Key;
+
+            // Enforce a clean border
+            for (var x = 0; x < shotPic.Width; x++)
+            {
+                shotPic.SetPixel(x, 0, color);
+                shotPic.SetPixel(x, shotPic.Height - 1, color);
+            }
+
+            for (var y = 0; y < shotPic.Height; y++)
+            {
+                shotPic.SetPixel(0, y, color);
+                shotPic.SetPixel(shotPic.Width - 1, y, color);
             }
         }
 

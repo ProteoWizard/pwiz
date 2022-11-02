@@ -1,11 +1,12 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import "class" : new ;
 import feature ;
+import indirect ;
 import path ;
 import project ;
 import property ;
@@ -20,7 +21,7 @@ import option ;
 # rule should be used to create new instances. Instances are immutable.
 #
 #   Each property is classified with regard to its effect on build results.
-# Incidental properties have no effect on build results, from Boost.Build's
+# Incidental properties have no effect on build results, from B2's
 # point of view. Others are either free, or non-free and we refer to non-free
 # ones as 'base'. Each property belongs to exactly one of those categories.
 #
@@ -399,7 +400,7 @@ class property-set
             if $(ignore-relevance) || $(p:G) in $(relevant-features)
             {
                 local att = [ feature.attributes $(p:G) ] ;
-                if ! ( incidental in $(att) ) 
+                if ! ( incidental in $(att) )
                 {
                     self.relevant += $(p) ;
                     if ! ( free in $(att) )
@@ -549,8 +550,11 @@ rule refine-from-user-input ( parent-requirements : specification * :
                 $(remove-requirements) : $(project-module) $(location) ] ;
 
             parent-requirements = [ property-set.create
-                [ set.difference [ $(parent-requirements).raw ]
-                : [ $(ps).raw ] ] ] ;
+                [ set.difference
+                    [ indirect.difference
+                        [ $(parent-requirements).raw ] : [ $(ps).raw ] ]
+                    : [ $(ps).raw ]
+                ] ] ;
             specification = $(add-requirements) ;
         }
 
@@ -588,4 +592,13 @@ else
     {
         return $(path) ;
     }
+}
+
+rule __test__ ( )
+{
+    import errors : try catch ;
+
+    try ;
+        create invalid-property ;
+    catch "Invalid property: 'invalid-property'" ;
 }

@@ -94,8 +94,8 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public DocumentGridForm(IDocumentContainer documentContainer) 
-            : this(new DocumentGridViewContext(new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer())))
+        public DocumentGridForm(SkylineWindow skylineWindow) 
+            : this(new DocumentGridViewContext(new SkylineWindowDataSchema(skylineWindow)))
         {
         }
 
@@ -126,6 +126,14 @@ namespace pwiz.Skyline.Controls.Databinding
             set
             {
                 BindingListSource.SetView(value, BindingListSource.ViewContext.GetRowSource(value));
+            }
+        }
+
+        public override DataGridId DataGridId
+        {
+            get
+            {
+                return new DataGridId(DataGridType.DOCUMENT_GRID, null);
             }
         }
 

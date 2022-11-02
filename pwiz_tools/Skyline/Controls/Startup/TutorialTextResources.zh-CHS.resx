@@ -1,76 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
-		Microsoft ResX Schema
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
 
-		Version 1.3
-
-		The primary goals of this format is to allow a simple XML format 
-		that is mostly human readable. The generation and parsing of the 
-		various data types are done through the TypeConverter classes 
-		associated with the data types.
-
-		Example:
-
-		... ado.net/XML headers & schema ...
-		<resheader name="resmimetype">text/microsoft-resx</resheader>
-		<resheader name="version">1.3</resheader>
-		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-		<data name="Name1">this is my long string</data>
-		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-			[base64 mime encoded serialized .NET Framework object]
-		</data>
-		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-			[base64 mime encoded string representing a byte array form of the .NET Framework object]
-		</data>
-
-		There are any number of "resheader" rows that contain simple 
-		name/value pairs.
-
-		Each data row contains a name, and value. The row also contains a 
-		type or mimetype. Type corresponds to a .NET class that support 
-		text/value conversion through the TypeConverter architecture. 
-		Classes that don't support this are serialized and stored with the 
-		mimetype set.
-
-		The mimetype is used for serialized objects, and tells the 
-		ResXResourceReader how to depersist the object. This is currently not 
-		extensible. For a given mimetype the value must be set accordingly:
-
-		Note - application/x-microsoft.net.object.binary.base64 is the format 
-		that the ResXResourceWriter will generate, however the reader can 
-		read any of the formats listed below.
-
-		mimetype: application/x-microsoft.net.object.binary.base64
-		value   : The object must be serialized with 
-			: System.Serialization.Formatters.Binary.BinaryFormatter
-			: and then encoded with base64 encoding.
-
-		mimetype: application/x-microsoft.net.object.soap.base64
-		value   : The object must be serialized with 
-			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-			: and then encoded with base64 encoding.
-
-		mimetype: application/x-microsoft.net.object.bytearray.base64
-		value   : The object must be serialized into a byte array 
-			: using a System.ComponentModel.TypeConverter
-			: and then encoded with base64 encoding.
-	-->
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
               <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
               <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
@@ -89,19 +109,25 @@
     <value>text/microsoft-resx</value>
   </resheader>
   <resheader name="version">
-    <value>1.3</value>
+    <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="DIA_SWATH_Caption" xml:space="preserve">
     <value>DIA/SWATH 数据分析</value>
   </data>
   <data name="DIA_SWATH_Description" xml:space="preserve">
-    <value>根据 Navarr、Nature Biotech 2016 基准测试文件，使用为指示说明而创建的 3 种生物混合数据集，亲身体验如何处理从 Q Exactive 或 TripleTOF 仪器中获得的非数据依赖采集 (DIA) 数据。使用面向 DIA 的“导入肽段搜索”向导从 DDA 数据构建谱图库，其中自动 iRT 校准用于保留时间校准，mProphet 学习的模型用于肽段峰值检测。运用丰富的 Skyline 摘要图评估数据质量，摘要图中包含保留时间、峰面积、质量准确度和 CV。 最后进行群组比较，并自行评估数据捕获每种生物预期比率的效果。</value>
+    <value>根据 Navarro、Nature Biotech 2016 基准测试文献，使用为指示说明而创建的三物种混合数据集，亲身体验如何处理从 Q Exactive 或 TripleTOF 仪器中获得的非数据依赖采集 (DIA) 数据。使用面向 DIA 的“导入肽段搜索”向导从 DDA 数据构建谱图库，其中自动 iRT 校准用于保留时间校准，mProphet 学习的模型用于肽段峰值检测。运用丰富的 Skyline 摘要图评估数据质量，摘要图中包含保留时间、峰面积、质量准确度和 CV。 最后进行群组比较，并自行评估数据捕获每个物种预期比率的效果。</value>
+  </data>
+  <data name="DIA_PASEF_Caption" xml:space="preserve">
+    <value>diaPASEF 数据分析</value>
+  </data>
+  <data name="DIA_PASEF_Description" xml:space="preserve">
+    <value>您将获得使用非数据依赖采集 (DIA) 平行累积串行碎裂 (PASEF) 数据的实际经验，该数据采集自 Bruker timsTOF 仪器，使用根据 Navarro Nature Biotech 2016 基准论文创建的 3 个生物体混合数据集为指导。您将通过适用于 DIA 的导入肽段搜索向导，从 ddaPASEF 数据建立谱图库，数据中包含自动 iRT 校准保留时间以及面向肽段峰检测的 mProphet 学习模型。您还将使用丰富的 Skyline 摘要图集评估数据质量，其中包括保留时间、峰面积、质量精度和 CV。最后进行分组比较，并对数据对每种生物体的预期比率的数据采集程度自行做出评估。</value>
   </data>
   <data name="IMSFiltering_Caption" xml:space="preserve">
     <value>离子迁移谱图过滤</value>
@@ -116,7 +142,7 @@
     <value>亲身体验如何在 Skyline 中进行审计日志记录处理。了解如何生成全面审计记录的 Skyline 文档，帮助其他人再现您的研究，也帮助您记住自己进行过的工作，这样有助于您撰写方法部分以供出版。了解如何使用“审核日志”网格视图（“文档网格”的扩展），来浏览记录的更改并注明更改原因。本例使用校准实验来显示设置更改、数据导入、整合调整以及从校准曲线中排除点的记录。最后，您要将文档上传到 Panorama，了解如何通过可浏览的 Web 界面获取审核日志以供审核。</value>
   </data>
   <data name="DIA_Description" xml:space="preserve">
-    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 隔离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
+    <value>使用非数据依赖采集 (DIA) 作业获得亲身体验，通过使用由相同仪器依次采集的 DIA 和 DDA 运行的工作流。定义和导出 DIA 分离方案。通过在 DIA 运行前采集的 DDA 数据，为实验建立谱图库。根据谱图库，为目标蛋白质组集选择肽段和离子对。在 Skyline 中导入和分析相关的 DIA运行，掌握开始处理 DIA数据的简单工作流。</value>
   </data>
   <data name="TargetedMSMS_Description" xml:space="preserve">
     <value>获得使用从低分辨率 Thermo LTQ 和高分辨率 Agilent 6520 Q-TOF 采集定向 MS/MS（还称作“平行反应监测” - PRM）数据方面的实际经验。获得对在低分辨率和高分辨率仪器上测量母离子和片段离子来获得对肽段定量之间的选择性和敏感性差异的全新理解。发现处理并了解您的质谱数据的新方法，这些方法是由Skyline提供针对基于色谱的定量蛋白质组学的一系列丰富特征集。</value>
@@ -145,6 +171,12 @@
   <data name="MS1Filtering_Description" xml:space="preserve">
     <value>获得创建 Skyline 文档，从而使用数据依赖采集 (DDA) 实验中的 MS1 扫描来检测肽段表达式中定量差异的实际经验。在本教程中，您将从发现数据集中生成一个谱图库、针对 MS1 过滤建立一个 Skyline 文档、导入原始质谱仪数据以从 MS1 扫描中提取母离子色谱图，借助 MS/MS 肽段鉴定指导峰拣选，并且进一步处理 Skyline 产生的定量数据。如果您对发现数据集的非标记定量分析感兴趣，本教程将为您的调查提供新的成套工具。</value>
   </data>
+  <data name="DDASearch_Caption" xml:space="preserve">
+    <value>用于 MS1 过滤的 DDA 搜索</value>
+  </data>
+  <data name="DDSearch_Description" xml:space="preserve">
+    <value>您将获得启动 DDA 质谱仪文件、使用 MS Amanda 运行肽段搜索、根据搜索结果建立谱图库以及最终从 DDA 文件中的 MS1 谱图提取色谱图进行定量分析的实际经验。在本教程中，您将使用 Skyline 肽段搜索向导来搜索从人类全细胞裂解物中采集的 3 个 DDA 数据文件，其中加入了稳定同位素标记蛋白质的 Sigma Alrich UPS1 标准混合物。</value>
+  </data>
   <data name="PeakPicking_Caption" xml:space="preserve">
     <value>高级峰值拣选模型</value>
   </data>
@@ -167,7 +199,7 @@
     <value>碰撞能量优化</value>
   </data>
   <data name="LibraryExplorer_Description" xml:space="preserve">
-    <value>亲身体验如何使用 Skyline 谱图库浏览器。了解使用包含 15N 标记肽段和磷酸化肽段的 MS/MS 谱图库对同位素标记和子离子中性丢失进行处理的更多信息。使用库浏览器可加速 Shotgun 发现实验与靶向研究之间的离子对。</value>
+    <value>亲身体验如何使用 Skyline 谱图库浏览器。了解使用包含 15N 标记肽段和磷酸化肽段的 MS/MS 谱图库对同位素标记和子离子中性丢失进行处理的更多信息。使用库浏览器可加速从Shotgun 蛋白组学研究到靶向蛋白组研究的方法建立。</value>
   </data>
   <data name="ExistingQuant_Caption" xml:space="preserve">
     <value>现有和定量实验</value>
@@ -217,6 +249,9 @@
   <data name="HiResMetabolomics_Caption" xml:space="preserve">
     <value>高分辨率代谢组学</value>
   </data>
+  <data name="SmallMolLibraries_Caption" xml:space="preserve">
+    <value>小分子 IMS 库</value>
+  </data>
   <data name="Section_Advanced_Topics" xml:space="preserve">
     <value>高级主题</value>
   </data>
@@ -228,5 +263,8 @@
   </data>
   <data name="HiResMetabolomics_Description" xml:space="preserve">
     <value>针对指定为母离子化学式和加合物的分子，了解如何创建以此类分子为靶向的 Skyline 文档。导入在 Q Exactive Orbitrap 质谱仪上为一组血浆样品收集的多个重复测定的数据集，查看最初为靶向蛋白质组学用途而创建的现有 Skyline 特性中，有多少可以应用于非蛋白质组学分子数据。</value>
+  </data>
+  <data name="SmallMolLibraries_Description" xml:space="preserve">
+    <value>了解如何使用谱图库和离子迁移过滤来分析复杂的离子迁移谱图-质谱 (IMS-MS) 小分子数据。探索包含质荷比、保留时间、片段和离子迁移信息的谱图库，了解如何使用每个分子的 CCS 值来提高母离子和碎片提取离子色谱图的选择性。</value>
   </data>
 </root>

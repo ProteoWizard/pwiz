@@ -33,6 +33,7 @@ using Excel;
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
@@ -82,6 +83,15 @@ namespace pwiz.SkylineTestUtil
         }
 
         public int ThresholdMB { get; private set; }
+    }
+
+    /// <summary>
+    /// Test method attribute which specifies a test is not suitable for parallel testing
+    /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoParallelTestingAttribute : Attribute
+    {
     }
 
     /// <summary>
@@ -173,7 +183,7 @@ namespace pwiz.SkylineTestUtil
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
             {
-                var messageDlg = existingDialog as MessageDlg;
+                var messageDlg = existingDialog as AlertDlg;
                 if (messageDlg == null)
                     AssertEx.IsNull(existingDialog, typeof(TDlg) + " is already open");
                 else
@@ -197,7 +207,21 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        protected static void RunUI([InstantHandle] Action act)
+        /// <summary>
+        /// Brings up a dialog where the Type might be the same as a form which is already open.
+        /// </summary>
+        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        {
+            var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
+            SkylineBeginInvoke(act);
+            TDlg result = null;
+            WaitForCondition(() => null != (result =
+                FormUtil.OpenForms.OfType<TDlg>().FirstOrDefault(form => !existingDialogs.Contains(form))));
+            return result;
+        }
+
+
+        public static void RunUI([InstantHandle] Action act)
         {
             SkylineInvoke(() =>
             {
@@ -239,7 +263,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>(Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
         {
             RunDlg(show, false, act, pause, millis);
         }
@@ -283,6 +307,7 @@ namespace pwiz.SkylineTestUtil
             ActivateReplicate(chromName);
 
             WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GetGraphChrom(chromName).ChromGroupInfos != null);
 
             RunUIWithDocumentWait(() => // adjust integration
             {
@@ -374,12 +399,12 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void SetCsvFileClipboardText(string filePath, bool hasHeader = false)
+        protected static void SetCsvFileClipboardText(string filePath)
         {
-            SetClipboardText(GetCsvFileText(filePath, hasHeader));
+            SetClipboardText(GetCsvFileText(filePath));
         }
 
-        protected static string GetCsvFileText(string filePath, bool hasHeader = false)
+        protected static string GetCsvFileText(string filePath)
         {
             string resultStr;
             if (TextUtil.CsvSeparator == TextUtil.SEPARATOR_CSV)
@@ -403,10 +428,6 @@ namespace pwiz.SkylineTestUtil
                     sb.AppendLine(fields.ToCsvLine());
                 }
                 resultStr = sb.ToString();
-            }
-            if (hasHeader)
-            {
-                resultStr = resultStr.Substring(resultStr.IndexOf('\n') + 1);
             }
             return resultStr;
         }
@@ -494,6 +515,17 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+        public static IEnumerable<TDlg> FindOpenForms<TDlg>() where TDlg : Form
+        {
+            foreach (var form in OpenForms)
+            {
+                if (form is TDlg tForm && tForm.Created)
+                {
+                    yield return tForm;
+                }
+            }
+        }
+
         public static Form FindOpenForm(Type formType) 
         {
             foreach (var form in OpenForms)
@@ -508,33 +540,31 @@ namespace pwiz.SkylineTestUtil
 
         private static int GetWaitCycles(int millis = WAIT_TIME)
         {
-            int waitCycles = millis / SLEEP_INTERVAL;
-
-            // Wait a little longer for stress test.
-            if (Program.StressTest)
-            {
-                waitCycles = waitCycles * 2;
-            }
+            var waitMultiplier = 1; // Various conditions may require longer timeouts
 
             if (System.Diagnostics.Debugger.IsAttached)
             {
                 // When debugger is attached, some vendor readers are S-L-O-W!
-                waitCycles *= 10;
+                waitMultiplier = 10;
+            }
+            else if (ExtensionTestContext.IsDebugMode || Helpers.RunningResharperAnalysis)
+            {
+                // Wait a little longer for debug build.
+                waitMultiplier = 4;
+            }
+            else if (Program.StressTest)
+            {
+                // Wait a little longer for stress test.
+                waitMultiplier = 2;
             }
 
             // Wait longer if running multiple processes simultaneously.
-            if (Program.UnitTestTimeoutMultiplier != 0)
+            if (Program.UnitTestTimeoutMultiplier > 0)
             {
-                waitCycles *= Program.UnitTestTimeoutMultiplier;
+                waitMultiplier *= Program.UnitTestTimeoutMultiplier;
             }
 
-            // Wait a little longer for debug build. (This may also imply code coverage testing, slower yet)
-            if (ExtensionTestContext.IsDebugMode)
-            {
-                waitCycles = waitCycles * 4;
-            }
-
-            return waitCycles;
+            return  (millis * waitMultiplier) / SLEEP_INTERVAL; // Return the wait cycle count
         }
 
         public static TDlg TryWaitForOpenForm<TDlg>(int millis = WAIT_TIME, Func<bool> stopCondition = null) where TDlg : Form
@@ -760,12 +790,15 @@ namespace pwiz.SkylineTestUtil
         private static string GetOpenFormsString()
         {
             var result =  string.Join(", ", OpenForms.Select(form => string.Format("{0} ({1})", form.GetType().Name, GetTextForForm(form))));
-            if (SkylineWindow.Document != null)
+            RunUI(() =>
             {
-                var state = string.Join("\", \"", SkylineWindow.Document.NonLoadedStateDescriptions);
-                if (!string.IsNullOrEmpty(state))
-                   result += " Also, document is not fully loaded: \"" + state + "\"";
-            }
+                if (SkylineWindow.DocumentUI != null)
+                {
+                    var state = string.Join("\", \"", SkylineWindow.DocumentUI.NonLoadedStateDescriptions);
+                    if (!string.IsNullOrEmpty(state))
+                        result += " Also, SkylineWindow.DocumentUI is not fully loaded: \"" + state + "\"";
+                }
+            });
             // Without line numbers, this isn't terribly useful.  Disable for now.
             // result += GetAllThreadsStackTraces();
             return result;
@@ -859,7 +892,7 @@ namespace pwiz.SkylineTestUtil
             return WaitForDocumentLoaded(millis);
         }
 
-        public static bool WaitForCondition(Func<bool> func)
+        public static bool WaitForCondition([InstantHandle] Func<bool> func)
         {
             return WaitForCondition(WAIT_TIME, func);
         }
@@ -1009,6 +1042,24 @@ namespace pwiz.SkylineTestUtil
                 PauseAndContinueForm.Show(description);
         }
 
+        // We don't normally leave PauseTest() in checked in code, but there are times
+        // when that's actually what's needed. For those, use this instead.
+        public static void PauseForManualTutorialStep(string description = null)
+        {
+            PauseTest(description);
+        }
+
+        // Pause a test's UI thread by posting a simple MessageBox.
+        // Doesn't allow for UI manipulation, but can be handy for 
+        // debugging multiline RunUI() statements.
+        public static void PauseTestUI(string description = null)
+        {
+            if (!Program.SkylineOffscreen)
+                MessageBox.Show(description ?? string.Empty, @"Test paused on UI thread", // Purposely using MessageBox here so that owner is properly set
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+        }
+
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
         /// the tests and wait until the pause form is dismissed, allowing a screenshot
@@ -1065,7 +1116,7 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
         }
 
-        public int PauseStartPage { get; set; }
+        public int PauseStartingPage { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
 
@@ -1139,7 +1190,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if (IsPauseForScreenShots && PauseStartPage <= (pageNum ?? int.MaxValue))
+            else if (IsPauseForScreenShots && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= (pageNum ?? int.MaxValue))
             {
                 if (screenshotForm == null)
                 {
@@ -1159,7 +1210,7 @@ namespace pwiz.SkylineTestUtil
                 formSeen.Saw(formType);
                 bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
 
-                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout);
+                PauseAndContinueForm.Show(description + string.Format(" - p. {0}", pageNum), LinkPage(pageNum), showMatchingPages, timeout, screenshotForm, _shotManager);
             }
             else
             {
@@ -1275,7 +1326,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         try
                         {
-                            dir?.Dispose();
+                            dir?.Cleanup();
                         }
                         catch (Exception x)
                         {
@@ -1370,6 +1421,7 @@ namespace pwiz.SkylineTestUtil
         protected virtual void InitializeSkylineSettings()
         {
             Settings.Default.Reset();
+            Settings.Default.SettingsUpgradeRequired = false; // do not restore settings from older versions
             Settings.Default.ImportResultsAutoCloseWindow = true;
             Settings.Default.ImportResultsSimultaneousFiles = (int)MultiFileLoader.ImportResultsSimultaneousFileOptions.many;    // use maximum threads for multiple file import
             Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
@@ -1405,7 +1457,7 @@ namespace pwiz.SkylineTestUtil
 
         private string AuditLogDir
         {
-            get { return Path.Combine(TestContext.TestRunResultsDirectory ?? TestContext.TestDir, "AuditLog"); }
+            get { return TestContext.GetTestResultsPath("AuditLog"); }
         }
 
         private string AuditLogTutorialDir
@@ -1477,20 +1529,49 @@ namespace pwiz.SkylineTestUtil
             if (!IsRecordAuditLogForTutorials)
             {
                 Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist, set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName);
+                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                    TestContext.TestName, projectFile);
             }
 
             // Compare file contents
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
-            if (Equals(expected, actual))
+            if (AreEquivalentAuditLogs(expected, actual))
                 return;
+
+            if (ForceMzml)
+            {
+                // If the only difference is in the mention of a raw file extension, ignore that
+                var extMzml = @".mzml";
+                var actualParts = actual.Split(new[] {extMzml, @".mzML", @".MZML" }, StringSplitOptions.None);
+                if (actualParts.Length > 1)
+                {
+                    var index = expected.IndexOf(actualParts[1], StringComparison.InvariantCultureIgnoreCase);
+                    if (index - actualParts[0].Length > 0)
+                    {
+                        var extExpected =
+                            expected.Substring(actualParts[0].Length, index - actualParts[0].Length); // Find the .ext that we expected to see
+                        var mzmlExpected =
+                            expected.Replace(extExpected, extMzml); // e.g. "read foo.raw OK"  -> "read foo.mzml OK"
+                        var mzmlActual =
+                            string.Join(extMzml, actualParts); // e.g. "read foo.mzML OK"  -> "read foo.mzml OK"
+
+                        if (AreEquivalentAuditLogs(mzmlExpected, mzmlActual))
+                            return;
+
+                        // Make sure to report the difference that causes the failure below
+                        expected = mzmlExpected;
+                        actual = mzmlActual;
+                    }
+                }
+            }
 
             // They are not equal. So, report an intelligible error and potentially copy
             // a new expected file to the project if in record mode.
             if (!IsRecordAuditLogForTutorials)
+            {
                 AssertEx.NoDiff(expected, actual);
+            }
             else
             {
                 // Copy the just recorded file to the project for comparison or commit
@@ -1499,6 +1580,20 @@ namespace pwiz.SkylineTestUtil
                     Console.WriteLine(@"Successfully recorded tutorial audit log");
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
+            }
+        }
+
+        private static bool AreEquivalentAuditLogs(string expected, string actual)
+        {
+            try
+            {
+                // Asserts that the files are the same other than generated GUIDs and timestamps
+                AssertEx.NoDiff(expected, actual);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -1582,17 +1677,17 @@ namespace pwiz.SkylineTestUtil
 
         private string AuditLogEntryToString(AuditLogEntry entry)
         {
-            var result = string.Format("Undo Redo : {0}\r\n", entry.UndoRedo);
-            result += string.Format("Summary   : {0}\r\n", entry.Summary);
-            result += "All Info  :\r\n";
+            var result = new StringBuilder(string.Format("Undo Redo : {0}\r\n", entry.UndoRedo));
+            result.Append(string.Format("Summary   : {0}\r\n", entry.Summary));
+            result.Append("All Info  :\r\n");
 
             foreach (var allInfoItem in entry.AllInfo)
-                result += allInfoItem + "\r\n";
+                result.AppendLine(allInfoItem.ToString());
 
             if (entry.ExtraInfo != null)
-                result += string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType));
+                result.Append(string.Format("Extra Info: {0}\r\n", LogMessage.ParseLogString(entry.ExtraInfo, LogLevel.all_info, entry.DocumentType)));
 
-            return result;
+            return result.ToString();
         }
 
         private void WaitForSkyline()
@@ -1675,7 +1770,6 @@ namespace pwiz.SkylineTestUtil
             if (null != SkylineWindow)
             {
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
-                NormalizedValueCalculatorVerifier.VerifyRatioCalculations(SkylineWindow.Document);
             }
 
             if (doClipboardCheck)
@@ -1882,12 +1976,15 @@ namespace pwiz.SkylineTestUtil
 
         public void FindNode(string searchText)
         {
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true);
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
+            var findDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+            RunUI(() => findDlg.FindOptions = new FindOptions().ChangeText(searchText).ChangeForward(true));
+            SkylineWindow.BeginInvoke((Action) findDlg.FindNext);
+            WaitForConditionUI(5*1000, () => SkylineWindow.SelectedNode.Text.Contains(searchText) || FindOpenForm<MessageDlg>() != null);
+            var messageDlg = FindOpenForm<MessageDlg>();
+            if (messageDlg != null)
+                Assert.Fail(TextUtil.LineSeparate("Unexpected message form with the text:", messageDlg.Message));
+            RunUI(() => AssertEx.Contains(SkylineWindow.SelectedNode.Text, searchText));
+            OkDialog(findDlg, findDlg.Close);
         }
 
         protected void AdjustSequenceTreePanelWidth(bool colorLegend = false)
@@ -1967,6 +2064,96 @@ namespace pwiz.SkylineTestUtil
         public static void WaitForBackgroundProteomeLoaderCompleted()
         {
             WaitForCondition(() => BackgroundProteomeManager.DocumentHasLoadedBackgroundProteomeOrNone(SkylineWindow.Document, true)); 
+        }
+
+        public static void ImportAssayLibrarySkipColumnSelect(string csvPath, List<string> errorList = null, bool proceedWithErrors = true)
+        {
+            ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
+        }
+
+        private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
+        {
+            var columnSelectDlg = isAssayLibrary ?
+                ShowDialog<ImportTransitionListColumnSelectDlg>(() =>  SkylineWindow.ImportAssayLibrary(csvPath)) :
+                ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
+
+            VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
+
+            if (errorList == null)
+            {
+                OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            }
+            else
+            {
+                // We're expecting errors, collect them then move on
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(columnSelectDlg.OkDialog);
+                errorList.Clear();
+                foreach (var err in errDlg.ErrorList)
+                {
+                    errorList.Add(err.ErrorMessage);
+                }
+                if (proceedWithErrors)
+                {
+                    OkDialog(errDlg, errDlg.AcceptButton.PerformClick);
+                    WaitForClosedForm(columnSelectDlg);
+                }
+                else
+                {
+                    OkDialog(errDlg, errDlg.Close);
+                    OkDialog(columnSelectDlg, columnSelectDlg.CancelDialog); // Canceling the error dialog drops us back into the import dialog
+                }
+            }
+        }
+
+        private static void VerifyExplicitUseInColumnSelect(bool isAssayLibrary, ImportTransitionListColumnSelectDlg transitionSelectDlg)
+        {
+            // Verify that we don't use "Explicit*" language in dropdowns for assay library import
+            var expectedHeaderTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes(isAssayLibrary);
+            var unexpectedHeaderTypes = ImportTransitionListColumnSelectDlg.GetKnownHeaderTypes(!isAssayLibrary);
+            var forbidden = unexpectedHeaderTypes.Where(t => !expectedHeaderTypes.Contains(t)).Select(t => t.Name).ToArray();
+            AssertEx.IsTrue(forbidden.Length > 0); // Headers should differ somewhat when importing assay library
+            var items = transitionSelectDlg.ComboBoxes.SelectMany(c => c.Items.Select(item => item.ToString())).Distinct();
+            AssertEx.IsTrue(!items.Any(forbidden.Contains));
+        }
+
+        public static void ImportTransitionListSkipColumnSelect(string csvPath, ICollection<string> errorList = null, bool proceedWithErrors = true)
+        {
+            ImportAssayLibraryOrTransitionList(csvPath, false, errorList, proceedWithErrors);
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(bool expectColumnSelectDialog = true)
+        {
+            PasteTransitionListSkipColumnSelect(SkylineWindow.Paste, expectColumnSelectDialog);
+        }
+
+        public static void PasteTransitionListSkipColumnSelect(string text, bool expectColumnSelectDialog = true)
+        {
+            PasteTransitionListSkipColumnSelect(() => SkylineWindow.Paste(text), expectColumnSelectDialog);
+        }
+
+        private static void PasteTransitionListSkipColumnSelect(Action pasteAction, bool expectColumnSelectDialog)
+        {
+            if (expectColumnSelectDialog)
+            {
+                var columnSelectDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(pasteAction);
+                WaitForConditionUI(() => columnSelectDlg.WindowShown); // Avoids possible race condition in code coverage tests
+                VerifyExplicitUseInColumnSelect(false, columnSelectDlg);
+                OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+            }
+            else
+            {
+                RunUI(pasteAction);
+            }
+        }
+
+        public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
+        {
+            var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
+            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            Assert.IsTrue(match.Success);
+            string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
+            if (sign == "+") sign = string.Empty;
+            return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
         }
 
         #region Modification helpers
@@ -2066,7 +2253,16 @@ namespace pwiz.SkylineTestUtil
             LockMassParameters lockMassParameters = null)
         {
             var docBefore = SkylineWindow.Document;
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(docBefore))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
                {
@@ -2127,7 +2323,16 @@ namespace pwiz.SkylineTestUtil
 
         public void ImportResultsFiles(IEnumerable<MsDataFileUri> fileNames, int waitForLoadSeconds = 420)
         {
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            ImportResultsDlg importResultsDlg;
+            if (!SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
+            {
+                importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            }
+            else
+            {
+                var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+                importResultsDlg = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
+            }
             RunUI(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFileReplicates(fileNames));
 
             string prefix = fileNames.Select(f => f.GetFileName()).GetCommonPrefix();

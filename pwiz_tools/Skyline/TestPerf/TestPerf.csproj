@@ -135,8 +135,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
+    <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />
+    <Compile Include="DiaUmpireVendorFormatTest.cs" />
+    <Compile Include="DiaUmpireTutorialTest.cs" />
     <Compile Include="DiaSwathTutorialTest.cs" />
+    <Compile Include="PerfAssociateProteinsTest.cs" />
+    <Compile Include="PerfCommandlineCreateImsDbTest.cs" />
+    <Compile Include="PerfDetectLockmassFunctionTest.cs" />
+    <Compile Include="PerfHighEnergyIonMobilityOffsetForPRM.cs" />
+    <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
     <Compile Include="ImportMassOnlyMoleculesTest.cs" />
@@ -148,6 +156,7 @@
     <Compile Include="PerfImportDiaPasefTest.cs" />
     <Compile Include="PerfImportPasefMascotTest.cs" />
     <Compile Include="PerfImportPrmPasefTest.cs" />
+    <Compile Include="PerfImportResultsAgilentIMSFringeValues.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
     <Compile Include="PerfImportResultsHugeTest.cs" />
@@ -156,6 +165,7 @@
     <Compile Include="PerfLockmassTest.cs" />
     <Compile Include="PerfMeasuredDriftTimes.cs" />
     <Compile Include="PerfMeasuredInverseK0.cs" />
+    <Compile Include="PerfMobilIonTest.cs" />
     <Compile Include="PerfMs3ChromatogramTest.cs" />
     <Compile Include="PerfNegativeIonDIATest.cs" />
     <Compile Include="PerfOpenSwathConvert.cs" />
@@ -165,8 +175,12 @@
     <Compile Include="PerfPeakTest.cs" />
     <Compile Include="PerfPeakViewConvert.cs" />
     <Compile Include="PerfThermoFAIMSTest.cs" />
+    <Compile Include="PerfThermoNegativeFAIMSTest.cs" />
+    <Compile Include="PerfThermoSureQuantFAIMSTest.cs" />
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
+    <Compile Include="PerfWatersSonarTest.cs" />
+    <Compile Include="OrbiPrmTutorialTest.cs" />
     <Compile Include="SmallMolDriftTimePredictorTest.cs" />
     <Compile Include="SmallMolLibrariesTutorialTest.cs" />
   </ItemGroup>
@@ -234,10 +248,12 @@
     <EmbeddedResource Include="ThermoDIA.ChorusRequest.xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DdaTutorialViews.zip" />
     <None Include="DiaSwathQEViews.zip" />
     <None Include="DiaSwathTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
+    <None Include="OrbiPrmViews.zip" />
     <None Include="PerfImportHundredsOfReplicatesTest.zip" />
     <None Include="HiResMetabolomicsViews.zip" />
     <None Include="PerfMs3ChromatogramTest.zip" />

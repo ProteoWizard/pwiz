@@ -51,6 +51,7 @@ rule msbuild_deploy ( targets + : sources * : properties * )
     TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
     OUTPUT_PATH on $(targets) = [ path.native $(PWIZ_BUILD_PATH)/IDPickerDeploy/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 actions msbuild_deploy
@@ -114,6 +115,7 @@ rule test_msi ( targets + : sources * : properties * )
     }
 
     LOCATION on $(targets) = [ path.native [ feature.get-values <location> : $(properties) ]  ] ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
 }
 
 actions test_msi

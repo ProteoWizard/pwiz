@@ -93,7 +93,15 @@ namespace pwiz.Skyline.Model.DdaSearch
         private List<int> consideredCharges;
         private bool useMonoIsotopicMass;
         private MSDataRunPath msdataRunPath;
+        private readonly string _spectrumIdFormatAccession;
+        private readonly string _fileFormatAccession;
         public Dictionary<int, string> SpectTitleMap { get; }
+
+        public string SpectrumIdFormatName { get; }
+        public string FileFormatName { get; }
+
+        public string SpectrumIdFormatAccession => _spectrumIdFormatAccession;
+        public string FileFormatAccession => _fileFormatAccession;
 
         public int CurrentSpectrum { get; private set; }
         public int TotalSpectra { get; private set; }
@@ -103,12 +111,16 @@ namespace pwiz.Skyline.Model.DdaSearch
             consideredCharges = charges;
             spectrumFileReader = new MsDataFileImpl(file,
                 requireVendorCentroidedMS2: MsDataFileImpl.SupportsVendorPeakPicking(file),
-                ignoreZeroIntensityPoints: true, trimNativeId: false);
+                acceptZeroLengthSpectra: false, ignoreZeroIntensityPoints: true, trimNativeId: false);
             useMonoIsotopicMass = mono;
 
             msdataRunPath = new MSDataRunPath(file);
             SpectTitleMap = new Dictionary<int, string>();
             CurrentSpectrum = 0;
+
+            spectrumFileReader.GetNativeIdAndFileFormat(out _spectrumIdFormatAccession, out _fileFormatAccession);
+            SpectrumIdFormatName = MsDataFileImpl.GetCvParamName(_spectrumIdFormatAccession);
+            FileFormatName = MsDataFileImpl.GetCvParamName(_fileFormatAccession);
         }
         public void Dispose()
         {
@@ -124,7 +136,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             List<Spectrum> spectra = new List<Spectrum>();
             nrOfParsed = 0;
-            while (nrOfParsed < numberOfSpectraToRead && specId < spectrumFileReader.SpectrumCount) { 
+            while (nrOfParsed < numberOfSpectraToRead && specId < TotalSpectra) { 
                 MsDataSpectrum spectrum = spectrumFileReader.GetSpectrum(specId);
                 cancellationToken.ThrowIfCancellationRequested();
                 ++specId;
@@ -165,6 +177,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 //clone peaks
                 FragmentsPeaks = new List<AMassCentroid>(spec.FragmentsPeaks.ToArray()),
                 SpectrumId = id,
+                ScanNumber = spec.ScanNumber,
                 RT = spec.RT,
                 immuneMasses = new SortedSet<double>(),
                 immunePeaks = new Dictionary<int, double>()
@@ -199,7 +212,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             if (new MSDataRunPath(spectraFile) != msdataRunPath)
                 return 0;
-            using (var filereader = new MsDataFileImpl(msdataRunPath.Filepath, msdataRunPath.RunIndex, preferOnlyMsLevel: 2))
+            using (var filereader = new MsDataFileImpl(msdataRunPath.Filepath, msdataRunPath.RunIndex, acceptZeroLengthSpectra: false, preferOnlyMsLevel: 2))
             {
                 TotalSpectra = filereader.SpectrumCount;
             }

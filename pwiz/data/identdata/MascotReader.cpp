@@ -178,6 +178,10 @@ namespace bxp = boost::xpressive;
 namespace
 {
     const string decoyPrefix = "DECOY_";
+    const char N_TERM_CHAR = '(';
+    const char C_TERM_CHAR = ')';
+    const char PROTEIN_N_TERM_CHAR = '[';
+    const char PROTEIN_C_TERM_CHAR = ']';
 }
 
 //
@@ -537,12 +541,24 @@ public:
         bxp::smatch what, where;
         if (bxp::regex_match(mod, what, varmodPattern))
         {
+            string name = what[1].str();
             bool proteinTerminal = what[2].matched;
             bool nTerminal = what[3].matched && what[3].str() == "N-term";
             bool cTerminal = !nTerminal && what[3].matched && what[3].str() == "C-term";
             string residues = what[4].matched ? what[4].str() : "";
-            
-            const CVTermInfo* cvt = getTermInfoByName(what[1].str());
+
+            const CVTermInfo* cvt = getTermInfoByName(name);
+
+            if (!cvt)
+            {
+                // if name doesn't match Unimod, try trimming "Propionyl K" to "Propionyl"
+                if (nTerminal) bal::replace_all(name, "N-term", "");
+                if (cTerminal) bal::replace_all(name, "C-term", "");
+                if (!residues.empty() && bal::ends_with(name, residues))
+                    name = name.substr(0, name.length() - residues.length());
+                bal::trim(name);
+                cvt = getTermInfoByName(name);
+            }
             
             SearchModificationPtr sm(new SearchModification());
             sm->fixedMod = false;
@@ -553,6 +569,19 @@ public:
             {
                 sm->massDelta = pwiz::data::unimod::modification(cvt->cvid).deltaMonoisotopicMass();
                 sm->fixedMod = true;
+
+                if (nTerminal || cTerminal)
+                {
+                    char termChar = N_TERM_CHAR;
+                    if (proteinTerminal)
+                    {
+                        if (nTerminal) termChar = PROTEIN_N_TERM_CHAR;
+                        else if (cTerminal) termChar = PROTEIN_C_TERM_CHAR;
+                    }
+                    else if (cTerminal) termChar = C_TERM_CHAR;
+
+                    fixedModMap[termChar] = sm->massDelta;
+                }
             }
 
             if (bxp::regex_match(residues, where, varmodListOfChars))
@@ -641,9 +670,10 @@ public:
         guessTitleFormatRegex(file, mzid);
     }
 
-    void getModifications(PeptidePtr peptide, const string& peptideMods, ms_searchparams& searchparam, ms_peptide* pep)
+    void getModifications(PeptidePtr peptide, const string& peptideMods, ms_searchparams& searchparam, ms_peptide* pep/*, bool hasNterminalStart, bool hasCterminalEnd*/)
     {
         // add variable mods
+        set<int> modifiedPositions;
         for (size_t i = 0; i < peptideMods.size(); ++i)
         {
             int mod_idx=0;
@@ -668,16 +698,21 @@ public:
             modification->monoisotopicMassDelta = searchparam.getVarModsDelta(mod_idx);
             if (i > 0 && i <= peptide->peptideSequence.length())
                 modification->residues.push_back(peptide->peptideSequence[i-1]);
-            if (!modification->empty())
-                peptide->modification.push_back(modification);
+            if (modification->empty())
+                continue;
+            modifiedPositions.insert(i);
+            peptide->modification.push_back(modification);
         }
         
-        // add fixed mods
+        // add fixed mods to residues
         for (size_t i = 0; i < peptide->peptideSequence.size(); ++i)
         {
+            if (modifiedPositions.count(i+1) > 0)
+                continue; // Mascot variable mods override fixed mods on the same position
+
             char r = peptide->peptideSequence[i];
 
-            map<char, double>::const_iterator findItr = fixedModMap.find(r);
+            auto findItr = fixedModMap.find(r);
             if (findItr == fixedModMap.end())
                 continue;
 
@@ -686,6 +721,33 @@ public:
             modification->monoisotopicMassDelta = findItr->second;
             modification->residues.push_back(r);
             peptide->modification.push_back(modification);
+        }
+
+        // add fixed mods to termini
+        if (modifiedPositions.count(0) == 0)
+        {
+            //auto findItr = fixedModMap.find(hasNterminalStart ? PROTEIN_N_TERM_CHAR : N_TERM_CHAR);
+            auto findItr = fixedModMap.find(N_TERM_CHAR);
+            if (findItr != fixedModMap.end())
+            {
+                ModificationPtr modification(new Modification());
+                modification->location = 0;
+                modification->monoisotopicMassDelta = findItr->second;
+                peptide->modification.push_back(modification);
+            }
+        }
+
+        if (modifiedPositions.count(peptide->peptideSequence.size()) == 0)
+        {
+            //auto findItr = fixedModMap.find(hasCterminalEnd ? PROTEIN_C_TERM_CHAR : C_TERM_CHAR);
+            auto findItr = fixedModMap.find(C_TERM_CHAR);
+            if (findItr != fixedModMap.end())
+            {
+                ModificationPtr modification(new Modification());
+                modification->location = peptide->peptideSequence.size();
+                modification->monoisotopicMassDelta = findItr->second;
+                peptide->modification.push_back(modification);
+            }
         }
     }
     
@@ -856,10 +918,15 @@ public:
                     peptide.reset(new Peptide);
                     peptide->peptideSequence = peptideSequence;
                     peptide->id = "PEP_" + lexical_cast<string>(mzid.sequenceCollection.peptides.size() + 1);
-                    getModifications(peptide, peptideMods, searchparam, peptideHit);
                 }
 
                 sii.peptidePtr = peptide;
+
+                // If Mascot starts allowing protein terminal mods to be fixed, we'll have to track whether the peptide is terminal
+                //bool hasNterminalStart = false;
+                //bool hasCterminalEnd = false;
+                
+                // peptideHit->getAnyProteinTermination(hasNterminalStart, hasCterminalEnd);
 
                 int numProteins = peptideHit->getNumProteins();
                 for (int k = 1; k <= numProteins; ++k)
@@ -932,7 +999,10 @@ public:
                 {
                     sir->spectrumIdentificationItem.push_back(siip);
                     if (newPeptide)
+                    {
+                        getModifications(peptide, peptideMods, searchparam, peptideHit/*, hasNterminalStart, hasCterminalEnd*/);
                         mzid.sequenceCollection.peptides.push_back(peptide);
+                    }
                 }
                 else
                     peptide.reset(); // reset the peptide so it is considered "new" again

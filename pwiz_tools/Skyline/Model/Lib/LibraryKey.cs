@@ -25,6 +25,7 @@ using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
@@ -533,7 +534,15 @@ namespace pwiz.Skyline.Model.Lib
 
         public override Target Target
         {
-            get { return PeptideLibraryKeys.First().Target; }
+            get { return new Target(ModifiedSequence); }
+        }
+
+        public string ModifiedSequence
+        {
+            get
+            {
+                return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Concat(Crosslinks);
+            }
         }
 
         public int Charge { get; private set; }
@@ -664,6 +673,15 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
             }
+
+            public IEnumerable<CrosslinkSite> CrosslinkSites
+            {
+                get
+                {
+                    return Enumerable.Range(0, Positions.Count).SelectMany(peptideIndex =>
+                        Positions[peptideIndex].Select(aaPosition => new CrosslinkSite(peptideIndex, aaPosition - 1)));
+                }
+            }
         }
 
         public static ImmutableList<ImmutableList<int>> MakePositions(IEnumerable<IEnumerable<int>> positions)
@@ -678,7 +696,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override string ToString()
         {
-            return string.Join(@"-", PeptideLibraryKeys) + @"-" + string.Join(String.Empty, Crosslinks) + Transition.GetChargeIndicator(Adduct);
+            return ModifiedSequence + Transition.GetChargeIndicator(Adduct);
         }
 
         /// <summary>
@@ -691,6 +709,10 @@ namespace pwiz.Skyline.Model.Lib
             var consumedPeptides = new HashSet<int>();
             foreach (var crosslink in Crosslinks)
             {
+                if (!HasValidIndexes(crosslink))
+                {
+                    return false;
+                }
                 var peptideIndexesWithLinks = ImmutableList.ValueOf(crosslink.PeptideIndexesWithLinks);
                 if (peptideIndexesWithLinks.Count == 1)
                 {
@@ -727,10 +749,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 int currentPeptideIndex = queue[0];
                 queue.RemoveAt(0);
-                if (!consumedPeptides.Add(currentPeptideIndex))
-                {
-                    return false;
-                }
+                consumedPeptides.Add(currentPeptideIndex);
                 for (int iCrosslink = remainingCrosslinks.Count - 1; iCrosslink >= 0; iCrosslink--)
                 {
                     var crosslinkIndexes = remainingCrosslinks[iCrosslink];
@@ -750,6 +769,52 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
             return true;
+        }
+
+        private bool HasValidIndexes(Crosslink crosslink)
+        {
+            if (crosslink.Positions.Count > PeptideLibraryKeys.Count)
+            {
+                return false;
+            }
+
+            for (int iPeptide = 0; iPeptide < crosslink.Positions.Count; iPeptide++)
+            {
+                var peptideSequence = PeptideLibraryKeys[iPeptide].UnmodifiedSequence;
+                foreach (var position in crosslink.Positions[iPeptide])
+                {
+                    if (position < 1 || position > peptideSequence.Length)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        protected bool Equals(CrosslinkLibraryKey other)
+        {
+            return Charge == other.Charge && Equals(PeptideLibraryKeys, other.PeptideLibraryKeys) && Equals(Crosslinks, other.Crosslinks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CrosslinkLibraryKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Charge;
+                hashCode = (hashCode * 397) ^ (PeptideLibraryKeys != null ? PeptideLibraryKeys.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Crosslinks != null ? Crosslinks.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

@@ -19,6 +19,7 @@
 
 using System;
 using System.IO;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -39,6 +40,52 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Exercise MultiButtonMsgDlg's use of standard MessageBoxButtons button sets
+            foreach (var buttonSet in (MessageBoxButtons[])Enum.GetValues(typeof(MessageBoxButtons)))
+            {
+                DialogResult result = DialogResult.Ignore;
+                RunDlg<MultiButtonMsgDlg>( () =>
+                        result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet),
+                    d => d.AcceptButton.PerformClick());
+                var expected = DialogResult.None;
+                var newDefault = DialogResult.None; // Used in next step, setting the default button
+                switch (buttonSet)
+                {
+                    case MessageBoxButtons.OK:
+                        expected = DialogResult.OK;
+                        newDefault = expected;
+                        break;
+                    case MessageBoxButtons.AbortRetryIgnore:
+                        expected = DialogResult.Abort;
+                        newDefault = DialogResult.Ignore;
+                        break;
+                    case MessageBoxButtons.OKCancel:
+                        expected = DialogResult.OK;
+                        newDefault = DialogResult.Cancel;
+                        break;
+                    case MessageBoxButtons.RetryCancel:
+                        expected = DialogResult.Retry;
+                        newDefault = DialogResult.Cancel;
+                        break;
+                    case MessageBoxButtons.YesNo:
+                        expected = DialogResult.Yes;
+                        newDefault = DialogResult.No;
+                        break;
+                    case MessageBoxButtons.YesNoCancel:
+                        expected = DialogResult.Yes;
+                        newDefault = DialogResult.No;
+                        break;
+                }
+                AssertEx.AreEqual(expected, result);
+
+                // Now test setting the default response
+                RunDlg<MultiButtonMsgDlg>(() =>
+                        result = MultiButtonMsgDlg.Show(Program.MainWindow, buttonSet.ToString(), buttonSet, newDefault),
+                    d => d.AcceptButton.PerformClick());
+                AssertEx.AreEqual(newDefault, result);
+
+            }
+
             // Show About dialog.
             RunDlg<AboutDlg>(() =>
                 {

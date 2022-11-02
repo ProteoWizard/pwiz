@@ -8,7 +8,7 @@
  *  Copyright 2001-2004 David Abrahams.
  *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -33,10 +33,11 @@
 
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/stat.h>  /* needed for mkdir() */
 
@@ -130,7 +131,12 @@ int file_collect_dir_content_( file_info_t * const d )
     if ( !*dirstr ) dirstr = ".";
 
     if ( -1 == ( n = scandir( dirstr, &namelist, NULL, alphasort ) ) )
+    {
+        if (n != ENOENT && n != ENOTDIR)
+            err_printf( "[errno %d] scandir '%s' failed: %s\n",
+                errno, dirstr, strerror(errno) );
         return -1;
+    }
 
     string_new( path );
     while ( n-- )
@@ -228,7 +234,6 @@ void file_archscan( char const * arch, scanback func, void * closure )
         for ( ; iter != end ; iter = filelist_next( iter ) )
         {
             file_info_t * member_file = filelist_item( iter );
-            LIST * symbols = member_file->files;
 
             /* Construct member path: 'archive-path(member-name)'
              */
@@ -308,7 +313,8 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
         char * src;
         char * dest;
 
-        strncpy( lar_name, ar_hdr.ar_name, sizeof( ar_hdr.ar_name ) );
+        int32_t ar_hdr_name_size = sizeof( ar_hdr.ar_name ); // Workaround for sizeof strncpy warning.
+        strncpy( lar_name, ar_hdr.ar_name, ar_hdr_name_size );
 
         sscanf( ar_hdr.ar_date, "%ld", &lar_date );
         sscanf( ar_hdr.ar_size, "%ld", &lar_size );

@@ -27,24 +27,28 @@ namespace SkylineNightly
 {
     static class Program
     {
-        private static bool PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
+        private static string PerformTests(Nightly.RunMode runMode, string arg, string decorateSrcDirName = null)
         {
             var nightly = new Nightly(runMode, decorateSrcDirName);
             var nightlyTask = Nightly.NightlyTask;
             if (nightlyTask != null && DateTime.UtcNow.Add(nightly.TargetDuration).ToLocalTime() > nightlyTask.NextRunTime)
             {
                 // Don't run, because the projected end time is after the start of the next scheduled start
-                return false;
+                return null;
             }
             var errMessage = nightly.RunAndPost();
             var message = string.Format(@"Completed {0}", arg);
             nightly.Finish(message, errMessage);
-            return string.IsNullOrEmpty(errMessage);
+            return errMessage;
         }
 
         private static void PerformTests(Nightly.RunMode runMode1, Nightly.RunMode runMode2, string arg)
         {
-            PerformTests(runMode1, string.Format(@"part one of {0}", arg), runMode1 == runMode2 ? @"A" : null);
+            var result = PerformTests(runMode1, string.Format(@"part one of {0}", arg), runMode1 == runMode2 ? @"A" : null);
+            if (Equals(result, Nightly.SkylineTesterStoppedByUser))
+            {
+                return; // If user killed the first half, assume we don't want the second half
+            }
             // Don't kill existing test processes for the second run, we'd like to keep any hangs around for forensics
             PerformTests(runMode2, string.Format(@"part two of {0}", arg), runMode1 == runMode2 ? @"B" : null);
         }
@@ -82,7 +86,7 @@ namespace SkylineNightly
 
                 switch (command)
                 {
-					case @"run":
+                    case @"run":
                     {
                         switch (args.Length)
                         {
@@ -95,17 +99,17 @@ namespace SkylineNightly
                             {
                                 PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]),
                                     (Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[2]),
-									args[1] + @" then " + args[2]);
+                                    args[1] + @" then " + args[2]);
                                 break;
                             }
-							default: throw new Exception(@"Wrong number of run modes specified, has to be 1 or 2");
+                            default: throw new Exception(@"Wrong number of run modes specified, has to be 1 or 2");
                         }
 
                         break;
                     }
                     case "indefinitely":
                     {
-                        while (PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1]))
+                        while (string.IsNullOrEmpty(PerformTests((Nightly.RunMode) Enum.Parse(typeof(Nightly.RunMode), args[1]), args[1])))
                         {
                         }
 
@@ -114,13 +118,13 @@ namespace SkylineNightly
                     case @"/?":
                     {
                         nightly = new Nightly(Nightly.RunMode.trunk);
-						string commands = string.Join(@" | ",
+                        string commands = string.Join(@" | ",
                             SkylineNightly.RunModes.Select(r => r.ToString()).ToArray());
                         message = string.Format(@"Usage: SkylineNightly run [{0}] [{1}]", commands, commands);
                         nightly.Finish(message, errMessage);
                         break;
                     }
-					case @"parse":
+                    case @"parse":
                     {
                         nightly = new Nightly(Nightly.RunMode.parse);
                         message = string.Format(@"Parse and post log {0}", nightly.GetLatestLog());
@@ -131,7 +135,7 @@ namespace SkylineNightly
                         nightly.Finish(message, errMessage);
                         break;
                     }
-					case @"post":
+                    case @"post":
                     {
                         nightly = new Nightly(Nightly.RunMode.post);
                         message = string.Format(@"Post existing XML for {0}", nightly.GetLatestLog());
@@ -168,7 +172,7 @@ namespace SkylineNightly
             }
             catch (Exception ex)
             {
-				MessageBox.Show(@"Exception Caught: " + ex.Message, @"SkylineNightly.exe");
+                MessageBox.Show(@"Exception Caught: " + ex.Message, @"SkylineNightly.exe");
             }
         }
     }

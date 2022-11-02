@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Util
             int startFragment = 0;
 
             Regex r = new Regex("([a-zA-Z]+):(.+?)[\r\n]",
-                                RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                                RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
             for (Match m = r.Match(rawClipboardText); m.Success; m = m.NextMatch())
             {
@@ -410,6 +410,36 @@ EndSelection:<<<<<<<3
             {
                 ClipboardEx.Clear();
                 ClipboardEx.SetText(text);
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetCopyErrorMessage());
+            }
+        }
+
+        /// <summary>
+        /// Sets the text on the system clipboard. Use this method for functionality that should
+        /// use the real clipboard regardless of whether a functional test is running.
+        /// </summary>
+        public static void SetSystemClipboardText(Control owner, string text)
+        {
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText(text);
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(FormUtil.FindTopLevelOwner(owner), GetCopyErrorMessage());
+            }
+        }
+
+        public static void SetClipboardData(Control owner, DataObject data, bool copy)
+        {
+            try
+            {
+                ClipboardEx.Clear();
+                ClipboardEx.SetDataObject(data, copy);
             }
             catch (ExternalException)
             {

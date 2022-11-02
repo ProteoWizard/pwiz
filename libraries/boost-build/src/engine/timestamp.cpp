@@ -6,9 +6,10 @@
 
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
+ * Copyright 2020 Nikita Kniazev.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -19,8 +20,6 @@
  *  timestamp_done()      - free timestamp tables
  *
  * Internal routines:
- *  time_enter()      - internal worker callback for scanning archives &
- *                      directories
  *  free_timestamps() - worker function for freeing timestamp table contents
  */
 
@@ -31,7 +30,7 @@
 #include "hash.h"
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 
@@ -59,18 +58,6 @@ typedef struct _binding
 } BINDING;
 
 static struct hash * bindhash = 0;
-
-static void time_enter( void *, OBJECT *, int const found,
-    timestamp const * const );
-
-static const char * time_progress[] =
-{
-    "INIT",
-    "NOENTRY",
-    "SPOTTED",
-    "MISSING",
-    "FOUND"
-};
 
 
 #ifdef OS_NT
@@ -110,9 +97,10 @@ void timestamp_clear( timestamp * const time )
 
 int timestamp_cmp( timestamp const * const lhs, timestamp const * const rhs )
 {
-    return lhs->secs == rhs->secs
+    return int(
+        lhs->secs == rhs->secs
         ? lhs->nsecs - rhs->nsecs
-        : lhs->secs - rhs->secs;
+        : lhs->secs - rhs->secs );
 }
 
 
@@ -161,13 +149,6 @@ int timestamp_empty( timestamp const * const time )
 void timestamp_from_path( timestamp * const time, OBJECT * const path )
 {
     PROFILE_ENTER( timestamp );
-
-    PATHNAME f1;
-    PATHNAME f2;
-    int found;
-    BINDING * b;
-    string buf[ 1 ];
-
 
     if ( file_time( path, time ) < 0 )
         timestamp_clear( time );
@@ -219,37 +200,6 @@ char const * timestamp_timestr( timestamp const * const time )
 
 
 /*
- * time_enter() - internal worker callback for scanning archives & directories
- */
-
-static void time_enter( void * closure, OBJECT * target, int const found,
-    timestamp const * const time )
-{
-    int item_found;
-    BINDING * b;
-    struct hash * const bindhash = (struct hash *)closure;
-
-    target = path_as_key( target );
-
-    b = (BINDING *)hash_insert( bindhash, target, &item_found );
-    if ( !item_found )
-    {
-        b->name = object_copy( target );
-        b->flags = 0;
-    }
-
-    timestamp_copy( &b->time, time );
-    b->progress = found ? BIND_FOUND : BIND_SPOTTED;
-
-    if ( DEBUG_BINDSCAN )
-        out_printf( "time ( %s ) : %s\n", object_str( target ), time_progress[
-            b->progress ] );
-
-    object_free( target );
-}
-
-
-/*
  * free_timestamps() - worker function for freeing timestamp table contents
  */
 
@@ -288,5 +238,5 @@ void timestamp_done()
  */
 double timestamp_delta_seconds( timestamp const * const a , timestamp const * const b )
 {
-	return ((b->secs*1000000.0+b->nsecs)-(a->secs*1000000.0+a->nsecs))/1000000.0;
+    return difftime(b->secs, a->secs) + (b->nsecs - a->nsecs) * 1.0E-9;
 }

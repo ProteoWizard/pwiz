@@ -16,7 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -355,7 +357,6 @@ namespace pwiz.SkylineTest
             var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(
                 new StringReader(DOC_EXPLICIT_HEAVY_IMPLICIT_STATIC));
             AssertEx.VerifyModifiedSequences(doc);
-
         }
 
         private const string DOC_EXPLICIT_HEAVY_IMPLICIT_STATIC = @"<srm_settings format_version='4.2' software_version='Skyline (64-bit) 4.2.0.19072'>
@@ -409,6 +410,215 @@ namespace pwiz.SkylineTest
       </precursor>
     </peptide>
   </peptide_list>
+</srm_settings>";
+
+        [TestMethod]
+        public void TestNeutralLossModifications()
+        {
+            var doc = (SrmDocument) new XmlSerializer(typeof(SrmDocument)).Deserialize(
+                new StringReader(DOC_NEUTRAL_LOSSES));
+            var peptideModifiedSequences = doc.Peptides.Select(peptideDocNode =>
+                ModifiedSequence.GetModifiedSequence(doc.Settings, peptideDocNode, IsotopeLabelType.light)).ToList();
+            var heavyPeptideModifiedSequences = doc.Peptides.Select(peptideDocNode =>
+                ModifiedSequence.GetModifiedSequence(doc.Settings, peptideDocNode, IsotopeLabelType.heavy)).ToList();
+            var fullNames = peptideModifiedSequences.Select(seq => seq.FullNames).ToList();
+            CollectionAssert.AreEqual(new[]
+            {
+                "PEPTIDEK",
+                "PEPT[Phospho (ST)]IDEK",
+                "PEPTIDEC[Carbamidomethyl (C)]K",
+                "PEPTIDEMC[Carbamidomethyl (C)]K",
+                "PEPTIDEM[Oxidation (M)]C[Carbamidomethyl (C)]K",
+                "PEPTIDEMK",
+                "PEPTIDEM[Oxidation (M)]K",
+                "PEPT[Phospho (ST)]IDEM[Oxidation (M)]K",
+                "PEPTIDEMC[Carbamidomethyl (C)]R",
+                "PEPTIDEM[Oxidation (M)]C[Carbamidomethyl (C)]R",
+            }, fullNames);
+            var heavyFullNames = heavyPeptideModifiedSequences.Select(seq => seq.FullNames).ToList();
+            CollectionAssert.AreEqual(new []
+            {
+                "PEPTIDEK[Label:13C(6) (K)]",
+                "PEPT[Phospho (ST)]IDEK[Label:13C(6) (K)]",
+                "PEPTIDEC[Carbamidomethyl (C)]K[Label:13C(6) (K)]",
+                "PEPTIDEMC[Carbamidomethyl (C)]K[Label:13C(6) (K)]",
+                "PEPTIDEM[Oxidation (M)]C[Carbamidomethyl (C)]K[Label:13C(6) (K)]",
+                "PEPTIDEMK[Label:13C(6) (K)]",
+                "PEPTIDEM[Oxidation (M)]K[Label:13C(6) (K)]",
+                "PEPT[Phospho (ST)]IDEM[Oxidation (M)]K[Label:13C(6) (K)]",
+                "PEPTIDEMC[Carbamidomethyl (C)]R",
+                "PEPTIDEM[Oxidation (M)]C[Carbamidomethyl (C)]R",
+            }, heavyFullNames);
+        }
+
+        private const string DOC_NEUTRAL_LOSSES = @"<?xml version='1.0' encoding='utf-8'?>
+<srm_settings format_version='20.22' software_version='Skyline (64-bit : developer build) 20.2.1.422 (319e57e40)'>
+  <settings_summary name='Default'>
+    <peptide_settings>
+      <enzyme name='Trypsin/P' cut='KR' no_cut='' sense='C' />
+      <digest_settings max_missed_cleavages='0' />
+      <peptide_prediction use_measured_rts='true' measured_rt_window='2' />
+      <peptide_filter start='0' min_length='8' max_length='25' auto_select='true'>
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick='library' />
+      <peptide_modifications max_variable_mods='3' max_neutral_losses='1'>
+        <static_modifications>
+          <static_modification name='Carbamidomethyl (C)' aminoacid='C' formula='H3C2NO' unimod_id='4' short_name='CAM' />
+          <static_modification name='Oxidation (M)' aminoacid='M' variable='true' formula='O' unimod_id='35' short_name='Oxi'>
+            <potential_loss formula='H4COS' massdiff_monoisotopic='63.998285' massdiff_average='64.10701' />
+          </static_modification>
+          <static_modification name='Water Loss (D, E, S, T)' aminoacid='D, E, S, T'>
+            <potential_loss formula='H2O' massdiff_monoisotopic='18.010565' massdiff_average='18.01528' />
+          </static_modification>
+          <static_modification name='Phospho (ST)' aminoacid='S, T' formula='HO3P' explicit_decl='true' unimod_id='21' short_name='Pho'>
+            <potential_loss formula='H3O4P' massdiff_monoisotopic='97.976896' massdiff_average='97.995181' />
+          </static_modification>
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name='Label:13C(6) (K)' aminoacid='K' label_13C='true' unimod_id='188' short_name='+06' />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type='Monoisotopic' fragment_mass_type='Monoisotopic' optimize_by='None' />
+      <transition_filter precursor_charges='2' product_charges='3' precursor_adducts='[M+H]' product_adducts='[M+]' fragment_types='y' small_molecule_fragment_types='f' fragment_range_first='m/z &gt; precursor' fragment_range_last='3 ions' precursor_mz_window='0' auto_select='true'>
+        <measured_ion name='N-terminal to Proline' cut='P' sense='N' min_length='3' />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance='0.5' min_ion_count='0' ion_count='3' pick_from='all' />
+      <transition_integration />
+      <transition_instrument min_mz='50' max_mz='1500' mz_match_tolerance='0.055' />
+    </transition_settings>
+    <data_settings document_guid='34ef7e1c-93c4-4ac6-a6c8-36f91812127b' audit_logging='true' />
+  </settings_summary>
+  <protein name='Protein' description='' websearch_status='X' auto_manage_children='false'>
+    <sequence>PEPTIDEKPE PTIDECKPEP TIDEMCKPEP TIDEMKPEPT IDEMCR</sequence>
+    <peptide sequence='PEPTIDEK' modified_sequence='PEPTIDEK' start='0' end='8' prev_aa='-' next_aa='P' calc_neutral_pep_mass='927.454927' num_missed_cleavages='0'>
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='7' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='927.454927' precursor_mz='464.73474' collision_energy='0' modified_sequence='PEPTIDEK' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='933.475056' precursor_mz='467.744804' collision_energy='0' modified_sequence='PEPTIDEK[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEK' modified_sequence='PEPT[+79.966331]IDEK' start='0' end='8' prev_aa='-' next_aa='P' calc_neutral_pep_mass='1007.421258' num_missed_cleavages='0'>
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa='1' modification_name='Water Loss (D, E, S, T)' mass_diff='+0' />
+          <explicit_modification index_aa='3' modification_name='Phospho (ST)' mass_diff='+80' />
+          <explicit_modification index_aa='5' modification_name='Water Loss (D, E, S, T)' mass_diff='+0' />
+          <explicit_modification index_aa='6' modification_name='Water Loss (D, E, S, T)' mass_diff='+0' />
+        </explicit_static_modifications>
+      </explicit_modifications>
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='7' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1007.421258' precursor_mz='504.717905' collision_energy='0' modified_sequence='PEPT[+80.0]IDEK' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1013.441387' precursor_mz='507.72797' collision_energy='0' modified_sequence='PEPT[+80.0]IDEK[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDECK' modified_sequence='PEPTIDEC[+57.021464]K' start='8' end='17' prev_aa='K' next_aa='P' calc_neutral_pep_mass='1087.485576' num_missed_cleavages='0'>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='7' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='8' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1087.485576' precursor_mz='544.750064' collision_energy='0' modified_sequence='PEPTIDEC[+57.0]K' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1093.505705' precursor_mz='547.760128' collision_energy='0' modified_sequence='PEPTIDEC[+57.0]K[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEMCK' modified_sequence='PEPTIDEMC[+57.021464]K' start='17' end='27' prev_aa='K' next_aa='P' calc_neutral_pep_mass='1218.526061' num_missed_cleavages='0'>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='8' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='9' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1218.526061' precursor_mz='610.270306' collision_energy='0' modified_sequence='PEPTIDEMC[+57.0]K' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1224.54619' precursor_mz='613.280371' collision_energy='0' modified_sequence='PEPTIDEMC[+57.0]K[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEMCK' modified_sequence='PEPTIDEM[+15.994915]C[+57.021464]K' start='17' end='27' prev_aa='K' next_aa='P' calc_neutral_pep_mass='1234.520976' num_missed_cleavages='0'>
+      <variable_modifications>
+        <variable_modification index_aa='7' modification_name='Oxidation (M)' mass_diff='+16' />
+      </variable_modifications>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='8' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='9' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1234.520976' precursor_mz='618.267764' collision_energy='0' modified_sequence='PEPTIDEM[+16.0]C[+57.0]K' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1240.541105' precursor_mz='621.277828' collision_energy='0' modified_sequence='PEPTIDEM[+16.0]C[+57.0]K[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEMK' modified_sequence='PEPTIDEMK' start='27' end='36' prev_aa='K' next_aa='P' calc_neutral_pep_mass='1058.495412' num_missed_cleavages='0'>
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='8' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1058.495412' precursor_mz='530.254982' collision_energy='0' modified_sequence='PEPTIDEMK' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1064.515541' precursor_mz='533.265047' collision_energy='0' modified_sequence='PEPTIDEMK[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEMK' modified_sequence='PEPTIDEM[+15.994915]K' start='27' end='36' prev_aa='K' next_aa='P' calc_neutral_pep_mass='1074.490327' num_missed_cleavages='0'>
+      <variable_modifications>
+        <variable_modification index_aa='7' modification_name='Oxidation (M)' mass_diff='+16' />
+      </variable_modifications>
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='8' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1074.490327' precursor_mz='538.25244' collision_energy='0' modified_sequence='PEPTIDEM[+16.0]K' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1080.510456' precursor_mz='541.262504' collision_energy='0' modified_sequence='PEPTIDEM[+16.0]K[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEMK' modified_sequence='PEPT[+79.966331]IDEM[+15.994915]K' start='27' end='36' prev_aa='K' next_aa='P' calc_neutral_pep_mass='1154.456658' num_missed_cleavages='0'>
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa='1' modification_name='Water Loss (D, E, S, T)' mass_diff='+0' />
+          <explicit_modification index_aa='3' modification_name='Phospho (ST)' mass_diff='+80' />
+          <explicit_modification index_aa='5' modification_name='Water Loss (D, E, S, T)' mass_diff='+0' />
+          <explicit_modification index_aa='6' modification_name='Water Loss (D, E, S, T)' mass_diff='+0' />
+          <explicit_modification index_aa='7' modification_name='Oxidation (M)' mass_diff='+16' />
+        </explicit_static_modifications>
+      </explicit_modifications>
+      <implicit_modifications>
+        <implicit_heavy_modifications>
+          <implicit_modification index_aa='8' modification_name='Label:13C(6) (K)' mass_diff='+6' />
+        </implicit_heavy_modifications>
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1154.456658' precursor_mz='578.235605' collision_energy='0' modified_sequence='PEPT[+80.0]IDEM[+16.0]K' />
+      <precursor charge='2' isotope_label='heavy' calc_neutral_mass='1160.476787' precursor_mz='581.24567' collision_energy='0' modified_sequence='PEPT[+80.0]IDEM[+16.0]K[+6.0]' />
+    </peptide>
+    <peptide sequence='PEPTIDEMCR' modified_sequence='PEPTIDEMC[+57.021464]R' start='36' end='46' prev_aa='K' next_aa='-' calc_neutral_pep_mass='1246.532209' num_missed_cleavages='0'>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='8' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1246.532209' precursor_mz='624.27338' collision_energy='0' modified_sequence='PEPTIDEMC[+57.0]R' />
+    </peptide>
+    <peptide sequence='PEPTIDEMCR' modified_sequence='PEPTIDEM[+15.994915]C[+57.021464]R' start='36' end='46' prev_aa='K' next_aa='-' calc_neutral_pep_mass='1262.527124' num_missed_cleavages='0'>
+      <variable_modifications>
+        <variable_modification index_aa='7' modification_name='Oxidation (M)' mass_diff='+16' />
+      </variable_modifications>
+      <implicit_modifications>
+        <implicit_static_modifications>
+          <implicit_modification index_aa='8' modification_name='Carbamidomethyl (C)' mass_diff='+57' />
+        </implicit_static_modifications>
+        <implicit_heavy_modifications />
+      </implicit_modifications>
+      <precursor charge='2' calc_neutral_mass='1262.527124' precursor_mz='632.270838' collision_energy='0' modified_sequence='PEPTIDEM[+16.0]C[+57.0]R' />
+    </peptide>
+  </protein>
 </srm_settings>";
     }
 }

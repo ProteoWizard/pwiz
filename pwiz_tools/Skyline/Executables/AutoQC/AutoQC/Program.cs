@@ -19,42 +19,50 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Deployment.Application;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using AutoQC.Properties;
 using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Repository.Hierarchy;
+using SharedBatch;
+using Resources = AutoQC.Properties.Resources;
+using Settings = AutoQC.Properties.Settings;
 
 namespace AutoQC
 {
     class Program
     {
-        private static readonly ILog LOG = LogManager.GetLogger("AutoQC");
-        private static string _version;
+        private static Version _version;
+        private static string _lastInstalledVersion;
 
-        public const string AutoQcStarter = "AutoQCStarter";
-        public static readonly string AutoQcStarterExe = $"{AutoQcStarter}.exe";
+        public const string AUTO_QC_STARTER = "AutoQCStarter";
+        public static readonly string AutoQcStarterExe = $"{AUTO_QC_STARTER}.exe";
 
         [STAThread]
         public static void Main(string[] args)
         {
+            ProgramLog.Init("AutoQC");
             Application.EnableVisualStyles();
+
+            AddFileTypesToRegistry();
+
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             // Handle exceptions on the UI thread.
-            Application.ThreadException += ((sender, e) => LOG.Error(e.Exception));
+            Application.ThreadException += ((sender, e) => ProgramLog.Error(e.Exception.Message, e.Exception));
             // Handle exceptions on the non-UI thread.
             AppDomain.CurrentDomain.UnhandledException += ((sender, e) =>
             {
                 try
                 {
-                    LOG.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
+                    ProgramLog.Error("AutoQC Loader encountered an unexpected error. ", (Exception)e.ExceptionObject);
 
                     const string logFile = "AutoQCProgram.log";
                     MessageBox.Show(
@@ -71,13 +79,14 @@ namespace AutoQC
                 }
             });
 
+            var doRestart = false;
             using (var mutex = new Mutex(false, $"University of Washington {AppName}"))
             {
                 if (!mutex.WaitOne(TimeSpan.Zero))
                 {
                     MessageBox.Show(
                         string.Format(Resources.Program_Main_Another_instance_of__0__is_already_running_, AppName),
-                        string.Format(Resources.Program_Main__0__Error, AppName), MessageBoxButtons.OK,
+                        AppName, MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                     return;
                 }
@@ -87,70 +96,277 @@ namespace AutoQC
                 // Initialize log4net -- global application logging
                 XmlConfigurator.Configure();
 
+                ProgramLog.Info($"Starting {AppName}");
+
+                string configFile = null;
                 try
                 {
-                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-                    LogInfo(string.Format("user.config path: {0}", config.FilePath));
+                    var config =
+                        ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
+                    configFile = config.FilePath;
+                    ProgramLog.Info(string.Format("user.config path: {0}", configFile));
+                    if (!InitSkylineSettings()) return;
+                    UpgradeSettingsIfRequired();
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    // ignored
-                }
+                    ProgramLog.Error(e.Message, e);
 
-                InitSkylineSettings();
-
-                // Thread.CurrentThread.CurrentUICulture = new CultureInfo("ja");
-                var form = new MainForm();
-
-                // CurrentDeployment is null if it isn't network deployed.
-                _version = ApplicationDeployment.IsNetworkDeployed
-                    ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString()
-                    : "";
-                form.Text = Version();
-
-                var worker = new BackgroundWorker {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
-                worker.DoWork += UpdateAutoQcStarter;
-                worker.RunWorkerCompleted += (o, eventArgs) =>
-                {
-                    if (eventArgs.Error != null)
+                    if (configFile == null && e is ConfigurationException ce)
                     {
-                        LogError($"Unable to update {AutoQcStarter} shortcut.", eventArgs.Error);
-                        form.DisplayError(string.Format(Resources.Program_Main__0__Update_Error, AutoQcStarter),
-                            string.Format(Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
-                                AutoQcStarter, eventArgs.Error));
+                        configFile = ce.Filename; // Get the user.config file path from the exception
                     }
-                };
+                    if (configFile == null)
+                    {
+                        MessageBox.Show(
+                            $"There was an error loading the saved configurations and settings. The error was {e.Message}");
+                        return;
 
-                worker.RunWorkerAsync();
+                    }
 
-                Application.Run(form);
+                    var msg1 = TextUtil.LineSeparate(
+                        $"There was an error loading the saved configurations and settings in {configFile}.",
+                        $"The error was {e.Message}");
+                    var msg2 = "Please provide this file to the developers to help debug the problem.";
+                    // Try to move the offending file to where the program exe is located
+                    var folderToCopy = Path.GetDirectoryName(ProgramLog.GetProgramLogFilePath()) ?? string.Empty;
+                    var newFileName = Path.Combine(folderToCopy, "error-user.config");
+                    ProgramLog.Error($"Moving '{configFile}' to '{newFileName}'.");
+                    try
+                    {
+                        File.Copy(configFile, newFileName, true);
+                        File.Delete(configFile);
+                    }
+                    catch (Exception exception)
+                    {
+                        var err = $"Attempting to move the configuration file failed with the error: {exception.Message}.";
+                        ProgramLog.Error(err, exception);
+                        MessageBox.Show(TextUtil.LineSeparate(msg1, Environment.NewLine, err, msg2));
+                        return;
+                    }
+                    
+                    var message = TextUtil.LineSeparate(msg1,
+                        Environment.NewLine,
+                        $"The settings file has been moved to {newFileName}.",
+                        msg2,
+                        Environment.NewLine,
+                        $"{AppName} will now start with default settings.");
+
+                    MessageBox.Show(message);
+                    ProgramLog.Error("Starting with default settings.");
+                    // Restart the application with a default user.settings after releasing the mutex.
+                    // If we restart here we will get an error message about an already running instance of AutoQC Loader.
+                    doRestart = true;  
+                }
+
+                if (!doRestart)
+                {
+                    var openFile = GetFirstArg(args);
+                    if (!string.IsNullOrEmpty(openFile))
+                    {
+                        ProgramLog.Info($"Reading configurations from file {openFile}");
+                    }
+
+                    var form = new MainForm(openFile) {Text = Version()};
+
+                    var worker = new BackgroundWorker
+                        {WorkerSupportsCancellation = false, WorkerReportsProgress = false};
+                    worker.DoWork += UpdateAutoQcStarter;
+                    worker.RunWorkerCompleted += (o, eventArgs) =>
+                    {
+                        if (eventArgs.Error != null)
+                        {
+                            ProgramLog.Error($"Unable to update {AUTO_QC_STARTER} shortcut.", eventArgs.Error);
+                            form.DisplayError(string.Format(
+                                Resources.Program_Main_Unable_to_update__0__shortcut___Error_was___1_,
+                                AUTO_QC_STARTER, eventArgs.Error));
+                        }
+                    };
+
+                    worker.RunWorkerAsync();
+
+                    Application.Run(form);
+                }
 
                 mutex.ReleaseMutex();
             }
+
+            if (doRestart)
+            {
+                // user.config somehow got corrupted. We will restart with a fresh user.config.
+                Application.Restart();
+            }
         }
 
-        private static void InitSkylineSettings()
+        private static void UpgradeSettingsIfRequired()
         {
-            if (SkylineSettings.IsInitialized() || SkylineSettings.FindSkyline(out var pathsChecked))
+            if (Settings.Default.SettingsUpgradeRequired)
             {
+                Settings.Default.Upgrade(); // This should copy all the settings from the previous version
+                Settings.Default.SettingsUpgradeRequired = false;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
+            GetCurrentAndLastInstalledVersions();
+            Settings.Default.UpdateIfNecessary(_version.ToString(), ConfigMigrationRequired());
+        }
+
+        private static void GetCurrentAndLastInstalledVersions()
+        {
+            if (ApplicationDeployment.IsNetworkDeployed) // clickOnce installation
+            {
+                _version = ApplicationDeployment.CurrentDeployment.CurrentVersion;
+            }
+            else // developer build
+            {
+                // copied from Skyline Install.cs GetVersion()
+                try
+                {
+                    string productVersion = null;
+
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly != null)
+                    {
+                        // custom attribute
+                        object[] attrs = entryAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+                        // Play it safe with a null check no matter what ReSharper thinks
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (attrs != null && attrs.Length > 0)
+                        {
+                            productVersion = ((AssemblyInformationalVersionAttribute)attrs[0]).InformationalVersion;
+                        }
+                        else
+                        {
+                            // win32 version info
+                            productVersion = FileVersionInfo.GetVersionInfo(entryAssembly.Location).ProductVersion?.Trim();
+                        }
+                    }
+
+                    _version = productVersion != null ? new Version(productVersion) : null;
+                }
+                catch (Exception)
+                {
+                    _version = null;
+                }
+            }
+
+            _lastInstalledVersion = Settings.Default.InstalledVersion ?? string.Empty;
+
+            if (_version != null && !_version.ToString().Equals(_lastInstalledVersion))
+            {
+                ProgramLog.Info(string.Empty.Equals(_lastInstalledVersion)
+                    ? $"This is a first install and run of version: {_version}."
+                    : $"Current version: {_version} is newer than the last installed version: {_lastInstalledVersion}.");
+
                 return;
             }
 
-            var message = new StringBuilder();
-            message.AppendLine(
-                    string.Format(
-                        Resources.Program_InitSkylineSettings__0__requires__1__or__2__to_be_installed_on_the_computer_,
-                        AppName, SkylineSettings.Skyline, SkylineSettings.SkylineDaily))
-                .AppendLine(string.Format(
-                    Resources.Program_InitSkylineSettings_Unable_to_find__0__at_any_of_the_following_locations__,
-                    SkylineSettings.Skyline))
-                .AppendLine(string.Join(Environment.NewLine, pathsChecked)).AppendLine()
-                .AppendLine(
-                    string.Format(Resources.Program_InitSkylineSettings_Please_install__0__or__1__to_use__2_,
-                        SkylineSettings.Skyline, SkylineSettings.SkylineDaily, AppName));
-            MessageBox.Show(message.ToString(),
-                string.Format(Resources.Program_InitSkylineSettings_Unable_To_Find__0_, SkylineSettings.Skyline),
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            var _currentVerStr = _version != null ? _version.ToString() : string.Empty;
+            ProgramLog.Info($"Current version: '{_currentVerStr}' is the same as last installed version: '{_lastInstalledVersion}'.");
+            
+        }
+
+        private static bool ConfigMigrationRequired()
+        {
+            if (_version != null)
+            {
+                if (string.IsNullOrEmpty(_lastInstalledVersion))
+                {
+                    ProgramLog.Info("Last installed version not found. Config migration is required.");
+                    return true;
+                }
+
+                if (System.Version.TryParse(_lastInstalledVersion, out var lastVersion))
+                {
+                    // ProgramLog.Info($"Current Version: {_version.Major}-{_version.MajorRevision}-{_version.Minor}-{_version.MinorRevision}");
+                    // ProgramLog.Info($"Previous Version: {lastVersion.Major}-{lastVersion.MajorRevision}-{lastVersion.Minor}-{lastVersion.MinorRevision}");
+                    if (lastVersion.Major == 1 && lastVersion.Minor == 1 && lastVersion.MinorRevision <= 20237)
+                    {
+                        ProgramLog.Info($"Last installed version was {_lastInstalledVersion}. Config migration is required.");
+                        return true;
+                    }
+                }
+                else
+                {
+                    ProgramLog.Info($"Could not parse last installed version {_lastInstalledVersion}. Skipping configuration migration.");
+                    return false;
+                }
+            }
+
+            ProgramLog.Info("Configuration migration is not required.");
+            return false;
+        }
+
+        private static bool InitSkylineSettings()
+        {
+            if (SkylineInstallations.FindSkyline())
+                return true;
+            var skylineForm = new FindSkylineForm(AppName, Icon());
+            Application.Run(skylineForm);
+
+            if (skylineForm.DialogResult != DialogResult.OK)
+            {
+                MessageBox.Show(string.Format(Resources.Program_InitSkylineSettings__0__requires_Skyline_to_run_, AppName) + Environment.NewLine +
+                    string.Format(Resources.Program_InitSkylineSettings_Please_install_Skyline_to_run__0__, AppName), AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            
+            return true;
+        }
+
+        private static string GetFirstArg(string[] args)
+        {
+            string arg;
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+                arg = activationData != null && activationData.Length > 0
+                    ? activationData[0]
+                    : string.Empty;
+            }
+            else
+            {
+                arg = args.Length > 0 ? args[0] : string.Empty;
+            }
+
+            return arg;
+        }
+
+        private static void AddFileTypesToRegistry()
+        {
+            var allProgramsPath = Environment.GetFolderPath(Environment.SpecialFolder.Programs);
+            var appName = "AutoQC";
+            var apprefName = appName + TextUtil.EXT_APPREF;
+            var publisherName = "University of Washington";
+            var paths = new[]
+            {
+                //e.g. %APPDATA%\Microsoft\Windows\Start Menu\Programs\University of Washington\AutoQC.appref-ms
+                Path.Combine(Path.Combine(allProgramsPath, publisherName), apprefName),
+                //e.g. %APPDATA%\Microsoft\Windows\Start Menu\Programs\AutoQC\AutoQC.appref-ms
+                Path.Combine(Path.Combine(allProgramsPath, appName), apprefName)
+            };
+            var appRefPath = paths.FirstOrDefault(File.Exists);
+
+            if (appRefPath != null)
+            {
+                var appExe = Application.ExecutablePath;
+
+                var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                var configFileIconPath = Path.Combine(baseDirectory, "AutoQC_configs.ico");
+
+                if (ApplicationDeployment.IsNetworkDeployed)
+                {
+                    FileUtil.AddFileTypeClickOnce(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
+                        Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
+                        appRefPath, configFileIconPath);
+                }
+                else
+                {
+                    FileUtil.AddFileTypeAdminInstall(TextUtil.EXT_QCFG, "AutoQC.Configuration.0",
+                        Resources.Program_AddFileTypesToRegistry_AutoQC_Configuration_File,
+                        appExe, configFileIconPath);
+                }
+            }
         }
 
         private static void UpdateAutoQcStarter(object sender, DoWorkEventArgs e)
@@ -159,65 +375,19 @@ namespace AutoQC
 
             if (ApplicationDeployment.IsNetworkDeployed)
             {
-                if (IsFirstRun())
+                if (_version != null && !_version.ToString().Equals(_lastInstalledVersion))
                 {
                     // First time running a newer version of the application
-                    LogInfo($"Updating {AutoQcStarterExe} shortcut.");
+                    ProgramLog.Info($"Updating {AutoQcStarterExe} shortcut.");
                     StartupManager.UpdateAutoQcStarterInStartup();
                 }
                 else if (!StartupManager.IsAutoQcStarterRunning())
                 {
                     // AutoQCStarter should be running but it is not
-                    LogInfo($"{AutoQcStarter} is not running. It should be running since Keep AutoQC Loader running is checked. Starting it up...");
+                    ProgramLog.Info($"{AUTO_QC_STARTER} is not running. It should be running since Keep AutoQC Loader running is checked. Starting it up...");
                     StartupManager.UpdateAutoQcStarterInStartup();
                 }
             }
-        }
-
-        private static bool IsFirstRun()
-        {
-            if (!ApplicationDeployment.IsNetworkDeployed)
-                return false;
-
-            var currentVersion = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-            var installedVersion = Settings.Default.InstalledVersion ?? string.Empty;
-            if (!currentVersion.Equals(installedVersion))
-            {
-                LogInfo(string.Empty.Equals(installedVersion)
-                    ? $"This is a first install and run of version: {currentVersion}."
-                    : $"Current version: {currentVersion} is newer than the last installed version: {installedVersion}.");
-
-                Settings.Default.InstalledVersion = currentVersion;
-                Settings.Default.Save();
-                return true;
-            }
-            LogInfo($"Current version: {currentVersion} same as last installed version: {installedVersion}.");
-            return false;
-        }
-
-        public static void LogError(string message)
-        {
-            LOG.Error(message);
-        }
-
-        public static void LogError(string configName, string message)
-        {
-            LOG.Error(string.Format("{0}: {1}", configName, message));
-        }
-
-        public static void LogError(string message, Exception e)
-        {
-            LOG.Error(message, e);
-        }
-
-        public static void LogError(string configName, string message, Exception e)
-        {
-            LogError(string.Format("{0}: {1}", configName, message), e);
-        }
-
-        public static void LogInfo(string message)
-        {
-            LOG.Info(message);
         }
 
         public static string GetProgramLogFilePath()
@@ -239,6 +409,13 @@ namespace AutoQC
         }
 
         public static string AppName => "AutoQC Loader";
+
+        public static Icon Icon()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(baseDirectory, "AutoQC_release.ico");
+            return  System.Drawing.Icon.ExtractAssociatedIcon(iconPath);
+        }
 
         private static void InitializeSecurityProtocol()
         {

@@ -35,7 +35,6 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnGraph = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.SuspendLayout();
             // 
             // labelMessage
@@ -92,7 +91,6 @@
             this.MinimizeBox = false;
             this.Name = "AddIrtStandardsDlg";
             this.ShowInTaskbar = false;
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

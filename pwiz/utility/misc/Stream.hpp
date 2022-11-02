@@ -51,13 +51,13 @@ using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
 
-using std::getline;
-
 using std::streampos;
 using std::streamoff;
 using std::streamsize;
 
-using bnw::system; // unqualified system() calls will be ambiguous, by intention, to force developers to consider UTF-8 compatibility
+
+//using bnw::system; // TODO: add linting so unqualified system() calls will not be allowed to force developers to consider UTF-8 compatibility
+
 using bnw::cin;
 using bnw::cout;
 using bnw::cerr;

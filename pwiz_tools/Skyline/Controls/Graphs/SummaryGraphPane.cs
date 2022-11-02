@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.SeqNode;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -27,7 +29,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Base class for GraphPanes that are shown on the RetentionTime graph
     /// </summary>
-    public abstract class SummaryGraphPane : GraphPane
+    public abstract class SummaryGraphPane : GraphPane, ITipDisplayer
     {
         protected SummaryGraphPane(GraphSummary graphSummary)
         {
@@ -51,6 +53,25 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public GraphSummary GraphSummary { get; private set; }
         public PaneKey PaneKey { get; protected set; }
+
+        Rectangle ITipDisplayer.RectToScreen(Rectangle r)
+        {
+            if (!GraphSummary.GraphControl.IsDisposed)
+                return GraphSummary.GraphControl.RectangleToScreen(r);
+            return new Rectangle();
+        }
+
+        Rectangle ITipDisplayer.ScreenRect
+        {
+            get
+            {
+                if (!GraphSummary.GraphControl.IsDisposed)
+                    return Screen.GetBounds(GraphSummary.GraphControl);
+                return new Rectangle();
+            }
+        }
+
+        bool ITipDisplayer.AllowDisplayTip => true;
 
         /// <summary>
         /// Sets a fixed minimum y value, which the graph control will maintain through
@@ -84,6 +105,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return false;
         }
+
+        public virtual void HandleMouseOutEvent(object sender, EventArgs e){}
 
         public virtual bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {

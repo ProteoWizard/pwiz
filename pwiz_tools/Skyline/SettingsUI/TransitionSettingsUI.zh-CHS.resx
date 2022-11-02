@@ -1262,8 +1262,7 @@
     <value>5</value>
   </data>
   <data name="textPeptideIonTypes.ToolTip" xml:space="preserve">
-    <value>一列以逗号分隔用于计算可能子离子的子离子类型
-（a、b、c、x、y、z 和 p 用于母离子）</value>
+    <value>逗号分隔的子离子类型列表（ 用于母离子的a、b、c、x、y、z、z.、z'、p），用于计算潜在的子离子。z. 和 z' 表示 z+1 自由基离子和 z+2 离子。这些常用于 ExD 实验。另外，也可以使用 z* 和 z"。</value>
   </data>
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>
@@ -2850,16 +2849,16 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
+  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
+    <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
@@ -3377,31 +3376,31 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMzMatchTolerance.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblMethodMatchTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblMethodMatchTolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>24, 108</value>
   </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblMethodMatchTolerance.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 13</value>
   </data>
-  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblMethodMatchTolerance.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
-  <data name="label16.Text" xml:space="preserve">
+  <data name="lblMethodMatchTolerance.Text" xml:space="preserve">
     <value>方法匹配耐受性质荷比(&amp;T)：</value>
   </data>
-  <data name="&gt;&gt;label16.Name" xml:space="preserve">
-    <value>label16</value>
+  <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
+    <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label16.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
-  <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblMethodMatchTolerance.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
   <data name="label10.AutoSize" type="System.Boolean, mscorlib">

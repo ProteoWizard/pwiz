@@ -356,7 +356,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(40, errorList[0].LineNum);
 
             var docHighMax = document.ChangeSettings(document.Settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
-            var docList = docHighMax.ImportMassList(inputsPhospho, null, out pathTo);
+            var docList = docHighMax.ImportMassList(inputsPhospho, null, null, out pathTo);
 
             AssertEx.Serializable(docList);
             AssertEx.IsDocumentState(docList, 3, 68, 134, 157, 481);
@@ -377,9 +377,36 @@ namespace pwiz.SkylineTest
             
             var docMultiLos = docHighMax.ChangeSettings(docHighMax.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxNeutralLosses(2)));
-            docList = docMultiLos.ImportMassList(inputsMultiLoss, null, out pathTo);
+            docList = docMultiLos.ImportMassList(inputsMultiLoss, null, null, out pathTo);
 
             AssertEx.IsDocumentState(docList, 4, 4, 4, 12);
+        }
+
+        [TestMethod]
+        public void ExplicitModImportListTest()
+        {
+            var document = new SrmDocument(SrmSettingsList.GetDefault());
+            var staticMods = new List<StaticMod>(document.Settings.PeptideSettings.Modifications.StaticModifications);
+            staticMods.Add(UniMod.GetModification("Oxidation (M)", true).ChangeVariable(true));
+            document = document.ChangeSettings(document.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(staticMods)));
+            var inputsExplicit = new MassListInputs(TEXT_EXPLICIT_MODS_LOSS, true);
+            var docError = document.ImportMassList(inputsExplicit, null, out _, out _, out _, out var errorList);
+            Assert.AreEqual(1, errorList.Count);
+            Assert.AreEqual(1, docError.PeptideTransitionCount);
+            var nodePep = docError.Peptides.First();
+            Assert.IsTrue(nodePep.HasExplicitMods && !nodePep.HasVariableMods);
+
+            // Add the necessary water loss where explicit mods used to block loss-only modificiations
+            staticMods.Add(UniMod.GetModification("Water Loss (D, E, S, T)", true));
+            document = document.ChangeSettings(document.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(staticMods)));
+            var docSuccess = document.ImportMassList(inputsExplicit, null, out _, out _, out _, out errorList);
+            Assert.AreEqual(0, errorList.Count, TextUtil.LineSeparate("Unexpected errors:",
+                TextUtil.LineSeparate(errorList.Select(err => err.ErrorMessage))));
+            Assert.AreEqual(2, docSuccess.PeptideTransitionCount);
+            nodePep = docSuccess.Peptides.First();
+            Assert.IsTrue(nodePep.HasExplicitMods && !nodePep.HasVariableMods);
         }
 
         private static int GetVariableModCount(SrmDocument document)
@@ -1230,5 +1257,9 @@ namespace pwiz.SkylineTest
             "1012.742519,980.400528,20,sp|Q9UK55|ZPI_HUMAN.VVQAPKEEEEDEQEASEEKASEEEK.y17.light,104.9,55.3\n" +
             "1012.742519,398.239795,20,sp|Q9UK55|ZPI_HUMAN.VVQAPKEEEEDEQEASEEKASEEEK.1b4.light,104.9,55.3\n";
 
+        private const string TEXT_EXPLICIT_MODS_LOSS =
+            "PrecursorMz,ProductMz,PrecursorCharge,ProductCharge,LibraryIntensity,NormalizedRetentionTime,PeptideSequence,ModifiedPeptideSequence,PeptideGroupLabel,ProteinId,UniprotId,FragmentType,FragmentSeriesNumber,CollisionEnergy,PrecursorIonMobility,TransitionGroupId,Decoy\n" +
+            "1154.5025826639,333.176860973052,3,1,45.18333,136.4219,NPTDEYLEGMMSEAPGPINFTMFLTMFGEK,NPTDEYLEGM(UniMod:35)M(UniMod:35)SEAPGPINFTM(UniMod:35)FLTM(UniMod:35)FGEK,NPTDEYLEGM(UniMod:35)M(UniMod:35)SEAPGPINFTM(UniMod:35)FLTM(UniMod:35)FGEK3,P24844|MYL9_HUMAN,P24844|MYL9_HUMAN,y,3,-1,-1,NPTDEYLEGM(UniMod:35)M(UniMod:35)SEAPGPINFTM(UniMod:35)FLTM(UniMod:35)FGEK3,0\n" +
+            "1154.5025826639,410.167024444965,3,1,9.50316,136.4219,NPTDEYLEGMMSEAPGPINFTMFLTMFGEK,NPTDEYLEGM(UniMod:35)M(UniMod:35)SEAPGPINFTM(UniMod:35)FLTM(UniMod:35)FGEK,NPTDEYLEGM(UniMod:35)M(UniMod:35)SEAPGPINFTM(UniMod:35)FLTM(UniMod:35)FGEK3,P24844|MYL9_HUMAN,P24844|MYL9_HUMAN,b,4,-1,-1,NPTDEYLEGM(UniMod:35)M(UniMod:35)SEAPGPINFTM(UniMod:35)FLTM(UniMod:35)FGEK3,0";
     }
 }

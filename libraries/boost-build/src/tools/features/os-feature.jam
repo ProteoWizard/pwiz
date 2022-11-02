@@ -1,9 +1,7 @@
 # Copyright 2017 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
-
-# TODO: Documentation.
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import feature ;
 import modules ;
@@ -13,7 +11,7 @@ import os ;
     aix android appletv bsd cygwin darwin freebsd haiku hpux iphone linux
     netbsd openbsd osf qnx qnxnto sgi solaris unix unixware windows vms vxworks
     freertos
-    
+
     # Not actually an OS -- used for targeting bare metal where object
     # format is ELF.  This catches both -elf and -eabi gcc targets as well
     # as other compilers targeting ELF. It is not clear how often we need
@@ -74,6 +72,24 @@ local rule default-host-os ( )
 # building on the target OS.
 feature.feature host-os : $(.os-names) ;
 feature.set-default host-os : [ default-host-os ] ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.target-os]]`target-os`::
+*Allowed values:* `aix`, `android`, `appletv`, `bsd`, `cygwin`, `darwin`,
+`freebsd`, `haiku`, `hpux`, `iphone`, `linux`, `netbsd`, `openbsd`, `osf`,
+`qnx`, `qnxnto`, `sgi`, `solaris`, `unix`, `unixware`, `windows`, `vms`,
+`vxworks`, `freertos`.
++
+Specifies the operating system for which the code is to be generated. The
+compiler you used should be the compiler for that operating system. This option
+causes B2 to use naming conventions suitable for that operating
+system, and adjust build process accordingly. For example, with gcc, it
+controls if import libraries are produced for shared libraries or not.
++
+See the section <<Cross-compilation>> for details of cross-compilation.
+
+|# # end::doc[]
 
 feature.feature target-os : $(.os-names) : propagated link-incompatible ;
 feature.set-default target-os : [ default-host-os ] ;

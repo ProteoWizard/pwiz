@@ -23,13 +23,14 @@
 #include "parse.h"
 #include "pathsys.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
 #include "output.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 
 #ifdef OS_NT
 #include <windows.h>
@@ -495,7 +496,6 @@ void load_builtins()
     init_property_set();
     init_sequence();
     init_order();
-    init_svnrev();
 }
 
 
@@ -924,7 +924,7 @@ LIST * glob_recursive( char const * pattern )
                 {
                     OBJECT * p;
                     path->f_dir.ptr = object_str( list_item( iter ) );
-                    path->f_dir.len = strlen( object_str( list_item( iter ) ) );
+                    path->f_dir.len = int32_t(strlen( object_str( list_item( iter ) ) ));
                     path_build( path, file_string );
 
                     p = object_new( file_string->value );
@@ -1240,13 +1240,15 @@ LIST * builtin_import( FRAME * frame, int flags )
           source_iter = list_next( source_iter ),
           target_iter = list_next( target_iter ) )
     {
-        RULE * r;
-        RULE * imported;
+        RULE * r = nullptr;
+        RULE * imported = nullptr;
 
         if ( !source_module->rules || !(r = (RULE *)hash_find(
             source_module->rules, list_item( source_iter ) ) ) )
+        {
             unknown_rule( frame, "IMPORT", source_module, list_item( source_iter
                 ) );
+        }
 
         imported = import_rule( r, target_module, list_item( target_iter ) );
         if ( !list_empty( localize ) )
@@ -1294,10 +1296,12 @@ LIST * builtin_export( FRAME * frame, int flags )
     LISTITER const end = list_end( rules );
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        RULE * r;
+        RULE * r = nullptr;
         if ( !m->rules || !( r = (RULE *)hash_find( m->rules, list_item( iter )
             ) ) )
+        {
             unknown_rule( frame, "EXPORT", m, list_item( iter ) );
+        }
         r->exported = 1;
     }
     return L0;
@@ -1317,11 +1321,6 @@ static void get_source_line( FRAME * frame, char const * * file, int * line )
     {
         char const * f = object_str( frame->file );
         int l = frame->line;
-        if ( !strcmp( f, "+" ) )
-        {
-            f = "jambase.c";
-            l += 3;
-        }
         *file = f;
         *line = l;
     }
@@ -1589,135 +1588,41 @@ LIST * builtin_sort( FRAME * frame, int flags )
 }
 
 
+namespace
+{
+    template <class S>
+    void replace_all(S &str, const S &from, const S &to)
+    {
+        const auto from_len = from.length();
+        const auto to_len = to.length();
+        auto pos = str.find(from, 0);
+        while (pos != S::npos)
+        {
+            str.replace(pos, from_len, to);
+            pos += to_len;
+            pos = str.find(from, pos);
+        }
+    }
+}
+
+
 LIST * builtin_normalize_path( FRAME * frame, int flags )
 {
     LIST * arg = lol_get( frame->args, 0 );
-
-    /* First, we iterate over all '/'-separated elements, starting from the end
-     * of string. If we see a '..', we remove a preceding path element. If we
-     * see '.', we remove it. Removal is done by overwriting data using '\1'
-     * characters. After the whole string has been processed, we do a second
-     * pass, removing any entered '\1' characters.
-     */
-
-    string   in[ 1 ];
-    string   out[ 1 ];
-    /* Last character of the part of string still to be processed. */
-    char   * end;
-    /* Working pointer. */
-    char   * current;
-    /* Number of '..' elements seen and not processed yet. */
-    int      dotdots = 0;
-    int      rooted  = 0;
-    OBJECT * result  = 0;
     LISTITER arg_iter = list_begin( arg );
     LISTITER arg_end = list_end( arg );
-
-    /* Make a copy of input: we should not change it. Prepend a '/' before it as
-     * a guard for the algorithm later on and remember whether it was originally
-     * rooted or not.
-     */
-    string_new( in );
-    string_push_back( in, '/' );
+    std::string in;
     for ( ; arg_iter != arg_end; arg_iter = list_next( arg_iter ) )
     {
-        if ( object_str( list_item( arg_iter ) )[ 0 ] != '\0' )
-        {
-            if ( in->size == 1 )
-                rooted = ( object_str( list_item( arg_iter ) )[ 0 ] == '/'  ) ||
-                         ( object_str( list_item( arg_iter ) )[ 0 ] == '\\' );
-            else
-                string_append( in, "/" );
-            string_append( in, object_str( list_item( arg_iter ) ) );
-        }
+        auto arg_str = object_str( list_item( arg_iter ) );
+        if (arg_str[ 0 ] == '\0') continue;
+        if (!in.empty()) in += "/";
+        in += arg_str;
     }
+    std::string out = b2::paths::normalize(in);
 
-    /* Convert \ into /. On Windows, paths using / and \ are equivalent, and we
-     * want this function to obtain a canonic representation.
-     */
-    for ( current = in->value, end = in->value + in->size;
-        current < end; ++current )
-        if ( *current == '\\' )
-            *current = '/';
-
-    /* Now we remove any extra path elements by overwriting them with '\1'
-     * characters and count how many more unused '..' path elements there are
-     * remaining. Note that each remaining path element with always starts with
-     * a '/' character.
-     */
-    for ( end = in->value + in->size - 1; end >= in->value; )
-    {
-        /* Set 'current' to the next occurrence of '/', which always exists. */
-        for ( current = end; *current != '/'; --current );
-
-        if ( current == end )
-        {
-            /* Found a trailing or duplicate '/'. Remove it. */
-            *current = '\1';
-        }
-        else if ( ( end - current == 1 ) && ( *( current + 1 ) == '.' ) )
-        {
-            /* Found '/.'. Remove them all. */
-            *current = '\1';
-            *(current + 1) = '\1';
-        }
-        else if ( ( end - current == 2 ) && ( *( current + 1 ) == '.' ) &&
-            ( *( current + 2 ) == '.' ) )
-        {
-            /* Found '/..'. Remove them all. */
-            *current = '\1';
-            *(current + 1) = '\1';
-            *(current + 2) = '\1';
-            ++dotdots;
-        }
-        else if ( dotdots )
-        {
-            memset( current, '\1', end - current + 1 );
-            --dotdots;
-        }
-        end = current - 1;
-    }
-
-    string_new( out );
-
-    /* Now we know that we need to add exactly dotdots '..' path elements to the
-     * front and that our string is either empty or has a '/' as its first
-     * significant character. If we have any dotdots remaining then the passed
-     * path must not have been rooted or else it is invalid we return an empty
-     * list.
-     */
-    if ( dotdots )
-    {
-        if ( rooted )
-        {
-            string_free( out );
-            string_free( in );
-            return L0;
-        }
-        do
-            string_append( out, "/.." );
-        while ( --dotdots );
-    }
-
-    /* Now we actually remove all the path characters marked for removal. */
-    for ( current = in->value; *current; ++current )
-        if ( *current != '\1' )
-            string_push_back( out, *current );
-
-    /* Here we know that our string contains no '\1' characters and is either
-     * empty or has a '/' as its initial character. If the original path was not
-     * rooted and we have a non-empty path we need to drop the initial '/'. If
-     * the original path was rooted and we have an empty path we need to add
-     * back the '/'.
-     */
-    result = object_new( out->size
-        ? out->value + !rooted
-        : ( rooted ? "/" : "." ) );
-
-    string_free( out );
-    string_free( in );
-
-    return list_new( result );
+    if (out.empty()) return L0;
+    else return list_new(object_new(out.c_str()));
 }
 
 
@@ -1857,14 +1762,14 @@ LIST * builtin_pad( FRAME * frame, int flags )
     OBJECT * string = list_front( lol_get( frame->args, 0 ) );
     char const * width_s = object_str( list_front( lol_get( frame->args, 1 ) ) );
 
-    int current = strlen( object_str( string ) );
-    int desired = atoi( width_s );
+    int32_t current = int32_t(strlen( object_str( string ) ));
+    int32_t desired = atoi( width_s );
     if ( current >= desired )
         return list_new( object_copy( string ) );
     else
     {
         char * buffer = (char *)BJAM_MALLOC( desired + 1 );
-        int i;
+        int32_t i;
         LIST * result;
 
         strcpy( buffer, object_str( string ) );
@@ -1961,7 +1866,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         int length = buf.reparse.SymbolicLinkReparseBuffer.SubstituteNameLength / 2;
         char cbuf[MAX_PATH + 1];
         int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.SymbolicLinkReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
-        if( numchars >= sizeof(cbuf) )
+        if( numchars >= int(sizeof(cbuf)) )
         {
             return 0;
         }
@@ -1975,7 +1880,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         char cbuf[MAX_PATH + 1];
         const char * result;
         int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.MountPointReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
-        if( numchars >= sizeof(cbuf) )
+        if( numchars >= int(sizeof(cbuf)) )
         {
             return 0;
         }
@@ -1994,7 +1899,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 #else
     char static_buf[256];
     char * buf = static_buf;
-    size_t bufsize = 256;
+    int32_t bufsize = 256;
     LIST * result = 0;
     while (1) {
         ssize_t len = readlink( path, buf, bufsize );
@@ -2002,7 +1907,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         {
             break;
         }
-        else if ( len < bufsize )
+        else if ( int32_t(len) < bufsize )
         {
             buf[ len ] = '\0';
             result = list_new( object_new( buf ) );
@@ -2517,7 +2422,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
     LIST   * command = lol_get( frame->args, 0 );
     LIST   * result = L0;
     string   s;
-    int      ret;
+    int32_t ret;
     char     buffer[ 1024 ];
     FILE   * p = NULL;
     int      exit_status = -1;
@@ -2552,7 +2457,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
 
     string_new( &s );
 
-    while ( ( ret = fread( buffer, sizeof( char ), sizeof( buffer ) - 1, p ) ) >
+    while ( ( ret = int32_t(fread( buffer, sizeof( char ), sizeof( buffer ) - 1, p )) ) >
         0 )
     {
         buffer[ ret ] = 0;
@@ -2708,7 +2613,6 @@ LIST * builtin_glob_archive( FRAME * frame, int flags )
 {
     LIST * const l = lol_get( frame->args, 0 );
     LIST * const r1 = lol_get( frame->args, 1 );
-    LIST * const r2 = lol_get( frame->args, 2 );
     LIST * const r3 = lol_get( frame->args, 3 );
 
     LISTITER iter;
@@ -2723,7 +2627,7 @@ LIST * builtin_glob_archive( FRAME * frame, int flags )
 # if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
        l;  /* Always case-insensitive. */
 # else
-       r2;
+       lol_get( frame->args, 2 ); // r2
 # endif
 
     if ( globbing.case_insensitive )

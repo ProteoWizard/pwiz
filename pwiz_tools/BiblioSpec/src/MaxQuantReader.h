@@ -179,6 +179,7 @@ public:
     ~MaxQuantReader();
     
     bool parseFile();
+    vector<PSM_SCORE_TYPE> getScoreTypes();
     // these inherited from SpecFileReader
     virtual void openFile(const char*, bool);
     virtual void setIdType(SPEC_ID_TYPE);
@@ -197,6 +198,7 @@ private:
     string paramsPath_;
     double scoreThreshold_;
     int lineNum_;
+    int lineCount_;
     map< string, vector<MaxQuantPSM*> > fileMap_; // store psms by filename
     MaxQuantPSM* curMaxQuantPSM_; // use this instead of curPSM_
     vector<MaxQuantColumnTranslator> targetColumns_; // columns to extract
@@ -212,13 +214,15 @@ private:
     void initFixedModifications();
     bool openFile();
     void parseHeader(std::string& line);
+    void getFilenamesAndLineCount();
     void collectPsms();
     void storeLine(MaxQuantLine& entry);
     void addDoublesToVector(vector<double>& v, const string& valueList);
-    void addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence);
+    void addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence, const string& unmodSequence);
     void addLabelModsToVector(vector<SeqMod>& v, const string& rawFile, const string& sequence, int labelingState);
     SeqMod searchForMod(vector<string>& modNames, const string& modSequence, int& posOpenParen);
     static int getModPosition(const string& modSeq, int posOpenParen);
+    void addFixedMods(vector<SeqMod>& v, const string& seq, const map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> >& modsByPosition);
     vector<SeqMod> getFixedMods(char aa, int aaPosition, const vector<const MaxQuantModification*>& mods);
     void initEvidence();  // optionally parse ion mobility info from evidence.txt
 

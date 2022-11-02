@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -29,32 +30,50 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ImportTransitionListErrorDlg : FormEx
     {
-        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll)
+        public ImportTransitionListErrorDlg(List<TransitionImportErrorInfo> errorList, bool isErrorAll, bool offerCancelButton)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
-            SimpleGridViewDriver<TransitionImportErrorInfo> compareGridViewDriver = new ImportErrorGridViewDriver(dataGridViewErrors,
+            SimpleGridViewDriver<TransitionImportErrorInfo> compareGridViewDriver = new ImportErrorGridViewDriver(
+                dataGridViewErrors,
                 bindingSourceGrid, new SortableBindingList<TransitionImportErrorInfo>());
             ErrorList = errorList;
             foreach (var error in errorList)
             {
                 compareGridViewDriver.Items.Add(error);
             }
+
             // If all of the transitions were errors, canceling and accepting are the same
             // so give a different message and disable the cancel button
             string errorListMessage;
+
+            void HideCancelButton()
+            {
+                buttonCancel.Visible = false;
+                buttonOk.Left = buttonCancel.Right - buttonOk.Width; // Position lower right
+            }
+
             if (isErrorAll)
             {
                 errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_The_imported_transition_contains_an_error__Please_check_the_transition_list_and_the_Skyline_settings_and_try_importing_again_ :
-                                                          string.Format(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_, errorList.Count);
-                buttonCancel.Visible = false;
+                    string.Format(Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_All__0__transitions_contained_errors___Please_check_the_transition_list_for_errors_and_try_importing_again_, errorList.Count);
+                HideCancelButton();
+                // In this case, the OK button should close the error dialog but not the column select dialog
+                // Simplest way to do this is to treat it as a cancel button
+                buttonOk.DialogResult = DialogResult.Cancel;
+            }
+            else if (offerCancelButton)
+            {
+                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_ :
+                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_, errorList.Count);
             }
             else
             {
-                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error__Skip_this_transition_and_import_the_rest_ :
-                                                          string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors__Skip_these__0__transitions_and_import_the_rest_, errorList.Count);
+                errorListMessage = errorList.Count == 1 ? Resources.ImportTransitionListErrorDlg_ImportTransitionListErrorDlg_A_transition_contained_an_error_ :
+                    string.Format(Resources.SkylineWindow_ImportMassList__0__transitions_contained_errors_, errorList.Count);
+                HideCancelButton();
             }
 
             labelErrors.Text = errorListMessage;
@@ -65,8 +84,8 @@ namespace pwiz.Skyline.FileUI
         private class ImportErrorGridViewDriver : SimpleGridViewDriver<TransitionImportErrorInfo>
         {
             public ImportErrorGridViewDriver(DataGridViewEx gridView,
-                                             BindingSource bindingSource,
-                                             SortableBindingList<TransitionImportErrorInfo> items)
+                BindingSource bindingSource,
+                SortableBindingList<TransitionImportErrorInfo> items)
                 : base(gridView, bindingSource, items)
             {
             }
@@ -75,6 +94,16 @@ namespace pwiz.Skyline.FileUI
             {
                 // No pasting.
             }
+        }
+
+        public void OkDialog()
+        {
+            DialogResult = DialogResult.OK;
+        }
+
+        public void ShowLineText(bool show)
+        {
+            cbShowText.Checked = show;
         }
 
         private void cbShowText_CheckedChanged(object sender, System.EventArgs e)

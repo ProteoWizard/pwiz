@@ -26,6 +26,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -44,6 +45,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -54,22 +56,21 @@ namespace pwiz.SkylineTestTutorial
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
         [TestMethod, MinidumpLeakThreshold(15)]
-        [Timeout(60*60*1000)]  // These can take a long time in code coverage mode (1 hour)
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
-//            PauseStartPage = 30;
+//            PauseStartingPage = 30;
             CoverShotName = "MS1Filtering";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-20_1.pdf";
 
             TestFilesZipPaths = new[]
                 {
                     PreferWiff
-                        ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering_2.zip" // Not L10N
-                        : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml_2.zip", // Not L10N
+                        ? @"https://skyline.ms/tutorials/MS1Filtering_2.zip" // Not L10N
+                        : @"https://skyline.ms/tutorials/MS1FilteringMzml_2.zip", // Not L10N
                     @"TestTutorial\Ms1FullScanFilteringViews.zip"
                 };
             RunFunctionalTest();
@@ -172,9 +173,9 @@ namespace pwiz.SkylineTestTutorial
                     PathsMessage("Unexpected BlibBuild input files.", builder.InputFiles));
                 importPeptideSearchDlg.BuildPepSearchLibControl.DebugMode = true;
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
             RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                 Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
@@ -189,10 +190,16 @@ namespace pwiz.SkylineTestTutorial
             // Verify input paths sent to BlibBuild
             string buildArgs = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildCommandArgs;
             string buildOutput = importPeptideSearchDlg.BuildPepSearchLibControl.LastBuildOutput;
-            var argLines = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var argFiles = buildArgs.Split(new[] { Environment.NewLine }, StringSplitOptions.None).Skip(1).ToArray();
+            for (var i = 0; i < argFiles.Length; i++)
+            {
+                var j = argFiles[i].IndexOf("score_threshold=", StringComparison.InvariantCulture);
+                if (j >= 0)
+                    argFiles[i] = argFiles[i].Substring(0, j).TrimEnd();
+            }
             var dirCommon = PathEx.GetCommonRoot(searchFiles);
             var searchLines = searchFiles.Select(f => PathEx.RemovePrefix(f, dirCommon)).ToArray();
-            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argLines.Skip(1).ToArray()), buildArgs);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(searchLines, argFiles), buildArgs);
 
             // Verify resulting .blib file contains the expected files
             var docLib = librarySettings.Libraries[0];
@@ -292,21 +299,21 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", 12);
 
-            var peptidesPerProteinDlg = ShowDialog<PeptidesPerProteinDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
-                peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                /*peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(11, proteinCount);
                 Assert.AreEqual(51, peptideCount);
                 Assert.AreEqual(52, precursorCount);
-                Assert.AreEqual(156, transitionCount);
+                Assert.AreEqual(156, transitionCount);*/
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 Assert.AreEqual(11, proteinCount);
-                Assert.AreEqual(51, peptideCount);
-                Assert.AreEqual(52, precursorCount);
-                Assert.AreEqual(156, transitionCount);
+                Assert.AreEqual(50, peptideCount);
+                Assert.AreEqual(51, precursorCount);
+                Assert.AreEqual(153, transitionCount);
             });
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
@@ -353,9 +360,9 @@ namespace pwiz.SkylineTestTutorial
 
             const int TIB_L = 0; // index for Tib_L
             const int TIP3 = 1; // index for Tip3
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 51, 52, 156);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 51, 52, 0, 156, 0);
-            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 51, 52, 0, 156, 0);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 50, 51, 153);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIB_L]), 50, 51, 0, 153, 0);
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document, GetFileNameWithoutExtension(searchFiles[TIP3]), 50, 51, 0, 153, 0);
             string Tib_LFilename = searchFiles[TIB_L].Replace(".group.xml", PreferedExtAbWiff);
             string Tip3Filename = searchFiles[TIP3].Replace(".group.xml", PreferedExtAbWiff);
 
@@ -404,7 +411,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowGraphPeakArea(true);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE);
-                Settings.Default.ShowDotProductPeakArea = true;
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                 Settings.Default.ShowLibraryPeakArea = true;
             });
             RunUI(() =>
@@ -517,6 +524,25 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("MS1 spectrum graph 37.32 minutes", 28);
             ClickChromatogram(TIP_NAME, 33.2, 328.1);
             PauseForScreenShot("MS1 spectrum graph 33.19 minutes", 29);
+
+            if (PreferWiff)
+            {
+                RunUI(() =>
+                {
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(75656, pointCount);
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided);
+                });
+                WaitForConditionUI(() => SkylineWindow.GraphFullScan.MsDataFileScanHelper.MsDataSpectra[0].Centroided);
+
+                RunUI(() =>
+                {
+                    int pointCount = GetTotalPointCount(SkylineWindow.GraphFullScan.ZedGraphControl.GraphPane);
+                    Assert.AreEqual(3575, pointCount);
+                    SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
+                });
+            }
+
             RunUI(() => SkylineWindow.HideFullScanGraph());
 
             RunUI(() =>
@@ -698,6 +724,25 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
+        }
+
+        private int GetTotalPointCount(GraphPane msGraphPane)
+        {
+            int total = 0;
+            foreach (var curve in msGraphPane.CurveList)
+            {
+                var pointList = curve.Points;
+                if (pointList is MSPointList msPointList)
+                {
+                    total += msPointList.FullCount;
+                }
+                else
+                {
+                    total += pointList.Count;
+                }
+            }
+
+            return total;
         }
 
         private GraphChromatogram GetGraphChromatogram(int chromIndex)

@@ -40,12 +40,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private bool IsRecordMode { get { return false; } }
 
         [TestMethod]
-        [Timeout(6000000)]  // Initial download can take a long time
         public void BrukerPrmPasefImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
             Log.AddMemoryAppender();
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfImportBrukerPrmPasef.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfImportBrukerPrmPasef.zip");
             TestFilesPersistent = new[] { ".d" }; // List of file basenames that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = false; // Turn on performance measurement
@@ -79,7 +78,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 if (results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out var chromGroupInfo))
+                    tolerance, out var chromGroupInfo))
                 {
                     foreach (var chromGroup in chromGroupInfo)
                     {

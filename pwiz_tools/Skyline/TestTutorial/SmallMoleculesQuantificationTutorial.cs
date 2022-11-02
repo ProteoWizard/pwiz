@@ -32,7 +32,6 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -64,14 +63,14 @@ namespace pwiz.SkylineTestTutorial
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeQuantification";
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuantification.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeQuant-20_1.pdf";
             ForceMzml = true; // Prefer mzML as being the more efficient download
 
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification.zip"
-                   : @"https://skyline.gs.washington.edu/tutorials/SmallMoleculeQuantification_mzML.zip"),
+                   ? @"https://skyline.ms/tutorials/SmallMoleculeQuantification.zip"
+                   : @"https://skyline.ms/tutorials/SmallMoleculeQuantification_mzML.zip"),
                 @"TestTutorial\SmallMoleculesQuantificationViews.zip"
             };
             RunFunctionalTest();
@@ -91,43 +90,38 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List, p. 2
             {
                 var doc = SkylineWindow.Document;
+                
+                var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog.Size = new Size(600, 300));
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 4);
 
-                var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-
-                RunUI(() =>
-                {
-                    pasteDlg.IsMolecule = true;
-                    pasteDlg.SetSmallMoleculeColumns(null);  // Default columns
-                });
-                PauseForScreenShot<PasteDlg>("Paste Dialog in small molecule mode, default columns - show Columns checklist", 3);
-
-
-                var columnsOrdered = new[]
-                {
-                    // Prepare transition list insert window to match tutorial
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.labelType,
-                    SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.coneVoltage,
-                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                }.ToList();
-                RunUI(() => { pasteDlg.SetSmallMoleculeColumns(columnsOrdered); });
-                WaitForConditionUI(() => pasteDlg.GetUsableColumnCount() == columnsOrdered.Count);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with selected and ordered columns", 4);
 
                 var text = "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\r\nDrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\r\n";
                 text = text.Replace(',', TextUtil.CsvSeparator).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-                SetClipboardText(text);
-                RunUI(pasteDlg.PasteTransitions);
-                RunUI(pasteDlg.ValidateCells);
-                PauseForScreenShot<PasteDlg>("Paste Dialog with validated contents", 5);
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
 
-                OkDialog(pasteDlg, pasteDlg.OkDialog);
+                RunUI(() => {
+                    col4Dlg.radioMolecule.PerformClick();
+                });
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List form before columns selected", 5);
+                RunUI(() => {
+                    var comboBoxes = col4Dlg.ComboBoxes;
+                    comboBoxes[0].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name);
+                    comboBoxes[1].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name);
+                    comboBoxes[2].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
+                    comboBoxes[3].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z);
+                    comboBoxes[4].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge);
+                    comboBoxes[5].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+                    comboBoxes[6].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+                    comboBoxes[7].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage);
+                    comboBoxes[8].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+                    comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time);
+                });
+
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dialog with identified columns", 6);
+
+                OkDialog(col4Dlg, col4Dlg.OkDialog);
+
                 var docTargets = WaitForDocumentChange(doc);
 
                 AssertEx.IsDocumentState(docTargets, null, 1, 1, 2, 2);
@@ -141,7 +135,7 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 0);
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 7);
 
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() =>
@@ -158,7 +152,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.UseOptimized = true;
                     transitionSettingsUI.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 4);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Prediction tab", 8);
 
 
                 RunUI(() =>
@@ -172,7 +166,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                     transitionSettingsUI.SetAutoSelect = true;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 4);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 9);
 
 
                 RunUI(() =>
@@ -185,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.MinTime = null;
                     transitionSettingsUI.MaxTime = null;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Instrument tab", 4);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings - Instrument tab", 10);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 WaitForDocumentChange(docTargets);
@@ -197,7 +191,7 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-precursor graph", 8);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-precursor graph", 13);
 
                 var docResults = SkylineWindow.Document;
 
@@ -234,15 +228,15 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 0);
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 9);
+                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 14);
 
                 // Peak integration correction
                 ActivateReplicate("DoubleBlank1"); // First with mismatched RT
-                PauseForScreenShot<SkylineWindow>("Selected replicate with unexpected RT", 10);
+                PauseForScreenShot<SkylineWindow>("Selected replicate with unexpected RT", 15);
                 ChangePeakBounds("DoubleBlank2", 26.5, 27.5);
                 ChangePeakBounds("DoubleBlank3", 26.5, 27.5);
                 ChangePeakBounds("DoubleBlank1", 26.5, 27.5);
-                PauseForScreenShot<SkylineWindow>("Adjusted peak boundaries", 13);
+                PauseForScreenShot<SkylineWindow>("Adjusted peak boundaries", 16);
 
                 using (new WaitDocumentChange(1, true))
                 {
@@ -259,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
                         peptideSettingsUI.QuantMsLevel = null; // All
                         peptideSettingsUI.QuantUnits = "uM";
                     });
-                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 14);
+                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings - Quantitation", 17);
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
@@ -267,7 +261,7 @@ namespace pwiz.SkylineTestTutorial
                 WaitForClosedForm<DocumentGridForm>();
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
                 RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates));
-                PauseForScreenShot<DocumentGridForm>("Document Grid - replicates", 15);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - replicates", 18);
 
                 /*IDictionary<string, Tuple<SampleType, double?>> sampleTypes =
                     new Dictionary<string, Tuple<SampleType, double?>> {
@@ -327,7 +321,7 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.SendPaste();
                 });
                 //SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
-                PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so all rows can be seen ", 16);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so rows 95_0_1_1_00_1021523636 to end can be seen", 22);
                 foreach (var chromatogramSet in SkylineWindow.Document.MeasuredResults.Chromatograms)
                 {
                     if (chromatogramSet.Name.StartsWith("DoubleBlank"))
@@ -353,7 +347,7 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
-                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 18);
+                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 23);
 
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 47,
                     new[]
@@ -362,10 +356,10 @@ namespace pwiz.SkylineTestTutorial
                         "Proteins!*.Peptides!*.Results!*.Value.ExcludeFromCalibration"
                     },
                     "Replicates_custom_quant");
-                PauseForScreenShot<DocumentGridForm>("Custom document grid - resize so all rows are visible before screenshot", 19);
+                PauseForScreenShot<DocumentGridForm>("Custom document grid -scroll to end so same rows are in screenshot", 23);
 
                 SetDocumentGridExcludeFromCalibration();
-                PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 20);
+                PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 24);
 
                 if (IsCoverShotMode)
                 {
@@ -393,7 +387,6 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 ImportReplicates(false); // Import the rest of the replicates
-                PauseForScreenShot<CalibrationForm>("Calibration Curve - all replicates loaded", 21);
 
                 RunUI(() => documentGrid.ChooseView(Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results));
                 WaitForConditionUI(() => documentGrid.ColumnCount > 6);
@@ -402,13 +395,13 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.Sort(colReplicate, ListSortDirection.Ascending);
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results", 15);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results - manually widen to show all columns", 25);
                 Settings.Default.CalibrationCurveOptions.LogXAxis = true;
                 Settings.Default.CalibrationCurveOptions.LogYAxis = true;
 
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 RunUI(()=>calibrationForm.UpdateUI(false));
-                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log");
+                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log", 26);
             }
 
         }
@@ -420,7 +413,7 @@ namespace pwiz.SkylineTestTutorial
                 var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
                 if (isFirstPass)
                 {
-                    PauseForScreenShot<ImportResultsDlg>("Import Results form", 7);
+                    PauseForScreenShot<ImportResultsDlg>("Import Results form", 11);
                 }
                 var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
                     importResultsDlg1.GetDataSourcePathsFile(null));

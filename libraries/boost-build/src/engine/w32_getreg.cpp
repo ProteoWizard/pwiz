@@ -1,7 +1,7 @@
 /*
 Copyright Paul Lin 2003. Copyright 2006 Bojan Resnik.
 Distributed under the Boost Software License, Version 1.0. (See accompanying
-file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
 # include "jam.h"
@@ -12,7 +12,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 # include "object.h"
 # include "parse.h"
 # include "frames.h"
-# include "strings.h"
+# include "jam_strings.h"
 
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
@@ -43,7 +43,7 @@ static HKEY get_key(char const** path)
 
     for (p = dlRootKeys; p->name; ++p)
     {
-        int n = strlen(p->name);
+        size_t n = strlen(p->name);
         if (!strncmp(*path,p->name,n))
         {
             if ((*path)[n] == '\\' || (*path)[n] == 0)
@@ -65,7 +65,7 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
 
     if (
         key != 0
-        && ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key)
+        && ERROR_SUCCESS == RegOpenKeyExA(key, path, 0, KEY_QUERY_VALUE, &key)
     )
     {
         DWORD  type;
@@ -74,21 +74,21 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
         LIST * const field = lol_get(frame->args, 1);
 
         if ( ERROR_SUCCESS ==
-             RegQueryValueEx(key, field ? object_str( list_front( field ) ) : 0, 0, &type, data, &len) )
+             RegQueryValueExA(key, field ? object_str( list_front( field ) ) : 0, 0, &type, data, &len) )
         {
             switch (type)
             {
 
              case REG_EXPAND_SZ:
                  {
-                     long len;
+                     DWORD len;
                      string expanded[1];
                      string_new(expanded);
 
                      while (
-                         (len = ExpandEnvironmentStrings(
-                             (LPCSTR)data, expanded->value, expanded->capacity))
-                         > expanded->capacity
+                         (len = ExpandEnvironmentStringsA(
+                             (LPCSTR)data, expanded->value, (DWORD)expanded->capacity))
+                         > DWORD(expanded->capacity)
                      )
                          string_reserve(expanded, len);
 
@@ -112,7 +112,7 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
              case REG_DWORD:
                  {
                      char buf[100];
-                     sprintf( buf, "%u", *(PDWORD)data );
+                     sprintf( buf, "%lu", *(PDWORD)data );
                      result = list_push_back( result, object_new(buf) );
                  }
                  break;
@@ -132,7 +132,7 @@ static LIST* get_subkey_names(HKEY key, char const* path)
     LIST* result = 0;
 
     if ( ERROR_SUCCESS ==
-         RegOpenKeyEx(key, path, 0, KEY_ENUMERATE_SUB_KEYS, &key)
+         RegOpenKeyExA(key, path, 0, KEY_ENUMERATE_SUB_KEYS, &key)
     )
     {
         char name[MAX_REGISTRY_KEYNAME_LENGTH];
@@ -141,7 +141,7 @@ static LIST* get_subkey_names(HKEY key, char const* path)
         FILETIME last_write_time;
 
         for ( index = 0;
-              ERROR_SUCCESS == RegEnumKeyEx(
+              ERROR_SUCCESS == RegEnumKeyExA(
                   key, index, name, &name_size, 0, 0, 0, &last_write_time);
               ++index,
               name_size = sizeof(name)
@@ -161,14 +161,14 @@ static LIST* get_value_names(HKEY key, char const* path)
 {
     LIST* result = 0;
 
-    if ( ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key) )
+    if ( ERROR_SUCCESS == RegOpenKeyExA(key, path, 0, KEY_QUERY_VALUE, &key) )
     {
         char name[MAX_REGISTRY_VALUENAME_LENGTH];
         DWORD name_size = sizeof(name);
         DWORD index;
 
         for ( index = 0;
-              ERROR_SUCCESS == RegEnumValue(
+              ERROR_SUCCESS == RegEnumValueA(
                   key, index, name, &name_size, 0, 0, 0, 0);
               ++index,
               name_size = sizeof(name)

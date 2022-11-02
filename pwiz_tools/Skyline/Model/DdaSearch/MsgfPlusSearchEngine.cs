@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Matt Chambers <matt.chambers42 .at. gmail.com >
  *
  * Copyright 2020 University of Washington - Seattle, WA
@@ -20,12 +20,17 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Threading;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Util;
 using System.IO;
+using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DdaSearch
@@ -99,10 +104,18 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"No cleavage"
         };
 
+        static string MSGFPLUS_FILENAME = @"MSGFPlus_v20210906";
+        static Uri MSGFPLUS_URL = new Uri($@"https://github.com/MSGFPlus/msgfplus/releases/download/v2021.09.06/{MSGFPLUS_FILENAME}.zip");
+        public static string MsgfPlusDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSGFPLUS_FILENAME);
+        public static string MsgfPlusBinary => Path.Combine(MsgfPlusDirectory, @"MSGFPlus.jar");
+
+        public static FileDownloadInfo[] FilesToDownload => JavaDownloadInfo.FilesToDownload.Concat(new []
+            { new FileDownloadInfo { Filename = MSGFPLUS_FILENAME, DownloadUrl = MSGFPLUS_URL, InstallPath = MsgfPlusDirectory, OverwriteExisting = true, Unzip = true}}).ToArray();
+
         private MzTolerance precursorMzTolerance;
-        private Tuple<double, double> isotopeErrorRange = new Tuple<double, double>(0, 1);
+        private Tuple<double, double> isotopeErrorRange = new Tuple<double, double>(0, 0);
         private int fragmentationMethod;
-        private int instrumentType = 0;
+        private int instrumentType;
         private int enzyme;
         //private int protocol;
         private int ntt, maxMissedCleavages;
@@ -110,101 +123,149 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
         private string modsFile = Path.GetTempFileName();
+        private CancellationTokenSource _cancelToken;
+        private IProgressStatus _progressStatus;
+        private bool _success;
 
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
+        public override string[] Ms2Analyzers => INSTRUMENT_TYPES;
         public override string EngineName => @"MS-GF+";
         public override Bitmap SearchEngineLogo => null;
         public override event NotificationEventHandler SearchProgressChanged;
 
-        public override bool Run(CancellationTokenSource cancelToken)
+        public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
+            _cancelToken = cancelToken;
+            _progressStatus = status;
+            _success = true;
 
-            IProgressStatus status = new ProgressStatus();
-            //UpdateProgress(status);
-            bool success = true;
             foreach (var spectrumFilename in SpectrumFileNames)
             {
                 try
                 {
-                    var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(@"java",
-                        @"-Xmx8G -jar MSGFPlus.jar " +
-                        $@"-s {spectrumFilename} -d {FastaFileNames[0]} -tda 1" +
-                        $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
-                        $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages}");
+                    long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
 
-                    pr.Run(psi, string.Empty, this, ref status);
-                    status = status.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
-                }
-                catch (OperationCanceledException)
-                {
-                    status = status.Cancel().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled);
-                    success = false;
+                    var pr = new ProcessRunner();
+                    var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
+                        $@"-Xmx{javaMaxHeapMB}M -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
+                        $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
+                        $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
+                        $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
+                        $@"-mod ""{modsFile}""")
+                    {
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        RedirectStandardInput = false
+                    };
+
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    _progressStatus = _progressStatus.NextSegment();
                 }
                 catch (Exception ex)
                 {
-                    status = status.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
-                    UpdateProgress(status);
-                    success = false;
+                    _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
+                    _success = false;
                 }
 
-                if (cancelToken.IsCancellationRequested)
-                    success = false;
+                if (IsCanceled && !_progressStatus.IsCanceled)
+                {
+                    _progressStatus = _progressStatus.Cancel().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled);
+                    _success = false;
+                }
+
+                if (!_success)
+                {
+                    _cancelToken.Cancel();
+                    break;
+                }
             }
 
-            var deleteHelper = new DeleteTempHelper(modsFile);
-            deleteHelper.DeletePath();
-            return success;
+            if (_success)
+                _progressStatus = _progressStatus.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
+            UpdateProgress(_progressStatus);
+
+            FileEx.SafeDelete(modsFile);
+            return _success;
         }
 
-        public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods1)
+        public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
         {
             /*  # Mass or CompositionStr, Residues, ModType, Position, Name (all the five fields are required).
                 # CompositionStr (C[Num]H[Num]N[Num]O[Num]S[Num]P[Num]Br[Num]Cl[Num]Fe[Num])
-                # 	- C (Carbon), H (Hydrogen), N (Nitrogen), O (Oxygen), S (Sulfur), P (Phosphorus), Br (Bromine), Cl (Chlorine), Fe (Iron), and Se (Selenium) are allowed.
-                # 	- Negative numbers are allowed.
-                # 	- E.g. C2H2O1 (valid), H2C1O1 (invalid) 
+                #   - C (Carbon), H (Hydrogen), N (Nitrogen), O (Oxygen), S (Sulfur), P (Phosphorus), Br (Bromine), Cl (Chlorine), Fe (Iron), and Se (Selenium) are allowed.
+                #   - Negative numbers are allowed.
+                #   - E.g. C2H2O1 (valid), H2C1O1 (invalid) 
                 # Mass can be used instead of CompositionStr. It is important to specify accurate masses (integer masses are insufficient).
-                # 	- E.g. 15.994915 
+                #   - E.g. 15.994915 
                 # Residues: affected amino acids (must be upper letters)
-                # 	- Must be upper letters or *
-                # 	- Use * if this modification is applicable to any residue. 
-                # 	- * should not be "anywhere" modification (e.g. "15.994915, *, opt, any, Oxidation" is not allowed.) 
-                # 	- E.g. NQ, *
+                #   - Must be upper letters or *
+                #   - Use * if this modification is applicable to any residue. 
+                #   - * should not be "anywhere" modification (e.g. "15.994915, *, opt, any, Oxidation" is not allowed.) 
+                #   - E.g. NQ, *
                 # ModType: "fix" for fixed modifications, "opt" for variable modifications, "custom" for custom amino acids (case insensitive)
                 # Position: position in the peptide where the modification can be attached. 
-                # 	- One of the following five values should be used:
-                # 	- any (anywhere), N-term (peptide N-term), C-term (peptide C-term), Prot-N-term (protein N-term), Prot-C-term (protein C-term) 
-                # 	- Case insensitive
-                # 	- "-" can be omitted
-                # 	- E.g. any, Any, Prot-n-Term, ProtNTerm => all valid
+                #   - One of the following five values should be used:
+                #   - any (anywhere), N-term (peptide N-term), C-term (peptide C-term), Prot-N-term (protein N-term), Prot-C-term (protein C-term) 
+                #   - Case insensitive
+                #   - "-" can be omitted
+                #   - E.g. any, Any, Prot-n-Term, ProtNTerm => all valid
                 # Name: name of the modification (Unimod PSI-MS name)
-                # 	- For proper mzIdentML output, this name should be the same as the Unimod PSI-MS name
-                # 	- E.g. Phospho, Acetyl
-                # 	- Visit http://www.unimod.org to get PSI-MS names.
+                #   - For proper mzIdentML output, this name should be the same as the Unimod PSI-MS name
+                #   - E.g. Phospho, Acetyl
+                #   - Visit http://www.unimod.org to get PSI-MS names.
              */
             using (var modsFileStream = new StreamWriter(modsFile, false))
             {
+                int modCounter = 0;
                 modsFileStream.WriteLine($@"NumMods={maxVariableMods}");
+                modsFileStream.WriteLine(@"C3H5NO,   U, custom, U, Selenocysteine   # Custom amino acids can only have C, H, N, O, and S");
+                modsFileStream.WriteLine(@"79.9166,  U, fix, any, Se80              # Use a static mod to add Se");
+
                 foreach (var mod in fixedAndVariableModifs)
                 {
-                    string composition = mod.Formula ?? mod.MonoisotopicMass.ToString();
-                    string residues = mod.AAs ?? @"*";
-                    string modType = mod.IsVariable ? @"opt" : @"fix";
-                    string position = @"any";
-                    switch (mod.Terminus)
+                    // these custom AAs not supported 
+                    if (mod.AAs?.IndexOfAny(@"BJOZ".ToCharArray()) > 0)
+                        continue;
+
+                    // can't use mod with no formula or mass; CONSIDER throwing exception
+                    if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                        mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
+                        continue;
+
+                    Action<string, string> addMod = (composition, residues) =>
                     {
-                        case ModTerminus.N:
-                            position = @"N-term";
-                            break;
-                        case ModTerminus.C:
-                            position = @"C-term";
-                            break;
+                        string modType = mod.IsVariable ? @"opt" : @"fix";
+                        string position = @"any";
+                        switch (mod.Terminus)
+                        {
+                            case ModTerminus.N:
+                                position = @"N-term";
+                                break;
+                            case ModTerminus.C:
+                                position = @"C-term";
+                                break;
+                        }
+
+
+                        string name = mod.ShortName;
+                        if (name.IsNullOrEmpty())
+                            name = $@"Mod{++modCounter}";
+
+                        modsFileStream.WriteLine($@"{composition}, {residues}, {modType}, {position}, {name}");
+                    };
+
+                    if (mod.LabelAtoms != LabelAtoms.None)
+                    {
+                        foreach (var aa in mod.AminoAcids)
+                        {
+                            double mass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, SequenceMassCalc.GetHeavyFormula(aa, mod.LabelAtoms), SequenceMassCalc.MassPrecision).Value;
+                            addMod(mass.ToString(CultureInfo.InvariantCulture), aa.ToString());
+                        }
                     }
-
-                    string name = mod.ShortName;
-
-                    modsFileStream.WriteLine($@"{composition},{residues},{modType},{position},{name}");
+                    else
+                        addMod(mod.Formula ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
                 }
             }
         }
@@ -226,16 +287,30 @@ namespace pwiz.Skyline.Model.DdaSearch
             fragmentationMethod = FRAGMENTATION_METHODS.IndexOf(m => m == ions);
         }
 
+        public override void SetMs2Analyzer(string ms2Analyzer)
+        {
+            instrumentType = INSTRUMENT_TYPES.IndexOf(m => m == ms2Analyzer);
+        }
+
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
             precursorMzTolerance = mzTolerance;
         }
 
-        public bool IsCanceled { get; private set; }
+        private string[] SupportedExtensions = { @".mzml", @".mzxml", @".mgf", @".ms2" };
+        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
+        {
+            requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
+            if (!SupportedExtensions.Contains(e => e == searchFilepath.GetExtension().ToLowerInvariant()))
+                return true;
+            return false;
+        }
+
+        public bool IsCanceled => _cancelToken.IsCancellationRequested;
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             SearchProgressChanged?.Invoke(this, status);
-            return status.IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+            return _cancelToken.IsCancellationRequested ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }
 
         public bool HasUI => false;

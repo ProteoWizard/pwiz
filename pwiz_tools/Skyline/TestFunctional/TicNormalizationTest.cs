@@ -25,6 +25,7 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -32,6 +33,8 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using ZedGraph;
+using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -60,8 +63,8 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor=>
             {
                 viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
-                var ppPeptides = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
-                    .Property(nameof(Protein.Peptides)).LookupAllItems();
+                var ppProteins = PropertyPath.Root.Property(nameof(SkylineDocument.Proteins)).LookupAllItems();
+                var ppPeptides = ppProteins.Property(nameof(Protein.Peptides)).LookupAllItems();
                 var ppReplicates = PropertyPath.Root.Property(nameof(SkylineDocument.Replicates)).LookupAllItems();
                 var ppPeptideResult = ppPeptides.Property(nameof(Peptide.Results)).DictionaryValues();
                 var ppFiles = ppReplicates.Property(nameof(Replicate.Files)).LookupAllItems();
@@ -71,6 +74,7 @@ namespace pwiz.SkylineTestFunctional
                 viewEditor.ChooseColumnsTab.AddColumn(ppFiles.Property(nameof(ResultFile.TicArea)));
                 viewEditor.ChooseColumnsTab.AddColumn(ppPeptideResult.Property(nameof(PeptideResult.Quantification))
                     .Property(nameof(QuantificationResult.NormalizedArea)));
+                viewEditor.ChooseColumnsTab.AddColumn(ppProteins.Property(nameof(Protein.Results)).DictionaryValues().Property(nameof(ProteinResult.Abundance)));
                 viewEditor.ViewName = viewName;
                 viewEditor.OkDialog();
             });
@@ -150,6 +154,49 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
+            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
+            RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
+            RunUI(() =>
+            {
+                SkylineWindow.SetDisplayTypeChrom(DisplayTypeChrom.single);
+                SkylineWindow.SelectedPath =
+                    SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
+            });
+            WaitForGraphs();
+            var areaReplicateGraphPane = FindGraph<AreaReplicateGraphPane>();
+            RunUI(() =>
+            {
+                var transitionGroup = SkylineWindow.Document.MoleculeTransitionGroups.First();
+                var graphPane = areaReplicateGraphPane.GraphControl.GraphPane;
+                var textLabels = graphPane.XAxis.Scale.TextLabels;
+                var chromatogramSets = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
+                Assert.AreEqual(Resources.AreaReplicateGraphPane_InitFromData_Expected, textLabels[0]);
+                foreach (var curve in graphPane.CurveList)
+                {
+                    var identityPath = curve.Tag as IdentityPath;
+                    Assert.IsNotNull(identityPath);
+                    var transition = transitionGroup.Transitions.FirstOrDefault(t => ReferenceEquals(t.Id, identityPath.Child));
+                    Assert.IsNotNull(transition);
+                    for (int i = 1; i < textLabels.Length; i++)
+                    {
+                        var replicateIndex = i - 1;
+                        var chromatogramSet = chromatogramSets[replicateIndex];
+                        var chromFileInfo = chromatogramSet.MSDataFileInfos[0];
+                        Assert.IsTrue(replicateIndex >= 0);
+                        var actualValue = curve.Points[i].Y;
+                        var rawArea = transition.Results[replicateIndex].FirstOrDefault()?.Area;
+                        var expectedValue = rawArea * medianTicArea / chromFileInfo.TicArea;
+                        if (!expectedValue.HasValue)
+                        {
+                            Assert.AreEqual(PointPairBase.Missing, actualValue);
+                        }
+                        else
+                        {
+                            Assert.AreEqual(expectedValue.Value, actualValue, expectedValue.Value / 1e6);
+                        }
+                    }
+                }
+            });
         }
 
         IEnumerable<Tuple<Peptide, ResultFile, double?>> ReadNormalizedAreas(DocumentGridForm documentGrid)
@@ -165,6 +212,9 @@ namespace pwiz.SkylineTestFunctional
                 var colNormalizedArea = documentGrid.FindColumn(ppPeptideResults
                     .Property(nameof(PeptideResult.Quantification))
                     .Property(nameof(QuantificationResult.NormalizedArea)));
+                var colProteinAbundance = documentGrid.FindColumn(ppPeptideResults
+                    .Property(nameof(PeptideResult.ProteinResult)).Property(nameof(ProteinResult.Abundance)));
+                Assert.IsNotNull(colProteinAbundance);
                 for (int iRow = 0; iRow < documentGrid.RowCount; iRow++)
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];

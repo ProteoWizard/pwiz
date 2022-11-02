@@ -2,8 +2,8 @@
 # Copyright 2006. Rene Rivera
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Manages 'generators' --- objects which can do transformation between different
 # target types and contain algorithm for finding transformation from sources to
@@ -32,7 +32,7 @@
 #
 # Likewise, when generator tries to convert sources to consumable types, it can
 # get more targets that it was asked for. The question is what to do with extra
-# targets. Boost.Build attempts to convert them to requested types, and attempts
+# targets. B2 attempts to convert them to requested types, and attempts
 # that as early as possible. Specifically, this is done after invoking each
 # generator. TODO: An example is needed to document the rationale for trying
 # extra target conversion at that point.
@@ -40,7 +40,7 @@
 # In order for the system to be able to use a specific generator instance 'when
 # needed', the instance needs to be registered with the system using
 # generators.register() or one of its related rules. Unregistered generators may
-# only be run explicitly and will not be considered by Boost.Build when when
+# only be run explicitly and will not be considered by B2 when when
 # converting between given target types.
 
 import "class" : new ;
@@ -222,7 +222,7 @@ class generator
             self.name-prefix += $(m[3]:E="") ;
             self.name-postfix += $(m[4]:E="") ;
         }
-        
+
         for local r in [ requirements ]
         {
             if $(r:G=)
@@ -475,7 +475,13 @@ class generator
         }
         if $(result)
         {
-            return $(relevant) $(result) ;
+            if [ class.is-a $(result[1]) : property-set ]
+            {
+                return [ $(result[1]).add $(relevant) ] $(result[2-]) ;
+            }
+            else {
+               return $(relevant) $(result) ;
+            }
         }
     }
 

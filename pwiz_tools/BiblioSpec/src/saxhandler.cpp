@@ -112,12 +112,16 @@ bool SAXHandler::parse()
             success = success && (XML_Parse(m_parser_, buffer, 0, true) != 0);
         }
     }
+    catch (EndEarlyException e) {
+        return true;
+    }
     catch(string thrown_msg) { // from parsers
         message = thrown_msg;
         success = false;
     }
     catch(BlibException e) { // probably from BuildParser
         if( e.hasFilename() ){
+            Verbosity::debug(e.what());
             throw e;
         } else {
             message = e.what();
@@ -131,6 +135,7 @@ bool SAXHandler::parse()
 
     if (!success) {
         string error = generateError(message.empty() ? getParserError() : message);
+        Verbosity::debug(error.c_str());
         throw BlibException(true, error.c_str());
     }
     

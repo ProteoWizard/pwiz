@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
@@ -119,7 +120,8 @@ namespace pwiz.Common.DataBinding.Controls
         {
             navBarButtonViews.Enabled = navBarButtonExport.Enabled = ViewContext != null && BindingListView != null && BindingListView.ViewInfo != null;
             navBarButtonActions.Visible = ViewContext != null && ViewContext.HasRowActions;
-            if (BindingListView != null)
+            navBarButtonClusterGrid.Checked = BindingListSource?.ClusteringSpec != null;
+            if (BindingListSource != null && BindingListView != null)
             {
                 var queryResults = BindingListView.QueryResults;
                 tbxFind.Enabled = true;
@@ -142,8 +144,8 @@ namespace pwiz.Common.DataBinding.Controls
                             bool filterApplied = false;
                             if (queryResults.TransformResults.RowTransform is RowFilter)
                             {
-                                int filteredCount = queryResults.TransformResults.PivotedRows.Count;
-                                int unfilteredCount = queryResults.TransformResults.Parent.PivotedRows.Count;
+                                int filteredCount = queryResults.TransformResults.PivotedRows.RowCount;
+                                int unfilteredCount = queryResults.TransformResults.Parent.PivotedRows.RowCount;
                                 if (filteredCount != unfilteredCount)
                                 {
                                     lblFilterApplied.Text = string.Format(Resources.NavBar_RefreshUi__Filtered_from__0__, unfilteredCount);
@@ -192,11 +194,12 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                     foreach (var viewSpec in viewSpecList.ViewSpecs)
                     {
-                        var item = NewChooseViewItem(group, viewSpec);
-                        if (null != item)
+                        if (!ViewContext.CanDisplayView(viewSpec))
                         {
-                            items.Add(item);
+                            continue;
                         }
+
+                        items.Add(NewChooseViewItem(group, viewSpec));
                     }
                     if (!items.Any())
                     {
@@ -249,11 +252,6 @@ namespace pwiz.Common.DataBinding.Controls
 
         ToolStripItem NewChooseViewItem(ViewGroup viewGroup, ViewSpec viewSpec)
         {
-            var viewInfo = ViewContext.GetViewInfo(new ViewName(viewGroup.Id, viewSpec.Name));
-            if (null == viewInfo)
-            {
-                return null;
-            }
             Image image = null;
             int imageIndex = ViewContext.GetImageIndex(viewSpec);
             if (imageIndex >= 0)
@@ -552,6 +550,7 @@ namespace pwiz.Common.DataBinding.Controls
                 columnFormats.Add(Tuple.Create(columnId, columnFormat));
             }
             newLayout = newLayout.ChangeColumnFormats(columnFormats);
+            newLayout = newLayout.ChangeClusterSpec(BindingListSource.ClusteringSpec);
             return newLayout;
         }
 
@@ -616,6 +615,56 @@ namespace pwiz.Common.DataBinding.Controls
         public ToolStripDropDownButton ReportsButton
         {
             get { return navBarButtonViews; }
+        }
+
+        private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
+        {
+            if (null != BindingListSource.ClusteringSpec && !BindingListSource.IsComplete &&
+                !(BindingListSource.ReportResults is ClusteredReportResults))
+            {
+                return;
+            }
+            BindingListSource.ViewContext.ToggleClustering(BindingListSource, BindingListSource.ClusteringSpec == null);
+        }
+
+        private void navBarButtonClusterGrid_Click(object sender, EventArgs e)
+        {
+            BindingListSource.ViewContext.ToggleClustering(BindingListSource, !navBarButtonClusterGrid.Checked);
+        }
+
+        public ToolStripSplitButton ClusterSplitButton
+        {
+            get { return navBarButtonCluster; }
+        }
+
+        private void navBarButtonCluster_DropDownOpening(object sender, EventArgs e)
+        {
+            // clusterRowsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterRows;
+            // clusterColumnsToolStripMenuItem.Checked = true == BindingListSource?.ClusteringSpec?.ClusterColumns;
+        }
+
+        private void advancedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowClusteringEditor();
+        }
+
+        public void ShowClusteringEditor()
+        {
+            var reportResults = BindingListSource?.ReportResults;
+            var dataSchema = BindingListSource?.ViewInfo.DataSchema;
+            if (reportResults == null || dataSchema == null)
+            {
+                return;
+            }
+
+            using (var clusteringEditor = new ClusteringEditor())
+            {
+                clusteringEditor.SetData(dataSchema, reportResults, BindingListSource.ClusteringSpec);
+                if (clusteringEditor.ShowDialog(FormUtil.FindTopLevelOwner(this)) == DialogResult.OK)
+                {
+                    BindingListSource.ClusteringSpec = clusteringEditor.GetClusteringSpec();
+                }
+            }
         }
     }
 }

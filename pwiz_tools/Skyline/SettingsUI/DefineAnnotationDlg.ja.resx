@@ -121,33 +121,33 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblName.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblName.Size" type="System.Drawing.Size, System.Drawing">
     <value>38, 13</value>
   </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblName.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="label1.Text" xml:space="preserve">
+  <data name="lblName.Text" xml:space="preserve">
     <value>名前(&amp;N)：</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
+  <data name="&gt;&gt;lblName.Name" xml:space="preserve">
+    <value>lblName</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblName.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="&gt;&gt;lblName.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -172,7 +172,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxName.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>1</value>
   </data>
   <data name="comboType.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 23</value>
@@ -195,31 +195,31 @@
   <data name="&gt;&gt;comboType.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblType.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 7</value>
   </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblType.Size" type="System.Drawing.Size, System.Drawing">
     <value>34, 13</value>
   </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblType.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="label2.Text" xml:space="preserve">
+  <data name="lblType.Text" xml:space="preserve">
     <value>タイプ(&amp;T)：</value>
   </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
+  <data name="&gt;&gt;lblType.Name" xml:space="preserve">
+    <value>lblType</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblType.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblType.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
   </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblType.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="tbxValues.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -252,32 +252,32 @@
   <data name="&gt;&gt;tbxValues.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblValues.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblValues.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 47</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblValues.Size" type="System.Drawing.Size, System.Drawing">
     <value>42, 13</value>
   </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblValues.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="label3.Text" xml:space="preserve">
+  <data name="lblValues.Text" xml:space="preserve">
     <value>値(&amp;V)：</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
+  <data name="&gt;&gt;lblValues.Name" xml:space="preserve">
+    <value>lblValues</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblValues.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblValues.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>4</value>
+  <data name="&gt;&gt;lblValues.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="checkedListBoxAppliesTo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -328,7 +328,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -355,37 +355,37 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 174</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="label4.Text" xml:space="preserve">
+  <data name="lblAppliesTo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="lblAppliesTo.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 174</value>
+  </data>
+  <data name="lblAppliesTo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 13</value>
+  </data>
+  <data name="lblAppliesTo.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblAppliesTo.Text" xml:space="preserve">
     <value>適用先(&amp;A)：</value>
   </data>
-  <data name="&gt;&gt;label4.Name" xml:space="preserve">
-    <value>label4</value>
+  <data name="&gt;&gt;lblAppliesTo.Name" xml:space="preserve">
+    <value>lblAppliesTo</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblAppliesTo.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label4.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblAppliesTo.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
   </data>
-  <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
-    <value>2</value>
+  <data name="&gt;&gt;lblAppliesTo.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -420,6 +420,36 @@
   <data name="&gt;&gt;tabPageEditable.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="lblAggregateOperation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
+  <data name="lblAggregateOperation.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAggregateOperation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 293</value>
+  </data>
+  <data name="lblAggregateOperation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>106, 13</value>
+  </data>
+  <data name="lblAggregateOperation.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblAggregateOperation.Text" xml:space="preserve">
+    <value>集計操作(&amp;O)：</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.Name" xml:space="preserve">
+    <value>lblAggregateOperation</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.Parent" xml:space="preserve">
+    <value>tabPageCalculated</value>
+  </data>
+  <data name="&gt;&gt;lblAggregateOperation.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="comboAggregateOperation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
@@ -442,36 +472,6 @@
     <value>tabPageCalculated</value>
   </data>
   <data name="&gt;&gt;comboAggregateOperation.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="lblAggregateOperation.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Bottom, Left</value>
-  </data>
-  <data name="lblAggregateOperation.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblAggregateOperation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 293</value>
-  </data>
-  <data name="lblAggregateOperation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 13</value>
-  </data>
-  <data name="lblAggregateOperation.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="lblAggregateOperation.Text" xml:space="preserve">
-    <value>集計操作：</value>
-  </data>
-  <data name="&gt;&gt;lblAggregateOperation.Name" xml:space="preserve">
-    <value>lblAggregateOperation</value>
-  </data>
-  <data name="&gt;&gt;lblAggregateOperation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblAggregateOperation.Parent" xml:space="preserve">
-    <value>tabPageCalculated</value>
-  </data>
-  <data name="&gt;&gt;lblAggregateOperation.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="availableFieldsTree1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -504,34 +504,34 @@
   <data name="&gt;&gt;availableFieldsTree1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+  <data name="lblCalculatedAppliesTo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="label5.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="lblCalculatedAppliesTo.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="lblCalculatedAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 10</value>
   </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="lblCalculatedAppliesTo.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
   </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+  <data name="lblCalculatedAppliesTo.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="label5.Text" xml:space="preserve">
+  <data name="lblCalculatedAppliesTo.Text" xml:space="preserve">
     <value>適用先(&amp;A)：</value>
   </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
+  <data name="&gt;&gt;lblCalculatedAppliesTo.Name" xml:space="preserve">
+    <value>lblCalculatedAppliesTo</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+  <data name="&gt;&gt;lblCalculatedAppliesTo.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblCalculatedAppliesTo.Parent" xml:space="preserve">
     <value>tabPageCalculated</value>
   </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;lblCalculatedAppliesTo.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="comboAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
@@ -601,7 +601,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

@@ -123,6 +123,9 @@
   <data name="AbsLog2FoldChange">
     <value>Log2の絶対値の変化率</value>
   </data>
+  <data name="Abundance">
+    <value>存在度</value>
+  </data>
   <data name="Accuracy">
     <value>精度</value>
   </data>
@@ -153,14 +156,14 @@
   <data name="AttributeGroupId">
     <value>属性グループID</value>
   </data>
+  <data name="AuditLogDetailRowId">
+    <value>詳細ID</value>
+  </data>
   <data name="AuditLogRow">
     <value>監査ログ行</value>
   </data>
   <data name="AuditLogRowId">
     <value>エントリID</value>
-  </data>
-  <data name="AuditLogDetailRowId">
-    <value>詳細ID</value>
   </data>
   <data name="AutoSelectMolecules">
     <value>分子を自動選択</value>
@@ -216,8 +219,14 @@
   <data name="CalibrationCurve">
     <value>校正曲線</value>
   </data>
+  <data name="CandidatePeakGroup">
+    <value>候補ピークグループ</value>
+  </data>
   <data name="CAS">
     <value>CAS</value>
+  </data>
+  <data name="Chosen">
+    <value>選択済み</value>
   </data>
   <data name="Chromatogram">
     <value>クロマトグラム</value>
@@ -250,6 +259,9 @@
     <value>共溶出</value>
   </data>
   <data name="CollisionalCrossSection">
+    <value>衝突断面積</value>
+  </data>
+  <data name="CollisionCrossSection">
     <value>衝突断面積</value>
   </data>
   <data name="CollisionEnergy">
@@ -300,14 +312,23 @@
   <data name="CvTotalAreaRatio">
     <value>Cv総面積比</value>
   </data>
+  <data name="CycleTimeAcrossPeak">
+    <value>ピーク全体でのサイクルタイム</value>
+  </data>
   <data name="DeclusteringPotential">
     <value>デクラスタリングポテンシャル</value>
   </data>
   <data name="DecoyMzShift">
     <value>デコイMzシフト</value>
   </data>
+  <data name="DegreesOfFreedom">
+    <value>自由度</value>
+  </data>
   <data name="DetailReason">
     <value>詳しい理由</value>
+  </data>
+  <data name="Details">
+    <value>詳細</value>
   </data>
   <data name="DetectionQValue">
     <value>検知Q値</value>
@@ -315,17 +336,11 @@
   <data name="DetectionZScore">
     <value>検知Zスコア</value>
   </data>
-  <data name="DegreesOfFreedom">
-    <value>自由度</value>
-  </data>
-  <data name="Details">
-    <value>詳細</value>
+  <data name="DriftTimeFragment">
+    <value>ドリフト時間断片</value>
   </data>
   <data name="DriftTimeMS1">
     <value>ドリフト時間MS1</value>
-  </data>
-  <data name="DriftTimeFragment">
-    <value>ドリフト時間断片</value>
   </data>
   <data name="DriftTimeWindow">
     <value>ドリフト時間ウィンドウ</value>
@@ -346,7 +361,10 @@
     <value>校正から除外</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
-    <value>明示的アナライト濃度</value>
+    <value>表示されたアナライト濃度</value>
+  </data>
+  <data name="ExplicitCollisionalCrossSection">
+    <value>明示的衝突断面積</value>
   </data>
   <data name="ExplicitCollisionEnergy">
     <value>明示的衝突エネルギー</value>
@@ -362,9 +380,6 @@
   </data>
   <data name="ExplicitDriftTimeHighEnergyOffsetMsec">
     <value>明示的ドリフト時間高エネルギーオフセットミリ秒</value>
-  </data>
-  <data name="ExplicitCollisionalCrossSection">
-    <value>明示的衝突断面積</value>
   </data>
   <data name="ExplicitDriftTimeMsec">
     <value>明示的ドリフト時間ミリ秒</value>
@@ -390,6 +405,9 @@
   <data name="ExplicitSLens">
     <value>指定されたSレンズ</value>
   </data>
+  <data name="Features">
+    <value>機能</value>
+  </data>
   <data name="FiguresOfMerit">
     <value>性能指数</value>
   </data>
@@ -404,6 +422,9 @@
   </data>
   <data name="Files">
     <value>ファイル</value>
+  </data>
+  <data name="FirstPosition">
+    <value>最初の位置</value>
   </data>
   <data name="FoldChange">
     <value>倍率変化</value>
@@ -444,11 +465,14 @@
   <data name="Identified">
     <value>同定済み</value>
   </data>
+  <data name="InChI">
+    <value>InChI</value>
+  </data>
   <data name="InChiKey">
     <value>InChiKey</value>
   </data>
-  <data name="InChI">
-    <value>InChI</value>
+  <data name="InstrumentSerialNumber">
+    <value>装置のシリアル番号</value>
   </data>
   <data name="Intensities">
     <value>強度</value>
@@ -483,14 +507,20 @@
   <data name="IonMobilityFragment">
     <value>イオン移動度のフラグメント</value>
   </data>
+  <data name="IonMobilityHighEnergyOffset">
+    <value>イオン移動度高エネルギーオフセット</value>
+  </data>
   <data name="IonMobilityMS1">
     <value>イオン移動度のMS1</value>
   </data>
-  <data name="IonMobilityWindow">
-    <value>イオン移動度ウィンドウ</value>
-  </data>
   <data name="IonMobilityUnits">
     <value>イオン移動度の単位</value>
+  </data>
+  <data name="IonMobilityValue">
+    <value>イオン移動度値</value>
+  </data>
+  <data name="IonMobilityWindow">
+    <value>イオン移動度ウィンドウ</value>
   </data>
   <data name="IonName">
     <value>イオン名</value>
@@ -519,11 +549,29 @@
   <data name="Key">
     <value>キー</value>
   </data>
+  <data name="LastPosition">
+    <value>最後の位置</value>
+  </data>
+  <data name="LibraryCollisionCrossSection">
+    <value>ライブラリ衝突断面積</value>
+  </data>
   <data name="LibraryDotProduct">
     <value>ライブラリ内積</value>
   </data>
   <data name="LibraryIntensity">
     <value>ライブラリ強度</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>ライブラリイオン移動度</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>ライブラリイオン移動度高エネルギーオフセット</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>ライブラリイオン移動度単位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>ライブラリイオン移動度値</value>
   </data>
   <data name="LibraryName">
     <value>ライブラリ名</value>
@@ -597,12 +645,6 @@
   <data name="MaxRetentionTime">
     <value>最大保持時間</value>
   </data>
-  <data name="Median">
-    <value>メジアン</value>
-  </data>
-  <data name="MedianDetectionQValue" xml:space="preserve">
-    <value>メジアン検出Q値</value>
-  </data>
   <data name="Mean">
     <value>平均</value>
   </data>
@@ -639,6 +681,15 @@
   <data name="MeanTotalAreaRatio">
     <value>平均総面積比</value>
   </data>
+  <data name="Median">
+    <value>中央値</value>
+  </data>
+  <data name="MedianDetectionQValue" xml:space="preserve">
+    <value>検出Q値の中央値</value>
+  </data>
+  <data name="MedianPeakArea">
+    <value>ピーク面積の中央値</value>
+  </data>
   <data name="Min">
     <value>最小</value>
   </data>
@@ -659,6 +710,9 @@
   </data>
   <data name="MissedCleavages">
     <value>ミス開裂</value>
+  </data>
+  <data name="ModelScore">
+    <value>モデルスコア</value>
   </data>
   <data name="ModifiedAreaProportion">
     <value>修飾された面積率</value>
@@ -687,26 +741,17 @@
   <data name="Molecule">
     <value>分子</value>
   </data>
-  <data name="MoleculeListAbundance">
-    <value>分子リスト存在量</value>
-  </data>
-  <data name="MoleculeListLocator">
-    <value>分子リストロケーター</value>
-  </data>
-  <data name="MoleculeListResult">
-    <value>分子リスト結果</value>
-  </data>
-  <data name="MoleculeListResults">
-    <value>分子リスト結果</value>
-  </data>
-  <data name="MoleculeName">
-    <value>分子名</value>
-  </data>
   <data name="MoleculeFormula">
     <value>分子式</value>
   </data>
   <data name="MoleculeList">
     <value>分子リスト</value>
+  </data>
+  <data name="MoleculeListAbundance">
+    <value>分子リスト存在量</value>
+  </data>
+  <data name="MoleculeListLocator">
+    <value>分子リストロケーター</value>
   </data>
   <data name="MoleculeListName">
     <value>分子リスト名</value>
@@ -714,11 +759,20 @@
   <data name="MoleculeListNote">
     <value>分子リストメモ</value>
   </data>
+  <data name="MoleculeListResult">
+    <value>分子リスト結果</value>
+  </data>
+  <data name="MoleculeListResults">
+    <value>分子リスト結果</value>
+  </data>
   <data name="MoleculeLists">
     <value>分子リスト</value>
   </data>
   <data name="MoleculeLocator">
     <value>分子ロケーター</value>
+  </data>
+  <data name="MoleculeName">
+    <value>分子名</value>
   </data>
   <data name="MoleculeNote">
     <value>分子メモ</value>
@@ -750,6 +804,9 @@
   <data name="NextAa">
     <value>次のAa</value>
   </data>
+  <data name="NormalizationDivisor">
+    <value>正規化約数</value>
+  </data>
   <data name="NormalizationMethod">
     <value>正規化メソッド</value>
   </data>
@@ -771,11 +828,26 @@
   <data name="OptStep">
     <value>最適ステップ</value>
   </data>
+  <data name="PeakGroupEndTime">
+    <value>ピークグループ終了時刻</value>
+  </data>
+  <data name="PeakGroupRetentionTime" xml:space="preserve">
+    <value>ピークグループ保持時間</value>
+  </data>
+  <data name="PeakGroupStartTime">
+    <value>ピークグループ開始時刻</value>
+  </data>
+  <data name="PeakQValue">
+    <value>ピークのQ値</value>
+  </data>
   <data name="PeakRank">
     <value>ピークのランク</value>
   </data>
   <data name="PeakRankByLevel">
     <value>レベル別のピークのランク</value>
+  </data>
+  <data name="PeakScores">
+    <value>ピークスコア</value>
   </data>
   <data name="Peptide">
     <value>ペプチド</value>
@@ -859,13 +931,13 @@
     <value>プリカーサー濃度</value>
   </data>
   <data name="PrecursorExplicitCollisionEnergy">
-    <value>プリカーサー明示的衝突エネルギー</value>
-  </data>
-  <data name="PrecursorIonName">
-    <value>プリカーサーイオン名</value>
+    <value>表示されたプリカーサー衝突エネルギー</value>
   </data>
   <data name="PrecursorIonFormula">
     <value>プリカーサーイオン式</value>
+  </data>
+  <data name="PrecursorIonName">
+    <value>プリカーサーイオン名</value>
   </data>
   <data name="PrecursorLocator">
     <value>プリカーサーロケーター</value>
@@ -978,6 +1050,9 @@
   <data name="ProteinSequence">
     <value>タンパク質シークエンス</value>
   </data>
+  <data name="ProteinSequenceCoverage">
+    <value>タンパク質シーケンスカバー率</value>
+  </data>
   <data name="ProteinSpecies">
     <value>タンパク質種</value>
   </data>
@@ -1038,6 +1113,12 @@
   <data name="Replicate">
     <value>繰り返し測定</value>
   </data>
+  <data name="ReplicateAbundance">
+    <value>繰り返し測定存在度</value>
+  </data>
+  <data name="ReplicateAbundances">
+    <value>繰り返し測定存在度</value>
+  </data>
   <data name="ReplicateCalibrationCurve">
     <value>繰り返し測定検量線</value>
   </data>
@@ -1046,6 +1127,9 @@
   </data>
   <data name="ReplicateErrorMessage">
     <value>繰り返し測定エラーメッセージ</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>繰り返し測定グループ</value>
   </data>
   <data name="ReplicateIndex">
     <value>繰り返し測定インデックス</value>
@@ -1071,11 +1155,14 @@
   <data name="ReplicateRSquared">
     <value>繰り返し測定平方根</value>
   </data>
-  <data name="ReplicateSlope">
-    <value>繰り返し測定勾配</value>
-  </data>
   <data name="Replicates">
     <value>繰り返し測定</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>繰り返し測定サンプルID</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>繰り返し測定勾配</value>
   </data>
   <data name="ReplicateTurningPoint">
     <value>繰り返し測定転回点</value>
@@ -1098,11 +1185,17 @@
   <data name="SampleDilutionFactor">
     <value>試料希釈倍数</value>
   </data>
+  <data name="SampleId">
+    <value>試料ID</value>
+  </data>
   <data name="SampleName">
     <value>試料名</value>
   </data>
   <data name="SampleType">
     <value>試料タイプ</value>
+  </data>
+  <data name="Score">
+    <value>スコア</value>
   </data>
   <data name="SkylineVersion">
     <value>Skylineバージョン</value>
@@ -1173,9 +1266,6 @@
   <data name="TicArea">
     <value>総イオン電流領域</value>
   </data>
-  <data name="TotalArea">
-    <value>総面積</value>
-  </data>
   <data name="Time">
     <value>時間</value>
   </data>
@@ -1184,6 +1274,9 @@
   </data>
   <data name="TimeStamp">
     <value>タイムスタンプ</value>
+  </data>
+  <data name="TotalArea">
+    <value>総面積</value>
   </data>
   <data name="TotalAreaFragment">
     <value>総面積断片</value>
@@ -1206,11 +1299,11 @@
   <data name="TotalBackgroundMs1">
     <value>総バックグラウンドMS1</value>
   </data>
-  <data name="TransitionCount">
-    <value>トランジション数</value>
-  </data>
   <data name="Transition">
     <value>トランジション</value>
+  </data>
+  <data name="TransitionCount">
+    <value>トランジション数</value>
   </data>
   <data name="TransitionIsDecoy">
     <value>トランジション同位体デコイ</value>
@@ -1226,6 +1319,12 @@
   </data>
   <data name="TransitionResult">
     <value>トランジション結果</value>
+  </data>
+  <data name="TransitionResultIsMs1">
+    <value>トランジション結果はMS1</value>
+  </data>
+  <data name="TransitionResultIsQuantitative">
+    <value>トランジション結果は定量的</value>
   </data>
   <data name="TransitionResultLocator">
     <value>トランジション結果ロケーター</value>
@@ -1266,10 +1365,16 @@
   <data name="UTCTime">
     <value>UTC時刻</value>
   </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>試料ID</value>
+  <data name="Weight">
+    <value>加重</value>
   </data>
-  <data name="InstrumentSerialNumber" xml:space="preserve">
-    <value>装置のシリアル番号</value>
+  <data name="WeightedFeature">
+    <value>加重機能</value>
+  </data>
+  <data name="WeightedFeatures">
+    <value>加重機能</value>
+  </data>
+  <data name="WeightedScore">
+    <value>加重スコア</value>
   </data>
 </root>

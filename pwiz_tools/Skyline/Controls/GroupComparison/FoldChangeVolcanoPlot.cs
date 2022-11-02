@@ -326,10 +326,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             _labeledPoints.Clear();
             _foldChangeCutoffLine1 = _foldChangeCutoffLine2 = _minPValueLine = null;
 
-            var rows = _bindingListSource.OfType<RowItem>()
-                .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.FoldChangeRow>()
-                .ToArray();
+            var rows = GetFoldChangeRows(_bindingListSource).ToList();
 
             var selectedPoints = new PointPairList();
             var otherPoints = new PointPairList();
@@ -376,7 +373,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             AddPoints(otherPoints, Color.Gray, PointSizeToFloat(PointSize.small), false, PointSymbol.Circle);
 
-            // The coordinates that depened on the axis scale dont matter here, the AxisChangeEvent will fix those
+            // The coordinates that depend on the axis scale don't matter here, the AxisChangeEvent will fix those
             // Insert after selected items, but before all other items
             var index = 1;
             if (CutoffSettings.FoldChangeCutoffValid)
@@ -536,7 +533,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 zedGraphControl.Cursor = Cursors.Hand;
 
                 if (_tip == null)
-                    _tip = new NodeTip(this) { Parent = ParentForm };
+                    _tip = new NodeTip(this) { Parent = this };
 
                 _tip.SetTipProvider(new FoldChangeRowTipProvider(_selectedRow), new Rectangle(point, new Size()),
                     point);
@@ -713,7 +710,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             base.BuildContextMenu(sender, menuStrip, mousePt, objState);
 
-            // Find the first seperator
+            // Find the first separator
             var index = menuStrip.Items.OfType<ToolStripItem>().ToArray().IndexOf(t => t is ToolStripSeparator);
 
             if (index >= 0)
@@ -738,10 +735,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         public void ShowFormattingDialog()
         {
-            var foldChangeRows = _bindingListSource.OfType<RowItem>()
-                .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.FoldChangeRow>()
-                .ToArray();
+            var foldChangeRows = GetFoldChangeRows(_bindingListSource).ToArray();
 
             var backup = GroupComparisonDef.ColorRows.Select(r => (MatchRgbHexColor)r.Clone()).ToArray();
             // This list will later be used as a BindingList, so we have to create a mutable clone
@@ -771,18 +765,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             RemoveBelowCutoffs();
         }
 
-        private int GetGlobalIndex(FoldChangeBindingSource.FoldChangeRow row)
-        {
-            return row.Peptide != null ? row.Peptide.DocNode.Id.GlobalIndex : row.Protein.DocNode.Id.GlobalIndex;
-        }
-
-
         public void RemoveBelowCutoffs()
         {
-            var rows = _bindingListSource.OfType<RowItem>()
-                .Select(rowItem => rowItem.Value)
-                .OfType<FoldChangeBindingSource.FoldChangeRow>()
-                .ToArray();
+            var rows = GetFoldChangeRows(_bindingListSource).ToArray();
 
             var foldchangeCutoff = Math.Abs(Settings.Default.Log2FoldChangeCutoff);
             var pvalueCutoff = Math.Pow(10, -Settings.Default.PValueCutoff);
@@ -926,8 +911,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         RowFilter.ColumnFilter CheckFilters(IEnumerable<RowFilter.ColumnFilter> filters, ColumnId columnId, IFilterOperation filterOp, double operand, out bool needsUpdate)
         {
-           var filter = filters.FirstOrDefault(f => Equals(f.ColumnId, columnId) &&
-                                         ReferenceEquals(f.Predicate.FilterOperation, filterOp));
+            var filter = filters.FirstOrDefault(f => Equals(f.ColumnId, columnId) &&
+                                                     ReferenceEquals(f.Predicate.FilterOperation, filterOp));
 
             if (filter == null)
             {

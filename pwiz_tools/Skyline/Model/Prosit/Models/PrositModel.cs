@@ -350,9 +350,10 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 _updateCallback = updateCallback;
             }
 
-            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor, IsotopeLabelType labelType, Action updateCallback) :
+            public PrositRequest(SrmSettings settings, PeptideDocNode peptide, TransitionGroupDocNode precursor,
+                IsotopeLabelType labelType, int nce, Action updateCallback) :
                 this(PrositPredictionClient.Current, PrositIntensityModel.Instance, PrositRetentionTimeModel.Instance,
-                    settings, peptide, precursor, labelType, Properties.Settings.Default.PrositNCE, updateCallback)
+                    settings, peptide, precursor, labelType, nce, updateCallback)
             {
             }
 
@@ -557,7 +558,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// slows down constructing inputs (for larger data sets with unknown mods (and aa's)significantly,
         /// which is why PrositExceptions (only) are set as an output parameter and null is returned.
         /// </summary>
-        public static int[] EncodeSequence(SrmSettings settings, ISequenceContainer peptide, IsotopeLabelType label, out PrositException exception)
+        public static int[] EncodeSequence(SrmSettings settings, PeptideDocNode peptide, IsotopeLabelType label, out PrositException exception)
         {
             if (!peptide.Target.IsProteomic)
                 throw new PrositSmallMoleculeException(peptide.ModifiedTarget);
@@ -568,7 +569,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 return null;
             }
 
-            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide, label);
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(settings, peptide.ModifiedTarget.Sequence, peptide.ExplicitMods, label);
             var result = new int[PrositConstants.PEPTIDE_SEQ_LEN];
 
             for (var i = 0; i < sequence.Length; ++i) {

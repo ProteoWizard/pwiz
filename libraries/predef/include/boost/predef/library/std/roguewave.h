@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2013
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -13,21 +13,22 @@ http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/predef/version_number.h>
 #include <boost/predef/make.h>
 
-/*`
-[heading `BOOST_LIB_STD_RW`]
+/* tag::reference[]
+= `BOOST_LIB_STD_RW`
 
-[@http://stdcxx.apache.org/ Roguewave] Standard C++ library.
+http://stdcxx.apache.org/[Roguewave] Standard {CPP} library.
 If available version number as major, minor, and patch.
 
-[table
-    [[__predef_symbol__] [__predef_version__]]
+[options="header"]
+|===
+| {predef_symbol} | {predef_version}
 
-    [[`__STD_RWCOMPILER_H__`] [__predef_detection__]]
-    [[`_RWSTD_VER`] [__predef_detection__]]
+| `+__STD_RWCOMPILER_H__+` | {predef_detection}
+| `+_RWSTD_VER+` | {predef_detection}
 
-    [[`_RWSTD_VER`] [V.R.P]]
-    ]
- */
+| `+_RWSTD_VER+` | V.R.P
+|===
+*/ // end::reference[]
 
 #define BOOST_LIB_STD_RW BOOST_VERSION_NUMBER_NOT_AVAILABLE
 
@@ -50,8 +51,7 @@ If available version number as major, minor, and patch.
 
 #define BOOST_LIB_STD_RW_NAME "Roguewave"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_LIB_STD_RW,BOOST_LIB_STD_RW_NAME)
-
-
-#endif

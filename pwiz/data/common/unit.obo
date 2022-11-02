@@ -76,6 +76,15 @@ is_a: UO:0000000 ! unit
 created_by: george gkoutos
 
 [Term]
+id: UO:0010054
+name: picoampere
+namespace: unit.ontology
+def: "An electric current unit current which is equal to one trillionth of an ampere or 10^[-12] A." [UOB:LTS]
+subset: unit_slim
+synonym: "pA" EXACT []
+is_a: UO:0000004 ! electric current unit
+
+[Term]
 id: UO:0000005
 name: temperature unit
 namespace: unit.ontology
@@ -1497,6 +1506,17 @@ is_a: UO:0000000 ! unit
 relationship: is_unit_of PATO:0001025 ! pressure
 created_by: george gkoutos
 
+
+[Term]
+id: UO:0010052
+name: pounds per square inch
+namespace: unit.ontology
+def: "A pressure unit which is equal to 6894.757 pascal." [Wikipedia:Wikipedia]
+synonym: "psi" EXACT []
+synonym: "lbf/in^[2]" EXACT []
+is_a: UO:0000109 ! pressure unit
+created_by: Luke Slater
+
 [Term]
 id: UO:0000110
 name: pascal
@@ -1597,6 +1617,22 @@ subset: unit_slim
 synonym: "J" EXACT []
 is_a: UO:0000111 ! energy unit
 created_by: george gkoutos
+
+[Term]
+id: UO:0010051
+name: large calorie
+namespace: unit.ontology
+def: "A unit of energy widely used in nutrition, equivalent to the amount of heat needed to cause one kilogram of water to rise in temperature by one degree Celsius." [Wikipedia:Wikipedia]
+subset: unit_slim
+synonym: "food calorie" EXACT []
+synonym: "kilocalorie" EXACT []
+synonym: "big calorie" EXACT []
+synonym: "cal" EXACT []
+synonym: "calorie" EXACT []
+synonym: "kcal" EXACT []
+is_a: UO:0000111 ! energy unit
+created_by: Luke Slater
+creation_date: 2020-10-24T18:01:12Z
 
 [Term]
 id: UO:0000113
@@ -1873,6 +1909,57 @@ subset: unit_slim
 synonym: "uGy" EXACT []
 is_a: UO:0000129 ! absorbed dose unit
 created_by: george gkoutos
+
+[Term]
+id: UO:0010055
+name: centigray
+namespace: unit.ontology
+def: "An absorbed dose unit which is equal to 0.01 gray (Gy)" [NIST:NIST]
+subset: unit_slim
+synonym: "cGy" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010060
+name: gray per minute
+namespace: unit.ontology
+def: "A derived absorbed dose unit which is equal to one gray absorbed per minute." [NIST:NIST]
+subset: unit_slim
+synonym: "Gy/min" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010061
+name: centigray per minute
+namespace: unit.ontology
+def: "A derived absorbed dose unit which is equal to one centigray absorbed per minute." [NIST:NIST]
+subset: unit_slim
+synonym: "cGy/min" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010062
+name: milligray per minute
+namespace: unit.ontology
+def: "A derived absorbed dose unit which is equal to one milligray absorbed per minute." [NIST:NIST]
+subset: unit_slim
+synonym: "mGy/min" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
+
+
+[Term]
+id: UO:0010063
+name: milligray per day
+namespace: unit.ontology
+def: "A derived absorbed dose unit which is equal to one milligray absorbed per day." [NIST:NIST]
+subset: unit_slim
+synonym: "mGy/min" EXACT []
+is_a: UO:0000129 ! absorbed dose unit
+created_by: Luke Slater
 
 [Term]
 id: UO:0000142
@@ -2939,6 +3026,7 @@ namespace: unit.ontology
 def: "A count unit which contains one nucleotide." [UO:GVG]
 subset: unit_slim
 synonym: "bp" EXACT []
+synonym: "basepair" EXACT []
 is_a: UO:0000189 ! count unit
 created_by: george gkoutos
 
@@ -3188,6 +3276,46 @@ is_a: UO:0000111 ! energy unit
 created_by: george gkoutos
 
 [Term]
+id: UO:0010056
+name: gigaelectronvolt
+namespace: unit.ontology
+def: "A unit of energy that is equal to one thousand million electronvolts." []
+subset: unit_slim
+synonym: "GeV" EXACT []
+is_a: UO:0000111 ! energy unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010057
+name: gigaelectronvolt per nucleon
+namespace: unit.ontology
+def: "Derived unit which is equal to the total kinetic energy of an atomic nucleus in GeV divided by the number of nucleons in the nucleus" []
+subset: unit_slim
+synonym: "GeV/nucleon" EXACT []
+is_a: UO:0000111 ! energy unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010058
+name: megaelectronvolt per nucleon
+namespace: unit.ontology
+def: "Derived unit which is equal to the total kinetic energy of an atomic nucleus in MeV divided by the number of nucleons in the nucleus" []
+subset: unit_slim
+synonym: "MeV/nucleon" EXACT []
+is_a: UO:0000111 ! energy unit
+created_by: Luke Slater
+
+[Term]
+id: UO:0010059
+name: kiloelectronvolt per micron
+namespace: unit.ontology
+def: "A derived unit equal to the energy deposited by ionizing radiation per micron of path length in matter" []
+subset: unit_slim
+synonym: "keV/micron" EXACT []
+is_a: UO:0000111 ! energy unit
+created_by: Luke Slater
+
+[Term]
 id: UO:0000267
 name: electric field strength unit
 namespace: unit.ontology
@@ -3288,6 +3416,29 @@ synonym: "ng/ml" EXACT []
 is_a: UO:0000052 ! mass density unit
 created_by: George Gkoutos
 creation_date: 2011-03-21T10:55:12Z
+
+[Term]
+id: UO:0010050
+name: nanogram per microliter 
+namespace: unit.ontology
+def: "A mass unit density which is equal to mass of an object in nanograms divided by the volume in microliters." [UOB:LTS]
+subset: unit_slim
+synonym: "nanogram per microlitre" EXACT []
+synonym: "ng/ul" EXACT []
+is_a: UO:0000052 ! mass density unit
+created_by: Luke Slater
+creation_date: 2020-10-24T17:54:12Z
+
+[Term]
+id: UO:0010053
+name: micrograms per wheaton bottle
+namespace: unit.ontology
+def: "A unit of mass concentration defined as the number of micrograms of a substance per 250 ml Wheaton bottle." [UOB:LTS]
+subset: unit_slim
+is_a: UO:0000052 ! mass density unit
+synonym: "micrograms per bottle" RELATED []
+created_by: Luke Slater
+creation_date: 2020-10-24T18:09:12Z
 
 [Term]
 id: UO:0000276
@@ -3847,32 +3998,35 @@ creation_date: 2013-12-06T12:26:29Z
 
 [Term]
 id: UO:0000328
-name: kilobasepair
+name: kilo base pair
 namespace: unit.ontology
 def: "A unit equal to one thousand base pairs." [UOC:GVG]
 synonym: "kbp" EXACT []
+synonym: "kilobasepair" EXACT []
 is_a: UO:0000244 ! base pair
 created_by: gkoutos
 creation_date: 2013-12-11T09:39:31Z
 
 [Term]
 id: UO:0000329
-name: megabasepair
+name: mega base pair
 namespace: unit.ontology
 def: "A unit equal to one million base pairs" [UOC:GVG]
 subset: unit_slim
 synonym: "Mb" EXACT []
+synonym: "megabasepair" EXACT []
 is_a: UO:0000244 ! base pair
 created_by: gkoutos
 creation_date: 2013-12-11T09:44:29Z
 
 [Term]
 id: UO:0000330
-name: gigabasepair
+name: giga base pair
 namespace: unit.ontology
 def: "A unit equal to one billion base pairs." [UOC:GVG]
 subset: unit_slim
 synonym: "Gb" EXACT []
+synonym: "gigabasepair" EXACT []
 is_a: UO:0000244 ! base pair
 created_by: gkoutos
 creation_date: 2013-12-11T09:44:52Z

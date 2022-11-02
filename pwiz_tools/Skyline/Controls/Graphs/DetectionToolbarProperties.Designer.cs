@@ -48,7 +48,6 @@
             this.cbShowAtLeastN = new System.Windows.Forms.CheckBox();
             this.tbAtLeastN = new System.Windows.Forms.TrackBar();
             this.gbAtLeastN = new System.Windows.Forms.GroupBox();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbAtLeastN)).BeginInit();
@@ -223,7 +222,6 @@
             this.Name = "DetectionToolbarProperties";
             this.ShowInTaskbar = false;
             this.Load += new System.EventHandler(this.DetectionToolbarProperties_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);

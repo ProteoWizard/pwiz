@@ -95,7 +95,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const
 {
-	return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, msLevelsToCentroid);
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, msLevelsToCentroid);
 }
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const
@@ -145,7 +145,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
     ExperimentType experimentType = msExperiment->getExperimentType();
     int msLevel = spectrum->getMSLevel();
     result->set(MS_ms_level, msLevel);
-    result->set(translateAsSpectrumType(experimentType));
+    CVID spectrumType = translateAsSpectrumType(experimentType);
+    result->set(spectrumType);
     result->set(translate(msExperiment->getPolarity()));
 
     double startMz, stopMz;
@@ -162,33 +163,54 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel d
 
     if (spectrum->getHasPrecursorInfo())
     {
-        double selectedMz, intensity, collisionEnergy = 0;
+        double selectedMz = 0, intensity, collisionEnergy = 0;
+        double centerMz = 0, lowerLimit, upperLimit;
         int charge;
         spectrum->getPrecursorInfo(selectedMz, intensity, charge);
 
-        Precursor precursor;
         if (spectrum->getHasIsolationInfo())
         {
-            double centerMz, lowerLimit, upperLimit;
             spectrum->getIsolationInfo(centerMz, lowerLimit, upperLimit, collisionEnergy);
-            precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
-            precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
-            precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
-			selectedMz = centerMz;
+            selectedMz = centerMz;
         }
 
-        SelectedIon selectedIon;
+        if (spectrumType == MS_precursor_ion_spectrum)
+        {
+            Product product;
 
-        selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
-        if (charge > 0)
-            selectedIon.set(MS_charge_state, charge);
+            // CONSIDER: error/warn if no isolation info?
+            if (centerMz > 0)
+            {
+                product.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
+                product.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+                product.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+            }
 
-        precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
-        if (collisionEnergy > 0)
-            precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
+            result->products.push_back(product);
+        }
+        else
+        {
+            Precursor precursor;
+            SelectedIon selectedIon;
 
-        precursor.selectedIons.push_back(selectedIon);
-        result->precursors.push_back(precursor);
+            if (centerMz > 0)
+            {
+                precursor.isolationWindow.set(MS_isolation_window_target_m_z, centerMz, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_lower_offset, centerMz - lowerLimit, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_upper_offset, upperLimit - centerMz, MS_m_z);
+            }
+
+            selectedIon.set(MS_selected_ion_m_z, selectedMz, MS_m_z);
+            if (charge > 0)
+                selectedIon.set(MS_charge_state, charge);
+
+            precursor.activation.set(MS_beam_type_collision_induced_dissociation); // assume beam-type CID since all ABI instruments that write WIFFs are either QqTOF or QqLIT
+            if (collisionEnergy > 0)
+                precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
+
+            precursor.selectedIons.push_back(selectedIon);
+            result->precursors.push_back(precursor);
+        }
     }
 
     if (detailLevel == DetailLevel_InstantMetadata)
@@ -235,6 +257,8 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
     ExperimentAndCycleByTime experimentAndCycleByTime;
     vector<double> times, intensities;
 
+    bool wiff2 = bal::iends_with(wifffile_->getWiffPath(), ".wiff2");
+
     int periodCount = wifffile_->getPeriodCount(sample);
     for (int period=1; period <= periodCount; ++period)
     {
@@ -253,7 +277,8 @@ PWIZ_API_DECL void SpectrumList_ABI::createIndex() const
                 msExperiment->getTIC(times, intensities);
 
                 for (int i = 0, end = (int) times.size(); i < end; ++i)
-                //    if (intensities[i] > 0)
+                    if ((!wiff2 || intensities[i] > 0) &&
+                        (experimentType != ABI::Product || wifffile_->getSpectrum(msExperiment, i+1)->getHasPrecursorInfo()))
                         experimentAndCycleByTime.insert(make_pair(times[i], make_pair(msExperiment, i + 1)));
             }
             else

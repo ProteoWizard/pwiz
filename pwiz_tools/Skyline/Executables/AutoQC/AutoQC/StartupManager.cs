@@ -2,13 +2,14 @@
 using System.Diagnostics;
 using System.IO;
 using IWshRuntimeLibrary;
+using SharedBatch;
 using File = System.IO.File;
 
 namespace AutoQC
 {
     internal class StartupManager
     {
-        private const string AUTOQCSTARTER = Program.AutoQcStarter;
+        private const string AUTOQCSTARTER = Program.AUTO_QC_STARTER;
         private static readonly string AUTOQCSTARTEREXE = Program.AutoQcStarterExe;
 
         public static void EnableKeepRunning()
@@ -31,6 +32,10 @@ namespace AutoQC
             try
             {
                 shortcut = GetShortcut();
+            }
+            catch (StartupManagerException)
+            {
+                throw;
             }
             catch (Exception e)
             {
@@ -66,7 +71,7 @@ namespace AutoQC
                 }
                 catch (Exception ex)
                 {
-                    Program.LogError($"Error removing {AUTOQCSTARTEREXE} shortcut from the Startup folder.", ex);
+                    ProgramLog.Error($"Error removing {AUTOQCSTARTEREXE} shortcut from the Startup folder.", ex);
                 }
                 throw new StartupManagerException($"Unable to start {AUTOQCSTARTEREXE}. Error was: {e.Message}", e);
             }
@@ -101,7 +106,7 @@ namespace AutoQC
         private static Process[] GetAutoQcStarterProcesses()
         {
             var procs = Process.GetProcessesByName(AUTOQCSTARTER);
-            Program.LogInfo($"Found {procs.Length} {AUTOQCSTARTER} {(procs.Length > 1 ? "processes" : "process")}.");
+            ProgramLog.Info($"Found {procs.Length} {AUTOQCSTARTER} {(procs.Length > 1 ? "processes" : "process")}.");
             return procs;
         }
 
@@ -109,18 +114,18 @@ namespace AutoQC
         {
             if (overwrite && File.Exists(shortcutInfo.ShortcutPath))
             {
-                Program.LogInfo($"Deleting old shortcut {shortcutInfo.ShortcutPath}");
+                ProgramLog.Info($"Deleting old shortcut {shortcutInfo.ShortcutPath}");
                 File.Delete(shortcutInfo.ShortcutPath);
                 
                 if (File.Exists(shortcutInfo.ShortcutPath))
                 {
-                    Program.LogError($"Could not delete {shortcutInfo.ShortcutPath}");
+                    ProgramLog.Error($"Could not delete {shortcutInfo.ShortcutPath}");
                 }
             }
             
             if (!File.Exists(shortcutInfo.ShortcutPath))
             {
-                Program.LogInfo($"Adding {AUTOQCSTARTEREXE} shortcut to Startup folder.");
+                ProgramLog.Info($"Adding {AUTOQCSTARTEREXE} shortcut to Startup folder.");
 
                 // http://softvernow.com/2018/07/30/create-shortcut-using-c/
                 WshShell wsh = new WshShell();
@@ -135,12 +140,12 @@ namespace AutoQC
                 }
                 else
                 {
-                    Program.LogError($"Could not create a shortcut to {AUTOQCSTARTEREXE}.");
+                    ProgramLog.Error($"Could not create a shortcut to {AUTOQCSTARTEREXE}.");
                 }
             }
             else
             {
-                Program.LogInfo($"Shortcut to {AUTOQCSTARTEREXE} already exists in the Startup folder.");
+                ProgramLog.Info($"Shortcut to {AUTOQCSTARTEREXE} already exists in the Startup folder.");
             }
         }
 
@@ -157,6 +162,11 @@ namespace AutoQC
             }
            
             var exeDirInfo = Directory.GetParent(exeLocation);
+            if (exeDirInfo == null)
+            {
+                throw new StartupManagerException($"Could not get directory path for executable '{exeLocation}'");
+            }
+            
             var targetPath = Path.Combine(exeDirInfo.FullName, $"{AUTOQCSTARTEREXE}");
             return new ShortCutInfo(GetShortcutPath(), targetPath);
         }
@@ -169,19 +179,19 @@ namespace AutoQC
 
         private static void RemoveAutoQcStarterFromStartup()
         {
-            Program.LogInfo($"Removing {AUTOQCSTARTER} shortcut from Startup folder");
+            ProgramLog.Info($"Removing {AUTOQCSTARTER} shortcut from Startup folder");
             var shortcutPath = GetShortcutPath();
-            Program.LogInfo($"Shortcut path is {shortcutPath}");
+            ProgramLog.Info($"Shortcut path is {shortcutPath}");
             
             //Remove the shortcut
             if (File.Exists(shortcutPath))
             {
                 File.Delete(shortcutPath);
-                Program.LogInfo($"Shortcut removed: {shortcutPath}");
+                ProgramLog.Info($"Shortcut removed: {shortcutPath}");
             }
             else
             {
-                Program.LogInfo($"Shortcut {shortcutPath} does not exist in Startup folder.");
+                ProgramLog.Info($"Shortcut {shortcutPath} does not exist in Startup folder.");
             }
         }
 
@@ -192,7 +202,7 @@ namespace AutoQC
 
             if (procs.Length > 0)
             {
-                Program.LogInfo($"Stopping {AUTOQCSTARTER}");
+                ProgramLog.Info($"Stopping {AUTOQCSTARTER}");
                 foreach (var process in procs)
                 {
                     process.Kill();
@@ -209,13 +219,13 @@ namespace AutoQC
             }
             else
             {
-                Program.LogInfo($"{AUTOQCSTARTER} is already running");
+                ProgramLog.Info($"{AUTOQCSTARTER} is already running");
             }
         }
 
         private static void StartAutoQcStarter(string shortcutPath)
         {
-            Program.LogInfo($"Starting {AUTOQCSTARTER} at {shortcutPath}");
+            ProgramLog.Info($"Starting {AUTOQCSTARTER} at {shortcutPath}");
             var procInfo = new ProcessStartInfo
             {
                 UseShellExecute =
@@ -226,7 +236,7 @@ namespace AutoQC
 
             using (Process.Start(procInfo))
             {
-                Program.LogInfo($"Started {AUTOQCSTARTER}.");
+                ProgramLog.Info($"{AUTOQCSTARTER} has been started.");
             }
         }     
     }

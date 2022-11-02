@@ -134,7 +134,7 @@ int LibReader::getSpecInMzRange(double minMz,
     sprintf(sqlStmtBuffer,
             "SELECT id, peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, copies, numPeaks, peakMZ, "
-            "peakIntensity FROM RefSpectra, RefSpectraPeaks "
+            "peakIntensity, retentionTime FROM RefSpectra, RefSpectraPeaks "
             "WHERE precursorMZ >= %f and precursorMZ <= %f "
             "AND numPeaks > %d "
             "AND id = RefSpectraId",
@@ -171,6 +171,8 @@ int LibReader::getSpecInMzRange(double minMz,
         int numBytes2 = sqlite3_column_bytes(statement, 8);
         Byte* comprI = (Byte*)sqlite3_column_blob(statement, 8);
 
+        tmpSpec->setRetentionTime(sqlite3_column_double(statement, 9));
+
         tmpSpec->setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1, comprM, 
                                                  numBytes2, comprI));
 
@@ -200,7 +202,7 @@ int LibReader::getSpecInMzRange(double minMz,
     sprintf(sqlStmtBuffer,
             "SELECT id, peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, copies, numPeaks, peakMZ, "
-            "peakIntensity FROM RefSpectra, RefSpectraPeaks "
+            "peakIntensity, retentionTime FROM RefSpectra, RefSpectraPeaks "
             "WHERE precursorMZ > %f and precursorMZ <= %f "
             "AND numPeaks > %d "
             "AND id = RefSpectraId",
@@ -238,6 +240,8 @@ int LibReader::getSpecInMzRange(double minMz,
         Byte* comprM = (Byte*)sqlite3_column_blob(statement, 7);
         int numBytes2 = sqlite3_column_bytes(statement, 8);
         Byte* comprI = (Byte*)sqlite3_column_blob(statement, 8);
+
+        tmpSpec->setRetentionTime(sqlite3_column_double(statement, 9));
 
         tmpSpec->setRawPeaks(getUncompressedPeaks(numPeaks, numBytes1, comprM, 
                                                  numBytes2, comprI));
@@ -553,7 +557,7 @@ vector<RefSpectrum> LibReader::getRefSpecsInRange(int lowLibID, int highLibID)
 {
 
     char szSqlStmt[8192];
-    sprintf(szSqlStmt, "select id, peptideSeq, precursorMZ,precursorCharge, "
+    sprintf(szSqlStmt, "select id, peptideSeq, precursorMZ, precursorCharge, "
             "peptideModSeq, prevAA, nextAA, copies, numPeaks, peakMZ, peakIntensity, retentionTime "
             "from RefSpectra,RefSpectraPeaks where "
             "id >= %d and id <=%d AND id=RefSpectraID",

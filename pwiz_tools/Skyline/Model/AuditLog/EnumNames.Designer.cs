@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class EnumNames {
@@ -196,6 +196,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chebyshev.
+        /// </summary>
+        public static string ClusterMetricType_chebyshev {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_chebyshev", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Euclidean.
+        /// </summary>
+        public static string ClusterMetricType_euclidean {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_euclidean", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to City block.
+        /// </summary>
+        public static string ClusterMetricType_manhattan {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_manhattan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pearson.
+        /// </summary>
+        public static string ClusterMetricType_pearson {
+            get {
+                return ResourceManager.GetString("ClusterMetricType_pearson", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count.
         /// </summary>
         public static string CountImpl_Count {
@@ -304,6 +340,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Waters SONAR.
+        /// </summary>
+        public static string eIonMobilityUnits_waters_sonar {
+            get {
+                return ResourceManager.GetString("eIonMobilityUnits_waters_sonar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DDA.
         /// </summary>
         public static string FullScanAcquisitionMethod_DDA {
@@ -331,7 +376,25 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Targeted.
+        ///   Looks up a localized string similar to PRM.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_PRM {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_PRM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SureQuant.
+        /// </summary>
+        public static string FullScanAcquisitionMethod_SureQuant {
+            get {
+                return ResourceManager.GetString("FullScanAcquisitionMethod_SureQuant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Targeted (obsolete).
         /// </summary>
         public static string FullScanAcquisitionMethod_Targeted {
             get {
@@ -489,6 +552,60 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportResultsSimultaneousFileOptions_several {
             get {
                 return ResourceManager.GetString("ImportResultsSimultaneousFileOptions_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DDA raw (search and build library).
+        /// </summary>
+        public static string InputFile_dda_raw {
+            get {
+                return ResourceManager.GetString("InputFile_dda_raw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DIA raw (deconvolute, search, and build library).
+        /// </summary>
+        public static string InputFile_dia_raw {
+            get {
+                return ResourceManager.GetString("InputFile_dia_raw", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search results (build library directly).
+        /// </summary>
+        public static string InputFile_search_result {
+            get {
+                return ResourceManager.GetString("InputFile_search_result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Orbitrap LTQ.
+        /// </summary>
+        public static string InstrumentPreset_OrbitrapLTQ {
+            get {
+                return ResourceManager.GetString("InstrumentPreset_OrbitrapLTQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Q Exactive.
+        /// </summary>
+        public static string InstrumentPreset_QExactive {
+            get {
+                return ResourceManager.GetString("InstrumentPreset_QExactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TripleTOF.
+        /// </summary>
+        public static string InstrumentPreset_TripleTOF {
+            get {
+                return ResourceManager.GetString("InstrumentPreset_TripleTOF", resourceCulture);
             }
         }
         
@@ -1087,6 +1204,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DIA-Umpire.
+        /// </summary>
+        public static string Protocol_dia_umpire {
+            get {
+                return ResourceManager.GetString("Protocol_dia_umpire", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSConvert.
+        /// </summary>
+        public static string Protocol_msconvert {
+            get {
+                return ResourceManager.GetString("Protocol_msconvert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Protocol_none {
+            get {
+                return ResourceManager.GetString("Protocol_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quadratic.
         /// </summary>
         public static string QuadraticFit_quadratic {
@@ -1222,6 +1366,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS Amanda.
+        /// </summary>
+        public static string SearchEngine_MSAmanda {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSAmanda", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSFragger.
+        /// </summary>
+        public static string SearchEngine_MSFragger {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSFragger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS-GF+.
+        /// </summary>
+        public static string SearchEngine_MSGFPlus {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSGFPlus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string SelectOne_Max {
@@ -1254,6 +1425,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SequenceTerminus_N {
             get {
                 return ResourceManager.GetString("SequenceTerminus_N", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the protein with the most peptides.
+        /// </summary>
+        public static string SharedPeptides_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptides_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to first protein.
+        /// </summary>
+        public static string SharedPeptides_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptides_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between proteins.
+        /// </summary>
+        public static string SharedPeptides_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptides_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single protein).
+        /// </summary>
+        public static string SharedPeptides_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptides_Removed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the protein group with the most peptides.
+        /// </summary>
+        public static string SharedPeptidesGroup_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to first protein group.
+        /// </summary>
+        public static string SharedPeptidesGroup_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between protein groups.
+        /// </summary>
+        public static string SharedPeptidesGroup_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single protein group).
+        /// </summary>
+        public static string SharedPeptidesGroup_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_Removed", resourceCulture);
             }
         }
         

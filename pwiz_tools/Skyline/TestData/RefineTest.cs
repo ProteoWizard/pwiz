@@ -247,7 +247,9 @@ namespace pwiz.SkylineTestData
         public void RefineConvertToSmallMoleculesTest()
         {
             // Exercise the code that helps match heavy labeled ion formulas with unlabled
-            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S"));
+            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S")); // Partially labeled
+            Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C'5H'9H3NO\"2S'")); // Completely labeled
+            Assert.AreEqual("C5H14NO2STiDb", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9D2H'H\"TNO2STiDb"));
             Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
             Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
 
@@ -268,15 +270,15 @@ namespace pwiz.SkylineTestData
 
         private SrmDocument InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode mode)
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip", mode.ToString());
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip", mode.ToString());
             if (mode == RefinementSettings.ConvertToSmallMoleculesMode.none)
             {
-                var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("SRM_mini.sky"));
+                var doc = ResultsUtil.DeserializeDocument(TestFilesDir.GetTestPath("SRM_mini.sky"));
                 AssertEx.IsDocumentState(doc, null, 4, 36, 38, 334);
                 return doc;
             }
-            var docPath = testFilesDir.GetTestPath("SRM_mini_single_replicate.sky");
-            var dataPaths = new[] { testFilesDir.GetTestPath("worm1.mzML") };
+            var docPath = TestFilesDir.GetTestPath("SRM_mini_single_replicate.sky");
+            var dataPaths = new[] { TestFilesDir.GetTestPath("worm1.mzML") };
             var converted = ConvertToSmallMolecules(null, ref docPath, dataPaths, mode);
             AssertEx.IsDocumentState(converted, null, 4, 36, 38, 334);
             return converted;
@@ -285,16 +287,14 @@ namespace pwiz.SkylineTestData
 
         private SrmDocument InitRefineDocumentIprg()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip");
-            var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("iPRG 2015 Study-mini.sky"));
+            var doc = ResultsUtil.DeserializeDocument(TestFilesDir.GetTestPath("iPRG 2015 Study-mini.sky"));
             AssertEx.IsDocumentState(doc, null, 1, 4, 6, 18);
             return doc;
         }
 
         private SrmDocument InitRefineDocumentSprg()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestData\Refine.zip");
-            var doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("sprg_all_charges-mini.sky"));
+            var doc = ResultsUtil.DeserializeDocument(TestFilesDir.GetTestPath("sprg_all_charges-mini.sky"));
             AssertEx.IsDocumentState(doc, null, 1, 3, 6, 54);
             return doc;
         }

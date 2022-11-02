@@ -57,13 +57,13 @@ namespace pwiz.SkylineTestTutorial
 
             ForceMzml = true;   // 2-3x faster than raw files for this test.
 
-            LinkPdf = "https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/iRT-20_1.pdf";
+            LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-20_1.pdf";
 
             TestFilesZipPaths = new[]
             {
                 UseRawFiles
-                    ? @"https://skyline.gs.washington.edu/tutorials/iRT.zip"
-                    : @"https://skyline.gs.washington.edu/tutorials/iRTMzml.zip",
+                    ? @"https://skyline.ms/tutorials/iRT.zip"
+                    : @"https://skyline.ms/tutorials/iRTMzml.zip",
                 @"TestTutorial\IrtViews.zip"
             };
             RunFunctionalTest();

@@ -33,8 +33,7 @@
             this.graphControl = new ZedGraph.ZedGraphControl();
             this.btnOk = new System.Windows.Forms.Button();
             this.cbGraphType = new System.Windows.Forms.ComboBox();
-            this.dataGridView = new System.Windows.Forms.DataGridView();
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).BeginInit();
+            this.dataGridView = new pwiz.Common.Controls.CommonDataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -93,7 +92,6 @@
             this.Name = "ExportMethodScheduleGraph";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ExportMethodScheduleGraph_FormClosing);
-            ((System.ComponentModel.ISupportInitialize)(this.modeUIHandler)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
@@ -103,6 +101,6 @@
         private ZedGraph.ZedGraphControl graphControl;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.ComboBox cbGraphType;
-        private System.Windows.Forms.DataGridView dataGridView;
+        private pwiz.Common.Controls.CommonDataGridView dataGridView;
     }
 }

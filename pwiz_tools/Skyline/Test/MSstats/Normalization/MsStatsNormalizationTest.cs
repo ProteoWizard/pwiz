@@ -28,6 +28,7 @@ using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
@@ -54,7 +55,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             IProgressStatus progressStatus = new ProgressStatus();
             viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref progressStatus,
                 viewContext.GetViewInfo(ViewGroup.BUILT_IN, view.ViewSpec), stringWriter,
-                viewContext.GetCsvWriter());
+                TextUtil.SEPARATOR_CSV);
             string expectedReport = new StreamReader(OpenTestFile("BrudererSubset_MSstatsInput.csv")).ReadToEnd();
             AssertEx.NoDiff(expectedReport, stringWriter.ToString());
         }
@@ -152,8 +153,14 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetEqualizeMedians_dataProcessedData.csv")));
             NormalizationData normalizationData = NormalizationData.GetNormalizationData(testDocument, false, null);
-            var mediansByReplicateFileIndex = chromatograms.ToDictionary(chrom => chrom.MSDataFileInfos.First().FileIndex,
-                chrom => normalizationData.GetMedian(chrom.MSDataFileInfos.First().FileId, IsotopeLabelType.light).Value);
+            var mediansByReplicateFileIndex = new Dictionary<int, double>();
+            for (int iReplicate = 0; iReplicate < chromatograms.Count; iReplicate++)
+            {
+                var chromFileInfo = chromatograms[iReplicate].MSDataFileInfos.First();
+                var median = normalizationData.GetLog2Median(iReplicate, chromFileInfo.FileId);
+                mediansByReplicateFileIndex.Add(chromFileInfo.FileIndex, median.Value);
+            }
+              
             double medianMedian = new Statistics(mediansByReplicateFileIndex.Values).Median();
             VerifyAbundances(testDocument, asSmallMolecules, expected, transitionChromInfo =>
             {
@@ -296,9 +303,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
         {
             if (asSmallMolecules)
             {
-                if (!RunSmallMoleculeTestVersions)
+                if (SkipSmallMoleculeTestVersions())
                 {
-                    Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                     return null;
                 }
             }

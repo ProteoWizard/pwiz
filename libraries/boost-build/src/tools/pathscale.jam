@@ -1,7 +1,7 @@
 #  Copyright 2006 Noel Belcourt
 #  Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import property ;
 import generators ;
@@ -20,24 +20,24 @@ generators.override pathscale.searched-lib-generator : searched-lib-generator ;
 # Documentation and toolchain description located
 # http://www.pathscale.com/docs.html
 
-rule init ( version ? : command * : options * ) 
+rule init ( version ? : command * : options * )
 {
-  command = [ common.get-invocation-command pathscale : pathCC : $(command) 
+  command = [ common.get-invocation-command pathscale : pathCC : $(command)
     : /opt/ekopath/bin ] ;
-  
+
   # Determine the version
   local command-string = $(command:J=" ") ;
   if $(command)
-  {    
+  {
       version ?= [ MATCH "^([0-9.]+)"
           : [ SHELL "$(command-string) -dumpversion" ] ] ;
   }
-  
+
   local condition = [ common.check-init-parameters pathscale
     : version $(version) ] ;
 
   common.handle-options pathscale : $(condition) : $(command) : $(options) ;
-    
+
   toolset.flags pathscale.compile.fortran90 OPTIONS $(condition) :
     [ feature.get-values <fflags> : $(options) ] : unchecked ;
 
@@ -83,7 +83,9 @@ flags pathscale.compile OPTIONS <inlining>full : -inline ;
 
 flags pathscale.compile OPTIONS <warnings>off           : -woffall ;
 flags pathscale.compile OPTIONS <warnings>on            : -Wall ;
-flags pathscale.compile OPTIONS <warnings>all           : -Wall -pedantic ;
+flags pathscale.compile OPTIONS <warnings>all           : -Wall ;
+flags pathscale.compile OPTIONS <warnings>extra         : -Wall -Wextra ;
+flags pathscale.compile OPTIONS <warnings>pedantic      : -Wall -Wextra -pedantic ;
 flags pathscale.compile OPTIONS <warnings-as-errors>on  : -Werror ;
 
 flags pathscale.compile OPTIONS <debug-symbols>on : -ggdb ;

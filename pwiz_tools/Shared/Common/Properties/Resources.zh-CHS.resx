@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -118,7 +118,6 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-<!-- ReSharper disable DuplicateResource -->
   <data name="agg_count" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\agg_count.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -274,14 +273,6 @@
   </data>
   <data name="ManageViewsForm_BtnRemoveOnClick_Are_you_sure_you_want_to_delete_these__0__views_" xml:space="preserve">
     <value>您是否确定要删除这 {0} 个报告？</value>
-  </data>
-  <data name="RecordNavBar_UpdateNow__Filtered_from__0__" xml:space="preserve">
-    <value>（从{0}过滤）</value>
-  </data>
-  <data name="RecordNavBar_UpdateNow__0__of__1_" xml:space="preserve">
-    <value>{0}/{1}</value>
-    <comment>Example : 1 of 10
-</comment>
   </data>
   <data name="FilterOperations_Has_Any_Value" xml:space="preserve">
     <value>拥有任何值</value>
@@ -517,5 +508,41 @@
   </data>
   <data name="UnknownUiMode" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\UnknownUiMode.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ClusterMetricType_CHEBYSHEV_Chebyshev_distance__L_inf_norm_" xml:space="preserve">
+    <value>Chebyshev 距离 (L-inf norm)</value>
+  </data>
+  <data name="ClusterMetricType_MANHATTAN_City_block_distance__L_1_norm_" xml:space="preserve">
+    <value>城市街区距离 (L-1 norm)</value>
+  </data>
+  <data name="ClusterMetricType_EUCLIDEAN_Euclidean_distance__L2_norm_" xml:space="preserve">
+    <value>Euclidean 距离 (L2 norm)</value>
+  </data>
+  <data name="ClusterMetricType_PEARSON_Pearson_correlation" xml:space="preserve">
+    <value>Pearson 关联</value>
+  </data>
+  <data name="ClusterRole_IGNORED_Ignored" xml:space="preserve">
+    <value>已忽略</value>
+  </data>
+  <data name="ClusterRole_ROWHEADER_Row_Header" xml:space="preserve">
+    <value>行标题</value>
+  </data>
+  <data name="ClusterRole_COLUMNHEADER_Column_Header" xml:space="preserve">
+    <value>列标题</value>
+  </data>
+  <data name="ClusterRole_RAW_Raw_Value" xml:space="preserve">
+    <value>原始值</value>
+  </data>
+  <data name="ClusterRole_LOGARITHM_Log10" xml:space="preserve">
+    <value>Log10</value>
+  </data>
+  <data name="BooleanTransform_BooleanTransform_Boolean" xml:space="preserve">
+    <value>布尔</value>
+  </data>
+  <data name="ZScore_ZScore_Z_Score" xml:space="preserve">
+    <value>Z-Score</value>
+  </data>
+  <data name="DropImageNoBackground" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DropImageNoBackground.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

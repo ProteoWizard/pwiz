@@ -76,11 +76,29 @@ int main(int argc, char* argv[])
         {
             auto newConfig = config;
 
-            // with both ion mobility and non-IMS data
+            // should work OK with non-IMS data
             newConfig.peakPicking = true;
-            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "ATEHLSTLSEK_profile.raw", "HDDDA_Short_noLM.raw" }), newConfig);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "ATEHLSTLSEK_profile.raw" }), newConfig);
 
-            // with combineIonMobility on IMS data
+            // should give a warning  with IMS data, but the fallback peak picking is slow so only do 2 spectra
+            /*newConfig.indexRange = make_pair(0, 1);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
+
+            // should still warn with combineIonMobility on
+            newConfig.combineIonMobilitySpectra = true;
+            newConfig.indexRange = make_pair(0, 0);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);*/
+        }
+
+        // test CWT centroiding
+        {
+            auto newConfig = config;
+
+            // CWT should work with ion mobility
+            newConfig.peakPickingCWT = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
+
+            // with or without combineIonMobility on
             newConfig.combineIonMobilitySpectra = true;
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
         }

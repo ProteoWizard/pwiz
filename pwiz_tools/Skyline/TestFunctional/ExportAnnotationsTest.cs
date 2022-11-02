@@ -16,17 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
@@ -48,28 +43,28 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
-            {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(new List<String>
-                {
-                    SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct
-                });
-                string text = TextUtil.LineSeparate(
-                    "C8H10N4O2\t1\tC7H9N4O\t1",
-                    "C8H10N4O2\t1\tC6H7N3O\t1",
-                    "C9H13N\t1\tC9H11\t1"
-                );
-                SetClipboardText(text);
-                pasteDlg.PasteTransitions();
-                pasteDlg.OkDialog();
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            string text1 = TextUtil.LineSeparate(
+                "C8H10N4O2\t1\tC7H9N4O\t1",
+                "C8H10N4O2\t1\tC6H7N3O\t1",
+                "C9H13N\t1\tC9H11\t1"
+            );
+            var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = text1);
+
+            RunUI(() => {
+                colDlg.radioMolecule.PerformClick();
+                colDlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             });
+
+            OkDialog(colDlg, colDlg.OkDialog);
+
             var originalDocument = SkylineWindow.Document;
             // First export a CSV where all of the properties are blank
-            var blankPropertiesCsv = Path.Combine(TestContext.TestDir, "blankProperties.csv");
+            var blankPropertiesCsv = TestContext.GetTestResultsPath("blankProperties.csv");
             ExportProperties(blankPropertiesCsv);
 
             // Use the document grid to set the ExplicitCollisionEnergy, ExplicitRetentionTime, and ExplicitRetentionTimeWindow
@@ -91,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentWithAnnotations = SkylineWindow.Document;
             Assert.AreNotEqual(originalDocument, documentWithAnnotations);
-            var propertiesCsv = Path.Combine(TestContext.TestDir, "properties.csv");
+            var propertiesCsv = TestContext.GetTestResultsPath("properties.csv");
             ExportProperties(propertiesCsv);
 
             // Reading back in the blank CSV file should obliterate the properties

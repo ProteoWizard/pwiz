@@ -37,7 +37,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod] 
         public void ElectronIonizationAllIonsPerfTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfElectronIonizationAllIonsTest.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfElectronIonizationAllIonsTest.zip");
             TestFilesPersistent = new[] { "GC_00343_500ng_62std2nd.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();

@@ -44,8 +44,14 @@
             this.filterBtn = new System.Windows.Forms.ToolStripButton();
             this.lblScanId = new System.Windows.Forms.ToolStripLabel();
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
+            this.toolStripLabelPeakType = new System.Windows.Forms.ToolStripLabel();
+            this.comboBoxPeakType = new System.Windows.Forms.ToolStripComboBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showPeakAnnotationsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.showCollisionEnergyContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -86,6 +92,7 @@
             this.graphControl.ScrollMinY = 0D;
             this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMove);
             this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
             // 
@@ -101,7 +108,10 @@
             this.spectrumBtn,
             this.filterBtn,
             this.lblScanId,
-            this.btnIsolationWindow});
+            this.btnIsolationWindow,
+            this.toolStripButtonShowAnnotations,
+            this.toolStripLabelPeakType,
+            this.comboBoxPeakType});
             resources.ApplyResources(this.toolBar, "toolBar");
             this.toolBar.Name = "toolBar";
             // 
@@ -191,10 +201,37 @@
             this.btnIsolationWindow.Name = "btnIsolationWindow";
             this.btnIsolationWindow.Click += new System.EventHandler(this.btnIsolationWindow_Click);
             // 
+            // toolStripButtonShowAnnotations
+            // 
+            this.toolStripButtonShowAnnotations.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripButtonShowAnnotations.CheckOnClick = true;
+            this.toolStripButtonShowAnnotations.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
+            resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
+            this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
+            this.toolStripButtonShowAnnotations.CheckedChanged += new System.EventHandler(this.toolStripButtonShowAnnotations_CheckedChanged);
+            // 
+            // toolStripLabelPeakType
+            // 
+            this.toolStripLabelPeakType.Name = "toolStripLabelPeakType";
+            resources.ApplyResources(this.toolStripLabelPeakType, "toolStripLabelPeakType");
+            // 
+            // comboBoxPeakType
+            // 
+            this.comboBoxPeakType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxPeakType.Items.AddRange(new object[] {
+            resources.GetString("comboBoxPeakType.Items"),
+            resources.GetString("comboBoxPeakType.Items1")});
+            this.comboBoxPeakType.Name = "comboBoxPeakType";
+            resources.ApplyResources(this.comboBoxPeakType, "comboBoxPeakType");
+            // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showScanNumberContextMenuItem});
+            this.showScanNumberContextMenuItem,
+            this.showCollisionEnergyContextMenuItem,
+            this.showPeakAnnotationsContextMenuItem,
+            this.toolStripSeparator1});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
             // 
@@ -203,6 +240,24 @@
             this.showScanNumberContextMenuItem.Name = "showScanNumberContextMenuItem";
             resources.ApplyResources(this.showScanNumberContextMenuItem, "showScanNumberContextMenuItem");
             this.showScanNumberContextMenuItem.Click += new System.EventHandler(this.showScanNumberToolStripMenuItem_Click);
+            // 
+            // showIonTypesRanksToolStripMenuItem
+            // 
+            this.showPeakAnnotationsContextMenuItem.CheckOnClick = true;
+            this.showPeakAnnotationsContextMenuItem.Name = "showIonTypesRanksToolStripMenuItem";
+            resources.ApplyResources(this.showPeakAnnotationsContextMenuItem, "showIonTypesRanksToolStripMenuItem");
+            this.showPeakAnnotationsContextMenuItem.CheckedChanged += new System.EventHandler(this.showIonTypesRanksToolStripMenuItem_CheckedChanged);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // showCollisionEnergyContextMenuItem
+            // 
+            this.showCollisionEnergyContextMenuItem.Name = "showCollisionEnergyContextMenuItem";
+            resources.ApplyResources(this.showCollisionEnergyContextMenuItem, "showCollisionEnergyContextMenuItem");
+            this.showCollisionEnergyContextMenuItem.Click += new System.EventHandler(this.showCollisionEnergyToolStripMenuItem_Click);
             // 
             // GraphFullScan
             // 
@@ -240,7 +295,11 @@
         private System.Windows.Forms.ToolStripButton filterBtn;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
-
-
+        private System.Windows.Forms.ToolStripButton toolStripButtonShowAnnotations;
+        private System.Windows.Forms.ToolStripMenuItem showPeakAnnotationsContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripLabel toolStripLabelPeakType;
+        private System.Windows.Forms.ToolStripComboBox comboBoxPeakType;
+        private System.Windows.Forms.ToolStripMenuItem showCollisionEnergyContextMenuItem;
     }
 }

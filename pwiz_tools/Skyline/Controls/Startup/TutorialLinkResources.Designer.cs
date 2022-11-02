@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls.Startup {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TutorialLinkResources {
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf.
         /// </summary>
         internal static string AuditLog_pdf {
             get {
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-2_5.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/CustomReports-20_2.pdf.
         /// </summary>
         internal static string CustomReports_pdf {
             get {
@@ -124,7 +124,43 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-2_6.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/DdaSearchMs1Filtering.zip.
+        /// </summary>
+        internal static string DDASearch_zip {
+            get {
+                return ResourceManager.GetString("DDASearch_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-21_1.pdf.
+        /// </summary>
+        internal static string DDSearch_pdf {
+            get {
+                return ResourceManager.GetString("DDSearch_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-PASEF-21_1.pdf.
+        /// </summary>
+        internal static string DIA_PASEF_pdf {
+            get {
+                return ResourceManager.GetString("DIA_PASEF_pdf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/DIA-PASEF-small.zip.
+        /// </summary>
+        internal static string DIA_PASEF_zip {
+            get {
+                return ResourceManager.GetString("DIA_PASEF_zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-21_1.pdf.
         /// </summary>
         internal static string DIA_pdf {
             get {
@@ -142,7 +178,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-TTOF-20_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-TTOF-21_1.pdf.
         /// </summary>
         internal static string DIA_TTOF_pdf {
             get {
@@ -214,7 +250,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Skyline%20Hi-Res%20Metabolomics.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/HiResMetabolomics-20_1.pdf.
         /// </summary>
         internal static string HiResMetabolomics_pdf {
             get {
@@ -232,7 +268,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-3_7.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-20_2.pdf.
         /// </summary>
         internal static string IMSFiltering_pdf {
             get {
@@ -259,7 +295,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-2_5.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/iRT-20_1.pdf.
         /// </summary>
         internal static string iRT_pdf {
             get {
@@ -286,7 +322,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-1_4.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/LibraryExplorer-20_2.pdf.
         /// </summary>
         internal static string LibraryExplorer_pdf {
             get {
@@ -349,7 +385,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-2_5.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/MS1Filtering-21_1.pdf.
         /// </summary>
         internal static string MS1Filtering_pdf {
             get {
@@ -367,7 +403,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-1_4.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/OptimizeCE-20_2.pdf.
         /// </summary>
         internal static string OptimizeCE_pdf {
             get {
@@ -475,7 +511,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries-20_2.pdf.
         /// </summary>
         internal static string SmallMolLibraries_pdf {
             get {
@@ -493,7 +529,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/TargetedMSMS-2_5.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-21_1.pdf.
         /// </summary>
         internal static string TargetedMSMS_pdf {
             get {

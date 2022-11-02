@@ -437,14 +437,14 @@ bool MaxQuantReader::parseFile()
     string line;
     getline(tsvFile_, line);
     parseHeader(line);
+    getFilenamesAndLineCount();
     
-    Verbosity::debug("Collecting PSMs.");
-    collectPsms();
-
     vector<string> dirs, extensions;
     // look in parent and grandparent dirs in addition to cwd
     dirs.push_back("../");   
-    dirs.push_back("../../");
+    dirs.push_back("../../"); 
+    dirs.push_back("../../../"); 
+    dirs.push_back("../../../../");
     
     // look in common open and vendor formats
     extensions.push_back(".mz5");
@@ -460,6 +460,29 @@ bool MaxQuantReader::parseFile()
     extensions.push_back(".ms2");
     extensions.push_back(".mgf");
 
+    // check that files exist before starting the full PSM parsing
+    vector<string> missingFiles;
+    if (!preferEmbeddedSpectra_)
+        for (const auto& filePsmListPair : fileMap_)
+        {
+            try
+            {
+                setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+            }
+            catch (BlibException& e)
+            {
+                if (!bal::contains(e.what(), "searching for spectrum file"))
+                    throw;
+                missingFiles.emplace_back(filePsmListPair.first);
+            }
+        }
+
+    if (!missingFiles.empty())
+        throw BlibException(false, "%s\n\nRun with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", filesNotFoundMessage(missingFiles, extensions, dirs).c_str());
+
+    Verbosity::debug("Collecting PSMs.");
+    collectPsms();
+
     Verbosity::debug("Building tables.");
     // add psms by filename
     initSpecFileProgress(fileMap_.size());
@@ -472,23 +495,18 @@ bool MaxQuantReader::parseFile()
             setSpecFileName(filePsmListPair.first.c_str(), false);
         else
         {
-            try
-            {
-                setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
-                specFileName = bfs::path(getSpecFileName()).filename().string();
-            }
-            catch (BlibException& e)
-            {
-                if (bal::contains(e.what(), "Could not find spectrum file"))
-                    throw BlibException(e.hasFilename(), "%s; run with the -E flag to allow MaxQuant to use deisotoped/deconvoluted embedded spectra", e.what());
-                throw e;
-            }
+            setSpecFileName(filePsmListPair.first.c_str(), extensions, dirs);
+            specFileName = bfs::path(getSpecFileName()).filename().string();
         }
 
         buildTables(MAXQUANT_SCORE, specFileName, false);
     }
     
     return true;
+}
+
+vector<PSM_SCORE_TYPE> MaxQuantReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, MAXQUANT_SCORE);
 }
 
 bool MaxQuantReader::openFile()
@@ -556,6 +574,71 @@ void MaxQuantReader::parseHeader(string& line)
     sort(targetColumns_.begin(), targetColumns_.end());
 }
 
+/// Get filenames from all lines of msms.txt (for checking that they can be found before parsing PSMs) and get line count as well
+void MaxQuantReader::getFilenamesAndLineCount()
+{
+    string line;
+    bool parseSuccess = true;
+    string errorMsg;
+
+    streampos originalPos = tsvFile_.tellg();
+    lineCount_ = 1;
+    //ProgressIndicator progress(lineCount);
+    vector<MaxQuantPSM*> dummyPsmList;
+    string lastFilename;
+
+    try
+    {
+        while (getline(tsvFile_, line))
+        {
+            ++lineCount_;
+            auto lineBegin = line.begin();
+            if (targetColumns_[0].position_ > 0)
+            {
+                auto rawFileItrRange = bal::find_nth(line, "\t", targetColumns_[0].position_+1);
+                if (rawFileItrRange.empty())
+                    throw BlibException(false, ("unable to find raw file column in getFilenamesAndLineCount for line:\n" + line).c_str());
+                lineBegin = rawFileItrRange.begin() + 1;
+            }
+            LineParser lineParser(lineBegin, line.end(), separator_);
+            string filename = *lineParser.begin();
+            if (lastFilename.empty() || lastFilename != filename)
+            {
+                lastFilename = filename;
+                fileMap_.insert(make_pair(filename, dummyPsmList));
+            }
+        }
+        tsvFile_.clear();
+        tsvFile_.seekg(originalPos);
+    }
+    catch (BlibException& e)
+    {
+        parseSuccess = false;
+        errorMsg = e.what();
+    }
+    catch (std::exception& e)
+    {
+        parseSuccess = false;
+        errorMsg = e.what();
+    }
+    catch (string& s)
+    {
+        parseSuccess = false;
+        errorMsg = s;
+    }
+    catch (...)
+    {
+        parseSuccess = false;
+        errorMsg = "Unknown exception";
+    }
+
+    if (!parseSuccess)
+    {
+        throw BlibException(false, "%s caught at line %d",
+            errorMsg.c_str(), lineCount_);
+    }
+}
+
 /**
  * Read the tsv file and parse all psms.
  */
@@ -565,18 +648,13 @@ void MaxQuantReader::collectPsms()
     bool parseSuccess = true;
     string errorMsg;
 
-    // get file size and set progress
-    streampos originalPos = tsvFile_.tellg();
-    int lineCount = count(std::istreambuf_iterator<char>(tsvFile_),
-                          std::istreambuf_iterator<char>(), '\n') + 1;
-    tsvFile_.seekg(originalPos);
-    ProgressIndicator progress(lineCount);
+    ProgressIndicator progress(lineCount_);
 
     // read file
     while (!tsvFile_.eof())
     {
         getline(tsvFile_, line);
-        lineNum_++;
+        ++lineNum_;
 
         size_t colListIdx = 0;  // go through all target columns
         int lineColNumber = 0;  // compare to all file columns
@@ -682,7 +760,7 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
 
     try
     {
-        addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence);
+        addModsToVector(curMaxQuantPSM_->mods, entry.modifications, entry.modifiedSequence, entry.sequence);
     }
     catch (const MaxQuantWrongSequenceException& e)
     {
@@ -697,20 +775,8 @@ void MaxQuantReader::storeLine(MaxQuantLine& entry)
     addDoublesToVector(curMaxQuantPSM_->intensities, entry.intensities);
 
     // Save PSM
-    map< string, vector<MaxQuantPSM*> >::iterator mapAccess
-        = fileMap_.find(entry.rawFile);
-    // file not in map yet, add it
-    if (mapAccess == fileMap_.end())
-    {
-        vector<MaxQuantPSM*> tmpPsms;
-        tmpPsms.push_back(curMaxQuantPSM_);
-        fileMap_[entry.rawFile] = tmpPsms;
-    }
-    else
-    {
         fileMap_[entry.rawFile].push_back(curMaxQuantPSM_);
     }
-}
 
 /**
  * Take a string of semicolon separated doubles and add them to the vector.
@@ -731,12 +797,47 @@ void MaxQuantReader::addDoublesToVector(vector<double>& v, const string& valueLi
     }
 }
 
+void MaxQuantReader::addFixedMods(vector<SeqMod>& v, const string& sequence, const map< MaxQuantModification::MAXQUANT_MOD_POSITION, vector<const MaxQuantModification*> >& modsByPosition)
+{
+
+    // get fixed modifications by position
+    const vector<const MaxQuantModification*>& modsAnywhere = modsByPosition.find(MaxQuantModification::ANYWHERE)->second;
+    const vector<const MaxQuantModification*>& modsAnyNTerm = modsByPosition.find(MaxQuantModification::ANY_N_TERM)->second;
+    const vector<const MaxQuantModification*>& modsAnyCTerm = modsByPosition.find(MaxQuantModification::ANY_C_TERM)->second;
+    const vector<const MaxQuantModification*>& modsNotNTerm = modsByPosition.find(MaxQuantModification::NOT_N_TERM)->second;
+    const vector<const MaxQuantModification*>& modsNotCTerm = modsByPosition.find(MaxQuantModification::NOT_C_TERM)->second;
+
+    /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
+    vector<const MaxQuantModification*> modsProteinNTerm;
+    vector<const MaxQuantModification*> modsProteinCTerm;
+    */
+
+    for (const auto& mod : modsAnyNTerm) { if (mod->sites.empty()) v.insert(v.begin(), SeqMod(1, mod->massDelta)); }
+
+    // iterate over sequence
+    for (int i = 0; i < (int)sequence.length(); i++)
+    {
+        boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsAnywhere));
+        if (i == 0)
+            boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsAnyNTerm));
+        else if (i + 1 == sequence.length())
+            boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsAnyCTerm));
+
+        if (i > 0)
+            boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsNotNTerm));
+        if (i + 1 < sequence.length())
+            boost::range::insert(v, v.end(), getFixedMods(sequence[i], i + 1, modsNotCTerm));
+    }
+
+    for (const auto& mod : modsAnyCTerm) { if (mod->sites.empty()) v.emplace_back(sequence.length(), mod->massDelta); }
+}
+
 /**
  * Adds a SeqMod for each modification in the given modified sequence string of the form
  * "_I(ab)AMASEQ_". The modifications string contains the (comma separated) full names of
  * the modifications; the string "Unmodified" can mean no variable modifications are present.
  */
-void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence)
+void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modifications, string modSequence, const string& sequence)
 {
     bal::replace_all(modSequence, "pS", "S(ph)");
     bal::replace_all(modSequence, "pT", "T(ph)");
@@ -772,19 +873,7 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
         }
     }
 
-    // get fixed modifications by position
-    const vector<const MaxQuantModification*>& modsAnywhere = fixedModBank_.find(MaxQuantModification::ANYWHERE)->second;
-    const vector<const MaxQuantModification*>& modsAnyNTerm = fixedModBank_.find(MaxQuantModification::ANY_N_TERM)->second;
     const vector<const MaxQuantModification*>& modsAnyCTerm = fixedModBank_.find(MaxQuantModification::ANY_C_TERM)->second;
-    const vector<const MaxQuantModification*>& modsNotNTerm = fixedModBank_.find(MaxQuantModification::NOT_N_TERM)->second;
-    const vector<const MaxQuantModification*>& modsNotCTerm = fixedModBank_.find(MaxQuantModification::NOT_C_TERM)->second;
-    
-    /* Do not use since we don't know where the peptide is in relation to the Protein N-term/C-term
-    vector<const MaxQuantModification*> modsProteinNTerm;
-    vector<const MaxQuantModification*> modsProteinCTerm;
-    */
-
-    for (const auto& mod : modsAnyNTerm) { if (mod->sites.empty()) v.emplace_back(1, mod->massDelta); }
 
     // iterate over sequence
     int modsFound = 0;
@@ -816,23 +905,12 @@ void MaxQuantReader::addModsToVector(vector<SeqMod>& v, const string& modificati
                 throw BlibException(false, "Illegal character %c found in sequence %s (line %d)", 
                                     modSequence[i], modSequence.c_str(), lineNum_);
             }
-            // check for fixed mods
-            boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnywhere));
-            if (i == 0)
-                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnyNTerm));
-            else if (i + 1 == sequenceLength)
-                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsAnyCTerm));
-
-            if (i > 0)
-                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsNotNTerm));
-            if (i + 1 < sequenceLength)
-                boost::range::insert(v, v.end(), getFixedMods(modSequence[i], i + 1 - modsTotalLength, modsNotCTerm));
 
             break;
         }
     }
 
-    for (const auto& mod : modsAnyCTerm) { if (mod->sites.empty()) v.emplace_back(sequenceLength - modsTotalLength, mod->massDelta); }
+    addFixedMods(v, sequence, fixedModBank_);
 
     if (modsFound < (int)modNames.size())
     {
@@ -869,15 +947,8 @@ void MaxQuantReader::addLabelModsToVector(vector<SeqMod>& v, const string& rawFi
                                    "raw file '%s'.",
                                    labelingState, labels->labelingStates.size(), rawFile.c_str());
     }
-    const vector<const MaxQuantModification*>& labelMods = labels->labelingStates[labelingState].mods;
 
-    // iterate over sequence
-    for (int i = 0; i < (int)sequence.length(); i++)
-    {
-        // check for label mods
-        vector<SeqMod> sequenceLabelMods = getFixedMods(sequence[i], i + 1, labelMods);
-        v.insert(v.end(), sequenceLabelMods.begin(), sequenceLabelMods.end());
-    }
+    addFixedMods(v, sequence, labels->labelingStates[labelingState].modsByPosition);
 }
 
 /**

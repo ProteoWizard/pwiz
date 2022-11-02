@@ -135,7 +135,7 @@
     <value>13</value>
   </data>
   <data name="textIonMobility.ToolTip" xml:space="preserve">
-    <value>ドリフト時間予測値を無効にします</value>
+    <value>ライブラリイオン移動度値を無効にする</value>
   </data>
   <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
     <value>textIonMobility</value>
@@ -466,7 +466,7 @@
     <value>15</value>
   </data>
   <data name="textBoxCCS.ToolTip" xml:space="preserve">
-    <value>予測またはライブラリの衝突断面値を上書きする</value>
+    <value>ライブラリの衝突断面積値を無効にする</value>
   </data>
   <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
     <value>textBoxCCS</value>
@@ -493,7 +493,7 @@
     <value>19</value>
   </data>
   <data name="textBoxPrecursorCollisionEnergy.ToolTip" xml:space="preserve">
-    <value>予測された、またはライブラリの衝突エネルギー値を上書きすると、それ自体がトランジションレベルの明示的な値で上書きされることがあります。</value>
+    <value>予測された、またはライブラリの衝突エネルギー値を上書きすると、それ自体がトランジションレベルで表示された値で上書きされることがあります。</value>
   </data>
   <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Name" xml:space="preserve">
     <value>textBoxPrecursorCollisionEnergy</value>

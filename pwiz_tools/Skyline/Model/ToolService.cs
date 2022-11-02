@@ -28,16 +28,18 @@ using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model
@@ -100,7 +102,7 @@ namespace pwiz.Skyline.Model
                 viewSpec.Name));
             var writer = new StringWriter();
             if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer,
-                viewContext.GetCsvWriter()))
+                    TextUtil.SEPARATOR_CSV))
             {
                 return writer.ToString();
             }
@@ -204,7 +206,6 @@ namespace pwiz.Skyline.Model
                             nodePep,
                             nodeGroup,
                             (float) document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
-                            true,
                             out arrayChromInfo);
                         foreach (var transition in nodeGroup.Transitions)
                         {
@@ -222,7 +223,7 @@ namespace pwiz.Skyline.Model
                                     {
                                         continue;
                                     }
-                                    Color color = GraphChromatogram.COLORS_LIBRARY[iColor % GraphChromatogram.COLORS_LIBRARY.Count];
+                                    Color color = ColorScheme.CurrentColorScheme.TransitionColors[iColor % ColorScheme.CurrentColorScheme.TransitionColors.Count];
                                     iColor++;
                                     result.Add(new Chromatogram
                                     {
@@ -240,8 +241,7 @@ namespace pwiz.Skyline.Model
             }
 
             if (result.Count == 1)
-                result[0].Color = ChromGraphItem.ColorSelected;
-
+                result[0].Color = ColorScheme.ChromGraphItemSelected;
 
             return result.ToArray();
         }

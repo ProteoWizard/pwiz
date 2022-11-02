@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using AutoQCStarter.Properties;
 
 namespace AutoQCStarter
 {
@@ -236,7 +237,7 @@ namespace AutoQCStarter
 
         private static void ShowError(string message)
         {
-            MessageBox.Show(message, $"{APP_NAME} Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(message, string.Format(Resources.Program_AppName__0__Error, APP_NAME), MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private static void Log(string message)

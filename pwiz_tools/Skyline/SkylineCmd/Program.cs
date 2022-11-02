@@ -32,7 +32,16 @@ namespace pwiz.SkylineCmd
         static int Main(string[] args)
         {
             var argsList = args.ToList();
-            AddBufferWidth(argsList);
+            if (argsList.FirstOrDefault() == "--ui")
+            {
+                // If "--ui" is specified, remove it from the argument list
+                // This enables invoking Skyline's Main without any arguments to bring up the UI
+                argsList.RemoveAt(0);
+            }
+            else
+            {
+                AddBufferWidth(argsList);
+            }
 
             var preferredEncoding = GetPreferredEncoding(argsList);
             using (new EncodingManager(preferredEncoding))

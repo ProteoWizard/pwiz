@@ -19,15 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Model
 {
     /// <summary>
     /// Given a list of known targets, decides how to reversibly convert them to strings so they can
     /// be looked up by peptide sequence, name, accession number etc.
-    /// CONSIDER(bspratt) make this case insenstive? More useful for user intraction that way
+    /// CONSIDER(bspratt) make this case insensitive? More useful for user interaction that way
     /// </summary>
     public class TargetResolver
     {
@@ -68,7 +68,15 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var target in targets)
                 {
+                    // Also lookup by name
                     accessions.Add(new Tuple<string, Target>(GetTargetDisplayName(target), target));
+
+                    // And by small molecule encoding string
+                    var encoded = target.ToSerializableString();
+                    if (!string.IsNullOrEmpty(encoded))
+                    {
+                        accessions.Add(new Tuple<string, Target>(encoded, target));
+                    }
                 }
 
                 _targetsByName = accessions.ToLookup(a => a.Item1, a => a.Item2);

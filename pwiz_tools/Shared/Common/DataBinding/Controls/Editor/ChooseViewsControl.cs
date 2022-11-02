@@ -86,7 +86,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                         newGroups.Add(listViewGroup);
                         foreach (var viewSpec in ViewContext.GetViewSpecList(group.Id).ViewSpecs)
                         {
-                            bool validRowSource = null != ViewContext.GetViewInfo(new ViewName(group.Id, viewSpec.Name));
+                            bool validRowSource = ViewContext.CanDisplayView(viewSpec);
                             if (FilterRowSources && !validRowSource)
                             {
                                 continue;

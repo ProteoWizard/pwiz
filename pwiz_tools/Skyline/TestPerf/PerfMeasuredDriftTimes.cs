@@ -43,7 +43,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         [TestMethod] 
         public void MeasuredDriftValuesPerfTest()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/perftests/PerfMeauredDriftTimes.zip";
+            TestFilesZip = GetPerfTestDataURL(@"PerfMeauredDriftTimes.zip");
             TestFilesPersistent = new[] { "BSA_Frag_100nM_18May15_Fir_15-04-02.d", "Yeast_0pt1ug_BSA_50nM_18May15_Fir_15-04-01.d" }; // list of files that we'd like to unzip alongside parent zipFile, and (re)use in place
 
             RunFunctionalTest();

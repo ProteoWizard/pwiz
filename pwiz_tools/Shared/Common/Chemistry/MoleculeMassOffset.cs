@@ -70,23 +70,8 @@ namespace pwiz.Common.Chemistry
         public string ToString(string format, IFormatProvider formatProvider)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            if (Molecule.Count != 0)
-            {
-                if (Molecule.Values.Any(v => v < 0))
-                {
-                    var positiveMolecule = MoleculeFromEntries(Molecule.Where(entry => entry.Value > 0));
-                    var negativeMolecule = MoleculeFromEntries(Molecule.Where(entry => entry.Value < 0)
-                        .Select(entry => new KeyValuePair<string, int>(entry.Key, -entry.Value)));
-                    stringBuilder.Append(positiveMolecule);
-                    stringBuilder.Append(@"-");
-                    stringBuilder.Append(negativeMolecule);
-                }
-                else
-                {
-                    stringBuilder.Append(Molecule);
-                }
-            }
-
+            stringBuilder.Append(Molecule);
+            
             if (MonoMassOffset != 0 || AverageMassOffset != 0)
             {
                 if (Equals(MonoMassOffset, AverageMassOffset))

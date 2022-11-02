@@ -1,6 +1,6 @@
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This is a generic 'clang' toolset. Depending on the current system, it
 # forwards either to 'clang-linux' or 'clang-darwin' modules.
@@ -24,12 +24,12 @@ rule init ( * : * )
     }
     else if [ os.name ] = MACOSX
     {
-        toolset.using clang-darwin : 
+        toolset.using clang-darwin :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     else
     {
-        toolset.using clang-linux : 
+        toolset.using clang-linux :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
 }
@@ -55,7 +55,10 @@ rule init-cxxstd-flags ( toolset : condition * : version )
     local dialects = [ feature.values <cxxstd-dialect> ] ;
     dialects = [ set.difference $(dialects) : gnu iso ] ;
     local std ;
-    if [ version-ge $(version) : 3.5 ] { std = 1z ; }
+    if [ version-ge $(version) : 10.0 ] { std = 20 ; }
+    else if [ version-ge $(version) : 6.0 ] { std = 2a ; }
+    else if [ version-ge $(version) : 5.0 ] { std = 17 ; }
+    else if [ version-ge $(version) : 3.5 ] { std = 1z ; }
     else if [ version-ge $(version) : 3.4 ] { std = 14 ; }
     else if [ version-ge $(version) : 3.3 ] { std = 11 ; }
     else { std = 03 ; }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -268,8 +269,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show(this, Resources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
-                                                  Program.Name, MessageBoxButtons.YesNo);
+            DialogResult result = MultiButtonMsgDlg.Show(this, Resources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
+                MessageBoxButtons.YesNo);
 
             if (result == DialogResult.Yes)
             {
