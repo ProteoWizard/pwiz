@@ -258,9 +258,14 @@ namespace pwiz.Skyline.Model.Results
             // Only use the transitions currently enabled
             var transitionPointSets = chromInfo.TransitionPointSets.Where(
                 tp => nodeGroup.Transitions.Any(
-                    t => (t.Mz - (tp.ExtractionWidth ?? tolerance.Interval) / 2) <= tp.ProductMz &&
-                         (t.Mz + (tp.ExtractionWidth ?? tolerance.Interval) / 2) >= tp.ProductMz))
-                .ToArray();
+                    t =>
+                    {
+                        if (tp.ExtractionWidth != null)
+                            return new MzTolerance(tp.ExtractionWidth.Value).IsWithinTolerance(t.Mz, tp.ProductMz);
+                        else
+                            return tolerance.IsWithinTolerance(t.Mz, tp.ProductMz);
+                    }
+                )).ToArray();
 
             for (var msLevel = 1; msLevel <= 2; msLevel++)
             {

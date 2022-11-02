@@ -579,8 +579,7 @@ namespace pwiz.Skyline.Model
                 var monoisotopicMass = charge.MassFromMz(peak.Mz, MassType.Monoisotopic);
                 var averageMass = charge.MassFromMz(peak.Mz, MassType.Average);
 
-                if (!(peakAnnotation.Ion.MonoisotopicMass.Equals(monoisotopicMass,
-                          Settings.TransitionSettings.Instrument.IonMatchMzTolerance) ||
+                if (!(Settings.TransitionSettings.Instrument.IonMatchMzTolerance.IsWithinTolerance(peakAnnotation.Ion.MonoisotopicMass, monoisotopicMass) ||
                       Settings.TransitionSettings.Instrument.IonMatchMzTolerance.IsWithinTolerance(peakAnnotation.Ion.AverageMass, averageMass)))
                 {
 
