@@ -104,12 +104,12 @@ namespace pwiz.SkylineTestFunctional
             var specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
 
             IList <SpectrumSourceFileDetails> datafiles = specLibInfoDlg.GetGridView();
-            Assert.AreEqual(datafiles.Count, 5);
+            Assert.AreEqual(5, datafiles.Count );
             foreach (var file in datafiles)
             {
                 Assert.AreEqual(0, file.BestSpectrum);
                 Assert.AreEqual(0, file.MatchedSpectrum);
-                Assert.AreEqual(file.CutoffScores.Count, 0);
+                Assert.AreEqual(0, file.CutoffScores.Count);
             }
 
             OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
@@ -119,18 +119,18 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => libExplore.HasSelectedLibrary);
             specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
             datafiles = specLibInfoDlg.GetGridView();
-            Assert.AreEqual(datafiles.Count, 4);
-            Assert.AreEqual(datafiles[0].CutoffScores.Count, 1);
-            Assert.AreEqual(datafiles[0].MatchedSpectrum, 1);
-            Assert.AreEqual(datafiles[0].BestSpectrum, 1);
-            Assert.AreEqual(datafiles[1].CutoffScores.Count, 1);
-            Assert.AreEqual(datafiles[1].MatchedSpectrum, 10);
-            Assert.AreEqual(datafiles[1].BestSpectrum, 9);            
-            Assert.AreEqual(datafiles[1].CutoffScores.Count, 1);
-            Assert.AreEqual(datafiles[2].MatchedSpectrum, 3);
-            Assert.AreEqual(datafiles[2].BestSpectrum, 3);
-            Assert.AreEqual(datafiles[3].MatchedSpectrum, 1);
-            Assert.AreEqual(datafiles[3].BestSpectrum, 1);      
+            Assert.AreEqual(4, datafiles.Count);
+            Assert.AreEqual(1, datafiles[0].CutoffScores.Count);
+            Assert.AreEqual(1, datafiles[0].MatchedSpectrum);
+            Assert.AreEqual(1, datafiles[0].BestSpectrum);
+            Assert.AreEqual(1, datafiles[1].CutoffScores.Count);
+            Assert.AreEqual(10, datafiles[1].MatchedSpectrum);
+            Assert.AreEqual(9, datafiles[1].BestSpectrum);
+            Assert.AreEqual(3, datafiles[1].CutoffScores.Count);
+            Assert.AreEqual(3, datafiles[2].MatchedSpectrum);
+            Assert.AreEqual(3, datafiles[2].BestSpectrum);
+            Assert.AreEqual(1, datafiles[3].MatchedSpectrum);
+            Assert.AreEqual(1, datafiles[3].BestSpectrum);
             OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
             OkDialog(libExplore, libExplore.CancelDialog);
         }

@@ -304,13 +304,15 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         // ReSharper disable LocalizableElement
 
-                        // Query for the source files.  
-                        // The number of matching entries in the RefSpectra is "BestSpectra".
-                        // The number of entries in the RetentionTimes table is "MatchedSpectra".
-                        // Each of these numbers is subdivided by score type.
-                        // Also, select "ssf.*" because not all tables have a column "cutoffScore".
+                        // Query for the source files detail information.
+                        // If any of the first 3 columns are missing an exception is thrown,
+                        // and only the filenames get listed.
+                        // 1. The number of matching entries in the RefSpectra is "BestSpectra".
+                        // 2. The number of entries in the RetentionTimes table is "MatchedSpectra".
+                        // 3. The score type for the entry is joined from "ScoreTypes".
+                        // Also, select "ssf.*" because not all tables have a column "cutoffScore" or "idFileName".
                         select.CommandText =
-                            @"SELECT ssf.id, ssf.fileName, st.scoreType, rs.BestSpectra, rs.MatchedSpectra, ssf.idFileName, ssf.cutoffScore
+                            @"SELECT ssf.id, ssf.fileName, st.scoreType, rs.BestSpectra, rs.MatchedSpectra, ssf.*
                             FROM SpectrumSourceFiles ssf 
                             LEFT JOIN (SELECT rsInner.fileId, rsInner.scoreType AS scoreType, COUNT(DISTINCT rsInner.id) AS BestSpectra, (SELECT COUNT(*) AS MatchedSpectra FROM RetentionTimes RT WHERE RT.SpectrumSourceId = rsInner.fileId) AS MatchedSpectra 
                                 FROM RefSpectra rsInner GROUP BY rsInner.fileId, rsInner.scoreType) RS ON RS.fileId = ssf.id
@@ -319,16 +321,20 @@ namespace pwiz.Skyline.Model.Lib
                         using (SQLiteDataReader reader = select.ExecuteReader())
                         {
                             int icolFileName = GetColumnIndex(reader, @"fileName");
-                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");
-                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");
-                            int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");
-                            int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra");
-                            int icolScoreType = GetColumnIndex(reader, @"scoreType");
+                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");     // May be -1
+                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");   // May be -1
+                            int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");   // May be missing causing exception
+                            int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra"); // May be missing
+                            int icolScoreType = GetColumnIndex(reader, @"scoreType");       // May be missing
                             var seenScoreTypes = new HashSet<string>();
                             while (reader.Read())
                             {
                                 string filename = reader.GetString(icolFileName);
-                                string idFilename = icolIdFileName > 0 && !reader.IsDBNull(icolIdFileName) ? reader.GetString(icolIdFileName) : null;
+                                string idFilename = null;
+                                if (icolIdFileName > 0 && !reader.IsDBNull(icolIdFileName))
+                                {
+                                    idFilename = reader.GetString(icolIdFileName);
+                                }
                                 SpectrumSourceFileDetails sourceFileDetails;
                                 if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
                                 {
@@ -350,7 +356,7 @@ namespace pwiz.Skyline.Model.Lib
                                 {
                                     cutoffScore = Convert.ToDouble(reader.GetValue(icolCutoffScore));
                                 }
-                                if (!string.IsNullOrEmpty(scoreName) || cutoffScore.HasValue)
+                                if (!string.IsNullOrEmpty(scoreName))
                                     sourceFileDetails.CutoffScores[scoreName] = cutoffScore;
                             }
 
