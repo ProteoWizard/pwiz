@@ -565,7 +565,7 @@ namespace pwiz.Skyline.Model.Results
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
-            IonMobility = ionMobility;
+            IonMobility = ionMobility ?? IonMobilityFilter.EMPTY;
             Area = area;
             BackgroundArea = backgroundArea;
             Height = height;

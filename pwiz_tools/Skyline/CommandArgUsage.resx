@@ -123,6 +123,12 @@
   <data name="_add_library_path" xml:space="preserve">
     <value>Specify a spectral library to be added to the open document.</value>
   </data>
+  <data name="_ionmobility_library_create" xml:space="preserve">
+    <value>Add an ion mobility library to the open document, based on its currently loaded chromatograms.</value>
+  </data>
+  <data name="_ionmobility_library_name" xml:space="preserve">
+    <value>Name to give the ion mobility library in an –-ionmobility-library-create operation.</value>
+  </data>
   <data name="_batch_commands" xml:space="preserve">
     <value>Runs a file line by line treating each line like a SkylineRunner/Cmd input. Useful for automating the execution of multiple commands.  The open Skyline file remains active through all commands.</value>
   </data>
@@ -295,7 +301,7 @@
     <value>The name for the iRT calculator created during assay library import. (optional) The default name is the document base name.</value>
   </data>
   <data name="_irt_database_path" xml:space="preserve">
-    <value>The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if –irt-standards-group-name or –irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb</value>
+    <value>The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if -–irt-standards-group-name or -–irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb</value>
   </data>
   <data name="_irt_standards_file" xml:space="preserve">
     <value>The path to a separate assay library containing the iRT standards to be applied to an imported assay library. (optional)</value>
@@ -386,6 +392,9 @@
   </data>
   <data name="CommandArgs_GROUP_IMPORT_Importing_results_replicates" xml:space="preserve">
     <value>Importing results replicates</value>
+  </data>
+  <data name="CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library" xml:space="preserve">
+    <value>Creating an ion mobility library</value>
   </data>
   <data name="CommandArgs_GROUP_REMOVE_Removing_results_replicates" xml:space="preserve">
     <value>Removing results replicates</value>

@@ -1116,6 +1116,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     SetGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
             }
+            else if (CurveCount == 1 && CurveList[0].NPts == 1 && CurveList[0].Points[0].X == 0)
+            {
+                string message = null;
+                switch (DisplayType)
+                {
+                    case DisplayTypeChrom.base_peak:
+                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram;
+                        break;
+                    case DisplayTypeChrom.tic:
+                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
+                        break;
+                }
+                SetGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
+            }
             else
             {
                 _graphHelper.FinishedAddingChromatograms(new[] {firstBestPeak, lastBestPeak}, false);
@@ -2466,10 +2480,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroupIds)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
-                                      (_arrayChromInfo != null &&
-                                       _arrayChromInfo.Length > 0 &&
-                                       _arrayChromInfo[0].Length > 0 &&
-                                       _arrayChromInfo[0][0].TextId == Settings.Default.ShowQcTraceName);
+                                      _arrayChromInfo?[0]?[0].TextId == Settings.Default.ShowQcTraceName;
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) &&
                 _extractor == extractor &&

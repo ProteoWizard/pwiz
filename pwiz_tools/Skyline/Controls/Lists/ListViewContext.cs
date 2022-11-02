@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,13 +24,15 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.Skyline.Model.Lists
+namespace pwiz.Skyline.Controls.Lists
 {
     public class ListViewContext : SkylineViewContext, INewRowHandler
     {

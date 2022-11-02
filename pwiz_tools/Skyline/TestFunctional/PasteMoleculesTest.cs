@@ -57,12 +57,7 @@ namespace pwiz.SkylineTestFunctional
             string[] columnOrder)
         {
             var allErrorText = string.Empty;
-            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
-                !clipText.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
-            {
-                clipText = clipText.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
-            }
-            clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            clipText = ToLocalText(clipText);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = clipText);
 
@@ -100,6 +95,18 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(windowDlg, windowDlg.CancelDialog);
             }
             WaitForClosedForm(transitionDlg);
+        }
+
+        private static string ToLocalText(string text)
+        {
+            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
+                !text.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
+            {
+                text = text.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
+            }
+
+            text = text.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            return text;
         }
 
         const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
@@ -980,56 +987,69 @@ namespace pwiz.SkylineTestFunctional
         private void TestIrregularColumnCounts()
         {
             var header = GetAminoAcidsTransitionListText(out var textCSV) + "\n";
+            var lineEnd = @",-1,3";
 
-            for (var loop = 0; loop < 2; loop++)
+            TestIrregularColumnCountCases(textCSV, lineEnd, false);
+
+            // Now check again when the anomaly is past the end of the lines that get shown to the user
+            textCSV = textCSV.Replace(header, string.Empty);
+            var chunk = textCSV.Replace(lineEnd, @",-2,4").Split('\n');
+            var bigText = header;
+            int lineCount = 1;
+            while (lineCount < ImportTransitionListColumnSelectDlg.N_DISPLAY_LINES)
             {
-                var docOrig = SkylineWindow.Document;
-                TestError(textCSV, null, null); // That should just work
-                WaitForDocumentChange(docOrig);
-                NewDocument();
-
-                // Now see what happens when we remove the trailing field in the header
-                var shortHeader =
-                    textCSV.Replace(@"," + SmallMoleculeTransitionListColumnHeaders.rtPrecursor, string.Empty);
-                AssertEx.AreNotEqual(shortHeader, textCSV, "did something change in the test code?");
-                docOrig = SkylineWindow.Document;
-                TestError(shortHeader, null, null); 
-                WaitForDocumentChange(docOrig);
-                NewDocument();
-
-                // Now see what happens when we remove the trailing field in a data line (so fewer columns in line than in header)
-                var lineEnd = @",-1,3";
-                var shortData = textCSV.Replace(lineEnd, @",-1");
-                AssertEx.AreNotEqual(shortData, textCSV, "did something change in the test code?");
-                docOrig = SkylineWindow.Document;
-                TestError(shortData, null, null);
-                WaitForDocumentChange(docOrig);
-                NewDocument();
-
-                // Now see what happens when we add an extra trailing field in a data line (so more columns in line than in header)
-                var longData = textCSV.Replace(lineEnd, lineEnd+@",paintball");
-                AssertEx.AreNotEqual(longData, textCSV, "did something change in the test code?");
-                docOrig = SkylineWindow.Document;
-                TestError(longData, null, null);
-                WaitForDocumentChange(docOrig);
-                NewDocument();
-
-                if (loop == 0)
+                foreach (var lineText in chunk.Where(l => !string.IsNullOrEmpty(l)))
                 {
-                    // Now check all that when the anomaly is well past the 100 or so lines that we normally show
-                    textCSV = textCSV.Replace(header, string.Empty);
-                    var chunk = textCSV.Replace(lineEnd, @",-2,4").Split('\n');
-                    var bigText = header;
-                    for (var i = 0; i++ < ImportTransitionListColumnSelectDlg.N_DISPLAY_LINES;)
-                    {
-                        foreach (var line in chunk.Where(l => !string.IsNullOrEmpty(l)))
-                        {
-                            bigText += i.ToString() + line + "\n";
-                        }
-                    }
-                    textCSV = bigText + textCSV;
+                    bigText += lineCount + lineText + "\n";
+                    lineCount++;
                 }
             }
+            textCSV = bigText + textCSV;
+
+            TestIrregularColumnCountCases(textCSV, lineEnd, true);
+        }
+
+        private void TestIrregularColumnCountCases(string textCSV, string lineEnd, bool withDsvReaderError)
+        {
+            var docOrig = SkylineWindow.Document;
+            TestError(textCSV, null, null); // That should just work
+            WaitForDocumentChange(docOrig);
+            NewDocument();
+
+            // Now see what happens when we remove the trailing field in the header
+            var shortHeader =
+                textCSV.Replace(@"," + SmallMoleculeTransitionListColumnHeaders.rtPrecursor, string.Empty);
+            AssertEx.AreNotEqual(shortHeader, textCSV, "did something change in the test code?");
+            docOrig = SkylineWindow.Document;
+            TestError(shortHeader, null, null);
+            WaitForDocumentChange(docOrig);
+            NewDocument();
+
+            // Now see what happens when we remove the trailing field in a data line (so fewer columns in line than in header)
+            var shortData = textCSV.Replace(lineEnd, @",-1");
+            AssertEx.AreNotEqual(shortData, textCSV, "did something change in the test code?");
+            docOrig = SkylineWindow.Document;
+            TestError(shortData, null, null);
+            WaitForDocumentChange(docOrig);
+            NewDocument();
+
+            // Now see what happens when we add an extra trailing field in a data line (so more columns in line than in header)
+            const string suffixField = @",paintball";
+            var longData = textCSV.Replace(lineEnd, lineEnd + suffixField);
+            AssertEx.AreNotEqual(longData, textCSV, "did something change in the test code?");
+            docOrig = SkylineWindow.Document;
+            // When the user can't see the field to use in making column decisions, an error is shown
+            string expectedError = withDsvReaderError ? GetDsvReaderError(longData, suffixField) : null;
+            TestError(longData, expectedError, null);
+            if (expectedError == null)
+                WaitForDocumentChange(docOrig);
+            NewDocument();
+        }
+
+        private static string GetDsvReaderError(string longData, string suffixField)
+        {
+            var lineText = ToLocalText(longData.Split('\n').First(l => l.EndsWith(suffixField)));
+            return string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_, lineText, 12, 11);
         }
 
         private void TestToolServiceAccess()
@@ -1846,7 +1866,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 // Test serialization of explicit values
-                pastedDoc = AssertEx.Serializable(pastedDoc, TestDirectoryName, SkylineVersion.CURRENT); 
+                pastedDoc = AssertEx.Serializable(pastedDoc, TestContext.GetTestResultsPath(), SkylineVersion.CURRENT); 
             }
             NewDocument();
 
@@ -1855,7 +1875,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
         {
             // Write out a transition list
-            string csvPath = TestContext.GetTestPath(outputName);
+            string csvPath = TestFilesDir.GetTestPath(outputName);
             string csvExpectedPath = TestFilesDir.GetTestPath(expectedName);
             // Open Export Method dialog, and set method to scheduled or standard.
             var exportMethodDlg =
