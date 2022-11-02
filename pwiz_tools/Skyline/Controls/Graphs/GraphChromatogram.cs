@@ -3761,8 +3761,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
                                           PeakIdentification? identified,
-                                          PeakBoundsChangeType changeType,
-                                          bool syncGeneratedChange = false)
+                                          PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
             Transition = transition;
@@ -3770,7 +3769,6 @@ namespace pwiz.Skyline.Controls.Graphs
             EndTime = endTime;
             Identified = identified;
             ChangeType = changeType;
-            SyncGeneratedChange = syncGeneratedChange;
         }
 
         public Transition Transition { get; private set; }
@@ -3779,7 +3777,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public PeakIdentification? Identified { get; private set; }
         public bool IsIdentified { get { return Identified.HasValue && Identified != PeakIdentification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
-        public bool SyncGeneratedChange { get; }
     }
 
     public sealed class ChangedMultiPeakBoundsEventArgs : EventArgs
