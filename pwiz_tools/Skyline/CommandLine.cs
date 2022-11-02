@@ -3223,7 +3223,7 @@ namespace pwiz.Skyline
                     !AgilentUltivoMethodExporter.IsMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_, args.TemplateFile);
-                    return;
+                    return false;
                 }
             }
 
