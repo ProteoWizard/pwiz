@@ -6211,6 +6211,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Reports could not be imported from {0}.
+        /// </summary>
+        public static string CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Success! Imported Reports from {0}.
         /// </summary>
         public static string CommandLine_ImportSkyr_Success__Imported_Reports_from__0_ {
@@ -27903,87 +27912,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineVersion_GetCurrentVersionName_Latest___0__ {
             get {
                 return ResourceManager.GetString("SkylineVersion_GetCurrentVersionName_Latest___0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 19.1.
-        /// </summary>
-        public static string SkylineVersion_V19_1_Skyline_19_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V19_1_Skyline_19_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 20.1.
-        /// </summary>
-        public static string SkylineVersion_V20_1_Skyline_20_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V20_1_Skyline_20_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 20.2.
-        /// </summary>
-        public static string SkylineVersion_V20_2_Skyline_20_2 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V20_2_Skyline_20_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 21.1.
-        /// </summary>
-        public static string SkylineVersion_V21_1_Skyline_21_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V21_1_Skyline_21_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 21.2.
-        /// </summary>
-        public static string SkylineVersion_V21_2_Skyline_21_2 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V21_2_Skyline_21_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 3.6.
-        /// </summary>
-        public static string SkylineVersion_V3_6_Skyline_3_6 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V3_6_Skyline_3_6", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 3.7.
-        /// </summary>
-        public static string SkylineVersion_V3_7_Skyline_3_7 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V3_7_Skyline_3_7", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 4.1.
-        /// </summary>
-        public static string SkylineVersion_V4_1_Skyline_4_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V4_1_Skyline_4_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 4.2.
-        /// </summary>
-        public static string SkylineVersion_V4_2_Skyline_4_2 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V4_2_Skyline_4_2", resourceCulture);
             }
         }
         

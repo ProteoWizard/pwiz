@@ -1566,5 +1566,25 @@ namespace pwiz.SkylineTest
                 Assert.IsNotNull(resourceStream, "Unable to find schema document {0} for Skyline Version {1}", schemaFileName, skylineVersion);
             }
         }
+
+        /// <summary>
+        /// Verifies that the list returned by <see cref="SkylineVersion.SupportedForSharing"/> contains
+        /// the most recent release version.
+        /// </summary>
+        [TestMethod]
+        public void TestMostRecentReleaseFormatIsSupportedForSharing()
+        {
+            var releaseVersions = SkylineVersion.SupportedForSharing()
+                .Where(version => version.Build == 0 && version.Revision == 0)
+                .OrderBy(version=>Tuple.Create(version.MajorVersion, version.MinorVersion)).ToList();
+            var mostRecentRelease = releaseVersions.Last();
+            if (mostRecentRelease.MajorVersion < Install.MajorVersion ||
+                mostRecentRelease.MajorVersion == Install.MajorVersion &&
+                mostRecentRelease.MinorVersion < Install.MinorVersion)
+            {
+                Assert.Fail("SkylineVersion.SupportedForSharing needs to include something at least as new as Skyline {0}.{1}", 
+                    Install.MajorVersion, Install.MinorVersion);
+            }
+        }
     }
 }
