@@ -1866,7 +1866,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 // Test serialization of explicit values
-                pastedDoc = AssertEx.Serializable(pastedDoc, TestContext.TestRunResultsDirectory, SkylineVersion.CURRENT); 
+                pastedDoc = AssertEx.Serializable(pastedDoc, TestContext.GetTestResultsPath(), SkylineVersion.CURRENT); 
             }
             NewDocument();
 

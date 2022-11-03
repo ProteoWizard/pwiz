@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional

@@ -369,7 +369,6 @@ namespace pwiz.SkylineTestUtil
         [TestInitialize]
         public void MyTestInitialize()
         {
-
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
 
@@ -383,6 +382,14 @@ namespace pwiz.SkylineTestUtil
 
             Settings.Init();
 
+            // DesiredCleanupLevel is set in TestRunner, but we need it to work for VS Test also for code
+            // coverage builds
+            if (IsMsTestRun)
+            {
+                var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
+                if (isTeamCity)
+                    DesiredCleanupLevel = DesiredCleanupLevel.all;
+            }
             STOPWATCH.Restart();
             Initialize();
         }
@@ -448,7 +455,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             // Audit logging can create this folder with no other association
-            TestFilesDir.CheckForFileLocks(TestContext.TestRunResultsDirectory,
+            TestFilesDir.CheckForFileLocks(TestContext.GetTestResultsPath(),
                 DesiredCleanupLevel == DesiredCleanupLevel.all);
         }
 

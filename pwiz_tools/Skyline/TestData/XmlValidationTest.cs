@@ -49,10 +49,10 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestCurrentXmlFormat()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            var doc08Path = testFilesDir.GetTestPath("Study7_for_xml_validation.sky");
-            var docCurrentPath = testFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
+            var doc08Path = TestFilesDir.GetTestPath("Study7_for_xml_validation.sky");
+            var docCurrentPath = TestFilesDir.GetTestPath("Study7_for_xml_validation_current.sky");
 
             // Test schema validation.
             var assembly = Assembly.GetAssembly(typeof(AssertEx));
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestData
             TestPeptideModifications(docCurrentPath);
 
             // Import a results file and check instrument information written out to the xml document.
-            var resultsPath = testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.mzML");
+            var resultsPath = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01.mzML");
             TestInstrumentInfo(resultsPath, docCurrentPath);
         }
 
@@ -311,10 +311,10 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestModificationsXml()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            var doc08Path = testFilesDir.GetTestPath("mods_test_08.sky");
-            var docCurrentPath = testFilesDir.GetTestPath("mods_test_current.sky");
+            var doc08Path = TestFilesDir.GetTestPath("mods_test_08.sky");
+            var docCurrentPath = TestFilesDir.GetTestPath("mods_test_current.sky");
 
             var doc08 = ResultsUtil.DeserializeDocument(doc08Path);
             Assert.IsNotNull(doc08);
