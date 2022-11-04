@@ -838,7 +838,7 @@ namespace pwiz.SkylineTestFunctional
                 out TransitionGroupDocNode nodeGroup)
             {
                 Assert.AreEqual(1, document.PeptideGroupCount);
-                nodePep = document.Peptides.FirstOrDefault(nodePep => nodePep.ModifiedSequence.Equals(seq));
+                nodePep = document.Peptides.FirstOrDefault(pep => pep.ModifiedSequence.Equals(seq));
                 Assert.IsNotNull(nodePep, $"Peptide {seq} not found.");
                 nodeGroup = nodePep.TransitionGroups.FirstOrDefault(nodeTranGroup =>
                     nodeTranGroup.PrecursorCharge == charge && Math.Abs(nodeTranGroup.PrecursorMz - mz) < 0.001);
