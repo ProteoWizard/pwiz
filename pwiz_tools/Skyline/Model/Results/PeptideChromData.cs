@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Linq;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
