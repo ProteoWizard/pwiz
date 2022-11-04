@@ -33,9 +33,9 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void GenerateDecoysTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\DecoysTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"Test\DecoysTest.zip");
 
-            string docPath = testFilesDir.GetTestPath("SimpleDecoys.sky");
+            string docPath = TestFilesDir.GetTestPath("SimpleDecoys.sky");
             SrmDocument simpleDecoysDoc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(simpleDecoysDoc, 0, 1, 18, 18, 56);
 
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTest
                 newDecoysDoc.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy));
 
             // MS1 document with precursors and variable modifications, shuffled
-            docPath = testFilesDir.GetTestPath("Ms1FilterTutorial.sky");
+            docPath = TestFilesDir.GetTestPath("Ms1FilterTutorial.sky");
             SrmDocument variableDecoysDoc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(variableDecoysDoc, 0, 11, 50, 51, 153);
             numDecoys = variableDecoysDoc.PeptideCount;
@@ -69,7 +69,7 @@ namespace pwiz.SkylineTest
             while (true)
             {
                 // As this is random we may need to make a few attempts before we get the values we need
-                SrmDocument doc = ResultsUtil.DeserializeDocument(testFilesDir.GetTestPath("precursor_decoy_test.sky"));
+                SrmDocument doc = ResultsUtil.DeserializeDocument(TestFilesDir.GetTestPath("precursor_decoy_test.sky"));
                 AssertEx.IsDocumentState(doc, null, 1, 1, 2, 6);
                 numDecoys = 2;
                 var decoysRandom = refineSettings.GenerateDecoys(doc, numDecoys, DecoyGeneration.ADD_RANDOM);
@@ -79,7 +79,6 @@ namespace pwiz.SkylineTest
                                                      x.Transition.DecoyMassShift < Transition.MIN_PRODUCT_DECOY_MASS_SHIFT)))
                     break;
             }
-
         }
 
         private static void ValidateDecoys(SrmDocument document, SrmDocument decoysDoc, bool modifiesSequences)
