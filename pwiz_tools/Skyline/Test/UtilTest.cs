@@ -306,13 +306,15 @@ namespace pwiz.SkylineTest
                 // NOTE: This takes seconds because the cleanup code uses TryTwice()
                 const string fileName = "DocWithLibrary.sky";
                 string filePath = testFilesDir.GetTestPath(fileName);
-                using (new StreamReader(filePath))
+                if (!Install.IsRunningOnWine)
                 {
-                    // TODO: Restore these tests once we have a way to determine running on Wine
-                    // DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
-                    // AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
-                    // DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
-                    // AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                    using (new StreamReader(filePath))
+                    {
+                        DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                        DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                    }
                 }
                 // Now test successful cleanup
                 DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
