@@ -6988,9 +6988,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
-    <value>No results found for the precursor {0} in the file {1}.</value>
-  </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
     <value>Fraction of Peak Groups</value>
   </data>
