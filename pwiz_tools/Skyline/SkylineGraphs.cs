@@ -1125,10 +1125,9 @@ namespace pwiz.Skyline
 
                 precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
                 menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
                 menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
 
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
                 ranksContextMenuItem.Checked = set.ShowRanks;
                 menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
                 if (control.ControlType == SpectrumControlType.LibraryMatch)
@@ -1141,29 +1140,16 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
                 observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
                 menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+                massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
                 duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
                 menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
             }
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
-            ranksContextMenuItem.Checked = set.ShowRanks;
-            menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            if (control?.ControlType == SpectrumControlType.LibraryMatch)
-            {
-                scoreContextMenuItem.Checked = set.ShowLibraryScores;
-                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            else {
+                menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+                massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
             }
-            ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
-            menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
-            observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
-            menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
-
-            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
-            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
-
-            duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
-            menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
