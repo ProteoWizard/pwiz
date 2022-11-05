@@ -11901,4 +11901,7 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
 	  <value>Unknown mass</value>
   </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+	  <value>Ignore explicit peak boundaries</value>
+  </data>
 </root>

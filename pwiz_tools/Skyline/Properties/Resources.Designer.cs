@@ -18491,6 +18491,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ignore explicit peak boundaries.
+        /// </summary>
+        public static string LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries {
+            get {
+                return ResourceManager.GetString("LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Spectrum count.
         /// </summary>
         public static string LibrarySpec_PEP_RANK_COPIES_Spectrum_count {
