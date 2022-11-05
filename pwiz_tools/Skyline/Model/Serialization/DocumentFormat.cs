@@ -99,6 +99,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_12 = new DocumentFormat(22.12); // ignore_sim_scans added
         public static readonly DocumentFormat VERSION_22_13 = new DocumentFormat(22.13); // protein_group and protein_association added
         public static readonly DocumentFormat PROTEIN_GROUPS = VERSION_22_13;
+        public static readonly DocumentFormat VERSION_22_2 = new DocumentFormat(22.2); // Release format
         public static readonly DocumentFormat VERSION_22_21 = new DocumentFormat(22.21); // skewness and kurtosis
         public static readonly DocumentFormat CURRENT = VERSION_22_21;
 
