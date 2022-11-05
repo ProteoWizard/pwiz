@@ -658,11 +658,12 @@ bool DiaNNSpecLibReader::parseFile()
                 if (processedRuns.count(run) > 0)
                     continue;
                 currentRun = run;
+                setSpecFileName(run, false);  // make status output report the current spec file
             }
             else if (!bal::equals(currentRun.c_str(), run))
             {
                 // skip rows not from the current runs being processed; another loop iteration will be required
-                hasSkippedRuns = processedRuns.count(run) == 0;
+                hasSkippedRuns = hasSkippedRuns || processedRuns.count(run) == 0;
                 continue;
             }
 

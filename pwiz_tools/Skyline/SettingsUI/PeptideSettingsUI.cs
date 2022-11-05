@@ -1702,7 +1702,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     for (int i = 0; i < Combo.Items.Count; i++)
                     {
-                        if (Equals(value, ((TypedModifications)Combo.Items[i]).LabelType.Name))
+                        if (Combo.Items[i] is TypedModifications && // Watch out for "Edit List"
+                            Equals(value, ((TypedModifications)Combo.Items[i]).LabelType.Name))
                         {
                             Combo.SelectedIndex = i;
                             break;
@@ -1722,7 +1723,8 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     for (int i = 1; i < ComboIS.Items.Count; i++)
                     {
-                        if (Equals(value, ((IsotopeLabelType)ComboIS.Items[i]).Name))
+                        if (ComboIS.Items[i] is IsotopeLabelType && // Watch out for "Edit List"
+                            Equals(value, ((IsotopeLabelType)ComboIS.Items[i]).Name))
                         {
                             ComboIS.SelectedIndex = i;
                             break;

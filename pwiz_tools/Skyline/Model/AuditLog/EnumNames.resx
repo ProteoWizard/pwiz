@@ -658,15 +658,15 @@
     <value>Removed (peptides must be unique to a single protein group)</value>
   </data>
   <data name="RelativeRT_Matching" xml:space="preserve">
-	<value>Matching</value>
+    <value>Matching</value>
   </data>
-	<data name="RelativeRT_Overlapping" xml:space="preserve">
-	<value>Overlapping</value>
+  <data name="RelativeRT_Overlapping" xml:space="preserve">
+    <value>Overlapping</value>
   </data>
   <data name="RelativeRT_Preceding" xml:space="preserve">
-	<value>Preceding</value>
+    <value>Preceding</value>
   </data>
   <data name="RelativeRT_Unknown" xml:space="preserve">
-	<value>Unknown</value>
+    <value>Unknown</value>
   </data>
 </root>

@@ -89,6 +89,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
 // ReSharper restore InconsistentNaming
 
+    public class DefaultValuesRelativeRtMatching : DefaultValues
+    {
+        protected override IEnumerable<object> _values
+        {
+            get { yield return RelativeRT.Matching; }
+        }
+    }
+
+
     /// <summary>
     /// Represents a document-wide  or explicit static modification that applies
     /// to all amino acids of a specific type or a single amino acid, or all peptides in the
@@ -246,7 +255,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        [Track]
+        [Track(defaultValues: typeof(DefaultValuesRelativeRtMatching))]
         public RelativeRT RelativeRT { get; private set; }
 
         [TrackChildren]

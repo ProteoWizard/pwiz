@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             _documentChangeListener = new DocumentChangeListener(this);
             SkylineWindow = skylineWindow;
-            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = new SkylineWindowDataSchema(skylineWindow);
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _candidatePeakGroups = new List<CandidatePeakGroup>();
             _bindingList = new BindingList<CandidatePeakGroup>(_candidatePeakGroups);

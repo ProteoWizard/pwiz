@@ -23,6 +23,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.Model;
@@ -300,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void NewReport()
         {
-            var dataSchema = new SkylineDataSchema(DocumentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var dataSchema = SkylineWindowDataSchema.FromDocumentContainer(DocumentContainer);
             var viewContext = new DocumentGridViewContext(dataSchema) { EnablePreview = true };
             var newView = viewContext.NewView(this, PersistedViews.MainGroup);
             if (newView != null)
