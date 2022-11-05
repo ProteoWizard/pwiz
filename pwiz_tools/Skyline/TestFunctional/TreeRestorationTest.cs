@@ -60,9 +60,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     SkylineWindow.NewDocument();
                     SetCurrentState();
-                    SkylineWindow.SaveDocument(TestContext.GetTestPath("blank.sky"));
+                    SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("blank.sky"));
                     // reload file from persistent string
-                    SkylineWindow.OpenFile(TestContext.GetTestPath("blank.sky"));
+                    SkylineWindow.OpenFile(TestFilesDir.GetTestPath("blank.sky"));
                     CompareStates();
                 });
 

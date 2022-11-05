@@ -363,7 +363,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (DisplayedMirrorSpectrum != null)
                     maxIntensity = Math.Max(maxIntensity, DisplayedMirrorSpectrum.Intensities.Max());
-
+                if (maxIntensity == 0)
+                {
+                    // Prevent Scale.Max and Scale.Min being set to the same value because it makes the entire chart disappear
+                    maxIntensity = 1;
+                }
                 maxIntensity *= YMAX_SCALE;
 
                 GraphPane.YAxis.Scale.Max = DisplayedSpectrum == null ? 0.0 : maxIntensity;
@@ -577,12 +581,14 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
+                // Return null if toolbar not visible or no mirror selected.
+                // The spectrum index is one minus the selected index in the combobox, since the first item is empty (i.e. no mirror).
+                var spectrumIndex = comboMirrorSpectrum.SelectedIndex - 1;
+                if (!toolBar.Visible || spectrumIndex < 0)
+                    return null;
+
                 var spectra = SelectedPrecursor?.Spectra ?? new List<SpectrumDisplayInfo>();
-                if (spectra.Count == 1)
-                    return spectra[0];
-                if (spectra.Count > 1 && comboMirrorSpectrum.SelectedIndex >= 0)
-                    return spectra[comboMirrorSpectrum.SelectedIndex];
-                return null;
+                return spectra.Count > 0 ? spectra[spectrumIndex] : null;
             }
         }
 

@@ -6988,9 +6988,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
-    <value>No results found for the precursor {0} in the file {1}.</value>
-  </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
     <value>Fraction of Peak Groups</value>
   </data>
@@ -8903,9 +8900,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>Developer Build</value>
   </data>
-  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
-    <value>Skyline 3.6</value>
-  </data>
   <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
     <value>Measured Time ({0})</value>
   </data>
@@ -9225,9 +9219,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_" xml:space="preserve">
     <value>Are you sure you want to delete these {0} transitions?</value>
     <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
-  </data>
-  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
-    <value>Skyline 3.7</value>
   </data>
   <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
     <value>Import Assay Library</value>
@@ -9682,9 +9673,6 @@ Recognized isotopes include: {2}</value>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone.</value>
   </data>
-  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
-    <value>Skyline 4.1</value>
-  </data>
   <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
     <value>{0} Molecules</value>
   </data>
@@ -10037,9 +10025,6 @@ Recognized isotopes include: {2}</value>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} is not a valid Full Scan Acquisition Method</value>
   </data>
-  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
-    <value>Skyline 4.2</value>
-  </data>
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>Embedded</value>
   </data>
@@ -10276,9 +10261,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   </data>
   <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
     <value>No corresponding QC chromatogram found</value>
-  </data>
-  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
-    <value>Skyline 19.1</value>
   </data>
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>Error: Failed saving to the user configuration file.</value>
@@ -10615,9 +10597,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
-  </data>
-  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
-    <value>Skyline 20.1</value>
   </data>
   <data name="RefineDlg_MSLevel_1" xml:space="preserve">
     <value>1</value>
@@ -11018,9 +10997,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>Scheduling failure (no targets?)</value>
-  </data>
-  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
-    <value>Skyline 20.2</value>
   </data>
   <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames" xml:space="preserve">
     <value>Concurrent frames</value>
@@ -11505,9 +11481,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
     <value>These filters cannot be applied as they would result in an empty transition list.</value>
   </data>
-  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
-    <value>Skyline 21.1</value>
-  </data>
   <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
     <value>The SureQuant acquisition method requires "Triggered Chromatogram Extraction". Unchecking this option will switch to the PRM acquisition method. Do you want to continue?</value>
   </data>
@@ -11759,9 +11732,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>Are you sure you want to continue?</value>
   </data>
-  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
-    <value>Skyline 21.2</value>
-  </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
     <value>Opening database</value>
   </data>
@@ -11884,9 +11854,15 @@ If you do not have the original file, you may build the library with embedded sp
       <value>No MS1 spectra found in TIC chromatogram</value>
   </data>
   <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
-	  <value>Creating ion mobility library "{0}" in "{1}"...</value>
+      <value>Creating ion mobility library "{0}" in "{1}"...</value>
   </data>
   <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
-	  <value>Unable to determine format of delimiter separated value file</value>
+      <value>Unable to determine format of delimiter separated value file</value>
+  </data>
+  <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
+      <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+      <value>Error: Reports could not be imported from {0}</value>
   </data>
 </root>

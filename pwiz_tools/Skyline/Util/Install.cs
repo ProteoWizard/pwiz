@@ -63,6 +63,7 @@ namespace pwiz.Skyline.Util
                 Version = string.Empty;
             }
 
+            IsRunningOnWine = Helpers.IsRunningOnWine;
         }
         public enum InstallType { release, daily, developer }
 
@@ -80,6 +81,7 @@ namespace pwiz.Skyline.Util
 
         public static bool IsDeveloperInstall { get; }
         public static bool IsAutomatedBuild { get; private set; }
+        public static bool IsRunningOnWine { get; }
 
         public static bool Is64Bit
         {

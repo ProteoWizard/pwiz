@@ -151,7 +151,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 
         protected override void DoTest()
         {
-            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.TestDir, GetType().Name);
+            string outDir = Path.Combine(REPORT_DIRECTORY ?? TestContext.GetTestResultsPath(), GetType().Name);
             string resultsTable = Path.Combine(outDir, "results.txt");
             Directory.CreateDirectory(outDir); // In case it doesn't already exists
             File.Delete(resultsTable); // In case it does already exist
