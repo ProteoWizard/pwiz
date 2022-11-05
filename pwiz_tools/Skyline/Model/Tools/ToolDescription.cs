@@ -33,6 +33,7 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;

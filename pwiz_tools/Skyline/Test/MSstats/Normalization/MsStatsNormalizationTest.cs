@@ -28,6 +28,7 @@ using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.GroupComparison;
