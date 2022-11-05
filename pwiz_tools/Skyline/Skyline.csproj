@@ -445,6 +445,11 @@
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EnumNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -518,11 +523,6 @@
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
-    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -2777,8 +2777,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>

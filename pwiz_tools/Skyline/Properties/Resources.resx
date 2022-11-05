@@ -11901,4 +11901,34 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ColonEndOfLine" xml:space="preserve">
 	  <value>:</value>
   </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+	  <value>Include by default</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+	  <value>Neutral loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+	  <value>Loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+	  <value>Neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+	  <value>{0} neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+	  <value>Losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+	  <value>{0} losses</value>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+	  <value>Mass</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+	  <value>Empty</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+	  <value>Unknown mass</value>
+  </data>
 </root>

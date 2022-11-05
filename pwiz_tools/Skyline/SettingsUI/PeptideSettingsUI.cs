@@ -1863,7 +1863,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 staticMod = _driverStaticMod.Choices[itemIndex];
             }
-            ChangeTooltip(listStaticMods, staticMod?.GetToolTip() ?? _staticModsOriginalTooltip);
+            ChangeTooltip(listStaticMods, staticMod?.ItemDescription.ToString() ?? _staticModsOriginalTooltip);
         }
 
         private void listHeavyMods_MouseMove(object sender, MouseEventArgs e)
@@ -1874,7 +1874,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 heavyMod = _driverHeavyMod.Choices[itemIndex];
             }
-            ChangeTooltip(listHeavyMods, heavyMod?.GetToolTip() ?? _heavyModsOriginalTooltip);
+            ChangeTooltip(listHeavyMods, heavyMod?.ItemDescription.ToString() ?? _heavyModsOriginalTooltip);
         }
 
         private void listLibraries_MouseMove(object sender, MouseEventArgs e)
@@ -1885,7 +1885,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 librarySpec = _driverLibrary.Choices[itemIndex];
             }
-            ChangeTooltip(listLibraries, librarySpec?.GetToolTip() ?? _librariesOriginalTooltip);
+            ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
         }
     }
 }

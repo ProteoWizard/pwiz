@@ -14866,6 +14866,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Include by default.
+        /// </summary>
+        public static string FragmentLoss_ItemDescription_Include_by_default {
+            get {
+                return ResourceManager.GetString("FragmentLoss_ItemDescription_Include_by_default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Neutral losses must be greater than or equal to {0}..
         /// </summary>
         public static string FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__ {
@@ -32140,6 +32149,87 @@ namespace pwiz.Skyline.Properties {
         public static string StatementCompletionTextBox_CreateListViewItems_Descriptions {
             get {
                 return ResourceManager.GetString("StatementCompletionTextBox_CreateListViewItems_Descriptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass.
+        /// </summary>
+        public static string StaticMod_FormatMass_Mass {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatMass_Mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mass.
+        /// </summary>
+        public static string StaticMod_FormatMass_Unknown_mass {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatMass_Unknown_mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription__0__losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription__0__losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} neutral losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription__0__neutral_losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription__0__neutral_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Empty {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loss.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Loss {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral loss.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Neutral_loss {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Neutral_loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Neutral_losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Neutral_losses", resourceCulture);
             }
         }
         

@@ -296,11 +296,7 @@ namespace pwiz.Skyline.SettingsUI
             var itemIndex = listBox.IndexFromPoint(e.Location);
             if (itemIndex >= 0 && itemIndex < _list.Count)
             {
-                var helpTipProvider = _list[itemIndex] as IHasToolTip;
-                if (helpTipProvider != null)
-                {
-                    newToolTip = helpTipProvider.GetToolTip();
-                }
+                newToolTip = (_list[itemIndex] as IHasItemDescription)?.ItemDescription.ToString();
             }
 
             if (newToolTip != helpTip.GetToolTip(listBox))

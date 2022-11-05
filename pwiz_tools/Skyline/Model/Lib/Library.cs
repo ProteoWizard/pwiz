@@ -1462,7 +1462,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement, IHasToolTip
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
@@ -1531,17 +1531,20 @@ namespace pwiz.Skyline.Model.Lib
         [Track(defaultValues:typeof(DefaultValuesTrue))]
         public bool UseExplicitPeakBounds { get; private set; }
 
-        public virtual string GetToolTip()
+        public virtual ItemDescription ItemDescription
         {
-            var lines = new List<string>();
-            lines.Add(GetLibraryTypeName());
-            lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
-            if (!UseExplicitPeakBounds)
+            get
             {
-                lines.Add("Ignore explicit peak boundaries");
-            }
+                var lines = new List<string>();
+                lines.Add(GetLibraryTypeName());
+                lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
+                if (!UseExplicitPeakBounds)
+                {
+                    lines.Add("Ignore explicit peak boundaries");
+                }
 
-            return TextUtil.LineSeparate(lines);
+                return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
+            }
         }
 
         public abstract string GetLibraryTypeName();
