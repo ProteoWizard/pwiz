@@ -25,6 +25,7 @@ using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 
@@ -105,9 +106,15 @@ namespace pwiz.Skyline.Controls.Graphs
             _displayState = newDisplayState;
         }
 
-        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected = false, bool forceLegendDisplay = false)
+        public void ResetForChromatograms(IEnumerable<TransitionGroup> transitionGroups,
+            bool forceLegendDisplay = false)
         {
-            SetDisplayState(new ChromDisplayState(Settings.Default, transitionGroups, proteinSelected, forceLegendDisplay));
+            ResetForChromatograms(TransformChrom.raw, transitionGroups, false, forceLegendDisplay);
+        }
+
+        public void ResetForChromatograms(TransformChrom transformChrom, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected, bool forceLegendDisplay)
+        {
+            SetDisplayState(new ChromDisplayState(Settings.Default, transformChrom, transitionGroups, proteinSelected, forceLegendDisplay));
         }
 
         public void FinishedAddingChromatograms(double bestPeakStartTime, double bestPeakEndTime, bool forceZoom)
@@ -227,8 +234,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (chromDisplayState.MinIntensity == 0)
                 {
-                    graphPane.LockYAxisMinAtZero = true;
                     graphPane.YAxis.Scale.MinAuto = true;
+                    graphPane.LockYAxisAtZero = chromDisplayState.LockYAxisAtZero;
                 }
                 else
                 {
@@ -466,9 +473,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly bool _proteinSelected;
 
-            public ChromDisplayState(Settings settings, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected, bool forceLegendDisplay = false) : base(transitionGroups)
+            public ChromDisplayState(Settings settings, TransformChrom transformChrom, IEnumerable<TransitionGroup> transitionGroups, bool proteinSelected, bool forceLegendDisplay = false) : base(transitionGroups)
             {
                 AutoZoomChrom = GraphChromatogram.AutoZoom;
+                TransformChrom = transformChrom;
                 MinIntensity = settings.ChromatogramMinIntensity;
                 MaxIntensity = settings.ChromatogramMaxIntensity;
                 TimeRange = settings.ChromatogramTimeRange;
@@ -480,11 +488,20 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             
             public AutoZoomChrom AutoZoomChrom { get; private set; }
+            public TransformChrom TransformChrom { get; }
             public double MinIntensity { get; private set; }
             public double MaxIntensity { get; private set; }
             public double TimeRange { get; private set; }
             public bool PeakRelativeTime { get; private set; }
             public IList<KeyValuePair<PaneKey, ChromGraphItem>> ChromGraphItems { get; private set; }
+            public bool LockYAxisAtZero
+            {
+                get
+                {
+                    // The second derivative chromatogram has many values which are negative
+                    return TransformChrom != TransformChrom.craw2d && MinIntensity == 0;
+                }
+            }
 
             public override bool CanUseZoomStateFrom(DisplayState displayStatePrev)
             {
@@ -496,7 +513,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         Equals(MaxIntensity, prevChromDisplayState.MaxIntensity) &&
                         Equals(TimeRange, prevChromDisplayState.TimeRange) &&
                         Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime) &&
-                        _proteinSelected == prevChromDisplayState._proteinSelected)
+                        _proteinSelected == prevChromDisplayState._proteinSelected &&
+                        Equals(LockYAxisAtZero, prevChromDisplayState.LockYAxisAtZero))
                     {
                         return ArrayUtil.ReferencesEqual(TransitionGroups, prevChromDisplayState.TransitionGroups);
                     }

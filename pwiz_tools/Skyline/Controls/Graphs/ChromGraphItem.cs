@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var hasTimes = info.RawTimes != null && info.RawTimes.Any(); // has measured points
 
-            var scaledHeight = graphPane.YAxis.Scale.Max / 20; // 5% of graph pane height
+            const double yChartFractionPosition = 0.95; // 5% of graph pane height
             var rawtimes = new List<double>();
 
             if (hasTimes)
@@ -685,10 +685,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 foreach (var time in rawtimes)
                 {
-                    LineObj stick = new LineObj(time, scaledHeight, time, 0)
+                    LineObj stick = new LineObj(time, yChartFractionPosition, time, 1)
                     {
                         IsClippedToChartRect = true,
-                        Location = { CoordinateFrame = CoordType.AxisXYScale },
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction},
                         ZOrder = ZOrder.A_InFront,
                         Line = { Width = 1, Style = DashStyle.Dash, Color = ColorScheme.ChromGraphItemSelected },
                         Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Controls.Graphs
             
             var countTxt = hasTimes ? @" " + rawtimes.Count : @" ?";
             var isBold = !hasTimes; // Question mark if no times exist is visually clearer if bold
-            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight)
+            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, yChartFractionPosition, CoordType.XScaleYChartFraction)
             {
                 FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorScheme.ChromGraphItemSelected, isBold, false, false)
                 {
