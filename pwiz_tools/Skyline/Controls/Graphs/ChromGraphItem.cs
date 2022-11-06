@@ -424,7 +424,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (bestPeak.StartTime != TransitionChromInfo.StartRetentionTime ||
                             bestPeak.EndTime != TransitionChromInfo.EndRetentionTime)
                         {
-                            AddOriginalPeakAnnotation(bestPeak, annotations, graphPane);
+                            AddOriginalPeakAnnotation(bestPeak, annotations);
                         }
                     }
                 }
@@ -438,13 +438,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations, GraphPane graphPane)
+        private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations)
         {
             var start = ScaleRetentionTime(bestPeak.StartTime);
             var end = ScaleRetentionTime(bestPeak.EndTime);
             var width = end.DisplayTime - start.DisplayTime;
-            var height = graphPane.YAxis.Scale.Max;
-            var originalPeakShadingBox = new BoxObj(start.DisplayTime, graphPane.YAxis.Scale.Max, width, height)
+            var originalPeakShadingBox = new BoxObj(start.DisplayTime, 0, width, 1)
             {
                 Fill = new Fill(COLOR_ORIGINAL_PEAK_SHADE),
                 ZOrder = ZOrder.F_BehindGrid,
@@ -452,6 +451,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 IsClippedToChartRect = true,
                 Tag = new GraphObjTag(this, GraphObjType.original_peak_shading, start, end)
             };
+            originalPeakShadingBox.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
             annotations.Add(originalPeakShadingBox);
         }
 
