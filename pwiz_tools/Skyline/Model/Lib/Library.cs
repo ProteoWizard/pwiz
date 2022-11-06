@@ -1540,7 +1540,7 @@ namespace pwiz.Skyline.Model.Lib
                 lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
                 if (!UseExplicitPeakBounds)
                 {
-                    lines.Add("Ignore explicit peak boundaries");
+                    lines.Add(Resources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
                 }
 
                 return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
