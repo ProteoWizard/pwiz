@@ -1277,7 +1277,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                                0,
                                                COLORS_GROUPS[(int)extractor % COLORS_GROUPS.Count],
                                                FontSize,
-                                               LineWidth);
+                                               LineWidth)
+            {
+                TransformChrom = Transform
+            };
             _graphHelper.AddChromatogram(new PaneKey(nodeGroup), graphItem);
         }
 
@@ -1579,6 +1582,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     fullScanInfo)
                 {
                     LineDashStyle = dashStyle,
+                    TransformChrom = Transform
                 };
                 _graphHelper.AddChromatogram(graphPaneKey, graphItem);
                 if (isSelected)
@@ -1602,8 +1606,9 @@ namespace pwiz.Skyline.Controls.Graphs
             RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (chromatogramInfo.TransformChrom == TransformChrom.craw2d)
+            if (chromatogramInfo.TransformChrom.IsDerivative())
             {
+                // Shading underneath the derivative transforms does not make sense
                 return;
             }
             if (tranPeakInfo == null)
@@ -1877,7 +1882,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        step,
                                                        color,
                                                        fontSize,
-                                                       width);
+                                                       width)
+                    {
+                        TransformChrom = Transform
+                    };
                     chromGraphItems.Add(graphItem);
                 }
 
@@ -2042,6 +2050,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        lineWidth)
                     {
                         LineDashStyle = anyQuantitative ? DashStyle.Solid : DashStyle.Dot,
+                        TransformChrom = Transform
                     };
                     var graphPaneKey = new PaneKey(nodeGroup);
                     _graphHelper.AddChromatogram(graphPaneKey, graphItem);
@@ -2211,7 +2220,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     CurveAnnotation = uniqueNames.GetUniquePrefix(peptideDocNode.ModifiedTarget.DisplayName, peptideDocNode.IsProteomic),
                     IdPath = _groupPaths[displayPeptides[i].PeptideIndex],
-                    GraphInfo = peptideGraphInfo
+                    GraphInfo = peptideGraphInfo,
+                    TransformChrom = Transform
                 };
                 if (peptideGraphInfo.IsSelected)
                     graphItems.Insert(0, graphItem);

@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromDisplayState.MinIntensity == 0)
                 {
                     graphPane.YAxis.Scale.MinAuto = true;
-                    graphPane.LockYAxisAtZero = chromDisplayState.LockYAxisAtZero;
+                    graphPane.LockYAxisAtZero = !chromDisplayState.TransformChrom.IsDerivative();
                 }
                 else
                 {
@@ -494,30 +494,32 @@ namespace pwiz.Skyline.Controls.Graphs
             public double TimeRange { get; private set; }
             public bool PeakRelativeTime { get; private set; }
             public IList<KeyValuePair<PaneKey, ChromGraphItem>> ChromGraphItems { get; private set; }
-            public bool LockYAxisAtZero
-            {
-                get
-                {
-                    // The second derivative chromatogram has many values which are negative
-                    return TransformChrom != TransformChrom.craw2d && MinIntensity == 0;
-                }
-            }
 
             public override bool CanUseZoomStateFrom(DisplayState displayStatePrev)
             {
                 var prevChromDisplayState = displayStatePrev as ChromDisplayState;
-                if (null != prevChromDisplayState)
+                if (null == prevChromDisplayState)
                 {
-                    if (Equals(AutoZoomChrom, prevChromDisplayState.AutoZoomChrom) &&
-                        Equals(MinIntensity, prevChromDisplayState.MinIntensity) &&
-                        Equals(MaxIntensity, prevChromDisplayState.MaxIntensity) &&
-                        Equals(TimeRange, prevChromDisplayState.TimeRange) &&
-                        Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime) &&
-                        _proteinSelected == prevChromDisplayState._proteinSelected &&
-                        Equals(LockYAxisAtZero, prevChromDisplayState.LockYAxisAtZero))
+                    return false;
+                }
+
+                if (TransformChrom.IsDerivative() || prevChromDisplayState.TransformChrom.IsDerivative())
+                {
+                    // The Y-axis range of different derivatives is very different, so we need to recalculate the zoom
+                    // state if the transformation has change and it is or was a derivative
+                    if (TransformChrom != prevChromDisplayState.TransformChrom)
                     {
-                        return ArrayUtil.ReferencesEqual(TransitionGroups, prevChromDisplayState.TransitionGroups);
+                        return false;
                     }
+                }
+                if (Equals(AutoZoomChrom, prevChromDisplayState.AutoZoomChrom) &&
+                    Equals(MinIntensity, prevChromDisplayState.MinIntensity) &&
+                    Equals(MaxIntensity, prevChromDisplayState.MaxIntensity) &&
+                    Equals(TimeRange, prevChromDisplayState.TimeRange) &&
+                    Equals(PeakRelativeTime, prevChromDisplayState.PeakRelativeTime) &&
+                    _proteinSelected == prevChromDisplayState._proteinSelected)
+                {
+                    return ArrayUtil.ReferencesEqual(TransitionGroups, prevChromDisplayState.TransitionGroups);
                 }
                 return false;
             }

@@ -163,6 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ChromatogramInfo Chromatogram { get; private set; }
         public TransitionChromInfo TransitionChromInfo { get; private set; }
         public RegressionLine TimeRegressionFunction { get; private set; }
+        public TransformChrom? TransformChrom { get; set; }
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
             return new ScaledRetentionTime(measuredTime, MeasuredTimeToDisplayTime(measuredTime));
@@ -778,6 +779,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
+            CoordType coordType;
+            if (true == TransformChrom?.IsDerivative())
+            {
+                maxIntensity = 1;
+                coordType = CoordType.XScaleYChartFraction;
+            }
+            else
+            {
+                coordType = CoordType.AxisXYScale;
+            }
+
             Color colorBoundaries = (best ? COLOR_BOUNDARIES_BEST : COLOR_BOUNDARIES);
             GraphObjType graphObjType = best ? GraphObjType.best_peak : GraphObjType.peak;
 
@@ -786,7 +798,7 @@ namespace pwiz.Skyline.Controls.Graphs
             LineObj stickStart = new LineObj(colorBoundaries, startTime.DisplayTime, maxIntensity, startTime.DisplayTime, 0)
                                      {
                                          IsClippedToChartRect = true,
-                                         Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                         Location = { CoordinateFrame = coordType },
                                          ZOrder = ZOrder.B_BehindLegend,
                                          Line = { Width = 1, Style = DashStyle.Dash },
                                          Tag = new GraphObjTag(this, graphObjType, startTime),
@@ -795,7 +807,7 @@ namespace pwiz.Skyline.Controls.Graphs
             LineObj stickEnd = new LineObj(colorBoundaries, endTime.DisplayTime, maxIntensity, endTime.DisplayTime, 0)
                                    {
                                        IsClippedToChartRect = true,
-                                       Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                       Location = { CoordinateFrame = coordType },
                                        ZOrder = ZOrder.B_BehindLegend,
                                        Line = { Width = 1, Style = DashStyle.Dash },
                                        Tag = new GraphObjTag(this, graphObjType, endTime),

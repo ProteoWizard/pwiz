@@ -2592,6 +2592,14 @@ namespace pwiz.Skyline.Model.Results
 
 // ReSharper disable InconsistentNaming
     public enum TransformChrom { raw, interpolated, craw2d, craw1d, savitzky_golay }
+
+    public static class TransformChromExtension
+    {
+        public static bool IsDerivative(this TransformChrom transformChrom)
+        {
+            return transformChrom == TransformChrom.craw1d || transformChrom == TransformChrom.craw2d;
+        }
+    }
 // ReSharper restore InconsistentNaming
 
     public class ChromatogramInfo
