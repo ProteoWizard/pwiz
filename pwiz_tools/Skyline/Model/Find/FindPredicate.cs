@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -128,13 +129,14 @@ namespace pwiz.Skyline.Model.Find
                 ?? MatchAnnotations(docNode.Annotations);
         }
 
-        public FindResult FindNext(BookmarkEnumerator bookmarkEnumerator)
+        public FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
         {
             var customMatches = new Dictionary<Bookmark, FindMatch>();
             foreach (var finder in FindOptions.CustomFinders)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var customEnumerator = new BookmarkEnumerator(bookmarkEnumerator);
-                var nextMatch = finder.NextMatch(customEnumerator);
+                var nextMatch = finder.NextMatch(customEnumerator, cancellationToken);
                 if (nextMatch == null || customMatches.ContainsKey(customEnumerator.Current))
                 {
                     continue;
@@ -143,6 +145,7 @@ namespace pwiz.Skyline.Model.Find
             }
             do
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 FindMatch findMatch;
                 if (customMatches.TryGetValue(bookmarkEnumerator.Current, out findMatch))
@@ -167,12 +170,13 @@ namespace pwiz.Skyline.Model.Find
                 var customFinder = FindOptions.CustomFinders[iFinder];
                 var bookmarkSet = new HashSet<Bookmark>();
                 longWaitBroker.Message = string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, customFinder.DisplayName);
-                foreach (var bookmark in customFinder.FindAll(document))
+                foreach (var bookmark in customFinder.FindAll(document, longWaitBroker.CancellationToken))
                 {
                     if (longWaitBroker.IsCanceled)
                     {
                         yield break;
                     }
+
                     bookmarkSet.Add(bookmark);
                 }
                 customMatches[iFinder] = bookmarkSet;

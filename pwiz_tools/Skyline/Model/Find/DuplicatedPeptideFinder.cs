@@ -17,6 +17,7 @@
  */
 
 using System.Collections.Generic;
+using System.Threading;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
@@ -27,8 +28,8 @@ namespace pwiz.Skyline.Model.Find
     public class DuplicatedPeptideFinder : AbstractDocNodeFinder
     {
         private SrmDocument _lastSearchedDocument;
-        private HashSet<int> _allPeptideHashes;
-        private HashSet<int> _duplicatePeptideHashes;
+        private HashSet<PeptideSequenceModKey> _allPeptideKeys;
+        private HashSet<PeptideSequenceModKey> _duplicatePeptideKeys;
 
         public override string Name
         {
@@ -47,11 +48,11 @@ namespace pwiz.Skyline.Model.Find
             if (ReferenceEquals(_lastSearchedDocument, document))
                 return;
             _lastSearchedDocument = document;
-            _allPeptideHashes = new HashSet<int>();
-            _duplicatePeptideHashes = new HashSet<int>();
+            _allPeptideKeys = new HashSet<PeptideSequenceModKey>();
+            _duplicatePeptideKeys = new HashSet<PeptideSequenceModKey>();
             foreach (var peptide in document.Peptides)
-                if (!_allPeptideHashes.Add(peptide.SequenceKey.GetHashCode()))
-                    _duplicatePeptideHashes.Add(peptide.SequenceKey.GetHashCode());
+                if (!(_allPeptideKeys).Add(peptide.SequenceKey))
+                    _duplicatePeptideKeys.Add(peptide.SequenceKey);
         }
 
         public override FindMatch Match(BookmarkEnumerator bookmarkEnumerator)
@@ -60,18 +61,21 @@ namespace pwiz.Skyline.Model.Find
             var peptide = bookmarkEnumerator.CurrentDocNode as PeptideDocNode;
             if (peptide == null)
                 return base.Match(bookmarkEnumerator);
-            return _duplicatePeptideHashes.Contains(peptide.SequenceKey.GetHashCode())
+            return _duplicatePeptideKeys.Contains(peptide.SequenceKey)
                 ? new FindMatch(DisplayName)
                 : null;
         }
 
-        public override IEnumerable<Bookmark> FindAll(SrmDocument document)
+        public override IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
         {
             InitializeIndex(document);
             foreach (var group in document.PeptideGroups)
             foreach (var peptide in group.Peptides)
-                if (_duplicatePeptideHashes.Contains(peptide.SequenceKey.GetHashCode()))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_duplicatePeptideKeys.Contains(peptide.SequenceKey))
                     yield return new Bookmark(new IdentityPath(group.Id, peptide.Id));
+            }
         }
     }
 }

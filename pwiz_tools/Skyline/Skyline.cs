@@ -1391,9 +1391,22 @@ namespace pwiz.Skyline
                     }
                     
                 }
-            }            
-            var findResult = DocumentUI.SearchDocument(bookmark,
-                findOptions, displaySettings);
+            }
+
+            FindResult findResult = null;
+            var document = DocumentUI;
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                {
+                    findResult = document.SearchDocument(bookmark,
+                        findOptions, displaySettings, longWaitBroker.CancellationToken);
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return;
+                }
+            }
 
             if (findResult == null)
             {
@@ -1413,10 +1426,13 @@ namespace pwiz.Skyline
             if (findOptions == null)
                 findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
-            IList<FindResult> results = null;
+            List<FindResult> results = new List<FindResult>();
             using (var longWaitDlg = new LongWaitDlg(this))
             {
-                longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+                longWaitDlg.PerformWork(parent, 2000, lwb =>
+                {
+                    results.AddRange(FindAll(lwb, findPredicate));
+                });
                 if (results.Count == 0)
                 {
                     if (!longWaitDlg.IsCanceled)

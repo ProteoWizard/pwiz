@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Threading;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -35,10 +36,11 @@ namespace pwiz.Skyline.Model.Find
         }
 
         public abstract FindMatch Match(BookmarkEnumerator bookmarkEnumerator);
-        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator)
+        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
         {
             do
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 var findMatch = Match(bookmarkEnumerator);
                 if (findMatch != null)
@@ -49,11 +51,12 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document)
+        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
         {
             var bookmarkEnumerator = new BookmarkEnumerator(document);
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 if (Match(bookmarkEnumerator) != null)
                 {
