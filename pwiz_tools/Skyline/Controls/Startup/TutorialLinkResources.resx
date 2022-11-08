@@ -158,7 +158,7 @@
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DDASearch_zip" xml:space="preserve">
-    <value>https://skyline.ms/tutorials/DdaSearchMS1Filtering.zip</value>
+    <value>https://skyline.ms/tutorials/DdaSearchMs1Filtering.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DDSearch_pdf" xml:space="preserve">

@@ -189,6 +189,7 @@ namespace pwiz.ProteowizardWrapper
                     preferOnlyMsLevel = !ForceUncombinedIonMobility && combineIonMobilitySpectra ? 0 : preferOnlyMsLevel,
                     allowMsMsWithoutPrecursor = false,
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
+                    ignoreCalibrationScans = true, // For Waters, we don't need to hear about lockmass values
                     reportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
                     globalChromatogramsAreMs1Only = true
                 };
@@ -613,10 +614,11 @@ namespace pwiz.ProteowizardWrapper
                         _ionMobilityUnits = _ionMobilitySpectrumList.getIonMobilityUnits();
                         _providesConversionCCStoIonMobility = _ionMobilitySpectrumList.canConvertIonMobilityAndCCS(_ionMobilityUnits);
                     }
-                    if (IsWatersFile  && _spectrumList != null)
+                    if (IsWatersFile  && _spectrumList != null && !_spectrumList.calibrationSpectraAreOmitted())
                     {
                         if (_spectrumList.size() > 0 && !hasSrmSpectra)
                         {
+                            // If lockmass scans aren't already being omitted at the top level, try to filter them out here.
                             // If the first seen spectrum has MS1 data and function > 1 assume it's the lockspray function, 
                             // and thus to be omitted from chromatogram extraction.
                             // N.B. for msE data we will always assume function 3 and greater are to be omitted
@@ -735,6 +737,13 @@ namespace pwiz.ProteowizardWrapper
 
                         timeList.Add((float) timeArrayData[i] * timeUnitMultiple);
                         intensityList.Add((float) intensityArrayData[i]);
+                    }
+
+                    // if there were no MS1 TIC points, add a placeholder so the TIC graph displays an appropriate message
+                    if (timeList.Count == 0)
+                    {
+                        timeList.Add(0);
+                        intensityList.Add(1);
                     }
 
                     timeArray = timeList.ToArray();

@@ -43,8 +43,8 @@ namespace pwiz.SkylineTestData.Results
 
         private void DoTestAgilentCEOpt()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -52,12 +52,12 @@ namespace pwiz.SkylineTestData.Results
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the .d file
-                Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME), true);
+                Import(docContainer, TestFilesDir.GetTestPath(RESULTS_NAME), true);
             }
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the .d file
-                Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME), false);
+                Import(docContainer, TestFilesDir.GetTestPath(RESULTS_NAME), false);
             }
         }
 

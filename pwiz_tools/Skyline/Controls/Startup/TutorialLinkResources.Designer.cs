@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls.Startup {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TutorialLinkResources {
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/AuditLog-20_1_1.pdf.
         /// </summary>
         internal static string AuditLog_pdf {
             get {
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/tutorials/DdaSearchMS1Filtering.zip.
+        ///   Looks up a localized string similar to https://skyline.ms/tutorials/DdaSearchMs1Filtering.zip.
         /// </summary>
         internal static string DDASearch_zip {
             get {
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-21_1.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DDASearch-21_1.pdf.
         /// </summary>
         internal static string DDSearch_pdf {
             get {
@@ -268,7 +268,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://skyline.ms/labkey/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-20_2.pdf.
+        ///   Looks up a localized string similar to https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/IMSFiltering-20_2.pdf.
         /// </summary>
         internal static string IMSFiltering_pdf {
             get {

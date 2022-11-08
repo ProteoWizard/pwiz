@@ -101,13 +101,10 @@
     <value>倍数变化的绝对值</value>
   </data>
   <data name="AbsLog2FoldChange">
-    <value>倍数变化的以 2 为底的对数的绝对值</value>
+    <value>倍数变化取以 2 为底的对数的绝对值</value>
   </data>
   <data name="Abundance">
     <value>重复测定的值是用于计算倍数的变化。此数值取决于归一化方法以及是基于蛋白质还是肽段级别来计算倍数的变化。</value>
-  </data>
-  <data name="AdjustedPValue">
-    <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
   </data>
   <data name="Accuracy">
     <value>分析物浓度（在重复测定中指定的）与计算浓度比</value>
@@ -115,6 +112,12 @@
   <data name="AcquiredTime">
     <value>质谱仪上一次开始获取此重复测定数据的时间
 和日期。或者，如果文件通过 1.1 之前的版本导入，则为 #N/A。</value>
+  </data>
+  <data name="AdjustedPValue">
+    <value>在多组肽段或蛋白质的该组比较中，针对多重比较调整 P 值。使用 Benjamini-Hochberg 程序完成调整。</value>
+  </data>
+  <data name="AllInfoMessage">
+    <value>更改的详细描述</value>
   </data>
   <data name="AnalyteConcentration">
     <value>加入外部或质量控制标准的已知量的分析物。</value>
@@ -241,21 +244,18 @@
     <value>提取色谱图所用的扫描类型：“片段”、“sim”、“ms1”或“未知”之一</value>
     <comment>Keep the english form of "fragment", "sim", "ms1", or "unknown" because that is what users see in the Document Grid. However, maybe put the localized translation in parentheses: "fragment" (translation of fragment), "sim" (translation of selected ion monitoring), etc. </comment>
   </data>
-  <data name="CollisionCrossSection">
-    <value>母离子的碰撞横截面</value>
-  </data>
-  <data name="CollisionalCrossSection">
-    <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
+  <data name="CleavageAa">
+    <value>在肽段断裂后（C-末端）肽段中的特异性
+氨基酸残基。（例如 P、M、S、T 等。）</value>
   </data>
   <data name="Coeluting">
     <value>如果此离子对的峰具有与峰群组内的其他离子对类似的顶点和范围，则为真。</value>
   </data>
-  <data name="ConfidenceLevel">
-    <value>用于确定对于倍数变化的置信区间的置信水平。</value>
+  <data name="CollisionalCrossSection">
+    <value>以平方埃为单位的离子迁移测量值，通常会转换为适当的单位（例如漂移时间，inverseK0），并用于从离子迁移质谱中提取色谱图。</value>
   </data>
-  <data name="CleavageAa">
-    <value>在肽段断裂后（C-末端）肽段中的特异性
-氨基酸残基。（例如 P、M、S、T 等。）</value>
+  <data name="CollisionCrossSection">
+    <value>母离子的碰撞横截面</value>
   </data>
   <data name="CollisionEnergy">
     <value>根据仪器/厂商特定的 Skyline 内的预设碰撞能量方程
@@ -263,6 +263,9 @@
   </data>
   <data name="ConcentrationMultiplier">
     <value>重复测定的“分析物浓度”所乘的值，以获得特定肽段或分子的特定浓度。</value>
+  </data>
+  <data name="ConfidenceLevel">
+    <value>用于确定对于倍数变化的置信区间的置信水平。</value>
   </data>
   <data name="CountTruncated">
     <value>在采集时间区间的任意一端
@@ -308,8 +311,8 @@
   <data name="CvTotalAreaRatio">
     <value>母离子总面积比值的变异系数 (CV)</value>
   </data>
-  <data name="DegreesOfFreedom">
-    <value>用于计算 T 测试置信区间的自由度。</value>
+  <data name="CycleTimeAcrossPeak">
+    <value>整合峰间的周期时间（秒）。</value>
   </data>
   <data name="DeclusteringPotential">
     <value>根据 Skyline 内仪器/厂商特定的预设去簇电位方程
@@ -318,6 +321,9 @@
   <data name="DecoyMzShift">
     <value>应用于母离子的质荷比变化，以产生
 诱饵质荷比</value>
+  </data>
+  <data name="DegreesOfFreedom">
+    <value>用于计算 T 测试置信区间的自由度。</value>
   </data>
   <data name="DetailReason">
     <value>用户给予的进行更改的详细原因</value>
@@ -347,11 +353,11 @@
   <data name="EndTime">
     <value>离子对峰结束积分边界的保留时间。</value>
   </data>
-  <data name="EstimatedValue">
-    <value>线性回归的斜率。</value>
-  </data>
   <data name="ErrorMessage">
     <value>在尝试计算该值时出现的错误消息正文（如有）。</value>
+  </data>
+  <data name="EstimatedValue">
+    <value>线性回归的斜率。</value>
   </data>
   <data name="ExcludeFromCalibration">
     <value>是否应从肽段的校准曲线计算中排除重复测定的结果。</value>
@@ -361,11 +367,11 @@
 如果未指定明确分析物浓度，则假定分析物的浓度为
 重复测定中的分析物浓度乘以肽段或分子的浓度系数。</value>
   </data>
-  <data name="ExplicitCollisionEnergy">
-    <value>用于目标的 SRM 方法或离子对列表确切所需的碰撞能量，覆盖所有模型或优化库值或根据母离子而定的明确值。</value>
-  </data>
   <data name="ExplicitCollisionalCrossSection">
     <value>待转换为离子迁移且用于从离子迁移质谱中提取色谱图确切所需的碰撞横截面（以平方埃为单位），覆盖所有模型值。</value>
+  </data>
+  <data name="ExplicitCollisionEnergy">
+    <value>用于目标的 SRM 方法或离子对列表确切所需的碰撞能量，覆盖所有模型或优化库值或根据母离子而定的明确值。</value>
   </data>
   <data name="ExplicitCompensationVoltage">
     <value>用于目标的 SRM 方法或离子对清单确切所需的补偿电压（离子迁移率过滤器），覆盖所有模型或优化库值。</value>
@@ -382,6 +388,10 @@
   <data name="ExplicitDriftTimeMsec">
     <value>用于从离子迁移率质谱中提取色谱图确切所需的漂移时间偏移（以毫秒为单位），覆盖所有模型值。</value>
   </data>
+  <data name="ExplicitGlobalStandardArea">
+    <value>在计算“相对于总体标准品比率”时使用的值。
+    在除以在 Skyline 以外计算的值来归一化特定重复测定中的峰面积时使用。</value>
+  </data>
   <data name="ExplicitIonMobility">
     <value>在提取色谱图时使用的过滤器中心的离子迁移值</value>
   </data>
@@ -390,10 +400,6 @@
   </data>
   <data name="ExplicitIonMobilityUnits">
     <value>明示离子迁移值的单位。</value>
-  </data>
-  <data name="ExplicitGlobalStandardArea">
-    <value>在计算“相对于总体标准品比率”时使用的值。
-    在除以在 Skyline 以外计算的值来归一化特定重复测定中的峰面积时使用。</value>
   </data>
   <data name="ExplicitRetentionTime">
     <value>用于目标的确切预测保留时间（以分钟为单位），覆盖所有其他预测方法。</value>
@@ -454,12 +460,12 @@
   <data name="FwhmDegenerate">
     <value>简并的Fwhm</value>
   </data>
+  <data name="Group">
+    <value>与对照组进行比较的重复测定的重复测定注释的值。</value>
+  </data>
   <data name="Height">
     <value>离子对峰积分边界之间的点的
 最大强度。</value>
-  </data>
-  <data name="Group">
-    <value>与对照组进行比较的重复测定的重复测定注释的值。</value>
   </data>
   <data name="HMDB" xml:space="preserve">
     <value>标准化分子标识符</value>
@@ -568,18 +574,6 @@
   <data name="LibraryCollisionCrossSection">
     <value>离子迁移库中母离子的碰撞横截面</value>
   </data>
-  <data name="LibraryIonMobility">
-    <value>离子迁移库中母离子的离子迁移信息</value>
-  </data>
-  <data name="LibraryIonMobilityHighEnergyOffset">
-    <value>离子迁移库中母离子的高能偏置</value>
-  </data>
-  <data name="LibraryIonMobilityUnits">
-    <value>库离子迁移值的单位</value>
-  </data>
-  <data name="LibraryIonMobilityValue">
-    <value>离子迁移库中母离子的离子迁移</value>
-  </data>
   <data name="LibraryDotProduct">
     <value>母离子的单个离子对峰面积与匹配的串联质谱谱图库谱图
 中匹配离子峰的强度之间的点积（注释：截止版本 v1.4，为 1 – Arcos(dotp)/(Pi/2)，
@@ -592,6 +586,18 @@
   <data name="LibraryIntensity">
     <value>对应匹配库谱图中离子对子离子的
 串联质谱峰强度。</value>
+  </data>
+  <data name="LibraryIonMobility">
+    <value>离子迁移库中母离子的离子迁移信息</value>
+  </data>
+  <data name="LibraryIonMobilityHighEnergyOffset">
+    <value>离子迁移库中母离子的高能偏置</value>
+  </data>
+  <data name="LibraryIonMobilityUnits">
+    <value>库离子迁移值的单位</value>
+  </data>
+  <data name="LibraryIonMobilityValue">
+    <value>离子迁移库中母离子的离子迁移</value>
   </data>
   <data name="LibraryName">
     <value>当串联质谱谱图库谱图与母离子相关时，
@@ -632,7 +638,7 @@
     <value>进行线性回归以确定倍数变化的结果。</value>
   </data>
   <data name="Log2FoldChange">
-    <value>倍数变化值的以 2 为底的对数。</value>
+    <value>倍数变化值取以 2 为底的对数。</value>
   </data>
   <data name="Losses">
     <value>此片段中所有中性丢失的逗号分隔清单</value>
@@ -675,15 +681,6 @@
   <data name="MaxRetentionTime">
     <value>离子对保留时间值最大值。</value>
   </data>
-  <data name="Median">
-    <value>中位数</value>
-  </data>
-  <data name="MedianPeakArea">
-    <value>特定结果文件中离子对结果的离子对峰面积中位数。
-当归一化方法为“均衡中位数”时，将使用该中位数峰面积。
-如果有内标标签类型，则仅使用母离子标签类型为内标的离子对峰面积来计算中位数峰面积。
-如果没有内标峰面积，则根据所有离子对峰面积计算中位数离子对峰面积。</value>
-  </data>
   <data name="Mean">
     <value>平均值</value>
   </data>
@@ -720,8 +717,17 @@
   <data name="MeanTotalAreaRatio">
     <value>母离子总面积比值的平均值。</value>
   </data>
+  <data name="Median">
+    <value>中位数</value>
+  </data>
   <data name="MedianDetectionQValue" xml:space="preserve">
     <value>在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的中位数。</value>
+  </data>
+  <data name="MedianPeakArea">
+    <value>特定结果文件中离子对结果的离子对峰面积中位数。
+当归一化方法为“均衡中位数”时，将使用该中位数峰面积。
+如果有内标标签类型，则仅使用母离子标签类型为内标的离子对峰面积来计算中位数峰面积。
+如果没有内标峰面积，则根据所有离子对峰面积计算中位数离子对峰面积。</value>
   </data>
   <data name="Min">
     <value>最小</value>
@@ -729,14 +735,14 @@
   <data name="MinBestRetentionTime">
     <value>母离子最佳保留时间值的最小值</value>
   </data>
+  <data name="MinDetectionQValue" xml:space="preserve">
+    <value>在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的最小值。</value>
+  </data>
   <data name="MinFoldChange">
     <value>倍数变化置信区间的下限。</value>
   </data>
   <data name="MinRetentionTime">
     <value>离子对保留时间值的最小值。</value>
-  </data>
-  <data name="MinDetectionQValue" xml:space="preserve">
-    <value>在应用 mProphet 模型后，分配给每个选定目标峰的错误发现率 (FDR) 得分的最小值。</value>
   </data>
   <data name="MinStartTime">
     <value>母离子所有离子对的最小开始时间。除非使用
@@ -780,6 +786,9 @@
   <data name="MoleculeFormula">
     <value>用于在质谱仪中测量的中性未标记分子的原子化学式。</value>
   </data>
+  <data name="MoleculeList">
+    <value>Skyline 文档中的一组分子。</value>
+  </data>
   <data name="MoleculeListAbundance">
     <value>表示分子列表丰度的数值。对该分子列表下所有离子对的归一化面积求平均值，即可得出该数值。
 根据“分子定量”设置中指定的归一化方法对面积进行归一化处理。
@@ -794,9 +803,6 @@
   </data>
   <data name="MoleculeListNote">
     <value>与分子相关的自由文本注释。</value>
-  </data>
-  <data name="MoleculeList">
-    <value>Skyline 文档中的一组分子。</value>
   </data>
   <data name="MoleculeListResult">
     <value>分子列表结果</value>
@@ -820,9 +826,6 @@
   <data name="MoleculePeakFoundRatio">
     <value>分子峰值发现比率</value>
   </data>
-  <data name="MonoisotopicMasses">
-    <value>以其单一同位素质量指代修饰的修饰序列，例如，"C[+57.021464]"。</value>
-  </data>
   <data name="MoleculeResult">
     <value>分子结果</value>
   </data>
@@ -838,6 +841,9 @@
   </data>
   <data name="Molecules">
     <value>分子列表中的分子。</value>
+  </data>
+  <data name="MonoisotopicMasses">
+    <value>以其单一同位素质量指代修饰的修饰序列，例如，"C[+57.021464]"。</value>
   </data>
   <data name="MsLevel">
     <value>指明该结果是否仅使用母离子强度（一级质谱）或子离子强度（二级质谱）获得。</value>
@@ -964,9 +970,6 @@
   <data name="PointsAcrossPeak">
     <value>合并峰启动时间和结束时间之间的色谱图点数。</value>
   </data>
-  <data name="CycleTimeAcrossPeak">
-    <value>整合峰间的周期时间（秒）。</value>
-  </data>
   <data name="Precursor">
     <value>母离子</value>
   </data>
@@ -998,19 +1001,19 @@
     <value>文档内的母离子特殊标识符。这将以“Precursor:”开头，并通常以母离子标记类型（之后是其加合物）结束。</value>
     <comment>Do not translate "Precursor:"</comment>
   </data>
+  <data name="PrecursorMz">
+    <value>母离子的质荷比 (m/z)。</value>
+  </data>
   <data name="PrecursorNeutralFormula">
     <value>母离子的公式。这是不推荐使用的，而应该使用“PrecursorIonFomula”。</value>
+  </data>
+  <data name="PrecursorNeutralMass">
+    <value>母离子的中性质量（以道尔顿为单位）</value>
   </data>
   <data name="PrecursorNormalizedArea">
     <value>母离子结果的校准后面积。
 其等同于根据肽段校准方法所校准的母离子结果总面积。
 若肽段校准方法为“无”或相对于标记的比率。那么母离子校准后面积将等于母离子总面积。</value>
-  </data>
-  <data name="PrecursorMz">
-    <value>母离子的质荷比 (m/z)。</value>
-  </data>
-  <data name="PrecursorNeutralMass">
-    <value>母离子的中性质量（以道尔顿为单位）</value>
   </data>
   <data name="PrecursorNote">
     <value>点击“编辑”菜单中的“编辑注释”后显示的与母离子相关的
@@ -1055,6 +1058,9 @@
   <data name="PreviousAa">
     <value>上一个 Aa</value>
   </data>
+  <data name="ProductAdduct">
+    <value>应用于子离子的加合物。</value>
+  </data>
   <data name="ProductCharge">
     <value>子离子电荷 (z)。</value>
   </data>
@@ -1062,17 +1068,14 @@
     <value>应用于子离子的质荷比变化，以产生
 诱饵质荷比。</value>
   </data>
-  <data name="ProductAdduct">
-    <value>应用于子离子的加合物。</value>
-  </data>
   <data name="ProductIonFormula">
     <value>子离子的公式。</value>
   </data>
-  <data name="ProductNeutralFormula">
-    <value>子离子的公式。这是不推荐使用的，而应该使用“ProductIonFormula”。</value>
-  </data>
   <data name="ProductMz">
     <value>子离子的质荷比 (m/z)。</value>
+  </data>
+  <data name="ProductNeutralFormula">
+    <value>子离子的公式。这是不推荐使用的，而应该使用“ProductIonFormula”。</value>
   </data>
   <data name="ProductNeutralMass">
     <value>子离子肽段片段的中性质量（以道尔顿为单位）。</value>
@@ -1210,14 +1213,11 @@
   <data name="ReplicateCount">
     <value>具有有效强度并对结果有作用的重复测定次数。</value>
   </data>
-  <data name="ReplicateGroup">
-    <value>重复测定丰度所属的群体</value>
-  </data>
-  <data name="ReplicateSampleIdentity">
-    <value>重复测定丰度的生物重复测定</value>
-  </data>
   <data name="ReplicateErrorMessage">
     <value>在尝试拟合重复测定校准曲线时出现的错误消息正文（如有）</value>
+  </data>
+  <data name="ReplicateGroup">
+    <value>重复测定丰度所属的群体</value>
   </data>
   <data name="ReplicateIndex">
     <value>重复测定索引</value>
@@ -1244,11 +1244,14 @@
   <data name="ReplicateRSquared">
     <value>重复测定校准曲线上的确定系数</value>
   </data>
-  <data name="ReplicateSlope">
-    <value>重复测定校准曲线的斜度</value>
-  </data>
   <data name="Replicates">
     <value>重复测定</value>
+  </data>
+  <data name="ReplicateSampleIdentity">
+    <value>重复测定丰度的生物重复测定</value>
+  </data>
+  <data name="ReplicateSlope">
+    <value>重复测定校准曲线的斜度</value>
   </data>
   <data name="ReplicateTurningPoint">
     <value>重复测定校准曲线上的双线性转折点</value>
@@ -1276,12 +1279,12 @@
     <value>在分析之前稀释样品的量。
 外部标准通常具有 1 的稀释因子，并且未知样品可能已被稀释大于 1 的因子，以使它们进入仪器的可量化范围。</value>
   </data>
+  <data name="SampleId" xml:space="preserve">
+    <value>参阅样品的免费文本标识符（可以在多个文件之间共享）。从导入结果文档内“样品 ID”属性中读取</value>
+  </data>
   <data name="SampleName">
     <value>当数据导入自多样品 WIFF 文件时的
 样品名称，或其他文件类型的文件名。</value>
-  </data>
-  <data name="SampleId" xml:space="preserve">
-    <value>参阅样品的免费文本标识符（可以在多个文件之间共享）。从导入结果文档内“样品 ID”属性中读取</value>
   </data>
   <data name="SampleType">
     <value>样品类型。 以下一种：
@@ -1353,6 +1356,9 @@
   <data name="StdevTotalAreaRatio">
     <value>母离子总面积归一化值的标准
 偏差。</value>
+  </data>
+  <data name="SummaryMessage">
+    <value>更改的描述</value>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>所有未从校准排除的外部标准重复测定中定性离子比值的平均值。</value>
@@ -1484,11 +1490,5 @@
   </data>
   <data name="WeightedScore">
     <value>特征得分与特征权重的乘积</value>
-  </data>
-  <data name="SummaryMessage">
-    <value>更改的描述</value>
-  </data>
-  <data name="AllInfoMessage">
-    <value>更改的详细描述</value>
   </data>
 </root>

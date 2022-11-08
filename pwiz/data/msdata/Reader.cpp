@@ -42,6 +42,7 @@ Reader::Config::Config()
     , acceptZeroLengthSpectra(false)
     , ignoreZeroIntensityPoints(false)
     , combineIonMobilitySpectra(false)
+    , ignoreCalibrationScans(false)
     , reportSonarBins(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
@@ -60,6 +61,7 @@ Reader::Config::Config(const Config& rhs)
     srmAsSpectra = rhs.srmAsSpectra;
 	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
     ignoreZeroIntensityPoints = rhs.ignoreZeroIntensityPoints;
+    ignoreCalibrationScans = rhs.ignoreCalibrationScans;
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
     reportSonarBins = rhs.reportSonarBins;
     unknownInstrumentIsError = rhs.unknownInstrumentIsError;

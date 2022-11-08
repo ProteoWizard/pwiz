@@ -55,8 +55,8 @@ namespace pwiz.SkylineTestData.Results
                 return;
             }
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath(DOCUMENT_NAME);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -71,8 +71,8 @@ namespace pwiz.SkylineTestData.Results
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the mzML file and verify Mz range
-                Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME), 510, 512);
-                Import(docContainer, testFilesDir.GetTestPath(RESULTS_NAME2), 555, 557);
+                Import(docContainer, TestFilesDir.GetTestPath(RESULTS_NAME), 510, 512);
+                Import(docContainer, TestFilesDir.GetTestPath(RESULTS_NAME2), 555, 557);
             }
         }
 

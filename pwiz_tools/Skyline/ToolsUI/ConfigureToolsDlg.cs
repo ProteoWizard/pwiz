@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Tools;

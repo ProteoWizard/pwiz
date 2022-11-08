@@ -46,9 +46,9 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestWiffCommandLineImport()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
-            string docPath = testFilesDir.GetTestPath(DOC_NAME);
-            string rawPath = testFilesDir.GetTestPath(WIFF_NAME);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
+            string docPath = TestFilesDir.GetTestPath(DOC_NAME);
+            string rawPath = TestFilesDir.GetTestPath(WIFF_NAME);
             
             RunCommand("--in=" + docPath,
                 "--import-file=" + rawPath,
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestData
             // Make a copy of the wiff file, rename it and import it. The document should contain 8 replicates. 
             // From the 1st file: "blank", "rfp9_after_h_1", "test", "rfp9_before_h_1"
             // From the 2nd file: "blank2", "rfp9_after_h_12", "test2", "rfp9_before_h_12"
-            var wiffCopy = Path.Combine(testFilesDir.FullPath,
+            var wiffCopy = Path.Combine(TestFilesDir.FullPath,
                 Path.GetFileNameWithoutExtension(rawPath) + "_copy.wiff");
             File.Copy(PathEx.SafePath(rawPath), wiffCopy);
             Assert.IsTrue(File.Exists(wiffCopy));
@@ -109,9 +109,9 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void TestWiffCommandLineImportSingleReplicate()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
-            string docPath = testFilesDir.GetTestPath(DOC_NAME);
-            string rawPath = testFilesDir.GetTestPath(WIFF_NAME);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
+            string docPath = TestFilesDir.GetTestPath(DOC_NAME);
+            string rawPath = TestFilesDir.GetTestPath(WIFF_NAME);
             const string replicateName = "MyReplicate";
 
             RunCommand("--in=" + docPath,

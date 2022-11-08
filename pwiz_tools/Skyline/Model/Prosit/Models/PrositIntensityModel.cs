@@ -110,6 +110,13 @@ namespace pwiz.Skyline.Model.Prosit.Models
             var peptideSequence = PrositHelpers.EncodeSequence(settings, skylineInput.NodePep, IsotopeLabelType.light, out exception);
             if (peptideSequence == null) // equivalently, exception != null
                 return null;
+            if (skylineInput.NodeGroup.PrecursorCharge > PrositConstants.PRECURSOR_CHARGES)
+            {
+                exception = new PrositException(string.Format(
+                    Resources.PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge,
+                    skylineInput.NodeGroup.PrecursorCharge, PrositConstants.PRECURSOR_CHARGES));
+                return null;
+            }
 
             var precursorCharge = PrositHelpers.OneHotEncode(skylineInput.NodeGroup.PrecursorCharge - 1, PrositConstants.PRECURSOR_CHARGES);
 

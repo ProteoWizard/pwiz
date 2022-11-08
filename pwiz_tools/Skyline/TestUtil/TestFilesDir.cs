@@ -26,10 +26,15 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
+    /// Desired level of clean-up in test directories
+    /// </summary>
+    public enum DesiredCleanupLevel { none, persistent_files, downloads, all }
+
+    /// <summary>
     /// Creates and cleans up a directory containing the contents of a
     /// test ZIP file.
     /// </summary>
-    public sealed class TestFilesDir : IDisposable
+    public sealed class TestFilesDir
     {
         private TestContext TestContext { get; set; }
 
@@ -81,7 +86,8 @@ namespace pwiz.SkylineTestUtil
             }
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
-            PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
+            if (PersistentFiles != null)
+                PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
         }
@@ -102,6 +108,19 @@ namespace pwiz.SkylineTestUtil
         public string PersistentFilesDir { get; private set; }
 
         public string[] PersistentFiles { get; private set; }
+
+        public string RootPath
+        {
+            get
+            {
+                // Handle the case where a DirectoryName has been added to differentiate
+                // folders running with the same test files.
+                var rootPath = FullPath;
+                if (!Equals(TestContext.GetTestPath(string.Empty), Path.GetDirectoryName(rootPath)))
+                    rootPath = Path.GetDirectoryName(rootPath);
+                return rootPath;
+            }
+        }
 
         /// <summary>
         /// Returns a full path to a file in the unzipped directory.
@@ -208,40 +227,84 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Attempts to move the directory to make sure no file handles are open.
+        /// <para>Attempts to move the directory to make sure no file handles are open.
         /// Used to delete the directory, but it can be useful to look at test
-        /// artifacts, after the tests complete.
+        /// artifacts, after the tests complete.</para>
+        /// <para>In some contexts, however, it may be more important to be space
+        /// efficient, and the chance to look at remaining artifacts is low (e.g. on
+        /// TeamCity VMs), so deletion is used again when called for.</para>
         /// </summary>
-        public void Dispose()
+        public void Cleanup()
         {
+            var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none);
+
+            CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
+            // Also check for file locks on the persistent files directory
+            // since it is essentially an extension of the test directory.
+            CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+        }
+
+        public static void CheckForFileLocks(string path, bool useDeletion = false)
+        {
+            if (!Directory.Exists(path)) // Did test already clean up after itself?
+                return;
+
+            // If deletion is acceptable, then simply try to delete the directory
+            // and the operation will throw a useful exception if it fails
+            if (useDeletion)
+            {
+                RemoveReadonlyFlags(path);
+                Helpers.TryTwice(() => Directory.Delete(path, true));
+                return;
+            }
+
             // Move to a new name within the same directory
             string guidName = Guid.NewGuid().ToString();
-            string parentPath = Path.GetDirectoryName(FullPath);
+            string parentPath = Path.GetDirectoryName(path);
             if (parentPath != null)
                 guidName = Path.Combine(parentPath, guidName);
 
-            if (Directory.Exists(FullPath))  // Did test already clean up after itself?
+            try
             {
-                try
-                {
-                    Helpers.TryTwice(() => Directory.Move(FullPath, guidName));
-                }
-                catch (IOException)
-                {
-                    // Useful for debugging. Exception names file that is locked.
-                    Helpers.TryTwice(() => Directory.Delete(FullPath, true));
-                }
+                Helpers.TryTwice(() => Directory.Move(path, guidName));
+            }
+            catch (IOException)
+            {
+                // Useful for debugging. Exception names file that is locked.
+                Helpers.TryTwice(() => Directory.Delete(path, true));
+            }
 
-                // Move the file back to where it was, and fail if this throws
-                try
-                {
-                    Helpers.TryTwice(() => Directory.Move(guidName, FullPath));
-                }
-                catch (IOException)
-                {
-                    // Useful for debugging. Exception names file that is locked.
-                    Helpers.TryTwice(() => Directory.Delete(guidName, true));
-                }
+            // Move the file back to where it was, and fail if this throws
+            try
+            {
+                Helpers.TryTwice(() => Directory.Move(guidName, path));
+            }
+            catch (IOException)
+            {
+                // Useful for debugging. Exception names file that is locked.
+                Helpers.TryTwice(() => Directory.Delete(guidName, true));
+            }
+        }
+
+        /// <summary>
+        /// Recursively removes read-only flags from files in a directory
+        /// making it possible to delete with Directory.Delete().
+        /// Note that it does not check for shortcuts/symbolic links to
+        /// other folders.
+        /// </summary>
+        public static void RemoveReadonlyFlags(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+            string[] dirs = Directory.GetDirectories(path);
+
+            foreach (string file in files)
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+            }
+
+            foreach (string dir in dirs)
+            {
+                RemoveReadonlyFlags(dir);
             }
         }
     }

@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>207</ApplicationRevision>
-    <ApplicationVersion>22.1.9.207</ApplicationVersion>
+    <ApplicationRevision>306</ApplicationRevision>
+    <ApplicationVersion>22.2.1.306</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -360,6 +360,8 @@
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
+    <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -390,6 +392,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\Startup\TutorialImageResources.Designer.cs">
@@ -566,9 +569,9 @@
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
-    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
-    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
-    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFit.cs" />
@@ -727,7 +730,6 @@
     <Compile Include="Model\Lists\ListItem.cs" />
     <Compile Include="Model\Lists\ListItemTypes.cs" />
     <Compile Include="Model\Lists\ListRowSource.cs" />
-    <Compile Include="Model\Lists\ListViewContext.cs" />
     <Compile Include="Model\RgbHexColor.cs" />
     <Compile Include="Model\GroupComparison\MatchExpression.cs" />
     <Compile Include="Model\GroupComparison\MatchRgbHexColor.cs" />
@@ -1344,7 +1346,7 @@
     <Compile Include="Model\Databinding\Collections\ResultList.cs" />
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
-    <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
+    <Compile Include="Controls\Databinding\DocumentGridViewContext.cs" />
     <Compile Include="Model\Databinding\Entities\Chromatogram.cs" />
     <Compile Include="Model\Databinding\Entities\ChromatogramGroup.cs" />
     <Compile Include="Model\Databinding\EditDescription.cs" />
@@ -1375,7 +1377,6 @@
     <Compile Include="Model\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
-    <Compile Include="Model\Databinding\SkylineViewContext.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
     <Compile Include="Model\Databinding\StandardTypeDataGridViewColumn.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
@@ -3347,6 +3348,14 @@
       <Link>grpc_csharp_ext.x86.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3452,6 +3461,7 @@
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
+    <None Include="PreBuildEvents.bat" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -5728,7 +5738,7 @@
     <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>

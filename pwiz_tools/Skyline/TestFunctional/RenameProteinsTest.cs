@@ -162,9 +162,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunUI(() =>
                           {
-                              SkylineWindow.SaveDocument(TestContext.GetTestPath("test.sky"));
+                              SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("test.sky"));
                               SkylineWindow.NewDocument();
-                              SkylineWindow.OpenFile(TestContext.GetTestPath("test.sky"));
+                              SkylineWindow.OpenFile(TestFilesDir.GetTestPath("test.sky"));
                           });
                 var docFastaRename = WaitForDocumentChange(docOrig);
                 var peptideGroups = docFastaRename.PeptideGroups.ToArray();
