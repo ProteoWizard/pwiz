@@ -23,11 +23,11 @@
       <?define ProgramFilesFolder="ProgramFilesFolder"?>
       <?endif?>
 
-      <PropertyRef Id='NETFRAMEWORK35'/>
+      <!--<PropertyRef Id='NETFRAMEWORK35'/>
       <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
       <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">
         <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
-      </Condition>
+      </Condition>-->
 
       <PropertyRef Id='NETFRAMEWORK45'/>
       <Condition Message="Requires Microsoft .NET 4.7.2 Framework">
