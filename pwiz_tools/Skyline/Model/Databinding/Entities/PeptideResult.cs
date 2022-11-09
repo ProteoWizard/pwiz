@@ -218,12 +218,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [ChildDisplayName("Replicate{0}")]
-        public LinkValue<CalibrationCurve> ReplicateCalibrationCurve
+        public LinkValue<CalibrationCurveMetrics> ReplicateCalibrationCurve
         {
             get
             {
                 var curveFitter = GetCalibrationCurveFitter();
-                return new LinkValue<CalibrationCurve>(curveFitter.GetCalibrationCurve(), (sender, args) =>
+                return new LinkValue<CalibrationCurveMetrics>(curveFitter.GetCalibrationCurveMetrics(), (sender, args) =>
                 {
                     if (null == DataSchema.SkylineWindow)
                     {
