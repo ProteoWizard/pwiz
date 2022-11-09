@@ -330,12 +330,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 if (HasInternalStandardConcentration())
                 {
-                    return new CalibrationCurve.Linear(
-                        1 / PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0),
-                        null);
+                    return new CalibrationCurve.Simple(1 / PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0));
                 }
 
-                return new CalibrationCurve.Linear(1, null);
+                return new CalibrationCurve.Simple(1);
             }
             foreach (var replicateIndex in GetValidStandardReplicates())
             {

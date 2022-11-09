@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     {
         // The CalibrationCurve that you get if you have no external standards.
         public static readonly CalibrationCurve NO_EXTERNAL_STANDARDS
-            = new Linear(1, null);
+            = new Simple(1);
 
         public abstract double? GetY(double? x);
 
@@ -305,6 +305,35 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
         }
 
+        public class Simple : CalibrationCurve
+        {
+            public Simple(double slope)
+            {
+                Slope = slope;
+            }
+
+            public double Slope { get; }
+            public override double? GetY(double? x)
+            {
+                return x * Slope;
+            }
+
+            public override double? GetX(double? y)
+            {
+                return y / Slope;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangePointCount(0);
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"y = {0}x", Slope);
+            }
+        }
+
         public class Error : CalibrationCurve
         {
             public Error(string message)
@@ -333,6 +362,5 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return @"Error: " + ErrorMessage;
             }
         }
-
     }
 }
