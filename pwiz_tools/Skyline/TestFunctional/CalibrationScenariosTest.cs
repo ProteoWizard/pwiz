@@ -25,6 +25,11 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// This test generates files which are intended to be committed to the TargetedMS project
+    /// in the "CalibrationScenariosTest" folder:
+    /// https://github.com/LabKey/targetedms/tree/develop/test/sampledata/TargetedMS/Quantification/CalibrationScenariosTest
+    /// </summary>
     [TestClass]
     public class CalibrationScenariosTest : AbstractFunctionalTest
     {

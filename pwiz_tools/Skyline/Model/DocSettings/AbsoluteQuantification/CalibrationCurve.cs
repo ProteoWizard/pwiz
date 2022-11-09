@@ -48,14 +48,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public CalibrationCurveMetrics GetMetrics(IList<WeightedPoint> points)
         {
-            var calibrationCurveRow = CreateCalibrationCurveMetrics()
-                .ChangePointCount(points.Count);
-            double? rSquared = CalculateRSquared(points);
-            if (rSquared.HasValue)
+            var calibrationCurveRow = CreateCalibrationCurveMetrics();
+            if (points.Count != 0)
             {
-                calibrationCurveRow = calibrationCurveRow.ChangeRSquared(rSquared);
+                calibrationCurveRow = calibrationCurveRow.ChangePointCount(points.Count);
+                double? rSquared = CalculateRSquared(points);
+                if (rSquared.HasValue)
+                {
+                    calibrationCurveRow = calibrationCurveRow.ChangeRSquared(rSquared);
+                }
             }
-
             return calibrationCurveRow;
         }
 

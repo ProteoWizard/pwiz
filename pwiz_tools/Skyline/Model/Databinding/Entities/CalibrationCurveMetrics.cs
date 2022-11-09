@@ -55,8 +55,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
-        public int PointCount { get; private set; }
-        public CalibrationCurveMetrics ChangePointCount(int pointCount)
+        public int? PointCount { get; private set; }
+        public CalibrationCurveMetrics ChangePointCount(int? pointCount)
         {
             return ChangeProp(ImClone(this), im => im.PointCount = pointCount);
         }
