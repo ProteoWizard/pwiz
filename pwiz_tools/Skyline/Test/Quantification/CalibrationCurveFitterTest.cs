@@ -348,7 +348,7 @@ namespace pwiz.SkylineTest.Quantification
                     .Select(c => c.AnalyteConcentration.HasValue ? c : c.ChangeAnalyteConcentration(10)).ToList()));
             var baseCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(baseDocument.Settings,
                 baseDocument.MoleculeGroups.First(), baseDocument.Molecules.First());
-            var baseCurve = (LinearCalibrationCurve) baseCurveFitter.GetCalibrationCurve();
+            var baseCurve = (CalibrationCurve.Linear) baseCurveFitter.GetCalibrationCurve();
             // Set the dilution factor of each external standard to 2.0, and each unknown to 3.0
             var docWithDilutionFactor = baseDocument.ChangeMeasuredResults(
                 baseDocument.MeasuredResults.ChangeChromatograms(baseDocument.MeasuredResults.Chromatograms.Select(
@@ -357,7 +357,7 @@ namespace pwiz.SkylineTest.Quantification
             var dilutionFactorCurveFitter = CalibrationCurveFitter.GetCalibrationCurveFitter(
                 docWithDilutionFactor.Settings, docWithDilutionFactor.MoleculeGroups.First(),
                 docWithDilutionFactor.Molecules.First());
-            var dilutionFactorCurve = (LinearCalibrationCurve) dilutionFactorCurveFitter.GetCalibrationCurve();
+            var dilutionFactorCurve = (CalibrationCurve.Linear) dilutionFactorCurveFitter.GetCalibrationCurve();
             Assert.AreEqual(2.0 * baseCurve.Slope, dilutionFactorCurve.Slope);
             Assert.AreEqual(baseCurve.Intercept, dilutionFactorCurve.Intercept);
             for (int replicateIndex = 0; replicateIndex < baseDocument.MeasuredResults.Chromatograms.Count; replicateIndex++)

@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public static double? CalculateLodFromTurningPoint(CalibrationCurve calibrationCurve,
             CalibrationCurveFitter fitter)
         {
-            return (calibrationCurve as BilinearCalibrationCurve)?.TurningPoint;
+            return (calibrationCurve as CalibrationCurve.Bilinear)?.TurningPoint;
         }
 
         public static double? BlankPlusSdMultiple(CalibrationCurve calibrationCurve, CalibrationCurveFitter fitter, double sdMultiple)

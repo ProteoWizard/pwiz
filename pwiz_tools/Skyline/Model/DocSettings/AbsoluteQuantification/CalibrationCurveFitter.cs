@@ -330,12 +330,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 if (HasInternalStandardConcentration())
                 {
-                    return new LinearCalibrationCurve(
+                    return new CalibrationCurve.Linear(
                         1 / PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0),
                         null);
                 }
 
-                return new LinearCalibrationCurve(1, null);
+                return new CalibrationCurve.Linear(1, null);
             }
             foreach (var replicateIndex in GetValidStandardReplicates())
             {
@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             if (points.Count == 0)
             {
-                return new ErrorCalibrationCurve(QuantificationStrings
+                return new CalibrationCurve.Error(QuantificationStrings
                     .CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
             }
             return GetCalibrationCurveFromPoints(points);

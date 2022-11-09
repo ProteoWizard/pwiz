@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         }
                     }
                     double[] xValues;
-                    if (CalibrationCurve is BilinearCalibrationCurve bilinearCalibrationCurve)
+                    if (CalibrationCurve is CalibrationCurve.Bilinear bilinearCalibrationCurve)
                     {
                         xValues = new[] {minX, bilinearCalibrationCurve.TurningPoint, maxX};
                     }
@@ -306,7 +306,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         zedGraphControl.GraphPane.CurveList.Add(interpolatedLine);
                     }
                 }
-                labelLines.Add(CalibrationCurve.ToString());
+                labelLines.Add(CalibrationCurveMetrics.ToString());
 
                 if (CalibrationCurveMetrics.RSquared.HasValue)
                 {
