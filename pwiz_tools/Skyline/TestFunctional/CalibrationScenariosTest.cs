@@ -37,6 +37,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            TestContext.EnsureTestResultsDir();
             var exportLiveReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             var manageViewsForm = ShowDialog<ManageViewsForm>(exportLiveReportDlg.EditList);
             RunUI(() => manageViewsForm.ImportViews(TestFilesDir.GetTestPath("CalibrationReports.skyr")));
@@ -47,7 +48,9 @@ namespace pwiz.SkylineTestFunctional
                 "CalibrationTest",
                 "CalibrationExcludedTest",
                 "p180test_calibration_DukeApril2016",
-                "MergedDocuments"
+                "MergedDocuments",
+                "BilinearCalibrationTest",
+                "LinearInLogSpace"
             };
             foreach (var scenarioName in scenarioNames)
             {
@@ -58,7 +61,6 @@ namespace pwiz.SkylineTestFunctional
         private void RunScenario(string scenarioName)
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath(scenarioName + ".sky")));
-            TestContext.EnsureTestResultsDir();
             string baseName = TestContext.GetTestResultsPath(scenarioName);
             RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
             var reports = new[]

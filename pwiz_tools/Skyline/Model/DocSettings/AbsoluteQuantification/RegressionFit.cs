@@ -141,7 +141,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             public BilinearFit() : base(@"bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear)
             {
-                
             }
 
             protected override CalibrationCurve FitPoints(IList<WeightedPoint> weightedPoints)
@@ -217,14 +216,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     return new CalibrationCurve.Error(Resources.LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_);
                 }
-                var logPoints = points.Select(LogPoint).ToList();
+                var logPoints = points.Select(LogOfPoint).ToList();
                 var calibrationCurve = (CalibrationCurve.Linear) LinearFit(logPoints);
                 return new CalibrationCurve.LinearInLogSpace(calibrationCurve);
             }
 
-            protected WeightedPoint LogPoint(WeightedPoint pt)
+            protected WeightedPoint LogOfPoint(WeightedPoint pt)
             {
-                return new WeightedPoint(Math.Log(pt.X), Math.Log(pt.Y), pt.Weight);
+                return CalibrationCurve.LinearInLogSpace.LogOfPoint(pt);
             }
         }
     }

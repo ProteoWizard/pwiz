@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public CalibrationCurveMetrics GetMetrics(IList<WeightedPoint> points)
         {
-            var calibrationCurveRow = ToCalibrationCurveRow()
+            var calibrationCurveRow = CreateCalibrationCurveMetrics()
                 .ChangePointCount(points.Count);
             double? rSquared = CalculateRSquared(points);
             if (rSquared.HasValue)
@@ -59,7 +59,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return calibrationCurveRow;
         }
 
-        protected abstract CalibrationCurveMetrics ToCalibrationCurveRow();
+        protected abstract CalibrationCurveMetrics CreateCalibrationCurveMetrics();
+        public abstract override string ToString();
 
         public virtual double? CalculateRSquared(IEnumerable<WeightedPoint> points)
         {
@@ -85,6 +86,92 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             double rSquared = 1 - sumOfSquaresOfResiduals / totalSumOfSquares;
             return rSquared;
         }
+        public class Linear : CalibrationCurve
+        {
+            public Linear(double slope, double? intercept)
+            {
+                Slope = slope;
+                Intercept = intercept;
+            }
+
+            public double Slope { get; }
+            public double? Intercept { get; }
+
+            public override double? GetY(double? x)
+            {
+                return x * Slope + Intercept.GetValueOrDefault();
+            }
+
+            public override double? GetX(double? y)
+            {
+                return (y - Intercept.GetValueOrDefault()) / Slope;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
+            }
+
+            public override string ToString()
+            {
+                if (Intercept.HasValue)
+                {
+                    return string.Format(@"y = {0}x + {1}", Slope, Intercept);
+                }
+
+                return string.Format(@"y = {0}x", Slope);
+            }
+        }
+        public class Quadratic : CalibrationCurve
+        {
+            public Quadratic(double intercept, double slope, double quadraticCoefficient)
+            {
+                Intercept = intercept;
+                Slope = slope;
+                QuadraticCoefficient = quadraticCoefficient;
+            }
+
+            public double Intercept { get; }
+            public double Slope { get; }
+            public double QuadraticCoefficient { get; }
+
+            public override double? GetX(double? y)
+            {
+                // Quadratic formula: x = (-b +/- sqrt(b^2-4ac))/2a
+                double? a = QuadraticCoefficient;
+                double? b = Slope;
+                double? c = Intercept - y;
+
+                double? discriminant = b * b - 4 * a * c;
+                if (!discriminant.HasValue)
+                {
+                    return null;
+                }
+                if (discriminant < 0)
+                {
+                    return double.NaN;
+                }
+                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
+                return (-b + sqrtDiscriminant) / 2 / a;
+            }
+
+            public override double? GetY(double? x)
+            {
+                return x * x * QuadraticCoefficient + x * Slope + Intercept;
+            }
+
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
+            {
+                return new CalibrationCurveMetrics().ChangeIntercept(Intercept).ChangeSlope(Slope)
+                    .ChangeQuadraticCoefficient(QuadraticCoefficient);
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"y = {0}x^2 + {1}x + {2}", QuadraticCoefficient, Slope, Intercept);
+            }
+        }
+
         public class LinearInLogSpace : CalibrationCurve
         {
             private readonly Linear _linearCalibrationCurve;
@@ -129,85 +216,29 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
 
-            protected override CalibrationCurveMetrics ToCalibrationCurveRow()
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
                 return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
             }
 
+            /// <summary>
+            /// Linear in log space calibration curves, the R-squared is calculated using the logarithm
+            /// of the points and 
+            /// </summary>
             public override double? CalculateRSquared(IEnumerable<WeightedPoint> points)
             {
-                return _linearCalibrationCurve.CalculateRSquared(points.Select(point => new WeightedPoint(Math.Log(point.X), Math.Log(point.Y), point.Weight)).ToList());
-            }
-        }
-        public class Linear : CalibrationCurve
-        {
-            public Linear(double slope, double? intercept)
-            {
-                Slope = slope;
-                Intercept = intercept;
+                return _linearCalibrationCurve.CalculateRSquared(points.Select(LogOfPoint).ToList());
             }
 
-            public double Slope { get; }
-            public double? Intercept { get; }
-
-            public override double? GetY(double? x)
+            public static WeightedPoint LogOfPoint(WeightedPoint weightedPoint)
             {
-                return x * Slope + Intercept.GetValueOrDefault();
+                return new WeightedPoint(Math.Log(weightedPoint.X), Math.Log(weightedPoint.Y), weightedPoint.Weight);
             }
 
-            public override double? GetX(double? y)
+            public override string ToString()
             {
-                return (y - Intercept.GetValueOrDefault()) / Slope;
-            }
-
-            protected override CalibrationCurveMetrics ToCalibrationCurveRow()
-            {
-                return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept);
-            }
-        }
-
-        public class Quadratic : CalibrationCurve
-        {
-            public Quadratic(double intercept, double slope, double quadraticCoefficient)
-            {
-                Intercept = intercept;
-                Slope = slope;
-                QuadraticCoefficient = quadraticCoefficient;
-            }
-
-            public double Intercept { get; }
-            public double Slope { get; }
-            public double QuadraticCoefficient { get; }
-
-            public override double? GetX(double? y)
-            {
-                // Quadratic formula: x = (-b +/- sqrt(b^2-4ac))/2a
-                double? a = QuadraticCoefficient;
-                double? b = Slope;
-                double? c = Intercept - y;
-
-                double? discriminant = b * b - 4 * a * c;
-                if (!discriminant.HasValue)
-                {
-                    return null;
-                }
-                if (discriminant < 0)
-                {
-                    return double.NaN;
-                }
-                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
-                return (-b + sqrtDiscriminant) / 2 / a;
-            }
-
-            public override double? GetY(double? x)
-            {
-                return x * x * QuadraticCoefficient + x * Slope + Intercept;
-            }
-
-            protected override CalibrationCurveMetrics ToCalibrationCurveRow()
-            {
-                return new CalibrationCurveMetrics().ChangeIntercept(Intercept).ChangeSlope(Slope)
-                    .ChangeQuadraticCoefficient(QuadraticCoefficient);
+                return string.Format(@"log(y) = {0} log(x) + {1}", _linearCalibrationCurve.Slope,
+                    _linearCalibrationCurve.Intercept ?? 0);
             }
         }
         public class Bilinear : CalibrationCurve
@@ -260,10 +291,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return _linearCalibrationCurve.GetX(y);
             }
 
-            protected override CalibrationCurveMetrics ToCalibrationCurveRow()
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
                 return new CalibrationCurveMetrics().ChangeSlope(Slope).ChangeIntercept(Intercept)
                     .ChangeTurningPoint(TurningPoint);
+            }
+
+            public override string ToString()
+            {
+                return _linearCalibrationCurve + string.Format(@"; x > {0}", TurningPoint);
             }
         }
 
@@ -285,9 +321,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
 
-            protected override CalibrationCurveMetrics ToCalibrationCurveRow()
+            protected override CalibrationCurveMetrics CreateCalibrationCurveMetrics()
             {
                 return new CalibrationCurveMetrics().ChangeErrorMessage(ErrorMessage);
+            }
+
+            public override string ToString()
+            {
+                return @"Error: " + ErrorMessage;
             }
         }
 

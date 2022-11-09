@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2022 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using pwiz.Common.DataBinding.Attributes;
@@ -17,51 +35,50 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
         public double? Slope { get; private set; }
-
         public CalibrationCurveMetrics ChangeSlope(double? slope)
         {
             return ChangeProp(ImClone(this), im => im.Slope = slope);
         }
+
         [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
         public double? Intercept { get; private set; }
-
         public CalibrationCurveMetrics ChangeIntercept(double? intercept)
         {
             return ChangeProp(ImClone(this), im => im.Intercept = intercept);
         }
+
         [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
         public double? TurningPoint { get; private set; }
-
         public CalibrationCurveMetrics ChangeTurningPoint(double? turningPoint)
         {
             return ChangeProp(ImClone(this), im => im.TurningPoint = turningPoint);
         }
+
+        [Format(NullValue = TextUtil.EXCEL_NA)]
+        public int PointCount { get; private set; }
+        public CalibrationCurveMetrics ChangePointCount(int pointCount)
+        {
+            return ChangeProp(ImClone(this), im => im.PointCount = pointCount);
+        }
+
         [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
         public double? QuadraticCoefficient { get; private set; }
-
         public CalibrationCurveMetrics ChangeQuadraticCoefficient(double? quadraticCoefficient)
         {
             return ChangeProp(ImClone(this), im => im.QuadraticCoefficient = quadraticCoefficient);
         }
+
         [Format(Formats.CalibrationCurve, NullValue = TextUtil.EXCEL_NA)]
         public double? RSquared { get; private set; }
-
         public CalibrationCurveMetrics ChangeRSquared(double? rSquared)
         {
             return ChangeProp(ImClone(this), im => im.RSquared = rSquared);
         }
-        public string ErrorMessage { get; private set; }
 
+        public string ErrorMessage { get; private set; }
         public CalibrationCurveMetrics ChangeErrorMessage(string errorMessage)
         {
             return ChangeProp(ImClone(this), im => im.ErrorMessage = errorMessage);
-        }
-
-        public int PointCount { get; private set; }
-
-        public CalibrationCurveMetrics ChangePointCount(int pointCount)
-        {
-            return ChangeProp(ImClone(this), im => im.PointCount = pointCount);
         }
 
         int IComparable.CompareTo(object obj)
@@ -119,6 +136,5 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_ +
                    rSquared.ToString(@"0.####");
         }
-
     }
 }
