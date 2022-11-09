@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 return null;
             }
-            var calibrationCurve = peptideEntity.CalibrationCurve.Value;
+            var calibrationCurve = peptideEntity.GetCalibrationCurveFitter().GetCalibrationCurve();
             var concentrationMultiplier = peptideEntity.ConcentrationMultiplier.GetValueOrDefault(1);
             double? bestLoq = null;
             foreach (var grouping in peptideResults.OrderByDescending(g => g.Key))
@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestFunctional
                         continue;
                     }
                     var meanArea = areas.Average();
-                    var backCalculatedConcentration = calibrationCurve.GetFittedX(meanArea);
+                    var backCalculatedConcentration = calibrationCurve.GetXValueForLimitOfDetection(meanArea);
                     if (!backCalculatedConcentration.HasValue)
                     {
                         break;

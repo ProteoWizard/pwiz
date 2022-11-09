@@ -51,11 +51,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var linearPoints = points.Where(pt => pt.X > xOffset).ToList();
             var baselinePoints = points.Where(pt => pt.X <= xOffset).ToList();
 
-            CalibrationCurve linearFit;
+            CalibrationCurve.Linear linearFit;
             if (linearPoints.Select(pt=>pt.X).Distinct().Count() >= 2)
             {
-                linearFit = RegressionFit.LinearFit(linearPoints);
-                if (linearFit == null || !string.IsNullOrEmpty(linearFit.ErrorMessage))
+                linearFit = RegressionFit.LINEAR.Fit(linearPoints) as CalibrationCurve.Linear;
+                if (linearFit == null)
                 {
                     return null;
                 }
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             else
             {
                 baselinePoints.AddRange(linearPoints);
-                linearFit = new CalibrationCurve(RegressionFit.LINEAR).ChangeSlope(0).ChangeIntercept(0);
+                linearFit = new CalibrationCurve.Linear(0, 0);
             }
 
             var baselineStats = new Util.Statistics(baselinePoints.Select(pt => pt.Y));

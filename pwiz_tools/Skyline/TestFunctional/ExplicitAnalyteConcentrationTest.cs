@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
                     WaitForGraphs();
                     if (molecule.GlobalStandardType == null)
                     {
-                        var calibrationCurve = calibrationForm.CalibrationCurve;
+                        var calibrationCurve = calibrationForm.CalibrationCurveMetrics;
                         Assert.IsTrue(calibrationCurve.RSquared > 0.99);
                         Assert.AreEqual(5, calibrationCurve.PointCount);
                     }

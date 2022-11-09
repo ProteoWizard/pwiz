@@ -16,14 +16,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return Math.Max(BaselineHeight, x * Slope + Intercept);
         }
 
-        public static BilinearCurveFit FromLinearFit(CalibrationCurve calibrationCurve, Statistics baselineStats,
+        public static BilinearCurveFit FromLinearFit(CalibrationCurve.Linear calibrationCurve, Statistics baselineStats,
             double totalError)
         {
             return new BilinearCurveFit
             {
                 StdDevBaseline = baselineStats.Length == 0 ? double.NaN : baselineStats.StdDevP(),
                 BaselineHeight = baselineStats.Length == 0 ? 0 : baselineStats.Mean(),
-                Slope = calibrationCurve.Slope.Value,
+                Slope = calibrationCurve.Slope,
                 Intercept = calibrationCurve.Intercept.Value,
                 Error = totalError
             };
