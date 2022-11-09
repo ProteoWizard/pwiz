@@ -137,16 +137,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 Peptide peptide = null;
                 Replicate replicate = null;
-                var calibrationCurve = default(LinkValue<CalibrationCurve>);
-                var replicateCalibrationCurve = default(LinkValue<CalibrationCurve>);
+                var calibrationCurve = default(LinkValue<CalibrationCurveMetrics>);
+                var replicateCalibrationCurve = default(LinkValue<CalibrationCurveMetrics>);
                 RunUI(() =>
                 {
                     var row = documentGrid.DataGridView.Rows[iRow];
                     peptide = (Peptide)row.Cells[colPeptide.Index].Value;
                     replicate = (Replicate)row.Cells[colReplicate.Index].Value;
-                    calibrationCurve = (LinkValue<CalibrationCurve>)row.Cells[colCalibrationCurve.Index].Value;
+                    calibrationCurve = (LinkValue<CalibrationCurveMetrics>)row.Cells[colCalibrationCurve.Index].Value;
                     replicateCalibrationCurve =
-                        (LinkValue<CalibrationCurve>)row.Cells[colReplicateCalibrationCurve.Index].Value;
+                        (LinkValue<CalibrationCurveMetrics>)row.Cells[colReplicateCalibrationCurve.Index].Value;
                 });
                 if (hasBatchNames)
                 {

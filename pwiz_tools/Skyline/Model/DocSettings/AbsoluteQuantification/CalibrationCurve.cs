@@ -45,9 +45,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return GetX(y);
         }
 
-        public CalibrationCurveMetrics MakeCalibrationCurveRow(IList<WeightedPoint> points)
+        public CalibrationCurveMetrics GetMetrics(IList<WeightedPoint> points)
         {
-            var calibrationCurveRow = ToCalibrationCurveRow();
+            var calibrationCurveRow = ToCalibrationCurveRow()
+                .ChangePointCount(points.Count);
             return AddRSquared(calibrationCurveRow, points);
         }
 

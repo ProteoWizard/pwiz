@@ -316,21 +316,27 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return row;
         }
 
-        public void GetCalibrationCurveAndMetrics(out CalibrationCurve calibrationCurve, out CalibrationCurveMetrics calibrationCurveMetrics)
+        public void GetCalibrationCurveAndMetrics(out CalibrationCurve calibrationCurve,
+            out CalibrationCurveMetrics calibrationCurveMetrics)
         {
-            
+            List<WeightedPoint> points = new List<WeightedPoint>();
+            calibrationCurve = GetCalibrationCurveAndPoints(points);
+            calibrationCurveMetrics = calibrationCurve.GetMetrics(points);
+        }
+
+        private CalibrationCurve GetCalibrationCurveAndPoints(List<WeightedPoint> points) 
+        {
             if (RegressionFit.NONE.Equals(QuantificationSettings.RegressionFit))
             {
                 if (HasInternalStandardConcentration())
                 {
-                    calibrationCurve = new LinearCalibrationCurve(1 / PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0), null);
+                    return new LinearCalibrationCurve(
+                        1 / PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0),
+                        null);
                 }
-                else
-                {
-                    calibrationCurve = new LinearCalibrationCurve(1, null);
-                }
+
+                return new LinearCalibrationCurve(1, null);
             }
-            List<WeightedPoint> points = new List<WeightedPoint>();
             foreach (var replicateIndex in GetValidStandardReplicates())
             {
                 double? intensity = GetYValue(replicateIndex);
@@ -338,21 +344,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     continue;
                 }
+
                 double x = GetSpecifiedXValue(replicateIndex).Value;
                 double weight = QuantificationSettings.RegressionWeighting.GetWeighting(x, intensity.Value);
                 WeightedPoint weightedPoint = new WeightedPoint(x, intensity.Value, weight);
                 points.Add(weightedPoint);
             }
+
             if (points.Count == 0)
             {
-                calibrationCurve = new ErrorCalibrationCurve(QuantificationStrings.CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
+                return new ErrorCalibrationCurve(QuantificationStrings
+                    .CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
             }
-            else
-            {
-                calibrationCurve = GetCalibrationCurveFromPoints(points);
-            }
-
-            calibrationCurveMetrics = calibrationCurve.MakeCalibrationCurveRow(points);
+            return GetCalibrationCurveFromPoints(points);
         }
 
         public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve)

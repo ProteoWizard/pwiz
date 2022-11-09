@@ -23,6 +23,7 @@ using MathNet.Numerics.LinearRegression;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -63,6 +64,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return new ErrorCalibrationCurve(e.Message);
             }
+        }
+
+        public CalibrationCurveMetrics GetCalibrationCurveMetrics(IList<WeightedPoint> points)
+        {
+            return Fit(points).GetMetrics(points);
         }
 
         public override string ToString()

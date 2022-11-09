@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
                     var precursor = (Precursor) row.Cells[colPrecursor.Index].Value;
                     var precursorResult = (PrecursorResult) row.Cells[colPrecursorResult.Index].Value;
                     var totalArea = precursorResult.TotalArea;
-                    var calculatedConcentration = replicateCalibrationCurve.Value.GetFittedX(totalArea);
+                    var calculatedConcentration = replicateCalibrationCurve.Value.GetXValueForLimitOfDetection(totalArea);
                     Assert.AreEqual(calculatedConcentration.Value, quantificationResult.Value.CalculatedConcentration.Value, .0001);
                     var expectedConcentration = precursorResult.Precursor.PrecursorConcentration;
                     var accuracy = calculatedConcentration / expectedConcentration;

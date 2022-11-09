@@ -9,6 +9,9 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    /// <summary>
+    /// Calibration curve values suitable for being displayed in a grid
+    /// </summary>
     [InvariantDisplayName("CalibrationCurve")]
     public class CalibrationCurveMetrics : Immutable, IComparable
     {
@@ -52,6 +55,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public CalibrationCurveMetrics ChangeErrorMessage(string errorMessage)
         {
             return ChangeProp(ImClone(this), im => im.ErrorMessage = errorMessage);
+        }
+
+        public int PointCount { get; private set; }
+
+        public CalibrationCurveMetrics ChangePointCount(int pointCount)
+        {
+            return ChangeProp(ImClone(this), im => im.PointCount = pointCount);
         }
 
         int IComparable.CompareTo(object obj)
