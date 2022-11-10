@@ -215,7 +215,7 @@ namespace pwiz.SkylineTestFunctional
             var actualLoq = peptideEntity.FiguresOfMerit.LimitOfQuantification;
             if (expectedLoq != actualLoq)
             {
-                Assert.AreEqual(expectedLoq, actualLoq, "Options: {0}", options);
+                Assert.AreEqual(expectedLoq, actualLoq);
             }
         }
 
@@ -306,12 +306,6 @@ namespace pwiz.SkylineTestFunctional
             public LodCalculation LodCalculation;
             public double? MaxLoqBias;
             public double? MaxLoqCv;
-
-            public override string ToString()
-            {
-                return string.Format("RegressionFit: {0} LodCalculation: {1} MaxLoqBias: {2} MaxLoqCv: {3}",
-                    RegressionFit, LodCalculation, MaxLoqBias, MaxLoqCv);
-            }
         }
     }
 }
