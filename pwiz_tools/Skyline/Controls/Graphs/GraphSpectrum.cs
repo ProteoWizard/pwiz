@@ -787,7 +787,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case PeptideTreeNode p:
                     {
                         var usingProsit = p.DocNode.IsProteomic && Settings.Default.Prosit;
-                        var listInfoGroups = GetChargeGroups(p, !usingProsit);
+                        var listInfoGroups = GetChargeGroups(p.DocNode, !usingProsit).ToArray();
                         return new SpectrumNodeSelection(stateProvider.SelectedNode, p.PepGroupNode, p.DocNode,
                             listInfoGroups.Length == 1 ? listInfoGroups[0] : null, null);
                     }
@@ -1150,10 +1150,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     else
                     {
                         precursors.AddRange((
-                            from peptide in selection.NodePep != null ? new[] { selection.NodePep } : selection.NodePepGroup.Peptides
-                            from precursor in peptide.TransitionGroups
-                            where precursor.HasLibInfo || prosit
-                            select new Precursor(settings, selection.SelectedTreeNode, peptide, precursor)).Take(limit));
+                            from nodePep in selection.NodePep != null ? new[] { selection.NodePep } : selection.NodePepGroup.Peptides
+                            from nodeTranGroup in GetChargeGroups(nodePep, !prosit)
+                            select new Precursor(settings, selection.SelectedTreeNode, nodePep, nodeTranGroup)).Take(limit));
                     }
                 }
 
@@ -1494,22 +1493,22 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return GraphPane.XAxis.Scale.Max; }
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
-        private static TransitionGroupDocNode[] GetChargeGroups(PeptideTreeNode nodeTree, bool requireLibInfo)
-// ReSharper restore SuggestBaseTypeForParameter
+        private static IEnumerable<TransitionGroupDocNode> GetChargeGroups(PeptideDocNode nodePep, bool requireLibInfo)
         {
             // Return the first group of each charge stat that has library info.
-            var listGroups = new List<TransitionGroupDocNode>();
-            foreach (TransitionGroupDocNode nodeGroup in nodeTree.ChildDocNodes)
+            var adducts = new HashSet<Adduct>();
+            foreach (var nodeGroup in nodePep.TransitionGroups)
             {
                 if (requireLibInfo && !nodeGroup.HasLibInfo)
                     continue;
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorAdduct;
-                if (!listGroups.Contains(g => g.TransitionGroup.PrecursorAdduct == precursorCharge))
-                    listGroups.Add(nodeGroup);
+                if (!adducts.Contains(precursorCharge))
+                {
+                    adducts.Add(precursorCharge);
+                    yield return nodeGroup;
+                }
             }
-            return listGroups.ToArray();
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
