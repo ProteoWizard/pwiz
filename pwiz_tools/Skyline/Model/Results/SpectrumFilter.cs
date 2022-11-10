@@ -229,7 +229,7 @@ namespace pwiz.Skyline.Model.Results
                                 _isSharedTime = false;
                             }
                         }
-                        if (canSchedule && peakBoundaries == null)
+                        if (canSchedule && (peakBoundaries == null || peakBoundaries.IsEmpty))
                         {
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {

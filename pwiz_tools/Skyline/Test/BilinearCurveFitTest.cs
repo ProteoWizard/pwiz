@@ -33,11 +33,11 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestBilinearFit()
         {
-            CalibrationCurve calcurve = RegressionFit.BILINEAR.Fit(LKPALAVILLER_POINTS);
+            var calcurve = (CalibrationCurve.Bilinear) RegressionFit.BILINEAR.Fit(LKPALAVILLER_POINTS);
             Assert.IsNotNull(calcurve.TurningPoint);
-            Assert.AreEqual(11673.593881022069, calcurve.TurningPoint.Value, 1);
-            Assert.AreEqual(1.2771070764E-12, calcurve.Slope.Value, 1E-15);
-            Assert.AreEqual(-1.4118993633E-08, calcurve.Intercept.Value, 1E-12);
+            Assert.AreEqual(11673.593881022069, calcurve.TurningPoint, 1);
+            Assert.AreEqual(1.2771070764E-12, calcurve.Slope, 1E-15);
+            Assert.AreEqual(-1.4118993633E-08, calcurve.Intercept, 1E-12);
         }
 
         public static readonly ImmutableList<WeightedPoint> LKPALAVILLER_POINTS = ImmutableList.ValueOf(new[]
