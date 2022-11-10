@@ -559,7 +559,11 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+#if DEBUG
+        private bool _buildDebug = true;
+#else
         private bool _buildDebug;
+#endif
 
         public enum BuildDirs
         {
@@ -599,7 +603,7 @@ namespace SkylineTester
             CheckBuildDirExistence(buildDirs);
             if (buildDirs.All(dir => dir == null))
             {
-                _buildDebug = true;
+                _buildDebug = !_buildDebug;
                 buildDirs = GetPossibleBuildDirs();
                 CheckBuildDirExistence(buildDirs);
                 _buildDebug = buildDirs.Any(dir => dir != null);

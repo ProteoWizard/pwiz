@@ -3967,6 +3967,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Relative retention time.
+        /// </summary>
+        public static string StaticMod_RelativeRT {
+            get {
+                return ResourceManager.GetString("StaticMod_RelativeRT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Terminus.
         /// </summary>
         public static string StaticMod_Terminus {

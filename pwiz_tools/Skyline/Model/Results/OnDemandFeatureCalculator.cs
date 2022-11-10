@@ -338,14 +338,6 @@ namespace pwiz.Skyline.Model.Results
 
             return null;
         }
-        public IEnumerable<float> ScorePeak(double startTime, double endTime, IEnumerable<DetailedPeakFeatureCalculator> calculators)
-        {
-            var peptideChromDataSets = MakePeptideChromDataSets();
-            var explicitPeakBounds = new PeakBounds(startTime, endTime);
-            peptideChromDataSets.PickChromatogramPeaks(explicitPeakBounds);
-            return peptideChromDataSets.DataSets[0].PeakSets.First().DetailScores;
-        }
-
         internal PeptideChromDataSets MakePeptideChromDataSets()
         {
             var peptideChromDataSets = new PeptideChromDataSets(PeptideDocNode, Settings, ChromFileInfo,

@@ -46,13 +46,13 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestCollectStatistics()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                                                           ExtensionTestContext.ExtThermoRaw);
                 var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { MsDataFileUri.Parse(rawPath) }) });
 
@@ -112,13 +112,13 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestNoiseTimeLimit()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                                                           ExtensionTestContext.ExtThermoRaw);
                 var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
 
@@ -129,8 +129,8 @@ namespace pwiz.SkylineTestData.Results
                 ChromCacheMinimizer.Settings settings = new ChromCacheMinimizer.Settings()
                     .ChangeDiscardUnmatchedChromatograms(false)
                     .ChangeNoiseTimeRange(1.0);
-                string minimized1Path = testFilesDir.GetTestPath("NoiseTimeLimited1.sky");
-                string minimized2Path = testFilesDir.GetTestPath("NoiseTimeLimited2.sky");
+                string minimized1Path = TestFilesDir.GetTestPath("NoiseTimeLimited1.sky");
+                string minimized2Path = TestFilesDir.GetTestPath("NoiseTimeLimited2.sky");
                 using (var docContainerMinimized1Min = MinimizeCacheFile(docResults,
                                                                          settings.ChangeNoiseTimeRange(1.0),
                                                                          minimized1Path))

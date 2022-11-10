@@ -309,6 +309,9 @@
   <data name="StaticMod_IsCrosslinker" xml:space="preserve">
     <value>Crosslinker</value>
   </data>
+  <data name="StaticMod_RelativeRT" xml:space="preserve">
+    <value>Relative retention time</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
   </data>

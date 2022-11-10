@@ -621,7 +621,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         barItem.Bar.Border.IsVisible = false;
                         barItem.Bar.Fill.Brush = GetBrushForNode(document.Settings, docNode, color);
                         barItem.Tag = new IdentityPath(identityPath, docNode.Id);
-                        CurveList.Add(barItem);
+                        CurveList.Add(barItem);                       // Add peak area bars
                     }
                 }
             }
@@ -655,7 +655,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 5f, Fill = new Fill(Color.DimGray)}
                 };
                 dotpLine.Tag = selectedTreeNode.Path;
-                CurveList.Insert(0, dotpLine);
+                CurveList.Insert(0, dotpLine);                  // Add dotp graph line
                 ToolTip.TargetCurves.ClearAndAdd(dotpLine);
             }
             else
@@ -676,7 +676,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
                 };
                 cutoffHighlightLine.Label.IsVisible = false;
-                CurveList.Add(cutoffHighlightLine);
+                CurveList.Insert(1, cutoffHighlightLine);                     // Add below cutoff highlight markers
                 ToolTip.TargetCurves.Add(cutoffHighlightLine);
 
 
@@ -697,7 +697,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale){Rect = new RectangleF(0, cutoff, 1, 0)},
                     Line = new LineBase(Color.Red)
                 };
-                GraphObjList.Add(cutoffLine);
+                GraphObjList.Add(cutoffLine);                          // Add  cutoff line
                 //This is a placeholder to make sure the line shows in the legend.
                 CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
                     Resources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))

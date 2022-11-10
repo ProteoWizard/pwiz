@@ -663,4 +663,16 @@
   <data name="Units_ppm" xml:space="preserve">
     <value>ppm</value>
   </data>
+  <data name="RelativeRT_Matching" xml:space="preserve">
+    <value>Matching</value>
+  </data>
+  <data name="RelativeRT_Overlapping" xml:space="preserve">
+    <value>Overlapping</value>
+  </data>
+  <data name="RelativeRT_Preceding" xml:space="preserve">
+    <value>Preceding</value>
+  </data>
+  <data name="RelativeRT_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
 </root>
