@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                     document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode,
                         peptideDocNode.TransitionGroups.First(),
-                        (float)document.Settings.TransitionSettings.Instrument.MzMatchTolerance,
+                        document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance,
                         out ChromatogramGroupInfo[] chromatogramGroups);
                     Assert.AreEqual(1, chromatogramGroups.Length, message);
                     var chromatogramGroupInfo = chromatogramGroups[0];

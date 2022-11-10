@@ -1865,7 +1865,7 @@ namespace pwiz.Skyline.Model
                     TransitionGroupTreeNode.GetLabel(find.TransitionGroup, find.PrecursorMz, string.Empty), filePath));
             }
 
-            var nodeGroupNew = change(find.NodeGroup, find.ChromInfo, Settings.TransitionSettings.Instrument.MzMatchTolerance, find.IndexSet, find.FileId,
+            var nodeGroupNew = change(find.NodeGroup, find.ChromInfo, Settings.TransitionSettings.Instrument.IonMatchMzTolerance, find.IndexSet, find.FileId,
                 find.OptimizationFunction);
             if (ReferenceEquals(find.NodeGroup, nodeGroupNew))
                 return this;
@@ -1919,9 +1919,9 @@ namespace pwiz.Skyline.Model
                 }
 
                 // Get all chromatograms for this transition group
-                var mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+                var mzMatchTolerance = document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance;
                 if (!document.Settings.MeasuredResults.TryLoadChromatogram(chromatograms, NodePep, NodeGroup,
-                        (float)mzMatchTolerance, out var chromInfos))
+                        mzMatchTolerance, out var chromInfos))
                 {
                     return;
                 }
