@@ -781,7 +781,14 @@ namespace TestRunner
             using (var receiver = new PullSocket())
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
-                int workerPort = receiver.BindRandomPort("tcp://*");
+                int workerPort;
+                if (commandLineArgs.HasArg("workerport"))
+                {
+                    workerPort = (int)commandLineArgs.ArgAsLong("workerport");
+                    receiver.Bind($"tcp://*:{workerPort}");
+                }
+                else
+                    workerPort = receiver.BindRandomPort("tcp://*");
 
                 string workerNames = null;
 
@@ -1921,6 +1928,9 @@ Here is a list of recognized arguments:
     workercount=[n]                 The number of parallel workers to run. One of the workers
                                     will be on the host, so only workercount - 1 Docker
                                     containers will be launched.
+
+    workerport=[n]                  The port the parallel server will listen for worker connections
+                                    on. If unset, a random port will be used.
 
     keepworkerlogs=[on|off]         Set keepworkerlogs=on to persist individual logs from each 
                                     Docker worker. Useful for debugging issues related to running

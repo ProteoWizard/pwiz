@@ -1270,11 +1270,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
                 showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-                menuStrip.Items.Add(showScanNumberContextMenuItem);
+                menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
                 showCollisionEnergyContextMenuItem.Checked = Settings.Default.ShowFullScanCE;
-                menuStrip.Items.Add(showCollisionEnergyContextMenuItem);
-                menuStrip.Items.Add(showPeakAnnotationsContextMenuItem);
-                menuStrip.Items.Add(toolStripSeparator1);
+                menuStrip.Items.Insert(1, showCollisionEnergyContextMenuItem);
+                menuStrip.Items.Insert(2, showPeakAnnotationsContextMenuItem);
+                menuStrip.Items.Insert(3, toolStripSeparator1);
 
                 var currentTransition =
                     _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
