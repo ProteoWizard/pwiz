@@ -316,8 +316,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var settings = SkylineWindow.DocumentUI.Settings;
-                var newLibs = settings.TransitionSettings.Libraries.ChangeIonMatchToleranceUnit(MzTolerance.Units.ppm)
-                    .ChangeIonMatchTolerance(10.0);
+                var newLibs = settings.TransitionSettings.Libraries.ChangeIonMatchMzTolerance(new MzTolerance(10.0, MzTolerance.Units.ppm));
                 var newSettings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeLibraries(newLibs));
                 SkylineWindow.ModifyDocument("Set test settings",
                     doc => doc.ChangeSettings(newSettings));

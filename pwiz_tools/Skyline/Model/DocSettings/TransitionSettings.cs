@@ -1638,10 +1638,9 @@ namespace pwiz.Skyline.Model.DocSettings
         private const double MAX_MATCH_TOLERANCE = 1.0;
         private const double MAX_MATCH_TOLERANCE_PPM = 100.1;    // Increased from 1 to 100 for ppm tolerance units
 
-        public TransitionLibraries(double ionMatchTolerance, MzTolerance.Units ionMatchToleranceUnit, int minIonCount, int ionCount, TransitionLibraryPick pick)
+        public TransitionLibraries(MzTolerance ionMatchMzTolerance, int minIonCount, int ionCount, TransitionLibraryPick pick)
         {
-            IonMatchTolerance = ionMatchTolerance;
-            IonMatchToleranceUnit = ionMatchToleranceUnit;
+            IonMatchMzTolerance = ionMatchMzTolerance;
             MinIonCount = minIonCount;
             IonCount = ionCount;
             Pick = pick;
@@ -1650,18 +1649,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         [Track]
-        public double IonMatchTolerance { get; private set; }
-
-        [Track]
-        public MzTolerance.Units IonMatchToleranceUnit { get; private set; }
-
-        public MzTolerance IonMatchMzTolerance
-        {
-            get
-            {
-                return new MzTolerance(IonMatchTolerance, IonMatchToleranceUnit);
-            }
-        }
+        public MzTolerance IonMatchMzTolerance { get; set; }
 
         public static double GetMaxMatchTolerance(MzTolerance.Units unit)
         {
@@ -1699,14 +1687,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Property change methods
 
-        public TransitionLibraries ChangeIonMatchTolerance(double prop)
+        public TransitionLibraries ChangeIonMatchMzTolerance(MzTolerance prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.IonMatchTolerance = v, prop);
-        }
-
-        public TransitionLibraries ChangeIonMatchToleranceUnit(MzTolerance.Units prop)
-        {
-            return ChangeProp(ImClone(this), (im, v) => im.IonMatchToleranceUnit = v, prop);
+            return ChangeProp(ImClone(this), (im, v) => im.IonMatchMzTolerance = v, prop);
         }
 
         public TransitionLibraries ChangeMinIonCount(int prop)
@@ -1751,12 +1734,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void DoValidate()
         {
-            if (MIN_MATCH_TOLERANCE > IonMatchTolerance || IonMatchTolerance > GetMaxMatchTolerance(IonMatchToleranceUnit))
+            if (MIN_MATCH_TOLERANCE > IonMatchMzTolerance.Value || IonMatchMzTolerance.Value > GetMaxMatchTolerance(IonMatchMzTolerance.Unit))
             {
                 throw new InvalidDataException(string.Format(
-                    Resources
-                        .TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__,
-                    IonMatchTolerance, MIN_MATCH_TOLERANCE, GetMaxMatchTolerance(IonMatchToleranceUnit)));
+                    Resources.TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__,
+                    IonMatchMzTolerance, MIN_MATCH_TOLERANCE, GetMaxMatchTolerance(IonMatchMzTolerance.Unit)));
             }
 
             if (0 > MinIonCount || MinIonCount > MAX_ION_COUNT)
@@ -1789,8 +1771,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read start tag attributes
-            IonMatchTolerance = reader.GetDoubleAttribute(ATTR.ion_match_tolerance);
-            IonMatchToleranceUnit = reader.GetEnumAttribute(ATTR.ion_match_tolerance_unit, MzTolerance.Units.mz);
+            IonMatchMzTolerance = new MzTolerance(reader.GetDoubleAttribute(ATTR.ion_match_tolerance),
+                reader.GetEnumAttribute(ATTR.ion_match_tolerance_unit, MzTolerance.Units.mz));
             MinIonCount = reader.GetIntAttribute(ATTR.min_ion_count);
             IonCount = reader.GetIntAttribute(ATTR.ion_count);
             Pick = reader.GetEnumAttribute(ATTR.pick_from, TransitionLibraryPick.all);
@@ -1804,9 +1786,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
-            writer.WriteAttribute(ATTR.ion_match_tolerance, IonMatchTolerance);
-            if(IonMatchToleranceUnit != MzTolerance.Units.mz)
-                writer.WriteAttribute(ATTR.ion_match_tolerance_unit, IonMatchToleranceUnit);
+            writer.WriteAttribute(ATTR.ion_match_tolerance, IonMatchMzTolerance.Value);
+            if(IonMatchMzTolerance.Unit != MzTolerance.Units.mz)
+                writer.WriteAttribute(ATTR.ion_match_tolerance_unit, IonMatchMzTolerance.Unit);
             writer.WriteAttribute(ATTR.min_ion_count, MinIonCount);
             writer.WriteAttribute(ATTR.ion_count, IonCount);
             writer.WriteAttribute(ATTR.pick_from, Pick);
@@ -1820,7 +1802,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.IonMatchTolerance == IonMatchTolerance && obj.IonMatchToleranceUnit == IonMatchToleranceUnit &&
+            return obj.IonMatchMzTolerance.Value == IonMatchMzTolerance.Value && obj.IonMatchMzTolerance.Unit == IonMatchMzTolerance.Unit &&
                    obj.MinIonCount == MinIonCount && obj.IonCount == IonCount && Equals(obj.Pick, Pick);
         }
 
@@ -1836,8 +1818,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = IonMatchTolerance.GetHashCode();
-                result = (result * 397) ^ IonMatchToleranceUnit.GetHashCode();
+                int result = IonMatchMzTolerance.Value.GetHashCode();
+                result = (result * 397) ^ IonMatchMzTolerance.Unit.GetHashCode();
                 result = (result*397) ^ MinIonCount;
                 result = (result*397) ^ IonCount;
                 result = (result*397) ^ Pick.GetHashCode();

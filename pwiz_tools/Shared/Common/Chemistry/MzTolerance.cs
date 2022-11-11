@@ -34,6 +34,10 @@ namespace pwiz.Common.Chemistry
             Unit = units;
         }
 
+        public static implicit operator MzTolerance(double tolerance)
+        {
+            return new MzTolerance(tolerance);
+        }
         public static double operator +(double d, MzTolerance tolerance)
         {
             switch (tolerance.Unit)

@@ -51,21 +51,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public TransitionFilterAndLibrariesSettings(TransitionSettingsControl control)
                 : this(FixWhitespace(control.txtPeptidePrecursorCharges.Text),
                     FixWhitespace(control.txtPrecursorIonCharges.Text), FixWhitespace(control.txtIonTypes.Text),
-                    control.ExclusionUseDIAWindow, control.IonMatchTolerance, control.IonMatchToleranceUnit, control.MinIonCount, control.IonCount,
+                    control.ExclusionUseDIAWindow, control.IonMatchMzTolerance, control.MinIonCount, control.IonCount,
                     control.IonRangeFrom, control.IonRangeTo, control.MinIonMz, control.MaxIonMz)
             {
             }
 
             public TransitionFilterAndLibrariesSettings(string peptidePrecursorCharges, string peptideIonCharges,
-                string peptideIonTypes, bool exclusionUseDiaWindow, double ionMatchTolerance, MzTolerance.Units ionMatchToleranceUnit, int minIonCount,
+                string peptideIonTypes, bool exclusionUseDiaWindow, MzTolerance ionMatchMzTolerance, int minIonCount,
                 int ionCount, string ionRangeFrom, string ionRangeTo, double minIonMz, double maxIonMz)
             {
                 PeptidePrecursorCharges = peptidePrecursorCharges;
                 PeptideIonCharges = peptideIonCharges;
                 PeptideIonTypes = peptideIonTypes;
                 ExclusionUseDIAWindow = exclusionUseDiaWindow;
-                IonMatchTolerance = ionMatchTolerance;
-                IonMatchToleranceUnit = ionMatchToleranceUnit;
+                IonMatchMzTolerance = ionMatchMzTolerance;
                 MinIonCount = minIonCount;
                 IonCount = ionCount;
                 IonRangeFrom = ionRangeFrom;
@@ -79,7 +78,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return new TransitionFilterAndLibrariesSettings(transitionSettings.Filter.PeptidePrecursorChargesString,
                     transitionSettings.Filter.PeptideProductChargesString,
                     transitionSettings.Filter.PeptideIonTypesString, transitionSettings.Filter.ExclusionUseDIAWindow,
-                    transitionSettings.Libraries.IonMatchTolerance, transitionSettings.Libraries.IonMatchToleranceUnit,
+                    transitionSettings.Libraries.IonMatchMzTolerance,
                     transitionSettings.Libraries.MinIonCount,
                     transitionSettings.Libraries.IonCount, transitionSettings.Filter.FragmentRangeFirst.Label,
                     transitionSettings.Filter.FragmentRangeLast.Label, transitionSettings.Instrument.MinMz,
@@ -95,9 +94,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [Track]
             public bool ExclusionUseDIAWindow { get; private set; }
             [Track]
-            public double IonMatchTolerance { get; private set; }
-            [Track]
-            public MzTolerance.Units IonMatchToleranceUnit { get; private set; }
+            public MzTolerance IonMatchMzTolerance { get; private set; }
             [Track]
             public int MinIonCount { get; private set; }
             [Track]
@@ -117,8 +114,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             PeptidePrecursorCharges = settings.Filter.PeptidePrecursorCharges.ToArray();
             PeptideIonCharges = settings.Filter.PeptideProductCharges.ToArray();
             PeptideIonTypes = settings.Filter.PeptideIonTypes.ToArray();
-            IonMatchTolerance = settings.Libraries.IonMatchTolerance;
-            IonMatchToleranceUnit = settings.Libraries.IonMatchToleranceUnit;
+            IonMatchMzTolerance = settings.Libraries.IonMatchMzTolerance;
             MinIonCount = settings.Libraries.MinIonCount;
             IonCount = settings.Libraries.IonCount;
             // If library picking set to "all", make filter settings equivalent for "filter"
@@ -171,16 +167,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbExclusionUseDIAWindow.Checked = value; }
         }
 
-        public double IonMatchTolerance
+        public MzTolerance IonMatchMzTolerance
         {
-            get { return double.Parse(txtTolerance.Text, LocalizationHelper.CurrentCulture); }
-            set { txtTolerance.Text = value.ToString(LocalizationHelper.CurrentCulture); }
-        }
-
-        public MzTolerance.Units IonMatchToleranceUnit
-        {
-            get { return (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex; }
-            set { comboMatchToleranceUnit.SelectedItem = comboMatchToleranceUnit.Items[(int)value]; }
+            get 
+            { 
+                return new MzTolerance(double.Parse(txtTolerance.Text, LocalizationHelper.CurrentCulture),
+                    (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex);
+            }
+            set
+            {
+                txtTolerance.Text = value.Value.ToString(LocalizationHelper.CurrentCulture);
+                comboMatchToleranceUnit.SelectedItem = comboMatchToleranceUnit.Items[(int)value.Unit];
+            }
         }
 
         public int MinIonCount
@@ -282,10 +280,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                     var libraries = settings.Libraries.ChangePick(TransitionLibraryPick.filter);    // Always apply the filter when the wizard is used
                     var defLibraries = defSettings.Libraries;
-                    if (libraries.IonMatchTolerance == defLibraries.IonMatchTolerance)
-                        libraries = libraries.ChangeIonMatchTolerance(0.05);
-                    if (libraries.IonMatchToleranceUnit == defLibraries.IonMatchToleranceUnit)
-                        libraries = libraries.ChangeIonMatchToleranceUnit(MzTolerance.Units.mz);
+                    if (libraries.IonMatchMzTolerance == defLibraries.IonMatchMzTolerance)
+                        libraries = libraries.ChangeIonMatchMzTolerance(new MzTolerance(0.05));
                     if (libraries.IonCount == defLibraries.IonCount)
                         libraries = libraries.ChangeIonCount(6);
                     if (libraries.MinIonCount == defLibraries.MinIonCount)
@@ -430,7 +426,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 settings.Instrument.MaxInclusions, settings.Instrument.MinTime, settings.Instrument.MaxTime);
             Helpers.AssignIfEquals(ref instrument, settings.Instrument);
 
-            var libraries = new TransitionLibraries(ionMatchTolerance, ionMatchToleranceUnit, minIonCount, ionCount, TransitionLibraryPick.filter);
+            var libraries = new TransitionLibraries(new MzTolerance(ionMatchTolerance, ionMatchToleranceUnit), minIonCount, ionCount, TransitionLibraryPick.filter);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);

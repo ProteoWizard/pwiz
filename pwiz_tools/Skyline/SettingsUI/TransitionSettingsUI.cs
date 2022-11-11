@@ -143,8 +143,8 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize library settings
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
             panelPick.Visible = cbLibraryPick.Checked;
-            textTolerance.Text = Libraries.IonMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
-            comboToleranceUnits.SelectedItem = comboToleranceUnits.Items[(int)Libraries.IonMatchToleranceUnit];
+            textTolerance.Text = Libraries.IonMatchMzTolerance.Value.ToString(LocalizationHelper.CurrentCulture);
+            comboToleranceUnits.SelectedItem = comboToleranceUnits.Items[(int)Libraries.IonMatchMzTolerance.Unit];
             textMinIonCount.Text = Libraries.MinIonCount != 0 ? Libraries.MinIonCount.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
             textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
@@ -503,7 +503,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, ionMatchToleranceUnit, minIonCount, ionCount, pick);
+            TransitionLibraries libraries = new TransitionLibraries(new MzTolerance(ionMatchTolerance, ionMatchToleranceUnit), minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // This dialog does not yet change integration settings
