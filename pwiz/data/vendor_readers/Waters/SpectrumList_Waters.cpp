@@ -766,10 +766,20 @@ PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, vector<fl
     ie.setMass = setMass;
     ie.precursorMass = precursorMass;
 
+    ie.id = "";
     std::back_insert_iterator<std::string> sink(ie.id);
-    generate(sink,
-            "function=" << int_ << " process=" << int_ << " scan=" << int_,
-            ie.function + 1, ie.process, ie.scan + 1);
+    if (startScan == endScan)
+    {
+        generate(sink,
+                "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                ie.function + 1, ie.process, ie.scan + 1);
+    } 
+    else
+    {
+        generate(sink,
+                "function=" << int_ << " process=" << int_ << " scan=" << int_ << " merged=" << int_ << "-" << int_,
+                ie.function + 1, ie.process, ie.scan + 1, startScan + 1, endScan + 1);
+    }
     idToIndexMap_[ie.id] = ie.index; 
 }
 
