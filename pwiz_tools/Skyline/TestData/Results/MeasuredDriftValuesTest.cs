@@ -67,9 +67,11 @@ namespace pwiz.SkylineTestData.Results
                     return;
                 }
             }
-            var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
+
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip"); // Re-used from BlibDriftTimeTest
+
             // Open document with some peptides but no results
-            var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
+            var docPath = TestFilesDir.GetTestPath("BlibDriftTimeTest.sky");
             // This was a malformed document, which caused problems after a fix to not recalculate
             // document library settings on open. To avoid rewriting this test for the document
             // which now contains 2 precursors, the first precursor is removed immediately.
@@ -80,7 +82,7 @@ namespace pwiz.SkylineTestData.Results
             if (asSmallMolecules)
             {
                 var refine = new RefinementSettings();
-                docOriginal = refine.ConvertToSmallMolecules(docOriginal, testFilesDir.FullPath);
+                docOriginal = refine.ConvertToSmallMolecules(docOriginal, TestFilesDir.FullPath);
             }
             using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
             {
@@ -88,7 +90,7 @@ namespace pwiz.SkylineTestData.Results
 
                 // Import an mz5 file that contains drift info
                 const string replicateName = "ID12692_01_UCA168_3727_040714";
-                var rawFilePath = testFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5);
+                var rawFilePath = TestFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5);
                 var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
@@ -104,7 +106,7 @@ namespace pwiz.SkylineTestData.Results
 
                 // Verify ability to extract predictions from raw data
                 var libraryName0 = "test0";
-                var dbPath0 = testFilesDir.GetTestPath(libraryName0 + IonMobilityDb.EXT);
+                var dbPath0 = TestFilesDir.GetTestPath(libraryName0 + IonMobilityDb.EXT);
                 if (provokeError)
                 {
                     File.Delete(rawFilePath);
@@ -143,7 +145,7 @@ namespace pwiz.SkylineTestData.Results
                     new LibKey(pepSequence, Adduct.DOUBLY_PROTONATED);
                 revised.Add(new PrecursorIonMobilities(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123)));
                 var libraryName = "test";
-                var dbPath = testFilesDir.GetTestPath(libraryName+IonMobilityDb.EXT);
+                var dbPath = TestFilesDir.GetTestPath(libraryName+IonMobilityDb.EXT);
                 var imsdb = IonMobilityDb.CreateIonMobilityDb(dbPath, libraryName, false, revised);
                 var newLibIM = new IonMobilityLibrary(libraryName, dbPath, imsdb);
                 var ionMobilityWindowWidthCalculator = new IonMobilityWindowWidthCalculator(

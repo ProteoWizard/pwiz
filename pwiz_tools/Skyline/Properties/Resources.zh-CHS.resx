@@ -8891,9 +8891,6 @@
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>开发者版本</value>
   </data>
-  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
-    <value>Skyline 3.6</value>
-  </data>
   <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
     <value>测量的时间 ({0})</value>
   </data>
@@ -9213,9 +9210,6 @@
   <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_" xml:space="preserve">
     <value>您是否确定想要删除这些 {0} 离子对？</value>
     <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
-  </data>
-  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
-    <value>Skyline 3.7</value>
   </data>
   <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
     <value>导入分析库</value>
@@ -9649,9 +9643,6 @@
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>您确定要清除所有已保存的设置吗？这将立即把 {0} 退回到其原始配置，此操作不能撤销。</value>
   </data>
-  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
-    <value>Skyline 4.1</value>
-  </data>
   <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
     <value>{0} 分子</value>
   </data>
@@ -10004,9 +9995,6 @@
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} 不是有效的全扫描采集方法</value>
   </data>
-  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
-    <value>Skyline 4.2</value>
-  </data>
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>已嵌入</value>
   </data>
@@ -10243,9 +10231,6 @@
   </data>
   <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
     <value>未发现相应的 QC 色谱图</value>
-  </data>
-  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
-    <value>Skyline 19.1</value>
   </data>
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>错误：未能保存至用户配置文件。</value>
@@ -10582,9 +10567,6 @@
   </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>没有母离子化学式，不能使用子离子中性丢失化学式</value>
-  </data>
-  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
-    <value>Skyline 20.1</value>
   </data>
   <data name="RefineDlg_MSLevel_1" xml:space="preserve">
     <value>1</value>
@@ -10984,9 +10966,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>时序安排故障（无目标？）</value>
-  </data>
-  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
-    <value>Skyline 20.2</value>
   </data>
   <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames" xml:space="preserve">
     <value>并发帧</value>
@@ -11461,9 +11440,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
     <value>不能应用这些过滤器，因为它们会导致出现空的离子对列表。</value>
   </data>
-  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
-    <value>Skyline 21.1</value>
-  </data>
   <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
     <value>SureQuant 采集方法需要 "触发色谱图提取"。取消选中此选项将切换到 PRM 采集方法。是否要继续?</value>
   </data>
@@ -11635,10 +11611,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>正在查找 FASTA 文件中的肽段</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
-    <value>母离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值或留空，Skyline 将为您进行计算。</value>
+    <value>母离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值，或留空来让Skyline 为您进行计算。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_" xml:space="preserve">
-    <value>子离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值或留空，Skyline 将为您进行计算。</value>
+    <value>子离子质荷比 {0} 与根据离子公式和电荷状态计算得出的值 {1} 不一致（增量 = {2},离子对设置 | 仪器 | 方法匹配耐受性质荷比 = {3}）。纠正表中的质荷比值，或留空来让Skyline 为您进行计算。</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_" xml:space="preserve">
     <value>母离子公式和质荷比值在任何电荷状态下都不一致。</value>
@@ -11686,7 +11662,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>{1} 的得分阈值 {0} 只包括得分理想的鉴定。</value>
   </data>
   <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__will_include_all_identifications_" xml:space="preserve">
-    <value>{1} 的得分阈值 {1} 包括所有鉴定。</value>
+    <value>{1} 的得分阈值 {0} 包括所有鉴定。</value>
   </data>
   <data name="BuildLibraryGridView_GetThresholds_Score_threshold__0__for__1__is_unusually_permissive_" xml:space="preserve">
     <value>{1} 的得分阈值 {0} 异常宽松。</value>
@@ -11714,9 +11690,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>您确定想要继续？</value>
-  </data>
-  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
-    <value>Skyline 21.2</value>
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
     <value>正在打开数据库</value>
@@ -11777,13 +11750,13 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>正在计算蛋白质簇</value>
   </data>
   <data name="ProteinAssociation_Removing_subset_proteins" xml:space="preserve">
-    <value>正在删除子集蛋白质</value>
+    <value>正在删除蛋白质子集</value>
   </data>
   <data name="AssociateProteinsDlg_Find_minimal_protein_group_list_that_explains_all_peptides" xml:space="preserve">
     <value>查找能解释所有肽段的最小蛋白质组列表(&amp;M)</value>
   </data>
   <data name="AssociateProteinsDlg_Remove_subset_protein_groups" xml:space="preserve">
-    <value>删除子集蛋白质组(&amp;R)</value>
+    <value>删除蛋白质组子集(&amp;R)</value>
   </data>
   <data name="AssociateProteinsDlg_Min_peptides_per_protein_group" xml:space="preserve">
     <value>每个蛋白质组的最小肽段数(&amp;N)</value>
@@ -11792,10 +11765,10 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>点积：{0:0.0000}</value>
   </data>
   <data name="FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_" xml:space="preserve">
-    <value>第 {0} 行出错：在 {2} 位置出现无效的非 ASCII 字符 '{1}' ；是否确定这是 FASTA 文件？</value>
+    <value>第 {0} 行出错：在 {2} 位置出现无效的非 ASCII 字符 '{1}' ；确定这是 FASTA 文件吗？</value>
   </data>
   <data name="AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups" xml:space="preserve">
-    <value>将所有文档肽段组织到关联的蛋白质或蛋白质组中。</value>
+    <value>将所有文档中的肽段组织到关联的蛋白质或蛋白质组中。</value>
   </data>
   <data name="AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_" xml:space="preserve">
     <value>现有蛋白质关联将被丢弃。</value>

@@ -257,7 +257,12 @@ namespace pwiz.SkylineTestData
                 PropertyNames.RefinementSettings_CVCutoff
             };
             // Remove all elements above the cv cutoff
-            TestFilesDir = new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip");
+            var testFilesDirs = new[]
+            {
+                new TestFilesDir(TestContext, @"TestFunctional\AreaCVHistogramTest.zip"),
+                new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip"),
+            };
+            TestFilesDir = testFilesDirs[0];
             DocumentPath = InitRefineDocument("Rat_plasma.sky", 19, 29, 125, 125, 721);
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
             var output = Run(args.ToArray());
@@ -299,10 +304,13 @@ namespace pwiz.SkylineTestData
             IsDocumentState(OutPath, 19, 29, 3, 0, 3, 18, output);
 
             // Make sure error is recorded when peptide have only 1 replicate
-            TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
+            TestFilesDir = testFilesDirs[1];
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky", 1, 4, 37, 40, 338);
             output = Run(CommandArgs.ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF.GetArgumentTextWithValue(cvCutoff));
             AssertEx.Contains(output, Resources.RefinementSettings_Refine_The_document_must_contain_at_least_2_replicates_to_refine_based_on_consistency_);
+
+            // So that both TestFilesDirs get cleaned up properly
+            TestFilesDirs = testFilesDirs;
         }
 
         [TestMethod]

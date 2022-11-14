@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -31,8 +33,9 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using Transition = pwiz.Skyline.Model.Transition;
 
-namespace pwiz.Skyline.Model.Databinding.RowActions
+namespace pwiz.Skyline.Controls.Databinding.RowActions
 {
     /// <summary>
     /// Actions which remove peaks belonging to the items in the selected rows in the Document Grid.

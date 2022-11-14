@@ -196,14 +196,19 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (var row in documentGrid.DataGridView.Rows.Cast<DataGridViewRow>())
                 {
-                    var replicateCalibrationCurve =
-                        (LinkValue<CalibrationCurve>) row.Cells[colReplicateCalibrationCurve.Index].Value;
+                    var calibrationCurveMetrics =
+                        (LinkValue<CalibrationCurveMetrics>) row.Cells[colReplicateCalibrationCurve.Index].Value;
                     var quantificationResult =
                         (LinkValue<PrecursorQuantificationResult>) row.Cells[colQuantificationResult.Index].Value;
-                    var precursor = (Precursor) row.Cells[colPrecursor.Index].Value;
                     var precursorResult = (PrecursorResult) row.Cells[colPrecursorResult.Index].Value;
                     var totalArea = precursorResult.TotalArea;
-                    var calculatedConcentration = replicateCalibrationCurve.Value.GetFittedX(totalArea);
+                    var calibrationCurve =
+                        precursorResult.PeptideResult.GetCalibrationCurveFitter().GetCalibrationCurve();
+                    Assert.IsInstanceOfType(calibrationCurve, typeof(CalibrationCurve.Linear));
+                    var linearCalibrationCurve = (CalibrationCurve.Linear)calibrationCurve;
+                    Assert.AreEqual(linearCalibrationCurve.Slope, calibrationCurveMetrics.Value.Slope);
+                    Assert.AreEqual(linearCalibrationCurve.Intercept, calibrationCurveMetrics.Value.Intercept);
+                    var calculatedConcentration = calibrationCurve.GetXValueForLimitOfDetection(totalArea);
                     Assert.AreEqual(calculatedConcentration.Value, quantificationResult.Value.CalculatedConcentration.Value, .0001);
                     var expectedConcentration = precursorResult.Precursor.PrecursorConcentration;
                     var accuracy = calculatedConcentration / expectedConcentration;

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
+using System.Threading;
 
 namespace SkylineTester
 {
@@ -61,13 +62,29 @@ namespace SkylineTester
                 try
                 {
                     _process.CloseMainWindow();
-                    if (!_process.WaitForExit(500))
-                        _process.Kill();
+
+                    // Wait for exit on a new thread to avoid deadlocking
+                    var exitWaitThread = new Thread(WaitForProcessExit);
+                    exitWaitThread.Start();
                 }
                 catch
                 {
                     // Ignore failure
                 }
+            }
+
+            private void WaitForProcessExit()
+            {
+                // It would seem that we could use Process.WaitForExit(millis) but that
+                // has been seen to wait indefinitely under a debugger of a deadlock.
+                // So, just to be safe, a busy wait is used here.
+                for (int i = 0; i < 5; i++)
+                {
+                    if (_process.HasExited)
+                        return;
+                    Thread.Sleep(100);
+                }
+                _process.Kill();
             }
 
             private void KillChildren(int? pid = null, List<Process> childProcesses = null)

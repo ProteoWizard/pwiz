@@ -38,23 +38,47 @@ namespace pwiz.SkylineTestUtil
     {
         protected static string RunCommand(params string[] inputArgs)
         {
-            var consoleBuffer = new StringBuilder();
-            var consoleOutput = new CommandStatusWriter(new StringWriter(consoleBuffer));
-            var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleOutput, true);
+            return RunCommand(null, inputArgs);
+        }
 
-            var fail = exitStatus == Program.EXIT_CODE_SUCCESS && consoleOutput.IsErrorReported ||
-                       exitStatus != Program.EXIT_CODE_SUCCESS && !consoleOutput.IsErrorReported;
-            if (fail)
+        protected static string RunCommand(bool? expectSuccess, params string[] inputArgs)
+        {
+            var consoleBuffer = new StringBuilder();
+            var consoleWriter = new CommandStatusWriter(new StringWriter(consoleBuffer));
+
+            var exitStatus = CommandLineRunner.RunCommand(inputArgs, consoleWriter, true);
+
+            var consoleOutput = consoleBuffer.ToString();
+            bool errorReported = consoleWriter.IsErrorReported;
+
+            ValidateRunExitStatus(expectSuccess, exitStatus, errorReported, consoleOutput);
+
+            return consoleOutput;
+        }
+
+        private static void ValidateRunExitStatus(bool? expectSuccess, int exitStatus, bool errorReported, string consoleOutput)
+        {
+            string message = null;
+            // Make sure exist status and text error reporting match
+            if (exitStatus == Program.EXIT_CODE_SUCCESS && errorReported ||
+                exitStatus != Program.EXIT_CODE_SUCCESS && !errorReported)
             {
-                var message =
-                    TextUtil.LineSeparate(
-                        string.Format("{0} reported but exit status was {1}.",
-                            consoleOutput.IsErrorReported ? "Error" : "No error", exitStatus),
-                        "Output: ", consoleBuffer.ToString());
-                Assert.Fail(message);
+                message = string.Format("{0} reported but exit status was {1}.",
+                    errorReported ? "Error" : "No error", exitStatus);
+            }
+            else if (expectSuccess.HasValue)
+            {
+                // Make sure expected exit status matches actual
+                if (expectSuccess.Value && exitStatus != Program.EXIT_CODE_SUCCESS)
+                    message = string.Format("Expecting successful command-line execution but got {0} exit code.", exitStatus);
+                else if (!expectSuccess.Value && exitStatus == Program.EXIT_CODE_SUCCESS)
+                    message = "Expecting command-line error but execution was successful.";
             }
 
-            return consoleBuffer.ToString();
+            if (message != null)
+            {
+                Assert.Fail(TextUtil.LineSeparate(message, "Output: ", consoleOutput));
+            }
         }
 
         public SrmDocument ConvertToSmallMolecules(SrmDocument doc, ref string docPath, IEnumerable<string> dataPaths,

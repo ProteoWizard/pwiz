@@ -112,7 +112,7 @@
         <value>“洗脱”为 true 的内标母离子之间离子对的部分。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCalc" xml:space="preserve">
-        <value>离子对峰面积之和的以 10 为底的对数。
+        <value>离子对峰面积之和取以 10 为底的对数。
 如有内标母离子，则使用内标母离子计算，否则使用分析物母离子计算。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestDefaultIntensityCorrelationCalc" xml:space="preserve">
@@ -129,7 +129,7 @@
 如果存在内标母离子，则使用内标母离子进行计算，否则使用分析物母离子。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCalc" xml:space="preserve">
-        <value>分析物母离子之间的离子对峰面积之和的以 10 为底的对数。</value>
+        <value>分析物母离子之间的离子对峰面积之和取以 10 为底的对数。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestIntensityCorrelationCalc" xml:space="preserve">
         <value>MS2 离子对面积相对于库强度的归一化对比角度。
@@ -145,7 +145,7 @@
         <value>预测的保留时间与峰顶时间之差的平方。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCalc" xml:space="preserve">
-        <value>不同内标母离子的离子对峰面积之和的以 10 为底的对数。</value>
+        <value>不同内标母离子的离子对峰面积之和取以 10 为底的对数。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.MQuestStandardIntensityCorrelationCalc" xml:space="preserve">
         <value>MS2 离子对面积相对于库强度的归一化对比角度。
@@ -173,15 +173,15 @@
 使用分析物母离子计算。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenCrossWeightedShapeCalc" xml:space="preserve">
-        <value>MS1 离子和 MS2 离子之间的形状相关得分。
+        <value>MS1 离子和 MS2 离子之间的形状相关性得分。
 如有内标母离子，则使用内标母离子计算，否则使用分析物母离子计算。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenIsotopeDotProductCalc" xml:space="preserve">
-        <value>MS1 离子对面积的归一化对比角度与预测的同位素分布的对比。
+        <value>MS1 离子对面积与预测的同位素分布的归一化对比角度。
 使用得分最高的分析物母离子计算。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenPrecursorMassErrorCalc" xml:space="preserve">
-        <value>按离子对面积加权的分析物 MS1 离子对的平均质量误差。</value>
+        <value>按离子对面积加权的各分析物 MS1 离子对的平均质量误差。</value>
     </data>
   <data name="pwiz.Skyline.Model.Results.Scoring.NextGenProductMassErrorCalc" xml:space="preserve">
         <value>按离子对面积加权的各分析物 MS2 离子对的平均质量误差。</value>

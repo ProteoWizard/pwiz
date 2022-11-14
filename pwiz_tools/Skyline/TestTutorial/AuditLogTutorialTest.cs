@@ -42,6 +42,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -516,8 +517,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(labels);
             var lines = labels.Text.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
             Assert.IsTrue(lines.Length >= 2);
-            Assert.AreEqual(CalibrationCurve.Format(slope, intercept), lines[0]);
-            Assert.AreEqual(CalibrationCurve.RSquaredDisplayText(rSquared), lines[1]);
+            Assert.AreEqual(CalibrationCurveMetrics.Format(slope, intercept), lines[0]);
+            Assert.AreEqual(CalibrationCurveMetrics.RSquaredDisplayText(rSquared), lines[1]);
         }
 
         private void DelayedRunUI(Action act)

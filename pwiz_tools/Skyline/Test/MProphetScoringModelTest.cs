@@ -32,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class MProphetScoringModelTest : AbstractUnitTest
+    public class MProphetScoringModelTest : AbstractUnitTestEx
     {
         private const string ZIP_FILE = @"Test\MProphetScoringModelTest.zip";  // Not L10N
 
@@ -130,13 +130,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMProphetScoringModel()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             // Test our MProphet implementation against known good results.
             foreach (var fileWeights in _fileWeights)
             {
                 // Load transition groups from data file.
-                var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
+                var filePath = TestFilesDir.GetTestPath(fileWeights._fileName);
                 if (IsRecordMode)
                 {
                     Console.WriteLine();
@@ -170,14 +170,14 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestMProphetRandomDiscard()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             var random = new Random();
 
             // Test our MProphet implementation against known good results.
             foreach (var fileWeights in _fileWeights)
             {
                 // Load transition groups from data file.
-                var filePath = testFilesDir.GetTestPath(fileWeights._fileName);
+                var filePath = TestFilesDir.GetTestPath(fileWeights._fileName);
                 ScoredGroupPeaksSet targetTransitionGroups;
                 ScoredGroupPeaksSet decoyTransitionGroups;
                 LoadData(filePath, out targetTransitionGroups, out decoyTransitionGroups);
@@ -377,14 +377,7 @@ namespace pwiz.SkylineTest
 
                 // Determine separator (comma, space, or tab).
                 var headerTest = lines[0].Trim();
-                var commaCount = headerTest.Split(TextUtil.SEPARATOR_CSV).Length;
-                var spaceCount = headerTest.Split(TextUtil.SEPARATOR_SPACE).Length;
-                var tabCount = headerTest.Split(TextUtil.SEPARATOR_TSV).Length;
-                var maxCount = Math.Max(Math.Max(commaCount, spaceCount), tabCount);
-                var separator =
-                    commaCount == maxCount
-                        ? TextUtil.SEPARATOR_CSV
-                        : spaceCount == maxCount ? TextUtil.SEPARATOR_SPACE : TextUtil.SEPARATOR_TSV;
+                var separator = AssertEx.DetermineDsvDelimiter(lines, out var columnCount);
 
                 // Find header labels.  If all headings are numeric, then no header.
                 Header = headerTest.ParseDsvFields(separator);
@@ -408,7 +401,7 @@ namespace pwiz.SkylineTest
                 }
 
                 // Fill out data matrix.
-                Items = new string[lineCount - dataIndex,maxCount];
+                Items = new string[lineCount - dataIndex,columnCount];
                 for (int i = 0; i < Items.GetLength(0); i++)
                 {
                     var items = lines[i + dataIndex].Trim().ParseDsvFields(separator);
