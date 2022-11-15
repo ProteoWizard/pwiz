@@ -27305,6 +27305,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid instrument type for SCIEX OS method export..
+        /// </summary>
+        public static string SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_ {
+            get {
+                return ResourceManager.GetString("SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_" +
+                        "method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
         public static string SearchSettingsControl_Additional_Settings {

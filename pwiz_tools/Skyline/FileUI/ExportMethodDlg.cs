@@ -838,7 +838,8 @@ namespace pwiz.Skyline.FileUI
             }
 
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
-                Equals(InstrumentType, ExportInstrumentType.ABI_TOF))
+                Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                Equals(InstrumentType, ExportInstrumentType.ABI_7600))
             {
                 // Check that mass analyzer settings are set to TOF.
                 if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs, 
@@ -1974,6 +1975,11 @@ namespace pwiz.Skyline.FileUI
                 if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
+                }
+                else if (Equals(InstrumentType, ExportInstrumentType.ABI_7500) ||
+                         Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_SCIEX_OS));
                 }
                 else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
                 {
