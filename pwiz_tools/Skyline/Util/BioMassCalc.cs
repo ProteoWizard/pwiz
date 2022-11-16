@@ -640,13 +640,14 @@ namespace pwiz.Skyline.Util
             }
             return string.Concat(atomOrder.Select(atom =>
             {
-                var atomCount = dictAtomCounts[atom];
-                return atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom;
+                return dictAtomCounts.TryGetValue(atom, out var atomCount) && atomCount != 0 ? // We have seen things like C30H46N2O1XeH'0 in the wild - H' won't be in dictAtomCounts
+                    (atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom) :
+                    string.Empty;
             })); 
         }
 
         /// <summary>
-        /// Find the C'3H'3 in  C'3C2H9H'3NO2S
+        /// Find the C'3H'0 in  C'3C2H9H'0NO2S (yes, H'0 - seen in the wild)
         /// </summary>
         public IDictionary<string, int> FindIsotopeLabelsInFormula(string desc)
         {
@@ -654,7 +655,7 @@ namespace pwiz.Skyline.Util
                 return null;
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
-            ParseCounts(ref parse, dictAtomCounts, false);
+            ParseCounts(ref parse, dictAtomCounts, false, null, true);
             return dictAtomCounts.Where(pair => DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
         }
 
@@ -916,7 +917,8 @@ namespace pwiz.Skyline.Util
         /// <param name="dictAtomCounts">Dictionary of atomic symbols and counts (may already contain counts from other formulas)</param>
         /// <param name="negative">True if counts should be subtracted</param>
         /// <param name="atomOrder">If non-null, used to note order of appearance of atomic symbols in formula</param>
-        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative, IList<string> atomOrder=null)
+        /// <param name="retainZeros">If true, keep dictionary entries for atoms that end up with 0 count</param>
+        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative, IList<string> atomOrder=null, bool retainZeros = false)
         {
             if (string.IsNullOrEmpty(desc))
             {
@@ -967,7 +969,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
 
-                if (dictAtomCounts[sym] == 0)
+                if (dictAtomCounts[sym] == 0 && !retainZeros)
                     dictAtomCounts.Remove(sym);
 
                 desc = desc.Substring(endCount).TrimStart();
