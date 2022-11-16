@@ -35,10 +35,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestCommandLineImportAnnotations()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"Test\CommandLineImportAnnotationsTest.zip");
-            var inDocPath = testFilesDir.GetTestPath("original.sky");
-            var outDocPath = testFilesDir.GetTestPath("AnnotatedDocument.sky");
-            var annotationPath = testFilesDir.GetTestPath("annotations.csv");
+            TestFilesDir = new TestFilesDir(TestContext, @"Test\CommandLineImportAnnotationsTest.zip");
+            var inDocPath = TestFilesDir.GetTestPath("original.sky");
+            var outDocPath = TestFilesDir.GetTestPath("AnnotatedDocument.sky");
+            var annotationPath = TestFilesDir.GetTestPath("annotations.csv");
             SrmDocument originalDocument;
             using (var stream = new FileStream(inDocPath, FileMode.Open))
             {

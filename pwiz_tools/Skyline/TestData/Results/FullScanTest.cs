@@ -71,8 +71,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void FullScanFilterTestAsSmallMoleculesRoundtrip()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            var docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
             var expectedPepCount = 3;
             var expectedTransGroupCount = 4;
             var expectedTransCount = 32;
@@ -97,8 +97,8 @@ namespace pwiz.SkylineTestData.Results
         {
             docCheckpoints = new List<SrmDocument>();
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
             var expectedPepCount = 7;
             var expectedTransGroupCount = 7;
             var expectedTransCount = 49;
@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestData.Results
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                string rawPath = TestFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                     ExtensionTestContext.ExtThermoRaw);
                 var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { new MsDataFilePath(rawPath) }) });
 
@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestData.Results
                 docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 6, 6, 38));
 
                 // Import full scan Orbi-Velos data
-                docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_long_acc_template.sky");
+                docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_long_acc_template.sky");
                 expectedPepCount = 3;
                 expectedTransGroupCount = 3;
                 expectedTransCount = 21;
@@ -142,14 +142,14 @@ namespace pwiz.SkylineTestData.Results
                 // Make sure saving this type of document works
                 AssertEx.Serializable(doc, AssertEx.DocumentCloned);
                 Assume.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
-                rawPath = testFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
+                rawPath = TestFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
                     ExtensionTestContext.ExtThermoRaw);
                 measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Accurate", new[] { rawPath }) });
 
                 docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21));
 
                 // Import LTQ data with MS1 and MS/MS
-                docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
+                docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
                 expectedPepCount = 3;
                 expectedTransGroupCount = 4;
                 expectedTransCount = 32;
@@ -164,7 +164,7 @@ namespace pwiz.SkylineTestData.Results
                 AssertEx.Serializable(docBoth, AssertEx.DocumentCloned);
                 Assume.IsTrue(docContainer.SetDocument(docBoth, docContainer.Document));
 
-                string dataPath = testFilesDir.GetTestPath("klc_20100329v_Protea_Peptide_Curve_200fmol_uL_tech1.mzML");
+                string dataPath = TestFilesDir.GetTestPath("klc_20100329v_Protea_Peptide_Curve_200fmol_uL_tech1.mzML");
                 var listResults = new List<ChromatogramSet>
                                   {
                                       new ChromatogramSet("MS1 and MS/MS", new[] { dataPath }),
@@ -186,8 +186,8 @@ namespace pwiz.SkylineTestData.Results
                 // Import LTQ data with MS1 and MS/MS using multiple files for a single replicate
                 listResults.Add(new ChromatogramSet("Multi-file", new[]
                                                                   {
-                                                                      testFilesDir.GetTestPath("both_DRV.mzML"),
-                                                                      testFilesDir.GetTestPath("both_KVP.mzML"),
+                                                                      TestFilesDir.GetTestPath("both_DRV.mzML"),
+                                                                      TestFilesDir.GetTestPath("both_KVP.mzML"),
                                                                   }));
                 measuredResults = new MeasuredResults(listResults.ToArray());
                 docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, expectedPepCount - 1, expectedTransGroupCount - 1, expectedTransCount - 6));
@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestData.Results
                 }
 
                 // Verify handling of bad request for vendor centroided data - out-of-range PPM
-                docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
+                docPath = TestFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
                 expectedPepCount = 2;
                 expectedTransGroupCount = 2;
                 expectedTransCount = 2;
@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestData.Results
 
                 // Verify handling of bad request for vendor centroided data - ask for centroiding in mzML
                 const string fileName = "S_2_LVN.mzML";
-                var filePath = testFilesDir.GetTestPath(fileName);
+                var filePath = TestFilesDir.GetTestPath(fileName);
                 AssertEx.ThrowsException<AssertFailedException>(() =>
                 {
                     listResults = new List<ChromatogramSet> { new ChromatogramSet("rep1", new[] { new MsDataFilePath(filePath) }), };
@@ -287,7 +287,7 @@ namespace pwiz.SkylineTestData.Results
                     string.Format(Resources.NoCentroidedDataException_NoCentroidedDataException_No_centroided_data_available_for_file___0_____Adjust_your_Full_Scan_settings_, filePath));
 
                 // Import FT data with only MS1
-                docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
+                docPath = TestFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
                 expectedPepCount = 2;
                 expectedTransGroupCount = 2;
                 expectedTransCount = 2;
@@ -331,7 +331,7 @@ namespace pwiz.SkylineTestData.Results
                     }
                 }
                 const string rep2 = "rep2";
-                listResults.Add(new ChromatogramSet(rep2, new[] { testFilesDir.GetTestPath("S_2_NVN.mzML") }));
+                listResults.Add(new ChromatogramSet(rep2, new[] { TestFilesDir.GetTestPath("S_2_NVN.mzML") }));
                 measuredResults = new MeasuredResults(listResults.ToArray());
                 docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1));
                 // Because of the way the mzML files were filtered, all of the LVN peaks should be present

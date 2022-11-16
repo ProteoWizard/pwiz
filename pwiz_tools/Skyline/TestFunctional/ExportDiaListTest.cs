@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(fullScanDlg, fullScanDlg.OkDialog);
 
                 // Export simple isolation scheme.
-                string csvPath = TestContext.GetTestPath("TestExport1.csv");
+                string csvPath = TestContext.GetTestResultsPath("TestExport1.csv");
                 RunDlg<ExportMethodDlg>(
                     (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList)),
                     exportMethodDlg =>
@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(fullScanDlg, fullScanDlg.OkDialog);
 
                 // Export multiplexed isolation scheme.
-                string csvPath = TestContext.GetTestPath("TestExport2.csv");
+                string csvPath = TestContext.GetTestResultsPath("TestExport2.csv");
                 RunDlg<ExportMethodDlg>(
                     (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList)),
                     exportMethodDlg =>
@@ -187,7 +187,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(fullScanDlg, fullScanDlg.OkDialog);
 
                 // Export overlapped isolation scheme.
-                string csvPath = TestContext.GetTestPath("TestExport3.csv");
+                string csvPath = TestContext.GetTestResultsPath("TestExport3.csv");
                 RunDlg<ExportMethodDlg>(
                     (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList)),
                     exportMethodDlg =>

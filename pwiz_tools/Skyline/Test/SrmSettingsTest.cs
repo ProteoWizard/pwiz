@@ -1108,7 +1108,7 @@ namespace pwiz.SkylineTest
 
         TransitionIonMobilityFiltering CheckIonMobilitySettingsBackwardCompatibility(string xml, string expectError = null)
         {
-            var testFilesDir = TestContext.GetTestPath(string.Empty);
+            var testFilesDir = TestContext.GetTestResultsPath(string.Empty);
 
             if (expectError != null)
             {
@@ -1196,7 +1196,7 @@ namespace pwiz.SkylineTest
 
             var pred = CheckIonMobilitySettingsBackwardCompatibility("<predict_drift_time name=\"test\" resolving_power=\"100\"></predict_drift_time>");
             var libFileName = "test"+IonMobilityDb.EXT;
-            Assert.AreEqual(TestContext.GetTestPath(libFileName), pred.IonMobilityLibrary.FilePath);
+            Assert.AreEqual(TestContext.GetTestResultsPath(libFileName), pred.IonMobilityLibrary.FilePath);
             Assert.AreEqual("test", pred.IonMobilityLibrary.Name);
             Assert.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power, pred.FilterWindowWidthCalculator.WindowWidthMode);
             Assert.AreEqual(0, pred.FilterWindowWidthCalculator.PeakWidthAtIonMobilityValueZero);
@@ -1268,7 +1268,9 @@ namespace pwiz.SkylineTest
             var tmpFile19 = "V19_1.sky";
             var tmpFileCurrent = "V20_13.sky";
             var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
-            var testPath = TestContext.TestDir;
+            var testPath = TestContext.GetTestResultsPath();
+            if (!File.Exists(testPath))
+                Directory.CreateDirectory(testPath);
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.V19_1); // Round trip with IMS info in peptide settings
             AssertEx.Serializable(oldDoc, testPath, SkylineVersion.CURRENT); // Round trip with IMS info in transition settings
             oldDoc.SerializeToFile(tmpFile19, tmpFile19, SkylineVersion.V19_1, null);

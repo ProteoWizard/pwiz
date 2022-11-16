@@ -96,6 +96,7 @@ namespace pwiz.SkylineTestFunctional
                 var helpMenuItem = skylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
                     .FirstOrDefault(item => item.Name == "helpToolStripMenuItem");
                 Assert.IsNotNull(helpMenuItem);
+                SetShiftKeyState(false);
                 Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
                 helpMenuItem.ShowDropDown();
                 submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
@@ -116,14 +117,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(submitErrorReportMenuItem);
 
             // Use the hidden help menu item to bring up the ReportErrorDlg and verify that the document bytes are
-            // truncated to MAX_ATTACHMENT_SIZE 
-            var reportErrorDlg3 = ShowDialog<ReportErrorDlg>(()=>
+            // truncated to MAX_ATTACHMENT_SIZE
+            using (new StoreExceptions())
             {
-                using (new StoreExceptions())
+                SkylineWindow.BeginInvoke(new Action(() =>
                 {
                     submitErrorReportMenuItem.PerformClick();
-                }
-            });
+                }));
+                WaitForCondition(10000, () => null != FindOpenForm<ReportErrorDlg>(), throwOnProgramException: false);
+            }
+
+            var reportErrorDlg3 = FindOpenForm<ReportErrorDlg>();
+            Assert.IsNotNull(reportErrorDlg3);
             RunDlg<DetailedReportErrorDlg>(reportErrorDlg3.OkDialog, detailedDlg =>
             {
                 Assert.IsNotNull(detailedDlg);

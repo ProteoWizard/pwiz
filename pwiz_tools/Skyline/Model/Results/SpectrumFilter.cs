@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Model.Results
                                 _isSharedTime = false;
                             }
                         }
-                        if (canSchedule && peakBoundaries == null)
+                        if (canSchedule && (peakBoundaries == null || peakBoundaries.IsEmpty))
                         {
                             if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {
@@ -288,8 +288,8 @@ namespace pwiz.Skyline.Model.Results
                         if (!EnabledMs)
                         {
                             filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children select nodeTran).
-                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, IsMseData() ?
-                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0 : 0)), calcWindowsQ3);
+                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz,
+                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0)), calcWindowsQ3);
                         }
                         else if (!EnabledMsMs)
                         {
@@ -300,8 +300,8 @@ namespace pwiz.Skyline.Model.Results
                             filterCount += filter.AddQ1FilterValues(GetMS1MzValues(nodeGroup), calcWindowsQ1);
                             filterCount += filter.AddQ3FilterValues((from TransitionDocNode nodeTran in nodeGroup.Children
                                     where !nodeTran.IsMs1 select nodeTran).
-                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz, IsMseData() ?
-                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0 : 0)), 
+                                Select(nodeTran => new SpectrumFilterValues(nodeTran.Mz,
+                                    nodeTran.ExplicitValues.IonMobilityHighEnergyOffset ?? ionMobilityFilter.HighEnergyIonMobilityOffset ?? 0)), 
                                 calcWindowsQ3);
                         }
                     }

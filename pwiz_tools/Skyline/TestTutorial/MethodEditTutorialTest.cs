@@ -85,13 +85,11 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.AddInputFiles(new[] { TestFilesDirs[0].GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") }); // Not L10N
             });
             WaitForConditionUI(() => buildLibraryDlg.Grid.ScoreTypesLoaded);
-            RunUI(() =>
-            {
-                buildLibraryDlg.Grid.SetScoreThreshold(0.95);
-                buildLibraryDlg.OkWizardPage();
-            });
+            RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(0.95));
+            OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
             PeptideSettingsUI peptideSettingsUI1 = peptideSettingsUI;
+            WaitForConditionUI(() => peptideSettingsUI1.PickedLibraries.Contains(YEAST_ATLAS));
             RunUI(() =>
                 {
                     peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Library;

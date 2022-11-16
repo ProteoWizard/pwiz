@@ -59,6 +59,9 @@ class PWIZ_API_DECL Reader
         /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
         bool combineIonMobilitySpectra;
 
+        /// when true, scans with only calibration data will be ignored (currently Waters lockmass only)
+        bool ignoreCalibrationScans;
+
         /// when true, Waters SONAR data will use bin numbers instead of ion mobility values in combineIonMobilitySpectra mode
         bool reportSonarBins;
 
