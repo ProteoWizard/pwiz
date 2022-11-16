@@ -3994,7 +3994,7 @@ namespace pwiz.Skyline
         }
     }
 
-    internal class CommandProgressMonitor : IProgressMonitor
+    public class CommandProgressMonitor : IProgressMonitor
     {
         private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;

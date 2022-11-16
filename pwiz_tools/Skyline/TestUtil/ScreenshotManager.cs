@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestUtil
                 else if (shotNode.Attributes[SHOT_TYPE_ATTRIBUTE].Value == SHOT_TYPE_VAL_CUSTOM_AREA)
                     return new CustomAreaShot(pSkylineWindow, shotNode);
                 else  throw new InvalidDataException("Unsupported screenshot type");
-                // ReSharper enable PossibleNullReferenceException
+                // ReSharper restore PossibleNullReferenceException
             }
 
             public SkylineScreenshot(ShotType pShotType, SkylineWindow pSkylineWindow)

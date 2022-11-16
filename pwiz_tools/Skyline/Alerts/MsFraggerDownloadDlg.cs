@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
-                    downloadProgressDlg.PerformWork(this, 50, () => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, downloadProgressDlg));
+                    downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
                     return;
                 }
 

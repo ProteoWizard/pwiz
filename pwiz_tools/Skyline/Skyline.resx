@@ -3216,6 +3216,12 @@
   <data name="&gt;&gt;importPeptideSearchMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Name" xml:space="preserve">
+    <value>encyclopeDiaSearchMenuItem</value>
+  </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator52.Name" xml:space="preserve">
     <value>toolStripSeparator52</value>
   </data>

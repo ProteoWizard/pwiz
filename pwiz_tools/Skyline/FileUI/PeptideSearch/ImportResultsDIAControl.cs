@@ -116,11 +116,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return;
                 }
 
-                foreach (var dataSource in dataSources.Where(
-                    d => !_foundResultsFiles.Select(f => f.Path).Contains(d.ToString())))
+                _foundResultsFiles.RaiseListChangedEvents = false;
+                try
                 {
-                    _foundResultsFiles.Add(new ImportPeptideSearch.FoundResultsFile(dataSource.GetFileNameWithoutExtension(),
-                        dataSource.ToString()));
+                    foreach (var dataSource in dataSources.Where(
+                                 d => !_foundResultsFiles.Select(f => f.Path).Contains(d.ToString())))
+                    {
+                        _foundResultsFiles.Add(new ImportPeptideSearch.FoundResultsFile(
+                            dataSource.GetFileNameWithoutExtension(),
+                            dataSource.ToString()));
+                    }
+                }
+                finally
+                {
+                    _foundResultsFiles.RaiseListChangedEvents = true;
+                    _foundResultsFiles.ResetBindings();
                 }
 
                 if (ResultsFilesChanged != null)

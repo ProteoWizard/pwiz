@@ -34,7 +34,7 @@ using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit
 {
-    class PrositLibraryBuilder : IiRTCapableLibraryBuilder
+    public class PrositLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private readonly SrmDocument _document;
         private readonly PredictionService.PredictionServiceClient _prositClient;

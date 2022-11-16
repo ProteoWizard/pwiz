@@ -2274,7 +2274,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var fillAlpha = graphItem.GraphInfo.IsSelected ? 60 : 15;
                 ((LineItem)curveItem).Line.Fill = new Fill(Color.FromArgb(fillAlpha, graphItem.GraphInfo.Color));
             }
-            // ReSharper enable PossibleInvalidCastException
+            // ReSharper restore PossibleInvalidCastException
         }
 
         private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary,

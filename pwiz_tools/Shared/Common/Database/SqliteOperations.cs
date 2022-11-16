@@ -16,8 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace pwiz.Common.Database
 {
@@ -60,6 +65,36 @@ namespace pwiz.Common.Database
                 // Newly created IrtDbs start without IrtHistory table
                 cmd.CommandText = @"DROP TABLE IF EXISTS " + tableName;
                 cmd.ExecuteNonQuery();
+            }
+        }
+
+        public static IEnumerable<string> DumpTable(string dbFilepath, string tableName, string columnSeparator = "\t", string[] sortColumns = null)
+        {
+            using var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = dbFilepath }.ConnectionString);
+            connection.Open();
+            foreach(string s in DumpTable(connection, tableName, columnSeparator, sortColumns))
+                yield return s;
+        }
+
+        public static IEnumerable<string> DumpTable(IDbConnection connection, string tableName, string columnSeparator = "\t", string[] sortColumns = null)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"SELECT * FROM " + tableName;
+            if (sortColumns != null)
+                cmd.CommandText += @" ORDER BY " + string.Join(@",", sortColumns);
+            using var reader = cmd.ExecuteReader();
+            using var sha1 = SHA1.Create();
+            yield return string.Join(columnSeparator,
+                Enumerable.Range(0, reader.FieldCount).Select(i => reader.GetName(i)));
+            object[] row = new object[reader.FieldCount];
+            while (reader.Read())
+            {
+                reader.GetValues(row);
+                for (var i = 0; i < row.Length; i++)
+                    if (row[i] is byte[] bytes)
+                        row[i] = Convert.ToBase64String(sha1.ComputeHash(bytes));
+
+                yield return string.Join(columnSeparator, row);
             }
         }
     }

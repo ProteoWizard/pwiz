@@ -12409,11 +12409,122 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Converting FASTA to Prosit input.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to could not find EncyclopeDIA.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Converting Prosit output to EncyclopeDIA library.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_Encyclo" +
+                        "peDia_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Combining chromatogram libraries.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Combining quantification libraries.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generating chromatogram library ({0} of {1}): {2}.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2 {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generating quantification library ({0} of {1}): {2}.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2 {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Converting DIA data to mzML.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to EncyclopeDIA Libraries.
         /// </summary>
         public static string EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries {
             get {
                 return ResourceManager.GetString("EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reusing Prosit predictions from: {0}.
+        /// </summary>
+        public static string EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_ {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ran EncyclopeDIA Search.
+        /// </summary>
+        public static string EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A FASTA file is required for an EncyclopeDIA Prosit search..
+        /// </summary>
+        public static string EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_ {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosi" +
+                        "t_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run.
+        /// </summary>
+        public static string EncyclopeDiaSearchDlg_NextPage_Run {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSearchDlg_NextPage_Run", resourceCulture);
             }
         }
         
@@ -14110,6 +14221,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_seque" +
                         "nce", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to unsupported enzyme &apos;{0}&apos;; allowed values are: {1}.
+        /// </summary>
+        public static string FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_ {
+            get {
+                return ResourceManager.GetString("FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_", resourceCulture);
             }
         }
         
@@ -24608,6 +24728,34 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("prosit_logo_dark_blue", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exporting Prosit spectra to BiblioSpec library.
+        /// </summary>
+        public static string PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library {
+            get {
+                return ResourceManager.GetString("PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_li" +
+                        "brary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to failed to write Prosit output to blib.
+        /// </summary>
+        public static string PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib {
+            get {
+                return ResourceManager.GetString("PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading Prosit CSV input.
+        /// </summary>
+        public static string PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input {
+            get {
+                return ResourceManager.GetString("PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input", resourceCulture);
             }
         }
         

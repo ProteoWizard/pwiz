@@ -946,6 +946,27 @@ namespace pwiz.Skyline.Util
                 return elapsedSpan.TotalMilliseconds + @" milliseconds";
             return deltaTicks + @" ticks";
         }
+
+        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
+        static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
+
+        /// <summary>
+        /// Tries to create a hard-link from sourceFilepath to destinationFilepath and returns true if the link was successfully created.
+        /// </summary>
+        public static bool CreateHardLink(string sourceFilepath, string destinationFilepath)
+        {
+            return CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
+        }
+
+        /// <summary>
+        /// Tries to create a hard-link from sourceFilepath to destinationFilepath and if that fails, it copies the file instead.
+        /// </summary>
+        public static void HardLinkOrCopyFile(string sourceFilepath, string destinationFilepath, bool overwrite = false)
+        {
+            Directory.CreateDirectory(PathEx.GetDirectoryName(destinationFilepath));
+            if (!CreateHardLink(sourceFilepath, destinationFilepath))
+                File.Copy(sourceFilepath, destinationFilepath, overwrite);
+        }
     }
 
     public static class DirectoryEx
