@@ -214,6 +214,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string AssociateProteinsSettings_Proteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide targets.
         /// </summary>
         public static string AssociateProteinsSettings_TargetPeptides {
@@ -4122,18 +4131,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Ion match tolerance.
         /// </summary>
-        public static string TransitionFilterAndLibrariesSettings_IonMatchTolerance {
+        public static string TransitionFilterAndLibrariesSettings_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchTolerance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unit for matching predicted and library m/z tolerance.
-        /// </summary>
-        public static string TransitionFilterAndLibrariesSettings_IonMatchToleranceUnit {
-            get {
-                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchToleranceUnit", resourceCulture);
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchMzTolerance", resourceCulture);
             }
         }
         
@@ -4536,18 +4536,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Ion match tolerance.
         /// </summary>
-        public static string TransitionLibraries_IonMatchTolerance {
+        public static string TransitionLibraries_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionLibraries_IonMatchTolerance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unit for matching predicted and library m/z tolerance.
-        /// </summary>
-        public static string TransitionLibraries_IonMatchToleranceUnit {
-            get {
-                return ResourceManager.GetString("TransitionLibraries_IonMatchToleranceUnit", resourceCulture);
+                return ResourceManager.GetString("TransitionLibraries_IonMatchMzTolerance", resourceCulture);
             }
         }
         

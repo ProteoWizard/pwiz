@@ -316,6 +316,10 @@ IPI:IPI00187596.1|SWISS-PROT:P23978|ENSEMBL:ENSRNOP00000009705|REFSEQ:NP_077347	
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_AutoSelect}",
                         "{3:True}",
                         "{3:False}"),
+                    
+                    new DetailLogMessage(LogLevel.all_info, MessageType.changed, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
+                        "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Libraries}{2:PropertySeparator}{0:TransitionLibraries_IonMatchMzTolerance}"),
+
                     new DetailLogMessage(LogLevel.all_info, MessageType.changed_from_to, SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Libraries}{2:PropertySeparator}{0:TransitionLibraries_IonCount}",
                         "{3:3}",
