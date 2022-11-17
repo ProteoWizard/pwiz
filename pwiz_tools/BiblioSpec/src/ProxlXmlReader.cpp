@@ -107,6 +107,8 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
                 analysisType_ = BYONIC_ANALYSIS;
             else if (program == "plink")
                 analysisType_ = PLINK_ANALYIS;
+			else if (program == "merox")
+				analysisType_ = MEROX_ANALYSIS;
         }
         break;
     case REPORTED_PEPTIDES_STATE:
@@ -127,7 +129,7 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
         break;
     case REPORTED_PEPTIDE_STATE:
         if (analysisType_ == UNKNOWN_ANALYSIS)
-            throw runtime_error("only Byonic, Percolator, and pLink ProxlXML files are supported; "
+            throw runtime_error("only Byonic, Percolator, pLink, and MeroX ProxlXML files are supported; "
                                 "cannot handle search program: " + bal::join(searchPrograms_, ", "));
         if (isScoreLookup_)
             throw SAXHandler::EndEarlyException();
@@ -194,7 +196,8 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
             string score = bal::to_lower_copy(string(getRequiredAttrValue("annotation_name", attr)));
             if (analysisType_ == PERCOLATOR_ANALYSIS && score == "q-value" ||
                 analysisType_ == BYONIC_ANALYSIS && score == "peptide abslogprob2d" ||
-                analysisType_ == PLINK_ANALYIS && score == "score") {
+                analysisType_ == PLINK_ANALYIS && score == "score" ||
+                analysisType_ == MEROX_ANALYSIS && score == "qvalue") {
                 curProxlPsm_->score = getDoubleRequiredAttrValue("value", attr);
             }
 
@@ -306,9 +309,12 @@ double ProxlXmlReader::getScoreThreshold()
 {
     switch (analysisType_)
     {
-        case BYONIC_ANALYSIS: return blibMaker_.getScoreThreshold(BYONIC);
-        case PERCOLATOR_ANALYSIS: return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
-        case PLINK_ANALYIS: return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
+        case BYONIC_ANALYSIS: 
+			return blibMaker_.getScoreThreshold(BYONIC);
+        case PERCOLATOR_ANALYSIS: 
+        case PLINK_ANALYIS:
+		case MEROX_ANALYSIS:
+			return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
 
         default:
             throw runtime_error("no case for analysisType_: " + lexical_cast<string>((int) analysisType_));
