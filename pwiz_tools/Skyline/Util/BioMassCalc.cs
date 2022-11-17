@@ -590,6 +590,53 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Remove, if necessary, any weirdness like "H0" (zero hydrogens) in a formula, preserving other less offensive idiosyncrasies like N1 instead of N
+        /// e.g. XeC12N001H0 => XeC12N1
+        /// Preserve things like COOOH instead of making it CO3H, e.g. COOOHN1S0 =>  COOOHN1 or COOOHNS0 =>  COOOHN
+        /// </summary>
+        /// <param name="desc">the formula</param>
+        /// <returns>the tidied up formula</returns>
+        public string RegularizeFormula(string desc)
+        {
+            if (string.IsNullOrEmpty(desc))
+            {
+                return desc;
+            }
+            desc = desc.Trim();
+            var atomCounts = new List<KeyValuePair<string, string>>();
+            while (desc.Length > 0)
+            {
+                var atom = NextSymbol(desc);
+                desc = desc.Substring(atom.Length);
+
+                var nDigits = 0; // Looking for an explicit atom count declaration
+                while (nDigits < desc.Length && char.IsDigit(desc[nDigits]))
+                {
+                    nDigits++;
+                }
+
+                var atomCount = 1;
+                var atomCountString = "";
+                if (nDigits > 0) // There was an explicit count declaration
+                {
+                    atomCount = int.Parse(desc.Substring(0, nDigits), CultureInfo.InvariantCulture);
+                    atomCountString = atomCount.ToString(CultureInfo.InvariantCulture); // Change "H01" to "H1"
+                }
+
+                if (atomCount != 0) // Drop "H0"
+                {
+                    atomCounts.Add(new KeyValuePair<string, string> (atom, atomCountString));
+                }
+
+                desc = desc.Substring(nDigits).TrimStart();
+            }
+
+            return string.Concat(atomCounts.Select(atomCount =>
+                $@"{atomCount.Key}{atomCount.Value}"));
+
+        }
+
+        /// <summary>
         /// Turn a formula like C5H9H'3NO2S into C5H12NO2S
         /// </summary>
         public string StripLabelsFromFormula(string desc)
@@ -647,7 +694,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Find the C'3H'0 in  C'3C2H9H'0NO2S (yes, H'0 - seen in the wild)
+        /// Find the C'3O"2 in  C'3C2H9H'0NO2O"2S (yes, H'0 - seen in the wild - but drop zero counts)
         /// </summary>
         public IDictionary<string, int> FindIsotopeLabelsInFormula(string desc)
         {
@@ -655,7 +702,7 @@ namespace pwiz.Skyline.Util
                 return null;
             var parse = desc;
             var dictAtomCounts = new Dictionary<string, int>();
-            ParseCounts(ref parse, dictAtomCounts, false, null, true);
+            ParseCounts(ref parse, dictAtomCounts, false);
             return dictAtomCounts.Where(pair => DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(pair.Key)).ToDictionary(p => p.Key, p => p.Value); 
         }
 
@@ -917,8 +964,7 @@ namespace pwiz.Skyline.Util
         /// <param name="dictAtomCounts">Dictionary of atomic symbols and counts (may already contain counts from other formulas)</param>
         /// <param name="negative">True if counts should be subtracted</param>
         /// <param name="atomOrder">If non-null, used to note order of appearance of atomic symbols in formula</param>
-        /// <param name="retainZeros">If true, keep dictionary entries for atoms that end up with 0 count</param>
-        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative, IList<string> atomOrder=null, bool retainZeros = false)
+        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative, IList<string> atomOrder=null)
         {
             if (string.IsNullOrEmpty(desc))
             {
@@ -969,7 +1015,7 @@ namespace pwiz.Skyline.Util
                     }
                 }
 
-                if (dictAtomCounts[sym] == 0 && !retainZeros)
+                if (dictAtomCounts[sym] == 0)
                     dictAtomCounts.Remove(sym);
 
                 desc = desc.Substring(endCount).TrimStart();

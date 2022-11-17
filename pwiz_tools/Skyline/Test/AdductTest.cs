@@ -85,6 +85,12 @@ namespace pwiz.SkylineTest
         private void TestAdductOperators()
         {
             // Test some underlying formula handling for fanciful user-supplied values
+            AssertEx.AreEqual("COOOHN", BioMassCalc.MONOISOTOPIC.RegularizeFormula("COOOHNS0"));
+            AssertEx.AreEqual("XeC12N1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("XeC12N1H0"));
+            AssertEx.AreEqual("XeC12N1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("XeC12N01H0"));
+            AssertEx.AreEqual("C'3C2H9NO2O\"2S1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("C'3C2H9H'0NO2O\"2S001"));
+            var labels = new Dictionary<string, int>(){{"C'",3},{"O\"",2}}; // Find the C'3O"2 in  C'3C2H9H'0NO2O"2S (yes, H'0 - seen in the wild - but we drop zero counts)
+            AssertEx.AreEqual(labels, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula("C'3C2H9H'0NO2O\"2S"));
             AssertEx.AreEqual(Adduct.SINGLY_PROTONATED, Adduct.FromStringAssumeProtonated("(M+H)+") );
             AssertEx.IsTrue(Adduct.FromStringAssumeProtonatedNonProteomic("[M-H2O+H]+").SameEffect(Adduct.FromStringAssumeProtonatedNonProteomic("(M+H)+[-H2O]")));
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
