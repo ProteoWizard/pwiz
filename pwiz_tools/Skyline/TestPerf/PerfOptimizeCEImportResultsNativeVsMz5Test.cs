@@ -96,7 +96,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             var logs = Log.GetMemoryAppendedLogEvents();
             var stats = PerfUtilFactory.SummarizeLogs(logs, TestFilesPersistent); // show summary, combining native per test and mz5 per test
             var log = new Log("Summary");
-            log.Info(stats.Replace(_testFilesDir.PersistentFilesDir,""));
+            log.Info(stats.Replace(_testFilesDir.PersistentFilesDir,string.Empty));
 
         }
 
@@ -116,11 +116,12 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 {
                     MsDataFileImpl.PerfUtilFactory.IssueDummyPerfUtils = (loop==0); // turn on performance measurement after initial warmup loop
                     RunFunctionalTest();
-                    // make sure we're clean for next pass
-                    File.Delete(Path.ChangeExtension(_skyFile, ChromatogramCache.EXT) ?? ChromatogramCache.EXT); // Not null for ReSharper
-                    
+                    // make sure we're clean for next pass - AbstractFunctionalTest may have already deleted everything
+                    FileEx.SafeDelete(Path.ChangeExtension(_skyFile, ChromatogramCache.EXT), true);
                 }
             }
+
+            _testFilesDir.Cleanup();
         }
 
         protected override void DoTest()

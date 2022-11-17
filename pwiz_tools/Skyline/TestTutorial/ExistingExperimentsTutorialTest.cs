@@ -352,7 +352,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => messageDlg.Size = new Size(838, 192));
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 20);
                 OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
-                RunUI(() => transitionSelectdgl.DialogResult = DialogResult.Cancel); // Cancel the import
+                OkDialog(transitionSelectdgl, transitionSelectdgl.CancelDialog); // Cancel the import
 
                 // Restore the clipboard text after pausing
                 ClipboardEx.SetText(clipboardSaveText);

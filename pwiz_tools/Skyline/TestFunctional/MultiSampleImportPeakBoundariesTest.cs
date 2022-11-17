@@ -67,8 +67,9 @@ namespace pwiz.SkylineTestFunctional
                 openDataSourceDlg.Open();
             });
             var importResultsSamplesDlg = WaitForOpenForm<ImportResultsSamplesDlg>();
+            var docBefore = SkylineWindow.Document;
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docBefore);
             Assert.AreEqual(1, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the first two samples from "secondfile.wiff" into a replicate named "ReplicateTwo"
@@ -90,8 +91,8 @@ namespace pwiz.SkylineTestFunctional
                 importResultsSamplesDlg.ExcludeSample(3);
             });
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
-            WaitForDocumentLoaded();
             WaitForCondition(() => 2 == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
+            WaitForDocumentLoaded();
             Assert.AreEqual(2, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             // Import the second and third samples from "secondfile.wiff" into a replicate named "ReplicateThree"
@@ -113,8 +114,8 @@ namespace pwiz.SkylineTestFunctional
                 importResultsSamplesDlg.ExcludeSample(1);
             });
             OkDialog(importResultsSamplesDlg, importResultsSamplesDlg.OkDialog);
-            WaitForDocumentLoaded();
             WaitForCondition(() => 3 == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
+            WaitForDocumentLoaded();
             Assert.AreEqual(3, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count);
 
             var peakBoundariesFile = TestFilesDir.GetTestPath("PeakBoundaries.tsv");

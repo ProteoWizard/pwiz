@@ -272,11 +272,21 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 {
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
                     session.Save(dbRefSpectrum);
+                    var ionMobilitiesByFileId = new IndexedIonMobilities(
+                        dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
+                            Select(rt =>
+                            {
+                                var ionMobilityValue = IonMobilityValue.GetIonMobilityValue(rt.IonMobility, (eIonMobilityUnits)rt.IonMobilityType);
+                                var ionMobilityAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(ionMobilityValue, rt.CollisionalCrossSectionSqA, rt.IonMobilityHighEnergyOffset);
+                                return new KeyValuePair<int, IonMobilityAndCCS>((int)rt.SpectrumSourceId, ionMobilityAndCCS);
+                            }));
                     listLibrary.Add(new BiblioLiteSpectrumInfo(spectrum.Key, 
                                                                 dbRefSpectrum.Copies,
                                                                 dbRefSpectrum.NumPeaks,
                                                                 (int) (dbRefSpectrum.Id ?? 0),
-                                                                spectrum.Protein));
+                                                                spectrum.Protein,
+                                                                default(IndexedRetentionTimes),
+                                                                ionMobilitiesByFileId));
                     proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
                     if (progressMonitor != null)
                     {

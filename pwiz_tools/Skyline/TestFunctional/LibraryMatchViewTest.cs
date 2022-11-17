@@ -94,7 +94,9 @@ namespace pwiz.SkylineTestFunctional
         private void CheckNode(SrmDocument.Level level, int i)
         {
             SelectNode(level, i);
+            WaitForDocumentLoaded();
             WaitForGraphs();
+            WaitForCondition(() => !SkylineWindow.GraphSpectrum.IsGraphUpdatePending);
             RunUI(() =>
             {
                 var selectedNode = SkylineWindow.SelectedNode;
@@ -126,6 +128,12 @@ namespace pwiz.SkylineTestFunctional
                 var graphSpectrum = SkylineWindow.GraphSpectrum;
                 Assert.IsNotNull(precursors);
                 Assert.AreEqual(precursors.Length > 1, graphSpectrum.PrecursorComboVisible);
+
+                if (precursors.Length == 0)
+                {
+                    Assert.IsFalse(graphSpectrum.HasSpectrum);
+                    return;
+                }
 
                 var spectrum = graphSpectrum.SelectedSpectrum;
                 var spectrumId = spectrum.Precursor.Id;

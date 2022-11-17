@@ -1055,11 +1055,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var irtCalc = ShowDialog<EditIrtCalcDlg>(peptideSettings.AddCalculator);
-            var testDir = TestContext.TestDir;
             RunUI(() =>
             {
                 irtCalc.CalcName = "Biognosys-10";
-                irtCalc.CreateDatabase(Path.Combine(testDir, "test.irtdb"));
+                irtCalc.CreateDatabase(TestContext.GetTestResultsPath("test.irtdb"));
 
             });
             // Test choosing an iRT standard with many rows before switching to a standard with fewer rows
@@ -1079,7 +1078,7 @@ namespace pwiz.SkylineTestFunctional
             var addPeptides = ShowDialog<AddIrtStandardsToDocumentDlg>(peptideSettings.OkDialog);
             RunUI(() => addPeptides.NumTransitions = 3);
             OkDialog(addPeptides, addPeptides.BtnYesClick);
-            RunUI(() => SkylineWindow.SaveDocument(Path.Combine(testDir, "test.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test.sky")));
             
             // Test opening ImportResultsDlg with all 10 iRT standard peptides in the document
             removePeptidesAndImport(IrtStandard.BIOGNOSYS_10, 0);

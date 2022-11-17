@@ -335,9 +335,14 @@ namespace SkylineTester
             _tabs[_previousTab].Enter();
             statusLabel.Text = "";
 
+            StartBackgroundLoadTestSet();
+        }
+
+        private void StartBackgroundLoadTestSet()
+        {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
+            loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -350,9 +355,7 @@ namespace SkylineTester
                 var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
-                var testSetValue = testSet.InvokeRequired
-                    ? (string)Invoke(new Func<string>(() => testSet.SelectedItem.ToString()))
-                    : testSet.SelectedItem.ToString();
+                var testSetValue = e.Argument;
                 var arrayDllNames = Equals(testSetValue, "All tests") ? TEST_DLLS : TUTORIAL_DLLS;
                 foreach (var testDll in arrayDllNames)
                 {
@@ -556,7 +559,11 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+#if DEBUG
+        private bool _buildDebug = true;
+#else
         private bool _buildDebug;
+#endif
 
         public enum BuildDirs
         {
@@ -596,7 +603,7 @@ namespace SkylineTester
             CheckBuildDirExistence(buildDirs);
             if (buildDirs.All(dir => dir == null))
             {
-                _buildDebug = true;
+                _buildDebug = !_buildDebug;
                 buildDirs = GetPossibleBuildDirs();
                 CheckBuildDirExistence(buildDirs);
                 _buildDebug = buildDirs.Any(dir => dir != null);
@@ -868,13 +875,15 @@ namespace SkylineTester
 
             var testNumber = line.Substring(8, 7).Trim();
             var testName = line.Substring(16, 46).TrimEnd();
+            // Expecting:
+            // <time> <pass> <test-name> <language> [test-output]<failure-count> failures, <memory-counts> MB, <handle-counts> handles, <seconds> secs.
             var parts = Regex.Split(line, "\\s+");
-            var partsIndex = memoryGraphType ? 6 : 8;
+            var partsIndex = parts.Length - (memoryGraphType ? 6 : 4);
             var unitsIndex = partsIndex + 1;
             var units = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
             double minorMemory = 0, majorMemory = 0;
             double? middleMemory = null;
-            if (unitsIndex < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
+            if (6 < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
@@ -1895,9 +1904,7 @@ namespace SkylineTester
 
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
-            var loader = new BackgroundWorker();
-            loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
+            StartBackgroundLoadTestSet();
         }
 
         #endregion Control events

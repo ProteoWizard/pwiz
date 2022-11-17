@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
@@ -34,6 +35,13 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ReportErrorDlg : FormEx
     {
+        /// <summary>
+        /// The maximum size of an attachment to include in an error report.
+        /// This number needs to be less than the "Maximum file size, in bytes, to allow in database BLOBs"
+        /// setting on the Skyline website (which is currently set to 50,000,000)
+        /// </summary>
+        public const int MAX_ATTACHMENT_SIZE = 10_000_000;
+
         private string _exceptionType;
         private string _exceptionMessage;
         private string _stackTraceText;
@@ -179,7 +187,7 @@ namespace pwiz.Skyline.Alerts
                 files.Add(@"skylineFile.sky", skyFileBytes);
             }
        
-            HttpUploadFiles(reportUrl, @"image/jpeg", nvc, files);
+            HttpUploadFiles(reportUrl, @"image/jpeg", nvc, files.Where(entry=>entry.Value.Length <= MAX_ATTACHMENT_SIZE));
 
             DialogResult = DialogResult.OK;
         }

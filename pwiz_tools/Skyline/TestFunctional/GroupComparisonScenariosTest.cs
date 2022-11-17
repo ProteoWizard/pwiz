@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -54,48 +53,44 @@ namespace pwiz.SkylineTestFunctional
         private void RunScenario(string scenarioName)
         {
             RunUI(() => SkylineWindow.OpenSharedFile(TestFilesDir.GetTestPath(scenarioName + ".sky.zip")));
-            if (null != TestContext.TestRunResultsDirectory)
+
+            TestContext.EnsureTestResultsDir();
+            string baseName = TestContext.GetTestResultsPath(scenarioName);
+            RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
+            foreach (var groupComparison in SkylineWindow.Document.Settings.DataSettings.GroupComparisonDefs)
             {
-                var directory = Path.Combine(TestContext.TestRunResultsDirectory, "GroupComparisonScenariosTest");
-                Directory.CreateDirectory(directory);
-                string baseName = Path.Combine(directory, scenarioName);
-                RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
-                foreach (var groupComparison in SkylineWindow.Document.Settings.DataSettings.GroupComparisonDefs)
+                String groupComparisonName = groupComparison.Name;
+                FoldChangeGrid foldChangeGrid =
+                    ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
+                var reports = new[]
                 {
-                    String groupComparisonName = groupComparison.Name;
-                    FoldChangeGrid foldChangeGrid =
-                        ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
-                    var reports = new[]
-                    {
-                        "GroupComparisonColumns"
-                    };
-                    foreach (String report in reports)
-                    {
-                        WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete 
-                            && null != foldChangeGrid.FoldChangeBindingSource.GroupComparisonModel.Results
-                            && null != foldChangeGrid.DataboundGridControl.BindingListSource.ViewContext);
+                    "GroupComparisonColumns"
+                };
+                foreach (String report in reports)
+                {
+                    WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete 
+                        && null != foldChangeGrid.FoldChangeBindingSource.GroupComparisonModel.Results
+                        && null != foldChangeGrid.DataboundGridControl.BindingListSource.ViewContext);
 
-                        // ReSharper disable AccessToForEachVariableInClosure
-                        RunUI(() => { foldChangeGrid.DataboundGridControl.ChooseView(report); });
-                        // ReSharper restore AccessToForEachVariableInClosure
+                    // ReSharper disable AccessToForEachVariableInClosure
+                    RunUI(() => { foldChangeGrid.DataboundGridControl.ChooseView(report); });
+                    // ReSharper restore AccessToForEachVariableInClosure
 
-                        WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
-                        String exportPath = Path.Combine(directory,
-                            scenarioName + "_" + groupComparisonName + "_" + report + ".csv");
+                    WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+                    String exportPath = TestContext.GetTestResultsPath(scenarioName + "_" + groupComparisonName + "_" + report + ".csv");
 
-                        RunUI(() =>
-                            {
-                                var viewContext = (AbstractViewContext) foldChangeGrid.DataboundGridControl.NavBar.ViewContext;
+                    RunUI(() =>
+                        {
+                            var viewContext = (AbstractViewContext) foldChangeGrid.DataboundGridControl.NavBar.ViewContext;
 
-                                viewContext.ExportToFile(foldChangeGrid,
-                                    foldChangeGrid.DataboundGridControl.BindingListSource, exportPath,
-                                    ',');
-                            }
-                        );
+                            viewContext.ExportToFile(foldChangeGrid,
+                                foldChangeGrid.DataboundGridControl.BindingListSource, exportPath,
+                                ',');
+                        }
+                    );
 
-                    }
-                    OkDialog(foldChangeGrid, foldChangeGrid.Close);
                 }
+                OkDialog(foldChangeGrid, foldChangeGrid.Close);
             }
         }
     }

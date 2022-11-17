@@ -33,9 +33,9 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ConsoleMProphetModelTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             const string docName = "mProphetModel.sky";
-            var docPath = testFilesDir.GetTestPath(docName);
+            var docPath = TestFilesDir.GetTestPath(docName);
             const string modelName = "testModel";
 
             var args = new List<string>

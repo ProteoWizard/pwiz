@@ -66,6 +66,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case API300:
         case API350:
         case API365:
+        case TripleQuad7500:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
             ic.componentList.push_back(Component(MS_quadrupole, 3));
@@ -138,6 +139,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API5000:           return MS_API_5000;
         case API5500:           return MS_Triple_Quad_5500;
         case API6500:           return MS_Triple_Quad_6500;
+        case TripleQuad7500:    return MS_Triple_Quad_7500;
         case API2000QTrap:      return MS_2000_QTRAP;
         case API2500QTrap:      return MS_2500_QTRAP;
         case API3200QTrap:      return MS_3200_QTRAP;

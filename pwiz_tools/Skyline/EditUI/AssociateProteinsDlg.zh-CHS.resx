@@ -169,7 +169,7 @@
     <value>0</value>
   </data>
   <data name="lblDescription.Text" xml:space="preserve">
-    <value>使用 FASTA 文件或背景蛋白质组，将所有文档肽段重组为关联的蛋白质或蛋白质组。现有蛋白质关联将被丢弃。</value>
+    <value>利用 FASTA 文件或背景蛋白质组的信息，将文档中的所有肽段重组为关联的蛋白质或蛋白质组。现有蛋白质的关联性将被丢弃。</value>
   </data>
   <data name="&gt;&gt;lblDescription.Name" xml:space="preserve">
     <value>lblDescription</value>
@@ -340,7 +340,7 @@
     <value>TopRight</value>
   </data>
   <data name="lblSharedPeptides.ToolTip" xml:space="preserve">
-    <value>FASTA 或背景蛋白质组的一个以上的蛋白质中包含多个肽段。在下面选择 Skyline 分配这些肽段的方式。</value>
+    <value>多个肽段包含在FASTA 或背景蛋白质组中至少一个蛋白质里。在下面选择 Skyline 分配这些肽段的方式。</value>
   </data>
   <data name="&gt;&gt;lblSharedPeptides.Name" xml:space="preserve">
     <value>lblSharedPeptides</value>
@@ -544,10 +544,10 @@
     <value>9</value>
   </data>
   <data name="lblRemoveSubsetProteins.Text" xml:space="preserve">
-    <value>删除子集蛋白质(&amp;R)</value>
+    <value>删除蛋白质子集(&amp;R)</value>
   </data>
   <data name="lblRemoveSubsetProteins.ToolTip" xml:space="preserve">
-    <value>删除子集蛋白质，但保留非简约、非子集的蛋白质。</value>
+    <value>删除蛋白质子集，但保留非简约、非子集的蛋白质。</value>
   </data>
   <data name="&gt;&gt;lblRemoveSubsetProteins.Name" xml:space="preserve">
     <value>lblRemoveSubsetProteins</value>

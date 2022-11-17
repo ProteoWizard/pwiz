@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
@@ -59,5 +60,18 @@ namespace pwiz.Skyline.Model
 
         public string AuditLogText { get { return Title; } }
         public bool IsName { get { return true; } }
+
+        public class PropertyFormatter : IPropertyFormatter
+        {
+            public object ParseValue(CultureInfo cultureInfo, string text)
+            {
+                return FromName(text);
+            }
+
+            public string FormatValue(CultureInfo cultureInfo, object value)
+            {
+                return ((StandardType)value).Name;
+            }
+        }
     }
 }

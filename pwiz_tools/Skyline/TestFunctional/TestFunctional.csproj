@@ -149,6 +149,7 @@
     </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -177,17 +178,22 @@
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
+    <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
+    <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
+    <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
+    <Compile Include="MessageBoxHelperTest.cs" />
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
+    <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
@@ -503,9 +509,11 @@
     <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
     <None Include="EncyclopeDiaLibraryMatchTest.zip" />
+    <None Include="EncyclopeDiaPeptidesWithNoSignalTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitAnalyteConcentrationTest.zip" />
+    <None Include="ExplicitMissingPeakBoundsTest.zip" />
     <None Include="ExplicitPeakBoundsTest.zip" />
     <None Include="ExplicitPeakScoreTest.zip" />
     <None Include="ExplicitRTTest.zip" />
