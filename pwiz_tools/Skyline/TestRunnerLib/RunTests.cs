@@ -483,7 +483,9 @@ namespace TestRunnerLib
 
             TeamCityFinishTest(test, message + '\n' + stackTrace);
 
-            Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
+            Log(ReportSystemHeaps
+                    ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n"
+                    : "{0,3} failures, {1:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
                 FailureCount,
                 ManagedMemory,
                 CommittedMemory,

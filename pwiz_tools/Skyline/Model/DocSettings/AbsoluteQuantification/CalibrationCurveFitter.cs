@@ -458,7 +458,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     }
                     double meanPeakArea = peakAreas.Mean();
                     double? backCalculatedConcentration =
-                        GetConcentrationFromXValue(calibrationCurve.GetX(meanPeakArea));
+                        GetConcentrationFromXValue(calibrationCurve.GetXValueForLimitOfDetection(meanPeakArea));
                     if (!backCalculatedConcentration.HasValue)
                     {
                         break;
