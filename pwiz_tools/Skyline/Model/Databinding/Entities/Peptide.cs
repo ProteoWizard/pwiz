@@ -410,13 +410,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public LinkValue<CalibrationCurve> CalibrationCurve
+        public LinkValue<CalibrationCurveMetrics> CalibrationCurve
         {
             get
             {
                 CalibrationCurveFitter curveFitter = GetCalibrationCurveFitter();
-                CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
-                return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
+                var calibrationCurve = curveFitter.GetCalibrationCurveMetrics();
+                return new LinkValue<CalibrationCurveMetrics>(calibrationCurve, (sender, args) =>
                 {
                     if (null == DataSchema.SkylineWindow)
                     {

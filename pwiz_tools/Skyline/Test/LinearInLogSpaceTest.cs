@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest
                 foreach (double power in new [] {-1.0, 0, 1.0, 2.5})
                 {
                     var points = Enumerable.Range(1, 10).Select(x => new WeightedPoint(x, factor * Math.Pow(x, power), 1)).ToArray();
-                    var calibrationCurve = RegressionFit.LINEAR_IN_LOG_SPACE.Fit(points);
+                    var calibrationCurve = RegressionFit.LINEAR_IN_LOG_SPACE.GetCalibrationCurveMetrics(points);
                     Assert.AreEqual(power, calibrationCurve.Slope.Value, .00001);
                     Assert.AreEqual(Math.Log(factor), calibrationCurve.Intercept.Value, .00001);
                 }
@@ -63,7 +63,7 @@ namespace pwiz.SkylineTest
                 new WeightedPoint(.5, 35613772),
                 new WeightedPoint(.125, 10149473)
             };
-            var calibrationCurve = RegressionFit.LINEAR_IN_LOG_SPACE.Fit(points);
+            var calibrationCurve = RegressionFit.LINEAR_IN_LOG_SPACE.GetCalibrationCurveMetrics(points);
             Assert.AreEqual(.9174, calibrationCurve.Slope.Value, .0001);
             
             // in the Excel spreadsheet, the regression was done on base10 logarithm values, so
