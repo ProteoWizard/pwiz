@@ -1,32 +1,67 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Linq;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public class BilinearCurveFit
     {
-        public double Slope { get; private set; }
-        public double Intercept { get; private set; }
-        public double BaselineHeight { get; private set; }
-        public double Error { get; private set; }
+        public CalibrationCurve CalibrationCurve { get; private set; }
         public double StdDevBaseline { get; private set; }
 
-        public double GetY(double x)
+        public double Slope
         {
-            return Math.Max(BaselineHeight, x * Slope + Intercept);
+            get
+            {
+                return (CalibrationCurve as CalibrationCurve.Bilinear)?.Slope ?? 0;
+            }
         }
 
-        public static BilinearCurveFit FromLinearFit(CalibrationCurve.Linear calibrationCurve, Statistics baselineStats,
-            double totalError)
+        public double Intercept
         {
-            return new BilinearCurveFit
+            get
             {
-                StdDevBaseline = baselineStats.Length == 0 ? double.NaN : baselineStats.StdDevP(),
-                BaselineHeight = baselineStats.Length == 0 ? 0 : baselineStats.Mean(),
-                Slope = calibrationCurve.Slope,
-                Intercept = calibrationCurve.Intercept.Value,
-                Error = totalError
-            };
+                return (CalibrationCurve as CalibrationCurve.Bilinear)?.Intercept ?? 0;
+            }
+        }
+
+        public double BaselineHeight
+        {
+            get
+            {
+                if (CalibrationCurve is CalibrationCurve.Bilinear bilinear)
+                {
+                    return bilinear.GetY(bilinear.TurningPoint);
+                }
+
+                return 0;
+            }
+        }
+
+        public double Error
+        {
+            get; private set;
+        }
+
+        public static BilinearCurveFit FromCalibrationCurve(CalibrationCurve calibrationCurve, IList<WeightedPoint> points)
+        {
+            var fit = new BilinearCurveFit {CalibrationCurve = calibrationCurve};
+            if (calibrationCurve is CalibrationCurve.Bilinear bilinear)
+            {
+                var baselinePoints = points.Where(pt => pt.X <= bilinear.TurningPoint);
+                var baselineStats = new Statistics(baselinePoints.Select(pt => pt.Y));
+
+                fit.StdDevBaseline = baselineStats.Length == 0 ? double.NaN : baselineStats.StdDevP();
+            }
+            else
+            {
+                fit.StdDevBaseline = double.NaN;
+            }
+
+            fit.Error = BilinearRegressionFit.CalculateError(calibrationCurve, points);
+
+            return fit;
         }
     }
 }

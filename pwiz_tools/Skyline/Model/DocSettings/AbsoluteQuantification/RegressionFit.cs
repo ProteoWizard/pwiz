@@ -41,7 +41,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public static readonly RegressionFit QUADRATIC = new QuadraticFit();
 
-        public static readonly RegressionFit BILINEAR = new BilinearFit();
+        //public static readonly RegressionFit LEGACY_BILINEAR = new LegacyBilinearFit();
+        public static readonly RegressionFit BILINEAR = new BilinearRegressionFit();
 
         public static readonly RegressionFit LINEAR_IN_LOG_SPACE = new LinearInLogSpace();
         public static readonly ImmutableList<RegressionFit> All = ImmutableList<RegressionFit>.ValueOf(new[]
@@ -137,9 +138,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
         }
 
-        private class BilinearFit : RegressionFit
+        private class LegacyBilinearFit : RegressionFit
         {
-            public BilinearFit() : base(@"bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear)
+            public LegacyBilinearFit() : base(@"bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear)
             {
             }
 
@@ -195,7 +196,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 double totalWeight = 0;
                 foreach (var pt in weightedPoints)
                 {
-                    double delta = pt.Y - calibrationCurve.GetY(pt.X).Value;
+                    double delta = pt.Y - calibrationCurve.GetY(pt.X);
                     totalWeight += pt.Weight;
                     totalDelta += pt.Weight * delta * delta;
                 }
@@ -226,5 +227,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return CalibrationCurve.LinearInLogSpace.LogOfPoint(pt);
             }
         }
+
     }
 }

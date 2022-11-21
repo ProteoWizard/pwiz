@@ -577,6 +577,7 @@
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFitter.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearRegressionFit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeType.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />

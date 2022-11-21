@@ -31,51 +31,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
         {
-            var pointList = points.ToList();
-            var uniqueConcentrations = pointList.Select(pt => pt.X).Distinct().OrderBy(x => x).ToList();
-            var fits = new List<BilinearCurveFit>();
-            foreach (var conc in uniqueConcentrations)
-            {
-                var fit = FitBilinearCurveWithOffset(conc, pointList);
-                if (fit != null)
-                {
-                    fits.Add(fit);
-                }
-            }
-
-            return fits.OrderBy(fit => fit.Error).FirstOrDefault();
+            var pointsList = points as IList<WeightedPoint> ?? points.ToList();
+            return BilinearCurveFit.FromCalibrationCurve(RegressionFit.BILINEAR.Fit(pointsList), pointsList);
         }
 
-        public BilinearCurveFit FitBilinearCurveWithOffset(double xOffset, ICollection<WeightedPoint> points)
+        public BilinearCurveFit FitBilinearCurveWithOffset(double offset, IEnumerable<WeightedPoint> points)
         {
-            var linearPoints = points.Where(pt => pt.X > xOffset).ToList();
-            var baselinePoints = points.Where(pt => pt.X <= xOffset).ToList();
-
-            CalibrationCurve.Linear linearFit;
-            if (linearPoints.Select(pt=>pt.X).Distinct().Count() >= 2)
-            {
-                linearFit = RegressionFit.LINEAR.Fit(linearPoints) as CalibrationCurve.Linear;
-                if (linearFit == null)
-                {
-                    return null;
-                }
-            }
-            else
-            {
-                baselinePoints.AddRange(linearPoints);
-                linearFit = new CalibrationCurve.Linear(0, 0);
-            }
-
-            var baselineStats = new Util.Statistics(baselinePoints.Select(pt => pt.Y));
-            var baselineHeight = baselineStats.Length == 0 ? 0 : baselineStats.Mean();
-            double totalError = 0;
-            foreach (var point in points)
-            {
-                double expected = Math.Max(baselineHeight, linearFit.GetY(point.X).Value);
-                double difference = expected - point.Y;
-                totalError += difference * difference * point.Weight;
-            }
-            return BilinearCurveFit.FromLinearFit(linearFit, baselineStats, totalError);
+            var pointsList = points as IList<WeightedPoint> ?? points.ToList();
+            return BilinearCurveFit.FromCalibrationCurve(
+                BilinearRegressionFit.FitPointsWithOffset(offset, pointsList), pointsList);
         }
 
         public BilinearCurveFit ComputeBootstrapParams(IList<WeightedPoint> points)
@@ -100,7 +64,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 var p = ComputeBootstrapParams(points);
                 for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
                 {
-                    var area = p.GetY(concentrationValues[iConcentration]);
+                    var area = p.CalibrationCurve.GetY(concentrationValues[iConcentration]);
                     areaGrid[iConcentration].Push(area);
                 }
 
