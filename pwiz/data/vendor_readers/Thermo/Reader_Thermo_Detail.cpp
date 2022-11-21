@@ -120,6 +120,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
         case InstrumentModelType_TSQ_Endura:                return MS_TSQ_Endura;
         case InstrumentModelType_TSQ_Altis:                 return MS_TSQ_Altis;
+        case InstrumentModelType_TSQ_Altis_Plus:            return MS_TSQ_Altis_Plus;
         case InstrumentModelType_TSQ_Quantis:               return MS_TSQ_Quantis;
         case InstrumentModelType_TSQ_8000_Evo:              return MS_TSQ_8000_Evo;
         case InstrumentModelType_TSQ_9000:                  return MS_TSQ_9000;
@@ -355,6 +356,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
         case InstrumentModelType_TSQ_Altis:
+        case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
