@@ -476,15 +476,15 @@ class Library {
         in.read((char*)&iRT_min, sizeof(double));
         in.read((char*)&iRT_max, sizeof(double));
         read_array(in, entries, version);
-        int i = 0;
+        auto precursorItr = precursors.begin();
         for (auto &e : entries)
         {
             e.lib = this;
-            std::string precursor = precursors[i++];
-            if (!bal::equals(e.name.c_str(), precursor.c_str()))
+            if (e.name != *precursorItr)
             {
-                Verbosity::error("Precursor mismatch between %s and %s in speclib file", e.name.c_str(), precursor.c_str());
+                Verbosity::error("Precursor mismatch between %s and %s in speclib file", e.name.c_str(), precursorItr->c_str());
             }
+            ++precursorItr;
             entryByModPeptideAndCharge.emplace(e.name, std::ref(e));
         }
         if (version <= -1 && in.peek() != std::char_traits<char>::eof()) read_vector(in, elution_groups);
@@ -628,8 +628,8 @@ bool DiaNNSpecLibReader::parseFile()
             if (kvp.first < 1)
                 break;
 
-            io::CSVReader<4, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> reportReader(kvp.second.string().c_str());
-            reportReader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Run", "Precursor.Id", "Q.Value", "RT");
+            io::CSVReader<3, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> reportReader(kvp.second.string().c_str());
+            reportReader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id", "Q.Value", "RT");
             if (reportReader.has_column("Precursor.Id") && reportReader.has_column("Q.Value") && reportReader.has_column("RT"))
             {
                 diannReportFilepath = kvp.second.string();
