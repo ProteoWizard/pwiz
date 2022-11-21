@@ -766,12 +766,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 selectionMatch = ReferenceEquals(selection.NodeTranGroup?.Id, (dataPrecursor?.Id as Transition)?.Group);
             }
 
-            var currentTransition =
-                _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
-
             if (_showIonSeriesAnnotations && _msDataFileScanHelper.Source == ChromSource.fragment)
             {
-                var nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
+                DocNodePath nodePath = null;
+                if (_msDataFileScanHelper.ScanProvider.Transitions.Length > _msDataFileScanHelper.TransitionIndex - 1)
+                {
+                    var currentTransition =
+                        _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
+                    nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
+                }
+
                 if (nodePath != null) // Make sure user hasn't removed node since last update
                 {
                     var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
