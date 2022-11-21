@@ -420,6 +420,7 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Peptide Precursor charges changed from "2" to "2, 3"
 Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, b"
+Settings > Transition Settings -- Library > Ion match tolerance changed
 Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
 
 Undo Redo : Peptide Settings -- Library > Libraries : "Yeast (GPM)" was added
