@@ -340,7 +340,7 @@ Config parseCommandLine(int argc, char** argv)
             ": write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra")
         ("ddaProcessing",
             po::value<bool>(&config.ddaProcessing)->zero_tokens(),
-            ": combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.")
+            ": if supported by vendor; combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.")
         ("ignoreCalibrationScans",
             po::value<bool>(&config.ignoreCalibrationScans)->zero_tokens(),
             ": do not process calibration scans (currently only applies to Waters lockmass function)")
