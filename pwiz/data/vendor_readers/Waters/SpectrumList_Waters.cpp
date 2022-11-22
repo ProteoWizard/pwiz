@@ -147,14 +147,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (!result.get())
         throw runtime_error("[SpectrumList_Waters::spectrum()] Allocation error.");
 
-    vector<float> ddaMasses;
-    vector<float> ddaIntensities;
-    
-    if (useDDAProcessor_)
-    {
-        getDDAScan(index, ddaMasses, ddaIntensities, index_[index]);
-    }
-    
     IndexEntry& ie = index_[index];
 
     result->index = ie.index;
@@ -378,8 +370,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
 
             if (useDDAProcessor_)
             {
-                masses = ddaMasses;
-                intensities = ddaIntensities;
+                getDDAScan(index, masses, intensities);
             }
             else if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
             {
@@ -749,7 +740,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
     size_ = index_.size();
 }
 
-PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities, IndexEntry& ie) const
+PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities) const
 {
     using namespace boost::spirit::karma;
     
@@ -757,36 +748,48 @@ PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, vector<fl
     int function, startScan, endScan;
     bool isMS1;
     rawdata_->GetDDAScan(index, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
-
-    ie.function = function;
-    ie.process = 0;
-    ie.block = -1; // The SDK DDA processor doesn't yet support ion mobility data
-    ie.scan = startScan; // While it might combine multiple scans, use the first for getting the metadata
-    ie.index = index;
-    ie.setMass = setMass;
-    ie.precursorMass = precursorMass;
-
-    ie.id = "";
-    std::back_insert_iterator<std::string> sink(ie.id);
-    if (startScan == endScan)
-    {
-        generate(sink,
-                "function=" << int_ << " process=" << int_ << " scan=" << int_,
-                ie.function + 1, ie.process, ie.scan + 1);
-    } 
-    else
-    {
-        generate(sink,
-                "function=" << int_ << " process=" << int_ << " scan=" << int_ << " merged=" << int_ << "-" << int_,
-                ie.function + 1, ie.process, ie.scan + 1, startScan + 1, endScan + 1);
-    }
-    idToIndexMap_[ie.id] = ie.index; 
 }
 
 PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
 {
+    using namespace boost::spirit::karma;
+
     size_ = rawdata_->GetDDAScanCount();
     index_.resize(size_);
+
+    for (auto i = 0; i < size_; ++i)
+    {
+        IndexEntry ie = index_[i];
+
+        float setMass, precursorMass, retentionTime;
+        int function, startScan, endScan;
+        vector<float> masses, intensities;
+        bool isMS1;
+        rawdata_->GetDDAScan(i, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
+
+        ie.function = function;
+        ie.process = 0;
+        ie.block = -1; // The SDK DDA processor doesn't yet support ion mobility data
+        ie.scan = startScan; // While it might combine multiple scans, use the first for getting the metadata
+        ie.index = i;
+        ie.setMass = setMass;
+        ie.precursorMass = precursorMass;
+
+        std::back_insert_iterator<std::string> sink(ie.id);
+        if (startScan == endScan)
+        {
+            generate(sink,
+                    "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                    ie.function + 1, ie.process, ie.scan + 1);
+        } 
+        else
+        {
+            generate(sink,
+                    "function=" << int_ << " process=" << int_ << " scan=" << int_ << " merged=" << int_ << "-" << int_,
+                    ie.function + 1, ie.process, ie.scan + 1, startScan + 1, endScan + 1);
+        }
+        idToIndexMap_[ie.id] = ie.index;
+    }
 }
 
 

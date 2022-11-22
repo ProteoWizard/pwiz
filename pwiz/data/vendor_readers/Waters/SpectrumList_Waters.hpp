@@ -116,7 +116,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListIonMobilityBase
 
     void createIndex();
     void createDDAIndex();
-    void getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities, IndexEntry& ie) const;
+    void getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities) const;
 
 #endif // PWIZ_READER_WATERS
 
