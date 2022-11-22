@@ -21,18 +21,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public class CalibrationCurveFitter
     {
-        private readonly IDictionary<CalibrationPoint, IDictionary<IdentityPath, PeptideQuantifier.Quantity>> _replicateQuantities
-            = new Dictionary<CalibrationPoint, IDictionary<IdentityPath, PeptideQuantifier.Quantity>>();
-
+        private readonly IndexedList<IdentityPath> _identityPaths = new IndexedList<IdentityPath>();
+        private readonly IDictionary<CalibrationPoint, ImmutableList<PeptideQuantifier.Quantity>> _replicateQuantities
+            = new Dictionary<CalibrationPoint, ImmutableList<PeptideQuantifier.Quantity>>();
         private HashSet<IdentityPath> _transitionsToQuantifyOn;
 
         public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, SrmSettings srmSettings)
@@ -62,16 +63,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public IDictionary<IdentityPath, PeptideQuantifier.Quantity> GetTransitionQuantities(CalibrationPoint calibrationPoint)
         {
-            IDictionary<IdentityPath, PeptideQuantifier.Quantity> result;
-            if (!_replicateQuantities.TryGetValue(calibrationPoint, out result))
+            ImmutableList<PeptideQuantifier.Quantity> quantities;
+            if (!_replicateQuantities.TryGetValue(calibrationPoint, out quantities))
             {
+                IDictionary<IdentityPath, PeptideQuantifier.Quantity> quantityDictionary;
                 if (calibrationPoint.LabelType == null)
                 {
-                    result = PeptideQuantifier.GetTransitionIntensities(SrmSettings, calibrationPoint.ReplicateIndex, false);
+                    quantityDictionary = PeptideQuantifier.GetTransitionIntensities(SrmSettings, calibrationPoint.ReplicateIndex, false);
                 }
                 else
                 {
-                    result = new Dictionary<IdentityPath, PeptideQuantifier.Quantity>
+                    quantityDictionary = new Dictionary<IdentityPath, PeptideQuantifier.Quantity>
                     {
                         {
                             IdentityPath.ROOT,
@@ -80,9 +82,26 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         }
                     };
                 }
-                _replicateQuantities.Add(calibrationPoint, result);
+
+                var quantityList = new PeptideQuantifier.Quantity[_identityPaths.Count].ToList();
+                foreach (var entry in quantityDictionary)
+                {
+                    int index = _identityPaths.IndexOf(entry.Key);
+                    if (index >= 0)
+                    {
+                        quantityList[index] = entry.Value;
+                    }
+                    else
+                    {
+                        _identityPaths.Add(entry.Key);
+                        quantityList.Add(entry.Value);
+                    }
+                }
+
+                quantities = ImmutableList.ValueOf(quantityList);
+                _replicateQuantities.Add(calibrationPoint, quantities);
             }
-            return result;
+            return MakeQuantityDictionary(quantities);
         }
 
         public double? GetPeptideConcentration(int replicateIndex)
@@ -287,44 +306,35 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public CalibrationCurve GetCalibrationCurve()
         {
+            GetCalibrationCurveAndMetrics(out CalibrationCurve calibrationCurve, out _);
+            return calibrationCurve;
+        }
+
+        public CalibrationCurveMetrics GetCalibrationCurveMetrics()
+        {
+            GetCalibrationCurveAndMetrics(out CalibrationCurve _, out CalibrationCurveMetrics row);
+            return row;
+        }
+
+        public void GetCalibrationCurveAndMetrics(out CalibrationCurve calibrationCurve,
+            out CalibrationCurveMetrics calibrationCurveMetrics)
+        {
+            List<WeightedPoint> points = new List<WeightedPoint>();
+            calibrationCurve = GetCalibrationCurveAndPoints(points);
+            calibrationCurveMetrics = calibrationCurve.GetMetrics(points);
+        }
+
+        private CalibrationCurve GetCalibrationCurveAndPoints(List<WeightedPoint> points) 
+        {
             if (RegressionFit.NONE.Equals(QuantificationSettings.RegressionFit))
             {
                 if (HasInternalStandardConcentration())
                 {
-                    return CalibrationCurve.NO_EXTERNAL_STANDARDS
-                        .ChangeSlope(1/PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0));
+                    return new CalibrationCurve.Simple(1 / PeptideQuantifier.PeptideDocNode.InternalStandardConcentration.GetValueOrDefault(1.0));
                 }
-                return CalibrationCurve.NO_EXTERNAL_STANDARDS;
+
+                return new CalibrationCurve.Simple(1);
             }
-            if (IsotopologResponseCurve)
-            {
-                var concentrationsByLabel = new Dictionary<IsotopeLabelType, double>();
-                foreach (var transitionGroup in PeptideQuantifier.PeptideDocNode.TransitionGroups)
-                {
-                    if (!transitionGroup.PrecursorConcentration.HasValue)
-                    {
-                        continue;
-                    }
-                    double prevConcentration;
-                    if (concentrationsByLabel.TryGetValue(transitionGroup.LabelType, out prevConcentration))
-                    {
-                        if (!Equals(prevConcentration, transitionGroup.PrecursorConcentration.Value))
-                        {
-                            string message =
-                                string.Format(
-                                    Resources
-                                        .CalibrationCurveFitter_GetCalibrationCurve_Unable_to_calculate_the_calibration_curve_for_the_because_there_are_different_Precursor_Concentrations_specified_for_the_label__0__,
-                                    transitionGroup.LabelType);
-                            return new CalibrationCurve().ChangeErrorMessage(message);
-                        }
-                    }
-                    else
-                    {
-                        concentrationsByLabel.Add(transitionGroup.LabelType, transitionGroup.PrecursorConcentration.Value);
-                    }
-                }
-            }
-            List<WeightedPoint> weightedPoints = new List<WeightedPoint>();
             foreach (var replicateIndex in GetValidStandardReplicates())
             {
                 double? intensity = GetYValue(replicateIndex);
@@ -332,17 +342,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     continue;
                 }
+
                 double x = GetSpecifiedXValue(replicateIndex).Value;
                 double weight = QuantificationSettings.RegressionWeighting.GetWeighting(x, intensity.Value);
                 WeightedPoint weightedPoint = new WeightedPoint(x, intensity.Value, weight);
-                weightedPoints.Add(weightedPoint);
+                points.Add(weightedPoint);
             }
-            if (weightedPoints.Count == 0)
+
+            if (points.Count == 0)
             {
-                return new CalibrationCurve()
-                    .ChangeErrorMessage(QuantificationStrings.CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
+                return new CalibrationCurve.Error(QuantificationStrings
+                    .CalibrationCurveFitter_GetCalibrationCurve_All_of_the_external_standards_are_missing_one_or_more_peaks_);
             }
-            return FindBestLodForPoints(weightedPoints);
+            return GetCalibrationCurveFromPoints(points);
         }
 
         public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve)
@@ -438,7 +450,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     }
                     double meanPeakArea = peakAreas.Mean();
                     double? backCalculatedConcentration =
-                        GetConcentrationFromXValue(calibrationCurve.GetFittedX(meanPeakArea));
+                        GetConcentrationFromXValue(calibrationCurve.GetXValueForLimitOfDetection(meanPeakArea));
                     if (!backCalculatedConcentration.HasValue)
                     {
                         break;
@@ -462,11 +474,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         private CalibrationCurve GetCalibrationCurveFromPoints(IList<WeightedPoint> points)
         {
             return QuantificationSettings.RegressionFit.Fit(points);
-        }
-
-        private CalibrationCurve FindBestLodForPoints(IList<WeightedPoint> weightedPoints)
-        {
-            return GetCalibrationCurveFromPoints(weightedPoints);
         }
 
         public string GetXAxisTitle()
@@ -745,6 +752,27 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return srmSettings.HasResults &&
                    srmSettings.MeasuredResults.Chromatograms.Any(c => !string.IsNullOrEmpty(c.BatchName));
+        }
+
+        /// <summary>
+        /// Given a flat list of <see cref="GroupComparison.PeptideQuantifier.Quantity"/>  objects,
+        /// create a dictionary using the elements from <see cref="_identityPaths"/> as the keys.
+        /// </summary>
+        private IDictionary<IdentityPath, PeptideQuantifier.Quantity> MakeQuantityDictionary(
+            IList<PeptideQuantifier.Quantity> quantities)
+        {
+            var dictionary = new Dictionary<IdentityPath, PeptideQuantifier.Quantity>();
+            for (int i = 0; i < quantities.Count; i++)
+            {
+                var quantity = quantities[i];
+                if (Equals(quantity, default(PeptideQuantifier.Quantity)))
+                {
+                    continue;
+                }
+                dictionary.Add(_identityPaths[i], quantity);
+            }
+
+            return dictionary;
         }
     }
 

@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             string[] columnOrder)
         {
             var allErrorText = string.Empty;
-            clipText = clipText.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            clipText = ToLocalText(clipText);
             var transitionDlg = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => transitionDlg.TransitionListText = clipText);
 
@@ -99,6 +99,18 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(transitionDlg);
         }
 
+        private static string ToLocalText(string text)
+        {
+            if (Equals(LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator, TextUtil.SEPARATOR_CSV.ToString()) &&
+                !text.Contains(TextUtil.SEPARATOR_TSV)) // Don't double-convert
+            {
+                text = text.Replace(TextUtil.SEPARATOR_CSV, TextUtil.SEPARATOR_TSV);
+            }
+
+            text = text.Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            return text;
+        }
+
         const string caffeineInChiKey = "RYYVLZVUVIJVGH-UHFFFAOYSA-N";
         const string caffeineHMDB = "HMDB01847";
         const string caffeineInChi = "InChI=1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3";
@@ -125,8 +137,9 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
-
             TestAutoManage();
+            TestFormulaWithAtomCountZero();
+            TestIrregularColumnCounts();
             TestMissingAccessionNumbers();
             TestMzOrderIndependence();
             TestNegativeModeLabels();
@@ -975,36 +988,78 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Settings.Default.CustomMoleculeTransitionInsertColumnsList = saveColumnOrder);
         }
 
+        private void TestIrregularColumnCounts()
+        {
+            var header = GetAminoAcidsTransitionListText(out var textCSV) + "\n";
+            var lineEnd = @",-1,3";
+
+            TestIrregularColumnCountCases(textCSV, lineEnd, false);
+
+            // Now check again when the anomaly is past the end of the lines that get shown to the user
+            textCSV = textCSV.Replace(header, string.Empty);
+            var chunk = textCSV.Replace(lineEnd, @",-2,4").Split('\n');
+            var bigText = header;
+            int lineCount = 1;
+            while (lineCount < ImportTransitionListColumnSelectDlg.N_DISPLAY_LINES)
+            {
+                foreach (var lineText in chunk.Where(l => !string.IsNullOrEmpty(l)))
+                {
+                    bigText += lineCount + lineText + "\n";
+                    lineCount++;
+                }
+            }
+            textCSV = bigText + textCSV;
+
+            TestIrregularColumnCountCases(textCSV, lineEnd, true);
+        }
+
+        private void TestIrregularColumnCountCases(string textCSV, string lineEnd, bool withDsvReaderError)
+        {
+            var docOrig = SkylineWindow.Document;
+            TestError(textCSV, null, null); // That should just work
+            WaitForDocumentChange(docOrig);
+            NewDocument();
+
+            // Now see what happens when we remove the trailing field in the header
+            var shortHeader =
+                textCSV.Replace(@"," + SmallMoleculeTransitionListColumnHeaders.rtPrecursor, string.Empty);
+            AssertEx.AreNotEqual(shortHeader, textCSV, "did something change in the test code?");
+            docOrig = SkylineWindow.Document;
+            TestError(shortHeader, null, null);
+            WaitForDocumentChange(docOrig);
+            NewDocument();
+
+            // Now see what happens when we remove the trailing field in a data line (so fewer columns in line than in header)
+            var shortData = textCSV.Replace(lineEnd, @",-1");
+            AssertEx.AreNotEqual(shortData, textCSV, "did something change in the test code?");
+            docOrig = SkylineWindow.Document;
+            TestError(shortData, null, null);
+            WaitForDocumentChange(docOrig);
+            NewDocument();
+
+            // Now see what happens when we add an extra trailing field in a data line (so more columns in line than in header)
+            const string suffixField = @",paintball";
+            var longData = textCSV.Replace(lineEnd, lineEnd + suffixField);
+            AssertEx.AreNotEqual(longData, textCSV, "did something change in the test code?");
+            docOrig = SkylineWindow.Document;
+            // When the user can't see the field to use in making column decisions, an error is shown
+            string expectedError = withDsvReaderError ? GetDsvReaderError(longData, suffixField) : null;
+            TestError(longData, expectedError, null);
+            if (expectedError == null)
+                WaitForDocumentChange(docOrig);
+            NewDocument();
+        }
+
+        private static string GetDsvReaderError(string longData, string suffixField)
+        {
+            var lineText = ToLocalText(longData.Split('\n').First(l => l.EndsWith(suffixField)));
+            return string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_, lineText, 12, 11);
+        }
+
         private void TestToolServiceAccess()
         {
             // Test the tool service logic without actually using tool service (there's a test for that too)
-            var header = string.Join(",", new string[]
-            {
-                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.nameProduct,
-                SmallMoleculeTransitionListColumnHeaders.labelType,
-                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
-                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-           });
-           var textCSV = header + "\n" +
-                "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
-                "Amino Acids B,ArgB,,light,,,310.2,217,-1,-1,19\n" +
-                "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
-                "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" + // NB we ignore RT conflicts
-                "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
-                "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
-                "Amino Acids B,AlaB,,light,,,225.1,45,-1,-1,3\n" +
-                "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" + // NB we ignore RT conflicts
-                "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" + // NB we ignore RT conflicts
-                "Amino Acids B,ArgB,,light,,,310.2,218,-1,-1,19\n" +
-                "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
-                "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+            var header = GetAminoAcidsTransitionListText(out var textCSV);
 
             var docOrig = SkylineWindow.Document;
             var textClean = textCSV;
@@ -1201,6 +1256,38 @@ namespace pwiz.SkylineTestFunctional
             var columnSelectDlg1 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
             Assert.IsFalse(columnSelectDlg1.radioMolecule.Checked);
             OkDialog(columnSelectDlg1, columnSelectDlg1.CancelDialog);
+        }
+
+        private static string GetAminoAcidsTransitionListText(out string textCSV)
+        {
+            var header = string.Join(",", new string[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
+                SmallMoleculeTransitionListColumnHeaders.namePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.labelType,
+                SmallMoleculeTransitionListColumnHeaders.formulaPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
+            });
+            textCSV = header + "\n" +
+                      "Amino Acids B,AlaB,,light,,,225.1,44,-1,-1,3\n" +
+                      "Amino Acids B,ArgB,,light,,,310.2,217,-1,-1,19\n" +
+                      "Amino Acids,Ala,,light,,,225,44,1,1,3\n" +
+                      "Amino Acids,Ala,,heavy,,,229,48,1,1,4\n" + // NB we ignore RT conflicts
+                      "Amino Acids,Arg,,light,,,310,217,1,1,19\n" +
+                      "Amino Acids,Arg,,heavy,,,312,219,1,1,19\n" +
+                      "Amino Acids B,AlaB,,light,,,225.1,45,-1,-1,3\n" +
+                      "Amino Acids B,AlaB,,heavy,,,229,48,-1,-1,4\n" + // NB we ignore RT conflicts
+                      "Amino Acids B,AlaB,,heavy,,,229,49,-1,-1,4\n" + // NB we ignore RT conflicts
+                      "Amino Acids B,ArgB,,light,,,310.2,218,-1,-1,19\n" +
+                      "Amino Acids B,ArgB,,heavy,,,312,219,-1,-1,19\n" +
+                      "Amino Acids B,ArgB,,heavy,,,312,220,-1,-1,19\n";
+            return header;
         }
 
         // Test uniform handling in File>Import>TransitionList, Edit>Insert>TransitionList, and pasting into Targets area
@@ -1431,6 +1518,31 @@ namespace pwiz.SkylineTestFunctional
                     !t.Transition.IsNegative() && Math.Abs(t.Transition.CustomIon.AverageMassMz - 236.1) < 1));
                 NewDocument();
             }
+        }
+
+        private void TestFormulaWithAtomCountZero()
+        {
+            // Make sure that H'0 doesn't cause trouble - throws "System.Collections.Generic.KeyNotFoundException: The given key was not present in the dictionary."
+            // in StripLabelsFromFormula() in pwiz_tools\Skyline\Util\BioMassCalc.cs if not fixed.
+            var text =
+                "MoleculeGroup,PrecursorName,PrecursorFormula,PrecursorAdduct,PrecursorMz,PrecursorCharge,ProductName,ProductFormula,ProductAdduct,ProductMz,ProductCharge\n" +
+                "AMPP_FA,AMPP_16:0_1.04,C28H42N2O1XeH'0,[M]1+,,1,AMPP_16:0_precursor,C28H42N2O1H'0,[M]1+,,1\n" + // Data from the wild
+                "AMPP_FA,AMPP_18:0_1.04,C30H46N2O1XeH'0,[M]1+,,1,AMPP_18:0_precursor,C30H46N2O1H'0,[M]1+,,1\n" + // Data from the wild
+                "AMPP_FA,AMPP_17:0_1.04,C28H0N2O1XeH'41,[M]1+,,1,AMPP_17:0_precursor,C28H0N2O1XeH'41,[M]1+,,1\n" + // Made up values
+                "AMPP_FA,AMPP_14:0_1.04,C28H0N2O1XeH'0,[M]1+,,1,AMPP_14:0_precursor,C28H0N2O1XeH'0,[M]1+,,1\n" + // Made up values
+                "AMPP_FA,AMPP_19:0_1.04,C30N2O1XeH'45,[M]1+,,1,AMPP_19:0_precursor,C30N2O1XeH'45,[M]1+,,1\n"; // Made up values
+
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected
+            RunUI(() => SkylineWindow.Paste());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
+            var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.Formula).ToArray();
+            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0]);
+            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1]);
+            AssertEx.AreEqual("C28H41N2OXe", docMolecules[2]);
+            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3]);
+            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4]); // We intentionally preserve nonstandard order
+            NewDocument();
         }
 
         private void TestNegativeModeLabels()
@@ -1852,7 +1964,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 // Test serialization of explicit values
-                pastedDoc = AssertEx.Serializable(pastedDoc, TestDirectoryName, SkylineVersion.CURRENT); 
+                pastedDoc = AssertEx.Serializable(pastedDoc, TestContext.GetTestResultsPath(), SkylineVersion.CURRENT); 
             }
             NewDocument();
 
@@ -1861,7 +1973,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
         {
             // Write out a transition list
-            string csvPath = TestContext.GetTestPath(outputName);
+            string csvPath = TestFilesDir.GetTestPath(outputName);
             string csvExpectedPath = TestFilesDir.GetTestPath(expectedName);
             // Open Export Method dialog, and set method to scheduled or standard.
             var exportMethodDlg =

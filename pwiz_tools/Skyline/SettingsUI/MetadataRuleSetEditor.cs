@@ -29,6 +29,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -46,13 +47,14 @@ namespace pwiz.Skyline.SettingsUI
         private MetadataExtractor _metadataExtractor;
         private ImmutableList<MetadataRuleSet> _existing;
         private string _originalName;
-        public MetadataRuleSetEditor(IDocumentContainer documentContainer, MetadataRuleSet metadataRuleSet, IEnumerable<MetadataRuleSet> existing)
+        public MetadataRuleSetEditor(SrmDocument document, MetadataRuleSet metadataRuleSet, IEnumerable<MetadataRuleSet> existing)
         {
             InitializeComponent();
-            DocumentContainer = documentContainer;
-            metadataRuleSet = metadataRuleSet ?? new MetadataRuleSet(typeof(ResultFile));
+            Document = document;
+            metadataRuleSet = 
+                metadataRuleSet ?? new MetadataRuleSet(typeof(ResultFile));
             _originalName = metadataRuleSet.Name;
-            _dataSchema = new SkylineDataSchema(documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = SkylineDataSchema.MemoryDataSchema(document, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(_dataSchema, typeof(ExtractedMetadataResultRow));
             var viewInfo = new ViewInfo(rootColumn, GetDefaultViewSpec());
             var skylineViewContext= new MetadataResultViewContext(rootColumn, new StaticRowSource(new MetadataStepResult[0]));
@@ -64,7 +66,7 @@ namespace pwiz.Skyline.SettingsUI
             _existing = ImmutableList.ValueOfOrEmpty(existing);
         }
 
-        public IDocumentContainer DocumentContainer { get; private set; }
+        public SrmDocument Document{ get; private set; } 
 
         public MetadataRuleSet MetadataRuleSet
         {
@@ -234,7 +236,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public MetadataRule ShowRuleEditor(MetadataRule rule)
         {
-            using (var dlg = new MetadataRuleEditor(DocumentContainer))
+            using (var dlg = new MetadataRuleEditor(Document))
             {
                 if (rule != null)
                 {

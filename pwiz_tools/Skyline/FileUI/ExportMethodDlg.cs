@@ -115,9 +115,19 @@ namespace pwiz.Skyline.FileUI
                 comboOptimizing.Items.Add(ExportOptimize.DP);
             comboOptimizing.SelectedIndex = 0;
 
-            // Set instrument type based on CE regression name for the document.
-            string cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-            if (cePredictorName != null)
+            // Set instrument type
+            var lastInstrument = Settings.Default.ExportInstrumentType;
+            var lastCePredictorName = Settings.Default.ExportCEPredictorName;
+            var cePredictorName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+
+            // Select the last instrument if the CE predictor is the same as last time.
+            if (!string.IsNullOrEmpty(lastCePredictorName) && Equals(lastCePredictorName, cePredictorName))
+            {
+                InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
+            }
+
+            // Otherwise, set instrument type based on CE regression name for the document.
+            if (InstrumentType == null)
             {
                 // Look for the first instrument type with the same prefix as the CE name
                 string cePredictorPrefix = cePredictorName.Split(' ')[0];
@@ -892,13 +902,10 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                var missingIonMobility = BrukerTimsTofIsolationListExporter.GetMissingIonMobility(documentExport, _exportProperties);
-                if (missingIonMobility.Length > 0)
+                var ionMobilityError = BrukerTimsTofIsolationListExporter.CheckIonMobilities(documentExport, _exportProperties, templateName);
+                if (!string.IsNullOrEmpty(ionMobilityError))
                 {
-                    MessageDlg.Show(this,
-                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
-                        Environment.NewLine + Environment.NewLine +
-                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    MessageDlg.Show(this, ionMobilityError);
                     return;
                 }
             }
@@ -909,27 +916,26 @@ namespace pwiz.Skyline.FileUI
                 // Check to make sure CE and DP match chosen instrument, and offer to use
                 // the correct version for the instrument, if not.
                 var predict = documentExport.Settings.TransitionSettings.Prediction;
-                var ce = predict.CollisionEnergy;
-                string ceName = (ce != null ? ce.Name : null);
-                string ceNameDefault = _instrumentType.Split(' ')[0];
+                var ceName = predict.CollisionEnergy?.Name;
+                var ceNameDefault = _instrumentType.Split(' ')[0];
 
                 // CE prediction should be None for Bruker timsTOF, since the CE is populated by the instrument control software in the method.
                 if (Equals(_instrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
                     ceNameDefault = CollisionEnergyList.ELEMENT_NONE;
 
-                bool ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
+                var ceInSynch = IsInSynchPredictor(ceName, ceNameDefault);
 
-                var dp = predict.DeclusteringPotential;
-                string dpName = (dp != null ? dp.Name : null);
-                string dpNameDefault = _instrumentType.Split(' ')[0];
-                bool dpInSynch = true;
+                var dpName = predict.DeclusteringPotential?.Name;
+                string dpNameDefault = null;
+                var dpInSynch = true;
                 if (_instrumentType == ExportInstrumentType.ABI)
+                {
+                    dpNameDefault = _instrumentType.Split(' ')[0];
                     dpInSynch = IsInSynchPredictor(dpName, dpNameDefault);
-                else
-                    dpNameDefault = null; // Ignored for all other types
+                }
 
                 if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault))) ||
-                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault))))
+                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault!))))
                 {
                     var sb = new StringBuilder(string.Format(Resources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
                                                              _instrumentType));
@@ -1100,6 +1106,7 @@ namespace pwiz.Skyline.FileUI
 
             // Successfully completed dialog.  Store the values in settings.
             Settings.Default.ExportInstrumentType = _instrumentType;
+            Settings.Default.ExportCEPredictorName = _document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
             Settings.Default.ExportMethodStrategy = ExportStrategy.ToString();
             Settings.Default.ExportSortByMz = SortByMz;
             Settings.Default.ExportIgnoreProteins = IgnoreProteins;
@@ -2072,6 +2079,13 @@ namespace pwiz.Skyline.FileUI
                     MessageDlg.Show(this,
                         string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
                             brukerTemplate));
+                    return;
+                }
+
+                var ionMobilityError = BrukerTimsTofIsolationListExporter.CheckIonMobilities(_document, _exportProperties, brukerTemplate);
+                if (!string.IsNullOrEmpty(ionMobilityError))
+                {
+                    MessageDlg.Show(this, ionMobilityError);
                     return;
                 }
 

@@ -38,15 +38,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName("MoleculeResult")]
     public class PeptideResult : Result
     {
-        private readonly CachedValue<PeptideChromInfo> _chromInfo;
-        private readonly CachedValue<QuantificationResult> _quantificationResult;
-        private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
+        private readonly CachedValues _cachedValues = new CachedValues();
 
         public PeptideResult(Peptide peptide, ResultFile file) : base(peptide, file)
         {
-            _chromInfo = CachedValue.Create(DataSchema, () => ResultFile.FindChromInfo(peptide.DocNode.Results));
-            _quantificationResult = CachedValue.Create(DataSchema, GetQuantification);
-            _calibrationCurveFitter = CachedValue.Create(DataSchema, GetCalibrationCurveFitter);
         }
 
         [HideWhen(AncestorOfType = typeof(Peptide))]
@@ -55,7 +50,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public Peptide Peptide { get { return SkylineDocNode as Peptide; } }
 
         [Browsable(false)]
-        public PeptideChromInfo ChromInfo { get { return _chromInfo.Value; } }
+        public PeptideChromInfo ChromInfo { get { return _cachedValues.GetChromInfo(this); } }
         [Format(Formats.PEAK_FOUND_RATIO, NullValue = TextUtil.EXCEL_NA)]
         [InvariantDisplayName("MoleculePeakFoundRatio", ExceptInUiMode = UiModes.PROTEOMIC)]
         public double PeptidePeakFoundRatio { get { return ChromInfo.PeakCountRatio; } }
@@ -134,7 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         private double? GetAreaProportion(IEnumerable<Peptide> peptides)
         {
-            var normalizedArea = _quantificationResult.Value?.NormalizedArea;
+            var normalizedArea = GetQuantificationResult()?.NormalizedArea;
             if (!normalizedArea.HasValue)
             {
                 return null;
@@ -146,7 +141,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 {
                     if (peptideResult.ResultFile.Replicate.Name == ResultFile.Replicate.Name)
                     {
-                        total += peptideResult._quantificationResult.Value?.NormalizedArea ?? 0.0;
+                        total += peptideResult.GetQuantificationResult()?.NormalizedArea ?? 0.0;
                     }
                 }
             }
@@ -189,11 +184,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public QuantificationResult GetQuantificationResult()
+        {
+            return _cachedValues.GetQuantificationResult(this);
+        }
+
         public LinkValue<QuantificationResult> Quantification
         {
             get
             {
-                return new LinkValue<QuantificationResult>(_quantificationResult.Value, (sender, args) =>
+                return new LinkValue<QuantificationResult>(GetQuantificationResult(), (sender, args) =>
                 {
                     SkylineWindow skylineWindow = DataSchema.SkylineWindow;
                     if (skylineWindow != null)
@@ -206,22 +206,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        private QuantificationResult GetQuantification()
-        {
-            return _calibrationCurveFitter.Value.GetPeptideQuantificationResult(ResultFile.Replicate.ReplicateIndex);
-        }
-
         public CalibrationCurveFitter GetCalibrationCurveFitter()
         {
-            if (string.IsNullOrEmpty(ResultFile.Replicate.BatchName) && !Peptide.DocNode.HasPrecursorConcentrations)
-            {
-                return Peptide.GetCalibrationCurveFitter();
-            }
-
-            var calibrationCurveFitter =
-                new CalibrationCurveFitter(Peptide.GetPeptideQuantifier(), SrmDocument.Settings);
-            calibrationCurveFitter.SingleBatchReplicateIndex = ResultFile.Replicate.ReplicateIndex;
-            return calibrationCurveFitter;
+            return _cachedValues.GetCalibrationCurveFitter(this);
         }
 
         public override ElementRef GetElementRef()
@@ -231,12 +218,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [ChildDisplayName("Replicate{0}")]
-        public LinkValue<CalibrationCurve> ReplicateCalibrationCurve
+        public LinkValue<CalibrationCurveMetrics> ReplicateCalibrationCurve
         {
             get
             {
                 var curveFitter = GetCalibrationCurveFitter();
-                return new LinkValue<CalibrationCurve>(curveFitter.GetCalibrationCurve(), (sender, args) =>
+                return new LinkValue<CalibrationCurveMetrics>(curveFitter.GetCalibrationCurveMetrics(), (sender, args) =>
                 {
                     if (null == DataSchema.SkylineWindow)
                     {
@@ -290,6 +277,45 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public override bool IsEmpty()
         {
             return !ChromInfo.RetentionTime.HasValue;
+        }
+
+        private class CachedValues : CachedValues<PeptideResult, PeptideChromInfo,
+            CalibrationCurveFitter, QuantificationResult>
+        {
+            protected override SrmDocument GetDocument(PeptideResult owner)
+            {
+                return owner.SrmDocument;
+            }
+            protected override PeptideChromInfo CalculateValue(PeptideResult owner)
+            {
+                return owner.ResultFile.FindChromInfo(owner.Peptide.DocNode.Results);
+            }
+
+            public PeptideChromInfo GetChromInfo(PeptideResult owner)
+            {
+                return GetValue(owner);
+            }
+            protected override CalibrationCurveFitter CalculateValue1(PeptideResult owner)
+            {
+                if (string.IsNullOrEmpty(owner.ResultFile.Replicate.BatchName) && !owner.Peptide.DocNode.HasPrecursorConcentrations)
+                {
+                    return owner.Peptide.GetCalibrationCurveFitter();
+                }
+                var calibrationCurveFitter =
+                    new CalibrationCurveFitter(owner.Peptide.GetPeptideQuantifier(), owner.SrmDocument.Settings);
+                calibrationCurveFitter.SingleBatchReplicateIndex = owner.ResultFile.Replicate.ReplicateIndex;
+                return calibrationCurveFitter;
+            }
+
+            public CalibrationCurveFitter GetCalibrationCurveFitter(PeptideResult owner)
+            {
+                return GetValue1(owner);
+            }
+            protected override QuantificationResult CalculateValue2(PeptideResult owner)
+            {
+                return GetValue1(owner).GetPeptideQuantificationResult(owner.ResultFile.Replicate.ReplicateIndex);
+            }
+            public QuantificationResult GetQuantificationResult(PeptideResult owner) { return GetValue2(owner); }
         }
     }
 }

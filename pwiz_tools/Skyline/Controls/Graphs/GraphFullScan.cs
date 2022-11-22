@@ -1270,11 +1270,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
                 showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-                menuStrip.Items.Add(showScanNumberContextMenuItem);
+                menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
                 showCollisionEnergyContextMenuItem.Checked = Settings.Default.ShowFullScanCE;
-                menuStrip.Items.Add(showCollisionEnergyContextMenuItem);
-                menuStrip.Items.Add(showPeakAnnotationsContextMenuItem);
-                menuStrip.Items.Add(toolStripSeparator1);
+                menuStrip.Items.Insert(1, showCollisionEnergyContextMenuItem);
+                menuStrip.Items.Insert(2, showPeakAnnotationsContextMenuItem);
+                menuStrip.Items.Insert(3, toolStripSeparator1);
 
                 var currentTransition =
                     _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nearestLabel == null || nearestLabel.Tag == null)
                 return false;
             var transition = (int) nearestLabel.Tag;
-            if (transition < 0 || transition >= _transitionIndex.Length)
+            if (transition < 0 || _transitionIndex == null || transition >= _transitionIndex.Length)
                 return false;
             if (_showIonSeriesAnnotations && _transitionIndex[(int)nearestLabel.Tag] < 0)
                 return false;
@@ -1400,6 +1400,30 @@ namespace pwiz.Skyline.Controls.Graphs
         public MsDataFileScanHelper MsDataFileScanHelper
         {
             get => _msDataFileScanHelper;
+        }
+
+        public IEnumerable<string> IonLabels
+        {
+            get
+            {
+                if (toolStripButtonShowAnnotations.Checked && Program.SkylineOffscreen)
+                {
+                    var annotationCurves = GraphPane.CurveList.FindAll(c => c is StickItem && c.Tag is SpectrumGraphItem);
+                    if (annotationCurves.Any())
+                    {
+                        var graphItem = annotationCurves.First().Tag as SpectrumGraphItem;
+                        return graphItem?.IonLabels;
+                    }
+                    else
+                        return null;
+                }
+                else
+                {
+                    return GraphPane.GraphObjList.OfType<TextObj>()
+                        .ToList().FindAll(txt => txt.Location.X >= XAxisMin && txt.Location.X <= XAxisMax)      //select only annotations visible in the current window)
+                        .Select(label => label.Text).ToHashSet();
+                }
+            }
         }
 
         #endregion Test support

@@ -190,11 +190,15 @@ namespace SkylineTester
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
 
+            testSet.SelectedIndex = 0;
+
             runMode.SelectedIndex = 0;
 
             InitLanguages(formsLanguage);
             InitLanguages(tutorialsLanguage);
             EnableButtonSelectFailedTests(false); // No tests run yet
+
+            runSerial.Checked = true; // default to serial; saved settings will override
 
             if (args.Length > 0)
                 _openFile = args[0];
@@ -331,9 +335,14 @@ namespace SkylineTester
             _tabs[_previousTab].Enter();
             statusLabel.Text = "";
 
+            StartBackgroundLoadTestSet();
+        }
+
+        private void StartBackgroundLoadTestSet()
+        {
             var loader = new BackgroundWorker();
             loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
+            loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -346,19 +355,33 @@ namespace SkylineTester
                 var skylineNode = new TreeNode("Skyline tests");
 
                 // Load all tests from each dll.
-                var arrayDllNames = showTutorialsOnly.Checked ? TUTORIAL_DLLS : TEST_DLLS;
+                var testSetValue = e.Argument;
+                var arrayDllNames = Equals(testSetValue, "All tests") ? TEST_DLLS : TUTORIAL_DLLS;
                 foreach (var testDll in arrayDllNames)
                 {
-                    var tests = GetTestInfos(testDll).OrderBy(test => test).ToArray();
+                    var tests = GetTestInfos(testDll).OrderBy(test => test.TestMethod.Name).ToArray();
 
                     // Add tests to test tree view.
                     var dllName = testDll.Replace(".dll", "");
                     var childNodes = new List<TreeNode>(tests.Length);
                     foreach (var test in tests)
                     {
-                        if (!showTutorialsOnly.Checked || test.EndsWith("Tutorial"))
-                            childNodes.Add(new TreeNode(test));
-                }
+                        switch (testSetValue)
+                        {
+                            case "Tutorial tests":
+                                if (!test.TestMethod.Name.EndsWith("Tutorial"))
+                                    continue;
+                                break;
+                            case "Audit log tests":
+                            {
+                                if (!test.IsAuditLogTest)
+                                    continue;
+                                break;
+                            }
+                        }
+
+                        childNodes.Add(new TreeNode(test.TestMethod.Name));
+                    }
                     skylineNode.Nodes.Add(new TreeNode(dllName, childNodes.ToArray()));
                 }
 
@@ -384,7 +407,7 @@ namespace SkylineTester
 
                 var tutorialTests = new List<string>();
                 foreach (var tutorialDll in TUTORIAL_DLLS)
-                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial"));
+                    tutorialTests.AddRange(GetTestInfos(tutorialDll, "NoLocalizationAttribute", "Tutorial").Select(t => t.TestMethod.Name));
                 foreach (var test in tutorialTests.ToArray())
                 {
                     // Remove any tutorial tests we've hacked for extra testing (extending test name not to end with Tutorial) - not of interest to localizers
@@ -425,26 +448,11 @@ namespace SkylineTester
             return type.GetInterfaces().Any(t => t.Name == interfaceName);
         }
 
-        public IEnumerable<string> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
+        public IEnumerable<TestInfo> GetTestInfos(string testDll, string filterAttribute = null, string filterName = null)
         {
-            var dllPath = Path.Combine(ExeDir, testDll);
-            var assembly = LoadFromAssembly.Try(dllPath);
-            var types = assembly.GetTypes();
-
-            foreach (var type in types)
-            {
-                if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
-                {
-                    var methods = type.GetMethods();
-                    foreach (var method in methods)
-                    {
-                        if (HasAttribute(method, "TestMethodAttribute") && 
-                            (filterAttribute == null || !HasAttribute(method, filterAttribute)) &&
-                            (filterName == null || method.Name.Contains(filterName)))
-                            yield return method.Name;
-                    }
-                }
-            }
+            return TestRunnerLib.RunTests.GetTestInfos(Path.Combine(ExeDir, testDll)).Where(info =>
+                (filterAttribute == null || !info.TestMethod.CustomAttributes.Any(attr => Equals(attr.AttributeType.Name, filterAttribute))) &&
+                (filterName == null || info.TestMethod.Name.Contains(filterName)));
         }
 
         // Determine if the given class or method from an assembly has the given attribute.
@@ -551,7 +559,11 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+#if DEBUG
+        private bool _buildDebug = true;
+#else
         private bool _buildDebug;
+#endif
 
         public enum BuildDirs
         {
@@ -591,7 +603,7 @@ namespace SkylineTester
             CheckBuildDirExistence(buildDirs);
             if (buildDirs.All(dir => dir == null))
             {
-                _buildDebug = true;
+                _buildDebug = !_buildDebug;
                 buildDirs = GetPossibleBuildDirs();
                 CheckBuildDirExistence(buildDirs);
                 _buildDebug = buildDirs.Any(dir => dir != null);
@@ -863,13 +875,15 @@ namespace SkylineTester
 
             var testNumber = line.Substring(8, 7).Trim();
             var testName = line.Substring(16, 46).TrimEnd();
+            // Expecting:
+            // <time> <pass> <test-name> <language> [test-output]<failure-count> failures, <memory-counts> MB, <handle-counts> handles, <seconds> secs.
             var parts = Regex.Split(line, "\\s+");
-            var partsIndex = memoryGraphType ? 6 : 8;
+            var partsIndex = parts.Length - (memoryGraphType ? 6 : 4);
             var unitsIndex = partsIndex + 1;
             var units = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
             double minorMemory = 0, majorMemory = 0;
             double? middleMemory = null;
-            if (unitsIndex < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
+            if (6 < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
@@ -1042,8 +1056,11 @@ namespace SkylineTester
                 testsTree,
                 runCheckedTests,
                 skipCheckedTests,
-                showTutorialsOnly,
+                testSet,
                 runMode,
+                runParallel,
+                runSerial,
+                parallelWorkerCount,
 
                 // Build
                 buildTrunk,
@@ -1472,13 +1489,15 @@ namespace SkylineTester
         public RadioButton      RunIndefinitely             { get { return runIndefinitely; } }
         public NumericUpDown    RunLoopsCount               { get { return runLoopsCount; } }
         public Button           RunNightly                  { get { return runNightly; } }
+        public RadioButton      RunParallel                 { get { return runParallel; } }
+        public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
         public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
-        public CheckBox         ShowTutorialsOnly           { get { return showTutorialsOnly; } }
+        public ComboBox         TestSet                     { get { return testSet; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
         public CheckBox         StartSln                    { get { return startSln; } }
         public TabControl       Tabs                        { get { return tabs; } }
@@ -1883,11 +1902,9 @@ namespace SkylineTester
             }
         }
 
-        private void showTutorialsOnly_CheckedChanged(object sender, EventArgs e)
+        private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
-            var loader = new BackgroundWorker();
-            loader.DoWork += BackgroundLoad;
-            loader.RunWorkerAsync();
+            StartBackgroundLoadTestSet();
         }
 
         #endregion Control events

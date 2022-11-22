@@ -86,7 +86,9 @@ PWIZ_API_DECL enum InstrumentModel
     API4600TripleTOF,
     API5600TripleTOF,
     API6600TripleTOF,
+    TripleQuad7500,
     X500QTOF,
+    ZenoTOF7600,
     GenericQTrap,
     InstrumentModel_Count
 };
@@ -172,6 +174,7 @@ struct PWIZ_API_DECL Target
     double dwellTime;
     double collisionEnergy;
     double declusteringPotential;
+    double startTime, endTime;
     std::string compoundID;
 };
 

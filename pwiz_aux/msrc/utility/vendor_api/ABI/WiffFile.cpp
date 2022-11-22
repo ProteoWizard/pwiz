@@ -63,7 +63,6 @@ namespace pwiz {
 namespace vendor_api {
 namespace ABI {
 
-
 class WiffFileImpl : public WiffFile
 {
     public:
@@ -152,9 +151,6 @@ struct ExperimentImpl : public Experiment
     ExperimentType experimentType;
     size_t simCount;
     size_t transitionCount;
-
-    typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
-    TransitionParametersMap transitionParametersMap;
 
     const vector<double>& cycleTimes() const {initializeTIC(); return cycleTimes_;}
     const vector<double>& cycleIntensities() const {initializeTIC(); return cycleIntensities_;}
@@ -361,6 +357,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("5500"))            return API5500; // predicted
         if (modelName->Contains("QTRAP6500"))       return API6500QTrap; // predicted
         if (modelName->Contains("6500"))            return API6500; // predicted
+        if (modelName->Contains("QUAD7500"))        return TripleQuad7500;
         if (modelName->Contains("QTRAP"))           return GenericQTrap;
         if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
         if (modelName->Contains("QSTARXL"))         return QStarXL;
@@ -379,6 +376,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("350"))             return API350; // predicted
         if (modelName->Contains("365"))             return API365; // predicted
         if (modelName->Contains("X500QTOF"))        return X500QTOF;
+        if (modelName->Contains("ZENOTOF7600"))     return ZenoTOF7600;
         throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
     }
     CATCH_AND_FORWARD
@@ -441,24 +439,6 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
             transitionCount = msExperiment->Details->MassRangeInfo->Length;
         else if (experimentType == SIM)
             simCount = msExperiment->Details->MassRangeInfo->Length;
-
-        /*for (int i=0; i < msExperiment->MRMTransitions->Count; ++i)
-        {
-            MRMTransition^ transition = msExperiment->MRMTransitions[i];
-            pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
-            e.first = i;
-            e.second = -1;
-        }
-
-        MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
-        for (int i=0; i < transitions->Count; ++i)
-        {
-            MRMTransition^ transition = transitions[i]->Transition;
-            pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
-            if (e.second != -1) // this Q1/Q3 wasn't added by the MRMTransitions loop
-                e.first = -1;
-            e.second = i;
-        }*/
     }
     CATCH_AND_FORWARD
 }
@@ -546,11 +526,20 @@ void ExperimentImpl::getSIM(size_t index, Target& target) const
         target.type = TargetType_SIM;
         target.Q1 = transition->Mass;
         target.dwellTime = transition->DwellTime;
-        // TODO: store RTWindow?
+        target.startTime = transition->ExpectedRT - transition->RTWindow / 2;
+        target.endTime = transition->ExpectedRT + transition->RTWindow / 2;
+        target.compoundID = ToStdString(transition->Name);
+        
+        auto parameters = transition->CompoundDepParameters;
+        if (parameters->ContainsKey("CE"))
+            target.collisionEnergy = fabs((float) parameters["CE"]->Start);
+        else
+            target.collisionEnergy = 0;
 
-        // TODO: use NaN to indicate these values should be considered missing?
-        target.collisionEnergy = 0;
-        target.declusteringPotential = 0;
+        if (parameters->ContainsKey("DP"))
+            target.declusteringPotential = (float) parameters["DP"]->Start;
+        else
+            target.declusteringPotential = 0;
     }
     CATCH_AND_FORWARD
 }
@@ -571,27 +560,25 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
             throw std::out_of_range("[Experiment::getSRM()] index out of range");
 
         MRMMassRange^ transition = (MRMMassRange^) msExperiment->Details->MassRangeInfo[index];
-        //const pair<int, int>& e = transitionParametersMap.find(make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble))->second;
 
         target.type = TargetType_SRM;
         target.Q1 = transition->Q1Mass;
         target.Q3 = transition->Q3Mass;
         target.dwellTime = transition->DwellTime;
-        // TODO: store RTWindow?
+        target.startTime = transition->ExpectedRT - transition->RTWindow;
+        target.endTime = transition->ExpectedRT + transition->RTWindow;
+        target.compoundID = ToStdString(transition->Name);
 
-        /*if (e.second > -1)
-        {
-            MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
-            CompoundDependentParametersDictionary^ parameters = transitions[e.second]->Parameters;
-            target.collisionEnergy = (double) parameters["CE"];
-            target.declusteringPotential = (double) parameters["DP"];
-        }
-        else*/
-        {
-            // TODO: use NaN to indicate these values should be considered missing?
+        auto parameters = transition->CompoundDepParameters;
+        if (parameters->ContainsKey("CE"))
+            target.collisionEnergy = fabs((float) parameters["CE"]->Start);
+        else
             target.collisionEnergy = 0;
+
+        if (parameters->ContainsKey("DP"))
+            target.declusteringPotential = (float) parameters["DP"]->Start;
+        else
             target.declusteringPotential = 0;
-        }
     }
     CATCH_AND_FORWARD
 }

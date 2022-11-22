@@ -1116,6 +1116,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     SetGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
             }
+            else if (CurveCount == 1 && CurveList[0].NPts == 1 && CurveList[0].Points[0].X == 0)
+            {
+                string message = null;
+                switch (DisplayType)
+                {
+                    case DisplayTypeChrom.base_peak:
+                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram;
+                        break;
+                    case DisplayTypeChrom.tic:
+                        message = Resources.GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram;
+                        break;
+                }
+                SetGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
+            }
             else
             {
                 _graphHelper.FinishedAddingChromatograms(new[] {firstBestPeak, lastBestPeak}, false);
@@ -2271,9 +2285,11 @@ namespace pwiz.Skyline.Controls.Graphs
                                                   Target lookupSequence,
                                                   ExplicitMods lookupMods)
         {
+            bool fullScan = settings.TransitionSettings.FullScan.IsEnabled &&
+                            !chromGraphPrimary.Chromatogram.GroupInfo.CachedFile.IsSrm;
             // Set any MS/MS IDs on the first graph item also
-            if (settings.PeptideSettings.Libraries.IsLoaded &&
-                (settings.TransitionSettings.FullScan.IsEnabled || settings.PeptideSettings.Libraries.HasMidasLibrary))
+            if (settings.PeptideSettings.Libraries.IsLoaded && 
+                (fullScan || settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
                 var nodeGroupsArray = nodeGroups.ToArray();
                 var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
@@ -2464,10 +2480,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                      out bool changedGroupIds)
         {
             bool qcTraceNameMatches = extractor != ChromExtractor.qc ||
-                                      (_arrayChromInfo != null &&
-                                       _arrayChromInfo.Length > 0 &&
-                                       _arrayChromInfo[0].Length > 0 &&
-                                       _arrayChromInfo[0][0].TextId == Settings.Default.ShowQcTraceName);
+                                      _arrayChromInfo?[0]?[0].TextId == Settings.Default.ShowQcTraceName;
 
             if (UpdateGroups(nodeGroups, groupPaths, out changedGroups, out changedGroupIds) &&
                 _extractor == extractor &&
@@ -3748,8 +3761,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
                                           PeakIdentification? identified,
-                                          PeakBoundsChangeType changeType,
-                                          bool syncGeneratedChange = false)
+                                          PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
             Transition = transition;
@@ -3757,7 +3769,6 @@ namespace pwiz.Skyline.Controls.Graphs
             EndTime = endTime;
             Identified = identified;
             ChangeType = changeType;
-            SyncGeneratedChange = syncGeneratedChange;
         }
 
         public Transition Transition { get; private set; }
@@ -3766,7 +3777,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public PeakIdentification? Identified { get; private set; }
         public bool IsIdentified { get { return Identified.HasValue && Identified != PeakIdentification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
-        public bool SyncGeneratedChange { get; }
     }
 
     public sealed class ChangedMultiPeakBoundsEventArgs : EventArgs

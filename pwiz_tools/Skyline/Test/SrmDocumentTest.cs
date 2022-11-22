@@ -1399,6 +1399,13 @@ namespace pwiz.SkylineTest
             "<srm_settings><selected_proteins>\n" +
             "  <peptide_list/>\n" +
             "</selected_proteins></srm_settings>",
+            // Protein group name and 2 proteins
+            "<srm_settings><selected_proteins>\n" +
+            "  <protein_group name=\"test1/test2\">\n" +
+            "    <protein name=\"test1\" description=\"desc1\" accession=\"test1\" preferred_name=\"test1\" websearch_status=\"X#test1\"><sequence>ABCDEFG HIJKLMNP QRSTUV WXYZ</sequence></protein>\n" +
+            "    <protein name=\"test2\" description=\"desc2\" accession=\"test2\" preferred_name=\"test2\" websearch_status=\"X#test2\"><sequence>ABCDEFG HIJKLMNP QRSTUV</sequence></protein>\n" +
+            "  </protein_group>\n" +
+            "</selected_proteins></srm_settings>",
         };
 
         private readonly string[] _peptideGroupInvalid =
@@ -1557,6 +1564,26 @@ namespace pwiz.SkylineTest
                     SchemaDocuments.GetSkylineSchemaResourceName(skylineVersion.SrmDocumentVersion.ToString());
                 var resourceStream = typeof(SchemaDocuments).Assembly.GetManifestResourceStream(schemaFileName);
                 Assert.IsNotNull(resourceStream, "Unable to find schema document {0} for Skyline Version {1}", schemaFileName, skylineVersion);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that the list returned by <see cref="SkylineVersion.SupportedForSharing"/> contains
+        /// the most recent release version.
+        /// </summary>
+        [TestMethod]
+        public void TestMostRecentReleaseFormatIsSupportedForSharing()
+        {
+            var releaseVersions = SkylineVersion.SupportedForSharing()
+                .Where(version => version.Build == 0 && version.Revision == 0)
+                .OrderBy(version=>Tuple.Create(version.MajorVersion, version.MinorVersion)).ToList();
+            var mostRecentRelease = releaseVersions.Last();
+            if (mostRecentRelease.MajorVersion < Install.MajorVersion ||
+                mostRecentRelease.MajorVersion == Install.MajorVersion &&
+                mostRecentRelease.MinorVersion < Install.MinorVersion)
+            {
+                Assert.Fail("SkylineVersion.SupportedForSharing needs to include something at least as new as Skyline {0}.{1}", 
+                    Install.MajorVersion, Install.MinorVersion);
             }
         }
     }

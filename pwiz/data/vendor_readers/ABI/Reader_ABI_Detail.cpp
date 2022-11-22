@@ -66,6 +66,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case API300:
         case API350:
         case API365:
+        case TripleQuad7500:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
             ic.componentList.push_back(Component(MS_quadrupole, 3));
@@ -100,6 +101,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(InstrumentModel in
         case API6600TripleTOF:
         case X500QTOF:
         case NlxTof:
+        case ZenoTOF7600:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
             ic.componentList.push_back(Component(MS_quadrupole, 3));
@@ -138,6 +140,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API5000:           return MS_API_5000;
         case API5500:           return MS_Triple_Quad_5500;
         case API6500:           return MS_Triple_Quad_6500;
+        case TripleQuad7500:    return MS_Triple_Quad_7500;
         case API2000QTrap:      return MS_2000_QTRAP;
         case API2500QTrap:      return MS_2500_QTRAP;
         case API3200QTrap:      return MS_3200_QTRAP;
@@ -150,6 +153,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API4600TripleTOF:  return MS_TripleTOF_4600;
         case API5600TripleTOF:  return MS_TripleTOF_5600;
         case API6600TripleTOF:  return MS_TripleTOF_6600;
+        case ZenoTOF7600:       return MS_ZenoTOF_7600;
         case QStar:             return MS_QSTAR;
         case QStarPulsarI:      return MS_QSTAR_Pulsar;
         case QStarXL:           return MS_QSTAR_XL;

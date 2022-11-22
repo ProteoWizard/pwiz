@@ -889,6 +889,10 @@ namespace pwiz.Skyline
         {
             _graphSpectrumSettings.ShowPrecursorIon = show;
         }
+        public void ShowSpecialIons(bool show)
+        {
+            _graphSpectrumSettings.ShowSpecialIons = show;
+        }
         public void ShowCharge1(bool show)
         {
             _graphSpectrumSettings.ShowCharge1 = show;
@@ -957,9 +961,14 @@ namespace pwiz.Skyline
             ShowPrecursorIon(!_graphSpectrumSettings.ShowPrecursorIon);
         }
 
+        private void specialionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSpecialIons(!_graphSpectrumSettings.ShowSpecialIons);
+        }
+        
         public void SynchMzScaleToolStripMenuItemClick(IMzScalePlot source = null)
         {
-            if(ListMzScaleCopyables().Count() < 2)
+            if (ListMzScaleCopyables().Count() < 2)
                 return;
             Settings.Default.SyncMZScale = synchMzScaleToolStripMenuItem.Checked;
             if (!Settings.Default.SyncMZScale)
@@ -983,10 +992,10 @@ namespace pwiz.Skyline
             SynchMzScaleToolStripMenuItemClick();
         }
 
-        //Testing support
-        public void SynchMzScale(IMzScalePlot source)
+        // Testing support
+        public void SynchMzScale(IMzScalePlot source, bool setSynchMz = true)
         {
-            synchMzScaleToolStripMenuItem.Checked = true;
+            synchMzScaleToolStripMenuItem.Checked = setSynchMz;
             SynchMzScaleToolStripMenuItemClick(source);
         }
 
@@ -1105,6 +1114,8 @@ namespace pwiz.Skyline
                 if (isProteomic)
                 {
                     menuStrip.Items.Insert(iInsert++, ionTypesContextMenuItem);
+                    specialionsContextMenuItem.Checked = set.ShowSpecialIons;
+                    menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
                 }
                 else
                 {
@@ -1114,10 +1125,9 @@ namespace pwiz.Skyline
 
                 precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
                 menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
                 menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
 
-                menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
                 ranksContextMenuItem.Checked = set.ShowRanks;
                 menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
                 if (control.ControlType == SpectrumControlType.LibraryMatch)
@@ -1130,29 +1140,16 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
                 observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
                 menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+                massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
                 duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
                 menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
             }
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
-            ranksContextMenuItem.Checked = set.ShowRanks;
-            menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            if (control?.ControlType == SpectrumControlType.LibraryMatch)
-            {
-                scoreContextMenuItem.Checked = set.ShowLibraryScores;
-                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
+            else {
+                menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
+                massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
             }
-            ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
-            menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
-            observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
-            menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
-
-            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
-            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
-
-            duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
-            menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
@@ -2224,8 +2221,12 @@ namespace pwiz.Skyline
             var peptideChanges = new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>>();
             foreach (var change in changesArr)
             {
+                var find = new SrmDocument.FindChromInfos(document, change.GroupPath, change.NameSet, change.FilePath);
+                if (find.IndexInfo == -1)
+                    continue;
+
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
-                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
+                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, false);
 
                 changedGroupIds.Add(Tuple.Create(change.GroupPath, change.FilePath));
 
@@ -2341,7 +2342,7 @@ namespace pwiz.Skyline
                     }
 
                     yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath,
-                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), null, change.ChangeType, true);
+                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), null, change.ChangeType);
                 }
             }
         }

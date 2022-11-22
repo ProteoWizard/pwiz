@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -50,7 +51,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                PeptideLibraries libraries,
                                PeptideModifications modifications,
                                PeptideIntegration integration,
-                               BackgroundProteome backgroundProteome
+                               BackgroundProteome backgroundProteome,
+                               ProteinAssociation.ParsimonySettings proteinAssociationSettings
                                )
         {
             Enzyme = enzyme;
@@ -68,6 +70,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Filter = Filter.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none);
             }
             Quantification = QuantificationSettings.DEFAULT;
+            ProteinAssociationSettings = proteinAssociationSettings;
         }
 
         [TrackChildren]
@@ -96,6 +99,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(true)]
         public QuantificationSettings Quantification { get; private set; }
+
+        [TrackChildren]
+        public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
 
         #region Property change methods
 
@@ -155,17 +161,23 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Quantification = prop);
         }
 
+        public PeptideSettings ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ProteinAssociationSettings = prop);
+        }
+
         public PeptideSettings MergeDefaults(PeptideSettings defPep)
         {
             PeptideSettings newPeptideSettings = ImClone(this);
-            newPeptideSettings.Enzyme = newPeptideSettings.Enzyme ?? defPep.Enzyme;
-            newPeptideSettings.DigestSettings = newPeptideSettings.DigestSettings ?? defPep.DigestSettings;
-            newPeptideSettings.Prediction = newPeptideSettings.Prediction ?? defPep.Prediction;
-            newPeptideSettings.Filter = newPeptideSettings.Filter ?? defPep.Filter;
-            newPeptideSettings.Libraries = newPeptideSettings.Libraries ?? defPep.Libraries;
-            newPeptideSettings.BackgroundProteome = newPeptideSettings.BackgroundProteome ?? defPep.BackgroundProteome;
-            newPeptideSettings.Modifications = newPeptideSettings.Modifications ?? defPep.Modifications;
-            newPeptideSettings.Integration = newPeptideSettings.Integration ?? defPep.Integration;
+            newPeptideSettings.Enzyme ??= defPep.Enzyme;
+            newPeptideSettings.DigestSettings ??= defPep.DigestSettings;
+            newPeptideSettings.Prediction ??= defPep.Prediction;
+            newPeptideSettings.Filter ??= defPep.Filter;
+            newPeptideSettings.Libraries ??= defPep.Libraries;
+            newPeptideSettings.BackgroundProteome ??= defPep.BackgroundProteome;
+            newPeptideSettings.Modifications ??= defPep.Modifications;
+            newPeptideSettings.Integration ??= defPep.Integration;
+            newPeptideSettings.ProteinAssociationSettings ??= defPep.ProteinAssociationSettings;
             return Equals(newPeptideSettings, this) ? this : newPeptideSettings;
         }
 
@@ -217,6 +229,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Modifications = reader.DeserializeElement<PeptideModifications>();
                 Integration = reader.DeserializeElement<PeptideIntegration>();
                 Quantification = reader.DeserializeElement<QuantificationSettings>();
+                ProteinAssociationSettings = reader.DeserializeElement<ProteinAssociation.ParsimonySettings>();
                 reader.ReadEndElement();
             }
 
@@ -239,6 +252,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(Integration);
             if (!Equals(Quantification, QuantificationSettings.DEFAULT))
                 writer.WriteElement(Quantification);
+            if (!Equals(ProteinAssociationSettings, ProteinAssociation.ParsimonySettings.DEFAULT))
+                writer.WriteElement(ProteinAssociationSettings);
         }
 
         #endregion
@@ -257,7 +272,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Modifications, Modifications) &&
                    Equals(obj.Integration, Integration) &&
                    Equals(obj.BackgroundProteome, BackgroundProteome) &&
-                   Equals(obj.Quantification, Quantification);
+                   Equals(obj.Quantification, Quantification) &&
+                   Equals(obj.ProteinAssociationSettings, ProteinAssociationSettings);
         }
 
         public override bool Equals(object obj)
@@ -281,6 +297,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ Integration.GetHashCode();
                 result = (result*397) ^ BackgroundProteome.GetHashCode();
                 result = (result*397) ^ Quantification.GetHashCode();
+                result = (result*397) ^ ProteinAssociationSettings?.GetHashCode() ?? 0;
                 return result;
             }
         }
@@ -341,14 +358,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     foreach(TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
-                        double windowRT;
                         double? centerTime = PredictRetentionTime(document,
                                                                   nodePep,
                                                                   nodeGroup,
                                                                   i,
                                                                   ExportSchedulingAlgorithm.Trends,
                                                                   true,
-                                                                  out windowRT);
+                                                                  out var windowRT);
                         if (centerTime.HasValue && windowRT > MeasuredRTWindow.Value)
                             return i - 1;
                     }
@@ -363,14 +379,14 @@ namespace pwiz.Skyline.Model.DocSettings
             int? replicateNum,
             ExportSchedulingAlgorithm algorithm,
             bool singleWindow,
-            out double windowRT)
+            out WindowRT windowRT)
         {
             return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, replicateNum, algorithm,
                 singleWindow, null, out windowRT);
         }
 
         public double? PredictRetentionTimeForChromImport(SrmDocument document, PeptideDocNode nodePep,
-            TransitionGroupDocNode nodeGroup, out double windowRt)
+            TransitionGroupDocNode nodeGroup, out WindowRT windowRt)
         {
             return PredictRetentionTimeUsingSpecifiedReplicates(document, nodePep, nodeGroup, null,
                 ExportSchedulingAlgorithm.Average, false, chromatogramSet => chromatogramSet.UseForRetentionTimeFilter, out windowRt);
@@ -383,19 +399,19 @@ namespace pwiz.Skyline.Model.DocSettings
                                             ExportSchedulingAlgorithm algorithm,
                                             bool singleWindow,
                                             Predicate<ChromatogramSet> replicateFilter, 
-                                            out double windowRT)
+                                            out WindowRT windowRT)
         {
             // If peptide has an explicitly set RT, use that
             if (nodePep.ExplicitRetentionTime != null  && 
                 (MeasuredRTWindow.HasValue || nodePep.ExplicitRetentionTime.RetentionTimeWindow.HasValue))
             {
                 // If peptide has an explicitly set RT window, use that, or the global setting
-                windowRT = nodePep.ExplicitRetentionTime.RetentionTimeWindow ?? MeasuredRTWindow.Value;
+                windowRT = new WindowRT(nodePep.ExplicitRetentionTime.RetentionTimeWindow ?? MeasuredRTWindow.Value, true);
                 return nodePep.ExplicitRetentionTime.RetentionTime;
             }
             // Safe defaults
             double? predictedRT = null;
-            windowRT = 0;
+            windowRT = new WindowRT(0, false);
             // Use measurements, if set and available
             bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue && document.Settings.HasResults);
             if (useMeasured)
@@ -405,7 +421,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (peakTime != null)
                     predictedRT = peakTime.CenterTime;
                 if (predictedRT.HasValue)
-                    windowRT = MeasuredRTWindow.Value;
+                    windowRT.Window = MeasuredRTWindow.Value;
                 else if (nodePep.Children.Count > 1)
                 {
                     // If their are other children of this peptide, look for one
@@ -420,7 +436,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                             if (predictedRT.HasValue)
                             {
-                                windowRT = MeasuredRTWindow.Value;
+                                windowRT.Window = MeasuredRTWindow.Value;
                                 break;
                             }
                         }
@@ -467,10 +483,27 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         predictedRT = RetentionTime.GetRetentionTime(modifiedSequence);
                     }
-                    windowRT = RetentionTime.TimeWindow;
+                    windowRT.Window = RetentionTime.TimeWindow;
                 }
             }
             return predictedRT;
+        }
+
+        public struct WindowRT
+        {
+            public double Window { get; set; }
+            public bool IsExplicit { get; set; }
+
+            public WindowRT(double window, bool isExplicit)
+            {
+                Window = window;
+                IsExplicit = isExplicit;
+            }
+
+            public static implicit operator double(WindowRT windowRT) => windowRT.Window;
+
+            public override string ToString() => Window.ToString(CultureInfo.CurrentCulture);
+            public string ToString(CultureInfo cultureInfo) => Window.ToString(cultureInfo);
         }
 
         /// <summary>
@@ -532,8 +565,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
-                    double windowRT;
-                    if (PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out windowRT).HasValue)
+                    if (PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out _).HasValue)
                         anyTimes = true;
                     else if (schedulingStrategy != SchedulingStrategy.any)
                         return false;
@@ -846,9 +878,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
-        [TrackChildren(ignoreName: true)]
-        public ProteinAssociation.ParsimonySettings ParsimonySettings { get; private set; }
-
         #region Property change methods
 
         public PeptideFilter ChangeExcludeNTermAAs(int prop)
@@ -879,11 +908,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideFilter ChangePeptideUniqueness(PeptideUniquenessConstraint prop)
         {
             return ChangeProp(ImClone(this), im => im.PeptideUniqueness = prop);
-        }
-
-        public PeptideFilter ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
-        {
-            return ChangeProp(ImClone(this), im => im.ParsimonySettings = prop);
         }
         #endregion
 
@@ -1144,7 +1168,6 @@ namespace pwiz.Skyline.Model.DocSettings
                    obj.MaxPeptideLength == MaxPeptideLength &&
                    obj.AutoSelect.Equals(AutoSelect) &&
                    obj.PeptideUniqueness.Equals(PeptideUniqueness) &&
-                   Equals(obj.ParsimonySettings, ParsimonySettings) &&
                    ArrayUtil.EqualsDeep(obj._exclusions, _exclusions);
         }
 
@@ -1166,7 +1189,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 result = (result*397) ^ _exclusions.GetHashCodeDeep();
                 result = (result*397) ^ PeptideUniqueness.GetHashCode();
-                result = (result*397) ^ ParsimonySettings?.GetHashCode() ?? 0;
                 return result;
             }
         }
@@ -2174,7 +2196,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (resultDict.Count > foundDictKeys.Count)
             {
                 // Other libraries contributed some drift info
-                ionMobilities = new LibraryIonMobilityInfo(filePath.GetFilePath(), false, resultDict);
+                ionMobilities = new LibraryIonMobilityInfo(filePath?.GetFilePath(), false, resultDict);
             }
             return ionMobilities != null;
         }

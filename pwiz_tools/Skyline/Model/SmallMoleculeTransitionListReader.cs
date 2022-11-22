@@ -2128,9 +2128,6 @@ namespace pwiz.Skyline.Model
         public const string idSMILES = "SMILES";
         public const string idKEGG = "KEGG";
         public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
-        public static string COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0 => Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility + @" (1/K0)";
-        public static string COLUMN_HEADER_EXPLICIT_IM_MSEC => Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility + @" (msec)";
-
 
         public static readonly List<string> KnownHeaders;
 
@@ -2209,27 +2206,41 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(adductPrecursor, Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct),
                     Tuple.Create(adductProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Adduct),
                     Tuple.Create(rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time),
+                    Tuple.Create(rtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Retention_Time),
                     Tuple.Create(rtPrecursor, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_RT__min_), // ""RT (min)"
                     Tuple.Create(rtPrecursor, @"explicitretentiontime"),
                     Tuple.Create(rtPrecursor, @"precursorrt"),
                     Tuple.Create(rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window),
+                    Tuple.Create(rtWindowPrecursor, Resources.PasteDlg_UpdateMoleculeType_Retention_Time_Window),
                     Tuple.Create(rtWindowPrecursor, @"explicitretentiontimewindow"),
                     Tuple.Create(rtWindowPrecursor, @"precursorrtwindow"),
                     Tuple.Create(cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy),
+                    Tuple.Create(cePrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Energy),
                     Tuple.Create(dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time__msec_),
                     Tuple.Create(dtHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Drift_Time_High_Energy_Offset__msec_),
                     Tuple.Create(imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility),
+                    Tuple.Create(imPrecursor, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility),
                     Tuple.Create(imPrecursor, @"explicitionmobility"),
+                    Tuple.Create(imPrecursor, @"ionmobility"),
                     Tuple.Create(imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset),
+                    Tuple.Create(imHighEnergyOffset, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset),
                     Tuple.Create(imHighEnergyOffset, @"explicitionmobilityhighenergyoffset"),
+                    Tuple.Create(imHighEnergyOffset, @"ionmobilityhighenergyoffset"),
                     Tuple.Create(imUnits, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units),
+                    Tuple.Create(imUnits, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility_Units),
                     Tuple.Create(imUnits, @"explicitionmobilityunits"),
-                    Tuple.Create(dtPrecursor, COLUMN_HEADER_EXPLICIT_IM_MSEC),
-                    Tuple.Create(imPrecursor_invK0, COLUMN_HEADER_EXPLICIT_IM_INVERSE_K0),
+                    Tuple.Create(imUnits, @"ionmobilityunits"),
+                    Tuple.Create(dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_),
+                    Tuple.Create(dtPrecursor, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_),
+                    Tuple.Create(imPrecursor_invK0, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_),
+                    Tuple.Create(imPrecursor_invK0, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_),
                     Tuple.Create(imPrecursor_invK0, @"1/K0"),
+                    Tuple.Create(imPrecursor_invK0, @"PrecursorIonMobility"), // As in Bruker PASER files
                     Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility + @" (CoV)"),
+                    Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Ion_Mobility + @" (CoV)"),
                     Tuple.Create(compensationVoltage, @"CoV"),
                     Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_),
+                    Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_),
                     Tuple.Create(ccsPrecursor, Resources.PasteDlg_UpdateMoleculeType_Collisional_Cross_Section__sq_A_),
                     Tuple.Create(ccsPrecursor, @"Collisional Cross Section"),
                     Tuple.Create(ccsPrecursor, @"Collision Cross Section"),
@@ -2242,8 +2253,10 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(slens, @"s-lens"),
                     Tuple.Create(coneVoltage, Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage),
                     Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage),
+                    Tuple.Create(compensationVoltage, Resources.PasteDlg_UpdateMoleculeType_Compensation_Voltage),
                     Tuple.Create(declusteringPotential, Resources.PasteDlg_UpdateMoleculeType_Explicit_Declustering_Potential),
                     Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential),
+                    Tuple.Create(declusteringPotential, Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential),
                     Tuple.Create(note, Resources.PasteDlg_UpdateMoleculeType_Note),
                     Tuple.Create(labelType, Resources.PasteDlg_UpdateMoleculeType_Label_Type),
                     Tuple.Create(labelType, Resources.SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Label),

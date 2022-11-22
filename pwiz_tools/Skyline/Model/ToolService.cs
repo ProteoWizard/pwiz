@@ -28,6 +28,7 @@ using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -38,6 +39,7 @@ using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model
@@ -100,7 +102,7 @@ namespace pwiz.Skyline.Model
                 viewSpec.Name));
             var writer = new StringWriter();
             if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer,
-                viewContext.GetCsvWriter()))
+                    TextUtil.SEPARATOR_CSV))
             {
                 return writer.ToString();
             }

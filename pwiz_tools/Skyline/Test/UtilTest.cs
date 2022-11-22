@@ -90,8 +90,16 @@ namespace pwiz.SkylineTest
                     writer.Write(separator);
                 writer.WriteDsvField(field, separator);
             }
-            var fieldsOut = sb.ToString().ParseDsvFields(separator);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut), "while parsing:\n"+sb+"\nexpected:\n" + string.Join("\n", fields) + "\n\ngot:\n" + string.Join("\n", fieldsOut));
+
+            var line = sb.ToString();
+            var fieldsOut = line.ParseDsvFields(separator);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut),
+                TextUtil.LineSeparate("while parsing:", line, string.Empty, 
+                    "expected:", TextUtil.LineSeparate(fields), string.Empty, 
+                    "got:",TextUtil.LineSeparate(fieldsOut)));
+            var detectedSeparator = AssertEx.DetermineDsvDelimiter(new[] { line }, out var detectedColumnCount);
+            Assert.AreEqual(separator, detectedSeparator);
+            Assert.AreEqual(fields.Length, detectedColumnCount);
         }
 
         [TestMethod]
@@ -156,7 +164,7 @@ namespace pwiz.SkylineTest
 
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.
@@ -285,6 +293,44 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
             Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\ZipFile.zip\BSA_Protea_label_free_meth3.sky", out zipFileName));
             Assert.AreEqual("ZipFile.zip", zipFileName);
+        }
+
+        [TestMethod]
+        public void FilesDirTest()
+        {
+            var cleanupLevel = DesiredCleanupLevel;
+            try
+            {
+                var testFilesDir = new TestFilesDir(TestContext, @"Test\DocLoadLibraryTest.zip");
+                // Lock a file and make sure that CleanUp fails
+                // NOTE: This takes seconds because the cleanup code uses TryTwice()
+                const string fileName = "DocWithLibrary.sky";
+                string filePath = testFilesDir.GetTestPath(fileName);
+                if (!Install.IsRunningOnWine)
+                {
+                    using (new StreamReader(filePath))
+                    {
+                        DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                        DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                    }
+                }
+                // Now test successful cleanup
+                DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
+                testFilesDir.Cleanup();
+                AssertEx.FileExists(filePath);
+                DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                testFilesDir.Cleanup();
+                AssertEx.FileNotExists(filePath);
+                AssertEx.IsFalse(Directory.Exists(testFilesDir.FullPath));
+                // CONSIDER: This could be extended to test persistent files and
+                //           ZIP files in the Downloads folder.
+            }
+            finally
+            {
+                DesiredCleanupLevel = cleanupLevel;
+            }
         }
     }
 }
