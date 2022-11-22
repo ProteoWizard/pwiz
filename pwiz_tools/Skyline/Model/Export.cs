@@ -2348,7 +2348,7 @@ namespace pwiz.Skyline.Model
             if (nodeTran != null)
                 pieces.Add(GetTransitionName(charge, nodeTran));
             pieces.Add(GetOptValueText(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step) + nodeTranGroup.TransitionGroup.LabelType);
-            extPeptideId = string.Join(".", pieces);
+            extPeptideId = string.Join(@".", pieces);
 
             extGroupId = string.Format(@"{0}.{1}.{2}",
                 pepGroupName,
