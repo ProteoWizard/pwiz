@@ -2244,7 +2244,8 @@ namespace pwiz.Skyline.Model
             if (FullScans)
             {
                 precursorWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
-                productWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo);
+                if (nodeTran != null)
+                    productWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo);
             }          
 
             double maxRtDiff = 0;
