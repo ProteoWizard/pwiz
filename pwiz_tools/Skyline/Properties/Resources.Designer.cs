@@ -23912,6 +23912,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed loading MIDAS library {0}..
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading {0}.
         /// </summary>
         public static string PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_ {
