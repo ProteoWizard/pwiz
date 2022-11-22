@@ -768,13 +768,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (_showIonSeriesAnnotations && _msDataFileScanHelper.Source == ChromSource.fragment)
             {
-                DocNodePath nodePath = null;
-                if (_msDataFileScanHelper.ScanProvider.Transitions.Length > _msDataFileScanHelper.TransitionIndex - 1)
-                {
-                    var currentTransition =
-                        _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
-                    nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
-                }
+                var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id, _documentContainer.DocumentUI);
 
                 if (nodePath != null) // Make sure user hasn't removed node since last update
                 {
@@ -1280,9 +1274,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 menuStrip.Items.Insert(2, showPeakAnnotationsContextMenuItem);
                 menuStrip.Items.Insert(3, toolStripSeparator1);
 
-                var currentTransition =
-                    _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
-                var isProteomic = (currentTransition.Id as Transition)?.Group.IsProteomic;
+                var isProteomic = (_msDataFileScanHelper.CurrentTransition?.Id as Transition)?.Group.IsProteomic;
                 (_documentContainer as GraphSpectrum.IStateProvider)
                     ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
             }
