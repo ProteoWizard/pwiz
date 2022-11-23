@@ -160,13 +160,23 @@ run-if-exists SpectrumList_3D_Test.cpp pwiz_analysis_spectrum_processing_basic $
     : # default-build
     ;
 
+rule SpectrumList_IonMobility_Test_Args ( properties * )
+{
+    local result = [ sequence.transform path.native : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynth_Chrom.d
+                                                      $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.mzML
+                   ] ;
+    if ! <address-model>32 in $(properties)
+    {
+       result += [ sequence.transform path.native : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.raw
+                                                    $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/MSe_Short.raw
+                 ] ;
+    }
+    return $(result) ;
+}
+
 run-if-exists SpectrumList_IonMobility_Test.cpp pwiz_analysis_spectrum_processing_basic $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     : # args
-      [ sequence.transform path.native : $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data/ImsSynth_Chrom.d
-                                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.raw
-                                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/MSe_Short.raw
-                                         $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data/HDMSe_Short_noLM.mzML
-      ]
+      <conditional>@SpectrumList_IonMobility_Test_Args
     : # input-files
     : <vendor-api-support>off:<build>no <testing.semaphore>io_semaphore # requirements
     : SpectrumList_IonMobility_Test # target name
