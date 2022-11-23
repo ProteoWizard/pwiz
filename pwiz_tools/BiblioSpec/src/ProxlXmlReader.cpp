@@ -107,8 +107,8 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
                 analysisType_ = BYONIC_ANALYSIS;
             else if (program == "plink")
                 analysisType_ = PLINK_ANALYIS;
-			else if (program == "merox")
-				analysisType_ = MEROX_ANALYSIS;
+            else if (program == "merox")
+                analysisType_ = MEROX_ANALYSIS;
         }
         break;
     case REPORTED_PEPTIDES_STATE:
@@ -310,11 +310,11 @@ double ProxlXmlReader::getScoreThreshold()
     switch (analysisType_)
     {
         case BYONIC_ANALYSIS: 
-			return blibMaker_.getScoreThreshold(BYONIC);
+            return blibMaker_.getScoreThreshold(BYONIC);
         case PERCOLATOR_ANALYSIS: 
         case PLINK_ANALYIS:
-		case MEROX_ANALYSIS:
-			return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
+        case MEROX_ANALYSIS:
+            return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
 
         default:
             throw runtime_error("no case for analysisType_: " + lexical_cast<string>((int) analysisType_));
