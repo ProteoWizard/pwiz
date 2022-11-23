@@ -177,9 +177,8 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (CollisionEnergy.HasValue &&
-                spectra.SelectMany(spectrum => spectrum.Precursors)
-                    .Select((precursor, i) => precursor.PrecursorCollisionEnergy)
-                    .Any(ce => !Equals(CollisionEnergy, ce)))
+                spectra.SelectMany(s => s.Precursors).Select(p => p.PrecursorCollisionEnergy)
+                    .Any(ce => !ce.HasValue || Math.Abs(ce.Value - CollisionEnergy.Value) > 0.05))
             {
                 return null;
             }

@@ -1593,7 +1593,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits, false);
+                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
             var groupInfo = new ChromatogramGroupInfo(header,
                 new[]
                 {

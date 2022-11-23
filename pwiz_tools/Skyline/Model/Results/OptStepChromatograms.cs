@@ -58,31 +58,6 @@ namespace pwiz.Skyline.Model.Results
             return new OptStepChromatograms(chromatogramInfo.ProductMz, ImmutableList.Singleton(chromatogramInfo), 0);
         }
 
-        public static IEnumerable<OptStepChromatograms> FromChromatograms(IEnumerable<ChromatogramInfo> chromatogramInfos)
-        {
-            var curGroup = new List<ChromatogramInfo>();
-
-            OptStepChromatograms CurResult()
-            {
-                var result = new OptStepChromatograms(curGroup[curGroup.Count / 2].ProductMz, curGroup, (curGroup.Count - 1) / 2);
-                curGroup.Clear();
-                return result;
-            }
-
-            foreach (var info in chromatogramInfos.OrderBy(info => info.PrecursorMz).ThenBy(info => info.ProductMz))
-            {
-                var prevInfo = curGroup.LastOrDefault();
-                if (prevInfo != null && (!Equals(info.PrecursorMz, prevInfo.PrecursorMz) ||
-                                         !ChromatogramInfo.IsOptimizationSpacing(prevInfo.ProductMz, info.ProductMz)))
-                    yield return CurResult();
-
-                curGroup.Add(info);
-            }
-
-            if (curGroup.Count > 0)
-                yield return CurResult();
-        }
-
         /// <summary>
         /// The number of chromatogram steps, typically equal to <see cref="OptimizableRegression.StepCount"/>.
         /// </summary>

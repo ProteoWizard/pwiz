@@ -676,9 +676,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var hasTimes = info.RawTimes != null && info.RawTimes.Any(); // has measured points
 
-            if (!hasTimes && info.Header.HasOptimizationScanIds)
-                return; // don't show anything if this is optimization data
-
             var scaledHeight = graphPane.YAxis.Scale.Max / 20; // 5% of graph pane height
             var rawtimes = new List<double>();
 

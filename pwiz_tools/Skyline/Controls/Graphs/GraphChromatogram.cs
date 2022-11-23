@@ -358,21 +358,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            var thisTransition = transitions[transitionIndex.Value];
-
             if (clickedItem.OptimizationStep.HasValue)
             {
-                var groups = OptStepChromatograms.FromChromatograms(ChromGroupInfo.GetRawTransitionInfos())
-                    .ToDictionary(group => group.GetChromatogramForStep(0).ProductMz, group => group);
-                foreach (var nodeTran in clickedItem.TransitionGroupNode.Transitions)
-                {
-                    if (Equals(nodeTran.Mz, thisTransition.ProductMz) || !groups.TryGetValue(nodeTran.Mz, out var group))
-                        continue;
-
-                    transitions.Add(MakeTransitionFullScanInfo(nodeTran.Id,
-                        new FullScanInfo(group.GetChromatogramForStep(clickedItem.OptimizationStep.Value), nodeTran),
-                        thisTransition.Color));
-                }
+                // Add infos for other transitions with the same optimization step.
+                transitions.AddRange(GetOtherOptimizationTransitions(_closestCurve));
             }
 
             var measuredResults = DocumentUI.Settings.MeasuredResults;
@@ -384,6 +373,34 @@ namespace pwiz.Skyline.Controls.Graphs
                 MsDataFileScanHelper.FindScanIndex(chromatogramInfo, retentionTime.MeasuredTime),
                 clickedItem.OptimizationStep);
             ClickedChromatogram?.Invoke(this, e);
+        }
+
+        private IEnumerable<TransitionFullScanInfo> GetOtherOptimizationTransitions(CurveItem clickedCurve)
+        {
+            var clickedItem = _closestCurve.Tag as ChromGraphItem;
+            if (clickedItem?.OptimizationStep == null)
+                yield break;
+
+            var settings = DocumentUI.Settings;
+            var results = settings.MeasuredResults;
+            if (results == null)
+                yield break;
+
+            if (!results.TryGetChromatogramSet(_nameChromatogramSet, out var chromSet, out _))
+                yield break;
+
+            foreach (var nodeTran in clickedItem.TransitionGroupNode.Transitions)
+            {
+                if (ReferenceEquals(nodeTran, clickedItem.TransitionNode))
+                    continue;
+
+                var optStepChroms = ChromGroupInfo.GetAllTransitionInfo(nodeTran,
+                    (float)settings.TransitionSettings.Instrument.MzMatchTolerance, chromSet.OptimizationFunction, TransformChrom.raw);
+
+                var chromInfo = optStepChroms.GetChromatogramForStep(clickedItem.OptimizationStep.Value);
+                if (chromInfo != null)
+                    yield return MakeTransitionFullScanInfo(nodeTran.Id, new FullScanInfo(chromInfo, nodeTran), clickedCurve.Color);
+            }
         }
 
         private TransitionFullScanInfo MakeTransitionFullScanInfo(Identity transitionId, FullScanInfo fullScanInfo, Color color)

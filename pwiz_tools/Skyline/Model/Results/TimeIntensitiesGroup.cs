@@ -141,16 +141,14 @@ namespace pwiz.Skyline.Model.Results
             = ImmutableList<ChromSource>.ValueOf(new[] { ChromSource.fragment, ChromSource.sim, ChromSource.ms1 });
 
         public InterpolatedTimeIntensities(IEnumerable<TimeIntensities> transitionTimeIntensities,
-            IEnumerable<ChromSource> transitionChromSources, bool optScans) : base(transitionTimeIntensities)
+            IEnumerable<ChromSource> transitionChromSources) : base(transitionTimeIntensities)
         {
             TransitionChromSources = ImmutableList<ChromSource>.ValueOf(transitionChromSources);
-            OptimizationScans = optScans;
             Assume.IsTrue(TransitionTimeIntensities.Count > 0);
             Assume.IsTrue(TransitionChromSources.Count == TransitionTimeIntensities.Count);
         }
 
         public ImmutableList<ChromSource> TransitionChromSources { get; private set;}
-        public bool OptimizationScans { get; }
 
         public ImmutableList<float> InterpolatedTimes
         {
@@ -189,26 +187,15 @@ namespace pwiz.Skyline.Model.Results
                 }
                 WriteMassErrors(stream, timeIntensities.MassErrors);
             }
-
-            if (!OptimizationScans)
+            var scanIdsByChromSource = ScanIdsByChromSource();
+            foreach (var chromSource in PERSISTED_CHROM_SOURCES)
             {
-                var scanIdsByChromSource = ScanIdsByChromSource();
-                foreach (var chromSource in PERSISTED_CHROM_SOURCES)
+                ImmutableList<int> scanIds;
+                if (!scanIdsByChromSource.TryGetValue(chromSource, out scanIds))
                 {
-                    if (!scanIdsByChromSource.TryGetValue(chromSource, out var scanIds))
-                    {
-                        continue;
-                    }
-
-                    PrimitiveArrays.Write(stream, scanIds.ToArray());
+                    continue;
                 }
-            }
-            else
-            {
-                foreach (var scanIds in TransitionTimeIntensities.Select(ti => ti.ScanIds).Where(scanIds => scanIds != null))
-                {
-                    PrimitiveArrays.Write(stream, scanIds.ToArray());
-                }
+                PrimitiveArrays.Write(stream, scanIds.ToArray());
             }
         }
 
@@ -225,6 +212,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static InterpolatedTimeIntensities ReadFromStream(Stream stream, ChromGroupHeaderInfo chromGroupHeaderInfo, ChromTransition[] chromTransitions)
         {
+            Dictionary<ChromSource, int[]> scanIds = new Dictionary<ChromSource, int[]>();
             int numTrans = chromTransitions.Length;
             Assume.IsTrue(numTrans == chromGroupHeaderInfo.NumTransitions);
             int numPoints = chromGroupHeaderInfo.NumPoints;
@@ -242,53 +230,36 @@ namespace pwiz.Skyline.Model.Results
                     transitionMassErrors[i] = ReadMassErrors(stream, numPoints);
                 }
             }
-
-            var transitionScanIds = new int[numTrans][];
-            if (!chromGroupHeaderInfo.HasOptimizationScanIds)
+            if (chromGroupHeaderInfo.HasFragmentScanIds)
             {
-                var chromSourceToScans = new Dictionary<ChromSource, int[]>();
-                if (chromGroupHeaderInfo.HasFragmentScanIds)
-                {
-                    chromSourceToScans.Add(ChromSource.fragment, PrimitiveArrays.Read<int>(stream, numPoints));
-                }
-
-                if (chromGroupHeaderInfo.HasSimScanIds)
-                {
-                    chromSourceToScans.Add(ChromSource.sim, PrimitiveArrays.Read<int>(stream, numPoints));
-                }
-
-                if (chromGroupHeaderInfo.HasMs1ScanIds)
-                {
-                    chromSourceToScans.Add(ChromSource.ms1, PrimitiveArrays.Read<int>(stream, numPoints));
-                }
-
-                for (var i = 0; i < numTrans; i++)
-                {
-                    chromSourceToScans.TryGetValue(chromTransitions[i].Source, out var scans);
-                    transitionScanIds[i] = scans;
-                }
+                scanIds.Add(ChromSource.fragment, PrimitiveArrays.Read<int>(stream, numPoints));
             }
-            else
+            if (chromGroupHeaderInfo.HasSimScanIds)
             {
-                for (var i = 0; i < numTrans; i++)
-                {
-                    transitionScanIds[i] = PrimitiveArrays.Read<int>(stream, numPoints);
-                }
+                scanIds.Add(ChromSource.sim, PrimitiveArrays.Read<int>(stream, numPoints));
             }
+            if (chromGroupHeaderInfo.HasMs1ScanIds)
+            {
+                scanIds.Add(ChromSource.ms1, PrimitiveArrays.Read<int>(stream, numPoints));
+            }
+            List<TimeIntensities> listOfTimeIntensities = new List<TimeIntensities>();
+            for (int i = 0; i < numTrans; i++)
+            {
+                var chromSource = chromTransitions[i].Source;
+                int[] transitionScanIds;
+                scanIds.TryGetValue(chromSource, out transitionScanIds);
 
-            var timeIntensities = Enumerable.Range(0, numTrans).Select(i =>
-                new TimeIntensities(sharedTimes, transitionIntensities[i], transitionMassErrors[i], transitionScanIds[i]));
-
-            return new InterpolatedTimeIntensities(timeIntensities,
-                chromTransitions.Select(chromTransition => chromTransition.Source),
-                chromGroupHeaderInfo.HasOptimizationScanIds);
+                var timeIntensities = new TimeIntensities(sharedTimes, transitionIntensities[i], transitionMassErrors[i], transitionScanIds);
+                listOfTimeIntensities.Add(timeIntensities);
+            }
+            return new InterpolatedTimeIntensities(listOfTimeIntensities, chromTransitions.Select(chromTransition=>chromTransition.Source));
         }
 
         public override TimeIntensitiesGroup Truncate(float newStartTime, float newEndTime)
         {
             return new InterpolatedTimeIntensities(TransitionTimeIntensities
-                    .Select(timeIntensities => timeIntensities.Truncate(newStartTime, newEndTime)),
-                TransitionChromSources, OptimizationScans);
+                .Select(timeIntensities=>timeIntensities.Truncate(newStartTime, newEndTime)), 
+                TransitionChromSources);
         }
 
         public override TimeIntensitiesGroup RetainTransitionIndexes(ISet<int> transitionIndexes)
@@ -298,9 +269,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return EMPTY;
             }
-
-            return new InterpolatedTimeIntensities(newIndexes.Select(i => TransitionTimeIntensities[i]),
-                newIndexes.Select(i => TransitionChromSources[i]), OptimizationScans);
+            return new InterpolatedTimeIntensities(newIndexes.Select(i=>TransitionTimeIntensities[i]), newIndexes.Select(i=>TransitionChromSources[i]));
         }
 
         public override int NumInterpolatedPoints { get { return TransitionTimeIntensities.First().NumPoints; } }
@@ -326,7 +295,7 @@ namespace pwiz.Skyline.Model.Results
         {
             var interpolatedTimes = GetInterpolatedTimes();
             return new InterpolatedTimeIntensities(TransitionTimeIntensities.Select(timeIntensities=>timeIntensities.Interpolate(interpolatedTimes, InferZeroes)), 
-                chromSources, false);
+                chromSources);
         }
 
         public ImmutableList<float> GetInterpolatedTimes()

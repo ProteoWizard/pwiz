@@ -174,8 +174,7 @@ namespace pwiz.Skyline.Model.Results
             raw_chromatograms = 0x80,
             ion_mobility_type_bitmask = 0x700, // 3 bits for ion mobility type none, drift, inverse_mobility, spares
             dda_acquisition_method = 0x800,
-            extracted_qc_trace = 0x1000,
-            optimization_scan_ids = 0x2000
+            extracted_qc_trace = 0x1000
         }
 
         /// <summary>
@@ -188,9 +187,9 @@ namespace pwiz.Skyline.Model.Results
         public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
             int compressedSize, int uncompressedSize,
             int numPoints, FlagValues flags, int statusId, int statusRank, float? startTime, float? endTime,
-            double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits, bool optimizationScans)
+            double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
             : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags, statusId,
-                statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits, optimizationScans)
+                statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits)
         {
         }
 
@@ -205,11 +204,11 @@ namespace pwiz.Skyline.Model.Results
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
                                      double? collisionalCrossSection, 
-                                     eIonMobilityUnits ionMobilityUnits, bool optimizationScans)
+                                     eIonMobilityUnits ionMobilityUnits)
             : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
                    numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
                    compressedSize, uncompressedSize, location, flags, statusId, statusRank,
-                   startTime, endTime, collisionalCrossSection, ionMobilityUnits, optimizationScans)
+                   startTime, endTime, collisionalCrossSection, ionMobilityUnits)
         {
         }
 
@@ -222,8 +221,7 @@ namespace pwiz.Skyline.Model.Results
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
-                                     double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits,
-                                     bool optimizationScans)
+                                     double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
             : this()
         {
             _precursor = precursor.Value;
@@ -236,10 +234,6 @@ namespace pwiz.Skyline.Model.Results
                 flags &= ~FlagValues.polarity_negative;
             }
             flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
-            if (optimizationScans)
-            {
-                flags |= FlagValues.optimization_scan_ids;
-            }
             _textIdIndex = textIdIndex;
             _textIdLen = CheckUShort(textIdLen);
             _fileIndex = CheckUShort(fileIndex);
@@ -287,7 +281,7 @@ namespace pwiz.Skyline.Model.Results
             -1,
             headerInfo.LocationPoints,
             0, -1, -1,
-            null, null, null, eIonMobilityUnits.none, false)
+            null, null, null, eIonMobilityUnits.none)
         {
         }
 
@@ -360,7 +354,6 @@ namespace pwiz.Skyline.Model.Results
         public bool HasSimScanIds { get { return (Flags & FlagValues.has_sim_scan_ids) != 0; } }
         public bool HasRawChromatograms { get { return (Flags & FlagValues.raw_chromatograms) != 0; } }
         public bool IsDda { get { return (Flags & FlagValues.dda_acquisition_method) != 0; } }
-        public bool HasOptimizationScanIds => (Flags & FlagValues.optimization_scan_ids) != 0;
 
         public float? StartTime { get { return _startTime >= 0 ? _startTime : (float?) null; }  } // For SRM data with same precursor but different RT interval
         public float? EndTime { get { return _endTime >= 0 ? _endTime : (float?)null; } } // For SRM data with same precursor but different RT interval
@@ -2356,11 +2349,6 @@ namespace pwiz.Skyline.Model.Results
         public virtual ChromatogramInfo GetRawTransitionInfo(int index)
         {
             return new ChromatogramInfo(this, index);
-        }
-
-        public IEnumerable<ChromatogramInfo> GetRawTransitionInfos()
-        {
-            return Enumerable.Range(0, NumTransitions).Select(GetRawTransitionInfo);
         }
 
         protected SignedMz GetProductGlobal(int index)

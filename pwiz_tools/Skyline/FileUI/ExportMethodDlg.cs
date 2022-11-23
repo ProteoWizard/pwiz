@@ -1690,14 +1690,9 @@ namespace pwiz.Skyline.FileUI
             {
                 cbIgnoreProteins.Checked = true;
             }
-            if (triggered && !(InstrumentType == ExportInstrumentType.ABI || InstrumentType == ExportInstrumentType.ABI_QTRAP))
-            {
-                comboOptimizing.Enabled = false;
-            }
-            else
-            {
-                comboOptimizing.Enabled = !IsFullScanInstrument;
-            }
+
+            comboOptimizing.Enabled = !(triggered && !(InstrumentType == ExportInstrumentType.ABI ||
+                                                       InstrumentType == ExportInstrumentType.ABI_QTRAP));
             if (!comboOptimizing.Enabled)
             {
                 OptimizeType = ExportOptimize.NONE;
