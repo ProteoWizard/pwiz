@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Model
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
             var transitions = !IsolationList
-                ? GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary)
+                ? GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter)
                 : new TransitionDocNode[] { null };
 
             // When exporting CoV optimization methods, only write top ranked transitions.
@@ -572,7 +572,7 @@ namespace pwiz.Skyline.Model
                 ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
                 Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
 
-            foreach (var nodeTran in transitions.Where(PassesPolarityFilter))
+            foreach (var nodeTran in transitions)
             {
                 if (OptimizeType == null)
                 {
