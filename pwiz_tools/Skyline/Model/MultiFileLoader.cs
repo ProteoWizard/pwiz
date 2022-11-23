@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public class MultiFileLoader
+    public class MultiFileLoader : IDisposable
     {
         public const int MAX_PARALLEL_LOAD_FILES = 12;
         public const int MAX_PARALLEL_LOAD_FILES_USER_GC = 3; // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs
@@ -49,6 +49,11 @@ namespace pwiz.Skyline.Model
             _synchronousMode = synchronousMode;
             _statusLock = new object();
             ResetStatus();
+        }
+
+        public void Dispose()
+        {
+            _worker?.Dispose();
         }
 
         public MultiProgressStatus Status { get { return _status; } }
