@@ -259,7 +259,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         // CONSIDER: in the ion mobility case, get these values from the actual data arrays
         result->set(MS_base_peak_m_z, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_MASS));
         result->set(MS_base_peak_intensity, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::BASE_PEAK_INTENSITY));
-        result->set(MS_total_ion_current, binaryDataSource.lock()->GetScanStat<double>(ie.function, scan, MassLynxScanItem::TOTAL_ION_CURRENT));
+        result->set(MS_total_ion_current, binaryDataSource.lock()->GetScanStat<float>(ie.function, scan, MassLynxScanItem::TOTAL_ION_CURRENT));
         result->defaultArrayLength = binaryDataSource.lock()->GetScanStat<int>(ie.function, scan, MassLynxScanItem::PEAKS_IN_SCAN);
     }
     else
