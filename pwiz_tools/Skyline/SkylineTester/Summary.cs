@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -107,11 +108,28 @@ namespace SkylineTester
 
         public string GetLogFile(Run run)
         {
-            var logFile = "{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}.log".With(
+            var logNameFormat = "{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}.log";
+            var logFile = logNameFormat.With(
                 Environment.MachineName,
                 run.Date.Year, run.Date.Month, run.Date.Day, 
                 run.Date.Hour, run.Date.Minute, run.Date.Second);
-            return Path.Combine(Path.GetDirectoryName(SummaryFile) ?? "", logFile);
+            var directoryName = Path.GetDirectoryName(SummaryFile) ?? "";
+            var path = Path.Combine(directoryName, logFile);
+            if (!File.Exists(path))
+            {
+                // Don't insist on files with names matching this machine, we may be doing performance comparisons
+                var template = logNameFormat.With(
+                    string.Empty,
+                    run.Date.Year, run.Date.Month, run.Date.Day,
+                    run.Date.Hour, run.Date.Minute, run.Date.Second);
+                var match = Directory.GetFiles(directoryName).FirstOrDefault(f => f.EndsWith(template));
+                if (!string.IsNullOrEmpty(match))
+                {
+                    path = Path.Combine(directoryName, match);
+                }
+            }
+
+            return path;
         }
 
         public void Save()
