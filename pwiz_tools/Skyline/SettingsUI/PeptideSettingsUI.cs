@@ -819,13 +819,22 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     MidasLibrary midasLib = null;
                     using (var longWait = new LongWaitDlg
+                           {
+                               Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library,
+                               Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath))
+                           })
                     {
-                        Text = Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading_MIDAS_Library,
-                        Message = string.Format(Resources.PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_, Path.GetFileName(midasLibSpec.FilePath))
-                    })
-                    {
-                        longWait.PerformWork(this, 800, monitor => midasLib = _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
+                        longWait.PerformWork(this, 800, monitor => midasLib =
+                            _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
                     }
+
+                    if (midasLib == null)
+                    {
+                        MessageDlg.Show(this, string.Format(
+                            Resources.PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__, Path.GetFileName(midasLibSpec.FilePath)));
+                        return;
+                    }
+
                     var builder = new MidasBlibBuilder(_parent.Document, midasLib, filterDlg.LibraryName, filterDlg.FileName);
                     builder.BuildLibrary(null);
                     Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);

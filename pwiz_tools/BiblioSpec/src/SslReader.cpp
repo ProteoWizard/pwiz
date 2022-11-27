@@ -212,6 +212,8 @@ SslReader::SslReader(BlibBuilder& maker,
       char c = modSeq[i];
       if (c >= 'A' && c <= 'Z') {
         ++pos;
+      } else if (c != '[' && c != ']' && c != '.' && !std::isdigit(c)) {
+          throw BlibException(false, "Only uppercase letters (amino acids) and bracketed modifications ('[123.4]') are allowed in peptide sequences: %s", modSeq.c_str());
       } else if (c == '[') {
         size_t closePos = modSeq.find(']', ++i);
         if (closePos == string::npos) {
