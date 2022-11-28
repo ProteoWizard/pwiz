@@ -763,5 +763,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 transaction.Commit();
             }
         }
+
+        public override Library Unload()
+        {
+            return ChangeProp(ImClone((MidasLibrary)base.Unload()), im => im.FilePath = null);
+        }
     }
 }

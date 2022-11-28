@@ -815,7 +815,7 @@ namespace pwiz.Skyline.Model.Results
         {
             // Write tag attributes
             base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.use_for_retention_time_prediction, false);
+            writer.WriteAttribute(ATTR.use_for_retention_time_prediction, UseForRetentionTimeFilter);
             writer.WriteAttributeNullable(ATTR.analyte_concentration, AnalyteConcentration);
             if (null != SampleType && !Equals(SampleType, SampleType.DEFAULT))
             {
@@ -1097,7 +1097,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 im.FileWriteTime = null;
                 im.InstrumentInfoList = ImmutableList.Empty<MsInstrumentConfigInfo>();
-                //im.InstrumentSerialNumber = null;
+                if (im.InstrumentSerialNumber == string.Empty)
+                {
+                    im.InstrumentSerialNumber = null;
+                }
                 im.IsSrm = false;
                 im.RunStartTime = null;
                 im.UsedMs1Centroids = null;

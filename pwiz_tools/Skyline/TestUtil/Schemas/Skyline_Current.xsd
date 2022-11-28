@@ -565,6 +565,7 @@
                 <xs:attribute name="sample_id" type="xs:string" />
                 <xs:attribute name="instrument_serial_number" type="xs:string" />
                 <xs:attribute name="ion_mobility_type" type="xs:string" use="optional"/>
+                <xs:attribute name="has_midas_spectra" type="xs:boolean"/>
               </xs:complexType>
             </xs:element>
             <xs:element name="annotation" type="annotation_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -575,6 +576,7 @@
           <xs:attribute name="has_midas_spectra" type="xs:boolean" />
           <xs:attribute name="sample_dilution_factor" type="xs:double"/>
           <xs:attribute name="batch_name" type="xs:string"/>
+          <xs:attribute name="use_for_retention_time_prediction" type="xs:boolean"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>
