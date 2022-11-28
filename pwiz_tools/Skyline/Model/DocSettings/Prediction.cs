@@ -1044,6 +1044,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 im._isMissingStandardPeptides = false;
                 im.Calculator = im.Calculator?.Unload();
+                if (IsAutoCalculated)
+                {
+                    im.Conversion = null;
+                    im._listFileIdToConversion = null;
+                }
             });
         }
     }

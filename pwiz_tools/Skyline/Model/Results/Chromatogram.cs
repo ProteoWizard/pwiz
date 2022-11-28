@@ -967,6 +967,19 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        public ChromatogramSet Unload()
+        {
+            var unloadedFileInfos = new List<ChromFileInfo>();
+            foreach (var fileInfo in MSDataFileInfos)
+            {
+                unloadedFileInfos.Add(fileInfo.Unload());
+            }
+            return ChangeProp(ImClone(ChangeMSDataFileInfos(unloadedFileInfos)), im =>
+            {
+                im._rescoreCount = 0;
+            });
+        }
     }
 
     /// <summary>

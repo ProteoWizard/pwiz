@@ -1898,18 +1898,8 @@ namespace pwiz.Skyline.Model.Results
 
         public MeasuredResults Unload()
         {
-            var unloadedChromatogramSets = new List<ChromatogramSet>();
-            foreach (var chromatogramSet in Chromatograms)
-            {
-                var unloadedFileInfos = new List<ChromFileInfo>();
-                foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    unloadedFileInfos.Add(fileInfo.Unload());
-                }
-                unloadedChromatogramSets.Add(chromatogramSet.ChangeMSDataFileInfos(unloadedFileInfos));
-            }
-
-            return new MeasuredResults(unloadedChromatogramSets)
+            return new MeasuredResults(ImmutableList.ValueOf(
+                Chromatograms.Select(chromatogramSet => chromatogramSet.Unload())))
             {
                 IsTimeNormalArea = IsTimeNormalArea
             };
