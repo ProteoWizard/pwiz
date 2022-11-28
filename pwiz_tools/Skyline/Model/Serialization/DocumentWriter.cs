@@ -560,7 +560,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttribute(ATTR.calc_neutral_mass, node.GetPrecursorIonPersistentNeutralMass());
             }
-            writer.WriteAttribute(ATTR.precursor_mz, SequenceMassCalc.PersistentMZ(node.PrecursorMz));
+            writer.WriteAttribute(ATTR.precursor_mz, node.PrecursorMz.Value);
             WriteExplicitTransitionGroupValuesAttributes(writer, node.ExplicitValues);
 
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
@@ -732,8 +732,8 @@ namespace pwiz.Skyline.Model.Serialization
 
             // Order of elements matters for XSD validation
             WriteAnnotations(writer, nodeTransition.Annotations);
-            writer.WriteElementString(EL.precursor_mz, SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz));
-            writer.WriteElementString(EL.product_mz, SequenceMassCalc.PersistentMZ(nodeTransition.Mz));
+            writer.WriteElementString(EL.precursor_mz, nodeGroup.PrecursorMz.Value);
+            writer.WriteElementString(EL.product_mz, nodeTransition.Mz.Value);
 
             
             double? ce = nodeTransition.GetCollisionEnergy(Settings, nodePep, nodeGroup);

@@ -365,14 +365,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         protected bool Equals(LinearModelParams other)
         {
-            if (Weights.Count != other.Weights.Count)
-                return false;
-            for (int i = 0; i < Weights.Count; ++i)
-            {
-                if (Weights[i] != other.Weights[i])
-                    return false;
-            }
-            return Bias == other.Bias;
+            return Equals(_weights, other._weights) && Equals(Bias, other.Bias);
         }
 
         public override bool Equals(object obj)

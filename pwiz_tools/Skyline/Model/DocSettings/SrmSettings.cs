@@ -2081,11 +2081,12 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Return a SrmSettings with all of the chromatograms, libraries, and other external files unloaded
         /// </summary>
-        public SrmSettings UnloadSettings()
+        public SrmSettings Unload()
         {
             var srmSettings = this;
             srmSettings = srmSettings.ChangeMeasuredResults(srmSettings.MeasuredResults?.Unload());
             srmSettings = srmSettings.ChangePeptideSettings(srmSettings.PeptideSettings.Unload());
+            srmSettings = srmSettings.ChangeTransitionSettings(srmSettings.TransitionSettings.Unload());
             return srmSettings;
         }
 

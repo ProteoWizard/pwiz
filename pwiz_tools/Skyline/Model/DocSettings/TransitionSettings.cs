@@ -290,6 +290,15 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public TransitionSettings Unload()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.IonMobilityFiltering =
+                    im.IonMobilityFiltering?.ChangeLibrary(im.IonMobilityFiltering.IonMobilityLibrary?.Unload());
+            });
+        }
     }
 
 // ReSharper disable InconsistentNaming

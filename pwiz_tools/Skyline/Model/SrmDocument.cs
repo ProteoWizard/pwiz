@@ -2685,7 +2685,7 @@ namespace pwiz.Skyline.Model
         /// <returns></returns>
         public SrmDocument UnloadDocument()
         {
-            return ChangeSettingsNoDiff(Settings.UnloadSettings());
+            return ChangeSettingsNoDiff(Settings.Unload());
         }
 
         #region object overrides

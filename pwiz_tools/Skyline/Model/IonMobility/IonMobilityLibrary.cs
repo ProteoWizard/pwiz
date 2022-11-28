@@ -466,6 +466,11 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         #endregion
+
+        public IonMobilityLibrary Unload()
+        {
+            return ChangeProp(ImClone(this), im => im._database = null);
+        }
     }
 
 }
