@@ -1267,9 +1267,9 @@ namespace pwiz.Skyline.Model.Results
 
         public void ReadXml(XmlReader reader)
         {
-            // Consume tag
             IsTimeNormalArea = reader.GetBoolAttribute(ATTR.time_normal_area);
             bool unjoinedResults = reader.GetBoolAttribute(ATTR.joining_disabled);
+            // Consume tag
             reader.Read();
 
             // Read chromatogram sets
@@ -1909,7 +1909,10 @@ namespace pwiz.Skyline.Model.Results
                 unloadedChromatogramSets.Add(chromatogramSet.ChangeMSDataFileInfos(unloadedFileInfos));
             }
 
-            return new MeasuredResults(unloadedChromatogramSets);
+            return new MeasuredResults(unloadedChromatogramSets)
+            {
+                IsTimeNormalArea = IsTimeNormalArea
+            };
         }
     }
 
