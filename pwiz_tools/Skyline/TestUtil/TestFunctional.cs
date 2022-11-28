@@ -914,10 +914,6 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
-            if (SkylineWindow != null)
-            {
-                AssertEx.Serializable(SkylineWindow.Document);
-            }
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
@@ -972,7 +968,6 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
-            AssertEx.Serializable(SkylineWindow.Document);
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
@@ -1410,7 +1405,11 @@ namespace pwiz.SkylineTestUtil
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
-            Program.Main();
+            using (var documentSerializabilityVerifier = new DocumentSerializabilityVerifier())
+            {
+                documentSerializabilityVerifier.RunAsync();
+                Program.Main();
+            }
             threadTest.Join();
 
             // Were all windows disposed?
