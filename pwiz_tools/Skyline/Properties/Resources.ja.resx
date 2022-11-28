@@ -3212,9 +3212,6 @@
   <data name="RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard" xml:space="preserve">
     <value>クリップボードへのデータ設定に失敗しました。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
-    <value>サーバー{0}はPanoramaサーバーではありません。</value>
-  </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>メソッド{0}が正常にエクスポートされました。</value>
   </data>
@@ -4100,9 +4097,6 @@
   </data>
   <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
     <value>シークエンスに対するライブラリスペクトルが{0}欠損しています。</value>
-  </data>
-  <data name="EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__" xml:space="preserve">
-    <value>サーバー{0}への接続中の不明なエラー。</value>
   </data>
   <data name="RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__" xml:space="preserve">
     <value>{0}の名前を1回以上変更することはできません。{1}または{2}を削除してください</value>

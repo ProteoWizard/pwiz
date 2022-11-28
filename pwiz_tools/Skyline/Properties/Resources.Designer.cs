@@ -12144,20 +12144,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid email address..
+        /// </summary>
+        public static string EditServerDlg_OkDialog__0__is_not_a_valid_email_address_ {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog__0__is_not_a_valid_email_address_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The server &apos;{0}&apos; already exists..
         /// </summary>
         public static string EditServerDlg_OkDialog_The_server__0__already_exists_ {
             get {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_The_server__0__already_exists_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The server {0} is not a Panorama server..
-        /// </summary>
-        public static string EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server {
-            get {
-                return ResourceManager.GetString("EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server", resourceCulture);
             }
         }
         
@@ -12177,15 +12177,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_" +
                         "the_panorama_server", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unknown error connecting to the server {0}..
-        /// </summary>
-        public static string EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__ {
-            get {
-                return ResourceManager.GetString("EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__", resourceCulture);
             }
         }
         
@@ -15088,6 +15079,24 @@ namespace pwiz.Skyline.Properties {
         public static string GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_ {
             get {
                 return ResourceManager.GetString("GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string GenericState_AppendErrorAndUri_Error___0_ {
+            get {
+                return ResourceManager.GetString("GenericState_AppendErrorAndUri_Error___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to URL: {0}.
+        /// </summary>
+        public static string GenericState_AppendErrorAndUri_URL___0_ {
+            get {
+                return ResourceManager.GetString("GenericState_AppendErrorAndUri_URL___0_", resourceCulture);
             }
         }
         
@@ -21681,6 +21690,35 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_serv" +
+                        "er___0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server did not return a valid JSON response. {0} is not a Panorama server..
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_" +
+                        "a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected JSON response from the server: {0}.
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a Panorama folder.
         /// </summary>
         public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {
@@ -27467,6 +27505,15 @@ namespace pwiz.Skyline.Properties {
         public static string ServerList_Title_Edit_Servers {
             get {
                 return ResourceManager.GetString("ServerList_Title_Edit_Servers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to connect to the server {0}..
+        /// </summary>
+        public static string ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__ {
+            get {
+                return ResourceManager.GetString("ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__", resourceCulture);
             }
         }
         
@@ -34864,6 +34911,16 @@ namespace pwiz.Skyline.Properties {
         public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
             get {
                 return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error authenticating user credentials on the server {0}..
+        /// </summary>
+        public static string UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__ {
+            get {
+                return ResourceManager.GetString("UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_t" +
+                        "he_server__0__", resourceCulture);
             }
         }
         

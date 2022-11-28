@@ -128,16 +128,15 @@ namespace pwiz.Skyline.FileUI
                     if (ex is WebException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
-                        if (Resources
-                            .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server
-                            .Equals(error))
+                        if (error != null && error.Contains(Resources
+                                .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server))
                         {
                             error = TextUtil.LineSeparate(error, Resources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
 
                         }
 
-                        listErrorServers.Add(new Tuple<Server, string>(server, error));
+                        listErrorServers.Add(new Tuple<Server, string>(server, error ?? string.Empty));
                     }
                     else
                     {
