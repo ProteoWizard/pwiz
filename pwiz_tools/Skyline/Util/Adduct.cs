@@ -833,10 +833,12 @@ namespace pwiz.Skyline.Util
             } 
             return ChangeIsotopeLabels(
                 isotopes == null || isotopes.Count == 0 ? string.Empty : isotopes.Aggregate(string.Empty,
-                        (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
-                            (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
-                            // If label was described (for example) as Cl' in dict, look up Cl37 and use that
-                            DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))); 
+                    (current, pair) => current +
+                                       ((pair.Value == 0) ? string.Empty : // We see things like H'0 (that's a zero) in the wild
+                                           (string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
+                                               (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
+                                               // If label was described (for example) as Cl' in dict, look up Cl37 and use that
+                                               DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))))); 
         }
 
         // Sometimes all we know is that two analytes have same name but different masses - describe isotope label as a mass
