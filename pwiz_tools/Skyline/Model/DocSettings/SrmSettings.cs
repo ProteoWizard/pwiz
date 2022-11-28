@@ -2078,6 +2078,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(chromatogramGroupInfo.FilePath, dataFilePath));
         }
 
+        /// <summary>
+        /// Return a SrmSettings with all of the chromatograms, libraries, and other external files unloaded
+        /// </summary>
+        public SrmSettings UnloadSettings()
+        {
+            var srmSettings = this;
+            srmSettings = srmSettings.ChangeMeasuredResults(srmSettings.MeasuredResults?.Unload());
+            srmSettings = srmSettings.ChangePeptideSettings(srmSettings.PeptideSettings.Unload());
+            return srmSettings;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

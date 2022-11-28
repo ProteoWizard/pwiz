@@ -1678,6 +1678,11 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
+
+        public override Library Unload()
+        {
+            return ChangeProp(ImClone((NistLibraryBase)base.Unload()), im => im.FilePath = null);
+        }
     }
 
     public struct NistSpectrumInfo : ICachedSpectrumInfo

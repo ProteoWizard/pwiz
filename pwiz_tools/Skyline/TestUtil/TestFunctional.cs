@@ -914,6 +914,10 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForCondition(int millis, Func<bool> func, string timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
+            if (SkylineWindow != null)
+            {
+                AssertEx.Serializable(SkylineWindow.Document);
+            }
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
@@ -968,6 +972,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForConditionUI(int millis, Func<bool> func, Func<string> timeoutMessage = null, bool failOnTimeout = true, bool throwOnProgramException = true)
         {
+            AssertEx.Serializable(SkylineWindow.Document);
             int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {

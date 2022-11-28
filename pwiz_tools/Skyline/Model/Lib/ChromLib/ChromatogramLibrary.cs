@@ -1039,5 +1039,10 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                 return Encoding.UTF8.GetString(bytes);
             }
         }
+
+        public override Library Unload()
+        {
+            return ChangeProp(ImClone((ChromatogramLibrary)base.Unload()), im => im.FilePath = null);
+        }
     }
 }

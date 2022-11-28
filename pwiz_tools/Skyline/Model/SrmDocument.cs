@@ -2678,6 +2678,16 @@ namespace pwiz.Skyline.Model
             return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
         }
 
+        /// <summary>
+        /// Unloads all chromatograms, libraries, etc. so that the document is in the same
+        /// state it was right after the XML was deserialized and before any files were loaded
+        /// </summary>
+        /// <returns></returns>
+        public SrmDocument UnloadDocument()
+        {
+            return ChangeSettingsNoDiff(Settings.UnloadSettings());
+        }
+
         #region object overrides
 
         public bool Equals(SrmDocument obj)

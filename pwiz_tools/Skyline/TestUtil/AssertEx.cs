@@ -392,7 +392,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void Serializable(SrmDocument doc)
         {
-            Serializable(doc, DocumentCloned, DocumentFormat.CURRENT);
+            Serializable(doc, UnloadedDocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
             // Make sure to serialize the document the other way, and make sure it's still the same.
@@ -403,12 +403,17 @@ namespace pwiz.SkylineTestUtil
                 Settings.Default.CompactFormatOption =
                     (wasCompactFormat ? CompactFormatOption.NEVER : CompactFormatOption.ALWAYS).Name;
                 Assert.AreNotEqual(wasCompactFormat, CompactFormatOption.FromSettings().UseCompactFormat(doc));
-                Serializable(doc, DocumentCloned);
+                Serializable(doc, UnloadedDocumentCloned);
             }
             finally
             {
                 Settings.Default.CompactFormatOption = oldSetting;
             }
+        }
+
+        private static void UnloadedDocumentCloned(SrmDocument originalDocument, SrmDocument roundTripDocument)
+        {
+            DocumentCloned(originalDocument.UnloadDocument(), roundTripDocument);
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)

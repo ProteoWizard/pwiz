@@ -1895,6 +1895,22 @@ namespace pwiz.Skyline.Model.Results
         {
             return _medianTicArea;
         }
+
+        public MeasuredResults Unload()
+        {
+            var unloadedChromatogramSets = new List<ChromatogramSet>();
+            foreach (var chromatogramSet in Chromatograms)
+            {
+                var unloadedFileInfos = new List<ChromFileInfo>();
+                foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    unloadedFileInfos.Add(fileInfo.Unload());
+                }
+                unloadedChromatogramSets.Add(chromatogramSet.ChangeMSDataFileInfos(unloadedFileInfos));
+            }
+
+            return new MeasuredResults(unloadedChromatogramSets);
+        }
     }
 
     public sealed class DataFileReplicates

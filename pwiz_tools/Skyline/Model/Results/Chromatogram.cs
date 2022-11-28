@@ -1074,6 +1074,26 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.ImportTime = importTime);
         }
 
+        /// <summary>
+        /// Put the ChromFileInfo back in the state it was in when it was first deserialized from XML and
+        /// before <see cref="ChangeInfo"/> updated values from the skyd file.
+        /// </summary>
+        public ChromFileInfo Unload()
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.FileWriteTime = null;
+                im.InstrumentInfoList = ImmutableList.Empty<MsInstrumentConfigInfo>();
+                //im.InstrumentSerialNumber = null;
+                im.IsSrm = false;
+                im.RunStartTime = null;
+                im.UsedMs1Centroids = null;
+                im.UsedMs2Centroids = null;
+                im.MaxIntensity = 0;
+                im.MaxRetentionTime = 0;
+            });
+        }
+
         public ChromFileInfo ChangeSampleId(string sampleId)
         {
             return ChangeProp(ImClone(this), im => im.SampleId = sampleId);

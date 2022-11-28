@@ -183,6 +183,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
+        public PeptideSettings Unload()
+        {
+            return ChangeLibraries(Libraries.Unload())
+                .ChangeBackgroundProteome(BackgroundProteome?.Unload())
+                .ChangePrediction(Prediction.Unload());
+        }
+
         public bool NeedsBackgroundProteomeUniquenessCheckProcessing
         {
             get
@@ -487,6 +494,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             return predictedRT;
+        }
+
+        public PeptidePrediction Unload()
+        {
+            return ChangeRetentionTime(RetentionTime?.Unload());
         }
 
         public struct WindowRT
@@ -2684,6 +2696,32 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public PeptideLibraries Unload()
+        {
+            var unloadedLibrarySpecs = new List<LibrarySpec>();
+            var unloadedLibraries = new List<Library>();
+            for (int i = 0; i < Libraries.Count; i++)
+            {
+                if (true == LibrarySpecs[i]?.IsDocumentLibrary)
+                {
+                    continue;
+                }
+
+                var library = Libraries[i];
+                if (library != null)
+                {
+                    unloadedLibrarySpecs.Add(null);
+                    unloadedLibraries.Add(library.Unload());
+                }
+                else
+                {
+                    unloadedLibrarySpecs.Add(LibrarySpecs[i]);
+                    unloadedLibraries.Add(null);
+                }
+            }
+            return ChangeLibraries(unloadedLibrarySpecs, unloadedLibraries);
+        }
 
         #region object overrides
 

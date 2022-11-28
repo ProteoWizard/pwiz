@@ -460,6 +460,14 @@ namespace pwiz.Skyline.Model.Irt
 
         #endregion
 
+        public override RetentionScoreCalculatorSpec Unload()
+        {
+            return ChangeProp(ImClone((RCalcIrt) base.Unload()), im=>
+            {
+                im._database = null;
+            });
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

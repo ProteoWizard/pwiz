@@ -906,6 +906,11 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public virtual Library Unload()
+        {
+            return this;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -1710,7 +1715,16 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues { get; }
-        public string Protein { get; protected set; } // Some .blib and .clib files provide a protein accession (or Molecule List Name for small molecules)
+        private string _protein;
+        // Some .blib and .clib files provide a protein accession (or Molecule List Name for small molecules)
+        public string Protein
+        {
+            get { return _protein;}
+            protected set
+            {
+                _protein = string.IsNullOrEmpty(value) ? null : value;
+            }
+        } 
 
         #region Implementation of IXmlSerializable
 

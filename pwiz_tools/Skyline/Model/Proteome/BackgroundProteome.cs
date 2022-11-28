@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model.Proteome
     {
         // Info we may use to answer various questions faster the second time around, 
         // but always the same answer because we are immutable
-        private readonly BackgroundProteomeMetadataCache _cache;
+        private BackgroundProteomeMetadataCache _cache;
         private class BackgroundProteomeMetadataCache : IEquatable<BackgroundProteomeMetadataCache>
         {
             private readonly BackgroundProteome _parent;
@@ -185,6 +186,7 @@ namespace pwiz.Skyline.Model.Proteome
             return true;
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public bool NeedsProteinMetadataSearch
         {
             get
@@ -413,6 +415,22 @@ namespace pwiz.Skyline.Model.Proteome
                 return _cache.Equals(that._cache);
             }
         }
+
+        public BackgroundProteome Unload()
+        {
+            if (IsNone)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._cache = new BackgroundProteomeMetadataCache(im);
+                im.DatabaseValidated = false;
+                im.DatabaseInvalid = false;
+            });
+        }
+
         // ReSharper disable InconsistentNaming
         public enum DuplicateProteinsFilter
         {

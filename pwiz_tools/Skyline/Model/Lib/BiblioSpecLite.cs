@@ -2549,6 +2549,11 @@ namespace pwiz.Skyline.Model.Lib
             newSequence.Append(unmodifiedSequence.Substring(aaCount));
             return new PeptideLibraryKey(newSequence.ToString(), impreciseLibraryKey.Charge);
         }
+
+        public override Library Unload()
+        {
+            return ChangeProp(ImClone((BiblioSpecLiteLibrary)base.Unload()), im => im.FilePath = null);
+        }
     }
 
     public sealed class SpectrumLiteKey
