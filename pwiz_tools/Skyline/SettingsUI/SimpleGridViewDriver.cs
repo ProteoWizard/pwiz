@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
+using Type = System.Type;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -38,11 +40,15 @@ namespace pwiz.Skyline.SettingsUI
 
             Items = items;
             bindingSource.DataSource = items;
+
+            _requiredColumns = new HashSet<int>();
         }
 
         protected DataGridView GridView { get { return _gridView; } }
 
         protected Control MessageParent { get { return FormEx.GetParentForm(GridView); } }
+
+        private HashSet<int> _requiredColumns;
 
         /// <summary>
         /// Handles "peptide" -> "molecule" translation as required by current UI mode
@@ -86,6 +92,22 @@ namespace pwiz.Skyline.SettingsUI
             // Handle delete keys for single cell
             if (_gridView.SelectedRows.Count == 0 && (keys == Keys.Delete || keys == Keys.Back))
             {
+                var cell = _gridView.CurrentCell;
+                if (cell == null || cell.ReadOnly)
+                    return false;
+
+                if (_requiredColumns.Contains(cell.ColumnIndex))
+                {
+                    var editMode = _gridView.IsCurrentCellInEditMode;
+                    if (_gridView.BeginEdit(false) && _gridView.EditingControl is TextBox textbox)
+                    {
+                        textbox.Clear();
+                        return true;
+                    }
+
+                    if (!editMode)
+                        _gridView.CancelEdit();
+                }
                 SetCellValue(string.Empty);
                 return true;
             }
@@ -142,31 +164,56 @@ namespace pwiz.Skyline.SettingsUI
             _gridView.BeginEdit(true);
         }
 
-        public void SetCellValue(string s)
+        public void SetCellValue(object obj)
         {
-            if (_gridView.CurrentCell == null)
+            var cell = _gridView.CurrentCell;
+            if (cell == null)
                 return;
+
             _gridView.BeginEdit(true);
-            _gridView.CurrentCell.Value = s;
+            SetCellValue(cell, obj);
             _gridView.NotifyCurrentCellDirty(true);
             _gridView.RefreshEdit();
             _gridView.EndEdit();
         }
 
-        public void SetCellValue(double d)
+        public void SetCellValue(int col, int row, object obj)
         {
-            if (_gridView.CurrentCell == null)
-                return;
-            _gridView.BeginEdit(true);
-            _gridView.CurrentCell.Value = d;
-            _gridView.NotifyCurrentCellDirty(true);
-            _gridView.RefreshEdit();
-            _gridView.EndEdit();
+            SetCellValue(_gridView[col, row], obj);
         }
 
-        public void SetCellValue(int col, int row, double d)
+        public void SetCellValue(DataGridViewCell cell, object obj)
         {
-            _gridView[col, row].Value = d;
+            cell.Value = ConvertValue(obj, cell.ValueType);
+        }
+
+        private static object ConvertValue(object obj, Type t)
+        {
+            if (t == null)
+                return null;
+            else if (obj == null || obj.GetType() == t)
+                return obj;
+
+            // Check if target type is Nullable.
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                // If object is empty string, convert to null.
+                if (string.Empty.Equals(obj))
+                    return null;
+
+                // Change target type to Nullable's underlying type.
+                t = Nullable.GetUnderlyingType(t);
+            }
+
+            try
+            {
+                // ReSharper disable once AssignNullToNotNullAttribute
+                return Convert.ChangeType(obj, t);
+            }
+            catch
+            {
+                return obj;
+            }
         }
 
         public void SelectRow(int row)
@@ -188,6 +235,11 @@ namespace pwiz.Skyline.SettingsUI
         public int VisibleColumnCount
         {
             get { return _gridView.Columns.Cast<DataGridViewColumn>().Count(column => column.Visible); }
+        }
+
+        public void SetRequiredColumns(params int[] columns)
+        {
+            _requiredColumns = new HashSet<int>(columns);
         }
     }
 }
