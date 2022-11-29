@@ -372,7 +372,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestSkypValid()
         {
             AssertEx.ThrowsException<InvalidDataException>(
-                () => SkypFile.ReadSkyp(new SkypFile(), new StringReader(STR_EMPTY_SKYP)),
+                () => SkypFile.CreateForTest(STR_EMPTY_SKYP),
                 string.Format(
                     Resources.SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_,
                     SrmDocumentSharing.EXT_SKY_ZIP));
@@ -383,28 +383,26 @@ namespace pwiz.SkylineTestFunctional
                         .SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_,
                     SrmDocumentSharing.EXT_SKY_ZIP,
                     STR_INVALID_SKYP1);
-            AssertEx.ThrowsException<InvalidDataException>(() => SkypFile.ReadSkyp(new SkypFile(), new StringReader(STR_INVALID_SKYP1)), err);
+            AssertEx.ThrowsException<InvalidDataException>(() => SkypFile.CreateForTest(STR_INVALID_SKYP1), err);
 
 
             err = string.Format(Resources.SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_, STR_INVALID_SKYP2);
-            AssertEx.ThrowsException<InvalidDataException>(() => SkypFile.ReadSkyp(new SkypFile(), new StringReader(STR_INVALID_SKYP2)), err);
+            AssertEx.ThrowsException<InvalidDataException>(() => SkypFile.CreateForTest(STR_INVALID_SKYP2), err);
 
-            var skyp1 = new SkypFile();
-            AssertEx.NoExceptionThrown<Exception>(() => SkypFile.ReadSkyp(skyp1, new StringReader(STR_VALID_SKYP)));
+            SkypFile skyp1 = null;
+            AssertEx.NoExceptionThrown<Exception>(() => skyp1 = SkypFile.CreateForTest(STR_VALID_SKYP));
             Assert.AreEqual(new Uri(STR_VALID_SKYP), skyp1.SkylineDocUri);
             Assert.IsNull(skyp1.Size);
             Assert.IsNull(skyp1.DownloadingUser);
 
 
-            var skyp2 = new SkypFile();
-            SkypFile.ReadSkyp(skyp2, new StringReader(STR_VALID_SKYP_EXTENDED));
+            var skyp2 = SkypFile.CreateForTest(STR_VALID_SKYP_EXTENDED);
             Assert.AreEqual(new Uri(STR_VALID_SKYP_LOCALHOST), skyp2.SkylineDocUri);
             Assert.AreEqual(LOCALHOST, skyp2.GetServerName());
             Assert.AreEqual(skyp2.Size, 100);
             Assert.AreEqual(skyp2.DownloadingUser, "no-name@no-name.edu");
 
-            var skyp3 = new SkypFile();
-            SkypFile.ReadSkyp(skyp3, new StringReader(STR_INVALID_SIZE_SKYP3));
+            var skyp3 = SkypFile.CreateForTest(STR_INVALID_SIZE_SKYP3);
             Assert.AreEqual(new Uri(STR_VALID_SKYP_LOCALHOST), skyp3.SkylineDocUri);
             Assert.IsFalse(skyp3.Size.HasValue);
             Assert.AreEqual(skyp3.DownloadingUser, "no-name@no-name.edu");

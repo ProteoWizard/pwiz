@@ -24,6 +24,10 @@ namespace pwiz.Skyline.Model
         public long? Size { get; private set; }
         public string DownloadPath { get; private set; }
 
+        private SkypFile()
+        {
+        }
+
         [NotNull]
         public static SkypFile Create([NotNull] string skypPath, IEnumerable<Server> servers)
         {
@@ -31,7 +35,10 @@ namespace pwiz.Skyline.Model
             {
                 SkypPath = skypPath
             };
-            ReadSkyp(skyp);
+            using (var reader = new StreamReader(skyp.SkypPath))
+            {
+                ReadSkyp(skyp, reader);
+            }
 
             skyp.Server = servers?.FirstOrDefault(server => server.URI.Host.Equals(skyp.SkylineDocUri.Host));
 
@@ -41,15 +48,14 @@ namespace pwiz.Skyline.Model
             return skyp;
         }
 
-        private static void ReadSkyp(SkypFile skyp)
+        public static SkypFile CreateForTest(string skypText)
         {
-            using (var reader = new StreamReader(skyp.SkypPath))
-            {
-                ReadSkyp(skyp, reader);
-            }
+            var skyp = new SkypFile();
+            ReadSkyp(skyp, new StringReader(skypText));
+            return skyp;
         }
 
-        public static void ReadSkyp(SkypFile skyp, TextReader reader)
+        private static void ReadSkyp(SkypFile skyp, TextReader reader)
         {
             string line;
             var first = true;

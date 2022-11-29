@@ -10,6 +10,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -109,8 +110,7 @@ namespace pwiz.Skyline.FileUI
         {
             using (var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel))
             {
-                alertDlg.ShowDialog(parentWindow ?? _skyline);
-                if (alertDlg.DialogResult == DialogResult.OK)
+                if (alertDlg.ShowDialog(parentWindow ?? _skyline) == DialogResult.OK)
                 {
                     var allServers = Settings.Default.ServerList;
                     var newServer = allServers.EditItem(parentWindow, skypFile.GetSkylineDocServer(), allServers, false);
@@ -312,7 +312,6 @@ namespace pwiz.Skyline.FileUI
     {
         private IProgressMonitor ProgressMonitor { get; }
         private IProgressStatus ProgressStatus { get; set; }
-        private bool DownloadComplete { get; set; }
 
         public bool IsCancelled => ProgressMonitor != null && ProgressMonitor.IsCanceled;
         public bool IsError => ProgressStatus != null && ProgressStatus.IsError;
@@ -346,6 +345,7 @@ namespace pwiz.Skyline.FileUI
                     ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
                 };
 
+                var downloadComplete = false;
                 wc.DownloadFileCompleted += (s, e) =>
                 {
                     if (e.Error != null && !ProgressMonitor.IsCanceled)
@@ -353,17 +353,19 @@ namespace pwiz.Skyline.FileUI
                         ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(SkypDownloadException.Create(skyp, e.Error)));
                     }
 
-                    DownloadComplete = true;
+                    downloadComplete = true;
                 };
 
                 wc.DownloadFileAsync(skyp.SkylineDocUri, skyp.DownloadPath);
 
-                while (!DownloadComplete)
+                while (!downloadComplete)
                 {
-                   if (ProgressMonitor.IsCanceled)
+                    if (ProgressMonitor.IsCanceled)
                     {
                         wc.CancelAsync();
                     }
+
+                    Thread.Sleep(100);
                 }
             }
         }
