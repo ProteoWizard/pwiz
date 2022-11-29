@@ -23892,6 +23892,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed loading MIDAS library {0}..
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading {0}.
         /// </summary>
         public static string PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_ {
@@ -28193,15 +28202,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ApplyPeak_Failed_to_apply_peak_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ApplyPeak_Failed_to_apply_peak_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No results found for the precursor {0} in the file {1}..
-        /// </summary>
-        public static string SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__", resourceCulture);
             }
         }
         

@@ -1153,7 +1153,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
 
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-
+                
                 ranksContextMenuItem.Checked = set.ShowRanks;
                 menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
                 if (control.ControlType == SpectrumControlType.LibraryMatch)
@@ -2250,8 +2250,12 @@ namespace pwiz.Skyline
             var peptideChanges = new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ChangedPeakBoundsEventArgs>>();
             foreach (var change in changesArr)
             {
+                var find = new SrmDocument.FindChromInfos(document, change.GroupPath, change.NameSet, change.FilePath);
+                if (find.IndexInfo == -1)
+                    continue;
+
                 document = document.ChangePeak(change.GroupPath, change.NameSet, change.FilePath, change.Transition,
-                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, change.SyncGeneratedChange);
+                    change.StartTime.MeasuredTime, change.EndTime.MeasuredTime, UserSet.TRUE, change.Identified, false);
 
                 changedGroupIds.Add(Tuple.Create(change.GroupPath, change.FilePath));
 
@@ -2367,7 +2371,7 @@ namespace pwiz.Skyline
                     }
 
                     yield return new ChangedPeakBoundsEventArgs(change.GroupPath, null, chromSet.Name, info.FilePath,
-                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), null, change.ChangeType, true);
+                        new ScaledRetentionTime(start), new ScaledRetentionTime(end), null, change.ChangeType);
                 }
             }
         }
