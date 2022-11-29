@@ -1459,7 +1459,8 @@ namespace pwiz.Skyline.Menus
                         var dlg = new EditCustomMoleculeDlg(SkylineWindow, Resources.SkylineWindow_ModifyPeptide_Modify_Small_Molecule,
                             Document.Settings,
                             nodePep.Peptide.CustomMolecule,
-                            nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY))
+                            nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY,
+                            nodePep.Children.Select(node => ((TransitionGroupDocNode)node).PrecursorAdduct).ToList()))
                     {
                         dlg.SetResult(nodePep.Peptide.CustomMolecule, Adduct.EMPTY);
                         if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)

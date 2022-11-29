@@ -766,12 +766,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 selectionMatch = ReferenceEquals(selection.NodeTranGroup?.Id, (dataPrecursor?.Id as Transition)?.Group);
             }
 
-            var currentTransition =
-                _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
-
             if (_showIonSeriesAnnotations && _msDataFileScanHelper.Source == ChromSource.fragment)
             {
-                var nodePath = DocNodePath.GetNodePath(currentTransition.Id, _documentContainer.DocumentUI);
+                var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id, _documentContainer.DocumentUI);
+
                 if (nodePath != null) // Make sure user hasn't removed node since last update
                 {
                     var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings, nodePath.Precursor,
@@ -1270,15 +1268,13 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
                 showScanNumberContextMenuItem.Checked = Settings.Default.ShowFullScanNumber;
-                menuStrip.Items.Add(showScanNumberContextMenuItem);
+                menuStrip.Items.Insert(0, showScanNumberContextMenuItem);
                 showCollisionEnergyContextMenuItem.Checked = Settings.Default.ShowFullScanCE;
-                menuStrip.Items.Add(showCollisionEnergyContextMenuItem);
-                menuStrip.Items.Add(showPeakAnnotationsContextMenuItem);
-                menuStrip.Items.Add(toolStripSeparator1);
+                menuStrip.Items.Insert(1, showCollisionEnergyContextMenuItem);
+                menuStrip.Items.Insert(2, showPeakAnnotationsContextMenuItem);
+                menuStrip.Items.Insert(3, toolStripSeparator1);
 
-                var currentTransition =
-                    _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex];
-                var isProteomic = (currentTransition.Id as Transition)?.Group.IsProteomic;
+                var isProteomic = (_msDataFileScanHelper.CurrentTransition?.Id as Transition)?.Group.IsProteomic;
                 (_documentContainer as GraphSpectrum.IStateProvider)
                     ?.BuildSpectrumMenu(isProteomic.GetValueOrDefault(), sender, menuStrip);
             }

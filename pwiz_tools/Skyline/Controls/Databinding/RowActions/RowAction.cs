@@ -16,10 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 
-namespace pwiz.Skyline.Model.Databinding.RowActions
+namespace pwiz.Skyline.Controls.Databinding.RowActions
 {
     /// <summary>
     /// Base class for menu items which appear on the "Actions" dropdown on the Document Grid.

@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
         public static AuditLogForm MakeAuditLogForm(SkylineWindow skylineWindow)
         {
-            var dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var dataSchema = new SkylineWindowDataSchema(skylineWindow);
             var viewInfos = new[]
             {
                 CreateAuditLogViewInfo(dataSchema, AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo, @"Time", @"UndoRedoMessage", @"Reason"),
