@@ -111,15 +111,19 @@ namespace pwiz.Skyline.SettingsUI
             _mzCalculated = true;
             foreach(var entry in _allEntries)
             {
-                if (entry.Target != null)
+                if (entry.Key.IsPrecursorKey)
+                {
+                    entry.PrecursorMz = entry.Key.PrecursorMz.GetValueOrDefault();
+                }
+                else if (entry.Target != null)
                 {
                     entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
+                }
 
-                    if (progressMonitor.IsCanceled)
-                    {
-                        _mzCalculated = false;
-                        break;
-                    }
+                if (progressMonitor.IsCanceled)
+                {
+                    _mzCalculated = false;
+                    break;
                 }
             }
         }
