@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -231,9 +232,9 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private bool AddProteinRowsToGrid(ILongWaitBroker longWaitBroker)
+        private bool AddProteinRowsToGrid(IProgressReporter longWaitBroker)
         {
-            longWaitBroker.Message = Resources.UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_;
+            longWaitBroker.SetProgressMessage(Resources.UniquePeptidesDlg_AddProteinRowsToGrid_Adding_rows_to_grid_);
             HashSet<Protein> proteinSet = new HashSet<Protein>();
             foreach (var proteins in _peptideProteins)
             {

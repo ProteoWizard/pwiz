@@ -31,6 +31,7 @@ using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -1053,7 +1054,7 @@ namespace pwiz.Skyline
                     })
                     {
                         longWaitDlg.PerformWork(this, 800, () =>
-                            OptimizeCache(fileName, longWaitDlg));
+                            OptimizeCache(fileName, longWaitDlg.AsProgressReporter()));
                     }
                 }
             }
@@ -1069,7 +1070,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private void OptimizeCache(string fileName, ILongWaitBroker progress)
+        private void OptimizeCache(string fileName, IProgressReporter progress)
         {
             // Optimize the results cache to get rid of any unnecessary
             // chromatogram data.

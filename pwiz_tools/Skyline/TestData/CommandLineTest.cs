@@ -28,6 +28,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
@@ -326,8 +327,7 @@ namespace pwiz.SkylineTestData
             DocumentGridViewContext viewContext = new DocumentGridViewContext(skylineDataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.MainGroup.Id.ViewName(reportName));
             StringWriter writer = new StringWriter();
-            IProgressStatus status = new ProgressStatus("Exporting report");
-            viewContext.Export(CancellationToken.None, null, ref status, viewInfo, writer, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
+            viewContext.Export(SilentProgressReporter.INSTANCE, viewInfo, writer, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture));
             var programmaticReport = writer.ToString();
 
             RunCommand("--in=" + docPath,

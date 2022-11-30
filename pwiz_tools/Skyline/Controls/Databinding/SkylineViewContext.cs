@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
@@ -32,6 +31,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding.RowActions;
@@ -226,24 +226,23 @@ namespace pwiz.Skyline.Controls.Databinding
             return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
         }
 
-        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        public override bool RunLongJob(Control owner, Action<IProgressReporter> job)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                var status = longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, progressMonitor => job(longWaitDlg.CancellationToken, progressMonitor));
-                return status.IsComplete;
+                longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, ()=>job(longWaitDlg.AsProgressReporter()));
+                return !longWaitDlg.IsCanceled;
             }
         }
 
-        public override bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        public override bool RunOnThisThread(Control owner, Action<IProgressReporter> job)
         {
             var longOperationRunner = new LongOperationRunner();
             bool finished = false;
-            longOperationRunner.Run(longWaitBroker =>
+            longOperationRunner.Run(progressReporter=>
             {
-                var progressWaitBroker = new ProgressWaitBroker(progressMonitor=>job(longWaitBroker.CancellationToken, progressMonitor));
-                progressWaitBroker.PerformWork(longWaitBroker);
-                finished = !longWaitBroker.IsCanceled;
+                job(progressReporter);
+                finished = !progressReporter.IsCanceled;
             });
             return finished;
         }
@@ -311,21 +310,16 @@ namespace pwiz.Skyline.Controls.Databinding
                             Text = Resources.ExportReportDlg_ExportReport_Generating_Report
                         })
                     {
-                        var action = new Action<IProgressMonitor>(progressMonitor =>
+                        longWait.PerformWork(owner, 1500, () =>
                         {
-                            IProgressStatus status = new ProgressStatus(Resources.ExportReportDlg_ExportReport_Building_report);
-                            progressMonitor.UpdateProgress(status);
+                            var progressReporter = longWait.AsProgressReporter();
+                            progressReporter.SetProgressMessage(Resources.ExportReportDlg_ExportReport_Building_report);
                             using (var writer = new StreamWriter(stream))
                             {
-                                success = Export(longWait.CancellationToken, progressMonitor, ref status, viewInfo, writer, separator);
+                                success = Export(progressReporter, viewInfo, writer, separator);
                                 writer.Close();
                             }
-                            if (success)
-                            {
-                                progressMonitor.UpdateProgress(status.Complete());
-                            }
                         });
-                        longWait.PerformWork(owner, 1500, action);
                     }
                     return success;
                 });
@@ -339,8 +333,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor,
-            ref IProgressStatus status, ViewInfo viewInfo, TextWriter writer, char separator)
+        public bool Export(IProgressReporter progressReporter, ViewInfo viewInfo, TextWriter writer, char separator)
         {
             ViewLayout viewLayout = null;
             if (viewInfo.ViewGroup != null)
@@ -352,24 +345,23 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
 
-            return Export(cancellationToken, progressMonitor, ref status, viewInfo, viewLayout, writer, separator);
+            return Export(progressReporter, viewInfo, viewLayout, writer, separator);
         }
 
-        public bool Export(CancellationToken cancellationToken, IProgressMonitor progressMonitor, ref IProgressStatus status, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
+        public bool Export(IProgressReporter progressReporter, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
-            progressMonitor ??= new SilentProgressMonitor(cancellationToken);
-            using (var bindingListSource = new BindingListSource(cancellationToken))
+            progressReporter ??= SilentProgressReporter.INSTANCE;
+            using (var bindingListSource = new BindingListSource(progressReporter.CancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
-                progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
-                    .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
+                progressReporter.SetProgressValue(5);
+                progressReporter.SetProgressMessage(Resources.ExportReportDlg_ExportReport_Writing_report);
 
-                WriteDataWithStatus( progressMonitor, ref status, writer, bindingListSource, separator);
-                if (progressMonitor.IsCanceled)
+                WriteData( progressReporter, writer, bindingListSource, separator);
+                if (progressReporter.IsCanceled)
                     return false;
 
                 writer.Flush();
-                progressMonitor.UpdateProgress(status = status.Complete());
             }
             return true;
         }

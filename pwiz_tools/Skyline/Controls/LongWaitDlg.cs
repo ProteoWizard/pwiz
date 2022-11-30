@@ -20,6 +20,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -386,5 +387,29 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+
+        public IProgressReporter AsProgressReporter()
+        {
+            return new LongWaitDlgProgressReporter(this);
+        }
+
+        private class LongWaitDlgProgressReporter : AbstractProgressReporter
+        {
+            private LongWaitDlg _dlg;
+            public LongWaitDlgProgressReporter(LongWaitDlg dlg) : base(dlg.CancellationToken)
+            {
+                _dlg = dlg;
+            }
+
+            public override void SetProgressValue(double value)
+            {
+                _dlg.ProgressValue = (int) Math.Round(value);
+            }
+
+            public override void SetProgressMessage(string message)
+            {
+                _dlg.Message = message;
+            }
+        }
     }
 }

@@ -139,6 +139,14 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="ProgressReporting\AbstractProgressReporter.cs" />
+    <Compile Include="ProgressReporting\BufferedProgressReporter.cs" />
+    <Compile Include="ProgressReporting\CompleteProgressMonitorReporter.cs" />
+    <Compile Include="ProgressReporting\IProgressReporter.cs" />
+    <Compile Include="ProgressReporting\ProgressMonitorReporter.cs" />
+    <Compile Include="ProgressReporting\SilentProgressReporter.cs" />
+    <Compile Include="ProgressReporting\SubtaskProgressMonitor.cs" />
+    <Compile Include="ProgressReporting\WrappedProgressReporter.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />

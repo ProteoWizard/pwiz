@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Common.DataBinding;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -53,7 +54,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
             StringWriter stringWriter = new StringWriter();
             IProgressStatus progressStatus = new ProgressStatus();
-            viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref progressStatus,
+            viewContext.Export(SilentProgressReporter.INSTANCE,
                 viewContext.GetViewInfo(ViewGroup.BUILT_IN, view.ViewSpec), stringWriter,
                 TextUtil.SEPARATOR_CSV);
             string expectedReport = new StreamReader(OpenTestFile("BrudererSubset_MSstatsInput.csv")).ReadToEnd();

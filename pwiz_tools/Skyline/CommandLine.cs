@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
@@ -2754,15 +2755,15 @@ namespace pwiz.Skyline
                         return false;
                     }
 
-                    IProgressStatus status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                    var status = new ProgressStatus();
+                    var broker = new CommandProgressMonitor(_out, status);
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(CancellationToken.None, broker, ref status, viewInfo, writer,
+                        viewContext.Export(new ProgressMonitorReporter(broker, CancellationToken.None, status), viewInfo, writer,
                             reportColSeparator);
                     }
-
+                    
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
                     _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
@@ -3500,7 +3501,7 @@ namespace pwiz.Skyline
                     if (settings.MeasuredResults.IsLoaded)
                     {
                         FileStreamManager fsm = FileStreamManager.Default;
-                        settings.MeasuredResults.OptimizeCache(outFile, fsm);
+                        settings.MeasuredResults.OptimizeCache(outFile, fsm, SilentProgressReporter.INSTANCE);
 
                         //don't worry about updating the document with the results of optimization
                         //as is done in SkylineFiles

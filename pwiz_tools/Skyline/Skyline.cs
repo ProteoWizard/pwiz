@@ -34,6 +34,7 @@ using log4net;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -105,7 +106,7 @@ namespace pwiz.Skyline
         private SrmDocument _document;
         private SrmDocument _documentUI;
         private int _savedVersion;
-        private bool _closing;
+        private CancellationTokenSource _cancellationTokenSource;
         private readonly UndoManager _undoManager;
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ProteinMetadataManager _proteinMetadataManager;
@@ -493,7 +494,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool IsClosing { get { return _closing; } }
+        public bool IsClosing { get { return _cancellationTokenSource.IsCancellationRequested; } }
 
         /// <summary>
         /// Tracking active background loaders for a container - helps in test harness SkylineWindow teardown
@@ -1085,7 +1086,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            _closing = true;
+            _cancellationTokenSource.Cancel();
 
             // Stop listening for progress from background loaders
             _libraryManager.ProgressUpdateEvent -= UpdateProgress;
@@ -3817,9 +3818,26 @@ namespace pwiz.Skyline
             get
             {
                 // CONSIDER: Add a generic cancel button to the status bar that allows cancelling operations with progress?
-                return _closing;    // Once the main window is closing tell anything listening for progress to cancel
+                return _cancellationTokenSource.IsCancellationRequested;    // Once the main window is closing tell anything listening for progress to cancel
             }
         }
+
+        public CancellationToken ApplicationCancellationToken
+        {
+            get
+            {
+                return _cancellationTokenSource.Token;
+            }
+        }
+
+        public IProgressReporter GetProgressReporter(IProgressStatus status)
+        {
+            return new ProgressMonitorReporter(this, _cancellationTokenSource.Token, status);
+        }
+
+        public IProgressReporter NewProgressReporter()
+        {
+            return GetProgressReporter(new ProgressStatus());}
 
         UpdateProgressResponse IProgressMonitor.UpdateProgress(IProgressStatus status)
         {

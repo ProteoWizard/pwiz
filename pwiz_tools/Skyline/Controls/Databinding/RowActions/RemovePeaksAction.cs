@@ -91,12 +91,12 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                         };
                         SrmDocument resultDocument = doc;
                         doc = doc.BeginDeferSettingsChanges();
-                        longOperationRunner.Run(broker =>
+                        longOperationRunner.Run(progressReporter =>
                         {
                             for (int iGroup = 0; iGroup < lookup.Length; iGroup++)
                             {
-                                broker.ProgressValue = iGroup * 100 / lookup.Length;
-                                if (broker.IsCanceled)
+                                progressReporter.SetProgressValue(iGroup * 100.0 / lookup.Length);
+                                if (progressReporter.IsCanceled)
                                 {
                                     return;
                                 }

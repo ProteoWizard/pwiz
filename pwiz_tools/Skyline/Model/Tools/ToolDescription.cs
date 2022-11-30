@@ -31,6 +31,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -877,14 +878,16 @@ namespace pwiz.Skyline.Model.Tools
                         Resources.ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
                         toolTitle, reportTitle));
             }
-            IProgressStatus status =
-                new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
-                    reportTitle));
-            progressMonitor.UpdateProgress(status);
-            if (!viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewInfo, writer,
-                    TextUtil.SEPARATOR_CSV))
+
+            using (var progressReporter = new CompleteProgressMonitorReporter(progressMonitor, CancellationToken.None,
+                       string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+                           reportTitle)))
             {
-                throw new OperationCanceledException();
+                if (!viewContext.Export(progressReporter, viewInfo, writer,
+                        TextUtil.SEPARATOR_CSV))
+                {
+                    throw new OperationCanceledException();
+                }
             }
         }
 

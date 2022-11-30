@@ -32,6 +32,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.ProgressReporting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
@@ -2313,6 +2314,15 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
+        }
+    }
+
+    public static class ProgressReporterExtensions
+    {
+        public static void SetProgressCheckCancel(this IProgressReporter progressReporter, int step, int totalSteps)
+        {
+            progressReporter.CancellationToken.ThrowIfCancellationRequested();
+            progressReporter.SetProgressValue(step * 100.0 / totalSteps);
         }
     }
 }
