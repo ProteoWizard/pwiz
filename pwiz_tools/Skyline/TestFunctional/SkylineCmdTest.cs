@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
@@ -125,8 +126,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var writer = new StringWriter();
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
-            IProgressStatus status = new ProgressStatus(string.Empty);
-            processRunner.Run(GetProcessStartInfo(args), null, null, ref status, writer);
+            processRunner.Run(GetProcessStartInfo(args), null, null, writer);
             return writer.ToString();
         }
 

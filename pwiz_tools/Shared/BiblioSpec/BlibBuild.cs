@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.BiblioSpec.Properties;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.BiblioSpec
@@ -316,12 +317,12 @@ namespace pwiz.BiblioSpec
 
         public IList<string> TargetSequences { get; private set; }
 
-        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgress progress, out string[] ambiguous)
         {
-            return BuildLibrary(libraryBuildAction, progressMonitor, ref status, out _, out _, out ambiguous);
+            return BuildLibrary(libraryBuildAction, progress, out _, out _, out ambiguous);
         }
 
-        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string commandArgs, out string messageLog, out string[] ambiguous)
+        public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgress progress, out string commandArgs, out string messageLog, out string[] ambiguous)
         {
             // Arguments for BlibBuild
             // ReSharper disable LocalizableElement
@@ -408,8 +409,7 @@ namespace pwiz.BiblioSpec
             {
                 const string ambiguousPrefix = @"AMBIGUOUS:";
                 var processRunner = new ProcessRunner { MessagePrefix = DebugMode ? string.Empty : ambiguousPrefix };
-                processRunner.Run(psiBlibBuilder, null, progressMonitor, ref status);
-                isComplete = status.IsComplete;
+                isComplete = processRunner.Run(psiBlibBuilder, null, progress);
                 if (isComplete)
                 {
                     var messages = processRunner.MessageLog();
@@ -439,7 +439,7 @@ namespace pwiz.BiblioSpec
             return isComplete;
         }
 
-        public Dictionary<string, ScoreTypesResult> GetScoreTypes(IProgressMonitor progressMonitor, ref IProgressStatus status, out string commandArgs)
+        public Dictionary<string, ScoreTypesResult> GetScoreTypes(IProgress progress, out string commandArgs)
         {
             // Arguments for BlibBuild
             // ReSharper disable LocalizableElement
@@ -476,10 +476,11 @@ namespace pwiz.BiblioSpec
             };
 
             var text = new StringWriter();
+            bool isComplete = false;
             try
             {
                 var processRunner = new ProcessRunner();
-                processRunner.Run(psiBlibBuilder, null, progressMonitor, ref status, text);
+                isComplete = processRunner.Run(psiBlibBuilder, null, progress, text);
             }
             finally
             {
@@ -488,7 +489,7 @@ namespace pwiz.BiblioSpec
                 File.Delete(stdinFilename);
             }
 
-            if (!status.IsComplete)
+            if (!isComplete)
                 return null;
 
             var result = new Dictionary<string, ScoreTypesResult>();

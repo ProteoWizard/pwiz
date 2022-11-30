@@ -23,7 +23,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
             var data = new GraphData(document, null, -1, threshold, precision, true, bestResult,
-                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, SilentProgressReporter.INSTANCE);
+                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, SilentProgress.INSTANCE);
             return data.Refine(CancellationToken.None).Outliers;
         }
 
@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, IProgressReporter progress)
+        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, IProgress progress)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
             return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, 
@@ -428,7 +428,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount
                                 , 1, new PaneProgressBar(this));
 
-                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, new SilentProgressReporter(token)),
+                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, new SilentProgress(token)),
                                 @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
@@ -573,7 +573,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void UpdateAndRefine(RequestContext requestContext,
-            IProgressReporter progress)
+            IProgress progress)
         {
             try
             {
@@ -704,7 +704,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 RegressionMethodRT regressionMethod,
                 int originalIndex,
                 RTLinearRegressionGraphPane graphPane,
-                IProgressReporter progress
+                IProgress progress
                 )
             {
                 _document = document;

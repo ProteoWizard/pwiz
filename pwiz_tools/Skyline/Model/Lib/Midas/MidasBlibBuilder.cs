@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             _libSpec = new BiblioSpecLiteSpec(libName, blibPath);
         }
 
-        public bool BuildLibrary(IProgressMonitor progress)
+        public bool BuildLibrary(IProgress progress)
         {
             var bestSpectra = new List<SpectrumMzInfo>();
             foreach (var nodePep in _doc.Peptides)

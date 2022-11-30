@@ -26,7 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
@@ -92,13 +92,13 @@ namespace pwiz.Skyline.Model
             return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, Program.MainWindow.NewProgressReporter());
         }
 
-        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgressReporter progressMonitor)
+        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgress progressMonitor)
         {
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
             var viewContext = new DocumentGridViewContext(dataSchema);
-            progressMonitor.ProgressMessage = string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+            progressMonitor.Message = string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name);
             var writer = new StringWriter();
             if (viewContext.Export(progressMonitor, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer, TextUtil.SEPARATOR_CSV))

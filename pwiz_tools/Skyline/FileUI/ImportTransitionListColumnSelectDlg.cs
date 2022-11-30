@@ -277,7 +277,7 @@ namespace pwiz.Skyline.FileUI
 
             using (var longWaitDlg = new LongWaitDlg() { Message = checkBoxAssociateProteins.Text })
             {
-                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                longWaitDlg.PerformWork(this, 1000, () =>
                 {
                     // If there are headers, add one describing the protein name column we will add - if we haven't already
                     var hasHeaders = Importer.RowReader.Indices.Headers != null;
@@ -302,8 +302,8 @@ namespace pwiz.Skyline.FileUI
                     var proteome = _docCurrent.Settings.PeptideSettings.BackgroundProteome;
                     using (var proteomeDb = proteome.OpenProteomeDb())
                     {
-                        dictSequenceProteins = proteomeDb.GetDigestion().GetProteinsWithSequences(stripped.Values.ToList(), progressMonitor.CancellationToken);
-                        if (progressMonitor.IsCanceled)
+                        dictSequenceProteins = proteomeDb.GetDigestion().GetProteinsWithSequences(stripped.Values.ToList(), longWaitDlg.CancellationToken);
+                        if (longWaitDlg.IsCanceled)
                         {
                             dictSequenceProteins = null;
                         }

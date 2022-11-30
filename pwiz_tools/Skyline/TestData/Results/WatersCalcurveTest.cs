@@ -22,7 +22,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -518,7 +518,7 @@ namespace pwiz.SkylineTestData.Results
                 Assert.AreEqual(writeTime, File.GetLastWriteTime(cachePath));
 
                 // Optimizing should shrink the cache
-                var results = docNoCacheChange2.Settings.MeasuredResults.OptimizeCache(docPath, streamManager, SilentProgressReporter.INSTANCE);
+                var results = docNoCacheChange2.Settings.MeasuredResults.OptimizeCache(docPath, streamManager, SilentProgress.INSTANCE);
                 var docOptimized = docNoCacheChange2.ChangeSettings(docNoCacheChange2.Settings.ChangeMeasuredResults(results));
                 // This should not cause a reload
                 Assert.IsTrue(docContainer.SetDocument(docOptimized, docNoCacheChange2, false));

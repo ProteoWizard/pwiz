@@ -23,7 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.AuditLog;
@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public bool PerformUndoableOperation(string description, Func<IProgressReporter, bool> operation, BatchModifyInfo batchModifyInfo)
+        public bool PerformUndoableOperation(string description, Func<IProgress, bool> operation, BatchModifyInfo batchModifyInfo)
         {
             var skylineDataSchema = GetDataSchema();
             if (skylineDataSchema == null)
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Util
         /// Returns true if any changes were made to the document, false if there were no
         /// changes.
         /// </summary>
-        private bool Paste(IProgressReporter longWaitBroker, TextReader reader)
+        private bool Paste(IProgress longWaitBroker, TextReader reader)
         {
             bool anyChanges = false;
             var columnsByDisplayIndex =
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Util
                 {
                     return anyChanges;
                 }
-                longWaitBroker.ProgressMessage = string.Format(Resources.DataGridViewPasteHandler_Paste_Pasting_row__0_, iRow + 1);
+                longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_Paste_Pasting_row__0_, iRow + 1);
                 string line = reader.ReadLine();
                 if (null == line)
                 {
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Util
             return anyChanges;
         }
 
-        private bool ClearCells(IProgressReporter longWaitBroker)
+        private bool ClearCells(IProgress longWaitBroker)
         {
             if (DataGridView.SelectedRows.Count > 0)
             {
@@ -254,8 +254,8 @@ namespace pwiz.Skyline.Util
                 {
                     return anyChanges;
                 }
-                longWaitBroker.ProgressValue = 100 * iGrouping / cellsByRow.Length;
-                longWaitBroker.ProgressMessage = string.Format(Resources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
+                longWaitBroker.Value = 100 * iGrouping / cellsByRow.Length;
+                longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
                 var rowGrouping = cellsByRow[iGrouping];
                 var cells = rowGrouping.ToArray();
                 Array.Sort(cells, (c1, c2) => c1.ColumnIndex.CompareTo(c2.ColumnIndex));

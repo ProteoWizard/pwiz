@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -289,8 +290,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private Dictionary<string, ScoreTypesResult> GetScoreTypes(ICollection<string> files)
         {
             var blibBuild = new BlibBuild(null, files.ToArray());
-            IProgressStatus status = new ProgressStatus();
-            var results = blibBuild.GetScoreTypes(new SilentProgressMonitor(), ref status, out _);
+            var results = blibBuild.GetScoreTypes(SilentProgress.INSTANCE, out _);
 
             // Match input/output files
             var filesByLength = files.OrderByDescending(s => s.Length).ToArray();

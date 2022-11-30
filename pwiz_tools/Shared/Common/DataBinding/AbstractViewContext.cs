@@ -32,7 +32,7 @@ using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -61,11 +61,11 @@ namespace pwiz.Common.DataBinding
             string currentViewName = viewInfo.Name;
             return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? string.Empty : currentViewName);
         }
-        public abstract bool RunLongJob(Control owner, Action<IProgressReporter> job);
+        public abstract bool RunLongJob(Control owner, Action<IProgress> job);
 
-        public virtual bool RunOnThisThread(Control owner, Action<IProgressReporter> job)
+        public virtual bool RunOnThisThread(Control owner, Action<IProgress> job)
         {
-            job(SilentProgressReporter.INSTANCE);
+            job(SilentProgress.INSTANCE);
             return true;
         }
         public DataSchema DataSchema { get; private set; }
@@ -187,7 +187,7 @@ namespace pwiz.Common.DataBinding
 
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressReporter progressMonitor, TextWriter writer,
+        protected virtual void WriteData(IProgress progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
             var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
@@ -195,7 +195,7 @@ namespace pwiz.Common.DataBinding
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
-            var bufferedProgress = new BufferedProgressReporter(progressMonitor);
+            double lastProgress = 0;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 if (progressMonitor.IsCanceled)
@@ -203,7 +203,15 @@ namespace pwiz.Common.DataBinding
                     return;
                 }
 
-                bufferedProgress.UpdateIfProgress(rowIndex * 100.0 / rowCount, Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowIndex + 1, rowCount);
+                double newProgress = rowIndex * 100.0 / rowCount;
+                if (Math.Round(newProgress) > lastProgress)
+                {
+                    progressMonitor.Value = newProgress;
+                    progressMonitor.Message =
+                        string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowIndex + 1,
+                            rowCount);
+                    lastProgress = Math.Round(newProgress);
+                }
                 dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
             }
         }

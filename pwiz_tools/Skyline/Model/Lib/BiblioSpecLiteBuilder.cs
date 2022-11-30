@@ -24,7 +24,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using pwiz.BiblioSpec;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -124,29 +126,30 @@ namespace pwiz.Skyline.Model.Lib
         private string _buildCommandArgs;
         private string _buildOutput;
 
-        public bool BuildLibrary(IProgressMonitor progress)
+        public bool BuildLibrary(IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
             _ambiguousMatches = null;
             IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library);
-            progress.UpdateProgress(status);
+            progressMonitor.UpdateProgress(status);
             if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
             {
                 try
                 {
-                    InputFiles = VendorIssueHelper.ConvertPilotFiles(InputFiles, progress, status);
-                    if (progress.IsCanceled)
+                    InputFiles = progressMonitor.CallWithProgress(cancellationToken, ref status,
+                        progress => VendorIssueHelper.ConvertPilotFiles(InputFiles, progress));
+                    if (progressMonitor.IsCanceled)
                         return false;
                 }
                 catch (Exception x)
                 {
-                    progress.UpdateProgress(status.ChangeErrorException(x));
+                    progressMonitor.UpdateProgress(status.ChangeErrorException(x));
                     return false;
                 }
             }
 
             string message = string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
                                            Path.GetFileName(OutputPath));
-            progress.UpdateProgress(status = status.ChangeMessage(message));
+            progressMonitor.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles, TargetSequences)
             {
@@ -163,7 +166,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    if (!blibBuilder.BuildLibrary(Action, progress, ref status,
+                    if (!blibBuilder.BuildLibrary(Action, progressMonitor, ref status,
                         out _buildCommandArgs, out _buildOutput, out _ambiguousMatches))
                     {
                         return false;
@@ -185,7 +188,7 @@ namespace pwiz.Skyline.Model.Lib
                                               @"search results file '" + fullResultsFilepath);
 
                         var response =
-                            progress.UpdateProgress(
+                            progressMonitor.UpdateProgress(
                                 status.ChangeErrorException(new IOException(messageWithFullFilepath, x)));
                         if (response == UpdateProgressResponse.cancel)
                             return false;
@@ -194,13 +197,13 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     }
 
-                    progress.UpdateProgress(status.ChangeErrorException(x));
+                    progressMonitor.UpdateProgress(status.ChangeErrorException(x));
                     return false;
                 }
                 catch (Exception x)
                 {
                     Console.WriteLine(x.Message);
-                    progress.UpdateProgress(status.ChangeErrorException(
+                    progressMonitor.UpdateProgress(status.ChangeErrorException(
                         new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
                                                     redundantLibrary), x)));
                     return false;
@@ -209,13 +212,13 @@ namespace pwiz.Skyline.Model.Lib
 
             var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);
-            progress.UpdateProgress(status);
+            progressMonitor.UpdateProgress(status);
             // Write the non-redundant library to a temporary file first
             try
             {
                 using (var saver = new FileSaver(OutputPath))
                 {
-                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progress, ref status))
+                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progressMonitor, ref status))
                     {
                         return false;
                     }
@@ -225,12 +228,12 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (IOException x)
             {
-                progress.UpdateProgress(status.ChangeErrorException(x));
+                progressMonitor.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
             catch
             {
-                progress.UpdateProgress(status.ChangeErrorException(
+                progressMonitor.UpdateProgress(status.ChangeErrorException(
                     new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
                                                 OutputPath))));
                 return false;

@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -37,6 +38,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.IonMobility.DatabaseOpeningException;
+using IProgress = pwiz.Common.Progress.IProgress;
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {
@@ -792,7 +794,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                             {
                                 string message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_ion_mobility_information_,
                                                                librarySpec.FilePath);
-                                monitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(new IOException(message)));
+                                throw new IOException(message);
                             }
 
                         });
@@ -844,11 +846,10 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             }
         }
 
-        public static IEnumerable<ValidatingIonMobilityPrecursor> CollectIonMobilitiesAndCollisionalCrossSections(IProgressMonitor monitor,
+        public static IEnumerable<ValidatingIonMobilityPrecursor> CollectIonMobilitiesAndCollisionalCrossSections(IProgress monitor,
                                       IEnumerable<IIonMobilityInfoProvider> providers,
                                       int countProviders)
         {
-            IProgressStatus status = new ProgressStatus(Resources.CollisionalCrossSectionGridViewDriver_ProcessIonMobilityValues_Reading_ion_mobility_information);
             var peptideIonMobilities = new List<ValidatingIonMobilityPrecursor>();
             int runCount = 0;
             foreach (var ionMobilityInfoProvider in providers)
@@ -861,7 +862,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     if (monitor != null)
                     {
                         var message = string.Format(Resources.CollisionalCrossSectionGridViewDriver_ProcessDriftTimes_Reading_ion_mobility_data_from__0__, ionMobilityInfoProvider.Name);
-                        monitor.UpdateProgress(status = status.ChangeMessage(message));
+                        monitor.Message = message;
                     }
                     foreach (var ionMobilityList in ionMobilityInfoProvider.GetIonMobilityDict())
                     {
@@ -935,12 +936,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                     }
                 }
                 if (monitor != null)
-                    monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));
+                    monitor.SetProgressValue(runCount * 100 / countProviders);
             }
-
-            if (monitor != null)
-                monitor.UpdateProgress(status.Complete());
-
             return peptideIonMobilities;
         }
     }

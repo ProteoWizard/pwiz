@@ -24,7 +24,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -1232,14 +1232,14 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromatogramCache Optimize(string documentPath, IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager,
-            IProgressReporter progress)
+            IProgress progress)
         {
             string cachePathOpt = FinalPathForName(documentPath, null);
             return OptimizeToPath(null, cachePathOpt, msDataFilePaths, streamManager, progress);
         }
 
         public ChromatogramCache OptimizeToPath(CacheFormatVersion? formatVersion, string cachePathOpt,
-            IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager, IProgressReporter progress)
+            IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager, IProgress progress)
         {
             var keepFilePaths = new HashSet<MsDataFileUri>(msDataFilePaths);
             var keepFileIndices = new HashSet<int>();

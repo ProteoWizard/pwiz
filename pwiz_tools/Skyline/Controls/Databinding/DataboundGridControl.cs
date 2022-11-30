@@ -31,7 +31,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Clustering;
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Controls.Databinding
             return false;
         }
         
-        private bool DoFillDown(IProgressReporter progress, PropertyDescriptor[] propertyDescriptors, int firstRowIndex, int lastRowIndex)
+        private bool DoFillDown(IProgress progress, PropertyDescriptor[] propertyDescriptors, int firstRowIndex, int lastRowIndex)
         {
             bool anyChanges = false;
             var firstRowValues = propertyDescriptors.Select(pd => pd.GetValue(BindingListSource[firstRowIndex])).ToArray();
@@ -480,8 +480,8 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     return anyChanges;
                 }
-                progress.ProgressValue = 100*(iRow - firstRowIndex)/totalRows;
-                progress.ProgressMessage = string.Format(Resources.DataboundGridControl_DoFillDown_Filling__0___1__rows, iRow - firstRowIndex, totalRows);
+                progress.Value = 100*(iRow - firstRowIndex)/totalRows;
+                progress.Message = string.Format(Resources.DataboundGridControl_DoFillDown_Filling__0___1__rows, iRow - firstRowIndex, totalRows);
                 var row = BindingListSource[iRow];
                 for (int icol = 0; icol < propertyDescriptors.Length; icol++)
                 {

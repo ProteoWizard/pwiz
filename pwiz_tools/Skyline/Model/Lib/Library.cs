@@ -28,6 +28,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
@@ -526,7 +527,7 @@ namespace pwiz.Skyline.Model.Lib
         /// to cancel.
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
-        bool BuildLibrary(IProgressMonitor progress);
+        bool BuildLibrary(IProgress progress);
 
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.

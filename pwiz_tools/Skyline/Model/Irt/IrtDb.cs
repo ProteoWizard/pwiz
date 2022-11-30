@@ -35,6 +35,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using NHibernate.Tool.hbm2ddl;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
@@ -245,14 +246,14 @@ namespace pwiz.Skyline.Model.Irt
             return result;
         }
 
-        public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor = null)
+        public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgress monitor = null)
         {
             IProgressStatus status = new ProgressStatus(Resources.IrtDb_UpdatePeptides_Updating_peptides);
             monitor?.UpdateProgress(status);
             return UpdatePeptides(newPeptides, monitor, ref status);
         }
 
-        public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgressMonitor monitor, ref IProgressStatus status)
+        public IrtDb UpdatePeptides(ICollection<DbIrtPeptide> newPeptides, IProgress monitor, ref IProgressStatus status)
         {
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())

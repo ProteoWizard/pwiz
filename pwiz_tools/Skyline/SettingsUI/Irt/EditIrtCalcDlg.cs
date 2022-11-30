@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -912,13 +913,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     try
                     {
-                        var status = longWait.PerformWork(MessageParent, 800, monitor =>
-                            irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray(), RegressionType));
-                        if (status.IsError)
-                        {
-                            MessageDlg.Show(MessageParent, status.ErrorException.Message);
-                            return;
-                        }
+                        longWait.PerformWork(MessageParent, 800, ()=>
+                            irtAverages = ProcessRetentionTimes(longWait.AsProgress(), GetRetentionTimeProviders(document).ToArray(), RegressionType));
                     }
                     catch (Exception x)
                     {
@@ -1015,7 +1011,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         try
                         {
-                            var status = longWait.PerformWork(MessageParent, 800, monitor =>
+                            var status = longWait.PerformWork(MessageParent, 800, ()=>
                             {
                                 if (library == null)
                                     library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
@@ -1146,9 +1142,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers, IrtRegressionType regressionType)
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgress progress, IRetentionTimeProvider[] providers, IrtRegressionType regressionType)
             {
-                return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray(), regressionType);
+                return RCalcIrt.ProcessRetentionTimes(progress, providers, StandardPeptideList.ToArray(), Items.ToArray(), regressionType);
             }
 
             private void AddToLibrary(ProcessedIrtAverages irtAverages)

@@ -28,7 +28,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
@@ -1942,7 +1942,7 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
             foreach (var file in commandArgs.SearchResultsFiles)
                 _out.WriteLine(Path.GetFileName(file));
-            if (!builder.BuildLibrary(progressMonitor))
+            if (!builder.BuildLibrary(progressMonitor, CancellationToken.None))
                 return false;
 
             if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
@@ -2760,7 +2760,7 @@ namespace pwiz.Skyline
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(new ProgressMonitorReporter(broker, CancellationToken.None, status), viewInfo, writer,
+                        viewContext.Export(new ProgressMonitorProgress(broker, CancellationToken.None, status), viewInfo, writer,
                             reportColSeparator);
                     }
                     
@@ -3501,7 +3501,7 @@ namespace pwiz.Skyline
                     if (settings.MeasuredResults.IsLoaded)
                     {
                         FileStreamManager fsm = FileStreamManager.Default;
-                        settings.MeasuredResults.OptimizeCache(outFile, fsm, SilentProgressReporter.INSTANCE);
+                        settings.MeasuredResults.OptimizeCache(outFile, fsm, SilentProgress.INSTANCE);
 
                         //don't worry about updating the document with the results of optimization
                         //as is done in SkylineFiles
@@ -3993,7 +3993,7 @@ namespace pwiz.Skyline
         }
     }
 
-    internal class CommandProgressMonitor : IProgressMonitor
+    internal class CommandProgressMonitor : IProgressMonitor, IProgress
     {
         private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
@@ -4188,6 +4188,20 @@ namespace pwiz.Skyline
                 Thread.Sleep(1000);
             }
             _out.WriteLine(Resources.CommandWaitBroker_Wait_Done);
+        }
+
+        CancellationToken IProgress.CancellationToken => CancellationToken.None;
+
+        bool IProgress.IsCanceled => false;
+
+        double IProgress.Value
+        {
+            set => UpdateProgress(_currentProgress.ChangePercentComplete(Math.Max(0, Math.Min(100, (int)value))));
+        }
+
+        string IProgress.Message
+        {
+            set => UpdateProgress(_currentProgress.ChangeMessage(value));
         }
     }
 }

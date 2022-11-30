@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.Database;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -2143,7 +2144,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public void DeleteDataFiles(string[] filenames, IProgressMonitor monitor)
+        public void DeleteDataFiles(string[] filenames, IProgress monitor)
         {
             string inList = GetInList(filenames);
             bool hasModsTable = HasRedundantModificationsTable();
@@ -2188,7 +2189,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var blibFilter = new BlibFilter();
                 IProgressStatus status = new ProgressStatus(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Removing_library_runs_from_document_library_);
-                if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor, ref status))
+                if (!blibFilter.Filter(FilePathRedundant, saver.SafeName, monitor))
                     throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_DeleteDataFiles_Failed_attempting_to_filter_redundant_library__0__to__1_, FilePathRedundant, FilePath));
 
                 _sqliteConnectionRedundant.CloseStream();

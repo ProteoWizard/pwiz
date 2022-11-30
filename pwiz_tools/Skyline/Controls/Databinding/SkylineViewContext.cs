@@ -31,7 +31,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding.RowActions;
@@ -226,16 +226,16 @@ namespace pwiz.Skyline.Controls.Databinding
             return new AlertDlg(message, messageBoxButtons).ShowAndDispose(FormUtil.FindTopLevelOwner(owner));
         }
 
-        public override bool RunLongJob(Control owner, Action<IProgressReporter> job)
+        public override bool RunLongJob(Control owner, Action<IProgress> job)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, ()=>job(longWaitDlg.AsProgressReporter()));
+                longWaitDlg.PerformWork(FormUtil.FindTopLevelOwner(owner), 1000, ()=>job(longWaitDlg.AsProgress()));
                 return !longWaitDlg.IsCanceled;
             }
         }
 
-        public override bool RunOnThisThread(Control owner, Action<IProgressReporter> job)
+        public override bool RunOnThisThread(Control owner, Action<IProgress> job)
         {
             var longOperationRunner = new LongOperationRunner();
             bool finished = false;
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         longWait.PerformWork(owner, 1500, () =>
                         {
-                            var progressReporter = longWait.AsProgressReporter();
+                            var progressReporter = longWait.AsProgress();
                             progressReporter.SetProgressMessage(Resources.ExportReportDlg_ExportReport_Building_report);
                             using (var writer = new StreamWriter(stream))
                             {
@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public bool Export(IProgressReporter progressReporter, ViewInfo viewInfo, TextWriter writer, char separator)
+        public bool Export(IProgress progress, ViewInfo viewInfo, TextWriter writer, char separator)
         {
             ViewLayout viewLayout = null;
             if (viewInfo.ViewGroup != null)
@@ -345,20 +345,20 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
 
-            return Export(progressReporter, viewInfo, viewLayout, writer, separator);
+            return Export(progress, viewInfo, viewLayout, writer, separator);
         }
 
-        public bool Export(IProgressReporter progressReporter, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
+        public bool Export(IProgress progress, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
-            progressReporter ??= SilentProgressReporter.INSTANCE;
-            using (var bindingListSource = new BindingListSource(progressReporter.CancellationToken))
+            progress ??= SilentProgress.INSTANCE;
+            using (var bindingListSource = new BindingListSource(progress.CancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
-                progressReporter.SetProgressValue(5);
-                progressReporter.SetProgressMessage(Resources.ExportReportDlg_ExportReport_Writing_report);
+                progress.SetProgressValue(5);
+                progress.SetProgressMessage(Resources.ExportReportDlg_ExportReport_Writing_report);
 
-                WriteData( progressReporter, writer, bindingListSource, separator);
-                if (progressReporter.IsCanceled)
+                WriteData( progress, writer, bindingListSource, separator);
+                if (progress.IsCanceled)
                     return false;
 
                 writer.Flush();

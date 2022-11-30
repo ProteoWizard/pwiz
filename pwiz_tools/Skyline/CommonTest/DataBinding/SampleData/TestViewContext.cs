@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 
 namespace CommonTest.DataBinding.SampleData
@@ -33,7 +33,7 @@ namespace CommonTest.DataBinding.SampleData
             return MessageBox.Show(owner, message, "Test View Context", messageBoxButtons);
         }
 
-        public override bool RunLongJob(Control owner, Action<IProgressReporter> job)
+        public override bool RunLongJob(Control owner, Action<IProgress> job)
         {
             throw new NotSupportedException();
         }

@@ -60,14 +60,14 @@ namespace pwiz.Common.SystemUtil
         /// Public access to read the next line from the interleaved output
         /// of both standard out and standard error.
         /// </summary>
-        public string ReadLine(IProgressMonitor progressMonitor)
+        public string ReadLine(CancellationToken cancellationToken)
         {
-            int timeout = progressMonitor == null ? Timeout.Infinite : 10000;
+            int timeout = cancellationToken.CanBeCanceled ? 10000 : Timeout.Infinite;
             lock (_readLines)
             {
                 for (;;)
                 {
-                    if (progressMonitor != null && progressMonitor.IsCanceled)
+                    if (cancellationToken.IsCancellationRequested)
                     {
                         return string.Empty;
                     }
@@ -88,7 +88,7 @@ namespace pwiz.Common.SystemUtil
 
         public string ReadLine()
         {
-            return ReadLine(null);
+            return ReadLine(CancellationToken.None);
         }
 
         public string GetErrorLines()

@@ -19,7 +19,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Util
         public int DelayMillis { get; set; }
         public bool ExecutesJobOnBackgroundThread { get; set; }
 
-        public void Run(Action<IProgressReporter> action)
+        public void Run(Action<IProgress> action)
         {
             if (ExecutesJobOnBackgroundThread)
             {
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Util
             RunOnThisThread(action);
         }
 
-        public T CallFunction<T>(Func<IProgressReporter, T> func)
+        public T CallFunction<T>(Func<IProgress, T> func)
         {
             T returnValue = default(T);
             Run(progressMonitor =>
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Util
             return returnValue;
         }
         
-        private void RunOnThisThread(Action<IProgressReporter> performWork)
+        private void RunOnThisThread(Action<IProgress> performWork)
         {
             LongWaitDlg longWaitDlg = null;
             ProgressWaitBroker progressWaitBroker;
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Util
             dlgCreated.Dispose();
             try
             {
-                performWork(longWaitDlg.AsProgressReporter());
+                performWork(longWaitDlg.AsProgress());
             }
             finally
             {
@@ -112,12 +112,12 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private void RunOnBackgroundThread(Action<IProgressReporter> action)
+        private void RunOnBackgroundThread(Action<IProgress> action)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
                 InitLongWaitDlg(longWaitDlg);
-                longWaitDlg.PerformWork(ParentControl, DelayMillis, ()=>action(longWaitDlg.AsProgressReporter()));
+                longWaitDlg.PerformWork(ParentControl, DelayMillis, ()=>action(longWaitDlg.AsProgress()));
             }
         }
 

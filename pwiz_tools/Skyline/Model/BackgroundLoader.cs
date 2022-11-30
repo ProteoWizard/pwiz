@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -296,19 +297,18 @@ namespace pwiz.Skyline.Model
         public class LoadMonitor : ILoadMonitor
         {
             private readonly BackgroundLoader _manager;
-            private readonly IDocumentContainer _container;
-            private readonly object _tag;
 
-            public LoadMonitor(BackgroundLoader manager, IDocumentContainer container, object tag)
+            public LoadMonitor(BackgroundLoader manager, CancellationToken cancellationToken) : this(cancellationToken)
             {
                 _manager = manager;
-                _container = container;
-                _tag = tag;
             }
 
-            protected LoadMonitor()
+            protected LoadMonitor(CancellationToken cancellationToken)
             {
+                CancellationToken = cancellationToken;
             }
+
+            public CancellationToken CancellationToken { get; }
 
             public virtual IStreamManager StreamManager
             {
@@ -323,18 +323,8 @@ namespace pwiz.Skyline.Model
             {
                 get
                 {
-                    // Check for global cancelation of the progress monitor
-                    var monitor = _container as IProgressMonitor;
-                    if (monitor != null && monitor.IsCanceled)
-                        return true;
-                    // Check for cancellation of just this item
-                    return IsCanceledItem(_tag);
+                    return CancellationToken.IsCancellationRequested;
                 }
-            }
-
-            protected bool IsCanceledItem(object tag)
-            {
-                return _manager.IsCanceled(_container, tag);
             }
 
             /// <summary>
@@ -372,6 +362,11 @@ namespace pwiz.Skyline.Model
         public DefaultFileLoadMonitor(IProgressMonitor monitor)
         {
             _monitor = monitor;
+        }
+
+        public DefaultFileLoadMonitor(IProgress progress)
+        {
+            _monitor = new ProgressProgressMonitor(progress);
         }
 
         public bool IsCanceled

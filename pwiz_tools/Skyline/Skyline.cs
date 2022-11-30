@@ -34,7 +34,7 @@ using log4net;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Documentation;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Alerts;
@@ -106,7 +106,7 @@ namespace pwiz.Skyline
         private SrmDocument _document;
         private SrmDocument _documentUI;
         private int _savedVersion;
-        private CancellationTokenSource _cancellationTokenSource;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private readonly UndoManager _undoManager;
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ProteinMetadataManager _proteinMetadataManager;
@@ -3830,12 +3830,12 @@ namespace pwiz.Skyline
             }
         }
 
-        public IProgressReporter GetProgressReporter(IProgressStatus status)
+        public IProgress GetProgressReporter(IProgressStatus status)
         {
             return new ProgressMonitorReporter(this, _cancellationTokenSource.Token, status);
         }
 
-        public IProgressReporter NewProgressReporter()
+        public IProgress NewProgressReporter()
         {
             return GetProgressReporter(new ProgressStatus());}
 
@@ -4553,7 +4553,7 @@ namespace pwiz.Skyline
                         {
                             return;
                         }
-                        broker.ProgressValue = (processedCount++) * 100 / pathsToProcess.Count;
+                        broker.Value = (processedCount++) * 100 / pathsToProcess.Count;
                         var originalNode = newDocument.FindNode(identityPath);
                         if (originalNode != null)
                         {

@@ -76,13 +76,10 @@ namespace pwiz.Skyline.Model.Results
 
     internal class LoadCanceledException : IOException
     {
-        public LoadCanceledException(IProgressStatus status)
+        public LoadCanceledException()
             : base(Resources.LoadCanceledException_LoadCanceledException_Data_import_canceled)
         {
-            Status = status;
         }
-
-        public IProgressStatus Status { get; private set; }
     }
 
     internal class ChromCacheBuildException : DataFileException

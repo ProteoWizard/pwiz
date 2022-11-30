@@ -23,7 +23,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestUtil
             var viewContext = new DocumentGridViewContext(skylineDataSchema);
             using (var writer = new StreamWriter(fileName))
             {
-                viewContext.Export(SilentProgressReporter.INSTANCE, viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec.ViewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
+                viewContext.Export(SilentProgress.INSTANCE, viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec.ViewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
             }
         }
     }

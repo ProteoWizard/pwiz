@@ -387,20 +387,18 @@ namespace pwiz.Skyline.SettingsUI
                                 Library lib = null;
                                 using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_library})
                                 {
-                                    var status = longWait.PerformWork(TopMostApplicationForm, 800, monitor =>
+                                    longWait.PerformWork(TopMostApplicationForm, 800, ()=>
                                     {
                                         lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
-                                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(longWait.AsProgress()));
                                         if (lib != null)
                                         {
                                             foreach (var stream in lib.ReadStreams)
                                                 stream.CloseStream();
                                         }
                                     });
-                                    if (status.IsCanceled)
+                                    if (longWait.IsCanceled)
                                         lib = null;
-                                    if (status.IsError)
-                                        throw status.ErrorException;
                                 }
                                 // Add iRTs to library
                                 if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, NotificationContainerForm, true, out _))
@@ -481,20 +479,18 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    var status = longWait.PerformWork(GetParent(), 800, monitor =>
+                    longWait.PerformWork(GetParent(), 800, ()=>
                     {
                         processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
-                            standard.Peptides.ToArray(), cirtPeptides, regressionType, monitor,
+                            standard.Peptides.ToArray(), cirtPeptides, regressionType, longWait.AsProgress(),
                             out var newStandardPeptides);
                         if (newStandardPeptides != null)
                         {
                             standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
                         }
                     });
-                    if (status.IsCanceled)
+                    if (longWait.IsCanceled)
                         return false;
-                    if (status.IsError)
-                        throw status.ErrorException;
                 }
                 catch (Exception x)
                 {
@@ -531,12 +527,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    var status = longWait.PerformWork(GetParent(), 800, monitor =>
+                    longWait.PerformWork(GetParent(), 800, ()=>
                     {
-                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(), recalibrate, regressionType, monitor);
+                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(), recalibrate, regressionType, longWait.AsProgress());
                     });
-                    if (status.IsError)
-                        throw status.ErrorException;
                 }
                 catch (Exception x)
                 {

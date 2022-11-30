@@ -20,7 +20,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -142,6 +142,17 @@ namespace pwiz.Skyline.Controls
             if (progressWaitBroker.IsCanceled)
                 return progressWaitBroker.Status.Cancel();
             return progressWaitBroker.Status;
+        }
+        public IProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgress> performWork)
+        {
+            PerformWork(parent, delayMillis, ()=>performWork(AsProgress()));
+            IProgressStatus result = new ProgressStatus();
+            if (IsCanceled)
+            {
+                result = result.Cancel();
+            }
+
+            return result;
         }
 
         public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
@@ -388,27 +399,33 @@ namespace pwiz.Skyline.Controls
         }
 
 
-        public IProgressReporter AsProgressReporter()
+        public IProgress AsProgress()
         {
-            return new LongWaitDlgProgressReporter(this);
+            return new LongWaitDlgProgress(this);
         }
 
-        private class LongWaitDlgProgressReporter : AbstractProgressReporter
+        private class LongWaitDlgProgress : AbstractProgress
         {
             private LongWaitDlg _dlg;
-            public LongWaitDlgProgressReporter(LongWaitDlg dlg) : base(dlg.CancellationToken)
+            public LongWaitDlgProgress(LongWaitDlg dlg) : base(dlg.CancellationToken)
             {
                 _dlg = dlg;
             }
 
-            public override void SetProgressValue(double value)
+            public override double Value 
             {
-                _dlg.ProgressValue = (int) Math.Round(value);
+                set
+                {
+                    _dlg.ProgressValue = ConstrainProgress(value);
+                }
             }
 
-            public override void SetProgressMessage(string message)
+            public override string Message
             {
-                _dlg.Message = message;
+                set
+                {
+                    _dlg.Message = value;
+                }
             }
         }
     }

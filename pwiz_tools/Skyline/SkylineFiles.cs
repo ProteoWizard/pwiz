@@ -31,7 +31,7 @@ using Ionic.Zip;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.ProgressReporting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -1054,7 +1054,7 @@ namespace pwiz.Skyline
                     })
                     {
                         longWaitDlg.PerformWork(this, 800, () =>
-                            OptimizeCache(fileName, longWaitDlg.AsProgressReporter()));
+                            OptimizeCache(fileName, longWaitDlg.AsProgress()));
                     }
                 }
             }
@@ -1070,7 +1070,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private void OptimizeCache(string fileName, IProgressReporter progress)
+        private void OptimizeCache(string fileName, IProgress progress)
         {
             // Optimize the results cache to get rid of any unnecessary
             // chromatogram data.
@@ -1361,8 +1361,8 @@ namespace pwiz.Skyline
                         Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
                     })
                     {
-                        longWaitDlg.PerformWork(this, 800, monitor =>
-                            new SpectralLibraryExporter(Document, DocumentFilePath).ExportSpectralLibrary(dlg.FileName, monitor));
+                        longWaitDlg.PerformWork(this, 800, ()=>
+                            new SpectralLibraryExporter(Document, DocumentFilePath).ExportSpectralLibrary(dlg.FileName, longWaitDlg.AsProgress()));
                     }
                 }
                 catch (Exception x)
@@ -2322,7 +2322,7 @@ namespace pwiz.Skyline
             using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Adding_iRT_values_ })
             {
                 var newDoc = doc;
-                longWaitDlg.PerformWork(this, 100, progressMonitor => newDoc = newDoc.AddIrtPeptides(dbIrtPeptides, overwriteExisting, progressMonitor));
+                longWaitDlg.PerformWork(this, 100, () => newDoc = newDoc.AddIrtPeptides(dbIrtPeptides, overwriteExisting, longWaitDlg.AsProgress()));
                 doc = newDoc;
             }
             if (doc == null)
@@ -3398,10 +3398,10 @@ namespace pwiz.Skyline
                     SrmDocument newDocument = null;
                     using (var longWaitDlg = new LongWaitDlg(this))
                     {
-                        longWaitDlg.PerformWork(this, 1000, broker =>
+                        longWaitDlg.PerformWork(this, 1000, ()=>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            newDocument = documentAnnotations.ReadAnnotationsFromFile(longWaitDlg.CancellationToken, filename);
                         });
                     }
                     if (newDocument != null)
