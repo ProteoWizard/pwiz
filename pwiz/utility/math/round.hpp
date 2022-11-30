@@ -27,6 +27,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <boost/math/special_functions/modf.hpp>
 
 
 #ifdef _MSC_VER // msvc hack
@@ -56,7 +57,7 @@ floating_type roundto(floating_type number, int num_digits)
         doComplete5 += 5.0;
 
     doComplete5 /= 10.0;
-    modf(doComplete5, &doComplete5i);
+    boost::math::modf(doComplete5, &doComplete5i);
 
     return doComplete5i / pow(10.0, (floating_type)num_digits);
 }
