@@ -26,6 +26,7 @@
 
 
 #include <cmath>
+#include <stdexcept>
 
 
 #ifdef _MSC_VER // msvc hack
