@@ -51,7 +51,9 @@ floating_type roundto(floating_type number, int num_digits)
 {
     floating_type doComplete5i, doComplete5(number * pow(10.0, (floating_type)(num_digits + 1)));
 
-    if (number < 0.0)
+    if (std::isinf(number) || std::isnan(number))
+        return number;
+    else if (number < 0.0)
         doComplete5 -= 5.0;
     else
         doComplete5 += 5.0;
@@ -77,7 +79,7 @@ floating_type sigfig(floating_type X, int SigFigs)
         throw std::out_of_range("SigFigs must be greater than 0");
 
     // log10f(0) returns NaN
-    if (X == 0.0)
+    if (X == 0.0 || std::isinf(X) || std::isnan(X))
         return X;
 
     int Sign;
