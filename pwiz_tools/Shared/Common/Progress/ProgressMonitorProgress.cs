@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Progress
@@ -25,6 +26,17 @@ namespace pwiz.Common.Progress
             }
 
             return new ProgressMonitorProgress(progressMonitor, cancellationToken, progressStatus);
+        }
+
+        [CanBeNull]
+        public static Disposable ForNewTask(IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        {
+            if (progressMonitor == null)
+            {
+                return null;
+            }
+
+            return new Disposable(progressMonitor, cancellationToken);
         }
 
         public IProgressMonitor ProgressMonitor { get; }

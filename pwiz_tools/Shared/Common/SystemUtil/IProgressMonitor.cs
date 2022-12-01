@@ -104,10 +104,9 @@ namespace pwiz.Common.SystemUtil
             ref IProgressStatus status, Func<IProgress, T> function)
         {
             var progressMonitorProgress = new ProgressMonitorProgress(progressMonitor, cancellationToken, status);
-            T returnValue = default(T);
             try
             {
-                returnValue = function(progressMonitorProgress);
+                var returnValue = function(progressMonitorProgress);
                 status = progressMonitorProgress.ProgressStatus;
                 if (progressMonitor.IsCanceled && !status.IsFinal)
                 {
@@ -124,9 +123,9 @@ namespace pwiz.Common.SystemUtil
         public static T CallWithNewProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
             Func<IProgress, T> function)
         {
-            using (var progress = new ProgressMonitorProgress.Disposable(progressMonitor, cancellationToken))
+            using (var progress = ProgressMonitorProgress.ForNewTask(progressMonitor, cancellationToken))
             {
-                return function(progress);
+                return function((IProgress) progress ?? SilentProgress.INSTANCE);
             }
         }
     }
