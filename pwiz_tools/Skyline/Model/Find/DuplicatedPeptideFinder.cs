@@ -17,7 +17,7 @@
  */
 
 using System.Collections.Generic;
-using System.Threading;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
@@ -66,15 +66,21 @@ namespace pwiz.Skyline.Model.Find
                 : null;
         }
 
-        public override IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
+        public override IEnumerable<Bookmark> FindAll(SrmDocument document, IProgress progress)
         {
             InitializeIndex(document);
+            var peptideCount = document.PeptideCount;
+            int iPeptide = 0;
             foreach (var group in document.PeptideGroups)
-            foreach (var peptide in group.Peptides)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                if (_duplicatePeptideKeys.Contains(peptide.SequenceKey))
-                    yield return new Bookmark(new IdentityPath(group.Id, peptide.Id));
+                foreach (var peptide in group.Peptides)
+                {
+                    progress.CancellationToken.ThrowIfCancellationRequested();
+                    iPeptide++;
+                    progress.Value = iPeptide * 100.0 / peptideCount;
+                    if (_duplicatePeptideKeys.Contains(peptide.SequenceKey))
+                        yield return new Bookmark(new IdentityPath(group.Id, peptide.Id));
+                }
             }
         }
     }

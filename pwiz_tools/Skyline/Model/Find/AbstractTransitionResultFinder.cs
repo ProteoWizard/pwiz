@@ -18,7 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Find
@@ -52,9 +52,9 @@ namespace pwiz.Skyline.Model.Find
         protected abstract FindMatch MatchTransition(TransitionChromInfo transitionChromInfo);
         protected abstract FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo);
 
-        public FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
+        public FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgress progress)
         {
-            var allBookmarks = new HashSet<Bookmark>(FindAll(bookmarkEnumerator.Document, cancellationToken));
+            var allBookmarks = new HashSet<Bookmark>(FindAll(bookmarkEnumerator.Document, progress));
             if (allBookmarks.Count == 0)
             {
                 return null;
@@ -74,13 +74,13 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
+        public IEnumerable<Bookmark> FindAll(SrmDocument document, IProgress progress)
         {
-            return FindAll(IdentityPath.ROOT, document, cancellationToken);
+            return FindAll(IdentityPath.ROOT, document, progress);
         }
-        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, CancellationToken cancellationToken)
+        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, IProgress progress)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            progress.CancellationToken.ThrowIfCancellationRequested();
             var results = new List<Bookmark>();
             var transitionGroupDocNode = docNode as TransitionGroupDocNode;
             if (transitionGroupDocNode == null)
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 foreach (var child in docNodeParent.Children)
                 {
-                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, cancellationToken));
+                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, progress));
                 }
                 return results;
             }
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model.Find
             }
             for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                progress.CancellationToken.ThrowIfCancellationRequested();
                 var replicate = transitionGroupDocNode.Results[iReplicate];
                 if (replicate.IsEmpty)
                 {

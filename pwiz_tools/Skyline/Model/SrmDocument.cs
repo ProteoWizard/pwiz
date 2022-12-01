@@ -2010,13 +2010,13 @@ namespace pwiz.Skyline.Model
             return docResult.ChangeSettings(settings);
         }
 
-        public IdentityPath SearchDocumentForString(IdentityPath identityPath, string text, DisplaySettings settings, bool reverse, bool caseSensitive, CancellationToken cancellationToken)
+        public IdentityPath SearchDocumentForString(IdentityPath identityPath, string text, DisplaySettings settings, bool reverse, bool caseSensitive, IProgress progress)
         {
             var findOptions = new FindOptions()
                 .ChangeText(text)
                 .ChangeForward(!reverse)
                 .ChangeCaseSensitive(caseSensitive);
-            var findResult = SearchDocument(new Bookmark(identityPath), findOptions, settings, cancellationToken);
+            var findResult = SearchDocument(new Bookmark(identityPath), findOptions, settings, progress);
             if (findResult == null)
             {
                 return null;
@@ -2024,16 +2024,16 @@ namespace pwiz.Skyline.Model
             return findResult.Bookmark.IdentityPath;
         }
 
-        public FindResult SearchDocument(Bookmark startPath, FindOptions findOptions, DisplaySettings settings, CancellationToken cancellationToken)
+        public FindResult SearchDocument(Bookmark startPath, FindOptions findOptions, DisplaySettings settings, IProgress progress)
         {
             var bookmarkEnumerator = new BookmarkEnumerator(this, startPath) {Forward = findOptions.Forward};
-            return FindNext(bookmarkEnumerator, findOptions, settings, cancellationToken);
+            return FindNext(bookmarkEnumerator, findOptions, settings, progress);
         }
 
-        private static FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, FindOptions findOptions, DisplaySettings settings, CancellationToken cancellationToken)
+        private static FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, FindOptions findOptions, DisplaySettings settings, IProgress progress)
         {
             var findPredicate = new FindPredicate(findOptions, settings);
-            return findPredicate.FindNext(bookmarkEnumerator, cancellationToken);
+            return findPredicate.FindNext(bookmarkEnumerator, progress);
         }
 
         public SrmDocument ChangeStandardType(StandardType standardType, IEnumerable<IdentityPath> selPaths)

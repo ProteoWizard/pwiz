@@ -1396,12 +1396,15 @@ namespace pwiz.Skyline
 
             FindResult findResult = null;
             var document = DocumentUI;
-            using (var longWaitDlg = new LongWaitDlg())
+            using (var longWaitDlg = new LongWaitDlg()
+                   {
+                       Text = Resources.SkylineWindow_FindNext_Find_Next
+                   })
             {
-                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                longWaitDlg.PerformWork(this, 1000, () =>
                 {
                     findResult = document.SearchDocument(bookmark,
-                        findOptions, displaySettings, longWaitBroker.CancellationToken);
+                        findOptions, displaySettings, longWaitDlg.AsProgress());
                 });
                 if (longWaitDlg.IsCanceled)
                 {
@@ -1417,9 +1420,9 @@ namespace pwiz.Skyline
                 DisplayFindResult(null, findResult);
         }
 
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
+        private IEnumerable<FindResult> FindAll(IProgress progress, FindPredicate findPredicate)
         {
-            return findPredicate.FindAll(longWaitBroker, Document);
+            return findPredicate.FindAll(progress, Document);
         }
 
         public void FindAll(Control parent, FindOptions findOptions = null)
@@ -1428,11 +1431,14 @@ namespace pwiz.Skyline
                 findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
             List<FindResult> results = new List<FindResult>();
-            using (var longWaitDlg = new LongWaitDlg(this))
+            using (var longWaitDlg = new LongWaitDlg(this)
             {
-                longWaitDlg.PerformWork(parent, 2000, lwb =>
+                Text = Resources.SkylineWindow_FindAll_Find_All
+            })
+            {
+                longWaitDlg.PerformWork(parent, 2000, () =>
                 {
-                    results.AddRange(FindAll(lwb, findPredicate));
+                    results.AddRange(FindAll(longWaitDlg.AsProgress(), findPredicate));
                 });
                 if (results.Count == 0)
                 {

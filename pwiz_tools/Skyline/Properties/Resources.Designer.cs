@@ -28486,6 +28486,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find All.
+        /// </summary>
+        public static string SkylineWindow_FindAll_Find_All {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindAll_Find_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Background Proteome.
         /// </summary>
         public static string SkylineWindow_FindBackgroundProteome_Background_Proteome {
@@ -28582,6 +28591,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened {
             get {
                 return ResourceManager.GetString("SkylineWindow_FindIrtDatabase_The_database_file_specified_could_not_be_opened", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find Next.
+        /// </summary>
+        public static string SkylineWindow_FindNext_Find_Next {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindNext_Find_Next", resourceCulture);
             }
         }
         

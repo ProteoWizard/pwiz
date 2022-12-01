@@ -31,7 +31,7 @@ namespace pwiz.Common.Progress
             {
                 if (!double.IsNaN(value))
                 {
-                    Parent.Value = Math.Min(0, Math.Max(100, MinProgress + (MaxProgress - MinProgress) * value / 100));
+                    Parent.Value = Math.Max(0, Math.Min(100, MinProgress + (MaxProgress - MinProgress) * value / 100));
                 }
             }
             

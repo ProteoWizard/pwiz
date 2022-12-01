@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Threading;
+using pwiz.Common.Progress;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -26,6 +27,7 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public abstract class AbstractFinder : IFinder
     {
+        public const long PROGRESS_UPDATE_FREQUENCY = 100;
         public abstract string Name
         { 
             get;
@@ -36,12 +38,17 @@ namespace pwiz.Skyline.Model.Find
         }
 
         public abstract FindMatch Match(BookmarkEnumerator bookmarkEnumerator);
-        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
+        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgress progress)
         {
+            long index = 0;
             do
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                progress.CancellationToken.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
+                if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
+                {
+                    progress.Value = bookmarkEnumerator.GetProgressValue();
+                }
                 var findMatch = Match(bookmarkEnumerator);
                 if (findMatch != null)
                 {
@@ -51,13 +58,18 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
+        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, IProgress progress)
         {
             var bookmarkEnumerator = new BookmarkEnumerator(document);
+            long index = 0;
             while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                progress.CancellationToken.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
+                if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
+                {
+                    progress.Value = bookmarkEnumerator.GetProgressValue();
+                }
                 if (Match(bookmarkEnumerator) != null)
                 {
                     yield return bookmarkEnumerator.Current;

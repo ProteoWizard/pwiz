@@ -11865,4 +11865,10 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
   </data>
+  <data name="SkylineWindow_FindAll_Find_All" xml:space="preserve">
+	  <value>Find All</value>
+  </data>
+  <data name="SkylineWindow_FindNext_Find_Next" xml:space="preserve">
+	  <value>Find Next</value>
+  </data>
 </root>

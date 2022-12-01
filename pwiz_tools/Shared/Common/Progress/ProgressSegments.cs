@@ -14,6 +14,7 @@ namespace pwiz.Common.Progress
 
         public int CurrentSegment { get; set; }
         public int SegmentCount { get; set; }
+        public string MessageTemplate { get; set; }
 
         public IProgress Progress
         {
@@ -25,7 +26,7 @@ namespace pwiz.Common.Progress
                 }
 
                 int currentSegment = Math.Max(0, Math.Min(SegmentCount - 1, CurrentSegment));
-                return new SubtaskProgress(_parent, null, currentSegment * 100.0 / SegmentCount,
+                return new SubtaskProgress(_parent, MessageTemplate, currentSegment * 100.0 / SegmentCount,
                     (currentSegment + 1) * 100.0 / SegmentCount);
             }
         }

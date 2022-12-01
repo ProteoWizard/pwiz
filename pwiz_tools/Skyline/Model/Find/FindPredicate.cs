@@ -19,11 +19,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -129,23 +128,30 @@ namespace pwiz.Skyline.Model.Find
                 ?? MatchAnnotations(docNode.Annotations);
         }
 
-        public FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
+        public FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, IProgress progress)
         {
+            var progressSegments = new ProgressSegments(progress, FindOptions.CustomFinders.Count);
             var customMatches = new Dictionary<Bookmark, FindMatch>();
             foreach (var finder in FindOptions.CustomFinders)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                progress.CancellationToken.ThrowIfCancellationRequested();
                 var customEnumerator = new BookmarkEnumerator(bookmarkEnumerator);
-                var nextMatch = finder.NextMatch(customEnumerator, cancellationToken);
+                progress = progressSegments.NextSegment(string.Format(Resources.FindPredicate_FindAll_Searching_for__0__,
+                    finder.DisplayName));
+                var nextMatch = finder.NextMatch(customEnumerator, progress);
                 if (nextMatch == null || customMatches.ContainsKey(customEnumerator.Current))
                 {
                     continue;
                 }
                 customMatches.Add(customEnumerator.Current, nextMatch);
             }
+
+            // TODO(nicksh): this next part looks really inefficient. It looks like it's just trying 
+            // to figure out which find result comes next but it's iterating over all of the bookmark positions
+            progress = progressSegments.NextSegment("Collating results");
             do
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                progress.CancellationToken.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 FindMatch findMatch;
                 if (customMatches.TryGetValue(bookmarkEnumerator.Current, out findMatch))
@@ -161,18 +167,18 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, SrmDocument document)
+        public IEnumerable<FindResult> FindAll(IProgress progress, SrmDocument document)
         {
-            longWaitBroker.Message = Resources.FindPredicate_FindAll_Found_0_matches;
+            progress.Message = Resources.FindPredicate_FindAll_Found_0_matches;
             var customMatches = new HashSet<Bookmark>[FindOptions.CustomFinders.Count];
             for (int iFinder = 0; iFinder < FindOptions.CustomFinders.Count; iFinder++)
             {
                 var customFinder = FindOptions.CustomFinders[iFinder];
                 var bookmarkSet = new HashSet<Bookmark>();
-                longWaitBroker.Message = string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, customFinder.DisplayName);
-                foreach (var bookmark in customFinder.FindAll(document, longWaitBroker.CancellationToken))
+                progress.Message = string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, customFinder.DisplayName);
+                foreach (var bookmark in customFinder.FindAll(document, progress))
                 {
-                    if (longWaitBroker.IsCanceled)
+                    if (progress.IsCanceled)
                     {
                         yield break;
                     }
@@ -186,7 +192,7 @@ namespace pwiz.Skyline.Model.Find
             do
             {
                 bookmarkEnumerator.MoveNext();
-                if (longWaitBroker.IsCanceled)
+                if (progress.IsCanceled)
                 {
                     yield break;
                 }
@@ -202,7 +208,7 @@ namespace pwiz.Skyline.Model.Find
                 if (findMatch != null)
                 {
                     matchCount++;
-                    longWaitBroker.Message = matchCount == 1
+                    progress.Message = matchCount == 1
                                                  ? Resources.FindPredicate_FindAll_Found_1_match
                                                  : string.Format(Resources.FindPredicate_FindAll_Found__0__matches, matchCount);
                     yield return new FindResult(this, bookmarkEnumerator, findMatch);
