@@ -336,6 +336,12 @@
   <data name="fragmentsMenuItem.Text" xml:space="preserve">
     <value>&amp;Fragments</value>
   </data>
+  <data name="specialIonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="specialIonsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Special Ions</value>
+  </data>
   <data name="precursorIonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
   </data>
@@ -1069,6 +1075,12 @@
     <value>fragmentsMenuItem</value>
   </data>
   <data name="&gt;&gt;fragmentsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;specialIonsMenuItem.Name" xml:space="preserve">
+    <value>specialIonsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;specialIonsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;precursorIonMenuItem.Name" xml:space="preserve">

@@ -96,6 +96,12 @@ namespace pwiz.Skyline.Controls.Graphs
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations;
             _showIonSeriesAnnotations = Settings.Default.ShowFullScanAnnotations;
 
+            magnifyBtn.CheckedChanged += magnifyBtn_CheckedChanged;
+            spectrumBtn.CheckedChanged += spectrumBtn_CheckedChanged;
+            filterBtn.CheckedChanged += filterBtn_CheckedChanged;
+            toolStripButtonShowAnnotations.CheckedChanged += toolStripButtonShowAnnotations_CheckedChanged;
+
+
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
             lblScanId.Visible = false; // you might want to show the scan index for debugging
@@ -1038,6 +1044,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public bool IsAnnotated => _showIonSeriesAnnotations;
+        public LibraryRankedSpectrumInfo SpectrumInfo => _rmis;
 
         private void ZoomYAxis()
         {

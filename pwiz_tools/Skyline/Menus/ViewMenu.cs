@@ -300,6 +300,7 @@ namespace pwiz.Skyline.Menus
             fragmentsMenuItem.Visible = SmallMoleculesEnabled;
             fragmentsMenuItem.Checked = GraphSpectrumSettings.ShowFragmentIons;
             precursorIonMenuItem.Checked = GraphSpectrumSettings.ShowPrecursorIon;
+            specialIonsMenuItem.Checked = GraphSpectrumSettings.ShowSpecialIons;
         }
 
         private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
@@ -403,49 +404,15 @@ namespace pwiz.Skyline.Menus
         {
             get { return SkylineWindow.GraphSpectrumSettings; }
         }
-        private void aMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowAIons(!GraphSpectrumSettings.ShowAIons);
-        }
-
-        private void bMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowBIons(!GraphSpectrumSettings.ShowBIons);
-        }
-
-        private void cMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowCIons(!GraphSpectrumSettings.ShowCIons);
-        }
-
-        private void xMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowXIons(!GraphSpectrumSettings.ShowXIons);
-        }
-
-        private void yMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowYIons(!GraphSpectrumSettings.ShowYIons);
-        }
-
-        private void zMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowZIons(!GraphSpectrumSettings.ShowZIons);
-        }
-
-        private void zhMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowZHIons(!GraphSpectrumSettings.ShowZHIons);
-        }
-
-        private void zhhMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowZHHIons(!GraphSpectrumSettings.ShowZHHIons);
-        }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowFragmentIons(!GraphSpectrumSettings.ShowFragmentIons);
+        }
+
+        private void specialIonsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowSpecialIons(!GraphSpectrumSettings.ShowSpecialIons);
         }
 
         private void precursorIonMenuItem_Click(object sender, EventArgs e)

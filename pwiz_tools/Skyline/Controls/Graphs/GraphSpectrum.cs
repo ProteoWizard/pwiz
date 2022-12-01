@@ -68,6 +68,7 @@ namespace pwiz.Skyline.Controls.Graphs
         event EventHandler<ZoomEventArgs> ZoomEvent;
         SpectrumControlType ControlType { get; }
         bool IsAnnotated { get; }
+        LibraryRankedSpectrumInfo SpectrumInfo { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -848,6 +849,10 @@ namespace pwiz.Skyline.Controls.Graphs
             showAdducts.AddRange(adducts.Where(a =>
                 charges.Contains(Math.Abs(a.AdductCharge)) && !showAdducts.Contains(a)));
 
+            double? score = null;
+            if(spectrum.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                if (libInfo.SpectrumHeaderInfo is BiblioSpecSpectrumHeaderInfo biblioSpecInfo)
+                    score = biblioSpecInfo.Score;
             var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 precursor,
@@ -858,7 +863,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 types,
                 rankAdducts,
                 rankTypes,
-                null);
+                score);
 
             return new SpectrumGraphItem(peptide, precursor, selection.NodeTran, spectrumInfoR, spectrum.Name)
             {
@@ -1490,6 +1495,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
         }
+
+        public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem.SpectrumInfo;
 
         public Scale IntensityScale
         {

@@ -59,6 +59,7 @@
             this.libraryMatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fragmentsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.specialIonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chargesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ranksMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -158,6 +159,7 @@
             this.libraryMatchToolStripMenuItem,
             this.ionTypesMenuItem,
             this.fragmentsMenuItem,
+            this.specialIonsMenuItem,
             this.precursorIonMenuItem,
             this.chargesMenuItem,
             this.ranksMenuItem,
@@ -377,6 +379,13 @@
             this.fragmentsMenuItem.Name = "fragmentsMenuItem";
             resources.ApplyResources(this.fragmentsMenuItem, "fragmentsMenuItem");
             this.fragmentsMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
+            // 
+            // specialIonsMenuItem
+            // 
+            this.specialIonsMenuItem.CheckOnClick = true;
+            this.specialIonsMenuItem.Name = "specialIonsMenuItem";
+            resources.ApplyResources(this.specialIonsMenuItem, "specialIonsMenuItem");
+            this.specialIonsMenuItem.Click += new System.EventHandler(this.specialIonsMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
@@ -923,6 +932,7 @@
         private System.Windows.Forms.ToolStripMenuItem libraryMatchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ionTypesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fragmentsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem specialIonsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorIonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chargesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ranksMenuItem;

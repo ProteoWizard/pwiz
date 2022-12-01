@@ -1156,8 +1156,10 @@ namespace pwiz.Skyline
 
                 ranksContextMenuItem.Checked = set.ShowRanks;
                 menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-                if (control.ControlType == SpectrumControlType.LibraryMatch)
+                if (control.ControlType == SpectrumControlType.LibraryMatch && 
+                    control.SpectrumInfo != null && control.SpectrumInfo.Score.HasValue)
                 {
+                    
                     scoreContextMenuItem.Checked = set.ShowLibraryScores;
                     menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
                 }
