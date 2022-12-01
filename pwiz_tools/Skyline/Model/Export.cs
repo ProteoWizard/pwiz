@@ -385,6 +385,7 @@ namespace pwiz.Skyline.Model
 
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
+        public virtual double AccumulationTime { get; set; }
         public virtual bool UseSlens { get; set; }
         public virtual bool WriteCompensationVoltages { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
@@ -593,7 +594,17 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new SciexOsMethodExporter(document, instrumentType));
             if (MethodType == ExportMethodType.Standard)
-                exporter.DwellTime = DwellTime;
+            {
+                switch (instrumentType)
+                {
+                    case ExportInstrumentType.ABI_7500:
+                        exporter.DwellTime = DwellTime;
+                        break;
+                    case ExportInstrumentType.ABI_7600:
+                        exporter.AccumulationTime = AccumulationTime;
+                        break;
+                }
+            }
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
             return exporter;
         }
@@ -2124,7 +2135,8 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public double DwellTime { get; set; }
+        public double? DwellTime { get; set; }
+        public double? AccumulationTime { get; set; }
         protected PeptidePrediction.WindowRT RTWindow { get; private set; }
 
         private int OptimizeStepIndex { get; set; }
@@ -2411,7 +2423,9 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
             {
                 predictedRT = new PeptidePrediction.WindowRT(0, false);
-                dwellOrRt = Math.Round(DwellTime, 2).ToString(CultureInfo);
+                dwellOrRt = AccumulationTime.HasValue
+                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
                 return;
             }
 
