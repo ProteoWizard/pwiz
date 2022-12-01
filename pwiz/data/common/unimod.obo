@@ -1,5 +1,5 @@
 format-version: 1.4
-date: 18:04:2022 11:09
+date: 20:10:2022 14:06
 
 saved-by: psi-pi_team
 default-namespace: UNIMOD
@@ -44638,8 +44638,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:2022
-name: Kdo
-def: "Glycosylation with KDO." [PMID:https://pubmed.ncbi.nlm.nih.gov/32886756/, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2022]
+name: Ser/Thr-KDO
+def: "Glycosylation of Serine/Threonine residues with KDO." [PMID:https://books.google.co.in/books?id=IOuPDwAAQBAJ&pg=PA333&lpg=PA333&dq=kdo+220+mass&source=bl&ots=t--BcUkzNH&sig=ACfU3U2lNj05UnTthH1BD6fS0jC6rxYpFw&hl=en&sa=X&ved=2ahUKEwjLmPfoic7nAhWA7XMBHRsiAk4Q6AEwCnoECAoQAQ#v=onepage&q=kdo%20220%20mass&f=false, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2022]
 synonym: "3-deoxy-D-manno-oct-2-ulosonic acid 2-Keto-3-Deoxy-D-Mannooctanoic Acid" RELATED []
 xref: record_id "2022"
 xref: delta_mono_mass "220.058303"
@@ -44648,7 +44648,7 @@ xref: delta_composition "H(12) C(8) O(7)"
 xref: username_of_poster "ramya"
 xref: group_of_poster ""
 xref: date_time_posted "2020-02-13 12:07:17"
-xref: date_time_modified "2020-09-09 12:47:42"
+xref: date_time_modified "2022-10-20 12:17:04"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -45172,57 +45172,6 @@ is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
-id: UNIMOD:2056
-name: DMED
-def: "Light DMED." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2056]
-xref: record_id "2056"
-xref: delta_mono_mass "70.089484"
-xref: delta_avge_mass "70.1362"
-xref: delta_composition "H(10) C(4) N(2) O(-1)"
-xref: username_of_poster "spider279"
-xref: group_of_poster ""
-xref: date_time_posted "2021-12-12 14:39:33"
-xref: date_time_modified "2022-04-18 11:00:48"
-xref: approved "0"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "E"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Chemical derivative"
-xref: spec_1_neutral_loss_46_mono_mass "45.057849"
-xref: spec_1_neutral_loss_46_avge_mass "45.0837"
-xref: spec_1_neutral_loss_46_flag "false"
-xref: spec_1_neutral_loss_46_composition "H(7) C(2) N"
-xref: spec_1_neutral_loss_0_mono_mass "0"
-xref: spec_1_neutral_loss_0_avge_mass "0"
-xref: spec_1_neutral_loss_0_flag "false"
-xref: spec_1_neutral_loss_0_composition "0"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "D"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Chemical derivative"
-xref: spec_1_neutral_loss_46_mono_mass "45.057849"
-xref: spec_1_neutral_loss_46_avge_mass "45.0837"
-xref: spec_1_neutral_loss_46_flag "false"
-xref: spec_1_neutral_loss_46_composition "H(7) C(2) N"
-xref: spec_1_neutral_loss_0_mono_mass "0"
-xref: spec_1_neutral_loss_0_avge_mass "0"
-xref: spec_1_neutral_loss_0_flag "false"
-xref: spec_1_neutral_loss_0_composition "0"
-xref: spec_2_group "2"
-xref: spec_2_hidden "1"
-xref: spec_2_site "C-term"
-xref: spec_2_position "Any C-term"
-xref: spec_2_classification "Chemical derivative"
-xref: spec_2_neutral_loss_46_mono_mass "45.057849"
-xref: spec_2_neutral_loss_46_avge_mass "45.0837"
-xref: spec_2_neutral_loss_46_flag "false"
-xref: spec_2_neutral_loss_46_composition "H(7) C(2) N"
-is_a: UNIMOD:0 ! unimod root node
-
-
-[Term]
 id: UNIMOD:2057
 name: 6C-CysPAT
 def: "Iodoacetamido-LC-Phosphonic Acid derivative." [PMID:32109415, URL:https\://www.thermofisher.com/order/catalog/product/A52285, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2057]
@@ -45410,6 +45359,212 @@ xref: spec_1_hidden "1"
 xref: spec_1_site "C"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2067
+name: Mono_Nγ-propargyl-L-Gln_desthiobiotin
+def: "Monomodification of Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2067]
+comment: - desthiobiotin-azide to enrich L-Gln-propargyl modified peptides.
+synonym: "Enrichment of modified peptides using desthiobiotin-tag on streptavidin beads" RELATED []
+xref: record_id "2067"
+xref: delta_mono_mass "580.333296"
+xref: delta_avge_mass "580.677"
+xref: delta_composition "H(44) C(26) N(8) O(7)"
+xref: username_of_poster "KielkowskiLab"
+xref: group_of_poster ""
+xref: date_time_posted "2022-08-05 13:31:40"
+xref: date_time_modified "2022-10-20 14:02:54"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_neutral_loss_197_mono_mass "196.121178"
+xref: spec_1_neutral_loss_197_avge_mass "196.2462"
+xref: spec_1_neutral_loss_197_flag "false"
+xref: spec_1_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
+xref: spec_1_neutral_loss_599_mono_mass "598.343861"
+xref: spec_1_neutral_loss_599_avge_mass "598.6922"
+xref: spec_1_neutral_loss_599_flag "false"
+xref: spec_1_neutral_loss_599_composition "H(46) C(26) N(8) O(8)"
+xref: spec_1_neutral_loss_470_mono_mass "469.301268"
+xref: spec_1_neutral_loss_470_avge_mass "469.5783"
+xref: spec_1_neutral_loss_470_flag "false"
+xref: spec_1_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_2_neutral_loss_470_mono_mass "469.301268"
+xref: spec_2_neutral_loss_470_avge_mass "469.5783"
+xref: spec_2_neutral_loss_470_flag "false"
+xref: spec_2_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
+xref: spec_2_neutral_loss_599_mono_mass "598.343861"
+xref: spec_2_neutral_loss_599_avge_mass "598.6922"
+xref: spec_2_neutral_loss_599_flag "false"
+xref: spec_2_neutral_loss_599_composition "H(46) C(26) N(8) O(8)"
+xref: spec_2_neutral_loss_197_mono_mass "196.121178"
+xref: spec_2_neutral_loss_197_avge_mass "196.2462"
+xref: spec_2_neutral_loss_197_flag "false"
+xref: spec_2_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2068
+name: Di_L-Glu_Nγ-propargyl-L-Gln_desthiobiotin
+def: "Dimodification of L-Glu and Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2068]
+comment: - desthiobiotin-azide to enrich L-Gln-propargyl modified peptides.
+xref: record_id "2068"
+xref: delta_mono_mass "709.375889"
+xref: delta_avge_mass "709.7909"
+xref: delta_composition "H(51) C(31) N(9) O(10)"
+xref: username_of_poster "KielkowskiLab"
+xref: group_of_poster ""
+xref: date_time_posted "2022-08-09 13:38:45"
+xref: date_time_modified "2022-10-20 14:03:23"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_neutral_loss_470_mono_mass "469.301268"
+xref: spec_1_neutral_loss_470_avge_mass "469.5783"
+xref: spec_1_neutral_loss_470_flag "false"
+xref: spec_1_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
+xref: spec_1_neutral_loss_197_mono_mass "196.121178"
+xref: spec_1_neutral_loss_197_avge_mass "196.2462"
+xref: spec_1_neutral_loss_197_flag "false"
+xref: spec_1_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
+xref: spec_1_neutral_loss_728_mono_mass "727.386454"
+xref: spec_1_neutral_loss_728_avge_mass "727.8062"
+xref: spec_1_neutral_loss_728_flag "false"
+xref: spec_1_neutral_loss_728_composition "H(53) C(31) N(9) O(11)"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_2_neutral_loss_470_mono_mass "469.301268"
+xref: spec_2_neutral_loss_470_avge_mass "469.5783"
+xref: spec_2_neutral_loss_470_flag "false"
+xref: spec_2_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
+xref: spec_2_neutral_loss_728_mono_mass "727.386454"
+xref: spec_2_neutral_loss_728_avge_mass "727.8062"
+xref: spec_2_neutral_loss_728_flag "false"
+xref: spec_2_neutral_loss_728_composition "H(53) C(31) N(9) O(11)"
+xref: spec_2_neutral_loss_197_mono_mass "196.121178"
+xref: spec_2_neutral_loss_197_avge_mass "196.2462"
+xref: spec_2_neutral_loss_197_flag "false"
+xref: spec_2_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2069
+name: Di_L-Gln_Nγ-propargyl-L-Gln_desthiobiotin
+def: "Dimodification of L-Gln and Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2069]
+comment: - desthiobiotin-azide to enrich L-Gln-propargyl modified peptides.
+xref: record_id "2069"
+xref: delta_mono_mass "708.391873"
+xref: delta_avge_mass "708.8062"
+xref: delta_composition "H(52) C(31) N(10) O(9)"
+xref: username_of_poster "KielkowskiLab"
+xref: group_of_poster ""
+xref: date_time_posted "2022-08-09 13:45:33"
+xref: date_time_modified "2022-10-20 14:03:49"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_1_neutral_loss_727_mono_mass "726.402438"
+xref: spec_1_neutral_loss_727_avge_mass "726.8215"
+xref: spec_1_neutral_loss_727_flag "false"
+xref: spec_1_neutral_loss_727_composition "H(54) C(31) N(10) O(10)"
+xref: spec_1_neutral_loss_470_mono_mass "469.301268"
+xref: spec_1_neutral_loss_470_avge_mass "469.5783"
+xref: spec_1_neutral_loss_470_flag "false"
+xref: spec_1_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
+xref: spec_1_neutral_loss_197_mono_mass "196.121178"
+xref: spec_1_neutral_loss_197_avge_mass "196.2462"
+xref: spec_1_neutral_loss_197_flag "false"
+xref: spec_1_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_2_neutral_loss_727_mono_mass "726.402438"
+xref: spec_2_neutral_loss_727_avge_mass "726.8215"
+xref: spec_2_neutral_loss_727_flag "false"
+xref: spec_2_neutral_loss_727_composition "H(54) C(31) N(10) O(10)"
+xref: spec_2_neutral_loss_470_mono_mass "469.301268"
+xref: spec_2_neutral_loss_470_avge_mass "469.5783"
+xref: spec_2_neutral_loss_470_flag "false"
+xref: spec_2_neutral_loss_470_composition "H(39) C(21) N(7) O(5)"
+xref: spec_2_neutral_loss_197_mono_mass "196.121178"
+xref: spec_2_neutral_loss_197_avge_mass "196.2462"
+xref: spec_2_neutral_loss_197_flag "false"
+xref: spec_2_neutral_loss_197_composition "H(16) C(10) N(2) O(2)"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2070
+name: L-Gln
+def: "Monomodification with glutamine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2070]
+xref: record_id "2070"
+xref: delta_mono_mass "128.058578"
+xref: delta_avge_mass "128.1292"
+xref: delta_composition "H(8) C(5) N(2) O(2)"
+xref: username_of_poster "KielkowskiLab"
+xref: group_of_poster ""
+xref: date_time_posted "2022-08-25 13:15:56"
+xref: date_time_modified "2022-10-20 14:06:31"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "E"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "D"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:2072
+name: Glyceroyl
+def: "Glyceroylation." [PMID:35046029, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=2072]
+xref: record_id "2072"
+xref: delta_mono_mass "88.016044"
+xref: delta_avge_mass "88.0621"
+xref: delta_composition "H(4) C(3) O(3)"
+xref: username_of_poster "heremans"
+xref: group_of_poster ""
+xref: date_time_posted "2022-09-06 09:03:01"
+xref: date_time_modified "2022-10-20 14:05:50"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Protein N-term"
+xref: spec_2_classification "Post-translational"
 is_a: UNIMOD:0 ! unimod root node
 
 

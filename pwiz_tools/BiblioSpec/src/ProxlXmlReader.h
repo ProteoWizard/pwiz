@@ -81,7 +81,8 @@ protected:
         UNKNOWN_ANALYSIS,
         PERCOLATOR_ANALYSIS,
         BYONIC_ANALYSIS,
-        PLINK_ANALYIS
+        PLINK_ANALYIS,
+        MEROX_ANALYSIS
     };
 
     static double aaMasses_[128];

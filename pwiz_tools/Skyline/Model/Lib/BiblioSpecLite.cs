@@ -313,9 +313,21 @@ namespace pwiz.Skyline.Model.Lib
                         // 2. The number of entries in the RetentionTimes table is "MatchedSpectra".
                         // 3. The score type for the entry is joined from "ScoreTypes".
                         // Also, select "ssf.*" because not all tables have a column "cutoffScore" or "idFileName".
+                        var cols = new List<string>();
+                        cols.Add("ssf.fileName");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "idFileName"))
+                            cols.Add("ssf.idFileName");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "cutoffScore"))
+                            cols.Add("ssf.cutoffScore");
+                        cols.Add("st.scoreType");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "ScoreTypes", "probabilityType"))
+                            cols.Add("st.probabilityType");
+                        cols.Add("rs.BestSpectra");
+                        cols.Add("rs.MatchedSpectra");
+
                         select.CommandText =
-                            @"SELECT ssf.id, ssf.fileName, st.scoreType, rs.BestSpectra, rs.MatchedSpectra, ssf.*
-                            FROM SpectrumSourceFiles ssf 
+                            "SELECT " + string.Join(", ", cols) + @"
+                            FROM SpectrumSourceFiles ssf
                             LEFT JOIN (SELECT rsInner.fileId, rsInner.scoreType AS scoreType, COUNT(DISTINCT rsInner.id) AS BestSpectra, (SELECT COUNT(*) AS MatchedSpectra FROM RetentionTimes RT WHERE RT.SpectrumSourceId = rsInner.fileId) AS MatchedSpectra 
                                 FROM RefSpectra rsInner GROUP BY rsInner.fileId, rsInner.scoreType) RS ON RS.fileId = ssf.id
                             LEFT JOIN ScoreTypes st ON rs.scoreType = st.id";
@@ -323,12 +335,13 @@ namespace pwiz.Skyline.Model.Lib
                         using (SQLiteDataReader reader = select.ExecuteReader())
                         {
                             int icolFileName = GetColumnIndex(reader, @"fileName");
-                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");     // May be -1
-                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");   // May be -1
-                            int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");   // May be missing causing exception
-                            int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra"); // May be missing
-                            int icolScoreType = GetColumnIndex(reader, @"scoreType");       // May be missing
-                            var seenScoreTypes = new HashSet<string>();
+                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");           // May be -1
+                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");         // May be -1
+                            int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");         // May be missing causing exception
+                            int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra");   // May be missing
+                            int icolScoreType = GetColumnIndex(reader, @"scoreType");             // May be missing
+                            int icolProbabilityType = GetColumnIndex(reader, @"probabilityType"); // May be missing
+                            var seenScoreTypes = new HashSet<ScoreType>();
                             while (reader.Read())
                             {
                                 string filename = reader.GetString(icolFileName);
@@ -347,30 +360,32 @@ namespace pwiz.Skyline.Model.Lib
                                     sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(icolBestSpectra));
                                 if (!reader.IsDBNull(icolMatchedSpectra))
                                     sourceFileDetails.MatchedSpectrum += Convert.ToInt32(reader.GetValue(icolMatchedSpectra));
-                                string scoreName = string.Empty;
-                                if (!reader.IsDBNull(icolScoreType))
-                                {
-                                    scoreName = reader.GetString(icolScoreType);
-                                    seenScoreTypes.Add(scoreName);
-                                }
-                                double? cutoffScore = null;
-                                if (icolCutoffScore >= 0 && !reader.IsDBNull(icolCutoffScore))
-                                {
-                                    cutoffScore = Convert.ToDouble(reader.GetValue(icolCutoffScore));
-                                }
+                                var scoreName = !reader.IsDBNull(icolScoreType) ? reader.GetString(icolScoreType) : string.Empty;
+                                var probabilityType = !reader.IsDBNull(icolProbabilityType) ? reader.GetString(icolProbabilityType) : null;
+                                var cutoffScore = icolCutoffScore >= 0 && !reader.IsDBNull(icolCutoffScore)
+                                    ? Convert.ToDouble(reader.GetValue(icolCutoffScore))
+                                    : (double?)null;
+
                                 if (!string.IsNullOrEmpty(scoreName))
-                                    sourceFileDetails.CutoffScores[scoreName] = cutoffScore;
+                                {
+                                    var scoreType = new ScoreType(scoreName, probabilityType);
+                                    sourceFileDetails.ScoreThresholds[scoreType] = cutoffScore;
+                                    seenScoreTypes.Add(scoreType);
+                                }
                             }
 
                             // Cleanup cut-off scores without a score type
                             // CONSIDER: We should add a score type column to the SpectrumSourceFiles table
                             if (seenScoreTypes.Count == 1)
                             {
-                                foreach (var scoresEmpty in detailsByFileName.Values.Where(v => v.CutoffScores.ContainsKey(string.Empty)))
+                                foreach (var details in detailsByFileName.Values.Where(d => d.ScoreThresholds.Count == 1))
                                 {
-                                    scoresEmpty.CutoffScores[seenScoreTypes.First()] =
-                                        scoresEmpty.CutoffScores[string.Empty];
-                                    scoresEmpty.CutoffScores.Remove(string.Empty);
+                                    var kvp = details.ScoreThresholds.First();
+                                    if (Equals(kvp.Key.NameInvariant, string.Empty))
+                                    {
+                                        details.ScoreThresholds[seenScoreTypes.First()] = kvp.Value;
+                                        details.ScoreThresholds.Remove(kvp.Key);
+                                    }
                                 }
                             }
                         }

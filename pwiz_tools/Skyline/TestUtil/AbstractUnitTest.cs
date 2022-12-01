@@ -245,7 +245,7 @@ namespace pwiz.SkylineTestUtil
                 Directory.CreateDirectory(targetFolder);
 
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
-            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
+            string s3hostname = @"mc-tca-01.s3-us-west-2.amazonaws.com";
             string message = string.Empty;
             for (var retry = true; ; retry = false)
             {

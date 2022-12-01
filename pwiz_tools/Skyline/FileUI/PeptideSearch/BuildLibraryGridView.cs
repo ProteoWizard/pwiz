@@ -460,19 +460,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     : string.Format(
                         Resources.BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___,
                         threshold.ToString(), scoreType.ValidRange.Min, scoreType.ValidRange.Max);
-
-                switch (scoreType?.ProbabilityType)
-                {
-                    case ScoreType.EnumProbabilityType.probability_correct:
-                        cell.ToolTipText = Resources.BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__;
-                        break;
-                    case ScoreType.EnumProbabilityType.probability_incorrect:
-                        cell.ToolTipText = Resources.BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
-                        break;
-                    default:
-                        cell.ToolTipText = null;
-                        break;
-                }
+                cell.ToolTipText = scoreType?.ThresholdDescription;
             }
 
             cell.Style.BackColor = cell.ReadOnly ? ReadonlyCellBackColor : _defaultCellBackColor;
