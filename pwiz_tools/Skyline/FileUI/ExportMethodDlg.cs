@@ -48,6 +48,7 @@ namespace pwiz.Skyline.FileUI
         public static string CONCUR_PREC_TXT { get { return Resources.ExportMethodDlg_CONCUR_PREC_TXT; } }
         public static string RUN_DURATION_TXT { get { return Resources.ExportMethodDlg_RUN_DURATION_TXT; } }
         public static string DWELL_TIME_TXT { get { return Resources.ExportMethodDlg_DWELL_TIME_TXT; } }
+        public static string ACCUMULATION_TIME_TXT { get { return Resources.ExportMethodDlg_ACCUMULATION_TIME_TXT; } }
 
         public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
@@ -1895,7 +1896,9 @@ namespace pwiz.Skyline.FileUI
             {
                 if (!IsSingleDwellInstrument && !IsDia)
                 {
-                    labelDwellTime.Text = DWELL_TIME_TXT;
+                    labelDwellTime.Text = Equals(InstrumentType, ExportInstrumentType.ABI_7600)
+                        ? ACCUMULATION_TIME_TXT
+                        : DWELL_TIME_TXT;
                     showDwell = true;
                 }
                 else if (IsAlwaysScheduledInstrument)

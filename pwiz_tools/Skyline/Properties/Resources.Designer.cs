@@ -12761,6 +12761,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accumulation time (sec):.
+        /// </summary>
+        public static string ExportMethodDlg_ACCUMULATION_TIME_TXT {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ACCUMULATION_TIME_TXT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Method.
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click__0__Method {

@@ -170,8 +170,8 @@ namespace pwiz.Skyline.Model
         public const string ABI = "SCIEX";
         public const string ABI_QTRAP = "SCIEX QTRAP";
         public const string ABI_TOF = "SCIEX QTOF";
-        public const string ABI_7500 = "SCIEX 7500";
-        public const string ABI_7600 = "SCIEX 7600";
+        public const string ABI_7500 = "SCIEX OS 7500";
+        public const string ABI_7600 = "SCIEX OS 7600";
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";

@@ -326,7 +326,7 @@ namespace BuildSciexMethod
 
             // Edit method
             var massTable = InitMethod(method, transitions.Transitions.Length);
-            var props = PropertyData.GetAll(StandardMethod, massTable).ToArray();
+            var props = PropertyData.GetAll(Instrument, StandardMethod, massTable).ToArray();
             for (var i = 0; i < transitions.Transitions.Length; i++)
             {
                 foreach (var prop in props)
@@ -423,8 +423,16 @@ namespace BuildSciexMethod
                 ValueProperty.SetValue(rowPropObj, newValue);
             }
 
-            public static IEnumerable<PropertyData> GetAll(bool standardMethod, PropertiesTable table)
+            public static IEnumerable<PropertyData> GetAll(InstrumentType instrument, bool standardMethod, PropertiesTable table)
             {
+                var timeProp = typeof(RetentionTimeProperty);
+                if (standardMethod)
+                {
+                    timeProp = Equals(instrument, InstrumentType.QQQ)
+                        ? typeof(DwellTimeProperty)
+                        : typeof(AccumulationTimeProperty);
+                }
+
                 return new[]
                 {
                     new PropertyData(typeof(GroupIdProperty), t => t.Group),
@@ -433,7 +441,7 @@ namespace BuildSciexMethod
                     new PropertyData(typeof(Q3MassProperty), t => t.ProductMz),
                     new PropertyData(typeof(PrecursorIonProperty), t => t.PrecursorMz),
                     new PropertyData(typeof(FragmentIonProperty), t => t.ProductMz),
-                    new PropertyData(standardMethod ? typeof(DwellTimeProperty) : typeof(RetentionTimeProperty), t => t.DwellOrRt),
+                    new PropertyData(timeProp, t => t.DwellOrRt),
                     new PropertyData(typeof(RetentionTimeToleranceProperty), !standardMethod ? t => t.RTWindow : (Func<MethodTransition, object>)null),
                     new PropertyData(typeof(DeclusteringPotentialProperty), t => t.DP),
                     new PropertyData(typeof(EntrancePotentialProperty)),
