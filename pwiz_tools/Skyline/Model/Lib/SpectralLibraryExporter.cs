@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public void ExportSpectralLibrary(string path, IProgress progressMonitor)
         {
+            progressMonitor ??= SilentProgress.INSTANCE;
             const string name = "exported";
             var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
             foreach (var nodePepGroup in Document.MoleculeGroups)
