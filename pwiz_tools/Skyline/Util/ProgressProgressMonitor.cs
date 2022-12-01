@@ -1,6 +1,7 @@
-﻿using pwiz.Common.SystemUtil;
+﻿using pwiz.Common.Progress;
+using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.Progress
+namespace pwiz.Skyline.Util
 {
     public class ProgressProgressMonitor : IProgressMonitor
     {

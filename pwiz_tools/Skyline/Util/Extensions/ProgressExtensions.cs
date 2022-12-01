@@ -1,12 +1,7 @@
-﻿using pwiz.Common.SystemUtil;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using pwiz.Common.Progress;
+using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.Progress
+namespace pwiz.Skyline.Util.Extensions
 {
     public static class ProgressExtensions
     {

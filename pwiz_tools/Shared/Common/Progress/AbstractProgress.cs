@@ -24,10 +24,5 @@ namespace pwiz.Common.Progress
         {
             set;
         }
-
-        protected static int ConstrainProgress(double progress)
-        {
-            return Math.Max(0, Math.Min(100, (int) Math.Round(progress)));
-        }
     }
 }

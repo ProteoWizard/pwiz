@@ -141,8 +141,6 @@
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="Progress\AbstractProgress.cs" />
     <Compile Include="Progress\IProgress.cs" />
-    <Compile Include="Progress\ProgressExtensions.cs" />
-    <Compile Include="Progress\ProgressProgressMonitor.cs" />
     <Compile Include="Progress\ProgressSegments.cs" />
     <Compile Include="Progress\SilentProgress.cs" />
     <Compile Include="Progress\SubtaskProgress.cs" />

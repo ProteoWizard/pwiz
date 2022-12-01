@@ -416,7 +416,7 @@ namespace pwiz.Skyline.Controls
             {
                 set
                 {
-                    _dlg.ProgressValue = ConstrainProgress(value);
+                    _dlg.ProgressValue = Math.Max(0, Math.Min(100, (int)Math.Floor(value)));
                 }
             }
 

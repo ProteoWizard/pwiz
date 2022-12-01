@@ -13,14 +13,12 @@ namespace pwiz.Common.Progress
 
         public string Message
         {
-            set {}
+            set { }
         }
 
         public double Value
         {
-            set
-            {
-            }
+            set { }
         }
 
         public bool IsCanceled
