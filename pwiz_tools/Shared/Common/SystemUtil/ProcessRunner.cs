@@ -22,6 +22,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
+using JetBrains.Annotations;
+using pwiz.Common.Progress;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -29,9 +32,9 @@ namespace pwiz.Common.SystemUtil
     {
         string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
-        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+        bool Run(ProcessStartInfo psi, string stdin, IProgress progress,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
-        void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+        bool Run(ProcessStartInfo psi, string stdin, IProgress progress,
                  TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
     }
 
@@ -52,13 +55,13 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string HideLinePrefix { get; set; }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+        public bool Run(ProcessStartInfo psi, string stdin, IProgress progress,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass);
+            return Run(psi, stdin, progress, null, priorityClass);
         }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
+        public bool Run(ProcessStartInfo psi, string stdin, [CanBeNull] IProgress progress, TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
             // Make sure required streams are redirected.
@@ -109,9 +112,8 @@ namespace pwiz.Common.SystemUtil
             {
                 var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
                 StringBuilder sbError = new StringBuilder();
-                int percentLast = 0;
                 string line;
-                while ((line = reader.ReadLine(progress)) != null)
+                while ((line = reader.ReadLine(progress?.CancellationToken ?? CancellationToken.None)) != null)
                 {
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);
@@ -125,8 +127,7 @@ namespace pwiz.Common.SystemUtil
                         if (progress.IsCanceled)
                         {
                             proc.Kill();
-                            progress.UpdateProgress(status = status.Cancel());
-                            return;
+                            return false;
                         }
 
                         if (MessagePrefix != null && line.StartsWith(MessagePrefix))
@@ -140,11 +141,7 @@ namespace pwiz.Common.SystemUtil
                             string percentPart = parts[parts.Length - 1];
                             if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                             {
-                                percentLast = (int)percent;
-                                status = status.ChangePercentComplete(percentLast);
-                                if (percent >= 100 && status.SegmentCount > 0)
-                                    status = status.NextSegment();
-                                progress.UpdateProgress(status);
+                                progress.Value = percent;
                             }
                         }
                         else if (StatusPrefix == null || line.StartsWith(StatusPrefix))
@@ -153,8 +150,7 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            status = status.ChangeMessage(line);
-                            progress.UpdateProgress(status);
+                            progress.Message = line;
                         }
                     }
                 }
@@ -181,16 +177,7 @@ namespace pwiz.Common.SystemUtil
                     throw new IOException(sbError.ToString());
                 }
 
-                // Make to complete the status, if the process succeeded, but never
-                // printed 100% to the console
-                if (percentLast < 100)
-                {
-                    status = status.ChangePercentComplete(100);
-                    if (status.SegmentCount > 0)
-                        status = status.NextSegment();
-                    if (progress != null)
-                        progress.UpdateProgress(status);
-                }
+                return true;
             }
             finally
             {
@@ -211,27 +198,26 @@ namespace pwiz.Common.SystemUtil
             public bool shouldCancel { get; set; }
             public string StatusPrefix { get; set; }
             public string HideLinePrefix { get; set; }
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+            public bool Run(ProcessStartInfo psi, string stdin, IProgress progress,
                 ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
             {
-                Run(psi, stdin, progress, ref status, null, priorityClass);
+                return Run(psi, stdin, progress, null, priorityClass);
             }
 
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
+            public bool Run(ProcessStartInfo psi, string stdin, IProgress progress, TextWriter writer,
                 ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
             {
                 if (shouldCancel)
                 {
-                    status.Cancel();
-                    progress.UpdateProgress(status = status.Cancel());
-                    return;
+                    return false;
                 }
 
                 if (!string.IsNullOrEmpty(stringToWriteToWriter))
                     writer.WriteLine(stringToWriteToWriter);
-                status.ChangePercentComplete(100);
-                progress.UpdateProgress(status);
+                progress.Value = 100;
+                return true;
             }
         }
+
     }
 }

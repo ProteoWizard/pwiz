@@ -28,6 +28,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteomeDatabase.API;
@@ -407,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     try
                     {
-                        var status = longWait.PerformWork(this, 800, monitor =>
+                        var status = longWait.PerformWork(this, 800, (IProgressMonitor monitor) =>
                         {
                             _selectedLibrary = selectedLibrarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
                         });

@@ -258,11 +258,11 @@ namespace pwiz.Skyline.FileUI
                 var documentAnnotations = new DocumentAnnotations(Document);
                 using (var longWaitDlg = new LongWaitDlg())
                 {
-                    longWaitDlg.PerformWork(this, 1000, broker =>
+                    longWaitDlg.PerformWork(this, 1000, () =>
                     {
                         using (var fileSaver = new FileSaver(filename))
                         {
-                            documentAnnotations.WriteAnnotationsToFile(broker.CancellationToken, settings, fileSaver.SafeName);
+                            documentAnnotations.WriteAnnotationsToFile(longWaitDlg.CancellationToken, settings, fileSaver.SafeName);
                             fileSaver.Commit();
                         }
                         success = true;

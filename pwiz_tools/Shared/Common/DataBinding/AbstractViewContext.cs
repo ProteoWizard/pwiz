@@ -25,7 +25,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
@@ -33,6 +32,7 @@ using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Common.Progress;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -61,11 +61,11 @@ namespace pwiz.Common.DataBinding
             string currentViewName = viewInfo.Name;
             return viewInfo.ParentColumn.PropertyType.Name + (currentViewName == GetDefaultViewName() ? string.Empty : currentViewName);
         }
-        public abstract bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job);
+        public abstract bool RunLongJob(Control owner, Action<IProgress> job);
 
-        public virtual bool RunOnThisThread(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        public virtual bool RunOnThisThread(Control owner, Action<IProgress> job)
         {
-            job(CancellationToken.None, new SilentProgressMonitor());
+            job(SilentProgress.INSTANCE);
             return true;
         }
         public DataSchema DataSchema { get; private set; }
@@ -187,33 +187,30 @@ namespace pwiz.Common.DataBinding
 
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+        protected virtual void WriteData(IProgress progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
-        {
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, bindingListSource, separator);
-        }
-
-        protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, BindingListSource bindingListSource, char separator)
         {
             var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
             IList<RowItem> rows = Array.AsReadOnly(bindingListSource.Cast<RowItem>().ToArray());
             IList<PropertyDescriptor> properties = bindingListSource.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             dsvWriter.WriteHeaderRow(writer, properties);
             var rowCount = rows.Count;
-            int startPercent = status.PercentComplete;
+            double lastProgress = 0;
             for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
                 if (progressMonitor.IsCanceled)
                 {
                     return;
                 }
-                int percentComplete = startPercent + (rowIndex*(100 - startPercent)/rowCount);
-                if (percentComplete > status.PercentComplete)
+
+                double newProgress = rowIndex * 100.0 / rowCount;
+                if (Math.Round(newProgress) > lastProgress)
                 {
-                    status = status.ChangeMessage(string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, (rowIndex + 1), rowCount))
-                        .ChangePercentComplete(percentComplete);
-                    progressMonitor.UpdateProgress(status);
+                    progressMonitor.Value = newProgress;
+                    progressMonitor.Message =
+                        string.Format(Resources.AbstractViewContext_WriteData_Writing_row__0___1_, rowIndex + 1,
+                            rowCount);
+                    lastProgress = Math.Round(newProgress);
                 }
                 dsvWriter.WriteDataRow(writer, rows[rowIndex], properties);
             }
@@ -276,10 +273,10 @@ namespace pwiz.Common.DataBinding
             {
                 var writer = new StreamWriter(stream, new UTF8Encoding(false));
                 bool finished = false;
-                RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
+                RunOnThisThread(owner, progressReporter =>
                 {
-                    WriteData(progressMonitor, writer, bindingListSource, separator);
-                    finished = !progressMonitor.IsCanceled;
+                    WriteData(progressReporter, writer, bindingListSource, separator);
+                    finished = !progressReporter.CancellationToken.IsCancellationRequested;
                 });
                 if (finished)
                 {
@@ -308,10 +305,9 @@ namespace pwiz.Common.DataBinding
             try
             {
                 StringWriter tsvWriter = new StringWriter();
-                if (!RunOnThisThread(owner, (cancellationToken, progressMonitor) =>
+                if (!RunOnThisThread(owner, progressMonitor =>
                     {
                         WriteData(progressMonitor, tsvWriter, bindingListSource, '\t');
-                        progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                     }))
                 {
                     return;

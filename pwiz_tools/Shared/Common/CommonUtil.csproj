@@ -139,6 +139,12 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="Progress\AbstractProgress.cs" />
+    <Compile Include="Progress\IProgress.cs" />
+    <Compile Include="Progress\ProgressSegments.cs" />
+    <Compile Include="Progress\SilentProgress.cs" />
+    <Compile Include="Progress\SubtaskProgress.cs" />
+    <Compile Include="Progress\WrappedProgress.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />

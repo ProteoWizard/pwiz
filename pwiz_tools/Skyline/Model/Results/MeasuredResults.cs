@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -440,7 +441,7 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.SetClonedCacheState(null));
         }
 
-        public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager, ILongWaitBroker progress = null)
+        public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager, IProgress progress)
         {
             // No optimizing until we have a joined final cache
             if (IsJoiningDisabled)

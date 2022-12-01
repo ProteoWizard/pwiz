@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -372,6 +373,11 @@ namespace pwiz.Skyline.Model
         public DefaultFileLoadMonitor(IProgressMonitor monitor)
         {
             _monitor = monitor;
+        }
+
+        public static DefaultFileLoadMonitor ForProgress(IProgress progress)
+        {
+            return new DefaultFileLoadMonitor(new ProgressProgressMonitor(progress));
         }
 
         public bool IsCanceled

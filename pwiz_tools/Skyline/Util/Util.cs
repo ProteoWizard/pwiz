@@ -32,6 +32,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;

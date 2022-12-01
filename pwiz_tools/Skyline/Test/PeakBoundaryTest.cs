@@ -22,9 +22,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -456,7 +456,7 @@ namespace pwiz.SkylineTest
             using (var writer = new StreamWriter(fileName))
             {
                 IProgressStatus status = new ProgressStatus();
-                viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
+                viewContext.Export(SilentProgress.INSTANCE,
                     viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
             }
         }

@@ -26,7 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
@@ -89,20 +89,21 @@ namespace pwiz.Skyline.Model
             {
                 throw new ArgumentException(@"The report definition uses the old format.");
             }
-            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, Program.MainWindow);
+
+            using var progress = Program.MainWindow.NewProgress();
+            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, progress);
         }
 
-        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgressMonitor progressMonitor)
+        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgress progressMonitor)
         {
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
             var viewContext = new DocumentGridViewContext(dataSchema);
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
-                viewSpec.Name));
+            progressMonitor.Message = string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+                viewSpec.Name);
             var writer = new StringWriter();
-            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer,
-                    TextUtil.SEPARATOR_CSV))
+            if (viewContext.Export(progressMonitor, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer, TextUtil.SEPARATOR_CSV))
             {
                 return writer.ToString();
             }

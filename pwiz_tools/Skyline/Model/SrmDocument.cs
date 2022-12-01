@@ -54,6 +54,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -1561,7 +1562,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgressMonitor progressMonitor)
+        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgress progressMonitor)
         {
             var regression = Settings.PeptideSettings.Prediction.RetentionTime;
             if (!(regression?.Calculator is RCalcIrt calculator))

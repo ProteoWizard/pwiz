@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.BiblioSpec
@@ -26,7 +27,7 @@ namespace pwiz.BiblioSpec
     public class BlibFilter
     {
         public const string EXE_BLIB_FILTER = "BlibFilter";
-        public bool Filter(string sourceFile, string destinationFile, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public bool Filter(string sourceFile, string destinationFile, IProgress progress)
         {
             // ReSharper disable LocalizableElement
             var argv = new List<string>
@@ -48,8 +49,7 @@ namespace pwiz.BiblioSpec
                 RedirectStandardError = true
             };
             var processRunner = new ProcessRunner();
-            processRunner.Run(psiBlibFilter, null, progressMonitor, ref status);
-            return status.IsComplete;
+            return processRunner.Run(psiBlibFilter, null, progress);
         }
     }
 }

@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
@@ -215,7 +216,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
             var data = new GraphData(document, null, -1, threshold, precision, true, bestResult,
-                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, CancellationToken.None);
+                RTGraphController.PointsType, RTGraphController.RegressionMethod, -1, null, SilentProgress.INSTANCE);
             return data.Refine(CancellationToken.None).Outliers;
         }
 
@@ -263,11 +264,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, CancellationToken token)
+        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, IProgress progress)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
             return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, 
-                pointsType, regressionMethod, origIndex, this, token);
+                pointsType, regressionMethod, origIndex, this, progress);
             
         }
 
@@ -427,7 +428,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount
                                 , 1, new PaneProgressBar(this));
 
-                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, token),
+                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, new SilentProgress(token)),
                                 @"Update and refine regression data");
                         }
                         Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
@@ -572,7 +573,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void UpdateAndRefine(RequestContext requestContext,
-            CancellationToken cancellationToken)
+            IProgress progress)
         {
             try
             {
@@ -582,19 +583,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     regressionSettings.Refine, regressionSettings.PointsType, regressionSettings.RegressionMethod,
                     regressionSettings.OriginalIndex,
                     // ReSharper disable once InconsistentlySynchronizedField
-                    cancellationToken);
+                    progress);
 
                 if (regressionSettings.Refine && !IsDataRefined(newData))
                 {
                     var data = newData;
-                    using (var cancellationTokenSource = new DocumentCancellationToken(cancellationToken,
+                    using (var cancellationTokenSource = new DocumentCancellationToken(progress.CancellationToken,
                         GraphSummary.DocumentUIContainer, doc => !IsValidFor(data, doc)))
                     {
                         newData = Refine(newData, cancellationTokenSource.Token);
                     }
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
+                progress.CancellationToken.ThrowIfCancellationRequested();
 
                 // Update the graph on the UI thread.
                 lock (_requestLock)
@@ -616,7 +617,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             try
                             {
-                                if (!cancellationToken.IsCancellationRequested)
+                                if (!progress.IsCanceled)
                                     UpdateGraph(false);
                             }
                             catch (Exception ex)
@@ -703,7 +704,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 RegressionMethodRT regressionMethod,
                 int originalIndex,
                 RTLinearRegressionGraphPane graphPane,
-                CancellationToken token
+                IProgress progress
                 )
             {
                 _document = document;
@@ -733,7 +734,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var reportingStep = document.PeptideCount / (90 / REPORTING_STEP);
                 foreach (var nodePeptide in document.Molecules)
                 {
-                    ProgressMonitor.CheckCanceled(token);
+                    ProgressMonitor.CheckCanceled(progress.CancellationToken);
                     index++;
                     switch (RTGraphController.PointsType)
                     {
@@ -815,7 +816,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     _calculator = new DictionaryRetentionScoreCalculator(XmlNamedElement.NAME_INTERNAL, origTimesDict);
                     var alignedRetentionTimes = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimesDict,
                         origTimesDict, refine ? threshold : 0, _regressionMethod,
-                        token);
+                        progress.CancellationToken);
                     if (alignedRetentionTimes != null)
                     {
                         _regressionAll = alignedRetentionTimes.Regression;
@@ -834,7 +835,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL,
                             Settings.Default.RTScoreCalculatorList.ToList(), _targetTimes, _scoreCache, true,
-                            _regressionMethod, token);
+                            _regressionMethod, progress);
                         
                         _calculator = summary.Best.Calculator;
                         _statisticsAll = summary.Best.Statistics;
@@ -854,9 +855,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             _regressionMethod,
                             out _statisticsAll,
                             out unused,
-                            token);
+                            progress.CancellationToken);
 
-                        token.ThrowIfCancellationRequested();
+                        progress.CancellationToken.ThrowIfCancellationRequested();
                         _calculator = calc;
 
                         //If _regressionAll is null, it is safe to assume that the calculator is an iRT Calc with
@@ -883,7 +884,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                               dataPrevious != null ? dataPrevious._scoreCache : null);
 
                     if (dataPrevious != null && !ReferenceEquals(_calculator, dataPrevious._calculator))
-                        _scoreCache.RecalculateCalcCache(_calculator, token);
+                        _scoreCache.RecalculateCalcCache(_calculator, progress.CancellationToken);
 
                     _scoresRefined = _statisticsAll.ListHydroScores.ToArray();
                     _timesRefined = _statisticsAll.ListRetentionTimes.ToArray();

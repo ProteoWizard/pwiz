@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -195,7 +196,7 @@ namespace pwiz.Skyline.Model.Irt
         public string DocumentXml => _database.DocumentXml;
         public IrtRegressionType RegressionType => _database.RegressionType;
 
-        public static ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor,
+        public static ProcessedIrtAverages ProcessRetentionTimes(IProgress monitor,
             IRetentionTimeProvider[] providers, DbIrtPeptide[] standardPeptideList, DbIrtPeptide[] items, IrtRegressionType regressionType)
         {
             var heavyStandards = new DbIrtPeptide[standardPeptideList.Length];
@@ -225,9 +226,9 @@ namespace pwiz.Skyline.Model.Irt
             {
                 if (monitor.IsCanceled)
                     return null;
-                monitor.UpdateProgress(status = status.ChangeMessage(string.Format(
+                monitor.Message = string.Format(
                     Resources.LibraryGridViewDriver_ProcessRetentionTimes_Converting_retention_times_from__0__,
-                    retentionTimeProvider.Name)));
+                    retentionTimeProvider.Name);
 
                 runCount++;
 
@@ -239,14 +240,13 @@ namespace pwiz.Skyline.Model.Irt
                 }
                 providerData.Add(data);
 
-                monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / providers.Length));
+                monitor.Value = runCount * 100.0 / providers.Length;
             }
 
-            monitor.UpdateProgress(status.Complete());
             return new ProcessedIrtAverages(dictPeptideAverages, providerData);
         }
 
-        public static ProcessedIrtAverages ProcessRetentionTimesCirt(IProgressMonitor monitor,
+        public static ProcessedIrtAverages ProcessRetentionTimesCirt(IProgress monitor,
             IRetentionTimeProvider[] providers, DbIrtPeptide[] cirtPeptides, int numCirt, IrtRegressionType regressionType, out DbIrtPeptide[] chosenCirtPeptides)
         {
             chosenCirtPeptides = new DbIrtPeptide[0];

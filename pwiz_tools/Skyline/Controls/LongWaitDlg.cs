@@ -20,6 +20,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -141,6 +142,17 @@ namespace pwiz.Skyline.Controls
             if (progressWaitBroker.IsCanceled)
                 return progressWaitBroker.Status.Cancel();
             return progressWaitBroker.Status;
+        }
+        public IProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgress> performWork)
+        {
+            PerformWork(parent, delayMillis, ()=>performWork(AsProgress()));
+            IProgressStatus result = new ProgressStatus();
+            if (IsCanceled)
+            {
+                result = result.Cancel();
+            }
+
+            return result;
         }
 
         public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
@@ -386,5 +398,35 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+
+        public IProgress AsProgress()
+        {
+            return new LongWaitDlgProgress(this);
+        }
+
+        private class LongWaitDlgProgress : AbstractProgress
+        {
+            private LongWaitDlg _dlg;
+            public LongWaitDlgProgress(LongWaitDlg dlg) : base(dlg.CancellationToken)
+            {
+                _dlg = dlg;
+            }
+
+            public override double Value 
+            {
+                set
+                {
+                    _dlg.ProgressValue = Math.Max(0, Math.Min(100, (int)Math.Floor(value)));
+                }
+            }
+
+            public override string Message
+            {
+                set
+                {
+                    _dlg.Message = value;
+                }
+            }
+        }
     }
 }

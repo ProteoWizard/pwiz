@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
@@ -1941,7 +1942,7 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
             foreach (var file in commandArgs.SearchResultsFiles)
                 _out.WriteLine(Path.GetFileName(file));
-            if (!builder.BuildLibrary(progressMonitor))
+            if (!builder.BuildLibrary(progressMonitor, CancellationToken.None))
                 return false;
 
             if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
@@ -1951,7 +1952,7 @@ namespace pwiz.Skyline
 
             _out.WriteLine(Resources.CommandLine_ImportSearch_Loading_library);
             var libraryManager = new LibraryManager();
-            if (!import.LoadPeptideSearchLibrary(libraryManager, docLibSpec, progressMonitor))
+            if (!import.LoadPeptideSearchLibrary(libraryManager, docLibSpec, progressMonitor.AsProgress()))
                 return false;
 
             doc = import.AddDocumentSpectralLibrary(doc, docLibSpec);
@@ -1994,7 +1995,7 @@ namespace pwiz.Skyline
                 try
                 {
                     processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, import.IrtStandard.Peptides.ToArray(),
-                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
+                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor.AsProgress(), out var newStandardPeptides);
                     if (newStandardPeptides != null)
                     {
                         import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
@@ -2012,7 +2013,7 @@ namespace pwiz.Skyline
                 if (processedDbIrtPeptides.Any())
                 {
                     ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, import.IrtStandard.Peptides.ToArray(),
-                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
+                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor.AsProgress());
                 }
                 doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
             }
@@ -2560,7 +2561,7 @@ namespace pwiz.Skyline
                 }
 
                 _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_, dbIrtPeptidesFilter.Count, calcIrt.Name);
-                docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, false, progressMonitor);
+                docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, false, progressMonitor.AsProgress());
                 if (docNew == null)
                     return false;
             }
@@ -2592,7 +2593,7 @@ namespace pwiz.Skyline
                 {
                     var docLibrarySpec = new BiblioSpecLiteSpec(libraryName, outputLibraryPath);
                     using (var docLibrary = new LibraryReference(blibDb.CreateLibraryFromSpectra(
-                        docLibrarySpec, librarySpectra, libraryName, progressMonitor)))
+                        docLibrarySpec, librarySpectra, libraryName, progressMonitor.AsProgress())))
                     {
                         var newSettings = docNew.Settings.ChangePeptideLibraries(
                             libs => libs.ChangeLibrary(docLibrary.Reference, docLibrarySpec, indexOldLibrary));
@@ -2754,15 +2755,15 @@ namespace pwiz.Skyline
                         return false;
                     }
 
-                    IProgressStatus status = new ProgressStatus(string.Empty);
-                    IProgressMonitor broker = new CommandProgressMonitor(_out, status);
+                    var status = new ProgressStatus();
+                    var broker = new CommandProgressMonitor(_out, status);
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(CancellationToken.None, broker, ref status, viewInfo, writer,
+                        viewContext.Export(new ProgressMonitorProgress(broker, CancellationToken.None, status), viewInfo, writer,
                             reportColSeparator);
                     }
-
+                    
                     broker.UpdateProgress(status.Complete());
                     saver.Commit();
                     _out.WriteLine(Resources.CommandLine_ExportLiveReport_Report__0__exported_successfully_to__1__, reportName, reportFile);
@@ -3500,7 +3501,7 @@ namespace pwiz.Skyline
                     if (settings.MeasuredResults.IsLoaded)
                     {
                         FileStreamManager fsm = FileStreamManager.Default;
-                        settings.MeasuredResults.OptimizeCache(outFile, fsm);
+                        settings.MeasuredResults.OptimizeCache(outFile, fsm, SilentProgress.INSTANCE);
 
                         //don't worry about updating the document with the results of optimization
                         //as is done in SkylineFiles
@@ -4188,5 +4189,29 @@ namespace pwiz.Skyline
             }
             _out.WriteLine(Resources.CommandWaitBroker_Wait_Done);
         }
+
+        public IProgress AsProgress()
+        {
+            return new ProgressImpl(this);
+        }
+
+        private class ProgressImpl : AbstractProgress
+        {
+            private readonly CommandProgressMonitor _commandProgressMonitor;
+            public ProgressImpl(CommandProgressMonitor commandProgressMonitor) : base(CancellationToken.None)
+            {
+                _commandProgressMonitor = commandProgressMonitor;
+            }
+            public override double Value
+            {
+                set => _commandProgressMonitor.UpdateProgress((_commandProgressMonitor._currentProgress ?? new ProgressStatus()).ChangePercentComplete(Math.Max(0, Math.Min(100, (int)value))));
+            }
+
+            public override string Message
+            {
+                set => _commandProgressMonitor.UpdateProgress((_commandProgressMonitor._currentProgress ?? new ProgressStatus()).ChangeMessage(value));
+            }
+        }
+
     }
 }

@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Irt;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -564,8 +566,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> measuredPeptides,
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
-            RegressionMethodRT regressionMethod,
-            CancellationToken token)
+            RegressionMethodRT regressionMethod)
         {
             CalculateRegressionSummary result = new CalculateRegressionSummary();
             new LongOperationRunner
@@ -573,13 +574,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 JobTitle = @"Calculating best regression"
             }.Run(longWaitBroker =>
             {
-                using (var linkedTokenSource =
-                    CancellationTokenSource.CreateLinkedTokenSource(longWaitBroker.CancellationToken, token))
-                {
-                    longWaitBroker.SetProgressCheckCancel(0, calculators.Count);
-                    result = CalcBestRegressionBackground(name, calculators, measuredPeptides, scoreCache, allPeptides,
-                        regressionMethod, linkedTokenSource.Token, longWaitBroker);
-                }
+                longWaitBroker.SetProgressCheckCancel(0, calculators.Count);
+                result = CalcBestRegressionBackground(name, calculators, measuredPeptides, scoreCache, allPeptides,
+                    regressionMethod, longWaitBroker);
             });
             return result;
         }
@@ -593,8 +590,7 @@ namespace pwiz.Skyline.Model.DocSettings
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
-            CancellationToken token,
-            ILongWaitBroker longWaitBroker = null)
+            IProgress progress)
         {
             var data = new List<CalculatedRegressionInfo>(calculators.Count);
             var queueWorker = new QueueWorker<RetentionScoreCalculatorSpec>(null, (calculator, i) =>
@@ -608,12 +604,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     regressionMethod,
                     out regressionInfo.Statistics,
                     out regressionInfo.RVal,
-                    token);
+                    progress.CancellationToken);
 
                 lock (data)
                 {
                     data.Add(regressionInfo);
-                    longWaitBroker?.SetProgressCheckCancel(data.Count, calculators.Count);
+                    progress.SetProgressCheckCancel(data.Count, calculators.Count);
                 }
             });
 
@@ -626,7 +622,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (queueWorker.Exception != null)
                 throw queueWorker.Exception;
 
-            token.ThrowIfCancellationRequested();
+            progress.CancellationToken.ThrowIfCancellationRequested();
 
             var ordered = data.OrderByDescending(r => Math.Abs(r.RVal)).ToArray();
             return new CalculateRegressionSummary
@@ -786,7 +782,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     measuredPeptides,
                     scoreCache,
                     true,
-                    regressionMethod, longWaitBroker.CancellationToken);
+                    regressionMethod, longWaitBroker);
                 var regressionInitial = summary.Best.Regression;
                 var statisticsAll = summary.Best.Statistics;
                 calculator = summary.Best.Calculator;

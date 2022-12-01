@@ -27,6 +27,7 @@ using NHibernate;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -238,10 +239,12 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
                                                               IList<SpectrumMzInfo> listSpectra,
                                                               string libraryName,
-                                                              IProgressMonitor progressMonitor)
+                                                              IProgress progress)
         {
-            IProgressStatus status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
-            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
+            progress.Message = Resources
+                .BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list;
+            IProgressStatus progressStatus = new ProgressStatus();
+            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, new ProgressProgressMonitor(progress), ref progressStatus);
         }
 
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,

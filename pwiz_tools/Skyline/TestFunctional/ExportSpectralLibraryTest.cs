@@ -4,7 +4,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Progress;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -36,9 +36,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("msstatstest.sky")));
             var doc = WaitForDocumentLoaded();
             var exported = TestFilesDir.GetTestPath("export.blib");
-            var progress = new SilentProgressMonitor();
             new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
-                .ExportSpectralLibrary(exported, progress);
+                .ExportSpectralLibrary(exported, SilentProgress.INSTANCE);
             Assert.IsTrue(File.Exists(exported));
 
             var refSpectra = GetRefSpectra(exported);
@@ -65,9 +64,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(doc.Settings.HasRTPrediction);
             RunUI(() => SkylineWindow.SaveDocument());
             var exportedWithIrts = TestFilesDir.GetTestPath("export-irts.blib");
-            var progress2 = new SilentProgressMonitor();
             new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
-                .ExportSpectralLibrary(exportedWithIrts, progress2);
+                .ExportSpectralLibrary(exportedWithIrts, SilentProgress.INSTANCE);
 
             IList<DbIrtPeptide> irtLibrary;
             using (var connection = new SQLiteConnection(string.Format("Data Source='{0}';Version=3", exportedWithIrts)))

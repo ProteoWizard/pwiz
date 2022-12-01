@@ -112,7 +112,7 @@ namespace pwiz.Skyline
             if (DocumentUI == null)
                 return;
             var settings = DocumentUI.Settings;
-            if (_closing || ComboResults == null || ComboResults.IsDisposed || _inGraphUpdate || !settings.HasResults ||
+            if (IsClosing || ComboResults == null || ComboResults.IsDisposed || _inGraphUpdate || !settings.HasResults ||
                 settings.MeasuredResults.Chromatograms.Count < 2)
                 return;
 

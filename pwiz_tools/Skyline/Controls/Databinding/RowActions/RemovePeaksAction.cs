@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -33,6 +34,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.Databinding.RowActions
@@ -91,12 +93,12 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                         };
                         SrmDocument resultDocument = doc;
                         doc = doc.BeginDeferSettingsChanges();
-                        longOperationRunner.Run(broker =>
+                        longOperationRunner.Run(progressReporter =>
                         {
                             for (int iGroup = 0; iGroup < lookup.Length; iGroup++)
                             {
-                                broker.ProgressValue = iGroup * 100 / lookup.Length;
-                                if (broker.IsCanceled)
+                                progressReporter.SetProgressValue(iGroup * 100.0 / lookup.Length);
+                                if (progressReporter.IsCanceled)
                                 {
                                     return;
                                 }

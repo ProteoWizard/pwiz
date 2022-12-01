@@ -347,7 +347,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         ImportPeptideSearch.ClosePeptideSearchLibraryStreams(DocumentContainer.Document);
                         var buildState = new LibraryManager.BuildState(null, null);
                         var status = longWaitDlg.PerformWork(WizardForm, 800,
-                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, buildState));
+                            monitor => LibraryManager.BuildLibraryBackground(DocumentContainer, builder, monitor, longWaitDlg.CancellationToken, buildState));
                         LastBuildCommandArgs = buildState.BuildCommandArgs;
                         LastBuildOutput = buildState.BuildOutput;
                         if (status.IsError)

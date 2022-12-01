@@ -19,6 +19,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 
@@ -40,7 +41,7 @@ namespace pwiz.Skyline.Util
         public int DelayMillis { get; set; }
         public bool ExecutesJobOnBackgroundThread { get; set; }
 
-        public void Run(Action<ILongWaitBroker> action)
+        public void Run(Action<IProgress> action)
         {
             if (ExecutesJobOnBackgroundThread)
             {
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Util
             RunOnThisThread(action);
         }
 
-        public T CallFunction<T>(Func<ILongWaitBroker, T> func)
+        public T CallFunction<T>(Func<IProgress, T> func)
         {
             T returnValue = default(T);
             Run(progressMonitor =>
@@ -59,7 +60,7 @@ namespace pwiz.Skyline.Util
             return returnValue;
         }
         
-        private void RunOnThisThread(Action<ILongWaitBroker> performWork)
+        private void RunOnThisThread(Action<IProgress> performWork)
         {
             LongWaitDlg longWaitDlg = null;
             ProgressWaitBroker progressWaitBroker;
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.Util
             dlgCreated.Dispose();
             try
             {
-                performWork(longWaitDlg);
+                performWork(longWaitDlg.AsProgress());
             }
             finally
             {
@@ -111,12 +112,12 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private void RunOnBackgroundThread(Action<ILongWaitBroker> action)
+        private void RunOnBackgroundThread(Action<IProgress> action)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {
                 InitLongWaitDlg(longWaitDlg);
-                longWaitDlg.PerformWork(ParentControl, DelayMillis, action);
+                longWaitDlg.PerformWork(ParentControl, DelayMillis, ()=>action(longWaitDlg.AsProgress()));
             }
         }
 

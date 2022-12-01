@@ -125,8 +125,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var writer = new StringWriter();
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
-            IProgressStatus status = new ProgressStatus(string.Empty);
-            processRunner.Run(GetProcessStartInfo(args), null, null, ref status, writer);
+            processRunner.Run(GetProcessStartInfo(args), null, null, writer);
             return writer.ToString();
         }
 

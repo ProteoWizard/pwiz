@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.BiblioSpec;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model
                 stream.CloseStream();
         }
 
-        public bool LoadPeptideSearchLibrary(LibraryManager libraryManager, LibrarySpec libSpec, IProgressMonitor monitor)
+        public bool LoadPeptideSearchLibrary(LibraryManager libraryManager, LibrarySpec libSpec, IProgress progress)
         {
             if (libSpec == null)
             {
@@ -114,7 +115,7 @@ namespace pwiz.Skyline.Model
             }
 
             DocLib = libraryManager.TryGetLibrary(libSpec) ??
-                     libraryManager.LoadLibrary(libSpec, () => new DefaultFileLoadMonitor(monitor));
+                     libraryManager.LoadLibrary(libSpec, () => new DefaultFileLoadMonitor(new ProgressProgressMonitor(progress)));
 
             return DocLib != null;
         }
@@ -201,7 +202,7 @@ namespace pwiz.Skyline.Model
         }
 
         public static ProcessedIrtAverages ProcessRetentionTimes(int? numCirt, IRetentionTimeProvider[] irtProviders,
-            DbIrtPeptide[] standardPeptides, DbIrtPeptide[] cirtPeptides, IrtRegressionType regressionType, IProgressMonitor monitor, out DbIrtPeptide[] newStandardPeptides)
+            DbIrtPeptide[] standardPeptides, DbIrtPeptide[] cirtPeptides, IrtRegressionType regressionType, IProgress monitor, out DbIrtPeptide[] newStandardPeptides)
         {
             newStandardPeptides = null;
             var processed = !numCirt.HasValue
@@ -210,18 +211,19 @@ namespace pwiz.Skyline.Model
             return processed;
         }
 
-        public static void CreateIrtDb(string path, ProcessedIrtAverages processed, DbIrtPeptide[] standardPeptides, bool recalibrate, IrtRegressionType regressionType, IProgressMonitor monitor)
+        public static void CreateIrtDb(string path, ProcessedIrtAverages processed, DbIrtPeptide[] standardPeptides, bool recalibrate, IrtRegressionType regressionType, IProgress progress)
         {
+            var progressSegments = new ProgressSegments(progress, 1);
             DbIrtPeptide[] newStandards = null;
             if (recalibrate)
             {
-                monitor.UpdateProgress(new ProgressStatus().ChangeSegments(0, 2));
+                progressSegments.SegmentCount++;
                 newStandards = processed.RecalibrateStandards(standardPeptides).ToArray();
-                processed = RCalcIrt.ProcessRetentionTimes(monitor,
+                processed = RCalcIrt.ProcessRetentionTimes(progressSegments.NextSegment(),
                     processed.ProviderData.Select(data => data.RetentionTimeProvider).ToArray(),
                     newStandards.ToArray(), Array.Empty<DbIrtPeptide>(), regressionType);
             }
-            IrtDb.CreateIrtDb(path).UpdatePeptides((newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList(), monitor);
+            IrtDb.CreateIrtDb(path).UpdatePeptides((newStandards ?? standardPeptides).Concat(processed.DbIrtPeptides).ToList(), progressSegments.NextSegment());
         }
 
         public bool VerifyRetentionTimes(IEnumerable<string> resultsFiles)
