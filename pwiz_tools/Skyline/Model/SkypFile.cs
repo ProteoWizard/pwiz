@@ -175,5 +175,10 @@ namespace pwiz.Skyline.Model
         {
             return Server != null ? Server.URI.ToString() : GetSkylineDocServer().URI.ToString();
         }
+
+        public bool HasSize()
+        {
+            return Size.HasValue && Size > 0;
+        }
     }
 }

@@ -40,10 +40,12 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestSkypValid();
-
+            
             TestSkypGetNonExistentPath();
+            
+            TestSkypOpen();
 
-            TestSkypOpen();  
+            TestReadableSize();
         }
 
         private void TestSkypOpen()
@@ -421,6 +423,26 @@ namespace pwiz.SkylineTestFunctional
 
         private const string STR_INVALID_SIZE_SKYP3 =
             STR_VALID_SKYP_LOCALHOST + "\n\rFileSize:invalid\n\rDownloadingUser:no-name@no-name.edu";
+
+        private void TestReadableSize()
+        {
+            long size = 999;
+            Assert.AreEqual("999 B", WebDownloadClient.GetDownloadedSize(size, 0));
+
+            size = 1024;
+            Assert.AreEqual("1.0 KB", WebDownloadClient.GetDownloadedSize(size, 0));
+
+            size = 3500;
+            Assert.AreEqual("3.4 KB", WebDownloadClient.GetDownloadedSize(size, 0));
+
+            size = 1024 * 100;
+            long total = 1024 * 1024 * 2;
+            Assert.AreEqual("0.1 / 2.0 MB", WebDownloadClient.GetDownloadedSize(size, total));
+
+            size = 34288435; // 32.7 MB
+            total = 1024 * 1024 * 2;
+            Assert.AreEqual("32.7 / 2.0 MB", WebDownloadClient.GetDownloadedSize(size, total));
+        }
     }
 
     public class TestDownloadClient : IDownloadClient
