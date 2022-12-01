@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Threading;
 using JetBrains.Annotations;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Common.Progress
+namespace pwiz.Skyline.Util
 {
     public class ProgressMonitorProgress : AbstractProgress
     {
@@ -84,13 +85,23 @@ namespace pwiz.Common.Progress
 
         public class Disposable : ProgressMonitorProgress, IDisposable
         {
+            private bool _disposed;
             public Disposable(IProgressMonitor progressMonitor, CancellationToken cancellationToken) : base(
                 progressMonitor, cancellationToken, new ProgressStatus())
             {
             }
 
+            ~Disposable()
+            {
+                if (!_disposed)
+                {
+                    Program.ReportException(new ApplicationException(@"Disposable progress monitor was not disposed"));
+                }
+            }
+
             public void Dispose()
             {
+                _disposed = true;
                 ChangeProgressStatus(status=>status.IsFinal ? status : status.Complete());
             }
         }

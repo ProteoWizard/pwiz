@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Prosit.Communication;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using Tensorflow.Serving;
 
 namespace pwiz.Skyline.Model.Prosit

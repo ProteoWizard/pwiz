@@ -219,26 +219,5 @@ namespace pwiz.Common.SystemUtil
             }
         }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
-        {
-            Run(psi, stdin, progress, ref status, null, priorityClass);
-        }
-
-
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progressMonitor, ref IProgressStatus status,
-            TextWriter writer,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
-        {
-            if (progressMonitor == null)
-            {
-                Run(psi, stdin, SilentProgress.INSTANCE, priorityClass);
-            }
-            else
-            {
-                progressMonitor.CallWithProgress(CancellationToken.None, ref status, progress => Run(psi, stdin, progress, priorityClass));
-            }
-        }
-
     }
 }
