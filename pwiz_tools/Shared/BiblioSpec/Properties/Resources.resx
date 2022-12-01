@@ -164,4 +164,10 @@
 	<data name="BuildLibraryGridView_ScoreTypes_Number_of_score_types_is_not_equal_to_number_of_rows_in_grid_" xml:space="preserve">
 	  <value>Number of score types is not equal to number of rows in grid.</value>
   </data>
+    <data name="ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability_that_identification_is_correct_" xml:space="preserve">
+        <value>Score threshold minimum (score is probability that identification is correct)</value>
+    </data>
+    <data name="ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_" xml:space="preserve">
+        <value>Score threshold maximum (score is probability that identification is incorrect)</value>
+    </data>
 </root>

@@ -2389,11 +2389,6 @@ namespace pwiz.Skyline.SettingsUI
             set { textPeptide.Text = value; }            
         }
 
-        public int GetSelectedIndex()
-        {
-            return SelectedIndex;
-        }
-
         public int SelectedIndex
         {
             get { return listPeptide.SelectedIndex; }
@@ -2796,29 +2791,37 @@ namespace pwiz.Skyline.SettingsUI
             private List<TextColor> GetSequencePartsToDraw(ExplicitMods mods)
             {
                 var toDrawParts = new List<TextColor>();
-                if (!_pepInfo.Key.HasModifications)
+
+                if (_pepInfo.Key.IsPrecursorKey)
                 {
-                    toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
+                    toDrawParts.Add(new TextColor(_pepInfo.Key.ToString()));
                 }
                 else
                 {
-                    var splitMods = SplitModifications(_pepInfo.Key.Sequence);
-                    for (var i = 0; i < splitMods.Count; i++)
+                    if (!_pepInfo.Key.HasModifications)
                     {
-                        var piece = splitMods[i];
-                        string drawStr = piece.Item1.ToString();
-                        var drawColor = Brushes.Black;
-                        if (piece.Item2 != null) // if is modified AA
+                        toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
+                    }
+                    else
+                    {
+                        var splitMods = SplitModifications(_pepInfo.Key.Sequence);
+                        for (var i = 0; i < splitMods.Count; i++)
                         {
-                            drawStr += piece.Item2;
-                            var currentMod = GetCurrentMod(mods, i, piece);
-                            if (!IsMatched(currentMod, piece)) // not match if color is red
+                            var piece = splitMods[i];
+                            string drawStr = piece.Item1.ToString();
+                            var drawColor = Brushes.Black;
+                            if (piece.Item2 != null) // if is modified AA
                             {
-                                drawStr = drawStr.Replace(@"]", @"?]");
-                                drawColor = Brushes.Red;
+                                drawStr += piece.Item2;
+                                var currentMod = GetCurrentMod(mods, i, piece);
+                                if (!IsMatched(currentMod, piece)) // not match if color is red
+                                {
+                                    drawStr = drawStr.Replace(@"]", @"?]");
+                                    drawColor = Brushes.Red;
+                                }
                             }
+                            toDrawParts.Add(new TextColor(drawStr, drawColor));
                         }
-                        toDrawParts.Add(new TextColor(drawStr, drawColor));
                     }
                 }
                 return toDrawParts;
@@ -2960,6 +2963,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
         {
+            if (info.Key.IsPrecursorKey)
+                return info.Key.PrecursorMz.GetValueOrDefault();
+
             GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
             return CalcMz(info, _settings, transitionGroup, mods);
         }
@@ -2970,6 +2976,9 @@ namespace pwiz.Skyline.SettingsUI
         private static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
             TransitionGroupDocNode transitionGroup, ExplicitMods mods)
         {
+            if (info.Key.IsPrecursorKey)
+                return info.Key.PrecursorMz.GetValueOrDefault();
+
             var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
                 .GetPrecursorMass(info.Target);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));

@@ -61,6 +61,16 @@ namespace pwiz.Skyline.Model.Results
 
         public int TransitionIndex { get; set; }
 
+        public TransitionFullScanInfo CurrentTransition
+        {
+            get
+            {
+                if (ScanProvider.Transitions.Length > TransitionIndex)
+                    return ScanProvider.Transitions[TransitionIndex];
+                return null;
+            }
+        }
+
         public int ScanIndex { get; set; }
 
         public int? OptStep { get; private set; }
