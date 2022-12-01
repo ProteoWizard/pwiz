@@ -225,18 +225,18 @@ namespace pwiz.Common.SystemUtil
             Run(psi, stdin, progress, ref status, null, priorityClass);
         }
 
-        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
+
+        public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progressMonitor, ref IProgressStatus status,
             TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
-            var progressMonitorReporter = new ProgressMonitorProgress(progress, CancellationToken.None, status);
-            try
+            if (progressMonitor == null)
             {
-                Run(psi, stdin, progressMonitorReporter, writer, priorityClass);
+                Run(psi, stdin, SilentProgress.INSTANCE, priorityClass);
             }
-            finally
+            else
             {
-                status = progressMonitorReporter.ProgressStatus;
+                progressMonitor.CallWithProgress(CancellationToken.None, ref status, progress => Run(psi, stdin, progress, priorityClass));
             }
         }
 

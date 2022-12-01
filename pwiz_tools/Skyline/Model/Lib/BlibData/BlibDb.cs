@@ -243,7 +243,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         {
             progress.Message = Resources
                 .BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list;
-            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progress);
+            IProgressStatus progressStatus = new ProgressStatus();
+            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, new ProgressProgressMonitor(progress), ref progressStatus);
         }
 
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,

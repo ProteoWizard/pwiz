@@ -16,6 +16,17 @@ namespace pwiz.Common.Progress
             progressMonitor.UpdateProgress(progressStatus);
         }
 
+        public static IProgress ForProgressMonitor(IProgressMonitor progressMonitor,
+            CancellationToken cancellationToken, IProgressStatus progressStatus)
+        {
+            if (progressMonitor == null)
+            {
+                return SilentProgress.INSTANCE;
+            }
+
+            return new ProgressMonitorProgress(progressMonitor, cancellationToken, progressStatus);
+        }
+
         public IProgressMonitor ProgressMonitor { get; }
         public IProgressStatus ProgressStatus
         {
