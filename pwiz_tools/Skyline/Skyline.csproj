@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>256</ApplicationRevision>
-    <ApplicationVersion>22.2.1.256</ApplicationVersion>
+    <ApplicationRevision>306</ApplicationRevision>
+    <ApplicationVersion>22.2.1.306</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -453,6 +453,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\CalibrationCurveMetrics.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
