@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -375,6 +376,7 @@ namespace pwiz.Skyline.Model.Lib
         public delegate bool BuildFunction(IDocumentContainer documentContainer,
                                            ILibraryBuilder libraryBuilder,
                                            IProgressMonitor monitor,
+                                           CancellationToken cancellationToken,
                                            BuildState buildState);
 
         public sealed class BuildState
@@ -397,10 +399,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             var monitor = new LibraryBuildMonitor(this, container);
             var buildState = new BuildState(builder.LibrarySpec, BuildLibraryBackground);
-            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, buildState)), @"Library Build");
+            ActionUtil.RunAsync(() => callback(buildState, BuildLibraryBackground(container, builder, monitor, CancellationToken.None, buildState)), @"Library Build");
         }
 
-        public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, BuildState buildState)
+        public bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder, IProgressMonitor monitor, CancellationToken cancellationToken, BuildState buildState)
         {
             LocalizationHelper.InitThread();
             // Avoid building a library that is loading or allowing the library to be loaded
@@ -419,7 +421,7 @@ namespace pwiz.Skyline.Model.Lib
             bool success;
             lock (loadLock)
             {
-                success = builder.BuildLibrary(monitor);
+                success = builder.BuildLibrary(monitor, cancellationToken);
                 var iRTCapableBuilder = builder as IiRTCapableLibraryBuilder;
                 if (null != iRTCapableBuilder)
                 {
@@ -527,7 +529,7 @@ namespace pwiz.Skyline.Model.Lib
         /// to cancel.
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
-        bool BuildLibrary(IProgress progress);
+        bool BuildLibrary(IProgressMonitor progress, CancellationToken cancellationToken);
 
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.

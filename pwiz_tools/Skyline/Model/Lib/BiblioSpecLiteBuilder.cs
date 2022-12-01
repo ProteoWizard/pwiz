@@ -26,7 +26,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.BiblioSpec;
-using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -135,8 +134,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    InputFiles = progressMonitor.CallWithProgress(cancellationToken, ref status,
-                        progress => VendorIssueHelper.ConvertPilotFiles(InputFiles, progress));
+                    VendorIssueHelper.ConvertPilotFiles(InputFiles, progressMonitor, status);
                     if (progressMonitor.IsCanceled)
                         return false;
                 }
@@ -166,8 +164,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    if (!blibBuilder.BuildLibrary(Action, progressMonitor, ref status,
-                        out _buildCommandArgs, out _buildOutput, out _ambiguousMatches))
+                    if (!progressMonitor.CallWithProgress(cancellationToken, ref status, progress=>blibBuilder.BuildLibrary(Action, progress,
+                        out _buildCommandArgs, out _buildOutput, out _ambiguousMatches)))
                     {
                         return false;
                     }
@@ -218,7 +216,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 using (var saver = new FileSaver(OutputPath))
                 {
-                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progressMonitor, ref status))
+                    if (!progressMonitor.CallWithProgress(cancellationToken, ref status, progress=>blibFilter.Filter(redundantLibrary, saver.SafeName, progress)))
                     {
                         return false;
                     }

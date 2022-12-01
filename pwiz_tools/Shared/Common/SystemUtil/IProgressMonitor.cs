@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Threading;
+using pwiz.Common.Progress;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -73,6 +75,59 @@ namespace pwiz.Common.SystemUtil
         public bool HasUI
         {
             get { return false; }
+        }
+    }
+
+    public static class ProgressMonitorExtensions
+    {
+        public static T SafeCallWithProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
+            ref IProgressStatus status, Func<IProgress, T> function)
+        {
+            T returnValue = default(T);
+            try
+            {
+                returnValue = CallWithProgress(progressMonitor, cancellationToken, ref status, function);
+            }
+            catch (Exception e)
+            {
+                if (!progressMonitor.IsCanceled)
+                {
+                    if (!status.IsFinal)
+                    {
+                        progressMonitor.UpdateProgress(status = status.ChangeErrorException(e));
+                    }
+                }
+            }
+            return returnValue;
+        }
+        public static T CallWithProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
+            ref IProgressStatus status, Func<IProgress, T> function)
+        {
+            var progressMonitorProgress = new ProgressMonitorProgress(progressMonitor, cancellationToken, status);
+            T returnValue = default(T);
+            try
+            {
+                returnValue = function(progressMonitorProgress);
+                status = progressMonitorProgress.ProgressStatus;
+                if (progressMonitor.IsCanceled && !status.IsFinal)
+                {
+                    progressMonitor.UpdateProgress(status);
+                }
+                return returnValue;
+            }
+            finally
+            {
+                status = progressMonitorProgress.ProgressStatus;
+            }
+        }
+
+        public static T CallWithNewProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
+            Func<IProgress, T> function)
+        {
+            using (var progress = new ProgressMonitorProgress.Disposable(progressMonitor, cancellationToken))
+            {
+                return function(progress);
+            }
         }
     }
 }

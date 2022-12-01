@@ -387,10 +387,10 @@ namespace pwiz.Skyline.SettingsUI
                                 Library lib = null;
                                 using (var longWait = new LongWaitDlg {Text = Resources.LibraryBuildNotificationHandler_AddIrts_Loading_library})
                                 {
-                                    longWait.PerformWork(TopMostApplicationForm, 800, ()=>
+                                    longWait.PerformWork(TopMostApplicationForm, 800, (monitor)=>
                                     {
                                         lib = NotificationContainer.LibraryManager.TryGetLibrary(buildState.LibrarySpec) ??
-                                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(longWait.AsProgress()));
+                                              NotificationContainer.LibraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
                                         if (lib != null)
                                         {
                                             foreach (var stream in lib.ReadStreams)

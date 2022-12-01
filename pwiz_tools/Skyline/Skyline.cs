@@ -3830,14 +3830,15 @@ namespace pwiz.Skyline
             }
         }
 
-        public IProgress GetProgressReporter(IProgressStatus status)
+        public IProgress ProgressForStatus(IProgressStatus status)
         {
-            return new ProgressMonitorReporter(this, _cancellationTokenSource.Token, status);
+            return new ProgressMonitorProgress(this, _cancellationTokenSource.Token, status);
         }
 
-        public IProgress NewProgressReporter()
+        public ProgressMonitorProgress.Disposable NewProgress()
         {
-            return GetProgressReporter(new ProgressStatus());}
+            return new ProgressMonitorProgress.Disposable(this, ApplicationCancellationToken);
+        }
 
         UpdateProgressResponse IProgressMonitor.UpdateProgress(IProgressStatus status)
         {

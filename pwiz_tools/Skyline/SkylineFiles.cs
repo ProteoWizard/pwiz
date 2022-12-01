@@ -3005,7 +3005,8 @@ namespace pwiz.Skyline
                             {
                                 try
                                 {
-                                    docBlib.DeleteDataFiles(dlg.LibraryRunsRemovedList.ToArray(), this);
+                                    using var progress = NewProgress();
+                                    docBlib.DeleteDataFiles(dlg.LibraryRunsRemovedList.ToArray(), progress);
                                     releaseLibraries = true;
                                 }
                                 catch (Exception x)

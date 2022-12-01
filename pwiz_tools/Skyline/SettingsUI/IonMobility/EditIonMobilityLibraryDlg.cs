@@ -759,7 +759,7 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
                         {
                             var success = false;
                             if (library == null)
-                                library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
+                                library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(new ProgressProgressMonitor(monitor)));
 
                             int fileCount = library.FileCount ?? 0;
                             if (fileCount != 0)

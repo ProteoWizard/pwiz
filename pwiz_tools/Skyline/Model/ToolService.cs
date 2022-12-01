@@ -89,7 +89,9 @@ namespace pwiz.Skyline.Model
             {
                 throw new ArgumentException(@"The report definition uses the old format.");
             }
-            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, Program.MainWindow.NewProgressReporter());
+
+            using var progress = Program.MainWindow.NewProgress();
+            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, progress);
         }
 
         private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgress progressMonitor)

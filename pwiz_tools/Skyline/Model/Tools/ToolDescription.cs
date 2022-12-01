@@ -879,7 +879,7 @@ namespace pwiz.Skyline.Model.Tools
                         toolTitle, reportTitle));
             }
 
-            var progressReporter = new ProgressMonitorReporter(progressMonitor, CancellationToken.None,
+            var progressReporter = new ProgressMonitorProgress(progressMonitor, CancellationToken.None,
                 new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                     reportTitle)));
             if (!viewContext.Export(progressReporter, viewInfo, writer,

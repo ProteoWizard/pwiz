@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Progress;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -38,7 +37,7 @@ namespace pwiz.Skyline.Model.Lib
         public string DocumentFilePath { get; private set; }
         public SrmDocument Document { get; private set; }
 
-        public void ExportSpectralLibrary(string path, IProgress progress)
+        public void ExportSpectralLibrary(string path, IProgress progressMonitor)
         {
             const string name = "exported";
             var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
@@ -59,17 +58,21 @@ namespace pwiz.Skyline.Model.Lib
             var rCalcIrt = Document.Settings.HasRTPrediction
                 ? Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt
                 : null;
-            var segmentedProgress = new SegmentedProgress(progress ?? default(SilentProgress), 0, rCalcIrt == null ? 1 : 2);
+            var progressSegments = new ProgressSegments(progressMonitor, 1);
+            if (rCalcIrt != null)
+            {
+                progressSegments.SegmentCount++;
+            }
+
             using (var blibDb = BlibDb.CreateBlibDb(path))
             {
                 var libSpec = new BiblioSpecLiteSpec(name, path);
-                blibDb.CreateLibraryFromSpectra(libSpec, spectra.Values.ToList(), name, segmentedProgress);
+                blibDb.CreateLibraryFromSpectra(libSpec, spectra.Values.ToList(), name, progressSegments.NextSegment());
             }
 
             if (rCalcIrt != null)
             {
-                segmentedProgress = segmentedProgress.NextSegment();
-                IrtDb.CreateIrtDb(path).UpdatePeptides(rCalcIrt.GetDbIrtPeptides().ToList(), segmentedProgress);
+                IrtDb.CreateIrtDb(path).UpdatePeptides(rCalcIrt.GetDbIrtPeptides().ToList(), progressSegments.NextSegment());
             }
         }
 

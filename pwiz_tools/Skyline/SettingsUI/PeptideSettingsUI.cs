@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls;
@@ -819,7 +820,7 @@ namespace pwiz.Skyline.SettingsUI
                         longWait.PerformWork(this, 800, monitor => midasLib = _libraryManager.LoadLibrary(midasLibSpec, () => new DefaultFileLoadMonitor(monitor)) as MidasLibrary);
                     }
                     var builder = new MidasBlibBuilder(_parent.Document, midasLib, filterDlg.LibraryName, filterDlg.FileName);
-                    builder.BuildLibrary(null);
+                    builder.BuildLibrary(null, CancellationToken.None);
                     Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
                     _driverLibrary.LoadList();
                 }

@@ -112,7 +112,6 @@ namespace pwiz.Common.SystemUtil
             {
                 var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
                 StringBuilder sbError = new StringBuilder();
-                int percentLast = 0;
                 string line;
                 while ((line = reader.ReadLine(progress?.CancellationToken ?? CancellationToken.None)) != null)
                 {
@@ -142,12 +141,7 @@ namespace pwiz.Common.SystemUtil
                             string percentPart = parts[parts.Length - 1];
                             if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                             {
-                                percentLast = (int)percent;
                                 progress.Value = percent;
-                                if (percent >= 100)
-                                {
-                                    progress = SegmentedProgress.TryNextSegment(progress);
-                                }
                             }
                         }
                         else if (StatusPrefix == null || line.StartsWith(StatusPrefix))

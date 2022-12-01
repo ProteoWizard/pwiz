@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
-using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
@@ -45,13 +44,13 @@ namespace pwiz.Skyline.Model.Results
         protected readonly FileSaver _fsPeaks;
         protected readonly FileSaver _fsScores;
         protected readonly ILoadMonitor _loader;
-        protected IProgress _status;
+        protected IProgressStatus _status;
         protected int _peakCount;
         protected int _scoreCount;
         protected IPooledStream _destinationStream;
 
-        protected ChromCacheWriter(string cachePath, IProgress progress,
-                                   Action<ChromatogramCache> completed)
+        protected ChromCacheWriter(string cachePath, ILoadMonitor loader, IProgressStatus status,
+                                   Action<ChromatogramCache, IProgressStatus> completed)
         {
             CachePath = cachePath;
             CacheFormat = CacheFormat.CURRENT;

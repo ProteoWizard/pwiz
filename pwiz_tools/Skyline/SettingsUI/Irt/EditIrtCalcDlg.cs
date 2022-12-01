@@ -913,8 +913,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     try
                     {
-                        longWait.PerformWork(MessageParent, 800, ()=>
-                            irtAverages = ProcessRetentionTimes(longWait.AsProgress(), GetRetentionTimeProviders(document).ToArray(), RegressionType));
+                        var status = longWait.PerformWork(MessageParent, 800, monitor =>
+                            irtAverages = ProcessRetentionTimes(monitor, GetRetentionTimeProviders(document).ToArray(), RegressionType));
+                        if (status.IsError)
+                        {
+                            MessageDlg.Show(MessageParent, status.ErrorException.Message);
+                            return;
+                        }
                     }
                     catch (Exception x)
                     {
@@ -1011,7 +1016,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         try
                         {
-                            var status = longWait.PerformWork(MessageParent, 800, ()=>
+                            var status = longWait.PerformWork(MessageParent, 800, monitor =>
                             {
                                 if (library == null)
                                     library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
@@ -1019,7 +1024,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
                                 if (irtProvider.Any())
                                 {
-                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider, RegressionType);
+                                    irtAverages = ProcessRetentionTimes(longWait.AsProgress(), irtProvider, RegressionType);
                                 }
                                 else
                                 {
@@ -1033,7 +1038,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         return;
                                     }
 
-                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders.ToArray(), RegressionType);
+                                    irtAverages = ProcessRetentionTimes(longWait.AsProgress(), library.RetentionTimeProviders.ToArray(), RegressionType);
                                 }
                             });
                             if (status.IsError)
@@ -1092,7 +1097,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         {
                             var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
-                            irtAverages = ProcessRetentionTimes(monitor,
+                            irtAverages = ProcessRetentionTimes(longWait.AsProgress(),
                                 new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) },
                                 RegressionType);
                         });

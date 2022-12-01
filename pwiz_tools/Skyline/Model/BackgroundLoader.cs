@@ -297,18 +297,19 @@ namespace pwiz.Skyline.Model
         public class LoadMonitor : ILoadMonitor
         {
             private readonly BackgroundLoader _manager;
+            private readonly IDocumentContainer _container;
+            private readonly object _tag;
 
-            public LoadMonitor(BackgroundLoader manager, CancellationToken cancellationToken) : this(cancellationToken)
+            public LoadMonitor(BackgroundLoader manager, IDocumentContainer container, object tag)
             {
                 _manager = manager;
+                _container = container;
+                _tag = tag;
             }
 
-            protected LoadMonitor(CancellationToken cancellationToken)
+            protected LoadMonitor()
             {
-                CancellationToken = cancellationToken;
             }
-
-            public CancellationToken CancellationToken { get; }
 
             public virtual IStreamManager StreamManager
             {
@@ -323,8 +324,18 @@ namespace pwiz.Skyline.Model
             {
                 get
                 {
-                    return CancellationToken.IsCancellationRequested;
+                    // Check for global cancelation of the progress monitor
+                    var monitor = _container as IProgressMonitor;
+                    if (monitor != null && monitor.IsCanceled)
+                        return true;
+                    // Check for cancellation of just this item
+                    return IsCanceledItem(_tag);
                 }
+            }
+
+            protected bool IsCanceledItem(object tag)
+            {
+                return _manager.IsCanceled(_container, tag);
             }
 
             /// <summary>
@@ -364,9 +375,9 @@ namespace pwiz.Skyline.Model
             _monitor = monitor;
         }
 
-        public DefaultFileLoadMonitor(IProgress progress)
+        public static DefaultFileLoadMonitor ForProgress(IProgress progress)
         {
-            _monitor = new ProgressProgressMonitor(progress);
+            return new DefaultFileLoadMonitor(new ProgressProgressMonitor(progress));
         }
 
         public bool IsCanceled

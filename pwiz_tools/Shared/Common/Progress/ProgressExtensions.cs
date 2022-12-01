@@ -41,18 +41,5 @@ namespace pwiz.Common.Progress
             return progress.IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }
 
-        public static T CallWithProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
-            ref IProgressStatus status, Func<IProgress, T> action)
-        {
-            var progressMonitorProgress = new ProgressMonitorProgress(progressMonitor, cancellationToken, status);
-            try
-            {
-                return action(progressMonitorProgress);
-            }
-            finally
-            {
-                status = progressMonitorProgress.ProgressStatus;
-            }
-        }
     }
 }

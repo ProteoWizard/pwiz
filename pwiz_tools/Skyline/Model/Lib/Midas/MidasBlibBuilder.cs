@@ -20,7 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Progress;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
             _libSpec = new BiblioSpecLiteSpec(libName, blibPath);
         }
 
-        public bool BuildLibrary(IProgress progress)
+        public bool BuildLibrary(IProgressMonitor progress, CancellationToken cancellationToken)
         {
             var bestSpectra = new List<SpectrumMzInfo>();
             foreach (var nodePep in _doc.Peptides)
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
             using (var blibDb = BlibDb.CreateBlibDb(_libSpec.FilePath))
             {
-                return blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress) != null;
+                return progress.CallWithNewProgress(cancellationToken, progress2=>blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress2)) != null;
             }
         }
 

@@ -61,15 +61,15 @@ namespace pwiz.Skyline.Model.Prosit
             _nce = nce;
         }
 
-        public bool BuildLibrary(IProgress progress)
+        public bool BuildLibrary(IProgressMonitor progress, CancellationToken cancellationToken)
         {
-            var result = BuildLibraryOrThrow(progress);
-            return result;
+            bool result = progress.CallWithNewProgress(cancellationToken, BuildLibraryOrThrow);
+            return result && !progress.IsCanceled;
         }
 
         private bool BuildLibraryOrThrow(IProgress progress)
         {
-            var segmentedProgress = new SegmentedProgress(progress, 0, 5);
+            var progressSegments = new ProgressSegments(progress, 5);
             var standardSpectra = new List<SpectrumMzInfo>();
 
             // First get predictions for iRT standards specified by the user which may or may not be in the document
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Prosit
                         CancellationToken.None);
 
                     // Get spectra
-                    var standardMS = _intensityModel.PredictBatches(_prositClient, segmentedProgress, _document.Settings,
+                    var standardMS = _intensityModel.PredictBatches(_prositClient, progressSegments.NextSegment(), _document.Settings,
                         standardPeptidesToAdd.Select(p => p.WithNCE(_nce)).ToArray());
 
                     // Merge iRT and MS2 into SpecMzInfos
@@ -97,13 +97,11 @@ namespace pwiz.Skyline.Model.Prosit
                 }
             }
 
-            segmentedProgress = segmentedProgress.NextSegment();
             // Predict fragment intensities
-            PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progress, _document.Settings,
+            PrositMS2Spectra ms = _intensityModel.PredictBatches(_prositClient, progressSegments.NextSegment(), _document.Settings,
                 _peptides.Zip(_precursors,
                     (pep, prec) =>
                         new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, IsotopeLabelType.light, _nce)).ToArray());
-            segmentedProgress = segmentedProgress.NextSegment();
 
             var specMzInfo = ms.Spectra.Select(m => m.SpecMzInfo).ToList();
 
@@ -117,8 +115,7 @@ namespace pwiz.Skyline.Model.Prosit
                     distinctPeps.Add(new PrositRetentionTimeModel.PeptideDocNodeWrapper(p));
                 }
             }
-            var iRTMap = _rtModel.PredictBatches(_prositClient, segmentedProgress, _document.Settings, distinctPeps);
-            segmentedProgress = segmentedProgress.NextSegment();
+            var iRTMap = _rtModel.PredictBatches(_prositClient, progressSegments.NextSegment(), _document.Settings, distinctPeps);
 
             for (var i = 0; i < specMzInfo.Count; ++i)
             {
@@ -142,8 +139,6 @@ namespace pwiz.Skyline.Model.Prosit
             if (!librarySpectra.Any())
                 return true;
 
-            segmentedProgress = segmentedProgress.NextSegment();
-            segmentedProgress.Message = Resources.SkylineWindow_SaveDocument_Saving___;
             // Build the library
             using (var blibDb = BlibDb.CreateBlibDb(LibrarySpec.FilePath))
             {
@@ -152,7 +147,7 @@ namespace pwiz.Skyline.Model.Prosit
                 var docLibrarySpec2 = docLibrarySpec;
 
                 docLibraryNew =
-                    blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, LibrarySpec.Name, segmentedProgress);
+                    blibDb.CreateLibraryFromSpectra(docLibrarySpec2, librarySpectra, LibrarySpec.Name, progressSegments.NextSegment(Resources.SkylineWindow_SaveDocument_Saving___));
                 if (docLibraryNew == null)
                     return false;
             }

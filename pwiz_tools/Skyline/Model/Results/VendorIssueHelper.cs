@@ -25,7 +25,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
-using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -45,7 +44,7 @@ namespace pwiz.Skyline.Model.Results
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
         // ReSharper restore LocalizableElement
 
-        public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgress progress)
+        public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, IProgressStatus status)
         {
             string groupConverterExePath = null;
             var inputFilesPilotConverted = new List<string>();
@@ -71,8 +70,7 @@ namespace pwiz.Skyline.Model.Results
 
                 string message = string.Format(Resources.VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml, Path.GetFileName(inputFile));
                 int percent = index * 100 / inputFiles.Count;
-                progress.Message = message;
-                progress.Value = percent;
+                progress.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(percent));
 
                 if (groupConverterExePath == null)
                 {
@@ -149,7 +147,7 @@ namespace pwiz.Skyline.Model.Results
                     if (progress.IsCanceled)
                     {
                         proc.Kill();
-                        throw new LoadCanceledException();
+                        throw new LoadCanceledException(status.Cancel());
                     }
 
                     sbOut.AppendLine(line);
@@ -172,6 +170,7 @@ namespace pwiz.Skyline.Model.Results
 
                 inputFilesPilotConverted.Add(outputFile);
             }
+            progress.UpdateProgress(status.ChangePercentComplete(100));
             return inputFilesPilotConverted;
         }
 
@@ -215,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
                 if (monitor.IsCanceled)
                 {
                     proc.Kill();
-                    throw new LoadCanceledException();
+                    throw new LoadCanceledException(new ProgressStatus(string.Empty).Cancel());
                 }
 
                 sbOut.AppendLine(line);
@@ -226,7 +225,7 @@ namespace pwiz.Skyline.Model.Results
                 if (monitor.IsCanceled)
                 {
                     proc.Kill();
-                    throw new LoadCanceledException();
+                    throw new LoadCanceledException(new ProgressStatus(string.Empty).Cancel());
                 }
             }
 
@@ -304,7 +303,7 @@ namespace pwiz.Skyline.Model.Results
                 if (monitor.IsCanceled)
                 {
                     proc.Kill();
-                    throw new LoadCanceledException();
+                    throw new LoadCanceledException(status.Cancel());
                 }
 
                 sbOut.AppendLine(line);
@@ -347,7 +346,7 @@ namespace pwiz.Skyline.Model.Results
                 if (monitor.IsCanceled)
                 {
                     proc.Kill();
-                    throw new LoadCanceledException();
+                    throw new LoadCanceledException(status.Cancel());
                 }
             }
 
