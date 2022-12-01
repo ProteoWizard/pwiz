@@ -11723,12 +11723,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>Error getting score type for this file.</value>
   </data>
-  <data name="BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
-    <value>Score threshold minimum (score is probability that identification is correct).</value>
-  </data>
-  <data name="BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
-    <value>Score threshold maximum (score is probability that identification is incorrect).</value>
-  </data>
   <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
     <value>Score threshold '{0}' is invalid (must be a decimal value between {1} and {2}).</value>
   </data>
