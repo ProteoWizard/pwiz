@@ -26,6 +26,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -2934,14 +2935,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             FilePath = filePath;
             IdFilePath = idFilePath;
-            CutoffScores = new Dictionary<string, double?>();
+            ScoreThresholds = new Dictionary<ScoreType, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
         }
 
         public string FilePath { get; private set; }
         public string IdFilePath { get; set; }
-        public Dictionary<string, double?> CutoffScores { get; private set; }
+        public Dictionary<ScoreType, double?> ScoreThresholds { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }
 
