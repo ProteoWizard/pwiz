@@ -51,8 +51,6 @@ inline bool isinf(T value)
     return value == std::numeric_limits<T>::infinity();
 }
 #endif
-#else
-#define isinf(x) std::isinf((x))
 #endif
 
 
