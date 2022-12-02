@@ -87,6 +87,7 @@
             this.lblIntensityThresholdMin = new System.Windows.Forms.Label();
             this.lblIntensityThresholdType = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.textAccumulationTime = new System.Windows.Forms.TextBox();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -483,12 +484,18 @@
             resources.ApplyResources(this.label7, "label7");
             this.label7.Name = "label7";
             // 
+            // textAccumulationTime
+            // 
+            resources.ApplyResources(this.textAccumulationTime, "textAccumulationTime");
+            this.textAccumulationTime.Name = "textAccumulationTime";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textAccumulationTime);
             this.Controls.Add(this.panelSureQuant);
             this.Controls.Add(this.panelBrukerTimsTof);
             this.Controls.Add(this.btnGraph);
@@ -614,5 +621,6 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox textIntensityThresholdMin;
         private System.Windows.Forms.Label lblIntensityThresholdMin;
+        private System.Windows.Forms.TextBox textAccumulationTime;
     }
 }
