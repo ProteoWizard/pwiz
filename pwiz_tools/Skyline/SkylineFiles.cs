@@ -3425,6 +3425,43 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ImportAnnotationsFromFile(string filename)
+        {
+            using (var reader = new StreamReader(filename))
+            {
+                ImportAnnotations(reader, new MessageInfo(MessageType.imported_annotations, Document.DocumentType, filename));
+            }
+        }
+
+        public void ImportAnnotations(TextReader reader, MessageInfo messageInfo)
+        {
+            lock (GetDocumentChangeLock())
+            {
+                var originalDocument = Document;
+                SrmDocument newDocument = null;
+                using (var longWaitDlg = new LongWaitDlg(this))
+                {
+                    longWaitDlg.PerformWork(this, 1000, () =>
+                    {
+                        var documentAnnotations = new DocumentAnnotations(originalDocument);
+                        newDocument = documentAnnotations.ReadAnnotationsFromTextReader(longWaitDlg.CancellationToken, reader);
+                    });
+                }
+                if (newDocument != null)
+                {
+                    ModifyDocument(Resources.SkylineWindow_ImportAnnotations_Import_Annotations, doc =>
+                    {
+                        if (!ReferenceEquals(doc, originalDocument))
+                        {
+                            throw new ApplicationException(Resources
+                                .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                        }
+                        return newDocument;
+                    }, docPair => AuditLogEntry.CreateSingleMessageEntry(messageInfo));
+                }
+            }
+        }
+
 
         private void importAnnotationsMenuItem_Click(object sender, EventArgs e)
         {

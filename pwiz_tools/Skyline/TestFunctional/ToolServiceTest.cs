@@ -27,6 +27,7 @@ using pwiz.SkylineTestUtil;
 using SkylineTool;
 using Version = SkylineTool.Version;
 
+#pragma warning disable CS0612 // "obsolete"
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]

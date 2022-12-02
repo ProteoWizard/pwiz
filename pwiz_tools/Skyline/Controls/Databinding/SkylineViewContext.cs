@@ -354,6 +354,13 @@ namespace pwiz.Skyline.Controls.Databinding
             using (var bindingListSource = new BindingListSource(progress.CancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
+                if (viewLayout != null)
+                {
+                    foreach (var column in viewLayout.ColumnFormats)
+                    {
+                        bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
+                    }
+                }
                 progress.SetProgressValue(5);
                 progress.SetProgressMessage(Resources.ExportReportDlg_ExportReport_Writing_report);
 
