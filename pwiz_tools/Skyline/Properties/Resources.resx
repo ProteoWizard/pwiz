@@ -11907,4 +11907,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
       <value>Failed loading MIDAS library {0}.</value>
   </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+	  <value>({0} Da)</value>
+<comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
 </root>

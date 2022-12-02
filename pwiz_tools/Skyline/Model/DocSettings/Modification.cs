@@ -406,10 +406,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, Terminus.ToString()));
                 }
 
-                if (IsVariable)
-                {
-                    lines.Add(PropertyNames.StaticMod_IsVariable);
-                }
+                // TODO: "Variable" is only interesting to include in the description if the modification is
+                // also implicit, which this object does not know
+                // if (IsVariable)
+                // {
+                //     lines.Add(PropertyNames.StaticMod_IsVariable);
+                // }
 
                 if (IsCrosslinker)
                 {
@@ -518,16 +520,37 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        /// <summary>
+        /// If the formula is not blank, return the formula followed by the mono mass in parentheses formatted to one decimal place.
+        /// For example: H2O (-18)
+        /// If the formula is blank then return <see cref="FormatMass"/>
+        /// </summary>
         public static string FormatFormulaOrMass(string formula, double? monoMass, double? averageMass)
         {
             if (!string.IsNullOrEmpty(formula))
             {
-                return TextUtil.ColonSeparate(PropertyNames.StaticMod_Formula, formula);
+                var parts = new List<string> { formula };
+                if (monoMass.HasValue)
+                {
+                    var massString = monoMass.Value.ToString(@"0.#");
+                    if (monoMass.Value > 0)
+                    {
+                        massString = @"+" + massString;
+                    }
+
+                    parts.Add(string.Format(Resources.StaticMod_FormatFormulaOrMass___0__Da_, massString));
+                }
+
+                return TextUtil.SpaceSeparate(parts);
             }
 
             return FormatMass(monoMass, averageMass);
         }
 
+        /// <summary>
+        /// If the mono and average masses are the same then return "Mass: &lt;mass>".
+        /// Otherwise return something saying what the mono and average masses are.
+        /// </summary>
         public static string FormatMass(double? monoMass, double? averageMass)
         {
             var massDescriptions = new List<string>();

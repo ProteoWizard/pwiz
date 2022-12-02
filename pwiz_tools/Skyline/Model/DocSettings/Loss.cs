@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, MonoisotopicMass, AverageMass));
+                stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, -MonoisotopicMass, -AverageMass));
                 if (Charge != 0)
                 {
                     stringBuilder.Append(Adduct.FromChargeProtonated(Charge));
