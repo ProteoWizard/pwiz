@@ -61,6 +61,11 @@ namespace pwiz.Skyline.Model.Lib
             return NistLibrary.Load(this, loader);
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.NistLibrary_SpecFilter_NIST_Spectral_Library;
+        }
+
         #region Implementation of IXmlSerializable
         
         /// <summary>
