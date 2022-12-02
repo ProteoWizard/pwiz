@@ -35,7 +35,9 @@ namespace pwiz.SkylineTestUtil
 
         public void RunAsync()
         {
-            ActionUtil.RunAsync(RunOnThisThread);
+            var thread = ActionUtil.RunAsync(RunOnThisThread);
+            thread.Name = "Document Serializability Verifier";
+            thread.Priority = ThreadPriority.Lowest;
         }
 
         private void RunOnThisThread()

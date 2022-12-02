@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model
         public Color Color
         {
             get { return _color; }
-            set { _color = value; NotifyPropertyChanged(); }
+            set { _color = NormalizeColor(value); NotifyPropertyChanged(); }
         }
 
         [Track]
@@ -212,6 +212,21 @@ namespace pwiz.Skyline.Model
         public virtual void WriteXml(XmlWriter writer)
         {
             writer.WriteAttribute(ATTR.color, Hex);
+        }
+
+        public static Color NormalizeColor(Color color)
+        {
+            if (color.IsEmpty)
+            {
+                return color;
+            }
+
+            if (color.IsKnownColor || color.A != 255)
+            {
+                return Color.FromArgb(color.R, color.G, color.B);
+            }
+
+            return color;
         }
     }
 }

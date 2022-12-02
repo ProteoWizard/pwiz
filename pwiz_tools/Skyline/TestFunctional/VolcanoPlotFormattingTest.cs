@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.SkylineTestUtil;
 using ZedGraph;
@@ -330,7 +331,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             var groupDef = FindGroupComparison(GROUP_COMPARISON_NAME);
-            Assert.AreEqual(initialRowCount, groupDef.ColorRows.Count);
+            Assert.AreEqual(initialRowCount, groupDef.ColorRows.Count());
         }
 
         public class VolcanoPlotPointsInfo
@@ -338,7 +339,7 @@ namespace pwiz.SkylineTestFunctional
             public VolcanoPlotPointsInfo(int pointCount, Color color, bool labeled, PointSymbol pointSymbol, PointSize pointSize)
             {
                 PointCount = pointCount;
-                Color = color;
+                Color = RgbHexColor.NormalizeColor(color);
                 Labeled = labeled;
                 PointSymbol = pointSymbol;
                 PointSize = pointSize;
