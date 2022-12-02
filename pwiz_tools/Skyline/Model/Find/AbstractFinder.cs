@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Threading;
 using pwiz.Common.Progress;
 
 namespace pwiz.Skyline.Model.Find

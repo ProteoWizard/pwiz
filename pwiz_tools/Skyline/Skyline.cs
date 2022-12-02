@@ -4575,7 +4575,7 @@ namespace pwiz.Skyline
                         {
                             return;
                         }
-                        broker.Value = (processedCount++) * 100 / pathsToProcess.Count;
+                        broker.Value = (processedCount++) * 100.0 / pathsToProcess.Count;
                         var originalNode = newDocument.FindNode(identityPath);
                         if (originalNode != null)
                         {
