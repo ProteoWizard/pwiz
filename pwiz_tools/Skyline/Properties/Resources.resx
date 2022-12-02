@@ -2967,6 +2967,9 @@ Are you sure you want to continue?</value>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
     <value>&amp;Dwell time (ms):</value>
   </data>
+  <data name="ExportMethodDlg_ACCUMULATION_TIME_TXT" xml:space="preserve">
+      <value>Accumulation time (sec):</value>
+  </data>
   <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
     <value>Error: the instrument type {0} does not support triggered acquisition.</value>
   </data>
@@ -11864,6 +11867,9 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="SkylineWindow_FindNext_Find_Next" xml:space="preserve">
 	  <value>Find Next</value>
+  </data>
+  <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
+      <value>Invalid instrument type for SCIEX OS method export.</value>
   </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
       <value>Failed loading MIDAS library {0}.</value>
