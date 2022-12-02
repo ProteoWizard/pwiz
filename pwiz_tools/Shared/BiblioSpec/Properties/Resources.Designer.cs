@@ -259,5 +259,25 @@ namespace pwiz.BiblioSpec.Properties {
                 return ResourceManager.GetString("LibraryBuildActionExtension_LOCALIZED_VALUES_Create", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect).
+        /// </summary>
+        internal static string ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_ {
+            get {
+                return ResourceManager.GetString("ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability" +
+                        "_that_identification_is_incorrect_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct).
+        /// </summary>
+        internal static string ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability_that_identification_is_correct_ {
+            get {
+                return ResourceManager.GetString("ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability" +
+                        "_that_identification_is_correct_", resourceCulture);
+            }
+        }
     }
 }

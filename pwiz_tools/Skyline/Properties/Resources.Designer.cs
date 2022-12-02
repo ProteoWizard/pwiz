@@ -3201,26 +3201,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
-        /// </summary>
-        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_" +
-                        "that_identification_is_incorrect__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
-        /// </summary>
-        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_" +
-                        "that_identification_is_correct__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to continue?.
         /// </summary>
         public static string BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ {
@@ -12757,6 +12737,15 @@ namespace pwiz.Skyline.Properties {
         public static string ExportLiveReportDlg_ShowPreview_Preview__ {
             get {
                 return ResourceManager.GetString("ExportLiveReportDlg_ShowPreview_Preview__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accumulation time (sec):.
+        /// </summary>
+        public static string ExportMethodDlg_ACCUMULATION_TIME_TXT {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ACCUMULATION_TIME_TXT", resourceCulture);
             }
         }
         
@@ -23892,6 +23881,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed loading MIDAS library {0}..
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading {0}.
         /// </summary>
         public static string PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_ {
@@ -27305,6 +27303,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid instrument type for SCIEX OS method export..
+        /// </summary>
+        public static string SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_ {
+            get {
+                return ResourceManager.GetString("SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_" +
+                        "method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
         public static string SearchSettingsControl_Additional_Settings {
@@ -28193,15 +28201,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ApplyPeak_Failed_to_apply_peak_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ApplyPeak_Failed_to_apply_peak_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No results found for the precursor {0} in the file {1}..
-        /// </summary>
-        public static string SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__", resourceCulture);
             }
         }
         

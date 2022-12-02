@@ -459,7 +459,7 @@ namespace pwiz.Skyline.Model
             get { return _formula; }
             protected set
             {
-                _formula = value ?? string.Empty;
+                _formula = BioMassCalc.MONOISOTOPIC.RegularizeFormula(value ?? string.Empty); // e.g. XeC12N1H0 => XeC12N1
                 var unlabeled = string.IsNullOrEmpty(_formula) ? _formula : BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(_formula);
                 UnlabeledFormula = Equals(_formula, unlabeled) ? _formula : unlabeled;
             }
