@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using pwiz.BiblioSpec;
-using pwiz.Common.SystemUtil;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Search
@@ -41,7 +41,7 @@ namespace pwiz.Topograph.Search
             }
         }
 
-        public static List<SearchResult> ReadSearchResultsViaBiblioSpec(String filename, Func<int, bool> progressMonitor)
+        public static List<SearchResult> ReadSearchResultsViaBiblioSpec(String filename, CancellationToken cancellationToken, Action<int> progressMonitor)
         {
 
             string tempFile = null;
@@ -52,11 +52,10 @@ namespace pwiz.Topograph.Search
                                     {
                                         CompressLevel = 0,
                                     };
-                IProgressStatus status = new ProgressStatus("");
-                var progressMonitorImpl = ProgressMonitorImpl.NewProgressMonitorImpl(status, progressMonitor);
+                var progressMonitorImpl = ProgressMonitorImpl.NewProgressMonitorImpl(cancellationToken, progressMonitor);
                 string[] ambiguousPeptides;
-                blibBuild.BuildLibrary(LibraryBuildAction.Create, progressMonitorImpl, ref status, out ambiguousPeptides);
-                return ReadBiblioSpecDatabase(tempFile, progressMonitor);
+                blibBuild.BuildLibrary(LibraryBuildAction.Create, progressMonitorImpl, out ambiguousPeptides);
+                return ReadBiblioSpecDatabase(tempFile, cancellationToken, progressMonitor);
             }
             finally
             {
@@ -74,7 +73,7 @@ namespace pwiz.Topograph.Search
             }
         }
 
-        public static List<SearchResult> ReadBiblioSpecDatabase(string biblioSpecFile, Func<int, bool> progressMonitor)
+        public static List<SearchResult> ReadBiblioSpecDatabase(string biblioSpecFile, CancellationToken cancellationToken, Action<int> progressMonitor)
         {
             const string sqlSelectFromRefSpectra =
                 "SELECT S.peptideSeq, S.precursorMZ, S.precursorCharge, S.peptideModSeq,"

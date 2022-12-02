@@ -1,41 +1,30 @@
 ﻿using System;
-using pwiz.Common.SystemUtil;
+using System.Threading;
+using pwiz.Common.Progress;
 
 namespace pwiz.Topograph.Util
 {
-    public class ProgressMonitorImpl : IProgressMonitor
+    public class ProgressMonitorImpl : AbstractProgress
     {
-        private Func<bool> _isCanceledImpl;
-        private Action<IProgressStatus> _updateProgressImpl;
-        public ProgressMonitorImpl(Func<bool> isCanceledImpl, Action<IProgressStatus> updateProgressImpl)
+        private Action<int> _updateProgressImpl;
+        public ProgressMonitorImpl(CancellationToken cancellationToken, Action<int> updateProgressImpl) : base(cancellationToken)
         {
-            _isCanceledImpl = isCanceledImpl;
             _updateProgressImpl = updateProgressImpl;
         }
-        public bool IsCanceled
+
+        public override double Value
         {
-            get { return _isCanceledImpl.Invoke(); }
+            set => _updateProgressImpl(Math.Max(0, Math.Min(100, (int) value)));
         }
 
-        public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+        public override string Message
         {
-            _updateProgressImpl.Invoke(status);
-            return UpdateProgressResponse.normal;
+            set => throw new NotImplementedException();
         }
 
-        public bool HasUI
+        public static ProgressMonitorImpl NewProgressMonitorImpl(CancellationToken cancellationToken, Action<int> updateProgress)
         {
-            get { return false; }
-        }
-
-        public static ProgressMonitorImpl NewProgressMonitorImpl(IProgressStatus currentStatus, Func<int, bool> updateProgress)
-        {
-            return new ProgressMonitorImpl(
-                () => !updateProgress.Invoke(currentStatus.PercentComplete), 
-                status => {
-                    currentStatus = status;
-                    updateProgress(status.PercentComplete);
-                });
+            return new ProgressMonitorImpl(cancellationToken, updateProgress);
         }
     }
 }

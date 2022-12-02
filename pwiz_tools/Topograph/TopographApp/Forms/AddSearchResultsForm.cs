@@ -34,7 +34,7 @@ namespace pwiz.Topograph.ui.Forms
     public partial class AddSearchResultsForm : WorkspaceForm
     {
         private bool _isRunning;
-        private bool _isCancelled;
+        private CancellationTokenSource _cancellationTokenSource;
         private String _message;
         private int _progress;
         public AddSearchResultsForm(Workspace workspace)
@@ -43,7 +43,7 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
         }
 
-        private void WorkBackground(IList<string> filenames, Func<string, Func<int, bool>, IList<SearchResult>> fnReadSearchResults)
+        private void WorkBackground(IList<string> filenames, Func<string, CancellationToken, Action<int>, IList<SearchResult>> fnReadSearchResults)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     message += Path.GetFileName(filenames[i]);
                     UpdateProgress(message, 0);
-                    var searchResults = fnReadSearchResults(filenames[i], ProgressMonitor);
+                    var searchResults = fnReadSearchResults(filenames[i], _cancellationTokenSource.Token, ProgressMonitor);
                     AddSearchResults(searchResults, peptides, dataFiles);
                 }
                 if (!IsCancelled)
@@ -92,16 +92,11 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private bool ProgressMonitor(int progress)
+        private void ProgressMonitor(int progress)
         {
-            if (IsCancelled)
-            {
-                return false;
-            }
             progress = progress/2;
             progress = Math.Max(0, Math.Min(progress, 100));
             UpdateProgress(_message, progress);
-            return true;
         }
         private void UpdateProgress(String message, int progress)
         {
@@ -340,14 +335,17 @@ namespace pwiz.Topograph.ui.Forms
             {
                 lock(this)
                 {
-                    return _isCancelled;
+                    return _cancellationTokenSource.IsCancellationRequested;
                 }
             }
             set
             {
                 lock(this)
                 {
-                    _isCancelled = value;
+                    if (value)
+                    {
+                        _cancellationTokenSource.Cancel();
+                    }
                 }
             }
         }
@@ -382,12 +380,12 @@ namespace pwiz.Topograph.ui.Forms
             return result;
         }
 
-        private void AddSearchResults(IList<String> filenames, Func<string, Func<int,bool>, IList<SearchResult>> fnReadSearchResults)
+        private void AddSearchResults(IList<String> filenames, Func<string, CancellationToken, Action<int>, IList<SearchResult>> fnReadSearchResults)
         {
             IsRunning = true;
             btnChooseSearchResults.Enabled = false;
             btnImportLibrary.Enabled = false;
-            new Action<IList<string>, Func<string, Func<int, bool>, IList<SearchResult>>>(WorkBackground)
+            new Action<IList<string>, Func<string, CancellationToken, Action<int>, IList<SearchResult>>>(WorkBackground)
                 .BeginInvoke(filenames, fnReadSearchResults, null, null);
         }
 

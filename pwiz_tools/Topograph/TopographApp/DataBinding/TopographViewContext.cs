@@ -22,11 +22,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.Progress;
 using pwiz.Topograph.ui.Forms;
 using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Model;
@@ -174,28 +173,20 @@ namespace pwiz.Topograph.ui.DataBinding
 
 
 
-        public override bool RunLongJob(Control owner, Action<CancellationToken, IProgressMonitor> job)
+        public override bool RunLongJob(Control owner, Action<IProgress> job)
         {
             using (var longWaitDialog = new LongWaitDialog(owner.TopLevelControl, Program.AppName))
             {
                 var longOperationBroker =
                     new LongOperationBroker(
-                        broker =>
-                        job.Invoke(CancellationToken.None, ProgressMonitorImpl.NewProgressMonitorImpl(new ProgressStatus("Working"),
+                        (LongOperationBroker broker) =>
+                        job.Invoke(ProgressMonitorImpl.NewProgressMonitorImpl(broker.CancellationToken,
                                                                               iProgress =>
-                                                                                  {
-                                                                                      try
-                                                                                      {
-                                                                                          broker.
-                                                                                              UpdateStatusMessage(
-                                                                                                  iProgress + "% complete");
-                                                                                          return true;
-                                                                                      }
-                                                                                      catch (JobCancelledException)
-                                                                                      {
-                                                                                          return false;
-                                                                                      }
-                                                                                  })), longWaitDialog);
+                                                                                  
+                                                                                      broker.
+                                                                                          UpdateStatusMessage(
+                                                                                              iProgress + "% complete")
+                                                                                  )), longWaitDialog);
                 longOperationBroker.LaunchJob();
                 return !longOperationBroker.WasCancelled;
             }
