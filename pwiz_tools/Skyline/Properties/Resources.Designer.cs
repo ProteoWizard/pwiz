@@ -32900,11 +32900,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported element {0}.
+        /// </summary>
+        public static string ToolService_DeleteElementsNow_Unsupported_element__0_ {
+            get {
+                return ResourceManager.GetString("ToolService_DeleteElementsNow_Unsupported_element__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported element type &apos;{0}&apos;.
+        /// </summary>
+        public static string ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__ {
+            get {
+                return ResourceManager.GetString("ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Insert proteins.
         /// </summary>
         public static string ToolService_ImportFasta_Insert_proteins {
             get {
                 return ResourceManager.GetString("ToolService_ImportFasta_Insert_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Properties from external tool.
+        /// </summary>
+        public static string ToolService_ImportProperties_Import_Properties_from_external_tool {
+            get {
+                return ResourceManager.GetString("ToolService_ImportProperties_Import_Properties_from_external_tool", resourceCulture);
             }
         }
         

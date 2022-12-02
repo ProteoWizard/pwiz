@@ -11862,6 +11862,15 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
   </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+	  <value>Import Properties from external tool</value>
+  </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+	  <value>Unsupported element {0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+	  <value>Unsupported element type '{0}'</value>
+  </data>
   <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
       <value>Invalid instrument type for SCIEX OS method export.</value>
   </data>
