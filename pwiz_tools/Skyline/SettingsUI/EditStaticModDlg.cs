@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -818,6 +819,21 @@ namespace pwiz.Skyline.SettingsUI
         private void cbCrosslinker_CheckedChanged(object sender, EventArgs e)
         {
             cbVariableMod.Enabled = !cbCrosslinker.Checked;
+        }
+
+        private void listLosses_MouseMove(object sender, MouseEventArgs e)
+        {
+            string newToolTip = null;
+            var itemIndex = listLosses.IndexFromPoint(e.Location);
+            if (itemIndex >= 0 && itemIndex < listLosses.Items.Count)
+            {
+                newToolTip = (listLosses.Items[itemIndex] as IHasItemDescription)?.ItemDescription.ToString();
+            }
+
+            if (newToolTip != helpTip.GetToolTip(listLosses))
+            {
+                helpTip.SetToolTip(listLosses, newToolTip);
+            }
         }
     }
 }
