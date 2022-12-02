@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
@@ -114,6 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public CalibrationCurve CalibrationCurve { get; private set; }
+        public CalibrationCurveMetrics CalibrationCurveMetrics { get; private set; }
         public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         private void DisplayCalibrationCurve()
@@ -192,7 +194,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
             zedGraphControl.GraphPane.XAxis.Title.Text = curveFitter.GetXAxisTitle();
             zedGraphControl.GraphPane.YAxis.Title.Text = curveFitter.GetYAxisTitle();
-            CalibrationCurve = curveFitter.GetCalibrationCurve();
+            curveFitter.GetCalibrationCurveAndMetrics(out CalibrationCurve calibrationCurve, out CalibrationCurveMetrics calibrationCurveRow);
+            CalibrationCurve = calibrationCurve;
+            CalibrationCurveMetrics = calibrationCurveRow;
+            
             FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue;
@@ -285,9 +290,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         }
                     }
                     double[] xValues;
-                    if (CalibrationCurve.TurningPoint.HasValue)
+                    if (CalibrationCurve is CalibrationCurve.Bilinear bilinearCalibrationCurve)
                     {
-                        xValues = new[] {minX, CalibrationCurve.TurningPoint.Value, maxX};
+                        xValues = new[] {minX, bilinearCalibrationCurve.TurningPoint, maxX};
                     }
                     else
                     {
@@ -301,11 +306,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         zedGraphControl.GraphPane.CurveList.Add(interpolatedLine);
                     }
                 }
-                labelLines.Add(CalibrationCurve.ToString());
+                labelLines.Add(CalibrationCurveMetrics.ToString());
 
-                if (CalibrationCurve.RSquared.HasValue)
+                if (CalibrationCurveMetrics.RSquared.HasValue)
                 {
-                    labelLines.Add(CalibrationCurve.RSquaredDisplayText(CalibrationCurve.RSquared.Value));
+                    labelLines.Add(CalibrationCurveMetrics.RSquaredDisplayText(CalibrationCurveMetrics.RSquared.Value));
                 }
                 if (!Equals(curveFitter.QuantificationSettings.RegressionWeighting, RegressionWeighting.NONE))
                 {
