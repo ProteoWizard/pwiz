@@ -506,7 +506,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (TransformChrom.IsDerivative() || prevChromDisplayState.TransformChrom.IsDerivative())
                 {
                     // The Y-axis range of different derivatives is very different, so we need to recalculate the zoom
-                    // state if the transformation has change and it is or was a derivative
+                    // state if the transformation has changed and it is or was a derivative
                     if (TransformChrom != prevChromDisplayState.TransformChrom)
                     {
                         return false;
