@@ -408,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     try
                     {
-                        var status = longWait.PerformWork(this, 800, (IProgressMonitor monitor) =>
+                        var status = longWait.PerformWork(this, 800, monitor =>
                         {
                             _selectedLibrary = selectedLibrarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
                         });

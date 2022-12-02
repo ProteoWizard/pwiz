@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Util
                 {
                     return anyChanges;
                 }
-                longWaitBroker.Value = 100 * iGrouping / cellsByRow.Length;
+                longWaitBroker.Value = 100.0 * iGrouping / cellsByRow.Length;
                 longWaitBroker.Message = string.Format(Resources.DataGridViewPasteHandler_ClearCells_Cleared__0___1__rows, iGrouping, cellsByRow.Length);
                 var rowGrouping = cellsByRow[iGrouping];
                 var cells = rowGrouping.ToArray();

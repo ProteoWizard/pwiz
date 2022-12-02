@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     return anyChanges;
                 }
-                progress.Value = 100*(iRow - firstRowIndex)/totalRows;
+                progress.Value = 100.0*(iRow - firstRowIndex)/totalRows;
                 progress.Message = string.Format(Resources.DataboundGridControl_DoFillDown_Filling__0___1__rows, iRow - firstRowIndex, totalRows);
                 var row = BindingListSource[iRow];
                 for (int icol = 0; icol < propertyDescriptors.Length; icol++)

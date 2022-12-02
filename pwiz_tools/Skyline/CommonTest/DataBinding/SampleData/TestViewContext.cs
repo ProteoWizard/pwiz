@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Progress;
-using pwiz.Common.SystemUtil;
 
 namespace CommonTest.DataBinding.SampleData
 {

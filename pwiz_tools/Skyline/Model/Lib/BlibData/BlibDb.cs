@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="librarySpec">Library spec for which the new library is created</param>
         /// <param name="listSpectra">List of existing spectra, by LibKey</param>
         /// <param name="libraryName">Name of the library to be created</param>
-        /// <param name="progressMonitor">Progress monitor to display progress in creating library</param>
+        /// <param name="progress">Progress monitor to display progress in creating library</param>
         /// <returns>A library of type <see cref="BiblioSpecLiteLibrary"/></returns>
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
                                                               IList<SpectrumMzInfo> listSpectra,

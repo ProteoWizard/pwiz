@@ -27,7 +27,6 @@ using NHibernate;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Progress;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -38,7 +37,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.IonMobility.DatabaseOpeningException;
-using IProgress = pwiz.Common.Progress.IProgress;
 
 namespace pwiz.Skyline.SettingsUI.IonMobility
 {

@@ -530,6 +530,7 @@ namespace pwiz.Skyline.Model.Lib
         /// to cancel.
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
+        /// <param name="cancellationToken">Cancellation token associated with the progress monitor</param>
         bool BuildLibrary(IProgressMonitor progress, CancellationToken cancellationToken);
 
         /// <summary>

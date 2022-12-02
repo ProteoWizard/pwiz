@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Threading;
-using pwiz.Common.Progress;
 
 namespace pwiz.Common.SystemUtil
 {

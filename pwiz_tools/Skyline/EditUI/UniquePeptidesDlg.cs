@@ -297,7 +297,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     return false;
                 }
-                longWaitBroker.Value = 100 * i / _peptideDocNodes.Count;
+                longWaitBroker.Value = 100.0 * i / _peptideDocNodes.Count;
                 var peptideTag = _peptideDocNodes[i];
                 var proteins = _peptideProteins[i];
                 var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
