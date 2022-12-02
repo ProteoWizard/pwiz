@@ -11865,7 +11865,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
   </data>
-<<<<<<< HEAD
   <data name="ColonSeparator" xml:space="preserve">
 	  <value>{0}: {1}</value>
   </data>
@@ -11904,9 +11903,8 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
 	  <value>Ignore explicit peak boundaries</value>
-=======
+  </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
       <value>Failed loading MIDAS library {0}.</value>
->>>>>>> remotes/origin/master
   </data>
 </root>
