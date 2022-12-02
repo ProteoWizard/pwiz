@@ -11868,6 +11868,45 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_FindNext_Find_Next" xml:space="preserve">
 	  <value>Find Next</value>
   </data>
+  <data name="ColonSeparator" xml:space="preserve">
+	  <value>{0}: {1}</value>
+  </data>
+  <data name="ColonEndOfLine" xml:space="preserve">
+	  <value>:</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+	  <value>Include by default</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+	  <value>Neutral loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+	  <value>Loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+	  <value>Neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+	  <value>{0} neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+	  <value>Losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+	  <value>{0} losses</value>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+	  <value>Mass</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+	  <value>Empty</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+	  <value>Unknown mass</value>
+  </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+	  <value>Ignore explicit peak boundaries</value>
+  </data>
   <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
 	  <value>Import Properties from external tool</value>
   </data>
@@ -11882,5 +11921,9 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
       <value>Failed loading MIDAS library {0}.</value>
+  </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+	  <value>({0} Da)</value>
+	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
   </data>
 </root>
