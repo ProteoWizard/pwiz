@@ -43,7 +43,7 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
         }
 
-        private void WorkBackground(IList<string> filenames, Func<string, CancellationToken, Action<int>, IList<SearchResult>> fnReadSearchResults)
+        private void WorkBackground(IList<string> filenames, ReadSearchResultsFunc fnReadSearchResults)
         {
             try
             {
@@ -380,12 +380,15 @@ namespace pwiz.Topograph.ui.Forms
             return result;
         }
 
-        private void AddSearchResults(IList<String> filenames, Func<string, CancellationToken, Action<int>, IList<SearchResult>> fnReadSearchResults)
+        public delegate IList<SearchResult> ReadSearchResultsFunc(string fileName, CancellationToken cancellationToken,
+            Action<int> updateProgress);
+
+        private void AddSearchResults(IList<String> filenames, ReadSearchResultsFunc fnReadSearchResults)
         {
             IsRunning = true;
             btnChooseSearchResults.Enabled = false;
             btnImportLibrary.Enabled = false;
-            new Action<IList<string>, Func<string, CancellationToken, Action<int>, IList<SearchResult>>>(WorkBackground)
+            new Action<IList<string>, ReadSearchResultsFunc>(WorkBackground)
                 .BeginInvoke(filenames, fnReadSearchResults, null, null);
         }
 
