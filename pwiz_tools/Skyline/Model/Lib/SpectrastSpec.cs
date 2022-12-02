@@ -50,6 +50,11 @@ namespace pwiz.Skyline.Model.Lib
             return SpectrastLibrary.Load(this, loader);
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.SpectrastLibrary_SpecFilter_SpectraST_Library;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

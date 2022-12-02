@@ -73,6 +73,11 @@ namespace pwiz.Skyline.Model.Lib
             get { return RANK_IDS; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.XHunterLibrary_SpecFilter_GPM_Spectral_Library;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

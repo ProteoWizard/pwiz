@@ -30,13 +30,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    /// <summary>
-    /// For naming of the resource file
-    /// </summary>
-    public class ShareListDlg
-    {
-    }
-
     public partial class ShareListDlg<TList, TItem> : FormEx
         where TList : SerializableSettingsList<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
