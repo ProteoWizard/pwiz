@@ -116,7 +116,9 @@ namespace pwiz.Skyline.Model.Find
             });
         }
         public int OptStep { get; private set; }
+#pragma warning disable CS0612 // "XXX is obsolete"
         public static Bookmark ToBookmark(DocumentLocation documentLocation, SrmDocument document)
+#pragma warning restore CS0612
         {
             Bookmark bookmark = ROOT;
             if (documentLocation.IdPath.Any())

@@ -146,6 +146,10 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(filterDlg, filterDlg.OkDialog);
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
+            var libExplorerDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            Assert.AreEqual(218, libExplorerDlg.PeptidesCount);
+            OkDialog(libExplorerDlg, libExplorerDlg.Close);
+
             // Get transition rankings
             var ranks = new Dictionary<Identity, Dictionary<double, int>>();
             foreach (var nodeTranGroup in doc.PeptideTransitionGroups)

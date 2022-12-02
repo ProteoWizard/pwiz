@@ -74,6 +74,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             get { return RANK_IDS; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.MidasLibrary_SpecFilter_MIDAS_Spectral_Library;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
