@@ -77,6 +77,7 @@ namespace BuildSciexMethod
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
                 "   -d               Standard (unscheduled) method\n" +
+                "   -t               SCIEX ZenoTOF 7600\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
                 "   -s               Transition list is read from stdin.\n" +
                 "                    e.g. cat TranList.csv | BuildSciexMethod -s -o new.ext temp.ext\n" +
@@ -98,9 +99,20 @@ namespace BuildSciexMethod
         private readonly ISciexControlApi _api = SciexControlApiFactory.Create();
         private readonly List<MethodTransitions> _methodTrans = new List<MethodTransitions>();
 
+        private enum InstrumentType { QQQ, TOF }
+
+        private InstrumentType Instrument { get; set; }
+
         private string TemplateMethod { get; set; }
         private bool StandardMethod { get; set; }
         private bool ScheduledMethod => !StandardMethod;
+        private bool IsConnected { get; set; }
+        private bool IsLoggedIn { get; set; }
+
+        public Builder()
+        {
+            Instrument = InstrumentType.QQQ;
+        }
 
         public void ParseCommandArgs(string[] args)
         {
@@ -116,6 +128,9 @@ namespace BuildSciexMethod
                 {
                     case 'd':
                         StandardMethod = true;
+                        break;
+                    case 't':
+                        Instrument = InstrumentType.TOF;
                         break;
                     case 'o':
                         if (i >= args.Length)
@@ -134,7 +149,7 @@ namespace BuildSciexMethod
             }
 
             if (multiFile && !string.IsNullOrEmpty(outputMethod))
-                throw new Program.UsageException("Multi-file and specific output are not compatibile.");
+                throw new Program.UsageException("Multi-file and specific output are not compatible.");
 
             var argcLeft = args.Length - i;
             if (argcLeft < 1 || (!readStdin && argcLeft < 2))
@@ -264,9 +279,17 @@ namespace BuildSciexMethod
 
         public void BuildMethod()
         {
+            if (Instrument == InstrumentType.QQQ &&
+                _methodTrans.Any(t => t.Transitions.Any(tran => !tran.ProductMz.HasValue)))
+            {
+                throw new Exception("All transitions must have product m/z.");
+            }
+
             // Connect and login
             Check(_api.Connect(new ConnectByUriRequest(ServiceUri)));
+            IsConnected = true;
             Check(_api.Login(new LoginCurrentUserRequest()));
+            IsLoggedIn = true;
 
             foreach (var methodTranList in _methodTrans)
             {
@@ -303,7 +326,7 @@ namespace BuildSciexMethod
 
             // Edit method
             var massTable = InitMethod(method, transitions.Transitions.Length);
-            var props = PropertyData.GetAll(StandardMethod, massTable).ToArray();
+            var props = PropertyData.GetAll(Instrument, StandardMethod, massTable).ToArray();
             for (var i = 0; i < transitions.Transitions.Length; i++)
             {
                 foreach (var prop in props)
@@ -317,20 +340,33 @@ namespace BuildSciexMethod
 
         private PropertiesTable InitMethod(IMsMethod method, int numTransitions)
         {
-
             // Check that there is at least one experiment
             var experiment = method.Experiments.FirstOrDefault();
             if (experiment == null)
                 throw new Exception("Method does not contain any experiments.");
 
+            var props = experiment.Properties;
+            var massTable = experiment.MassTable;
+            
+            if (Instrument == InstrumentType.TOF)
+            {
+                if (experiment.ExperimentParts.Count != 2 ||
+                    experiment.ExperimentParts[0].ExperimentPartName != ExperimentPartName.TOFMS ||
+                    experiment.ExperimentParts[1].ExperimentPartName != ExperimentPartName.TOFMSMS)
+                    throw new Exception("Expected two experiment parts, TOF MS and TOF MSMS");
+                
+                var part = experiment.ExperimentParts[1];
+                props = part.Properties;
+                massTable = part.PropertiesTable;
+            }
+
             // Set the method's IsScanScheduleAppliedProperty.
-            var scheduledProp = experiment.Properties.TryGet<IsScanScheduleAppliedProperty>();
+            var scheduledProp = props.TryGet<IsScanScheduleAppliedProperty>();
             if (scheduledProp == null)
                 throw new Exception("Experiment does not have IsScanScheduleAppliedProperty.");
             scheduledProp.Value = ScheduledMethod;
 
-            // Check that there is at least one row in the mass table
-            var massTable = experiment.MassTable;
+            // Check that there is at least one row in the mass table.
             if (massTable.Rows.Count == 0)
                 throw new Exception("Mass table does not contain any rows.");
 
@@ -345,8 +381,11 @@ namespace BuildSciexMethod
 
         public void Dispose()
         {
-            _api.Logout(new LogoutRequest());
-            _api.Disconnect(new DisconnectRequest());
+            if (IsLoggedIn)
+                _api.Logout(new LogoutRequest());
+
+            if (IsConnected)
+                _api.Disconnect(new DisconnectRequest());
         }
 
         private class PropertyData
@@ -384,8 +423,16 @@ namespace BuildSciexMethod
                 ValueProperty.SetValue(rowPropObj, newValue);
             }
 
-            public static IEnumerable<PropertyData> GetAll(bool standardMethod, PropertiesTable table)
+            public static IEnumerable<PropertyData> GetAll(InstrumentType instrument, bool standardMethod, PropertiesTable table)
             {
+                var timeProp = typeof(RetentionTimeProperty);
+                if (standardMethod)
+                {
+                    timeProp = Equals(instrument, InstrumentType.QQQ)
+                        ? typeof(DwellTimeProperty)
+                        : typeof(AccumulationTimeProperty);
+                }
+
                 return new[]
                 {
                     new PropertyData(typeof(GroupIdProperty), t => t.Group),
@@ -394,12 +441,13 @@ namespace BuildSciexMethod
                     new PropertyData(typeof(Q3MassProperty), t => t.ProductMz),
                     new PropertyData(typeof(PrecursorIonProperty), t => t.PrecursorMz),
                     new PropertyData(typeof(FragmentIonProperty), t => t.ProductMz),
-                    new PropertyData(standardMethod ? typeof(DwellTimeProperty) : typeof(RetentionTimeProperty), t => t.DwellOrRt),
+                    new PropertyData(timeProp, t => t.DwellOrRt),
                     new PropertyData(typeof(RetentionTimeToleranceProperty), !standardMethod ? t => t.RTWindow : (Func<MethodTransition, object>)null),
                     new PropertyData(typeof(DeclusteringPotentialProperty), t => t.DP),
                     new PropertyData(typeof(EntrancePotentialProperty)),
                     new PropertyData(typeof(CollisionEnergyProperty), t => t.CE),
                     new PropertyData(typeof(CollisionCellExitPotentialProperty)),
+                    new PropertyData(typeof(ElectronKeProperty)),
                 }.Where(prop => prop.GetValueForTransition != null && prop.GetPropertiesRowObj(table.Rows[0]) != null);
             }
 
@@ -450,7 +498,7 @@ namespace BuildSciexMethod
         private static readonly Dictionary<int, Action<MethodTransition, string>> Columns = new Dictionary<int, Action<MethodTransition, string>>
         {
             [0] = (t, s) => { t.PrecursorMz = double.Parse(s, CultureInfo.InvariantCulture); },
-            [1] = (t, s) => { t.ProductMz = double.Parse(s, CultureInfo.InvariantCulture); },
+            [1] = (t, s) => { t.ProductMz = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [2] = (t, s) => { t.DwellOrRt = double.Parse(s, CultureInfo.InvariantCulture); },
             [3] = (t, s) => { t.Label = s; },
             [4] = (t, s) => { t.DP = double.Parse(s, CultureInfo.InvariantCulture); },
@@ -485,7 +533,7 @@ namespace BuildSciexMethod
         }
 
         public double PrecursorMz { get; private set; }
-        public double ProductMz { get; private set; }
+        public double? ProductMz { get; private set; }
         public double DwellOrRt { get; private set; }
         public string Label { get; set; }
         public double CE { get; private set; }
