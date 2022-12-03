@@ -655,6 +655,6 @@
     <value>タンパク質グループ間で重複</value>
   </data>
   <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
-    <value>削除済み (ペプチドは特定のタンパク質グループに固有の必要がある)</value>
+    <value>削除済み (ペプチドは特定のタンパク質グループに固有でなければならない)</value>
   </data>
 </root>

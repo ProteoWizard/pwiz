@@ -1041,7 +1041,7 @@
     <value>ドキュメント内のペプチドをフィルタリング</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_IncludeAmbiguousMatches" xml:space="preserve">
-    <value>あいまい一致を含む</value>
+    <value>曖昧な一致を含む</value>
   </data>
   <data name="BuildPeptideSearchLibrarySettings_SearchFileNames" xml:space="preserve">
     <value>ファイルを検索</value>

@@ -11694,13 +11694,13 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>誤</value>
   </data>
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
-    <value>このファイルをスコアタイプを取得中にエラーが発生しました。</value>
+    <value>このファイルのスコアタイプを取得中にエラーが発生しました。</value>
   </data>
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
-    <value>スコア閾値の最小値 (スコアは同定が正である可能性あり)。</value>
+    <value>スコア閾値の最小値 (スコアは同定が正である確率)。</value>
   </data>
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
-    <value>スコア閾値の最大値 (スコアは同定が誤である可能性あり)。</value>
+    <value>スコア閾値の最大値 (スコアは同定が誤である確率)。</value>
   </data>
   <data name="BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
     <value>スコア閾値 '{0}' が無効です ({1}と{2}の間の十進数でなければならない)。</value>
@@ -11712,7 +11712,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
     <value>Skyline 21.2</value>
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
-    <value>開始データベース</value>
+    <value>データベースを開く</value>
   </data>
   <data name="IonTypeSelector_NTermLabel" xml:space="preserve">
     <value>N末端：</value>
