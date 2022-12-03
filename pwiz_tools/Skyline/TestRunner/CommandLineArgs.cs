@@ -83,6 +83,12 @@ namespace TestRunner
             return _args[argName].Replace("\r", "").Replace("\n", "");
         }
 
+        public string ArgAsStringOrDefault(string argName, string default_ = null)
+        {
+            if (!HasArg(argName)) return default_;
+            return _args[argName].Replace("\r", "").Replace("\n", "");
+        }
+
         public long ArgAsLong(string argName)
         {
             return Convert.ToInt64(_args[argName]);
@@ -97,7 +103,7 @@ namespace TestRunner
         {
             get
             {
-                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + " "));
+                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + "=" + ArgAsString(arg) + " "));
             }
         }
 
@@ -115,6 +121,11 @@ namespace TestRunner
         public string SearchArgs(string argList)
         {
             return argList.Split(';').FirstOrDefault(HasArg);
+        }
+
+        public void SetArg(string argName, string value)
+        {
+            _args[argName] = value;
         }
     }
 }

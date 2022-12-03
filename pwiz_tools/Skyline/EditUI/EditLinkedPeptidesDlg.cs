@@ -33,7 +33,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class EditLinkedPeptidesDlg : Form
+    public partial class EditLinkedPeptidesDlg : ModeUIInvariantFormEx  // This dialog is inherently proteomic, never needs to be adapted for small mol or mixed UI mode
     {
         private BindingList<PeptideRow> _peptideRows;
         private BindingList<CrosslinkRow> _crosslinkRows;

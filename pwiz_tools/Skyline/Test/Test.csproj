@@ -102,6 +102,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
@@ -146,6 +150,8 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
+    <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
     <Compile Include="ScoreQValueMapTest.cs" />
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
@@ -326,6 +332,8 @@
     <EmbeddedResource Include="Study7.sky" />
     <EmbeddedResource Include="Study7_0-7.sky" />
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
+    <None Include="ProtocolBuffers\generatecode.bat" />
+    <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -353,7 +361,16 @@
     <EmbeddedResource Include="UniModHeavyList.xml" />
     <EmbeddedResource Include="UniModStaticList.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="ProtocolBuffers\GeneratedCode\readme.txt" />
+    <Content Include="ProtocolBuffers\grpc_csharp_plugin.exe" />
+    <Content Include="ProtocolBuffers\protoc.exe" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

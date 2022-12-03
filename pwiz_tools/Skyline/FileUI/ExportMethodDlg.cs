@@ -48,6 +48,7 @@ namespace pwiz.Skyline.FileUI
         public static string CONCUR_PREC_TXT { get { return Resources.ExportMethodDlg_CONCUR_PREC_TXT; } }
         public static string RUN_DURATION_TXT { get { return Resources.ExportMethodDlg_RUN_DURATION_TXT; } }
         public static string DWELL_TIME_TXT { get { return Resources.ExportMethodDlg_DWELL_TIME_TXT; } }
+        public static string ACCUMULATION_TIME_TXT { get { return Resources.ExportMethodDlg_ACCUMULATION_TIME_TXT; } }
 
         public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
@@ -172,6 +173,7 @@ namespace pwiz.Skyline.FileUI
             MethodType = mType;
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
+            AccumulationTime = Settings.Default.ExportMethodAccumulationTime;
             RunLength = Settings.Default.ExportMethodRunLength;
 
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
@@ -220,6 +222,7 @@ namespace pwiz.Skyline.FileUI
             textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
+            textAccumulationTime.Top = textDwellTime.Top;
             panelSureQuant.Top = labelMaxTransitions.Top;
             panelThermoColumns.Top = labelDwellTime.Top;
             var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
@@ -749,6 +752,16 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public double AccumulationTime
+        {
+            get { return _exportProperties.AccumulationTime; }
+            set
+            {
+                _exportProperties.AccumulationTime = value;
+                textAccumulationTime.Text = _exportProperties.AccumulationTime.ToString(LocalizationHelper.CurrentCulture);
+            }
+        }
+
         /// <summary>
         /// Length of run in minutes for non-scheduled runs
         /// </summary>
@@ -838,7 +851,8 @@ namespace pwiz.Skyline.FileUI
             }
 
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
-                Equals(InstrumentType, ExportInstrumentType.ABI_TOF))
+                Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                Equals(InstrumentType, ExportInstrumentType.ABI_7600))
             {
                 // Check that mass analyzer settings are set to TOF.
                 if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs, 
@@ -902,13 +916,10 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
             {
-                var missingIonMobility = BrukerTimsTofIsolationListExporter.GetMissingIonMobility(documentExport, _exportProperties);
-                if (missingIonMobility.Length > 0)
+                var ionMobilityError = BrukerTimsTofIsolationListExporter.CheckIonMobilities(documentExport, _exportProperties, templateName);
+                if (!string.IsNullOrEmpty(ionMobilityError))
                 {
-                    MessageDlg.Show(this,
-                        Resources.ExportMethodDlg_OkDialog_All_targets_must_have_an_ion_mobility_value__These_can_be_set_explicitly_or_contained_in_an_ion_mobility_library_or_spectral_library__The_following_ion_mobility_values_are_missing_ +
-                        Environment.NewLine + Environment.NewLine +
-                        TextUtil.LineSeparate(missingIonMobility.Select(k => k.ToString())));
+                    MessageDlg.Show(this, ionMobilityError);
                     return;
                 }
             }
@@ -938,7 +949,7 @@ namespace pwiz.Skyline.FileUI
                 }
 
                 if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault))) ||
-                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault))))
+                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault!))))
                 {
                     var sb = new StringBuilder(string.Format(Resources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
                                                              _instrumentType));
@@ -1128,6 +1139,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.PrimaryTransitionCount = PrimaryCount;
             if (textDwellTime.Visible)
                 Settings.Default.ExportMethodDwellTime = DwellTime;
+            if (textAccumulationTime.Visible)
+                Settings.Default.ExportMethodAccumulationTime = AccumulationTime;
             if (textRunLength.Visible)
                 Settings.Default.ExportMethodRunLength = RunLength;
             if (panelThermoColumns.Visible)
@@ -1334,6 +1347,15 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 _exportProperties.DwellTime = dwellTime;
+            }
+
+            if (textAccumulationTime.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textAccumulationTime, AbstractMassListExporter.ACCUMULATION_TIME_MIN,
+                        AbstractMassListExporter.ACCUMULATION_TIME_MAX, out var accumulationTime, false))
+                    return false;
+
+                _exportProperties.AccumulationTime = accumulationTime;
             }
 
             _exportProperties.IntensityThresholdPercent = null;
@@ -1892,13 +1914,22 @@ namespace pwiz.Skyline.FileUI
         private void UpdateDwellControls(bool standard)
         {
             bool showDwell = false;
+            bool showAccumulation = false;
             bool showRunLength = false;
             if (standard)
             {
                 if (!IsSingleDwellInstrument && !IsDia)
                 {
-                    labelDwellTime.Text = DWELL_TIME_TXT;
-                    showDwell = true;
+                    if (!Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                    {
+                        labelDwellTime.Text = DWELL_TIME_TXT;
+                        showDwell = true;
+                    }
+                    else
+                    {
+                        labelDwellTime.Text = ACCUMULATION_TIME_TXT;
+                        showAccumulation = true;
+                    }
                 }
                 else if (IsAlwaysScheduledInstrument)
                 {
@@ -1906,10 +1937,11 @@ namespace pwiz.Skyline.FileUI
                     showRunLength = true;                    
                 }
             }
-            labelDwellTime.Visible = showDwell || showRunLength;
+            labelDwellTime.Visible = showDwell || showAccumulation || showRunLength;
             labelDwellTime.TabIndex = textRunLength.TabIndex-1;
             textDwellTime.Visible = showDwell;
             textDwellTime.TabIndex = textRunLength.TabIndex;
+            textAccumulationTime.Visible = showAccumulation;
             textRunLength.Visible = showRunLength;
         }
 
@@ -1977,6 +2009,11 @@ namespace pwiz.Skyline.FileUI
                 if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
+                }
+                else if (Equals(InstrumentType, ExportInstrumentType.ABI_7500) ||
+                         Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_SCIEX_OS));
                 }
                 else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
                 {
@@ -2082,6 +2119,13 @@ namespace pwiz.Skyline.FileUI
                     MessageDlg.Show(this,
                         string.Format(Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist,
                             brukerTemplate));
+                    return;
+                }
+
+                var ionMobilityError = BrukerTimsTofIsolationListExporter.CheckIonMobilities(_document, _exportProperties, brukerTemplate);
+                if (!string.IsNullOrEmpty(ionMobilityError))
+                {
+                    MessageDlg.Show(this, ionMobilityError);
                     return;
                 }
 

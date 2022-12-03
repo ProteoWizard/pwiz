@@ -155,21 +155,15 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
-            var explicitPeakBounds = _settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
-            var peakBounds = explicitPeakBounds == null
-                ? null
-                : new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime);
-            PickChromatogramPeaks(peakBounds);
-        }
-
-        public void PickChromatogramPeaks(PeakBounds peakBounds)
-        {
             ExplicitPeakBoundsFunc explicitPeakBoundsFunc = null;
-            if (peakBounds != null)
+            var explicitPeakBounds = _settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
+            if (explicitPeakBounds != null)
             {
-                explicitPeakBoundsFunc = (transitionGroup, transition) => peakBounds;
+                var peakBounds = explicitPeakBounds.IsEmpty
+                    ? null
+                    : new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime);
+                explicitPeakBoundsFunc = (transitionGroup, transition)=>peakBounds;
             }
-
             PickChromatogramPeaks(explicitPeakBoundsFunc);
         }
 
@@ -998,10 +992,8 @@ namespace pwiz.Skyline.Model.Results
         }
         internal IEnumerable<ChromatogramGroupInfo> MakeChromatogramGroupInfos(IEnumerable<ChromDataSet> dataSets)
         {
-            var chromCachedFile = new ChromCachedFile(FileInfo.FilePath, default(ChromCachedFile.FlagValues),
-                FileInfo.FileWriteTime ?? DateTime.FromBinary(0), FileInfo.FileWriteTime, (float) FileInfo.MaxRetentionTime, (float) FileInfo.MaxIntensity, FileInfo.IonMobilityUnits, 
-                FileInfo.SampleId, FileInfo.InstrumentSerialNumber, FileInfo.InstrumentInfoList);
-            
+            var chromCachedFile = new ChromCachedFile(FileInfo);
+
             foreach (var chromDataSet in dataSets)
             {
                 yield return chromDataSet.ToChromatogramGroupInfo(DetailedPeakFeatureCalculators.FeatureNames, chromCachedFile);

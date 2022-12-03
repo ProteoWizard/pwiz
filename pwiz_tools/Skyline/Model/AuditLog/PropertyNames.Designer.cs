@@ -214,6 +214,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string AssociateProteinsSettings_Proteins {
+            get {
+                return ResourceManager.GetString("AssociateProteinsSettings_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide targets.
         /// </summary>
         public static string AssociateProteinsSettings_TargetPeptides {
@@ -2923,6 +2932,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Protein association settings.
+        /// </summary>
+        public static string PeptideSettings_ProteinAssociationSettings {
+            get {
+                return ResourceManager.GetString("PeptideSettings_ProteinAssociationSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quantification.
         /// </summary>
         public static string PeptideSettings_Quantification {
@@ -3945,6 +3963,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string StaticMod_MonoisotopicMass {
             get {
                 return ResourceManager.GetString("StaticMod_MonoisotopicMass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Relative retention time.
+        /// </summary>
+        public static string StaticMod_RelativeRT {
+            get {
+                return ResourceManager.GetString("StaticMod_RelativeRT", resourceCulture);
             }
         }
         

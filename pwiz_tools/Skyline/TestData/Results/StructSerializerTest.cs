@@ -68,7 +68,8 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestDirectSerializer()
         {
-            var filePath = TestContext.GetTestPath("TestDirectSerializerToDisk.bin");
+            TestContext.EnsureTestResultsDir();
+            var filePath = TestContext.GetTestResultsPath("TestDirectSerializerToDisk.bin");
             byte[] firstBytes = Encoding.UTF8.GetBytes("Beginning");
             var chromTransitions = new[] {new ChromTransition4(522.6f)};
             var chromTransitionSerializer = (StructSerializer<ChromTransition4>) ChromTransition4.StructSerializer();

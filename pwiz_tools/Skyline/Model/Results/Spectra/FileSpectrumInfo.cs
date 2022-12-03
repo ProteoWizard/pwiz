@@ -14,7 +14,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     [DisplayName("Info")]
-    public class FileSpectrumInfo : SkylineObject, ILinkValue
+    public class FileSpectrumInfo : RootSkylineObject, ILinkValue
     {
         private ImmutableList<SpectrumMetadata> _spectra;
         private MsDataFileUri _dataFileUri;

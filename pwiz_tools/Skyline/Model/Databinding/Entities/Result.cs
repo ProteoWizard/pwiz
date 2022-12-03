@@ -26,11 +26,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     public abstract class Result : SkylineObject, ILinkValue
     {
         private readonly ResultFile _resultFile;
-        protected Result(SkylineDocNode docNode, ResultFile resultFile) : base(docNode.DataSchema)
+        protected Result(SkylineDocNode docNode, ResultFile resultFile)
         {
             SkylineDocNode = docNode;
             _resultFile = resultFile;
         }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return SkylineDocNode.DataSchema;
+        }
+
         [Browsable(false)]
         protected SkylineDocNode SkylineDocNode { get; private set; }
 

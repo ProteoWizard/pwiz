@@ -94,11 +94,11 @@ namespace pwiz.SkylineTestData.Results
             }
 
             string subdir = (asSmallMolecules == RefinementSettings.ConvertToSmallMoleculesMode.none) ? null : asSmallMolecules.ToString();
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE, subdir);
 
             bool withDriftTimeFilter = (mode != DriftFilterType.none); // Perform drift time filtering from blib file?
             string docPath;
-            SrmDocument document = InitWatersImsMseDocument(testFilesDir, driftWindowWidthCalcType, withDriftTimeFilter, out docPath);
+            SrmDocument document = InitWatersImsMseDocument(TestFilesDir, driftWindowWidthCalcType, withDriftTimeFilter, out docPath);
             AssertEx.IsDocumentState(document, null, 1, 1, 1, 8); // Drift time lib load bumps the doc version, so does small mol conversion
             var listChromatograms = new List<ChromatogramSet>();
             // A small subset of the QC_HDMSE_02_UCA168_3495_082213 data set (RT 21.5-22.5) from Will Thompson
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestData.Results
                     for (int complete = 0; complete <= 1; complete++)
                     {
                         var sharePath =
-                            testFilesDir.GetTestPath(complete == 1 ? "share_complete.zip" : "share_minimized.zip");
+                            TestFilesDir.GetTestPath(complete == 1 ? "share_complete.zip" : "share_minimized.zip");
                         var share = new SrmDocumentSharing(document, docPath, sharePath,
                             new ShareType(complete == 1, SkylineVersion.CURRENT)); // Explicitly declaring version number forces a save before zip
                         share.Share(new SilentProgressMonitor());

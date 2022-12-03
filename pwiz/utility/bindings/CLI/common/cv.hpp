@@ -38,12 +38,11 @@
 
 // ["psi-ms.obo"]
 //   format-version: 1.2
-//   data-version: 4.1.92
-//   date: 07:01:2022 11:44
+//   data-version: 4.1.108
+//   date: 26:10:2022 11:38
 //   saved-by: Joshua Klein
 //   auto-generated-by: OBO-Edit 2.3.1
 //   import: http://purl.obolibrary.org/obo/pato.obo
-//   import: http://purl.obolibrary.org/obo/uo.obo
 //   import: http://purl.obolibrary.org/obo/stato.owl
 //   default-namespace: MS
 //   namespace-id-rule: * MS:$sequence(7,0,9999999)$
@@ -69,14 +68,14 @@
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html and http://mass-spec.lsu.edu/msterms/index.php/Main_Page
 //   remark: For any queries contact psidev-ms-vocab@lists.sourceforge.net
-//   remark: URL: https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo
+//   remark: URL: http://purl.obolibrary.org/obo/ms/psi-ms.obo
 //   remark: This work is licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.
 //   remark: To view a copy of this license, visit https://creativecommons.org/licenses/by/4.0/ or send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, California, 94041, USA.
 //   ontology: ms
 //
 // ["unimod.obo"]
 //   format-version: 1.4
-//   date: 18:04:2022 11:09
+//   date: 20:10:2022 14:06
 //
 // ["unit.obo"]
 //   format-version: 1.2
@@ -8530,7 +8529,7 @@ public enum class CVID
     /// <summary>interaction score derived from cross-linking: Parent term for interaction scores derived from cross-linking.</summary>
     MS_interaction_score_derived_from_cross_linking = 1002664,
 
-    /// <summary>regular expression for interaction scores derived from cross-linking: ([:digit:]+[.][a|b]:([:digit:]+|null):[:digit:]+[.][:digit:]+([Ee][+-][0-9]+)*:(true|false]\{1\})).</summary>
+    /// <summary>regular expression for interaction scores derived from cross-linking: ([0-9]+)[.]([a|b]):([0-9]+|null):([\-+]?[0-9]+(?:[.][0-9]+)?(?:[Ee][+-][0-9]+)?):(true|false)</summary>
     MS_regular_expression_for_interaction_scores_derived_from_cross_linking = 1002665,
 
     /// <summary>impact II: Bruker Daltonics' impact II.</summary>
@@ -9829,20 +9828,20 @@ public enum class CVID
     /// <summary>NIST msp comment: Term for a comment field withing the NIST msp file format</summary>
     MS_NIST_msp_comment = 1003102,
 
-    /// <summary>ion interpretation format: Interpretation format used for annotating individual spectrum ion peaks.</summary>
-    MS_ion_interpretation_format = 1003103,
+    /// <summary>ion annotation format: Annotation format used for annotating individual spectrum ion peaks.</summary>
+    MS_ion_annotation_format = 1003103,
 
-    /// <summary>peptide ion interpretation format: Interpretation format designed primarily for peptides, with allowances for generic chemical formulas and other miscellaneous named ions.</summary>
-    MS_peptide_ion_interpretation_format = 1003104,
+    /// <summary>peptide ion annotation format: Annotation format designed primarily for peptides, with allowances for generic chemical formulas and other miscellaneous named ions.</summary>
+    MS_peptide_ion_annotation_format = 1003104,
 
-    /// <summary>cross-linked peptide ion interpretation format: Interpretation format designed specifically for cross-linked peptide ion peaks.</summary>
-    MS_cross_linked_peptide_ion_interpretation_format = 1003105,
+    /// <summary>cross-linked peptide ion annotation format: Annotation format designed specifically for cross-linked peptide ion peaks.</summary>
+    MS_cross_linked_peptide_ion_annotation_format = 1003105,
 
-    /// <summary>glycan ion interpretation format: Interpretation format designed specifically for glycan ion peaks.</summary>
-    MS_glycan_ion_interpretation_format = 1003106,
+    /// <summary>glycan ion annotation format: Annotation format designed specifically for glycan ion peaks.</summary>
+    MS_glycan_ion_annotation_format = 1003106,
 
-    /// <summary>lipid ion interpretation format: Interpretation format designed specifically for lipid ion peaks.</summary>
-    MS_lipid_ion_interpretation_format = 1003107,
+    /// <summary>lipid ion annotation format: Annotation format designed specifically for lipid ion peaks.</summary>
+    MS_lipid_ion_annotation_format = 1003107,
 
     /// <summary>PatternLab: PatternLab for Proteomics is an integrated computational environment for analyzing shotgun proteomic data.</summary>
     MS_PatternLab = 1003108,
@@ -10345,11 +10344,191 @@ public enum class CVID
     /// <summary>spectrum cluster member spectrum keys: A list of integers corresponding to the library spectrum keys of the members of this cluster. These members must be in the same library.</summary>
     MS_spectrum_cluster_member_spectrum_keys = 1003268,
 
-    /// <summary>spectrum cluster member USI: A member of this cluster external to the library, specified using a PSI Universal Spectrum Identifier </summary>
+    /// <summary>spectrum cluster member USI: A member of this cluster external to the library, specified using a PSI Universal Spectrum Identifier.</summary>
     MS_spectrum_cluster_member_USI = 1003269,
 
-    /// <summary>proforma peptidoform ion notation: A string describing the peptidoform ion using the PSI ProForma notation, which should include the charge state, and optionally the adduct type.  </summary>
+    /// <summary>proforma peptidoform ion notation: A string describing the peptidoform ion using the PSI ProForma notation, which should include the charge state, and optionally the adduct type.</summary>
     MS_proforma_peptidoform_ion_notation = 1003270,
+
+    /// <summary>peak annotation: The molecular identity(-ies) of the ion(s) producing this peak, inferred manually or computationally based on its m/z and the molecular interpretation of the spectrum.</summary>
+    MS_peak_annotation = 1003271,
+
+    /// <summary>peak annotation string: A string representing the peak annotation, in a defined format specified by the attribute 'ion annotation format'.</summary>
+    MS_peak_annotation_string = 1003272,
+
+    /// <summary>peak annotation confidence: A confidence value of assigning a peak annotation to a peak, as defined by the attribute 'peak annotation confidence metric'.</summary>
+    MS_peak_annotation_confidence = 1003273,
+
+    /// <summary>peak annotation confidence metric: A confidence metric of assigning a peak annotation to a peak. By default, this should range from 0 (no confidence) to 1 (certain), and if there are multiple annotations of the same peak, the sum of their confidence levels should be no more than 1.</summary>
+    MS_peak_annotation_confidence_metric = 1003274,
+
+    /// <summary>other attribute name: A user-provided name for a user-defined value describing a trait not covered by an existing controlled vocabulary term. This term should be used sparingly, preferring existing terms that describe the specific concept. Should be used with MS:1003276 to provide the attribute's value</summary>
+    MS_other_attribute_name = 1003275,
+
+    /// <summary>other attribute value: A user-provided value for a user-defined name describing a trait not covered by an existing controlled vocabulary term. This term should be used sparingly, preferring existing terms that describe the specific concept. Should be used with MS:1003275 to provide the attribute's name</summary>
+    MS_other_attribute_value = 1003276,
+
+    /// <summary>value between -1 and 1 inclusive: Value range for signed normalized score values.</summary>
+    MS_value_between__1_and_1_inclusive = 1003277,
+
+    /// <summary>m/z variability of peak: A measure of the statistical variability of the m/z value of this peak, usually estimated from replicate spectra of the same analyte.</summary>
+    MS_m_z_variability_of_peak = 1003278,
+
+    /// <summary>observation frequency of peak: The frequency at which this peak is observed among replicate spectra of the same analyte.</summary>
+    MS_observation_frequency_of_peak = 1003279,
+
+    /// <summary>intensity variability of peak: A measure of the statistical variability of the intensity of this peak, usually estimated from replicate spectra of the same analyte.</summary>
+    MS_intensity_variability_of_peak = 1003280,
+
+    /// <summary>Casanovo: Casanovo is a deep learning-based de novo spectrum identification tool. Official website https://github.com/Noble-Lab/casanovo/.</summary>
+    MS_Casanovo = 1003281,
+
+    /// <summary>Bruker TSF format: Bruker TSF raw file format.</summary>
+    MS_Bruker_TSF_format = 1003282,
+
+    /// <summary>Bruker TSF nativeID format: Native format defined by frame=xsd:nonNegativeInteger.</summary>
+    MS_Bruker_TSF_nativeID_format = 1003283,
+
+    /// <summary>Bruker TSF nativeID format, combined spectra: Bruker TSF comma separated list of spectra that have been combined prior to searching or interpretation.</summary>
+    MS_Bruker_TSF_nativeID_format__combined_spectra = 1003284,
+
+    /// <summary>standard deviation of m/z values of peak among replicates: The standard deviation of the m/z values of this peak among the replicate spectra of the same analyte.</summary>
+    MS_standard_deviation_of_m_z_values_of_peak_among_replicates = 1003285,
+
+    /// <summary>coefficient of variation of intensity of peak among replicates: The coefficient of variation (standard deviation divided by mean) of the intensities of this peak among the replicate spectra of the same analyte.</summary>
+    MS_coefficient_of_variation_of_intensity_of_peak_among_replicates = 1003286,
+
+    /// <summary>standard deviation of intensity of peak among replicates: The standard deviation of the intensities of this peak among the replicate spectra of the same analyte.</summary>
+    MS_standard_deviation_of_intensity_of_peak_among_replicates = 1003287,
+
+    /// <summary>number of unassigned peaks: The number of unassigned peaks in the spectrum.</summary>
+    MS_number_of_unassigned_peaks = 1003288,
+
+    /// <summary>intensity of highest unassigned peak: The intensity of the highest unassigned peak in the spectrum.</summary>
+    MS_intensity_of_highest_unassigned_peak = 1003289,
+
+    /// <summary>number of unassigned peaks among top 20 peaks: The number of unassigned peaks among the most intense 20 peaks in the spectrum.</summary>
+    MS_number_of_unassigned_peaks_among_top_20_peaks = 1003290,
+
+    /// <summary>Luciphor deltaScore: Luciphor phosphosite localization score</summary>
+    MS_Luciphor_deltaScore = 1003291,
+
+    /// <summary>TSQ Altis Plus: Thermo Scientific TSQ Altis Plus Triple Quadrupole MS.</summary>
+    MS_TSQ_Altis_Plus = 1003292,
+
+    /// <summary>ZenoTOF 7600: SCIEX ZenoTOF 7600.</summary>
+    MS_ZenoTOF_7600 = 1003293,
+
+    /// <summary>electron activated dissociation: A process to fragment ions in a high intensity electron beam which results in a dissociation of various analytes ranging from singly charged small molecules to multiply protonated proteins.</summary>
+    MS_electron_activated_dissociation = 1003294,
+
+    /// <summary>EAD: A process to fragment ions in a high intensity electron beam which results in a dissociation of various analytes ranging from singly charged small molecules to multiply protonated proteins.</summary>
+    MS_EAD = MS_electron_activated_dissociation,
+
+    /// <summary>summary statistics of replicates: Summary statistics of an attribute among all replicates that are aggregated to generate this spectrum.</summary>
+    MS_summary_statistics_of_replicates = 1003295,
+
+    /// <summary>number of replicates spectra used from source: The number of replicate spectra used during the aggregation process that originate from a specified source (e.g. a file, a dataset, a sample type, etc.). This term must appear in a group alongside a source term, which is one of: 'ProteomeXchange accession number', 'constituent spectrum file', or 'sample name'</summary>
+    MS_number_of_replicates_spectra_used_from_source = 1003296,
+
+    /// <summary>contributing replicate spectrum: A cross reference to another spectrum that is a replicate spectrum of the same analyte and contributes to the generation of this aggregated spectrum.</summary>
+    MS_contributing_replicate_spectrum = 1003297,
+
+    /// <summary>contributing replicate spectrum keys: A list of cross references to contributing replicate spectra in the same library, in the form of library spectrum keys.</summary>
+    MS_contributing_replicate_spectrum_keys = 1003298,
+
+    /// <summary>contributing replicate spectrum USI: A list of cross references to contributing replicate spectra, in the form of PSI Universal Spectrum Identifiers.</summary>
+    MS_contributing_replicate_spectrum_USI = 1003299,
+
+    /// <summary>spectrum match: Result of a comparison of a spectrum to another spectrum, usually to assess the plausibility that the two spectra originate from the same analyte.</summary>
+    MS_spectrum_match = 1003300,
+
+    /// <summary>peptide-spectrum match: Result of a comparison of an observed fragment ion spectrum to the theoretically predicted fragmentation pattern of a peptide sequence, to assess the plausibility that the observed spectrum originates from the putative peptide sequence.</summary>
+    MS_peptide_spectrum_match = 1003301,
+
+    /// <summary>PSM: Result of a comparison of an observed fragment ion spectrum to the theoretically predicted fragmentation pattern of a peptide sequence, to assess the plausibility that the observed spectrum originates from the putative peptide sequence.</summary>
+    MS_PSM = MS_peptide_spectrum_match,
+
+    /// <summary>spectrum-spectrum match: Result of a comparison of an observed fragment ion spectrum to another observed fragment ion spectrum, to assess the plausibility that two spectra originate from the same analyte, e.g., in spectral library searching and spectrum clustering.</summary>
+    MS_spectrum_spectrum_match = 1003302,
+
+    /// <summary>SSM: Result of a comparison of an observed fragment ion spectrum to another observed fragment ion spectrum, to assess the plausibility that two spectra originate from the same analyte, e.g., in spectral library searching and spectrum clustering.</summary>
+    MS_SSM = MS_spectrum_spectrum_match,
+
+    /// <summary>spectral similarity: A measure of how similar two spectra are, based on the features of the spectra (the locations and intensities of peaks) alone.</summary>
+    MS_spectral_similarity = 1003303,
+
+    /// <summary>spectral dot product: The dot (inner) product of two vectorized spectra divided by the product of their vector norms. It ranges from 0 (orthogonal vectors) to 1 (collinear vectors). Also known as cosine similarity.</summary>
+    MS_spectral_dot_product = 1003304,
+
+    /// <summary>cosine similarity: The dot (inner) product of two vectorized spectra divided by the product of their vector norms. It ranges from 0 (orthogonal vectors) to 1 (collinear vectors). Also known as cosine similarity.</summary>
+    MS_cosine_similarity = MS_spectral_dot_product,
+
+    /// <summary>spectral Euclidean distance: The Euclidean distance between a pair of points representing two vectorized spectra in high-dimensional space.</summary>
+    MS_spectral_Euclidean_distance = 1003305,
+
+    /// <summary>shared peak count: The number of peaks with closely matching m/z values that are common to two spectra.</summary>
+    MS_shared_peak_count = 1003306,
+
+    /// <summary>normalized spectral angle: The angle subtended by two vectorized spectra in high-dimensional space. It is equal to the 1 - (2 * inverse cosine of the spectral dot product) / pi.</summary>
+    MS_normalized_spectral_angle = 1003307,
+
+    /// <summary>spectral Pearson correlation: The Pearson's rho statistic between a pair of points representing two vectorized spectra.</summary>
+    MS_spectral_Pearson_correlation = 1003308,
+
+    /// <summary>Goslin: The Goslin implementations parse common lipid name dialects and normalize them to the recent lipid shorthand nomenclature based on grammars on succinct lipid nomenclature.</summary>
+    MS_Goslin = 1003309,
+
+    /// <summary>Lipid shorthand identification confidence level: Identification confidence levels based on the updated lipid shorthand nomenclature. The value slot can have the values 'Category', 'Class', 'Species', 'Phosphate-position', 'Molecular species', 'sn-position', 'DBE position', 'Structure defined', 'Full structure', 'Complete structure'.</summary>
+    MS_Lipid_shorthand_identification_confidence_level = 1003310,
+
+    /// <summary>Lipid empirical score: The lipid empirical score is a point-based lipid class-specific scoring system based on MS and other evidence sources as defined by the Lipidomics Standards Initiative (LSI). The score has a numeric value between 0 and 100. Score values are lipid class-specific and are therefore not immediately comparable between lipid classes.</summary>
+    MS_Lipid_empirical_score = 1003311,
+
+    /// <summary>Lipid shorthand identification confidence - Category: Lipid shorthand identification confidence level 'Category'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Category = 1003312,
+
+    /// <summary>Lipid shorthand identification confidence - Class: Lipid shorthand identification confidence level 'Class'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Class = 1003313,
+
+    /// <summary>Lipid shorthand identification confidence - Species: Lipid shorthand identification confidence level 'Species'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Species = 1003314,
+
+    /// <summary>Lipid shorthand identification confidence - Phosphate-position: Lipid shorthand identification confidence level 'Phosphate-position'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Phosphate_position = 1003315,
+
+    /// <summary>Lipid shorthand identification confidence - Molecular species: Lipid shorthand identification confidence level 'Molecular species'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Molecular_species = 1003316,
+
+    /// <summary>Lipid shorthand identification confidence - sn-position: Lipid shorthand identification confidence level 'sn-position'.</summary>
+    MS_Lipid_shorthand_identification_confidence___sn_position = 1003317,
+
+    /// <summary>Lipid shorthand identification confidence - DBE pos: Lipid shorthand identification confidence level 'DBE pos'.</summary>
+    MS_Lipid_shorthand_identification_confidence___DBE_pos = 1003318,
+
+    /// <summary>Lipid shorthand identification confidence - Structure defined: Lipid shorthand identification confidence level 'Structure defined'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Structure_defined = 1003319,
+
+    /// <summary>spectrum cluster size: The number of spectra in a spectrum cluster.</summary>
+    MS_spectrum_cluster_size = 1003320,
+
+    /// <summary>summary statistics of clustered spectra: Summary statistics of an attribute among all spectra of a spectrum cluster.</summary>
+    MS_summary_statistics_of_clustered_spectra = 1003321,
+
+    /// <summary>spectrum cluster best representative: Cross reference to the spectrum that is considered the most representative among spectra in a cluster, either as a library spectrum key if the best representative is in the same library, or a universal spectrum identifier if it is not.</summary>
+    MS_spectrum_cluster_best_representative = 1003322,
+
+    /// <summary>spectrum cluster consensus spectrum: Cross reference to a consensus spectrum that is constructed from aggregating spectra in a cluster, either as a library spectrum key if the consensus spectrum is in the same library, or a universal spectrum identifier if it is not.</summary>
+    MS_spectrum_cluster_consensus_spectrum = 1003323,
+
+    /// <summary>spectral dot product to aggregated spectrum: Spectral similarity measured by the spectral dot product between a replicate to its corresponding aggregated (e.g. consensus) spectrum.</summary>
+    MS_spectral_dot_product_to_aggregated_spectrum = 1003324,
+
+    /// <summary>Lipid shorthand identification confidence - Full structure: Lipid shorthand identification confidence level 'Full structure'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Full_structure = 1003325,
+
+    /// <summary>Lipid shorthand identification confidence - Complete structure: Lipid shorthand identification confidence level 'Complete structure'.</summary>
+    MS_Lipid_shorthand_identification_confidence___Complete_structure = 1003326,
 
     /// <summary>PSI-MS CV Quality Control Vocabulary: PSI Quality Control controlled vocabulary term.</summary>
     MS_PSI_MS_CV_Quality_Control_Vocabulary = 4000000,
@@ -10587,6 +10766,33 @@ public enum class CVID
 
     /// <summary>batch-corrected identified MS1 feature area principal component analysis result: A table with the PCA results of identified MS1 feature areas after batch-correction.</summary>
     MS_batch_corrected_identified_MS1_feature_area_principal_component_analysis_result = 4000094,
+
+    /// <summary>slowest frequency for MS level 1 collection: The slowest acquisition speed with which precursor MS scans were collected. Scan acquisition frequency can be used to gauge the suitability of used instrument settings for the sample content used.</summary>
+    MS_slowest_frequency_for_MS_level_1_collection = 4000095,
+
+    /// <summary>slowest frequency for MS level 2 collection: The slowest acquisition speed with which product MS scans were collected. Scan acquisition frequency can be used to gauge the suitability of used instrument settings for the sample content used.</summary>
+    MS_slowest_frequency_for_MS_level_2_collection = 4000096,
+
+    /// <summary>MS1 signal jump (10x) count: The number of times where MS1 TIC increased more than 10-fold between adjacent MS1 scans. An unusual high count of signal jumps or falls can indicate ESI stability issues.</summary>
+    MS_MS1_signal_jump__10x__count = 4000097,
+
+    /// <summary>MS1 signal fall (10x) count: The number of times where MS1 TIC decreased more than 10-fold between adjacent MS1 scans. An unusual high count of signal jumps or falls can indicate ESI stability issues.</summary>
+    MS_MS1_signal_fall__10x__count = 4000098,
+
+    /// <summary>number of empty MS1 scans: Number of MS1 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks).</summary>
+    MS_number_of_empty_MS1_scans = 4000099,
+
+    /// <summary>number of empty MS2 scans: Number of MS2 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks).</summary>
+    MS_number_of_empty_MS2_scans = 4000100,
+
+    /// <summary>number of empty MS3 scans: Number of MS3 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks).</summary>
+    MS_number_of_empty_MS3_scans = 4000101,
+
+    /// <summary>number of detected quantification data points: The number of datapoints detected for quantification purposes within the run. These datapoints may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the meta data or analysis methods section of the recording file for the respective run.</summary>
+    MS_number_of_detected_quantification_data_points = 4000102,
+
+    /// <summary>number of identified quantification data points: The number of identified datapoints for quantification purposes withing the run after user defined acceptance criteria are applied. These datapoints may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the meta data or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability.</summary>
+    MS_number_of_identified_quantification_data_points = 4000103,
 
     /// <summary>unimod root node: The root node of the unimod modifications ontology.</summary>
     UNIMOD_unimod_root_node = 300000000,
@@ -15037,8 +15243,8 @@ public enum class CVID
     /// <summary>TMTpro_zero: Native TMTpro Tandem Mass Tag.</summary>
     UNIMOD_TMTpro_zero = 300002017,
 
-    /// <summary>Kdo: Glycosylation with KDO.</summary>
-    UNIMOD_Kdo = 300002022,
+    /// <summary>Ser/Thr-KDO: Glycosylation of Serine/Threonine residues with KDO.</summary>
+    UNIMOD_Ser_Thr_KDO = 300002022,
 
     /// <summary>Andro-H2O: Andrographolide with the loss of H2O.</summary>
     UNIMOD_Andro_H2O = 300002025,
@@ -15097,9 +15303,6 @@ public enum class CVID
     /// <summary>pRBS-ID_6-thioguanosine: RNA-protein UVA-crosslinked, hydrofluoride-digested 6-thioguanosine adduct.</summary>
     UNIMOD_pRBS_ID_6_thioguanosine = 300002055,
 
-    /// <summary>DMED: Light DMED.</summary>
-    UNIMOD_DMED = 300002056,
-
     /// <summary>6C-CysPAT: Iodoacetamido-LC-Phosphonic Acid derivative.</summary>
     UNIMOD_6C_CysPAT = 300002057,
 
@@ -15117,6 +15320,21 @@ public enum class CVID
 
     /// <summary>DBIA: Desthiobiotinylation of cysteine with DBIA probe.</summary>
     UNIMOD_DBIA = 300002062,
+
+    /// <summary>Mono_Nγ-propargyl-L-Gln_desthiobiotin: Monomodification of Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
+    UNIMOD_Mono_N___propargyl_L_Gln_desthiobiotin = 300002067,
+
+    /// <summary>Di_L-Glu_Nγ-propargyl-L-Gln_desthiobiotin: Dimodification of L-Glu and Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
+    UNIMOD_Di_L_Glu_N___propargyl_L_Gln_desthiobiotin = 300002068,
+
+    /// <summary>Di_L-Gln_Nγ-propargyl-L-Gln_desthiobiotin: Dimodification of L-Gln and Nγ-propargyl-L-Gln probe with clicked desthiobiotin-azide.</summary>
+    UNIMOD_Di_L_Gln_N___propargyl_L_Gln_desthiobiotin = 300002069,
+
+    /// <summary>L-Gln: Monomodification with glutamine.</summary>
+    UNIMOD_L_Gln = 300002070,
+
+    /// <summary>Glyceroyl: Glyceroylation.</summary>
+    UNIMOD_Glyceroyl = 300002072,
 
     /// <summary>unit: A unit of measurement is a standardized quantity of a physical quality.</summary>
     UO_unit = 400000000,
@@ -16298,7 +16516,13 @@ public enum class CVID
     UO_milligray_per_minute = 400010062,
 
     /// <summary>milligray per day: A derived absorbed dose unit which is equal to one milligray absorbed per day.</summary>
-    UO_milligray_per_day = 400010063
+    UO_milligray_per_day = 400010063,
+
+    /// <summary>milligray per hour: A derived absorbed dose unit which is equal to one milligray absorbed per hour.</summary>
+    UO_milligray_per_hour = 400010064,
+
+    /// <summary>milligray per second: A derived absorbed dose unit which is equal to one milligray absorbed per second.</summary>
+    UO_milligray_per_second = 400010065
 }; // enum CVID
 
 

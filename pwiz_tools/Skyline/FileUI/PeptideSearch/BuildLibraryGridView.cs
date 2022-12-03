@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
@@ -86,6 +85,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 DataBindingComplete += (sender, e) => Sort(_colFile, ListSortDirection.Ascending);
                 UserDeletingRow += OnUserDeletingRow;
                 RowPrePaint += OnRowPrePaint;
+                CellPainting += OnCellPainting;
                 CellFormatting += OnCellFormatting;
                 CellValueChanged += OnCellValueChanged;
 
@@ -147,21 +147,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var bw = new BackgroundWorker();
                     bw.DoWork += (sender, e) =>
                     {
-                        bool success;
-                        Dictionary<string, BiblioSpecScoreType[]> scoreTypes;
+                        Dictionary<string, ScoreTypesResult> scoreTypes;
                         Exception getScoreTypesException = null;
                         try
                         {
-                            success = GetScoreTypes(valueSet, out scoreTypes);
+                            scoreTypes = GetScoreTypes(valueSet);
                         }
                         catch (Exception x)
                         {
-                            success = false;
                             scoreTypes = null;
                             getScoreTypesException = x;
                         }
 
-                        Invoke(new MethodInvoker(() => GridUpdateScoreInfo(success, scoreTypes, getScoreTypesException)));
+                        Invoke(new MethodInvoker(() => GridUpdateScoreInfo(scoreTypes, getScoreTypesException)));
                     };
                     bw.RunWorkerAsync();
                 }
@@ -182,17 +180,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             .Select(row => (File)row.DataBoundItem);
 
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool ScoreTypesLoaded => Files.All(f => !f.ScoreTypeError && f.ScoreType != null);
+        public bool ScoreTypesLoaded => Files.All(f => !f.HasScoreTypeError && f.ScoreType != null);
 
         [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsReady => FilesList.Count > 0 && (IsFileOnly || Files.All(f => !f.ScoreTypeError && f.ScoreType != null && f.ScoreThreshold.HasValue));
+        public bool IsReady => FilesList.Count > 0 && (IsFileOnly || Files.All(f => !f.HasScoreTypeError && f.ScoreType != null && f.ScoreThreshold.HasValue));
 
         public bool Validate(IWin32Window parent, CancelEventArgs e, bool showWarnings, out Dictionary<string, double> thresholdsByFile)
         {
             if (!ScoreTypesLoaded)
                 throw new Exception(Resources.BuildLibraryGridView_GetThresholds_Score_types_not_loaded_);
 
-            var thresholdsByScoreType = new Dictionary<BiblioSpecScoreType, double>();
+            var thresholdsByScoreType = new Dictionary<ScoreType, double>();
             thresholdsByFile = new Dictionary<string, double>();
 
             var errors = new List<string>();
@@ -230,8 +228,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (!scoreType.CanSet)
                         continue;
 
-                    var probCorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct;
-                    var probIncorrect = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_incorrect;
+                    var probCorrect = scoreType.ProbabilityType == ScoreType.EnumProbabilityType.probability_correct;
+                    var probIncorrect = scoreType.ProbabilityType == ScoreType.EnumProbabilityType.probability_incorrect;
                     var threshold = pair.Value;
                     var thresholdIsMin = threshold.Equals(scoreType.ValidRange.Min);
                     var thresholdIsMax = threshold.Equals(scoreType.ValidRange.Max);
@@ -288,26 +286,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return true;
         }
 
-        private bool GetScoreTypes(ICollection<string> files, out Dictionary<string, BiblioSpecScoreType[]> scoreTypes)
+        private Dictionary<string, ScoreTypesResult> GetScoreTypes(ICollection<string> files)
         {
             var blibBuild = new BlibBuild(null, files.ToArray());
             IProgressStatus status = new ProgressStatus();
-            var success = blibBuild.GetScoreTypes(new SilentProgressMonitor(), ref status, out _, out _, out scoreTypes);
+            var results = blibBuild.GetScoreTypes(new SilentProgressMonitor(), ref status, out _);
 
             // Match input/output files
             var filesByLength = files.OrderByDescending(s => s.Length).ToArray();
-            var scoreTypesTmp = new Dictionary<string, BiblioSpecScoreType[]>();
-            foreach (var pair in scoreTypes)
-                scoreTypesTmp[filesByLength.First(f => f.EndsWith(pair.Key))] = pair.Value;
-            scoreTypes = scoreTypesTmp;
+            var resultsTmp = new Dictionary<string, ScoreTypesResult>();
+            foreach (var pair in results)
+                resultsTmp[filesByLength.First(f => f.EndsWith(pair.Key))] = pair.Value;
+            results = resultsTmp;
 
-            return success;
+            return results;
         }
 
-        private void GridUpdateScoreInfo(bool success, IReadOnlyDictionary<string, BiblioSpecScoreType[]> scoreTypes, Exception exception)
+        private void GridUpdateScoreInfo(IReadOnlyDictionary<string, ScoreTypesResult> scoreTypes, Exception exception)
         {
-            CellValueChanged -= OnCellValueChanged;
-
             // Gather existing score thresholds
             var existingThresholds = new Dictionary<string, double?>();
             foreach (var file in Files.Where(f => f.ScoreType != null && (scoreTypes == null || !scoreTypes.ContainsKey(f.FilePath))))
@@ -316,25 +312,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var filesToProcess = Files.Where(f => f.ScoreType == null).ToArray();
             foreach (var file in filesToProcess)
             {
-                if (!success || exception != null || scoreTypes == null || !scoreTypes.TryGetValue(file.FilePath, out var scoreTypesThis))
+                ScoreTypesResult scoreTypesThis = null;
+                if (exception != null)
                 {
-                    var errorSb = new StringBuilder(Resources.BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_);
-                    if (exception != null)
-                    {
-                        errorSb.AppendLine();
-                        errorSb.Append(exception.Message);
-                    }
-                    var row = FindRow(file);
-                    row.ErrorText = errorSb.ToString();
-                    file.ScoreTypeError = true;
-                    InvalidateCell(row.Cells[_colScoreType.Index]);
-                    InvalidateCell(row.Cells[_colThreshold.Index]);
+                    file.ScoreTypeError = exception.Message;
+                }
+                else if (scoreTypes == null || !scoreTypes.TryGetValue(file.FilePath, out scoreTypesThis))
+                {
+                    file.ScoreTypeError = Resources.BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_;
+                }
+                else if (scoreTypesThis.HasError)
+                {
+                    file.ScoreTypeError = TextUtil.LineSeparate(scoreTypesThis.Errors);
+                }
+
+                if (file.HasScoreTypeError || scoreTypesThis == null)
+                {
+                    InvalidateRow(FindRowIndex(file));
                     continue;
                 }
 
-                for (var i = 0; i < scoreTypesThis.Length; i++)
+                for (var i = 0; i < scoreTypesThis.NumScoreTypes; i++)
                 {
-                    var scoreType = scoreTypesThis[i];
+                    var scoreType = scoreTypesThis.ScoreTypes[i];
 
                     double? threshold;
                     if (scoreType.CanSet)
@@ -347,34 +347,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         threshold = scoreType.DefaultValue;
                     }
 
-                    DataGridViewRow row;
                     if (i == 0)
                     {
                         file.ScoreType = scoreType;
                         file.ScoreThreshold = threshold;
-                        row = FindRow(file);
+
+                        var row = FindRowIndex(file);
+                        InvalidateCell(_colScoreType.Index, row);
+                        InvalidateCell(_colThreshold.Index, row);
                     }
                     else
                     {
-                        var newFile = new File(file.FilePath, scoreType, threshold);
-                        FilesList.Add(newFile);
-                        row = FindRow(newFile);
+                        FilesList.Add(new File(file.FilePath, scoreType, threshold));
                     }
-
-                    if (scoreType.CanSet)
-                    {
-                        var thresholdCell = row.Cells[_colThreshold.Index];
-                        thresholdCell.ToolTipText = scoreType.ProbabilityType == BiblioSpecScoreType.EnumProbabilityType.probability_correct
-                            ? Resources.BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__
-                            : Resources.BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__;
-                        thresholdCell.ReadOnly = false;
-                    }
-                    InvalidateCell(row.Cells[_colScoreType.Index]);
-                    InvalidateCell(row.Cells[_colThreshold.Index]);
                 }
             }
-
-            CellValueChanged += OnCellValueChanged;
 
             FilesChanged?.Invoke(this, null);
         }
@@ -397,7 +384,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private DataGridViewRow FindRow(File file)
         {
-            return Rows.Cast<DataGridViewRow>().FirstOrDefault(row => Equals(file, row.DataBoundItem));
+            var i = FindRowIndex(file);
+            return i >= 0 ? Rows[i] : null;
+        }
+
+        private int FindRowIndex(File file)
+        {
+            for (var i = 0; i < RowCount; i++)
+                if (ReferenceEquals(Rows[i].DataBoundItem, file))
+                    return i;
+            return -1;
         }
 
         #region Functional test support
@@ -407,15 +403,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SetScoreThreshold(scoreType => threshold);
         }
 
-        public void SetScoreThreshold(Func<BiblioSpecScoreType, double?> thresholdFunc)
+        public void SetScoreThreshold(Func<ScoreType, double?> thresholdFunc)
         {
-            foreach (var file in Files.Where(f => f.ScoreType != null && f.ScoreType.CanSet))
+            foreach (DataGridViewRow row in Rows)
             {
+                var file = (File)row.DataBoundItem;
+                if (file.ScoreType == null || !file.ScoreType.CanSet)
+                    continue;
+
                 var threshold = thresholdFunc.Invoke(file.ScoreType);
                 if (threshold != null)
                 {
                     file.ScoreThreshold = threshold;
-                    InvalidateCell(FindRow(file).Cells[_colThreshold.Index]);
+                    InvalidateCell(row.Cells[_colThreshold.Index]);
                 }
             }
         }
@@ -430,8 +430,40 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void OnRowPrePaint(object sender, DataGridViewRowPrePaintEventArgs e)
         {
-            foreach (var cell in Rows[e.RowIndex].Cells.Cast<DataGridViewCell>())
-                cell.Style.BackColor = cell.ReadOnly ? ReadonlyCellBackColor : _defaultCellBackColor;
+            var row = Rows[e.RowIndex];
+            var file = (File)row.DataBoundItem;
+
+            row.ErrorText = !file.HasScoreTypeError
+                ? null
+                : TextUtil.LineSeparate(Resources.BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_,
+                    string.Empty,
+                    file.ScoreTypeError);
+        }
+
+        private void OnCellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            var row = Rows[e.RowIndex];
+            var cell = row.Cells[e.ColumnIndex];
+            var file = (File)row.DataBoundItem;
+
+            if (e.ColumnIndex == _colThreshold.Index)
+            {
+                var scoreType = file.ScoreType;
+                var threshold = file.ScoreThreshold;
+
+                cell.ReadOnly = !file.CanSetScore || file.HasScoreTypeError;
+                cell.ErrorText = scoreType == null || (threshold.HasValue && scoreType.ValidRange.Min <= threshold && threshold <= scoreType.ValidRange.Max)
+                    ? null
+                    : string.Format(
+                        Resources.BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___,
+                        threshold.ToString(), scoreType.ValidRange.Min, scoreType.ValidRange.Max);
+                cell.ToolTipText = scoreType?.ThresholdDescription;
+            }
+
+            cell.Style.BackColor = cell.ReadOnly ? ReadonlyCellBackColor : _defaultCellBackColor;
         }
 
         private void OnCellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -444,7 +476,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             else if (e.ColumnIndex == _colScoreType.Index)
             {
-                if (file.ScoreTypeError)
+                if (file.HasScoreTypeError)
                 {
                     e.Value = string.Empty;
                     e.FormattingApplied = true;
@@ -457,7 +489,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             else if (e.ColumnIndex == _colThreshold.Index)
             {
-                if (file.ScoreTypeError)
+                if (file.HasScoreTypeError)
                 {
                     e.Value = string.Empty;
                     e.FormattingApplied = true;
@@ -472,29 +504,29 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void OnCellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex != _colThreshold.Index)
+            if (e.RowIndex < 0)
                 return;
 
             var file = (File)Rows[e.RowIndex].DataBoundItem;
-            var scoreType = file.ScoreType;
-            if (scoreType == null)
-                return;
+            var repaint = false;
 
-            // Copy new threshold to all other files with same score type
-            var threshold = file.ScoreThreshold;
-            var errorText = threshold.HasValue && scoreType.ValidRange.Min <= threshold && threshold <= scoreType.ValidRange.Max
-                ? null
-                : string.Format(
-                    Resources.BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___,
-                    threshold.ToString(), scoreType.ValidRange.Min, scoreType.ValidRange.Max);
-
-            foreach (var fileThis in Files.Where(f => Equals(scoreType, f.ScoreType)))
+            if (e.ColumnIndex == _colThreshold.Index)
             {
-                var cellThis = FindRow(fileThis).Cells[_colThreshold.Index];
-                fileThis.ScoreThreshold = threshold;
-                cellThis.ErrorText = errorText;
-                InvalidateCell(cellThis);
+
+                var scoreType = file.ScoreType;
+                if (scoreType == null)
+                    return;
+
+                // Copy new threshold to all other files with same score type
+                foreach (var fileOther in Files.Where(f => Equals(scoreType, f.ScoreType)))
+                {
+                    fileOther.ScoreThreshold = file.ScoreThreshold;
+                    repaint = true;
+                }
             }
+
+            if (repaint)
+                Invalidate();
         }
 
         public class File
@@ -502,26 +534,31 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public string FilePath { get; set; }
             [Track]
             public string FileName => Path.GetFileName(FilePath);
-            public BiblioSpecScoreType ScoreType { get; set; }
+            public ScoreType ScoreType { get; set; }
             [Track]
             public string ScoreTypeName => ScoreType?.ToString();
+            public bool CanSetScore => ScoreType != null && ScoreType.CanSet;
             [Track]
             public double? ScoreThreshold { get; set; }
-            public bool ScoreTypeError { get; set; }
+            public string ScoreTypeError { get; set; }
+            public bool HasScoreTypeError => ScoreTypeError != null;
 
-            public File(string filePath, BiblioSpecScoreType scoreType, double? scoreThreshold)
+            public File(string filePath, ScoreType scoreType, double? scoreThreshold)
             {
                 FilePath = filePath;
                 ScoreType = scoreType;
                 ScoreThreshold = scoreThreshold;
-                ScoreTypeError = false;
+                ScoreTypeError = null;
             }
 
             public bool Equals(File obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return Equals(obj.FilePath, FilePath) && Equals(obj.ScoreType, ScoreType) && Equals(obj.ScoreThreshold, ScoreThreshold);
+                return Equals(obj.FilePath, FilePath) &&
+                       Equals(obj.ScoreType, ScoreType) &&
+                       Equals(obj.ScoreThreshold, ScoreThreshold) &&
+                       Equals(obj.ScoreTypeError, ScoreTypeError);
             }
 
             public override bool Equals(object obj)
@@ -538,6 +575,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var result = FilePath?.GetHashCode() ?? 0;
                     result = (result * 397) ^ (ScoreType?.GetHashCode() ?? 0);
                     result = (result * 397) ^ ScoreThreshold.GetHashCode();
+                    result = (result * 397) ^ (ScoreTypeError ?? string.Empty).GetHashCode();
                     return result;
                 }
             }

@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.2.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.3.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -209,6 +209,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ExportMethodDwellTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.1")]
+        public double ExportMethodAccumulationTime {
+            get {
+                return ((double)(this["ExportMethodAccumulationTime"]));
+            }
+            set {
+                this["ExportMethodAccumulationTime"] = value;
             }
         }
         
@@ -1481,18 +1493,6 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["InstallationId"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string StackTraceListVersion {
-            get {
-                return ((string)(this["StackTraceListVersion"]));
-            }
-            set {
-                this["StackTraceListVersion"] = value;
             }
         }
         
@@ -3272,6 +3272,31 @@ namespace pwiz.Skyline.Properties {
                 this["ShowZHHIons"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ShowLosses {
+            get {
+                return ((string)(this["ShowLosses"]));
+            }
+            set {
+                this["ShowLosses"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowSpecialIons {
+            get {
+                return ((bool)(this["ShowSpecialIons"]));
+            }
+            set {
+                this["ShowSpecialIons"] = value;
+            }
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
@@ -3279,21 +3304,11 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ((string)(this["LastProteinAssociationFastaFilepath"]));
             }
-
             set {
                 this["LastProteinAssociationFastaFilepath"] = value;
             }
         }
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string ShowLosses {
-            get {
-                return ((string)(this["ShowLosses"]));    		}
-            set {
-                this["ShowLosses"] = value;
-            }
-        }		
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
@@ -3315,6 +3330,66 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ExportCEPredictorName"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AlphabeticalReportEditor {
+            get {
+                return ((bool)(this["AlphabeticalReportEditor"]));
+            }
+            set {
+                this["AlphabeticalReportEditor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryPropertiesVisible {
+            get {
+                return ((bool)(this["ViewLibraryPropertiesVisible"]));
+            }
+            set {
+                this["ViewLibraryPropertiesVisible"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryPropertiesSorted {
+            get {
+                return ((bool)(this["ViewLibraryPropertiesSorted"]));
+            }
+            set {
+                this["ViewLibraryPropertiesSorted"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ViewLibrarySplitMainDist {
+            get {
+                return ((int)(this["ViewLibrarySplitMainDist"]));
+            }
+            set {
+                this["ViewLibrarySplitMainDist"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ViewLibrarySplitPropsDist {
+            get {
+                return ((int)(this["ViewLibrarySplitPropsDist"]));
+            }
+            set {
+                this["ViewLibrarySplitPropsDist"] = value;
             }
         }
     }

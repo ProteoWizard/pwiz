@@ -106,6 +106,13 @@ exe write_mzid_example_files
     : <include>../../..
     ;
 
+exe textpsm2mzid
+    : textpsm2mzid.cpp
+      TextPSMReader.cpp
+      ../../pwiz/data/identdata
+    : <include>../../..
+    ;
+
 
 exe write_proteome_example_files
     : write_proteome_example_files.cpp
@@ -128,6 +135,7 @@ install bin
       txt2mzml
       write_example_files
       write_mzid_example_files
+      textpsm2mzid
       write_proteome_example_files
       write_traml_example_files
     : <location>bin ;

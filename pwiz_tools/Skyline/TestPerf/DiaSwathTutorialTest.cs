@@ -386,8 +386,8 @@ namespace TestPerf
                 RemoveDuplicates = true,
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
-                FinalTargetCounts = new[] { 2697, 27189, 28342, 170052 },
-                ScoringModelCoefficients = "-0.3394|-0.8789|4.4756|3.5100|-0.1021|0.7491|0.4295|-0.1219",
+                FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
+                ScoringModelCoefficients = "-0.3352|-0.9057|4.5016|3.5315|-0.1012|0.7389|0.4436|-0.1320",
                 MassErrorStats = new[]
                 {
                     new[] {3.6, 2.7},
@@ -398,9 +398,9 @@ namespace TestPerf
                     new[] {3.9, 2.6},
                     new[] {3.6, 2.7},
                 },
-                DiffPeptideCounts = new[] { 12594, 8476, 2253, 1850 },
-                UnpolishedProteins = 2307,
-                PolishedProteins = 2307,
+                DiffPeptideCounts = new[] { 12621, 8497, 2255, 1854 },
+                UnpolishedProteins = 2314,
+                PolishedProteins = 2314,
             };
 
             if (!IsCoverShotMode)
@@ -500,7 +500,7 @@ namespace TestPerf
             SrmDocument doc = SkylineWindow.Document;
 
             string documentBaseName = "DIA-" + InstrumentTypeName + "-tutorial";
-            string documentFile = TestContext.GetTestPath(documentBaseName + SrmDocument.EXT);
+            string documentFile = TestFilesDirs[0].GetTestPath(documentBaseName + SrmDocument.EXT);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             //var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);

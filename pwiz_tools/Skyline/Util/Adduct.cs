@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Util
             }
             AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
             Composition = new ImmutableDictionary<string, int>(composition);
-            var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(composition));
+            var resultMol = Molecule.FromDict(composition);
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidOperationException(
@@ -741,8 +741,7 @@ namespace pwiz.Skyline.Util
             var l = Molecule.Parse(left.Trim());
             var r = Molecule.Parse(right.Trim());
             var d = l.Difference(r);
-
-            if (d.Values.All(count => count == 0))
+            if (d.Values.Any(count => count < 0) || d.Values.All(count => count == 0))
             {
                 return NonProteomicProtonatedFromCharge(charge); // No difference in formulas, try straight protonation
             }
@@ -834,10 +833,12 @@ namespace pwiz.Skyline.Util
             } 
             return ChangeIsotopeLabels(
                 isotopes == null || isotopes.Count == 0 ? string.Empty : isotopes.Aggregate(string.Empty,
-                        (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
-                            (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
-                            // If label was described (for example) as Cl' in dict, look up Cl37 and use that
-                            DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))); 
+                    (current, pair) => current +
+                                       ((pair.Value == 0) ? string.Empty : // We see things like H'0 (that's a zero) in the wild
+                                           (string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
+                                               (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
+                                               // If label was described (for example) as Cl' in dict, look up Cl37 and use that
+                                               DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))))); 
         }
 
         // Sometimes all we know is that two analytes have same name but different masses - describe isotope label as a mass
@@ -862,6 +863,9 @@ namespace pwiz.Skyline.Util
         {
             if (Equals(newCharge, AdductCharge))
                 return this;
+            // If it is proteomic, simply create a new proteomic adduct with the new charge.
+            if (IsProteomic)
+                return FromChargeProtonated(newCharge);
 
             if (AdductCharge == 0)
             {

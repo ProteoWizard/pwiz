@@ -255,10 +255,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 GetX80Dimensions(g, rt, sizeMax, out var widthLine, out var heightLine, out var heightMax);
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
                 // If current name isn't the original, show that.
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
+                    tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
                 // Add information about accession, preferred name, gene, etc.
                 AddProteinMetadata(tableDetails, DocNode.ProteinMetadata, rt, g);
                 if (!DocNode.PeptideGroup.Description.IsNullOrEmpty() &&
@@ -363,21 +363,21 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             if (!String.IsNullOrEmpty(metadata.Accession))
             {
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Accession, metadata.Accession, rt);
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Accession, metadata.Accession, rt);
             }
 
             if (!String.IsNullOrEmpty(metadata.PreferredName))
             {
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name,
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name,
                     metadata.PreferredName, rt);
             }
             if (!String.IsNullOrEmpty(metadata.Gene))
             {
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Gene, metadata.Gene, rt);
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Gene, metadata.Gene, rt);
             }
             if (!String.IsNullOrEmpty(metadata.Species))
             {
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Species, metadata.Species, rt);
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Species, metadata.Species, rt);
             }
             if (!String.IsNullOrEmpty(metadata.DisplaySearchHistory()))
             {

@@ -34,6 +34,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -215,6 +216,23 @@ namespace pwiz.Skyline
         public string SharedFile { get; private set; }
         public ShareType SharedFileType { get; private set; }
 
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", () => GetPathToFile(IonMobilityDb.EXT),
+            (c, p) => c.ImsDbFile = p.ValueFullPath);
+
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_IMSDB_NAME = new DocArgument(@"ionmobility-library-name", NAME_VALUE,
+            (c, p) => c.ImsDbName = p.Value);
+
+        private static readonly ArgumentGroup GROUP_CREATE_IMSDB = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library, false,
+            ARG_IMSDB_CREATE, ARG_IMSDB_NAME)
+        {
+            Dependencies =
+            {
+                {  ARG_IMSDB_NAME, ARG_IMSDB_CREATE },
+            },
+        };
+
         public static readonly Argument ARG_IMPORT_FILE = new DocArgument(@"import-file", PATH_TO_FILE,
             (c, p) => c.ParseImportFile(p));
         public static readonly Argument ARG_IMPORT_REPLICATE_NAME = new DocArgument(@"import-replicate-name", NAME_VALUE,
@@ -337,6 +355,8 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public string ImsDbFile { get; private set; }
+        public string ImsDbName { get; private set; }
 
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
@@ -555,6 +575,10 @@ namespace pwiz.Skyline
         public bool AddDecoys
         {
             get { return !string.IsNullOrEmpty(AddDecoysType); }
+        }
+        public bool CreatingIMSDB
+        {
+            get { return !string.IsNullOrEmpty(ImsDbFile); }
         }
         public bool ImportingResults
         {
@@ -1784,6 +1808,7 @@ namespace pwiz.Skyline
                     GROUP_IMPORT_SEARCH,
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
+                    GROUP_CREATE_IMSDB,
                     GROUP_DECOYS,
                     GROUP_REFINEMENT,
                     GROUP_REFINEMENT_W_RESULTS,

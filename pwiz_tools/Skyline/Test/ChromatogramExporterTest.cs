@@ -62,13 +62,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ChromatogramExportTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
-            string chromExportDoc = testFilesDir.GetTestPath("ChromToExport.sky");
-            string fileExpected1 = testFilesDir.GetTestPathLocale(EXPORT_1);
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
+            string chromExportDoc = TestFilesDir.GetTestPath("ChromToExport.sky");
+            string fileExpected1 = TestFilesDir.GetTestPathLocale(EXPORT_1);
             string fileActual1 = GetActualName(fileExpected1);
-            string fileExpected2 = testFilesDir.GetTestPathLocale(EXPORT_2);
+            string fileExpected2 = TestFilesDir.GetTestPathLocale(EXPORT_2);
             string fileActual2 = GetActualName(fileExpected2);
-            string fileExpectedAll = testFilesDir.GetTestPathLocale(EXPORT_ALL);
+            string fileExpectedAll = TestFilesDir.GetTestPathLocale(EXPORT_ALL);
             string fileActualAll = GetActualName(fileExpectedAll);
             
             SrmDocument doc = ResultsUtil.DeserializeDocument(chromExportDoc);
@@ -82,12 +82,12 @@ namespace pwiz.SkylineTest
                 if (IsSaveAll)
                 {
                     // For regenerating all of the required expected files, if things change
-                    SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_1, SOURCES_1);
-                    SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_2, SOURCES_2);
-                    SaveChrom(docResults, testFilesDir.GetTestPath(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_ALL, SOURCES_ALL);
-                    SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_1, SOURCES_1);
-                    SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_2, SOURCES_2);
-                    SaveChrom(docResults, testFilesDir.GetTestPathIntl(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_ALL, SOURCES_ALL);
+                    SaveChrom(docResults, TestFilesDir.GetTestPath(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_1, SOURCES_1);
+                    SaveChrom(docResults, TestFilesDir.GetTestPath(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_2, SOURCES_2);
+                    SaveChrom(docResults, TestFilesDir.GetTestPath(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("en-US"), EXTRACTOR_ALL, SOURCES_ALL);
+                    SaveChrom(docResults, TestFilesDir.GetTestPathIntl(EXPORT_1), FILE_NAMES_1.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_1, SOURCES_1);
+                    SaveChrom(docResults, TestFilesDir.GetTestPathIntl(EXPORT_2), FILE_NAMES_2.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_2, SOURCES_2);
+                    SaveChrom(docResults, TestFilesDir.GetTestPathIntl(EXPORT_ALL), FILE_NAMES_ALL.ToList(), CultureInfo.GetCultureInfo("fr-FR"), EXTRACTOR_ALL, SOURCES_ALL);
                 }
 
                 SaveChrom(docResults, fileActual1, FILE_NAMES_1.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_1, SOURCES_1);

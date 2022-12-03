@@ -166,7 +166,7 @@
     <value>4</value>
   </data>
   <data name="btnFindNext.Text" xml:space="preserve">
-    <value>&amp;Find Next</value>
+    <value>Find &amp;Next</value>
   </data>
   <data name="&gt;&gt;btnFindNext.Name" xml:space="preserve">
     <value>btnFindNext</value>
@@ -343,7 +343,7 @@
     <value>3</value>
   </data>
   <data name="cbCaseSensitive.Text" xml:space="preserve">
-    <value>Match Case</value>
+    <value>&amp;Match case</value>
   </data>
   <data name="&gt;&gt;cbCaseSensitive.Name" xml:space="preserve">
     <value>cbCaseSensitive</value>
@@ -430,7 +430,7 @@
     <value>8</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>Also search for:</value>
+    <value>Also &amp;search for:</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -490,12 +490,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.530, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FindNodeDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.530, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

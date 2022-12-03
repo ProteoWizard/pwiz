@@ -166,6 +166,12 @@ namespace pwiz.Skyline.Model.Results
         private ExtractedSpectrum FilterSpectrumList(MsDataSpectrum[] spectra,
             SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset)
         {
+
+            if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
+            {
+                return null; // No compensation voltage match
+            }
+
             int targetCount = 1;
             if (Q1 == 0)
                 highAcc = false;    // No mass error for all-ions extraction
@@ -386,8 +392,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasIonMobilityFAIMS()
         {
-            return IonMobilityInfo.HasIonMobilityValue && 
-                   IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V;
+            return IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V &&
+                   IonMobilityInfo.HasIonMobilityValue;
         }
 
         public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
@@ -624,6 +630,11 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public override string ToString() // For debug convenience
+        {
+            return $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffset}";
         }
 
         #endregion

@@ -1053,30 +1053,22 @@ namespace pwiz.Skyline.Model
                     // loss modifications which are no longer possible.
                     var modsNew = settingsNew.PeptideSettings.Modifications;
                     var modsLossNew = modsNew.NeutralLossModifications.ToArray();
-                    var modsOld = diff.SettingsOld.PeptideSettings.Modifications;
-                    var modsLossOld = modsOld.NeutralLossModifications.ToArray();
-                    if (modsNew.MaxNeutralLosses < modsOld.MaxNeutralLosses ||
-                        !ArrayUtil.EqualsDeep(modsLossNew, modsLossOld) ||
-                        !ArrayUtil.EqualsDeep(settingsNew.TransitionSettings.Filter.MeasuredIons, diff.SettingsOld.TransitionSettings.Filter.MeasuredIons) ||
-                        !Equals(settingsNew.TransitionSettings.Instrument, diff.SettingsOld.TransitionSettings.Instrument))
+                    if (nodePep.HasExplicitMods && nodePep.ExplicitMods.HasNeutralLosses)
                     {
-                        if (nodePep.HasExplicitMods && nodePep.ExplicitMods.HasNeutralLosses)
-                        {
-                            modsLossNew = modsLossNew
-                                .Union(nodePep.ExplicitMods.NeutralLossModifications.Select(m => m.Modification))
-                                .ToArray();
-                        }
-                        IList<DocNode> childrenNew = new List<DocNode>();
-                        foreach (TransitionDocNode nodeTransition in nodeResult.Children)
-                        {
-                            if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
-                                settingsNew.TransitionSettings.Filter.IsAvailableReporterIon(nodeTransition) &&
-                                settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
-                                childrenNew.Add(nodeTransition);
-                        }
-
-                        nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                        modsLossNew = modsLossNew
+                            .Union(nodePep.ExplicitMods.NeutralLossModifications.Select(m => m.Modification))
+                            .ToArray();
                     }
+                    IList<DocNode> childrenNew = new List<DocNode>();
+                    foreach (TransitionDocNode nodeTransition in nodeResult.Children)
+                    {
+                        if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
+                            settingsNew.TransitionSettings.Filter.IsAvailableReporterIon(nodeTransition) &&
+                            settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
+                            childrenNew.Add(nodeTransition);
+                    }
+
+                    nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
                 }
 
                 if (diff.DiffTransitionProps)

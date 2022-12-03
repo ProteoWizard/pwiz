@@ -1311,6 +1311,12 @@ namespace pwiz.Skyline.Properties
                        };
         }
 
+        public void ResetDefaults()
+        {
+            Clear();
+            AddDefaults();
+        }
+
         public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
                                                                               @"http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
                                                                               string.Empty);
@@ -2939,8 +2945,7 @@ namespace pwiz.Skyline.Properties
                         25,  // MaxPeptideLength
                         new PeptideExcludeRegex[0], // Exclusions
                         true, // AutoSelect
-                        PeptideFilter.PeptideUniquenessConstraint.none, // Peptide uniqueness constraint measured against background proteome
-                        null
+                        PeptideFilter.PeptideUniquenessConstraint.none // Peptide uniqueness constraint measured against background proteome
                     ),
                     new PeptideLibraries
                     (
@@ -2960,7 +2965,8 @@ namespace pwiz.Skyline.Properties
                         new[] {IsotopeLabelType.heavy}
                     ),
                     new PeptideIntegration(null), 
-                    BackgroundProteome.NONE
+                    BackgroundProteome.NONE,
+                    ProteinAssociation.ParsimonySettings.DEFAULT
                 ),
                 new TransitionSettings
                 (

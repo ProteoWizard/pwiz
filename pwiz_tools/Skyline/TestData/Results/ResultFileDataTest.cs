@@ -12,19 +12,21 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestResultFileData()
         {
-            using (var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\MsxTest.zip"))
+            var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\MsxTest.zip");
+            TestFilesDirs = new[]
             {
-                var msDataFileUri = new MsDataFilePath(testFilesDir.GetTestPath("MsxTest.mzML"));
-                using (var msDataFile = msDataFileUri.OpenMsDataFile(true, false, false, false, false))
-                {
-                    var spectrumMetadatas = Enumerable.Range(0, msDataFile.SpectrumCount)
-                        .Select(i => msDataFile.GetSpectrumMetadata(i)).ToList();
-                    Assert.AreNotEqual(0, spectrumMetadatas.Count);
-                    var resultFileData = new ResultFileMetaData(spectrumMetadatas);
-                    var bytes = resultFileData.ToByteArray();
-                    var resultFileData2 = ResultFileMetaData.FromByteArray(bytes);
-                    Assert.AreEqual(resultFileData.SpectrumMetadatas, resultFileData2.SpectrumMetadatas);
-                }
+                testFilesDir
+            };
+            var msDataFileUri = new MsDataFilePath(testFilesDir.GetTestPath("MsxTest.mzML"));
+            using (var msDataFile = msDataFileUri.OpenMsDataFile(true, false, false, false, false))
+            {
+                var spectrumMetadatas = Enumerable.Range(0, msDataFile.SpectrumCount)
+                    .Select(i => msDataFile.GetSpectrumMetadata(i)).ToList();
+                Assert.AreNotEqual(0, spectrumMetadatas.Count);
+                var resultFileData = new ResultFileMetaData(spectrumMetadatas);
+                var bytes = resultFileData.ToByteArray();
+                var resultFileData2 = ResultFileMetaData.FromByteArray(bytes);
+                Assert.AreEqual(resultFileData.SpectrumMetadatas, resultFileData2.SpectrumMetadatas);
             }
         }
     }

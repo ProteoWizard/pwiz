@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,29 +40,79 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static string GetTestPath(this TestContext testContext, string relativePath)
+        public static bool GetBoolValue(this TestContext testContext, string property, bool defaultValue)
         {
-            return Path.Combine(testContext.TestDir, relativePath);
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
         }
 
-        public static String GetProjectDirectory(string relativePath)
+        public static TValue GetEnumValue<TValue>(this TestContext testContext, string property, TValue defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                (TValue)Enum.Parse(typeof(TValue), value.ToString());
+        }
+
+
+        public static string GetTestDir(this TestContext testContext)
+        {
+            // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
+            // because there's no other way to override the TestDir
+            return testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
+        }
+
+        public static string GetTestPath(this TestContext testContext, string relativePath)
+        {
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
+        }
+
+        public static string GetTestResultsPath(this TestContext testContext, string relativePath = null)
+        {
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), testContext.TestName, relativePath ?? string.Empty));
+        }
+
+        /// <summary>
+        /// Ensures the <see cref="GetTestResultsPath"/> root folder is created and empty.
+        /// </summary>
+        public static void EnsureTestResultsDir(this TestContext testContext)
+        {
+            var testResultsDir = testContext.GetTestResultsPath();
+            if (testResultsDir != null)
+            {
+                if (Directory.Exists(testResultsDir))
+                    DirectoryEx.SafeDelete(testResultsDir);
+
+                Directory.CreateDirectory(testResultsDir);
+            }
+        }
+
+        public static String GetProjectDirectory()
         {
             for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                directory != null && directory.Length > 10;
-                directory = Path.GetDirectoryName(directory))
+                 directory != null && directory.Length > 10;
+                 directory = Path.GetDirectoryName(directory))
             {
                 var testZipFiles = Path.Combine(directory, "TestZipFiles");
                 if (Directory.Exists(testZipFiles))
-                    return Path.Combine(testZipFiles, relativePath);
+                    return testZipFiles;
                 if (File.Exists(Path.Combine(directory, "Skyline.sln")))
-                    return Path.Combine(directory, relativePath);
+                    return directory;
             }
 
             // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
             if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
-                return Path.Combine("pwiz_tools", "Skyline", relativePath);
+                return Path.Combine("pwiz_tools", "Skyline");
 
             return null;
+        }
+
+        public static String GetProjectDirectory(string relativePath)
+        {
+            var projectDir = GetProjectDirectory();
+            if (projectDir == null)
+                return null;
+            return Path.Combine(projectDir, relativePath);
         }
 
         public static String GetProjectDirectory(this TestContext testContext, string relativePath)

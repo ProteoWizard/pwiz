@@ -1572,9 +1572,10 @@ namespace pwiz.Skyline.Model.Results
             has_midas_spectra = 0x04,
             has_combined_ion_mobility = 0x08,
             ion_mobility_type_bitmask = 0x70, // 3 bits for ion mobility type drift, inverse_mobility, spares
-            result_file_data = 0x80,
+            is_srm = 0x80,
             used_ms1_centroids = 0x100,
             used_ms2_centroids = 0x200,
+            result_file_data = 0x400,
         }
 
         public static DateTime GetLastWriteTime(MsDataFileUri filePath)
@@ -1589,16 +1590,6 @@ namespace pwiz.Skyline.Model.Results
             return (flags & FlagValues.single_match_mz) != 0;            
         }
 
-        private static bool HasMidasSpectraFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.has_midas_spectra) != 0;
-        }
-
-        private static bool HasCombinedIonMobilityFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.has_combined_ion_mobility) != 0;
-        }
-
         public static eIonMobilityUnits IonMobilityUnitsFromFlags(FlagValues flags)
         {
             var ionMobilityBits = flags & FlagValues.ion_mobility_type_bitmask;
@@ -1609,21 +1600,14 @@ namespace pwiz.Skyline.Model.Results
             return (eIonMobilityUnits)((int)ionMobilityBits >> 4);
         }
 
-        private static bool UsedMs1CentroidsFlags(FlagValues flags)
+        public ChromCachedFile(ChromFileInfo fileInfo)
+            : this(fileInfo.FilePath, 0, fileInfo.FileWriteTime ?? DateTime.FromBinary(0), fileInfo.FileWriteTime, null, 
+                (float) fileInfo.MaxRetentionTime, (float) fileInfo.MaxIntensity, 0, 0, default(float?), fileInfo.IonMobilityUnits, fileInfo.SampleId, fileInfo.SampleId, fileInfo.InstrumentInfoList)
         {
-            return (flags & FlagValues.used_ms1_centroids) != 0;
-        }
-
-        private static bool UsedMs2CentroidsFlags(FlagValues flags)
-        {
-            return (flags & FlagValues.used_ms2_centroids) != 0;
-        }
-
-        public ChromCachedFile(MsDataFileUri filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime,
-                               float maxRT, float maxIntensity, eIonMobilityUnits ionMobilityUnits, string sampleId, string serialNumber,
-                               IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
-            : this(filePath, flags, fileWriteTime, runStartTime, null, maxRT, maxIntensity, 0, 0, default(float?), ionMobilityUnits, sampleId, serialNumber, instrumentInfoList)
-        {
+            if (fileInfo.IsSrm)
+            {
+                Flags |= FlagValues.is_srm;
+            }
         }
 
         public ChromCachedFile(MsDataFileUri fileUri,
@@ -1692,22 +1676,27 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasMidasSpectra
         {
-            get { return HasMidasSpectraFlags(Flags); }
+            get { return (Flags & FlagValues.has_midas_spectra) != 0; }
         }
 
         public bool HasCombinedIonMobility
         {
-            get { return HasCombinedIonMobilityFlags(Flags); }
+            get { return (Flags & FlagValues.has_combined_ion_mobility) != 0; }
         }
 
         public bool UsedMs1Centroids
         {
-            get { return UsedMs1CentroidsFlags(Flags); }
+            get { return (Flags & FlagValues.used_ms1_centroids) != 0; }
         }
 
         public bool UsedMs2Centroids
         {
-            get { return UsedMs2CentroidsFlags(Flags); }
+            get { return (Flags & FlagValues.used_ms2_centroids) != 0; }
+        }
+
+        public bool IsSrm
+        {
+            get { return (Flags & FlagValues.is_srm) != 0; }
         }
 
         public bool HasResultFileData

@@ -61,7 +61,10 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteElement(Settings.RemoveUnsupportedFeatures(SkylineVersion.SrmDocumentVersion));
             foreach (PeptideGroupDocNode nodeGroup in Document.Children)
             {
-                if (nodeGroup.Id is FastaSequence)
+                if (nodeGroup.Id is FastaSequenceGroup &&
+                    SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
+                    writer.WriteStartElement(EL.protein_group);
+                else if (nodeGroup.Id is FastaSequence)
                     writer.WriteStartElement(EL.protein);
                 else
                     writer.WriteStartElement(EL.peptide_list);
@@ -102,7 +105,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeString(ATTR.name, node.PeptideGroup.Name);
             }
-            if (node.PeptideGroup.Description != null)
+            if (node.PeptideGroup.Description != null && !(node.PeptideGroup is FastaSequenceGroup))
             {
                 writer.WriteAttributeString(ATTR.description, node.PeptideGroup.Description);
             }
@@ -115,7 +118,8 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteAttributeString(ATTR.label_description, node.ProteinMetadataOverrides.Description);
             }
-            WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
+            if (!(node.PeptideGroup is FastaSequenceGroup) || SkylineVersion.SrmDocumentVersion < DocumentFormat.PROTEIN_GROUPS)
+                WriteProteinMetadataXML(writer, node.ProteinMetadataOverrides, true); // write the protein metadata, skipping the name and description we already wrote
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
             writer.WriteAttributeNullable(ATTR.decoy_match_proportion, node.ProportionDecoysMatch);
@@ -123,8 +127,7 @@ namespace pwiz.Skyline.Model.Serialization
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
 
-            FastaSequence seq = node.PeptideGroup as FastaSequence;
-            if (seq != null)
+            Action<FastaSequence> writeFastaSequence = seq =>
             {
                 if (seq.Alternatives.Count > 0)
                 {
@@ -135,12 +138,40 @@ namespace pwiz.Skyline.Model.Serialization
                         WriteProteinMetadataXML(writer, alt, false); // don't skip name and description
                         writer.WriteEndElement();
                     }
+
                     writer.WriteEndElement();
                 }
 
                 writer.WriteStartElement(EL.sequence);
                 writer.WriteString(FormatProteinSequence(seq.Sequence));
                 writer.WriteEndElement();
+            };
+
+            FastaSequenceGroup group = node.PeptideGroup as FastaSequenceGroup;
+            if (group != null && SkylineVersion.SrmDocumentVersion >= DocumentFormat.PROTEIN_GROUPS)
+            {
+                var proteinGroupMetadata = node.ProteinMetadataOverrides.ProteinMetadataList;
+                Assume.AreEqual(proteinGroupMetadata.Count, group.FastaSequenceList.Count);
+                for (var i = 0; i < group.FastaSequenceList.Count; i++)
+                {
+                    var seq = group.FastaSequenceList[i];
+                    var md = proteinGroupMetadata[i];
+                    writer.WriteStartElement(EL.protein);
+                    writer.WriteAttributeString(ATTR.name, seq.Name);
+                    if (!seq.Description.IsNullOrEmpty())
+                        writer.WriteAttributeString(ATTR.description, seq.Description);
+                    else if (!md.Description.IsNullOrEmpty())
+                        writer.WriteAttributeString(ATTR.description, md.Description);
+                    WriteProteinMetadataXML(writer, md, true); // write the protein metadata, skipping the name and description we already wrote
+                    writeFastaSequence(seq);
+                    writer.WriteEndElement();
+                }
+            }
+            else
+            {
+                FastaSequence seq = node.PeptideGroup as FastaSequence;
+                if (seq != null)
+                    writeFastaSequence(seq);
             }
 
             foreach (PeptideDocNode nodePeptide in node.Children)

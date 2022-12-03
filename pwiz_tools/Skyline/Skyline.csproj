@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>476</ApplicationRevision>
-    <ApplicationVersion>21.2.1.476</ApplicationVersion>
+    <ApplicationRevision>306</ApplicationRevision>
+    <ApplicationVersion>22.2.1.306</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -360,6 +360,8 @@
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
+    <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -390,6 +392,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\Spectra\SpectraGridForm.cs">
@@ -457,6 +460,11 @@
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EnumNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -467,6 +475,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\CalibrationCurveMetrics.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -530,11 +539,6 @@
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
-    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -572,9 +576,9 @@
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
-    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
-    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
-    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
@@ -630,6 +634,7 @@
     <Compile Include="Model\MoleculeNameAndAccessions.cs" />
     <Compile Include="Model\PrecursorKey.cs" />
     <Compile Include="Model\Proteome\ProteinAssociation.cs" />
+    <Compile Include="Model\Proteome\ProteinGroupMetadata.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
@@ -667,6 +672,16 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="GenericFormClassNames.cs" />
+    <Compile Include="SettingsUI\MsGraphExtension.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
+      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -737,7 +752,6 @@
     <Compile Include="Model\Lists\ListItem.cs" />
     <Compile Include="Model\Lists\ListItemTypes.cs" />
     <Compile Include="Model\Lists\ListRowSource.cs" />
-    <Compile Include="Model\Lists\ListViewContext.cs" />
     <Compile Include="Model\RgbHexColor.cs" />
     <Compile Include="Model\GroupComparison\MatchExpression.cs" />
     <Compile Include="Model\GroupComparison\MatchRgbHexColor.cs" />
@@ -1355,7 +1369,7 @@
     <Compile Include="Model\Databinding\Collections\ResultList.cs" />
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
-    <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
+    <Compile Include="Controls\Databinding\DocumentGridViewContext.cs" />
     <Compile Include="Model\Databinding\Entities\Chromatogram.cs" />
     <Compile Include="Model\Databinding\Entities\ChromatogramGroup.cs" />
     <Compile Include="Model\Databinding\EditDescription.cs" />
@@ -1386,7 +1400,6 @@
     <Compile Include="Model\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
-    <Compile Include="Model\Databinding\SkylineViewContext.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
     <Compile Include="Model\Databinding\StandardTypeDataGridViewColumn.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
@@ -1558,7 +1571,9 @@
     <Compile Include="EditUI\SpectrumChartPropertyDlg.Designer.cs">
       <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\ShareListDlg.cs" />
+    <Compile Include="FileUI\ShareListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="EditUI\UniquePeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2019,7 +2034,9 @@
     <Compile Include="SettingsUI\EditEnzymeDlg.Designer.cs">
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\EditListDlg.cs" />
+    <Compile Include="SettingsUI\EditListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SettingsUI\EditListDlg.Designer.cs">
       <DependentUpon>EditListDlg.cs</DependentUpon>
     </Compile>
@@ -2252,7 +2269,13 @@
       <DependentUpon>PcaPlot.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.ja.resx">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
+      <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.zh-CHS.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\ChooseFormatDlg.ja.resx">
@@ -2792,8 +2815,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
@@ -3355,6 +3378,14 @@
       <Link>grpc_csharp_ext.x86.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition=" '$(Platform)' == 'x64' " Include="..\Shared\ProteowizardWrapper\obj\x64\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -3459,6 +3490,8 @@
     </Content>
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
+    <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
+    <None Include="PreBuildEvents.bat" />
     <None Include="Resources\Locked.bmp" />
     <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
@@ -3872,6 +3905,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.ja.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\FullScanSettingsControl.zh-CHS.resx">
       <DependentUpon>FullScanSettingsControl.cs</DependentUpon>
@@ -3958,6 +3992,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\MetadataRuleSetEditor.zh-CHS.resx">
       <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
+      <DependentUpon>MsGraphExtension.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
@@ -5728,7 +5768,7 @@
     <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
   </Target>
   <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)ProtocolBuffers\generatecode.bat</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>

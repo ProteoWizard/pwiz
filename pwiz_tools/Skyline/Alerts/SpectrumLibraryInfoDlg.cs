@@ -18,14 +18,18 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Lib;
 using System.Linq;
+using pwiz.BiblioSpec;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -36,6 +40,9 @@ namespace pwiz.Skyline.Alerts
             InitializeComponent();
 
             Icon = Resources.Skyline;
+
+            libraryGridView.AutoGenerateColumns = false;
+            libraryGridView.DataSource = new SortableBindingList<Row>();
 
             cutoffScoreCol.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA;
             scoreTypeCol.DefaultCellStyle.NullValue = TextUtil.EXCEL_NA;
@@ -60,28 +67,24 @@ namespace pwiz.Skyline.Alerts
             {
                 libraryGridView.Hide();
             }
-            var _height = labelLibInfo.Height  + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + 70;
-            Height = _height;
+
+            Height = labelLibInfo.Height + linkSpecLibLinks.Height + dataGridViewHeight + btnOk.Height + 70;
         }
+
+        private BindingList<Row> Rows => libraryGridView.DataSource as BindingList<Row>;
 
         private void PopulateScoreGrid(LibraryDetails libraryDetails)
         {
             // Populates DataGridView with files and their given scores
             foreach (var file in libraryDetails.DataFiles)
             {
-                var fileName = Path.GetFileName(file.FilePath);
-                var spectrumCount = file.BestSpectrum;
-                var matchedCount = file.MatchedSpectrum;
-                if (file.CutoffScores.Any())
+                if (file.ScoreThresholds.Any())
                 {
-                    foreach (var cuttoffScore in file.CutoffScores)
-                    {
-                        libraryGridView.Rows.Add(fileName, cuttoffScore.Key, cuttoffScore.Value, matchedCount, spectrumCount);
-                    }
+                    Rows.AddRange(file.ScoreThresholds.Select(threshold => new Row(file, threshold.Key)));
                 }
                 else
                 {
-                    libraryGridView.Rows.Add(fileName, null, null, matchedCount, spectrumCount);
+                    Rows.Add(new Row(file));
                 }
             }
         }
@@ -170,19 +173,36 @@ namespace pwiz.Skyline.Alerts
         }
 
         // Currently only used by test
-        public IList<SpectrumSourceFileDetails> GetGridView()
+        public IEnumerable<SpectrumSourceFileDetails> SpectrumSourceFileDetails => Rows.Select(row => row.FileDetails);
+
+        private void libraryGridView_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            List<SpectrumSourceFileDetails> items = new List<SpectrumSourceFileDetails>();
-            foreach (DataGridViewRow dr in libraryGridView.Rows)
+            if (e.RowIndex >= 0 && e.ColumnIndex == cutoffScoreCol.Index)
             {
-                SpectrumSourceFileDetails row = new SpectrumSourceFileDetails(dr.Cells[0].Value.ToString());
-                if (dr.Cells[1].Value != null)
-                    row.CutoffScores[dr.Cells[1].Value.ToString()] = double.Parse(dr.Cells[2].Value.ToString());
-                row.MatchedSpectrum = int.Parse(dr.Cells[3].Value.ToString());
-                row.BestSpectrum = int.Parse(dr.Cells[4].Value.ToString());
-                items.Add(row);
+                var row = libraryGridView.Rows[e.RowIndex];
+                row.Cells[e.ColumnIndex].ToolTipText = ((Row)row.DataBoundItem).ScoreType?.ThresholdDescription;
             }
-            return items;
+        }
+
+        public class Row
+        {
+            public SpectrumSourceFileDetails FileDetails { get; }
+            // ReSharper disable once MemberCanBePrivate.Local
+            public ScoreType ScoreType { get; }
+
+            public Row(SpectrumSourceFileDetails fileDetails, ScoreType scoreType = null)
+            {
+                FileDetails = fileDetails;
+                ScoreType = scoreType;
+            }
+
+            // Properties for GridView
+            // ReSharper disable UnusedMember.Local
+            public string FileName => Path.GetFileName(FileDetails.FilePath);
+            public double? ScoreThreshold => ScoreType != null && FileDetails.ScoreThresholds.TryGetValue(ScoreType, out var threshold) ? threshold : null;
+            public int SpectrumCount => FileDetails.BestSpectrum;
+            public int MatchedCount => FileDetails.MatchedSpectrum;
+            // ReSharper restore UnusedMember.Local
         }
     }
 }

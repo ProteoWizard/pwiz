@@ -30,10 +30,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName("MoleculeListResult")]
     public class ProteinResult : SkylineObject, ILinkValue
     {
-        public ProteinResult(Protein protein, Replicate replicate) : base(protein.DataSchema)
+        public ProteinResult(Protein protein, Replicate replicate)
         {
             Replicate = replicate;
             Protein = protein;
+        }
+
+        protected override SkylineDataSchema GetDataSchema()
+        {
+            return Protein.DataSchema;
         }
 
         public override string ToString()
@@ -58,13 +63,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                Tuple<double, bool> record;
-                Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out record);
-                if (record == null || record.Item2)
+                if (!Protein.GetProteinAbundances().TryGetValue(Replicate.ReplicateIndex, out var abundanceValue))
                 {
                     return null;
                 }
-                return record.Item1;
+                if (abundanceValue.Incomplete)
+                {
+                    return null;
+                }
+                return abundanceValue.Abundance;
             }
         }
 

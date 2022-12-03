@@ -146,7 +146,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
 
         private void TestReports(string msg = null)
         {
-            // Verify reports working for CCS
+            // Verify reports working for CoV
             var expectedIM = new double?[]
             {
                 // MS1 ionMobility Values recorded
@@ -156,22 +156,17 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
                 -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -50, -50, -50, -10, -10, -10, -10, -10,
-                -10, -10, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, -10, null,
-                -10, null, -10, null, -10, null, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10,
-                null, -10, -10, null, -10, null, -10, null, -10, null, -10, null, -10, null, -10, -10, -10, -10,
-                -10, -10, -10, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, -10,
-                null, -10, null, -10, null, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null,
-                -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, null, -10, -10, null,
-                -10, null, -10, null, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10,
-                null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, null, -10, null, -10, -10,
-                null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, null, -10, -10, null, -10,
-                null, -10, null, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, null,
-                -10, -10, null, -10, null, -10, null, -10, null, -10, null, -10, null, null, null, null, -10, -10,
-                null, -10, null, -10, null, -10, null, -10, null, -10, -10, null, -10, null, -10, null, -10, null,
-                -10, null, -10, -10, null, -10, null, -10, null, -10, null, -10, null, -10, null, -10, -10, -10,
-                -10, -10, -50, null, null, null, -10, -10, -10, -40, -40, -40, -10, null, null, null, null, null,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, null, null, null, null, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -50, null, null, null, -10, -10, -10,
+                -40, null, null, -10, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null
             };
             var documentGrid = EnableDocumentGridIonMobilityResultsColumns(expectedIM.Length);
 

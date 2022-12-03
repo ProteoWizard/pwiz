@@ -24,7 +24,6 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -53,8 +52,7 @@ namespace pwiz.Skyline.Model.Databinding
         private readonly CachedValue<AnnotationCalculator> _annotationCalculator;
         private readonly CachedValue<NormalizedValueCalculator> _normalizedValueCalculator;
 
-        private SrmDocument _batchChangesOriginalDocument;
-        private List<EditDescription> _batchEditDescriptions;
+        private BatchChangesState _batchChangesState;
 
         private SrmDocument _document;
         public SkylineDataSchema(IDocumentContainer documentContainer, DataSchemaLocalizer dataSchemaLocalizer) : base(dataSchemaLocalizer)
@@ -98,7 +96,9 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override bool IsScalar(Type type)
         {
+#pragma warning disable CS0612 //"XXX is obsolete"
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
+#pragma warning restore CS0612
                    type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
                    type == typeof(NormalizationMethod) || type == typeof(RegressionFit) ||
                    type == typeof(AuditLogRow.AuditLogRowText) || type == typeof(AuditLogRow.AuditLogRowId);
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public SkylineWindow SkylineWindow { get { return _documentContainer as SkylineWindow; } }
+        public virtual SkylineWindow SkylineWindow { get { return null; } }
 
         private ReplicateSummaries _replicateSummaries;
         public ReplicateSummaries GetReplicateSummaries()
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public void BeginBatchModifyDocument()
         {
-            if (null != _batchChangesOriginalDocument)
+            if (null != _batchChangesState)
             {
                 throw new InvalidOperationException();
             }
@@ -364,53 +364,41 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
             }
-            _batchChangesOriginalDocument = _document;
-            _batchEditDescriptions = new List<EditDescription>();
+
+            _batchChangesState = new BatchChangesState(_document, (_documentContainer as IUndoable)?.GetUndoState());
         }
 
         public void CommitBatchModifyDocument(string description, DataGridViewPasteHandler.BatchModifyInfo batchModifyInfo)
         {
-            if (null == _batchChangesOriginalDocument)
+            if (null == _batchChangesState)
             {
                 throw new InvalidOperationException();
             }
-            string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
             if (SkylineWindow != null)
             {
-                SkylineWindow.ModifyDocument(description, document =>
+                SkylineWindow.ModifyDocument(description, _batchChangesState.UndoState, document =>
                 {
-                    VerifyDocumentCurrent(_batchChangesOriginalDocument, document);
-                    using (var longWaitDlg = new LongWaitDlg
-                    {
-                        Message = message
-                    })
-                    {
-                        SrmDocument newDocument = document;
-                        longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
-                        {
-                            var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor,
-                                message);
-                            newDocument = _document.EndDeferSettingsChanges(_batchChangesOriginalDocument,
-                                srmSettingsChangeMonitor);
-                        });
-                        return newDocument;
-                    }
-                }, GetAuditLogFunction(batchModifyInfo));
+                    VerifyDocumentCurrent(_batchChangesState.OriginalDocument, document);
+                    return EndDeferSettingsChanges(_document, _batchChangesState.OriginalDocument);
+                }, null, null, GetAuditLogFunction(batchModifyInfo));
             }
             else
             {
-                VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
-                if (!_documentContainer.SetDocument(
-                    _document.EndDeferSettingsChanges(_batchChangesOriginalDocument, null),
-                    _batchChangesOriginalDocument))
+                VerifyDocumentCurrent(_batchChangesState.OriginalDocument, _documentContainer.Document);
+                var newDocument = EndDeferSettingsChanges(_document, _batchChangesState.OriginalDocument);
+                if (!_documentContainer.SetDocument(newDocument, _batchChangesState.OriginalDocument))
                 {
                     throw new InvalidOperationException(Resources
                         .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
                 }
             }
-            _batchChangesOriginalDocument = null;
-            _batchEditDescriptions = null;
+            _batchChangesState = null;
             DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
+        }
+
+        protected virtual SrmDocument EndDeferSettingsChanges(SrmDocument document, SrmDocument originalDocument)
+        {
+            return document.EndDeferSettingsChanges(originalDocument, null);
         }
 
         private Func<SrmDocumentPair, AuditLogEntry> GetAuditLogFunction(
@@ -456,21 +444,20 @@ namespace pwiz.Skyline.Model.Databinding
                 }
 
                 var entry = AuditLogEntry.CreateCountChangeEntry(singular, plural, docPair.NewDocumentType,
-                    _batchEditDescriptions,
+                    _batchChangesState.EditDescriptions,
                     descr => MessageArgs.Create(descr.ColumnCaption.GetCaption(DataSchemaLocalizer)),
                     null).ChangeExtraInfo(batchModifyInfo.ExtraInfo + Environment.NewLine);
 
                 entry = entry.Merge(batchModifyInfo.EntryCreator.Create(docPair));
 
-                return entry.AppendAllInfo(_batchEditDescriptions.Select(descr => new MessageInfo(detailType, docPair.NewDocumentType,
+                return entry.AppendAllInfo(_batchChangesState.EditDescriptions.Select(descr => new MessageInfo(detailType, docPair.NewDocumentType,
                     getArgsFunc(descr))).ToList());
             };
         }
 
         public void RollbackBatchModifyDocument()
         {
-            _batchChangesOriginalDocument = null;
-            _batchEditDescriptions = null;
+            _batchChangesState = null;
             _document = _documentContainer.Document;
         }
 
@@ -486,7 +473,7 @@ namespace pwiz.Skyline.Model.Databinding
 
         public void ModifyDocument(EditDescription editDescription, Func<SrmDocument, SrmDocument> action, Func<SrmDocumentPair, AuditLogEntry> logFunc = null)
         {
-            if (_batchChangesOriginalDocument == null)
+            if (_batchChangesState == null)
             {
                 if (SkylineWindow != null)
                 {
@@ -510,8 +497,8 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 return;
             }
-            VerifyDocumentCurrent(_batchChangesOriginalDocument, _documentContainer.Document);
-            _batchEditDescriptions.Add(editDescription);
+            VerifyDocumentCurrent(_batchChangesState.OriginalDocument, _documentContainer.Document);
+            _batchChangesState.EditDescriptions.Add(editDescription);
             _document = action(_document.BeginDeferSettingsChanges());
         }
 
@@ -596,6 +583,19 @@ namespace pwiz.Skyline.Model.Databinding
         public static bool EqualExceptAuditLog(SrmDocument document1, SrmDocument document2)
         {
             return document1.ChangeAuditLog(AuditLogEntry.ROOT).Equals(document2.ChangeAuditLog(AuditLogEntry.ROOT));
+        }
+
+        private class BatchChangesState
+        {
+            public BatchChangesState(SrmDocument originalDocument, IUndoState undoState)
+            {
+                OriginalDocument = originalDocument;
+                UndoState = undoState;
+                EditDescriptions = new List<EditDescription>();
+            }
+            public SrmDocument OriginalDocument { get; }
+            public IUndoState UndoState { get; }
+            public List<EditDescription> EditDescriptions { get; }
         }
     }
 }

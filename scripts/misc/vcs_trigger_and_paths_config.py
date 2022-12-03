@@ -2,9 +2,16 @@
 targets = {}
 targets['CoreWindowsRelease'] = \
 {
-    "bt83": "Core Windows x86_64"
-    ,"bt36": "Core Windows x86"
-    ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
+    'master':
+    {
+        "bt83": "Core Windows x86_64"
+        ,"bt36": "Core Windows x86"
+        ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
+    },
+    'release':
+    {
+        # bt83 will be triggered by ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664
+    }
 }
 #targets['CoreWindowsDebug'] = \
 #{
@@ -13,7 +20,7 @@ targets['CoreWindowsRelease'] = \
 #}
 #targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
 targets['CoreWindows'] = targets['CoreWindowsRelease']
-targets['CoreLinux'] = {"bt17": "Core Linux x86_64"}
+targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
 
 targets['SkylineRelease'] = \
 {
@@ -53,10 +60,13 @@ targets['Container'] = \
 
 targets['BumbershootRelease'] = \
 {
-    "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-    ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
+    'master':
+    {
+        "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
+        ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
+    }
 }
-targets['BumbershootLinux'] = {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}
+targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
 targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
 
 targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])

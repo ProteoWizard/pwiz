@@ -11,6 +11,7 @@
       <xs:element name="settings_summary" type="settings_summary_type" minOccurs="1" maxOccurs="1"/>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="protein" type="protein_type" />
+        <xs:element name="protein_group" type="protein_group_type" />
         <xs:element name="peptide_list" type="peptide_list_type" />
       </xs:choice>
     </xs:sequence>
@@ -293,6 +294,15 @@
           <xs:attribute name="max_loq_cv" type="xs:double" />
           <xs:attribute name="qualitative_ion_ratio_threshold" type="xs:double" />
           <xs:attribute name="simple_ratios" type="xs:boolean" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="protein_association" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="min_peptides_per_protein" type="xs:integer"/>
+          <xs:attribute name="group_proteins" type="xs:boolean" />
+          <xs:attribute name="find_minimal_protein_list" type="xs:boolean" />
+          <xs:attribute name="remove_subset_proteins" type="xs:boolean" />
+          <xs:attribute name="shared_peptides" type="xs:string" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
@@ -842,6 +852,22 @@
         <xs:attribute name="label_description" type="xs:string"/>
         <!-- protein details that may be derived from identity object's name and description -->
         <xs:attributeGroup ref="protein_details_type"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="protein_group_type">
+    <xs:complexContent>
+      <xs:extension base="doc_parent_node_type">
+        <xs:sequence>
+          <xs:element name="protein" type="protein_type" minOccurs="2" maxOccurs="unbounded" />
+          <xs:element name="peptide" type="peptide_type" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <!-- name for the identity object (description is automatically generated) -->
+        <xs:attribute name="name" type="xs:string" use="required"/>
+
+        <!-- user override for name and description, for example as updated in web search  -->
+        <xs:attribute name="label_name" type="xs:string"/>
+        <xs:attribute name="label_description" type="xs:string"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

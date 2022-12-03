@@ -736,6 +736,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add an ion mobility library to the open document, based on its currently loaded chromatograms..
+        /// </summary>
+        internal static string _ionmobility_library_create {
+            get {
+                return ResourceManager.GetString("_ionmobility_library_create", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name to give the ion mobility library in an –-ionmobility-library-create operation..
+        /// </summary>
+        internal static string _ionmobility_library_name {
+            get {
+                return ResourceManager.GetString("_ionmobility_library_name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The name for the iRT calculator created during assay library import. (optional) The default name is the document base name..
         /// </summary>
         internal static string _irt_calc_name {
@@ -745,7 +763,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if –irt-standards-group-name or –irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
+        ///   Looks up a localized string similar to The path to an existing iRT calculator (.irtdb file) to be used with an imported assay library. Or, if -–irt-standards-group-name or -–irt-standards-file are used, then this is the output path for the created .irtdb file. (optional) The default iRT calculator path is path/to/document.irtdb.
         /// </summary>
         internal static string _irt_database_path {
             get {
@@ -1684,6 +1702,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms {
             get {
                 return ResourceManager.GetString("CommandArgs_GROUP_CHROMATOGRAM_Exporting_chromatograms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating an ion mobility library.
+        /// </summary>
+        internal static string CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library {
+            get {
+                return ResourceManager.GetString("CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library", resourceCulture);
             }
         }
         

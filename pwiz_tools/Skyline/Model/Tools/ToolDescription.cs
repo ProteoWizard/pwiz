@@ -33,6 +33,7 @@ using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -881,7 +882,7 @@ namespace pwiz.Skyline.Model.Tools
                     reportTitle));
             progressMonitor.UpdateProgress(status);
             if (!viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewInfo, writer,
-                viewContext.GetCsvWriter()))
+                    TextUtil.SEPARATOR_CSV))
             {
                 throw new OperationCanceledException();
             }

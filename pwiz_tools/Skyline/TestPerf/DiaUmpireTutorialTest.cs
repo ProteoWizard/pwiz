@@ -116,7 +116,7 @@ namespace TestPerf
         }
         private string RootName { get; set; }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaTtofDiaUmpireTutorial()
         {
             //IsPauseForScreenShots = true;
@@ -142,7 +142,7 @@ namespace TestPerf
             TestTtofData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
             // do not run full filesets for nightly tests
@@ -206,7 +206,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaQeDiaUmpireTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -233,7 +233,7 @@ namespace TestPerf
                 TestQeData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
             // do not run full filesets for nightly tests
@@ -359,7 +359,7 @@ namespace TestPerf
             SrmDocument doc = SkylineWindow.Document;
 
             string documentBaseName = "DIA-" + InstrumentTypeName + "-tutorial";
-            string documentFile = TestContext.GetTestPath(documentBaseName + SrmDocument.EXT);
+            string documentFile = GetTestPath(documentBaseName + SrmDocument.EXT);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard

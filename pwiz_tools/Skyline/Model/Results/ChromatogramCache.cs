@@ -328,9 +328,9 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SignedMz precursorMz,
             float tolerance, ChromatogramSet chromatograms)
         {
+            var fileIndexesFound = new HashSet<int>();
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {
-                bool anyFound = false;
                 var key = new LibKey(nodePep.ModifiedTarget, Adduct.EMPTY).LibraryKey;
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
                 {
@@ -345,14 +345,30 @@ namespace pwiz.Skyline.Model.Results
                     {
                         continue;
                     }
-                    anyFound = true;
+
                     yield return chromatogramIndex;
+                    fileIndexesFound.Add(entry.FileIndex);
                 }
-                if (anyFound)
+
+                if (chromatograms == null)
                 {
-                    yield break;
+                    if (fileIndexesFound.Count == _rawData.ChromCacheFiles.Count)
+                    {
+                        // If matching chromatograms were found in every file, then we are finished
+                        yield break;
+                    }
+                    // Otherwise, there might be some matching chromatograms in other replicates which have no TextId
+                }
+                else
+                {
+                    if (fileIndexesFound.Any())
+                    {
+                        // If searching for chromatograms in a particular replicate, then we are done if we find any matches
+                        yield break;
+                    }
                 }
             }
+            // Look for matching chromatograms which do not have a text id.
             int i = FindEntry(precursorMz, tolerance);
             if (i < 0)
             {
@@ -363,6 +379,10 @@ namespace pwiz.Skyline.Model.Results
                 var entry = ChromGroupHeaderInfos[i];
                 if (!MatchMz(precursorMz, entry.Precursor, tolerance))
                     break;
+                if (fileIndexesFound.Contains(entry.FileIndex))
+                {
+                    continue;
+                }
                 if (chromatograms != null &&
                     !chromatograms.ContainsFile(_rawData.ChromCacheFiles[entry.FileIndex]
                         .FilePath))

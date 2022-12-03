@@ -237,13 +237,23 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             get
             {
                 var skippedTransitionPage = _pagesToSkip.Contains(Pages.transition_settings_page);
+                SearchSettingsControl.DdaSearchSettings ddaSearchSettings;
+                if (ImportPeptideSearch.IsDDASearch && !BuildPepSearchLibControl.UseExistingLibrary)
+                {
+                    ddaSearchSettings = SearchSettingsControl.SearchSettings;
+                }
+                else
+                {
+                    ddaSearchSettings = null;
+                }
                 return new ImportPeptideSearchSettings(
                     ImportResultsControl.ImportSettings,
                     MatchModificationsControl.ModificationSettings,
-                    skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, FullScanSettingsControl.FullScan,
+                    skippedTransitionPage ? null : TransitionSettingsControl.FilterAndLibrariesSettings, 
+                    FullScanSettingsControl.FullScan,
                     ImportFastaControl.ImportSettings,
                     ImportFastaControl.AssociateProteinsSettings,
-                    ImportPeptideSearch.IsDDASearch ? SearchSettingsControl.SearchSettings : null,
+                    ddaSearchSettings,
                     ConverterSettingsControl.ConverterSettings,
                     ModeUI);
             }
@@ -742,7 +752,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
                     var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore);
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
-                        new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), BiblioSpecScoreType.GenericQValue, qValue));
+                        new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), ScoreType.GenericQValue, qValue));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
@@ -1084,9 +1094,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings);
             if (result)
             {
+                Func<SrmDocumentPair, AuditLogEntry> logFunc;
+                if (BuildPepSearchLibControl.UseExistingLibrary)
+                {
+                    logFunc = AuditLogEntry.SettingsLogFunction;
+                }
+                else
+                {
+                    logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
+                }
                 SkylineWindow.ModifyDocument(
                     Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library,
-                    doc => Document, BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create);
+                    doc => Document, logFunc);
                 SetDocument(SkylineWindow.Document, _documents.Peek());
             }
 

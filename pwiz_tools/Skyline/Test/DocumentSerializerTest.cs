@@ -77,9 +77,10 @@ namespace pwiz.SkylineTest
         private SrmDocument AddSmallMolecules(SrmDocument document)
         {
             var newChildren = new List<PeptideGroupDocNode>(document.MoleculeGroups);
-            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, TestContext.TestRunDirectory, RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names).MoleculeGroups);
-            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, TestContext.TestRunDirectory, RefinementSettings.ConvertToSmallMoleculesMode.masses_only).MoleculeGroups);
-            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, TestContext.TestRunDirectory).MoleculeGroups); // Do this last for fullest library translation
+            var path = TestContext.GetTestResultsPath();
+            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, path, RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names).MoleculeGroups);
+            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, path, RefinementSettings.ConvertToSmallMoleculesMode.masses_only).MoleculeGroups);
+            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, path).MoleculeGroups); // Do this last for fullest library translation
             document = (SrmDocument)document.ChangeChildren(newChildren.ToArray());
             return document;
         }

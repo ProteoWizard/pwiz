@@ -51,7 +51,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                PeptideLibraries libraries,
                                PeptideModifications modifications,
                                PeptideIntegration integration,
-                               BackgroundProteome backgroundProteome
+                               BackgroundProteome backgroundProteome,
+                               ProteinAssociation.ParsimonySettings proteinAssociationSettings
                                )
         {
             Enzyme = enzyme;
@@ -69,6 +70,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Filter = Filter.ChangePeptideUniqueness(PeptideFilter.PeptideUniquenessConstraint.none);
             }
             Quantification = QuantificationSettings.DEFAULT;
+            ProteinAssociationSettings = proteinAssociationSettings;
         }
 
         [TrackChildren]
@@ -97,6 +99,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren(true)]
         public QuantificationSettings Quantification { get; private set; }
+
+        [TrackChildren]
+        public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
 
         #region Property change methods
 
@@ -156,17 +161,23 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Quantification = prop);
         }
 
+        public PeptideSettings ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
+        {
+            return ChangeProp(ImClone(this), im => im.ProteinAssociationSettings = prop);
+        }
+
         public PeptideSettings MergeDefaults(PeptideSettings defPep)
         {
             PeptideSettings newPeptideSettings = ImClone(this);
-            newPeptideSettings.Enzyme = newPeptideSettings.Enzyme ?? defPep.Enzyme;
-            newPeptideSettings.DigestSettings = newPeptideSettings.DigestSettings ?? defPep.DigestSettings;
-            newPeptideSettings.Prediction = newPeptideSettings.Prediction ?? defPep.Prediction;
-            newPeptideSettings.Filter = newPeptideSettings.Filter ?? defPep.Filter;
-            newPeptideSettings.Libraries = newPeptideSettings.Libraries ?? defPep.Libraries;
-            newPeptideSettings.BackgroundProteome = newPeptideSettings.BackgroundProteome ?? defPep.BackgroundProteome;
-            newPeptideSettings.Modifications = newPeptideSettings.Modifications ?? defPep.Modifications;
-            newPeptideSettings.Integration = newPeptideSettings.Integration ?? defPep.Integration;
+            newPeptideSettings.Enzyme ??= defPep.Enzyme;
+            newPeptideSettings.DigestSettings ??= defPep.DigestSettings;
+            newPeptideSettings.Prediction ??= defPep.Prediction;
+            newPeptideSettings.Filter ??= defPep.Filter;
+            newPeptideSettings.Libraries ??= defPep.Libraries;
+            newPeptideSettings.BackgroundProteome ??= defPep.BackgroundProteome;
+            newPeptideSettings.Modifications ??= defPep.Modifications;
+            newPeptideSettings.Integration ??= defPep.Integration;
+            newPeptideSettings.ProteinAssociationSettings ??= defPep.ProteinAssociationSettings;
             return Equals(newPeptideSettings, this) ? this : newPeptideSettings;
         }
 
@@ -218,6 +229,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Modifications = reader.DeserializeElement<PeptideModifications>();
                 Integration = reader.DeserializeElement<PeptideIntegration>();
                 Quantification = reader.DeserializeElement<QuantificationSettings>();
+                ProteinAssociationSettings = reader.DeserializeElement<ProteinAssociation.ParsimonySettings>();
                 reader.ReadEndElement();
             }
 
@@ -240,6 +252,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(Integration);
             if (!Equals(Quantification, QuantificationSettings.DEFAULT))
                 writer.WriteElement(Quantification);
+            if (!Equals(ProteinAssociationSettings, ProteinAssociation.ParsimonySettings.DEFAULT))
+                writer.WriteElement(ProteinAssociationSettings);
         }
 
         #endregion
@@ -258,7 +272,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Modifications, Modifications) &&
                    Equals(obj.Integration, Integration) &&
                    Equals(obj.BackgroundProteome, BackgroundProteome) &&
-                   Equals(obj.Quantification, Quantification);
+                   Equals(obj.Quantification, Quantification) &&
+                   Equals(obj.ProteinAssociationSettings, ProteinAssociationSettings);
         }
 
         public override bool Equals(object obj)
@@ -282,6 +297,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ Integration.GetHashCode();
                 result = (result*397) ^ BackgroundProteome.GetHashCode();
                 result = (result*397) ^ Quantification.GetHashCode();
+                result = (result*397) ^ ProteinAssociationSettings?.GetHashCode() ?? 0;
                 return result;
             }
         }
@@ -823,8 +839,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
                              int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect,
-                             PeptideUniquenessConstraint peptideUniquenessConstraint,
-                             ProteinAssociation.ParsimonySettings parsimonySettings)
+                             PeptideUniquenessConstraint peptideUniquenessConstraint)
         {
             Exclusions = exclusions;
             ExcludeNTermAAs = excludeNTermAAs;
@@ -832,7 +847,6 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxPeptideLength = maxPeptideLength;
             AutoSelect = autoSelect;
             PeptideUniqueness = peptideUniquenessConstraint;
-            ParsimonySettings = parsimonySettings;
             DoValidate();
         }
 
@@ -864,9 +878,6 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public PeptideUniquenessConstraint PeptideUniqueness { get; private set; }
 
-        [TrackChildren(ignoreName: true)]
-        public ProteinAssociation.ParsimonySettings ParsimonySettings { get; private set; }
-
         #region Property change methods
 
         public PeptideFilter ChangeExcludeNTermAAs(int prop)
@@ -897,11 +908,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideFilter ChangePeptideUniqueness(PeptideUniquenessConstraint prop)
         {
             return ChangeProp(ImClone(this), im => im.PeptideUniqueness = prop);
-        }
-
-        public PeptideFilter ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
-        {
-            return ChangeProp(ImClone(this), im => im.ParsimonySettings = prop);
         }
         #endregion
 
@@ -1162,7 +1168,6 @@ namespace pwiz.Skyline.Model.DocSettings
                    obj.MaxPeptideLength == MaxPeptideLength &&
                    obj.AutoSelect.Equals(AutoSelect) &&
                    obj.PeptideUniqueness.Equals(PeptideUniqueness) &&
-                   Equals(obj.ParsimonySettings, ParsimonySettings) &&
                    ArrayUtil.EqualsDeep(obj._exclusions, _exclusions);
         }
 
@@ -1184,7 +1189,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 result = (result*397) ^ _exclusions.GetHashCodeDeep();
                 result = (result*397) ^ PeptideUniqueness.GetHashCode();
-                result = (result*397) ^ ParsimonySettings?.GetHashCode() ?? 0;
                 return result;
             }
         }
@@ -2192,7 +2196,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (resultDict.Count > foundDictKeys.Count)
             {
                 // Other libraries contributed some drift info
-                ionMobilities = new LibraryIonMobilityInfo(filePath.GetFilePath(), false, resultDict);
+                ionMobilities = new LibraryIonMobilityInfo(filePath?.GetFilePath(), false, resultDict);
             }
             return ionMobilities != null;
         }

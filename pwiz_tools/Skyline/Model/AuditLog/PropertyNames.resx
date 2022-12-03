@@ -309,6 +309,9 @@
   <data name="StaticMod_IsCrosslinker" xml:space="preserve">
     <value>Crosslinker</value>
   </data>
+  <data name="StaticMod_RelativeRT" xml:space="preserve">
+    <value>Relative retention time</value>
+  </data>
   <data name="TransitionFullScan_UseSelectiveExtraction" xml:space="preserve">
     <value>Use high-selectivity extraction</value>
   </data>
@@ -1358,6 +1361,9 @@
   <data name="AssociateProteinsSettings_FASTA" xml:space="preserve">
     <value>FASTA</value>
   </data>
+  <data name="AssociateProteinsSettings_Proteins" xml:space="preserve">
+    <value>Proteins</value>
+  </data>
   <data name="ParsimonySettings_FindMinimalProteinList" xml:space="preserve">
     <value>Find minimal protein list</value>
   </data>
@@ -1702,5 +1708,8 @@
   </data>
   <data name="ImportPeptideSearchSettings_AssociateProteinsSettings" xml:space="preserve">
     <value>Associate Proteins</value>
+  </data>
+  <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
+    <value>Protein association settings</value>
   </data>
 </root>
