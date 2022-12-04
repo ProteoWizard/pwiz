@@ -583,7 +583,7 @@
     <value>9</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>あいまい一致を含む(&amp;I)</value>
+    <value>曖昧な一致を含む(&amp;I)</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>

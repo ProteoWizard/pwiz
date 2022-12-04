@@ -826,10 +826,10 @@
     <value>最適ステップ</value>
   </data>
   <data name="PeakGroupEndTime">
-    <value>ピークグループ終了時刻</value>
+    <value>ピークグループ終了時間</value>
   </data>
   <data name="PeakGroupStartTime">
-    <value>ピークグループ開始時刻</value>
+    <value>ピークグループ開始時間</value>
   </data>
   <data name="PeakQValue">
     <value>ピークのQ値</value>
