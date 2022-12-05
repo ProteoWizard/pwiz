@@ -4402,7 +4402,6 @@ namespace pwiz.Skyline
                     SelectedResultsIndex = resultsIndex;
                 }
             }
-            
         }
 
         public sealed override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)

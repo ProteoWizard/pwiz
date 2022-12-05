@@ -183,6 +183,7 @@
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
     <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
+    <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />

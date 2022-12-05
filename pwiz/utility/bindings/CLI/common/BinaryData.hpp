@@ -91,8 +91,11 @@ public:
     virtual void CopyTo(array<ValueType>^ arrayTarget, int arrayIndex)
     {
         ValidateCopyToArrayArgs(arrayTarget, arrayIndex, base().size());
-        pin_ptr<ValueType> pinnedArray = &arrayTarget[0];
-        memcpy((ValueType*)pinnedArray + arrayIndex, &base()[0], base().size());
+        if (arrayTarget->Length > 0)
+        {
+            pin_ptr<ValueType> pinnedArray = &arrayTarget[0];
+            memcpy((ValueType*)pinnedArray + arrayIndex, &base()[0], base().size());
+        }
     }
     virtual bool Remove(ValueType item) { auto itr = std::find(base().begin(), base().end(), item); if (itr == base().end()) return false; base().erase(itr); return true; }
     virtual int IndexOf(ValueType item) { return (int)(std::find(base().begin(), base().end(), item) - base().begin()); }

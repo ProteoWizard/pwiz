@@ -1463,7 +1463,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
@@ -1531,6 +1531,24 @@ namespace pwiz.Skyline.Model.Lib
 
         [Track(defaultValues:typeof(DefaultValuesTrue))]
         public bool UseExplicitPeakBounds { get; private set; }
+
+        public virtual ItemDescription ItemDescription
+        {
+            get
+            {
+                var lines = new List<string>();
+                lines.Add(GetLibraryTypeName());
+                lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
+                if (!UseExplicitPeakBounds)
+                {
+                    lines.Add(Resources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
+                }
+
+                return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
+            }
+        }
+
+        public abstract string GetLibraryTypeName();
 
         #region Property change methods
 
