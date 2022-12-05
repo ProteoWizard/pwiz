@@ -24,6 +24,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Layout;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 

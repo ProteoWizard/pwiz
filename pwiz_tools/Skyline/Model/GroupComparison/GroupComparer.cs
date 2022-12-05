@@ -489,7 +489,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public double GetLog2Abundance()
             {
-                return Math.Log(Intensity/Denominator)/Math.Log(2.0);
+                double log2Abundance = Math.Log(Intensity/Denominator)/Math.Log(2.0);
+                if (double.IsNaN(log2Abundance) || double.IsInfinity(log2Abundance))
+                {
+                    log2Abundance = 0;
+                }
+
+                return log2Abundance;
             }
         }
 

@@ -8891,9 +8891,6 @@
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>开发者版本</value>
   </data>
-  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
-    <value>Skyline 3.6</value>
-  </data>
   <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
     <value>测量的时间 ({0})</value>
   </data>
@@ -9213,9 +9210,6 @@
   <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_" xml:space="preserve">
     <value>您是否确定想要删除这些 {0} 离子对？</value>
     <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
-  </data>
-  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
-    <value>Skyline 3.7</value>
   </data>
   <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
     <value>导入分析库</value>
@@ -9649,9 +9643,6 @@
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>您确定要清除所有已保存的设置吗？这将立即把 {0} 退回到其原始配置，此操作不能撤销。</value>
   </data>
-  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
-    <value>Skyline 4.1</value>
-  </data>
   <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
     <value>{0} 分子</value>
   </data>
@@ -10004,9 +9995,6 @@
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} 不是有效的全扫描采集方法</value>
   </data>
-  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
-    <value>Skyline 4.2</value>
-  </data>
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>已嵌入</value>
   </data>
@@ -10243,9 +10231,6 @@
   </data>
   <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
     <value>未发现相应的 QC 色谱图</value>
-  </data>
-  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
-    <value>Skyline 19.1</value>
   </data>
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>错误：未能保存至用户配置文件。</value>
@@ -10579,9 +10564,6 @@
   </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>没有母离子化学式，不能使用子离子中性丢失化学式</value>
-  </data>
-  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
-    <value>Skyline 20.1</value>
   </data>
   <data name="RefineDlg_MSLevel_1" xml:space="preserve">
     <value>1</value>
@@ -10981,9 +10963,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>时序安排故障（无目标？）</value>
-  </data>
-  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
-    <value>Skyline 20.2</value>
   </data>
   <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames" xml:space="preserve">
     <value>并发帧</value>
@@ -11458,9 +11437,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
     <value>不能应用这些过滤器，因为它们会导致出现空的离子对列表。</value>
   </data>
-  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
-    <value>Skyline 21.1</value>
-  </data>
   <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
     <value>SureQuant 采集方法需要 "触发色谱图提取"。取消选中此选项将切换到 PRM 采集方法。是否要继续?</value>
   </data>
@@ -11711,9 +11687,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   </data>
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>您确定想要继续？</value>
-  </data>
-  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
-    <value>Skyline 21.2</value>
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
     <value>正在打开数据库</value>
