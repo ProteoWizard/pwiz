@@ -61,6 +61,23 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void AreEqual<TKey,TValue>(IDictionary<TKey,TValue> expected, IDictionary<TKey, TValue> actual, string message = null)
+        {
+            AreEqual(expected.Count, actual.Count, message);
+
+            foreach (var keyValuePairExpected in expected)
+            {
+                if (!actual.TryGetValue(keyValuePairExpected.Key, out var valueActual ))
+                {
+                    AreEqual(keyValuePairExpected.Key.ToString(), null, message);
+                }
+                else
+                {
+                    AreEqual(keyValuePairExpected.Value, valueActual, message);
+                }
+            }
+        }
+
         public static void AreEqual<T>(T expected, T actual, string message = null)
         {
             if (!Equals(expected, actual))

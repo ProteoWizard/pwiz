@@ -376,6 +376,7 @@ InstrumentModel WiffFileImpl::getInstrumentModel() const
         if (modelName->Contains("350"))             return API350; // predicted
         if (modelName->Contains("365"))             return API365; // predicted
         if (modelName->Contains("X500QTOF"))        return X500QTOF;
+        if (modelName->Contains("ZENOTOF7600"))     return ZenoTOF7600;
         throw gcnew Exception("unknown instrument type: " + sample->Details->InstrumentName);
     }
     CATCH_AND_FORWARD
@@ -564,8 +565,8 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
         target.Q1 = transition->Q1Mass;
         target.Q3 = transition->Q3Mass;
         target.dwellTime = transition->DwellTime;
-        target.startTime = transition->ExpectedRT - transition->RTWindow / 2;
-        target.endTime = transition->ExpectedRT + transition->RTWindow / 2;
+        target.startTime = transition->ExpectedRT - transition->RTWindow;
+        target.endTime = transition->ExpectedRT + transition->RTWindow;
         target.compoundID = ToStdString(transition->Name);
 
         auto parameters = transition->CompoundDepParameters;
