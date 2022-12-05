@@ -226,12 +226,12 @@ namespace pwiz.SkylineTestUtil
                 Directory.CreateDirectory(targetFolder);
 
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
-            string s3hostname = @"mc-tca-01.s3-us-west-2.amazonaws.com";
+            string s3hostname = @"ci.skyline.ms";
             string message = string.Empty;
             for (var retry = true; ; retry = false)
             {
                 var zipURL = downloadFromS3
-                    ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
+                    ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"https://skyline.ms", @"https://" + s3hostname)
                         .Replace(PanoramaDomainAndPath, s3hostname)
                     : zipPath;
 
