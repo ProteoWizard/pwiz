@@ -2071,7 +2071,7 @@ namespace pwiz.Skyline.Model
                                 rankByLevel = pair.IsMs1 ? ++iRankMs : ++iRankMsMs;
                         }
                             if (pair.Info.Rank != rank || pair.Info.RankByLevel != rankByLevel)
-                                pair.Result = pair.Info.ChangeRank(false, rank, rankByLevel);
+                                pair.Result = pair.Info.ChangeRank(rank, rankByLevel);
                         }
 
                         foreach (var pair in arrayRanked)

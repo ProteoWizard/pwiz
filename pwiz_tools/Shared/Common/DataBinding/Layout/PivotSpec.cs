@@ -262,7 +262,7 @@ namespace pwiz.Common.DataBinding.Layout
                 }
                 else if (reader.IsStartElement("columnHeader"))
                 {
-                    columnHeaders.Add(new Column(ColumnId.ParsePersistedString(reader.GetAttribute("sourceColumn"))));
+                    columnHeaders.Add(new Column(ColumnId.ParsePersistedString(reader.GetAttribute("sourceColumn"))).ChangeVisible(false));
                     ReadEndElement(reader, "columnHeader");
                 }
                 else if (reader.IsStartElement("value"))

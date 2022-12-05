@@ -806,19 +806,8 @@ namespace pwiz.Skyline.Model.Results
             return chromInfo;
         }
 
-        /// <summary>
-        /// Because creating a copy shows up in a profiler, and this is currently only used
-        /// during calculation of this object, a copy flag was added to allow modified
-        /// immutability with direct setting allowed during extended creation time.
-        /// </summary>
-        public TransitionChromInfo ChangeRank(bool copy, short prop, short propByLevel)
+        public TransitionChromInfo ChangeRank(short prop, short propByLevel)
         {
-            if (!copy)
-            {
-                Rank = prop;
-                RankByLevel = propByLevel;
-                return this;
-            }
             return ChangeProp(ImClone(this), im =>
             {
                 im.Rank = prop;
