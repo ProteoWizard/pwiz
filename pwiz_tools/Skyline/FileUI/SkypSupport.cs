@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
@@ -336,12 +337,19 @@ namespace pwiz.Skyline.FileUI
                 {
                     // The Content-Length header is not set in the response from PanoramaWeb, so the ProgressPercentage remains 0
                     // during the download. If the skyp includes the file size, use that to calculate progress percentage.
-                    int progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
-                    var fileSize = skyp.Size;
-                    if (progressPercent == -1 && fileSize.HasValue && fileSize > 0)
+                    var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
+                    
+                    if (progressPercent == -1 && skyp.HasSize())
                     {
-                        progressPercent = Math.Max(0, Math.Min(100, (int)(e.BytesReceived * 100 / fileSize)));
+                        progressPercent = Math.Max(0, Math.Min(100, (int)(e.BytesReceived * 100 / skyp.Size)));
                     }
+
+                    var downloaded = e.BytesReceived;
+                    var message = TextUtil.LineSeparate(
+                        string.Format(Resources.SkypSupport_Download_Downloading__0_, skyp.SkylineDocUri),
+                        string.Empty,
+                        GetDownloadedSize(downloaded, skyp.HasSize() ? (long)skyp.Size : 0));
+                    ProgressStatus = ProgressStatus.ChangeMessage(message);
                     ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
                 };
 
@@ -367,6 +375,66 @@ namespace pwiz.Skyline.FileUI
 
                     Thread.Sleep(100);
                 }
+            }
+        }
+
+        public static string GetDownloadedSize(long downloaded, long fileSize)
+        {
+            if (fileSize > 0)
+            {
+                var unit = ReadableSize.GetUnit(fileSize);
+                return string.Format(@"{0} / {1}", unit.GetFormattedSize(downloaded, false),
+                    unit.GetFormattedSize(fileSize));
+            }
+            else
+            {
+                return ReadableSize.GetUnit(downloaded).GetFormattedSize(downloaded);
+            }
+        }
+    }
+
+    public class ReadableSize
+    {
+        private const long B = 1L;
+        private const long KB = B << 10;
+        private const long MB = KB << 10;
+        private const long GB = MB << 10;
+
+        private long Unit { get; }
+        private string UnitName { get; }
+        private string FormatString { get; }
+
+        public ReadableSize(long unit, string unitName)
+        {
+            Unit = unit;
+            UnitName = unitName;
+            FormatString = unit >= KB ? @"0.0" : @"0";
+        }
+
+        public string GetFormattedSize(long size, bool includeUnitName = true)
+        {
+            var value = (double) size / Unit;
+            var sizeStr = value.ToString(FormatString, CultureInfo.CurrentCulture);
+            return includeUnitName ? string.Format(@"{0} {1}", sizeStr, UnitName) : sizeStr;
+        }
+
+        public static ReadableSize GetUnit(long size)
+        {
+            if (size >= GB)
+            {
+                return new ReadableSize(GB, @"GB");
+            }
+            else if (size >= MB)
+            {
+                return new ReadableSize(MB, @"MB");
+            }
+            else if (size >= KB)
+            {
+                return new ReadableSize(KB, @"KB");
+            }
+            else
+            {
+                return new ReadableSize(B, @"B");
             }
         }
     }
