@@ -62,8 +62,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
             TestFilesZipPaths = new[]
             {
                 (UseRawFiles
-                   ? @"https://skyline.ms/tutorials/HiResMetabolomics.zip"
-                   : @"https://skyline.ms/tutorials/HiResMetabolomics_mzML.zip"),
+                   ? @"https://skyline.ms/tutorials/HiResMetabolomics2.zip"
+                   : @"https://skyline.ms/tutorials/HiResMetabolomics2_mzML.zip"),
                 @"TestPerf\HiResMetabolomicsViews.zip"
             };
             RunFunctionalTest();
@@ -107,7 +107,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 4);
                 OkDialog(errDlg, errDlg.OkDialog);
 
-                RunUI(() => col4Dlg.ComboBoxes[6].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
+                RunUI(() => col4Dlg.ComboBoxes[4].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
 
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 4);
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
@@ -120,7 +120,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
                     SkylineWindow.Size = new Size(957, 654);
-                    SkylineWindow.ExpandPeptides();
+                    SkylineWindow.ExpandPrecursors();
                 });
                 RestoreViewOnScreen(5);
                 PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
@@ -135,7 +135,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.SmallMoleculePrecursorAdducts = Adduct.M_PLUS_H.AdductFormula;
                     transitionSettingsUI.SmallMoleculeFragmentAdducts = Adduct.M_PLUS.AdductFormula;
                     transitionSettingsUI.SmallMoleculeFragmentTypes =
-                        TransitionFilter.SMALL_MOLECULE_FRAGMENT_CHAR + "," + TransitionFilter.PRECURSOR_ION_CHAR;
+                        TransitionFilter.PRECURSOR_ION_CHAR;
                     transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                     transitionSettingsUI.SetAutoSelect = true;
                 });
