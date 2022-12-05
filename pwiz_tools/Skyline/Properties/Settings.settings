@@ -50,6 +50,9 @@
     <Setting Name="ExportMethodDwellTime" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">20</Value>
     </Setting>
+    <Setting Name="ExportMethodAccumulationTime" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.1</Value>
+    </Setting>
     <Setting Name="MruLength" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">4</Value>
     </Setting>

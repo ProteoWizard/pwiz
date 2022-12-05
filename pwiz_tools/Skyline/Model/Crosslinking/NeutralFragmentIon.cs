@@ -89,19 +89,47 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             var containedCrosslinks = new List<Crosslink>();
+            var cleavedCrosslinks = new List<Crosslink>();
             foreach (var crosslink in peptideStructure.Crosslinks)
             {
                 bool? isContained = ContainsCrosslink(peptideStructure, crosslink.Sites);
                 if (!isContained.HasValue)
                 {
-                    return false;
-                }
-
-                if (isContained.Value)
+                    cleavedCrosslinks.Add(crosslink);
+                } 
+                else if (isContained.Value)
                 {
                     containedCrosslinks.Add(crosslink);
                 }
             }
+
+            // Verify that the number of cleaved crosslinkers with a particular name is the same as
+            // the number of neutral losses with that name
+            if (Losses == null)
+            {
+                if (cleavedCrosslinks.Count > 0)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                var lossCountsByName = Losses.Losses.GroupBy(loss => loss.PrecursorMod.Name)
+                    .ToDictionary(group => group.Key, group => group.Count());
+                var cleavedCrosslinksByName = cleavedCrosslinks.GroupBy(crosslink => crosslink.Crosslinker.Name)
+                    .ToDictionary(group => group.Key, group => group.Count());
+                foreach (var crosslinkerName in peptideStructure.Crosslinks
+                             .Select(crosslink => crosslink.Crosslinker.Name).Distinct())
+                {
+                    lossCountsByName.TryGetValue(crosslinkerName, out int lossCount);
+                    cleavedCrosslinksByName.TryGetValue(crosslinkerName, out int cleavedCrosslinkCount);
+                    if (lossCount != cleavedCrosslinkCount)
+                    {
+                        return false;
+                    }
+                }
+            }
+
             var peptideIndexQueue = new Queue<int>();
             var visitedPeptideIndexes = new HashSet<int>();
             peptideIndexQueue.Enqueue(peptideIndexes.Min());
@@ -125,6 +153,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
 
             return visitedPeptideIndexes.SetEquals(peptideIndexes);
+        }
+
+        public IEnumerable<Crosslink> GetCleavedCrosslinks(PeptideStructure peptideStructure)
+        {
+            return peptideStructure.Crosslinks.Where(crosslink =>
+                !ContainsCrosslink(peptideStructure, crosslink.Sites).HasValue);
         }
 
         public bool IsOrphan
@@ -226,6 +260,11 @@ namespace pwiz.Skyline.Model.Crosslinking
         {
             foreach (var crosslink in peptideStructure.Crosslinks)
             {
+                if (crosslink.Crosslinker.HasLoss)
+                {
+                    // A crosslinker with losses is cleavable to assume it is valid for now
+                    continue;
+                }
                 if (!ContainsCrosslink(peptideStructure, crosslink.Sites).HasValue)
                 {
                     return false;
@@ -323,6 +362,25 @@ namespace pwiz.Skyline.Model.Crosslinking
         public ComplexFragmentIon MakeChargedIon(TransitionGroup group, Adduct adduct, ExplicitMods explicitMods)
         {
             return new ComplexFragmentIon(MakeTransition(group, adduct), this, explicitMods);
+        }
+
+        public NeutralFragmentIon AddLosses(TransitionLosses losses)
+        {
+            if (losses == null)
+            {
+                return this;
+            }
+            TransitionLosses newLosses;
+            if (Losses == null)
+            {
+                newLosses = losses;
+            }
+            else
+            {
+                newLosses = new TransitionLosses(Losses.Losses.Concat(losses.Losses).ToList(), losses.MassType);
+            }
+
+            return ChangeProp(ImClone(this), im => im.Losses = newLosses);
         }
     }
 }

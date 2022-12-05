@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -169,7 +172,7 @@
     <value>True</value>
   </metadata>
   <data name="cutoffScoreCol.HeaderText" xml:space="preserve">
-    <value>Cutoff Score</value>
+    <value>Score Threshold</value>
   </data>
   <metadata name="matchingTimesCol.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -202,7 +205,7 @@
     <value>libraryGridView</value>
   </data>
   <data name="&gt;&gt;libraryGridView.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=22.2.1.334, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;libraryGridView.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
@@ -339,6 +342,12 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Library Details</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.334, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;fileNameCol.Name" xml:space="preserve">
     <value>fileNameCol</value>
   </data>
@@ -373,6 +382,6 @@
     <value>SpectrumLibraryInfoDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.334, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

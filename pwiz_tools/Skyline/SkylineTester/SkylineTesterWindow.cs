@@ -1907,6 +1907,11 @@ namespace SkylineTester
             StartBackgroundLoadTestSet();
         }
 
+        private void buttonRunStatsExportCSV_Click(object sender, EventArgs e)
+        {
+            _tabRunStats.ExportCSV();
+        }
+
         #endregion Control events
     }
 }

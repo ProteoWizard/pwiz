@@ -249,6 +249,7 @@ blib-test-build pride-mill : -o : output/pride-mill.blib : pride-mill.check zbui
 blib-test-build tiny-proxl : --unicode -o : output/tiny-proxl.blib : tiny-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.proxl.xml ;
 blib-test-build tinyByonic-proxl : -o : output/tinyByonic-proxl.blib : tinyByonic-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyByonic.proxl.xml ;
 blib-test-build tinyPlink-proxl : -o : output/tinyPlink-proxl.blib : tinyPlink-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyPlink.proxl.xml ;
+blib-test-build tinyMerox-proxl : -o : output/tinyMerox-proxl.blib : tinyMerox-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyMerox.proxl.xml ;
 blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
 blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;
