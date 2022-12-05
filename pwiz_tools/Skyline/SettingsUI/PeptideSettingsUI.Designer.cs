@@ -76,6 +76,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRegressionFit = new System.Windows.Forms.ComboBox();
             this.comboWeighting = new System.Windows.Forms.ComboBox();
             this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
+            this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -130,7 +131,6 @@ namespace pwiz.Skyline.SettingsUI
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -190,6 +190,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listHeavyMods.Name = "listHeavyMods";
             this.helpTip.SetToolTip(this.listHeavyMods, resources.GetString("listHeavyMods.ToolTip"));
             this.modeUIHandler.SetUIMode(this.listHeavyMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.listHeavyMods.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listHeavyMods_MouseMove);
             // 
             // listStaticMods
             // 
@@ -199,6 +200,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.Name = "listStaticMods";
             this.helpTip.SetToolTip(this.listStaticMods, resources.GetString("listStaticMods.ToolTip"));
             this.modeUIHandler.SetUIMode(this.listStaticMods, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
+            this.listStaticMods.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listStaticMods_MouseMove);
             // 
             // listStandardTypes
             // 
@@ -389,6 +391,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listLibraries.Name = "listLibraries";
             this.helpTip.SetToolTip(this.listLibraries, resources.GetString("listLibraries.ToolTip"));
             this.listLibraries.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLibraries_ItemCheck);
+            this.listLibraries.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listLibraries_MouseMove);
             // 
             // btnUpdateCalculator
             // 
@@ -496,6 +499,13 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tbxIonRatioThreshold, "tbxIonRatioThreshold");
             this.tbxIonRatioThreshold.Name = "tbxIonRatioThreshold";
             this.helpTip.SetToolTip(this.tbxIonRatioThreshold, resources.GetString("tbxIonRatioThreshold.ToolTip"));
+            // 
+            // cbxSimpleRatios
+            // 
+            resources.ApplyResources(this.cbxSimpleRatios, "cbxSimpleRatios");
+            this.cbxSimpleRatios.Name = "cbxSimpleRatios";
+            this.helpTip.SetToolTip(this.cbxSimpleRatios, resources.GetString("cbxSimpleRatios.ToolTip"));
+            this.cbxSimpleRatios.UseVisualStyleBackColor = true;
             // 
             // tabControl1
             // 
@@ -889,13 +899,6 @@ namespace pwiz.Skyline.SettingsUI
             this.editCalculatorListContextMenuItem.Name = "editCalculatorListContextMenuItem";
             resources.ApplyResources(this.editCalculatorListContextMenuItem, "editCalculatorListContextMenuItem");
             this.editCalculatorListContextMenuItem.Click += new System.EventHandler(this.editCalculatorListContextMenuItem_Click);
-            // 
-            // cbxSimpleRatios
-            // 
-            resources.ApplyResources(this.cbxSimpleRatios, "cbxSimpleRatios");
-            this.cbxSimpleRatios.Name = "cbxSimpleRatios";
-            this.helpTip.SetToolTip(this.cbxSimpleRatios, resources.GetString("cbxSimpleRatios.ToolTip"));
-            this.cbxSimpleRatios.UseVisualStyleBackColor = true;
             // 
             // PeptideSettingsUI
             // 

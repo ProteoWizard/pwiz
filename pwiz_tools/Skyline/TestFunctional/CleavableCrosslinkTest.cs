@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var explicitIsotopeMod in ListExplicitIsotopeModifications(peptide))
                 {
                     var matchingIsotopeMods = isotopeMods[explicitIsotopeMod.Name].ToList();
-                    Assert.AreNotEqual(0, matchingIsotopeMods.Count(), "Isotope modification {0} not found", explicitIsotopeMod);
+                    Assert.AreNotEqual(0, matchingIsotopeMods.Count, "Isotope modification {0} not found", explicitIsotopeMod);
                     foreach (var documentIsotopeMod in matchingIsotopeMods)
                     {
                         Assert.IsTrue(explicitIsotopeMod.Equivalent(documentIsotopeMod), "Isotope modification {0} in peptide {1} does not match document modificdation", explicitIsotopeMod, peptide.Peptide);

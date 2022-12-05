@@ -1285,6 +1285,37 @@ The Target Qualitative Ion Ratio is the average of the Qualitative Ion Ratios ac
   <data name="&gt;&gt;tbxIonRatioThreshold.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="cbxSimpleRatios.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 110</value>
+  </data>
+  <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 17</value>
+  </data>
+  <data name="cbxSimpleRatios.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="cbxSimpleRatios.Text" xml:space="preserve">
+    <value>&amp;Simple precursor ratios</value>
+  </data>
+  <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
+    <value>If checked, ratios between precursors will be calculated as the ratio of the sum of transition areas.
+Transitions from the two precursors will not be paired with each other for the purpose of handling missing peaks or calculating ratio dot products.</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
+    <value>cbxSimpleRatios</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -2212,37 +2243,6 @@ The Target Qualitative Ion Ratio is the average of the Qualitative Ion Ratios ac
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="cbxSimpleRatios.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbxSimpleRatios.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 110</value>
-  </data>
-  <data name="cbxSimpleRatios.Size" type="System.Drawing.Size, System.Drawing">
-    <value>132, 17</value>
-  </data>
-  <data name="cbxSimpleRatios.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="cbxSimpleRatios.Text" xml:space="preserve">
-    <value>&amp;Simple precursor ratios</value>
-  </data>
-  <data name="cbxSimpleRatios.ToolTip" xml:space="preserve">
-    <value>If checked, ratios between precursors will be calculated as the ratio of the sum of transition areas.
-Transitions from the two precursors will not be paired with each other for the purpose of handling missing peaks or calculating ratio dot products.</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
-    <value>cbxSimpleRatios</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
-    <value>tabQuantification</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -2703,7 +2703,7 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.276, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2733,6 +2733,6 @@ Transitions from the two precursors will not be paired with each other for the p
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.276, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
