@@ -181,11 +181,11 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
             {
                 return;
             }
-            DeleteDocNodes(skylineWindow, new HashSet<IdentityPath>(docNodes.Select(node => node.IdentityPath)));
+            DeleteIdentityPaths(skylineWindow, new HashSet<IdentityPath>(docNodes.Select(node => node.IdentityPath)));
         }
 
 
-        private static void DeleteDocNodes(SkylineWindow skylineWindow, HashSet<IdentityPath> identityPaths)
+        public static void DeleteIdentityPaths(SkylineWindow skylineWindow, HashSet<IdentityPath> identityPaths)
         {
             if (null != skylineWindow)
             {
