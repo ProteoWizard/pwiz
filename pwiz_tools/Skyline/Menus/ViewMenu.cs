@@ -636,7 +636,6 @@ namespace pwiz.Skyline.Menus
             transformChromNoneMenuItem.Checked = (transform == TransformChrom.raw);
             transformChromInterpolatedMenuItem.Checked = (transform == TransformChrom.interpolated);
             secondDerivativeMenuItem.Checked = (transform == TransformChrom.craw2d);
-            firstDerivativeMenuItem.Checked = (transform == TransformChrom.craw1d);
             smoothSGChromMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
         }
 
@@ -655,11 +654,6 @@ namespace pwiz.Skyline.Menus
         private void secondDerivativeMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SetTransformChrom(TransformChrom.craw2d);
-        }
-
-        private void firstDerivativeMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.SetTransformChrom(TransformChrom.craw1d);
         }
 
         private void smoothSGChromMenuItem_Click(object sender, EventArgs e)
