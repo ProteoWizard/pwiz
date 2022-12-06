@@ -3814,7 +3814,7 @@
     <value>225, 24</value>
   </data>
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
-    <value>Show Mass Error</value>
+    <value>Mass Error</value>
   </data>
   <data name="&gt;&gt;massErrorToolStripMenuItem.Name" xml:space="preserve">
     <value>massErrorToolStripMenuItem</value>

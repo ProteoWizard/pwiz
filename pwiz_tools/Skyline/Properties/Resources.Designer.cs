@@ -3210,26 +3210,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
-        /// </summary>
-        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_" +
-                        "that_identification_is_incorrect__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
-        /// </summary>
-        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_" +
-                        "that_identification_is_correct__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to continue?.
         /// </summary>
         public static string BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_ {
@@ -4765,6 +4745,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_" +
                         "one_regression_function", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to :.
+        /// </summary>
+        public static string ColonEndOfLine {
+            get {
+                return ResourceManager.GetString("ColonEndOfLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1}.
+        /// </summary>
+        public static string ColonSeparator {
+            get {
+                return ResourceManager.GetString("ColonSeparator", resourceCulture);
             }
         }
         
@@ -12770,6 +12768,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accumulation time (sec):.
+        /// </summary>
+        public static string ExportMethodDlg_ACCUMULATION_TIME_TXT {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ACCUMULATION_TIME_TXT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Method.
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click__0__Method {
@@ -14853,6 +14860,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("FragmentLibDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include by default.
+        /// </summary>
+        public static string FragmentLoss_ItemDescription_Include_by_default {
+            get {
+                return ResourceManager.GetString("FragmentLoss_ItemDescription_Include_by_default", resourceCulture);
             }
         }
         
@@ -18469,6 +18485,15 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_ {
             get {
                 return ResourceManager.GetString("LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore explicit peak boundaries.
+        /// </summary>
+        public static string LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries {
+            get {
+                return ResourceManager.GetString("LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries", resourceCulture);
             }
         }
         
@@ -27323,6 +27348,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid instrument type for SCIEX OS method export..
+        /// </summary>
+        public static string SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_ {
+            get {
+                return ResourceManager.GetString("SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_" +
+                        "method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
         public static string SearchSettingsControl_Additional_Settings {
@@ -32054,6 +32089,96 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ({0} Da).
+        /// </summary>
+        public static string StaticMod_FormatFormulaOrMass___0__Da_ {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatFormulaOrMass___0__Da_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass.
+        /// </summary>
+        public static string StaticMod_FormatMass_Mass {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatMass_Mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mass.
+        /// </summary>
+        public static string StaticMod_FormatMass_Unknown_mass {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatMass_Unknown_mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription__0__losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription__0__losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} neutral losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription__0__neutral_losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription__0__neutral_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Empty {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loss.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Loss {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral loss.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Neutral_loss {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Neutral_loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Neutral_losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Neutral_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid terminus &apos;{0}&apos;..
         /// </summary>
         public static string StaticMod_ToModTerminus_Invalid_terminus__0__ {
@@ -32910,11 +33035,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported element {0}.
+        /// </summary>
+        public static string ToolService_DeleteElementsNow_Unsupported_element__0_ {
+            get {
+                return ResourceManager.GetString("ToolService_DeleteElementsNow_Unsupported_element__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported element type &apos;{0}&apos;.
+        /// </summary>
+        public static string ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__ {
+            get {
+                return ResourceManager.GetString("ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Insert proteins.
         /// </summary>
         public static string ToolService_ImportFasta_Insert_proteins {
             get {
                 return ResourceManager.GetString("ToolService_ImportFasta_Insert_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Properties from external tool.
+        /// </summary>
+        public static string ToolService_ImportProperties_Import_Properties_from_external_tool {
+            get {
+                return ResourceManager.GetString("ToolService_ImportProperties_Import_Properties_from_external_tool", resourceCulture);
             }
         }
         

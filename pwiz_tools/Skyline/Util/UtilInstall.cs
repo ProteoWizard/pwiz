@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
         /// </summary>
-        static Uri JRE_URL = new Uri($@"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
+        static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
         public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
 
@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Util
 
     public static class SimpleFileDownloader
     {
-        private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror";
+        private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://ci.skyline.ms/skyline_tool_testing_mirror";
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {

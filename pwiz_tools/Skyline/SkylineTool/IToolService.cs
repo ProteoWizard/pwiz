@@ -29,17 +29,37 @@ namespace SkylineTool
     /// </summary>
     public interface IToolService
     {
+        /// <summary>
+        /// Returns a report as CSV
+        /// </summary>
+        /// <param name="toolName">Name of the tool requesting the report. This is used when displaying progress in the Skyline UI.</param>
+        /// <param name="reportName">Name of the report being requested</param>
+        /// <returns>The contents of the report as CSV text</returns>
         string GetReport(string toolName, string reportName);
+        /// <summary>
+        /// Returns a report as CSV
+        /// </summary>
+        /// <param name="reportDefinition">XML definition of the report. The XML is in the same format as an exported .skyr file. The root element of the report is "&lt;views>".</param>
+        /// <returns>The contents of the report as CSV text</returns>
         string GetReportFromDefinition(string reportDefinition);
 
+        [Obsolete ("Use GetSelectedElementLocator")]
         DocumentLocation GetDocumentLocation();
+        [Obsolete]
         void SetDocumentLocation(DocumentLocation documentLocation);
 
         string GetDocumentLocationName();
         string GetReplicateName();
 
+        [Obsolete("Use GetReportFromDefinition and query the Chromatogram field of Transition Results")]
         Chromatogram[] GetChromatograms(DocumentLocation documentLocation);
+        /// <summary>
+        /// Returns the path of the Skyline document or null if the document has not been saved.
+        /// </summary>
         string GetDocumentPath();
+        /// <summary>
+        /// Returns the version of Skyline.
+        /// </summary>
         Version GetVersion();
 
         void ImportFasta(string fasta);
@@ -50,6 +70,10 @@ namespace SkylineTool
 
         void AddDocumentChangeReceiver(string receiverName, string toolName);
         void RemoveDocumentChangeReceiver(string receiverName);
+        int GetProcessId();
+        void DeleteElements(string[] elementLocators);
+        void ImportProperties(string csvText);
+        string GetSelectedElementLocator(string elementType);
     }
 
     public interface IDocumentChangeReceiver
@@ -98,6 +122,7 @@ namespace SkylineTool
     }
 
     [Serializable]
+    [Obsolete]
     public class Chromatogram
     {
         public double PrecursorMz { get; set; }

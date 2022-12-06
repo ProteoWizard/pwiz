@@ -103,13 +103,13 @@ namespace pwiz.SkylineTestFunctional
 
             var specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
 
-            IList <SpectrumSourceFileDetails> datafiles = specLibInfoDlg.GetGridView();
-            Assert.AreEqual(5, datafiles.Count );
+            var datafiles = specLibInfoDlg.SpectrumSourceFileDetails.ToArray();
+            Assert.AreEqual(5, datafiles.Length );
             foreach (var file in datafiles)
             {
                 Assert.AreEqual(0, file.BestSpectrum);
                 Assert.AreEqual(0, file.MatchedSpectrum);
-                Assert.AreEqual(0, file.CutoffScores.Count);
+                Assert.AreEqual(0, file.ScoreThresholds.Count);
             }
 
             OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
@@ -118,8 +118,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(modDlg, modDlg.OkDialog);
             WaitForConditionUI(() => libExplore.HasSelectedLibrary);
             specLibInfoDlg = ShowDialog<SpectrumLibraryInfoDlg>(libExplore.ShowLibDetails);
-            datafiles = specLibInfoDlg.GetGridView();
-            Assert.AreEqual(4, datafiles.Count);
+            datafiles = specLibInfoDlg.SpectrumSourceFileDetails.ToArray();
+            Assert.AreEqual(4, datafiles.Length);
             Assert.AreEqual(1, datafiles[0].MatchedSpectrum);
             Assert.AreEqual(1, datafiles[0].BestSpectrum);
             Assert.AreEqual(10, datafiles[1].MatchedSpectrum);
@@ -130,10 +130,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, datafiles[3].BestSpectrum);
             foreach (var datafile in datafiles)
             {
-                Assert.AreEqual(1, datafile.CutoffScores.Count);
-                var cutoffScore = datafile.CutoffScores.First();
+                Assert.AreEqual(1, datafile.ScoreThresholds.Count);
+                var cutoffScore = datafile.ScoreThresholds.First();
                 Assert.AreEqual(0.95, cutoffScore.Value);
-                Assert.AreEqual("MAXQUANT SCORE", cutoffScore.Key);
+                Assert.AreEqual("MAXQUANT SCORE", cutoffScore.Key.NameInvariant);
             }
             OkDialog(specLibInfoDlg, specLibInfoDlg.OkDialog);
             OkDialog(libExplore, libExplore.CancelDialog);

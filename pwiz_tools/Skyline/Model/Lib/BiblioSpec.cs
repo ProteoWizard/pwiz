@@ -64,6 +64,11 @@ namespace pwiz.Skyline.Model.Lib
             get { return RANK_IDS; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.BiblioSpecLibrary_SpecFilter_Legacy_BiblioSpec_Library;
+        }
+
         #region Implementation of IXmlSerializable
         
         /// <summary>
