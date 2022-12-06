@@ -155,17 +155,17 @@
   <data name="viewToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;View</value>
   </data>
-  <data name="viewTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>191, 22</value>
-  </data>
-  <data name="viewTargetsMenuItem.Text" xml:space="preserve">
-    <value>&amp;Targets</value>
-  </data>
   <data name="viewProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
   <data name="viewProteinsMenuItem.Text" xml:space="preserve">
     <value>&amp;Proteins</value>
+  </data>
+  <data name="viewTargetsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="viewTargetsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Targets</value>
   </data>
   <data name="showTargetsByNameToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>173, 22</value>
@@ -330,59 +330,17 @@
   <data name="ionTypesMenuItem.Text" xml:space="preserve">
     <value>&amp;Ion Types</value>
   </data>
-  <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="aMenuItem.Text" xml:space="preserve">
-    <value>&amp;A</value>
-  </data>
-  <data name="bMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="bMenuItem.Text" xml:space="preserve">
-    <value>&amp;B</value>
-  </data>
-  <data name="cMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="cMenuItem.Text" xml:space="preserve">
-    <value>&amp;C</value>
-  </data>
-  <data name="xMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="xMenuItem.Text" xml:space="preserve">
-    <value>&amp;X</value>
-  </data>
-  <data name="yMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="yMenuItem.Text" xml:space="preserve">
-    <value>&amp;Y</value>
-  </data>
-  <data name="zMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="zMenuItem.Text" xml:space="preserve">
-    <value>&amp;Z</value>
-  </data>
-  <data name="zhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="zhMenuItem.Text" xml:space="preserve">
-    <value>Z•</value>
-  </data>
-  <data name="zhhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="zhhMenuItem.Text" xml:space="preserve">
-    <value>Z′</value>
-  </data>
   <data name="fragmentsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
   </data>
   <data name="fragmentsMenuItem.Text" xml:space="preserve">
     <value>&amp;Fragments</value>
+  </data>
+  <data name="specialIonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="specialIonsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Special Ions</value>
   </data>
   <data name="precursorIonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -912,12 +870,6 @@
   <data name="auditLogMenuItem.Text" xml:space="preserve">
     <value>&amp;Audit Log</value>
   </data>
-  <data name="candidatePeaksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
-  </data>
-  <data name="candidatePeaksToolStripMenuItem.Text" xml:space="preserve">
-    <value>&amp;Candidate Peaks</value>
-  </data>
   <data name="toolStripSeparator36.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
   </data>
@@ -933,6 +885,12 @@
   <data name="statusToolStripMenuItem.Text" xml:space="preserve">
     <value>Stat&amp;us Bar</value>
   </data>
+  <data name="candidatePeaksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>180, 22</value>
+  </data>
+  <data name="candidatePeaksToolStripMenuItem.Text" xml:space="preserve">
+    <value>&amp;Candidate Peaks</value>
+  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -943,18 +901,12 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.310, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;viewToolStripMenuItem.Name" xml:space="preserve">
     <value>viewToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;viewToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;viewTargetsMenuItem.Name" xml:space="preserve">
-    <value>viewTargetsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;viewTargetsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;viewProteinsMenuItem.Name" xml:space="preserve">
@@ -1113,58 +1065,16 @@
   <data name="&gt;&gt;ionTypesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;aMenuItem.Name" xml:space="preserve">
-    <value>aMenuItem</value>
-  </data>
-  <data name="&gt;&gt;aMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bMenuItem.Name" xml:space="preserve">
-    <value>bMenuItem</value>
-  </data>
-  <data name="&gt;&gt;bMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cMenuItem.Name" xml:space="preserve">
-    <value>cMenuItem</value>
-  </data>
-  <data name="&gt;&gt;cMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;xMenuItem.Name" xml:space="preserve">
-    <value>xMenuItem</value>
-  </data>
-  <data name="&gt;&gt;xMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;yMenuItem.Name" xml:space="preserve">
-    <value>yMenuItem</value>
-  </data>
-  <data name="&gt;&gt;yMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zMenuItem.Name" xml:space="preserve">
-    <value>zMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zhMenuItem.Name" xml:space="preserve">
-    <value>zhMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zhMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zhhMenuItem.Name" xml:space="preserve">
-    <value>zhhMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zhhMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;fragmentsMenuItem.Name" xml:space="preserve">
     <value>fragmentsMenuItem</value>
   </data>
   <data name="&gt;&gt;fragmentsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;specialIonsMenuItem.Name" xml:space="preserve">
+    <value>specialIonsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;specialIonsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;precursorIonMenuItem.Name" xml:space="preserve">
@@ -1599,12 +1509,6 @@
   <data name="&gt;&gt;auditLogMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;candidatePeaksToolStripMenuItem.Name" xml:space="preserve">
-    <value>candidatePeaksToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;candidatePeaksToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripSeparator36.Name" xml:space="preserve">
     <value>toolStripSeparator36</value>
   </data>
@@ -1623,10 +1527,16 @@
   <data name="&gt;&gt;statusToolStripMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;candidatePeaksToolStripMenuItem.Name" xml:space="preserve">
+    <value>candidatePeaksToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;candidatePeaksToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ViewMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=22.2.1.310, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
