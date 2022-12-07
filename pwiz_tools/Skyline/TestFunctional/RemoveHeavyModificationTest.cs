@@ -61,8 +61,7 @@ namespace pwiz.SkylineTestFunctional
                         editMods.AddItem(heavyModification);
                         editMods.OkDialog();
                     });
-                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            });
+            }, peptideSettingsUi => peptideSettingsUi.OkDialog());
 
             // Apply a heavy modification to the last amino acid on the peptide
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, editPepModsDlg =>
@@ -90,8 +89,7 @@ namespace pwiz.SkylineTestFunctional
                         editMods.RemoveItem();
                         editMods.OkDialog();
                     });
-                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            });
+            }, peptideSettingsUi => peptideSettingsUi.OkDialog());
 
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeCount);
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeTransitionGroupCount);

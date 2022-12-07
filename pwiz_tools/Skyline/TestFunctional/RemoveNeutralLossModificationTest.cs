@@ -68,8 +68,7 @@ namespace pwiz.SkylineTestFunctional
                         editMods.AddItem(phosphoModification);
                         editMods.OkDialog();
                     });
-                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            });
+            }, peptideSettingsUi => peptideSettingsUi.OkDialog());
             // Apply the Phospho modification to the "S" amino acid on the peptide and the Water Loss to the "E"
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, editPepModsDlg =>
             {
@@ -115,8 +114,7 @@ namespace pwiz.SkylineTestFunctional
                             editMods.RemoveItem();
                             editMods.OkDialog();
                         });
-                    OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-                });
+                }, peptideSettingsUi => peptideSettingsUi.OkDialog());
             AssertEx.Serializable(SkylineWindow.Document);
             Assert.AreEqual(0, GetLossesForMod(phosphoModification).Count());
             Assert.AreNotEqual(0, GetLossesForMod(waterLossModification).Count());

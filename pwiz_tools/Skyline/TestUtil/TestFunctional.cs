@@ -270,37 +270,31 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        /// <summary>
+        /// Invoke an action that causes a dialog to appear, and then dismiss that dialog.
+        /// Unlike <see cref="RunDlg{TDlg}"/>, the action which caused the dialog to appear
+        /// is not expected to be completed before this method returns.
+        /// </summary>
         protected static void ConfirmAction<TDlg>(Action action, Action<TDlg> confirmAction) where TDlg : Form
         {
             TDlg dlgConfirm = ShowDialog<TDlg>( action);
             OkDialog(dlgConfirm, ()=>confirmAction(dlgConfirm));
         }
 
-        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] [NotNull] Action<TDlg> act)
-            where TDlg : Form
-        {
-            RunDlg(show, act, false, -1);
-        }
-
-
         /// <summary>
         /// Shows a dialog and executes a test action on the dialog.
         /// </summary>
         /// <param name="show">Action which causes the dialog to be shown</param>
         /// <param name="act">Action which exercises the dialog. This action must cause the dialog to become closed at the end.</param>
-        /// <param name="pause">Whether to call PauseTest after the dialog is shown</param>
-        /// <param name="millis">Number of milliseconds to wait for dialog to be shown before failing</param>
-        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] [NotNull] Action<TDlg> act, bool pause = false, int millis = -1) where TDlg : Form
+        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] [NotNull] Action<TDlg> act)
+            where TDlg : Form
         {
-            var doc = SkylineWindow.Document;
             bool dialogClosed = false;
             TDlg dlg = ShowDialog<TDlg>(()=>
             {
                 show();
                 dialogClosed = true;
-            }, millis);
-            if (pause)
-                PauseTest();
+            });
             RunUI(() =>
             {
                 act(dlg);
@@ -315,7 +309,7 @@ namespace pwiz.SkylineTestUtil
         /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
         /// or which for other reasons cannot be tested by RunDlg.
         /// </summary>
-        protected static void RunLongDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act) where TDlg : Form
+        protected static void RunLongDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> testAction, Action<TDlg> closeAction) where TDlg : Form
         {
             bool dialogClosed = false;
             TDlg dlg = ShowDialog<TDlg>(() =>
@@ -323,7 +317,8 @@ namespace pwiz.SkylineTestUtil
                 show();
                 dialogClosed = true;
             });
-            act(dlg);
+            testAction(dlg);
+            OkDialog(dlg, ()=>closeAction(dlg));
             WaitForConditionUI(() => dialogClosed);
         }
 

@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.ReplicateName = "ReplicateOne";
             });
-            RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
+            ConfirmAction<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
             {
                 openDataSourceDlg.SelectFile(TestFilesDir.GetTestPath("firstfile.wiff"));
                 openDataSourceDlg.Open();
@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.ReplicateName = "ReplicateTwo";
             });
-            RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
+            ConfirmAction<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
             {
                 openDataSourceDlg.SelectFile(TestFilesDir.GetTestPath("secondfile.wiff"));
                 openDataSourceDlg.Open();
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.ReplicateName = "ReplicateThree";
             });
-            RunDlg<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
+            ConfirmAction<OpenDataSourceDialog>(importResultsDlg.OkDialog, openDataSourceDlg =>
             {
                 openDataSourceDlg.SelectFile(TestFilesDir.GetTestPath("secondfile.wiff"));
                 openDataSourceDlg.Open();

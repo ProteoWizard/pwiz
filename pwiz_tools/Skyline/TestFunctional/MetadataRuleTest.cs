@@ -90,10 +90,8 @@ namespace pwiz.SkylineTestFunctional
                                 .ChangeTarget(PropertyPathForAnnotation("SubjectId"));
                             metadataRuleStepEditor.OkDialog();
                         });
-                    metadataRuleEditor.OkDialog();
-                });
-                documentSettingsDlg.OkDialog();
-            });
+                }, metadataRuleEditor => metadataRuleEditor.OkDialog());
+            }, documentSettingsDlg => documentSettingsDlg.OkDialog());
 
             // Verify that newly imported files get the correct SubjectId
             ImportResultsFiles(new[]
@@ -125,10 +123,8 @@ namespace pwiz.SkylineTestFunctional
                         WaitForConditionUI(() =>
                             ((BindingListSource)metadataRuleStepEditor.PreviewGrid.DataSource).IsComplete);
                         Assert.AreEqual(2, metadataRuleStepEditor.PreviewGrid.RowCount);
-                        metadataRuleStepEditor.OkDialog();
-                    });
-                    metadataRuleEditor.OkDialog();
-                });
+                    }, metadataRuleStepEditor => metadataRuleStepEditor.OkDialog());
+                }, metadataRuleEditor => metadataRuleEditor.OkDialog());
 
                 // Change the "SubjectId" rule so that it has some regular expressions groups in it
                 RunLongDlg<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
@@ -172,12 +168,9 @@ namespace pwiz.SkylineTestFunctional
                                 Assert.IsNotNull(colSubjectId);
                                 Assert.AreEqual("D102", grid.Rows[0].Cells[colSubjectId.Index].Value);
                             });
-                            metadataRuleEditor.OkDialog();
-                        });
-                    metadataRuleListEditor.OkDialog();
-                });
-                documentSettingsDlg.OkDialog();
-            });
+                        }, metadataRuleEditor => metadataRuleEditor.OkDialog());
+                }, metadataRuleListEditor => metadataRuleListEditor.OkDialog());
+            }, documentSettingsDlg => documentSettingsDlg.OkDialog());
 
             // Verify the "SubjectId" and "BioReplicate" values on the replicates
             CollectionAssert.AreEqual(new[] { "D102", "H146" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
@@ -197,7 +190,8 @@ namespace pwiz.SkylineTestFunctional
                 (documentSettingsDlg.EditMetadataRuleList, metadataRuleListEditor =>
                 {
                     RunUI(() => { metadataRuleListEditor.SelectItem("SubjectId"); });
-                    RunDlg<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem, metadataRuleEditor=>{
+                    RunDlg<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem, metadataRuleEditor =>
+                    {
                         var grid = metadataRuleEditor.DataGridViewSteps;
                         var newRow = grid.Rows[grid.RowCount - 1];
                         Assert.IsTrue(newRow.IsNewRow);
@@ -218,10 +212,8 @@ namespace pwiz.SkylineTestFunctional
                         grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnSource.Index];
                         metadataRuleEditor.OkDialog();
                     });
-                    metadataRuleListEditor.OkDialog();
-                });
-                documentSettingsDlg.OkDialog();
-            });
+                }, metadataRuleListEditor => metadataRuleListEditor.OkDialog());
+            }, documentSettingsDlg=> documentSettingsDlg.OkDialog());
             CollectionAssert.AreEqual(new[] { "Diseased", "Healthy" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
 
