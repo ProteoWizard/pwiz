@@ -30922,12 +30922,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected the URL of a shared Skyline document archive ({0}) in the skyp file. Found {1} instead..
+        ///   Looks up a localized string similar to Expected the URL of a shared Skyline document archive file ({0}). Found filename {1} instead in the URL {2}..
         /// </summary>
-        public static string SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_ {
+        public static string SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__ {
             get {
-                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0_" +
-                        "__in_the_skyp_file__Found__1__instead_", resourceCulture);
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file" +
+                        "___0____Found_filename__1__instead_in_the_URL__2__", resourceCulture);
             }
         }
         
@@ -30942,21 +30942,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading {0}.
+        ///   Looks up a localized string similar to Downloading {0} from {1}.
         /// </summary>
-        public static string SkypSupport_Download_Downloading__0_ {
+        public static string SkypSupport_Download_Downloading__0__from__1_ {
             get {
-                return ResourceManager.GetString("SkypSupport_Download_Downloading__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error downloading the Skyline document specified in the skyp file: {0}..
-        /// </summary>
-        public static string SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__ {
-            get {
-                return ResourceManager.GetString("SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specifie" +
-                        "d_in_the_skyp_file___0__", resourceCulture);
+                return ResourceManager.GetString("SkypSupport_Download_Downloading__0__from__1_", resourceCulture);
             }
         }
         
@@ -30993,6 +30983,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_ {
             get {
                 return ResourceManager.GetString("SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error downloading the Skyline document {0} from {1}..
+        /// </summary>
+        public static string SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__ {
+            get {
+                return ResourceManager.GetString("SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document" +
+                        "__0__from__1__", resourceCulture);
             }
         }
         

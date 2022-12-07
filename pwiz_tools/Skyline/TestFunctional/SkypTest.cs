@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
             // DownloadingUser: no-name@no-name.org
             var skypPath2 = TestFilesDir.GetTestPath("test-extended.skyp");
             var skyp = SkypFile.Create(skypPath2, new List<Server>());
-            Assert.IsNull(skyp.Server);
+            Assert.IsNull(skyp.ServerMatch);
 
             
             // 1. Server in the skyp file does not match a saved Panorama server. Expect to see an error about adding a new Panorama 
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             var skypPath = TestFilesDir.GetTestPath("test.skyp");
 
             var skyp = SkypFile.Create(skypPath, new List<Server>());
-            Assert.IsNull(skyp.Server);
+            Assert.IsNull(skyp.ServerMatch);
 
             // 1. Server in the skyp file does not match a saved Panorama server. Expect to see an error about adding a new Panorama 
             //    server in Skyline.
@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.ServerList.AddRange(existingServers);
 
             var skyp = SkypFile.Create(skypPath, existingServers);
-            Assert.IsNull(skyp.Server); // No match found in existing servers
+            Assert.IsNull(skyp.ServerMatch); // No match found in existing servers
             
             var skypSupport = new SkypSupport(SkylineWindow)
             {
@@ -253,8 +253,8 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.ServerList.AddRange(existingServers);
 
             var skyp = SkypFile.Create(skypPath, existingServers);
-            if (hasServerMatch) Assert.AreEqual(skyp.Server, matchingServer); // Match found in existing servers 
-            else Assert.IsNull(skyp.Server); // No match found in existing servers
+            if (hasServerMatch) Assert.AreEqual(skyp.ServerMatch, matchingServer); // Match found in existing servers 
+            else Assert.IsNull(skyp.ServerMatch); // No match found in existing servers
             Assert.AreEqual(usernameMismatch, skyp.UsernameMismatch());
 
 
@@ -280,7 +280,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 else if (skyp.UsernameMismatch())
                 {
-                    expectedErr = TextUtil.SpaceSeparate(
+                    expectedErr = TextUtil.LineSeparate(
                         string.Format(
                             Resources
                                 .SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_,
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 else
                 {
-                    expectedErr = TextUtil.SpaceSeparate(
+                    expectedErr = TextUtil.LineSeparate(
                         string.Format(
                             Resources
                                 .SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_,
@@ -305,7 +305,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (skyp.UsernameMismatch())
                 {
-                    expectedErr = TextUtil.SpaceSeparate(
+                    expectedErr = TextUtil.LineSeparate(
                             string.Format(
                                 Resources.SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__,
                                 skyp.GetServerName(), _altUser, skyp.DownloadingUser),
@@ -379,9 +379,9 @@ namespace pwiz.SkylineTestFunctional
 
             var err =
                 string.Format(
-                    Resources
-                        .SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_,
+                    Resources.SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__,
                     SrmDocumentSharing.EXT_SKY_ZIP,
+                    "not_a_shared_zip.sky",
                     STR_INVALID_SKYP1);
             AssertEx.ThrowsException<InvalidDataException>(() => SkypFile.CreateForTest(STR_INVALID_SKYP1), err);
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
@@ -29,17 +28,13 @@ namespace pwiz.Skyline.FileUI
 
         public bool Open(string skypPath, IEnumerable<Server> servers, FormEx parentWindow = null)
         {
-            if (string.IsNullOrEmpty(skypPath))
-            {
-                MessageDlg.Show(parentWindow ?? _skyline, Resources.SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_);
-                return false;
-            }
-
+            Assume.IsFalse(string.IsNullOrEmpty(skypPath));
+            
             SkypFile skyp;
 
             try
             {
-                skyp = SkypFile.Create(skypPath, servers); // Read the skyp file
+                skyp = SkypFile.Create(skypPath!, servers); // Read the skyp file
             }
             catch (Exception e)
             {
@@ -63,29 +58,27 @@ namespace pwiz.Skyline.FileUI
                     {
                         var exception = progressStaus.ErrorException;
                         var skypEx = exception as SkypDownloadException;
-                        if (skypEx != null)
-                        {
-                            if (skypEx.Unauthorized())
-                            {
-                                return skyp.Server == null ? 
-                                    AddServerAndOpen(skyp, skypEx.Message, parentWindow)  // Server not saved in Skyline. Offer to add the server.
-                                    : EditServerAndOpen(skyp, skypEx.Message, parentWindow); // Server saved in Skyline but credentials are invalid. Offer to edit server credentials.
-                            }
-                            else if (skypEx.Forbidden() && skyp.UsernameMismatch())
-                            {
-                                // Server is saved in Skyline but the user in the saved credentials does not have enough permissions. 
-                                // The downloading user in the skyp file is different from saved user.  Offer to edit server credentials. 
-                                return EditServerAndOpen(skyp, skypEx.Message, parentWindow);
-                            }
-                            
-                            MessageDlg.ShowWithException(parentWindow ?? _skyline, skypEx.Message, skypEx);
-                            return false;
-                        }
-                        else
+                        if (skypEx == null)
                         {
                             ShowDownloadError(parentWindow, skyp, exception);
                             return false;
                         }
+                        
+                        if (skypEx.Unauthorized())
+                        {
+                            return skyp.ServerMatch == null
+                                ? AddServerAndOpen(skyp, skypEx.Message, parentWindow)  // Server not saved in Skyline. Offer to add the server.
+                                : EditServerAndOpen(skyp, skypEx.Message, parentWindow); // Server saved in Skyline but credentials are invalid. Offer to edit server credentials.
+                        }
+                        else if (skypEx.Forbidden() && skyp.UsernameMismatch())
+                        {
+                            // Server is saved in Skyline but the user in the saved credentials does not have enough permissions. 
+                            // The downloading user in the skyp file is different from saved user.  Offer to edit server credentials. 
+                            return EditServerAndOpen(skyp, skypEx.Message, parentWindow);
+                        }
+                        
+                        MessageDlg.ShowWithException(parentWindow ?? _skyline, skypEx.Message, skypEx);
+                        return false;
                     }
                 }
                 
@@ -100,26 +93,31 @@ namespace pwiz.Skyline.FileUI
 
         private void ShowDownloadError(FormEx parentWindow, SkypFile skyp, Exception exception)
         {
-            var message = TextUtil.LineSeparate(string.Format(
-                Resources
-                    .SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__,
-                skyp.SkylineDocUri), exception.Message);
+            var message = TextUtil.LineSeparate(
+                string.Format(
+                    Resources
+                        .SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
+                    skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
+                exception.Message);
             MessageDlg.ShowWithException(parentWindow ?? _skyline, message, exception);
         }
 
-        private bool AddServerAndOpen(SkypFile skypFile, string message, FormEx parentWindow)
+        private bool AddServerAndOpen(SkypFile skyp, string message, FormEx parentWindow)
         {
             using (var alertDlg = new AlertDlg(message, MessageBoxButtons.OKCancel))
             {
                 if (alertDlg.ShowDialog(parentWindow ?? _skyline) == DialogResult.OK)
                 {
                     var allServers = Settings.Default.ServerList;
-                    var newServer = allServers.EditItem(parentWindow, skypFile.GetSkylineDocServer(), allServers, false);
+                    // We did not find a matching server saved in Skyline so create a Server object from the sky.zip WebDAV URL
+                    // and the downloading user's username from the skyp file.
+                    var skylineDocServer = skyp.GetSkylineDocServer();
+                    var newServer = allServers.EditItem(parentWindow, skylineDocServer, allServers, false);
                     if (newServer == null)
                         return false;
                     allServers.Add(newServer); // server should not have the same Uri as an existing server in the list. EditServerDlg takes care of that.
 
-                    return Open(skypFile.SkypPath, allServers, parentWindow);
+                    return Open(skyp.SkypPath, allServers, parentWindow);
                 }
 
                 return false;
@@ -134,27 +132,41 @@ namespace pwiz.Skyline.FileUI
                 if (alertDlg.DialogResult == DialogResult.OK)
                 {
                     var allServers = Settings.Default.ServerList;
-                    var serverInSkyp = skyp.Server;
+                    var skypServerMatch = skyp.ServerMatch;
 
-                    var serverToEdit = skyp.UsernameMismatch()
-                        ? new Server(serverInSkyp.URI, skyp.DownloadingUser, null) // Use the username from the skyp
-                        : serverInSkyp;
-
-                    // From the list of all existing servers, remove the one that matches the server in the skyp file.  Pass this filtered 
-                    // list to the EditServerDlg. Otherwise, we will get an error that the server already exists.
-                    var serversForEditServerDlg = allServers.Where(s => !Equals(serverInSkyp.URI.Host, s.URI.Host)).ToList();
-                    var editedServer = allServers.EditItem(parentWindow, serverToEdit, serversForEditServerDlg, false);
-                    if (editedServer == null)
-                        return false;
-
-                    if (!Equals(serverToEdit.URI, editedServer.URI))
+                    Server editedServer;
+                    if (skyp.UsernameMismatch())
                     {
-                        allServers.Add(editedServer); // User may have changed the server Uri in the form
+                        // The username saved for this server in Skyline is not the same as the username in the skyp file.  This can happen,
+                        // for example, if the Panorama server was added to Skyline by one lab member on an instrument computer, but another 
+                        // lab member logs into Panorama on that computer and downloads a skyp file. The DownloadingUser value in the skyp file   
+                        // will be that of the second lab member. If the first lab member does not have permission to view files in the folder  
+                        // that the skyp was downloaded from, then trying to open the skyp file will result in a 403 - Forbidden error because
+                        // first lab member's credentials, that are saved in Skyline, will be used to download the sky.zip. In this case we prompt
+                        // the user to update the saved credentials, and display the username from the skyp file in EditServerDlg.
+                        // Create a new Server object with the same URI as the matching server but with the username from the skyp file.
+                        var editServer = new Server(skypServerMatch.URI, skyp.DownloadingUser, null);
+
+                        // From the list of existing servers, remove the matching server.  Pass this filtered list to EditServerDlg.
+                        // Otherwise, we will get an error that the server already exists because we are not editing an existing item from the list.
+                        var serversForEditServerDlg = allServers.Except(new[] { skypServerMatch });
+                        editedServer = allServers.EditItem(parentWindow, editServer, serversForEditServerDlg, false);
                     }
                     else
                     {
-                        allServers.Remove(serverInSkyp);
-                        allServers.Add(editedServer);
+                        editedServer = allServers.EditItem(parentWindow, skypServerMatch, allServers, false);
+                    }
+                    if (editedServer == null)
+                        return false;
+
+                    if (!Equals(skypServerMatch.URI, editedServer.URI))
+                    {
+                        allServers.Add(editedServer); // User may have changed the server Uri in the form. Add this as a new server.
+                    }
+                    else
+                    {
+                        var idx = allServers.IndexOf(skypServerMatch);
+                        allServers[idx] = editedServer;
                     }
 
                     return Open(skyp.SkypPath, allServers, parentWindow);
@@ -168,7 +180,7 @@ namespace pwiz.Skyline.FileUI
         private void Download(SkypFile skyp, IProgressMonitor progressMonitor)
         {
             var progressStatus =
-                new ProgressStatus(string.Format(Resources.SkypSupport_Download_Downloading__0_, skyp.SkylineDocUri));
+                new ProgressStatus(string.Format(Resources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()));
             progressMonitor.UpdateProgress(progressStatus);
 
             var downloadClient = DownloadClientCreator.Create(progressMonitor, progressStatus);
@@ -184,9 +196,9 @@ namespace pwiz.Skyline.FileUI
 
     public class SkypDownloadException : Exception
     {
-        public HttpStatusCode StatusCode { get; }
+        public HttpStatusCode? StatusCode { get; }
 
-        public SkypDownloadException(string message, HttpStatusCode statusCode, Exception e) : base(message, e)
+        public SkypDownloadException(string message, HttpStatusCode? statusCode, Exception e) : base(message, e)
         {
             StatusCode = statusCode;
         }
@@ -196,9 +208,9 @@ namespace pwiz.Skyline.FileUI
             return Unauthorized(StatusCode);
         }
 
-        public static bool Unauthorized(HttpStatusCode statusCode)
+        public static bool Unauthorized(HttpStatusCode? statusCode)
         {
-            return HttpStatusCode.Unauthorized.Equals(statusCode); // 401 -  No credentials provided or invalid credentials
+            return statusCode is HttpStatusCode.Unauthorized; // 401 -  No credentials provided or invalid credentials
         }
 
         public bool Forbidden()
@@ -206,19 +218,19 @@ namespace pwiz.Skyline.FileUI
             return Forbidden(StatusCode);
         }
 
-        public static bool Forbidden(HttpStatusCode statusCode)
+        public static bool Forbidden(HttpStatusCode? statusCode)
         {
-            return HttpStatusCode.Forbidden.Equals(statusCode); // 403 - Valid credentials but not enough permissions
+            return statusCode is HttpStatusCode.Forbidden; // 403 - Valid credentials but not enough permissions
         }
 
         public static SkypDownloadException Create(SkypFile skyp, Exception e)
         {
-            var statusCode = GetStatusCode(e);
+            var statusCode = GetErrorStatusCode(e);
             var message = GetMessage(skyp, e, statusCode);
             return new SkypDownloadException(message, statusCode, e);
         }
 
-        private static HttpStatusCode GetStatusCode(Exception e)
+        private static HttpStatusCode? GetErrorStatusCode(Exception e)
         {
             var webException = e as WebException;
             if (webException != null)
@@ -233,16 +245,15 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            return 0;
+            return null;
         }
 
-        public static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode statusCode)
+        public static string GetMessage(SkypFile skyp, Exception ex, HttpStatusCode? statusCode)
         {
             var message =
                 string.Format(
-                    Resources
-                        .SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__,
-                    skyp.SkylineDocUri);
+                    Resources.SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__,
+                    skyp.GetSkylineDocName(), skyp.GetDocUrlNoName());
 
             if (ex != null)
             {
@@ -254,58 +265,79 @@ namespace pwiz.Skyline.FileUI
 
             if (Unauthorized(statusCode)) // 401 -  No credentials provided or invalid credentials
             {
-                if (skyp.Server == null)
+                if (skyp.ServerMatch == null)
                 {
-                    message = TextUtil.LineSeparate(message, @"", 
-                        string.Format(Resources.SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_, serverName));
+                    message = BuildMessage(message,
+                        string.Format(
+                            Resources
+                                .SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_,
+                            serverName));
                 }
                 else if (skyp.UsernameMismatch())
                 {
                     // User that downloaded the skyp file is not the same as the username in the saved server credentials.
-                    message = TextUtil.LineSeparate(message, @"",
-                        TextUtil.SpaceSeparate(
-                            string.Format(
-                                Resources
-                                    .SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_,
-                                serverName),
-                            string.Format(
-                                Resources.SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__,
-                                skyp.DownloadingUser, skyp.Server.Username),
-                            Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_));
+                    message = BuildInvalidCredsMessage(message, serverName,
+                        string.Format(
+                            Resources
+                                .SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__,
+                            skyp.DownloadingUser, skyp.ServerMatch.Username));
                 }
                 else
                 {
                     // The skyp file either does not have a DownloadingUser, or the username in the skyp is the same as the username in the saved server credentials.
-                    message = TextUtil.LineSeparate(message, @"",
-                        TextUtil.SpaceSeparate(
-                            string.Format(
-                                Resources
-                                    .SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_,
-                                serverName),
-                            Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_));
+                    message = BuildInvalidCredsMessage(message, serverName);
                 }
             }
             else if (Forbidden(statusCode)) // 403 - Valid credentials but not enough permissions
             {
-                if (skyp.UsernameMismatch() && skyp.Server != null)
+                if (skyp.UsernameMismatch() && skyp.ServerMatch != null)
                 {
-                    message = TextUtil.LineSeparate(message, @"",
-                        TextUtil.SpaceSeparate(
-                            string.Format(
-                                Resources.SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__,
-                                serverName, skyp.Server.Username, skyp.DownloadingUser),
-                    Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_));
+                    message = BuildMessage(true, message,
+                        string.Format(
+                            Resources.SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__,
+                            serverName, skyp.ServerMatch.Username, skyp.DownloadingUser));
                 }
                 else
                 {
-                    message = TextUtil.LineSeparate(message, @"",
-                        string.Format(
-                            Resources.SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__,
-                            serverName));
+                    message = BuildMessage(message, string.Format(Resources.SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__,serverName));
                 }
             }
 
             return message;
+        }
+
+        private static string BuildMessage(string mainMessage, params string[] otherLines)
+        {
+            return BuildMessage(false, mainMessage, otherLines);
+        }
+
+        private static string BuildInvalidCredsMessage(string mainMessage, string serverName, params string[] otherLines)
+        {
+            var invalidCredsTxt = string.Format(
+                Resources
+                    .SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_,
+                serverName);
+            var otherMessages = new List<string> { invalidCredsTxt };
+            otherMessages.AddRange(otherLines);
+            return BuildMessage(true, mainMessage, otherMessages.ToArray());
+        }
+
+        private static string BuildMessage(bool addUpdateCredentialsText, string mainMessage, params string[] otherLines)
+        {
+            var allMessages = new List<string> { mainMessage };
+
+            if (otherLines.Length > 0)
+            {
+                allMessages.Add(string.Empty);
+                allMessages.AddRange(otherLines);
+            }
+
+            if (addUpdateCredentialsText)
+            {
+                allMessages.Add(Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_);
+            }
+
+            return TextUtil.LineSeparate(allMessages);
         }
     }
 
@@ -330,7 +362,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (skyp.HasCredentials())
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(skyp.Server.Username, skyp.Server.Password));
+                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
                 }
 
                 wc.DownloadProgressChanged += (s,e) =>
@@ -346,7 +378,7 @@ namespace pwiz.Skyline.FileUI
 
                     var downloaded = e.BytesReceived;
                     var message = TextUtil.LineSeparate(
-                        string.Format(Resources.SkypSupport_Download_Downloading__0_, skyp.SkylineDocUri),
+                        string.Format(Resources.SkypSupport_Download_Downloading__0__from__1_, skyp.GetSkylineDocName(), skyp.GetDocUrlNoName()),
                         string.Empty,
                         GetDownloadedSize(downloaded, skyp.HasSize() ? (long)skyp.Size : 0));
                     ProgressStatus = ProgressStatus.ChangeMessage(message);
@@ -380,61 +412,14 @@ namespace pwiz.Skyline.FileUI
 
         public static string GetDownloadedSize(long downloaded, long fileSize)
         {
+            var formatProvider = new FileSizeFormatProvider();
             if (fileSize > 0)
             {
-                var unit = ReadableSize.GetUnit(fileSize);
-                return string.Format(@"{0} / {1}", unit.GetFormattedSize(downloaded, false),
-                    unit.GetFormattedSize(fileSize));
+                return string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded), string.Format(formatProvider, @"{0:fs1}", fileSize));
             }
             else
             {
-                return ReadableSize.GetUnit(downloaded).GetFormattedSize(downloaded);
-            }
-        }
-    }
-
-    public class ReadableSize
-    {
-        private const long B = 1L;
-        private const long KB = B << 10;
-        private const long MB = KB << 10;
-        private const long GB = MB << 10;
-
-        private long Unit { get; }
-        private string UnitName { get; }
-        private string FormatString { get; }
-
-        public ReadableSize(long unit, string unitName)
-        {
-            Unit = unit;
-            UnitName = unitName;
-            FormatString = unit >= KB ? @"0.0" : @"0";
-        }
-
-        public string GetFormattedSize(long size, bool includeUnitName = true)
-        {
-            var value = (double) size / Unit;
-            var sizeStr = value.ToString(FormatString, CultureInfo.CurrentCulture);
-            return includeUnitName ? string.Format(@"{0} {1}", sizeStr, UnitName) : sizeStr;
-        }
-
-        public static ReadableSize GetUnit(long size)
-        {
-            if (size >= GB)
-            {
-                return new ReadableSize(GB, @"GB");
-            }
-            else if (size >= MB)
-            {
-                return new ReadableSize(MB, @"MB");
-            }
-            else if (size >= KB)
-            {
-                return new ReadableSize(KB, @"KB");
-            }
-            else
-            {
-                return new ReadableSize(B, @"B");
+                return string.Format(formatProvider, @"{0:fs1}", downloaded);
             }
         }
     }
