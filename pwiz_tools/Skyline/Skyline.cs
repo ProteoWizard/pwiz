@@ -1101,23 +1101,8 @@ namespace pwiz.Skyline
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
 
-            if (_graphFullScan != null)
-            {
-                var chargeSelector = _graphFullScan.GetHostedControl<ChargeSelectionPanel>();
-                if(chargeSelector != null)
-                {
-                    chargeSelector.HostedControl.OnCharge1Changed -= ShowCharge1;
-                    chargeSelector.HostedControl.OnCharge2Changed -= ShowCharge2;
-                    chargeSelector.HostedControl.OnCharge3Changed -= ShowCharge3;
-                    chargeSelector.HostedControl.OnCharge4Changed -= ShowCharge4;
-                }
-                var ionTypeSelector = _graphFullScan.GetHostedControl<IonTypeSelectionPanel>();
-                if (ionTypeSelector != null)
-                {
-                    ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
-                    ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
-                }
-            }
+            foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
+                control?.DisconnectHandlers();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -4417,7 +4402,6 @@ namespace pwiz.Skyline
                     SelectedResultsIndex = resultsIndex;
                 }
             }
-            
         }
 
         public sealed override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
