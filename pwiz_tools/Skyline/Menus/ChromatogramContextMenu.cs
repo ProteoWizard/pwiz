@@ -147,7 +147,6 @@ namespace pwiz.Skyline.Menus
                     transformChromNoneContextMenuItem,
                     transformChromInterpolatedContextMenuItem,
                     secondDerivativeContextMenuItem,
-                    firstDerivativeContextMenuItem,
                     smoothSGChromContextMenuItem
                 });
             }
@@ -667,7 +666,6 @@ namespace pwiz.Skyline.Menus
             transformChromNoneContextMenuItem.Checked = (transform == TransformChrom.raw);
             transformChromInterpolatedContextMenuItem.Checked = (transform == TransformChrom.interpolated);
             secondDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw2d);
-            firstDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw1d);
             smoothSGChromContextMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
         }
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
@@ -685,11 +683,6 @@ namespace pwiz.Skyline.Menus
         private void secondDerivativeMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SetTransformChrom(TransformChrom.craw2d);
-        }
-
-        private void firstDerivativeMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.SetTransformChrom(TransformChrom.craw1d);
         }
 
         private void smoothSGChromMenuItem_Click(object sender, EventArgs e)
