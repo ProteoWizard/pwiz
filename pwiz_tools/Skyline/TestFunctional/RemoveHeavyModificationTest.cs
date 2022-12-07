@@ -52,18 +52,17 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add an explicit heavy modification to the peptide settings
-            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
+            RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
+                RunUI(() => { peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications; });
+                RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditHeavyMods,
+                    editMods =>
+                    {
+                        editMods.AddItem(heavyModification);
+                        editMods.OkDialog();
+                    });
+                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             });
-            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditHeavyMods,
-                editMods =>
-                {
-                    editMods.AddItem(heavyModification);
-                    editMods.OkDialog();
-                });
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
             // Apply a heavy modification to the last amino acid on the peptide
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, editPepModsDlg =>
@@ -81,26 +80,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(4, SkylineWindow.Document.MoleculeTransitionGroupCount);
 
             // Remove the explicit heavy modification from the peptide settings
-            bool peptideSettingsClosed = false;
-            peptideSettingsUi = ShowDialog<PeptideSettingsUI>(()=>
+            RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
-                SkylineWindow.ShowPeptideSettingsUI();
-                peptideSettingsClosed = true;
+                RunUI(() => { peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications; });
+                RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditHeavyMods,
+                    editMods =>
+                    {
+                        editMods.SelectItem(heavyModification.Name);
+                        editMods.RemoveItem();
+                        editMods.OkDialog();
+                    });
+                OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             });
-            RunUI(() =>
-            {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
-            });
-            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditHeavyMods,
-                editMods =>
-                {
-                    editMods.SelectItem(heavyModification.Name);
-                    editMods.RemoveItem();
-                    editMods.OkDialog();
-                });
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            // Wait for the peptide settings dialog to finish updating SkylineWindow.Document
-            WaitForCondition(() => peptideSettingsClosed);
 
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeCount);
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeTransitionGroupCount);

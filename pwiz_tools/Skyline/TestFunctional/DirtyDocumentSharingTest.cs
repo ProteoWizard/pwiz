@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             Assert.IsFalse(File.Exists(format201SkyZip));
-            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ShareDocument(format201SkyZip), dlg => dlg.ClickNo());
+            ConfirmAction<MultiButtonMsgDlg>(() => SkylineWindow.ShareDocument(format201SkyZip), dlg => dlg.ClickNo());
             {
                 var shareTypeDlg = WaitForOpenForm<ShareTypeDlg>();
                 RunUI(() => shareTypeDlg.SelectedSkylineVersion = SkylineVersion.V20_1);
@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             
             var format202SkyZip = TestContext.GetTestResultsPath("Format202.sky.zip");
             Assert.IsFalse(File.Exists(format202SkyZip));
-            RunDlg<MultiButtonMsgDlg>(() => SkylineWindow.ShareDocument(format202SkyZip), dlg => dlg.ClickNo());
+            ConfirmAction<MultiButtonMsgDlg>(() => SkylineWindow.ShareDocument(format202SkyZip), dlg => dlg.ClickNo());
             {
                 var shareTypeDlg = WaitForOpenForm<ShareTypeDlg>();
                 RunUI(() => shareTypeDlg.SelectedSkylineVersion = SkylineVersion.V20_2);
@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
             }
             WaitForCondition(() => File.Exists(format202SkyZip));
 
-            RunDlg<MultiButtonMsgDlg>(()=>SkylineWindow.NewDocument(), dlg=>dlg.ClickNo());
+            ConfirmAction<MultiButtonMsgDlg>(()=>SkylineWindow.NewDocument(), dlg=>dlg.ClickNo());
             Assert.IsNull(FindOpenForm<AuditLogForm>());
             RunUI(()=>SkylineWindow.LoadFile(format201SkyZip));
             WaitForDocumentLoaded();

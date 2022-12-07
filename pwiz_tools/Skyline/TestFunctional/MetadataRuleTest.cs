@@ -46,55 +46,54 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("Rat_plasma.sky")));
-            var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            RunUI(()=>documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations));
-            // Define some replicate annotations
-            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+            RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
             {
-                defineAnnotationDlg.AnnotationName = "SubjectId";
-                defineAnnotationDlg.AnnotationTargets =
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
-                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.text;
-                defineAnnotationDlg.OkDialog();
+                RunUI(() => documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.annotations));
+                // Define some replicate annotations
+                RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+                {
+                    defineAnnotationDlg.AnnotationName = "SubjectId";
+                    defineAnnotationDlg.AnnotationTargets =
+                        AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                    defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.text;
+                    defineAnnotationDlg.OkDialog();
+                });
+                RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+                {
+                    defineAnnotationDlg.AnnotationName = "BioReplicate";
+                    defineAnnotationDlg.AnnotationTargets =
+                        AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                    defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.number;
+                    defineAnnotationDlg.OkDialog();
+                });
+                RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+                {
+                    defineAnnotationDlg.AnnotationName = "Condition";
+                    defineAnnotationDlg.AnnotationTargets =
+                        AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
+                    defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.value_list;
+                    defineAnnotationDlg.Items = new[] { "Healthy", "Diseased" };
+                    defineAnnotationDlg.OkDialog();
+                });
+                // Define a rule which sets SubjectId for the samples to "D" or "H" followed by "_" and the bioreplicate number.
+                RunUI(() => { documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules); });
+
+                RunLongDlg<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule, metadataRuleEditor =>
+                {
+                    RunUI(() => { metadataRuleEditor.RuleName = "SubjectId"; });
+                    RunDlg<MetadataRuleEditor>(() => metadataRuleEditor.EditRule(0),
+                        metadataRuleStepEditor =>
+                        {
+                            metadataRuleStepEditor.MetadataRule = new MetadataRule()
+                                .ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
+                                .ChangePattern("[DH]_[0-9]+")
+                                .ChangeTarget(PropertyPathForAnnotation("SubjectId"));
+                            metadataRuleStepEditor.OkDialog();
+                        });
+                    metadataRuleEditor.OkDialog();
+                });
+                documentSettingsDlg.OkDialog();
             });
-            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
-            {
-                defineAnnotationDlg.AnnotationName = "BioReplicate";
-                defineAnnotationDlg.AnnotationTargets =
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
-                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.number;
-                defineAnnotationDlg.OkDialog();
-            });
-            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
-            {
-                defineAnnotationDlg.AnnotationName = "Condition";
-                defineAnnotationDlg.AnnotationTargets =
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate);
-                defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.value_list;
-                defineAnnotationDlg.Items = new[] { "Healthy", "Diseased" };
-                defineAnnotationDlg.OkDialog();
-            });
-            // Define a rule which sets SubjectId for the samples to "D" or "H" followed by "_" and the bioreplicate number.
-            RunUI(()=>
-            {
-                documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
-            });
-            var metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
-            RunUI(() =>
-            {
-                metadataRuleEditor.RuleName = "SubjectId";
-            });
-            var metadataRuleStepEditor = ShowDialog<MetadataRuleEditor>(() => metadataRuleEditor.EditRule(0));
-            RunUI(() =>
-            {
-                metadataRuleStepEditor.MetadataRule = new MetadataRule()
-                    .ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
-                    .ChangePattern("[DH]_[0-9]+")
-                    .ChangeTarget(PropertyPathForAnnotation("SubjectId"));
-            });
-            OkDialog(metadataRuleStepEditor, metadataRuleStepEditor.OkDialog);
-            OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
-            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
 
             // Verify that newly imported files get the correct SubjectId
             ImportResultsFiles(new[]
@@ -107,67 +106,78 @@ namespace pwiz.SkylineTestFunctional
                 .Select(chrom=>chrom.Annotations.GetAnnotation("SubjectId")).ToList());
 
             // Add a BioReplicate rule which sets the BioReplicate to the number between the underscores in the filename.
-            documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            RunUI(() =>
+            RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
             {
-                documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
-            });
-            metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
-            RunUI(()=> metadataRuleEditor.RuleName = "BioReplicate");
-            metadataRuleStepEditor = ShowDialog<MetadataRuleEditor>(() => metadataRuleEditor.EditRule(0));
-            RunUI(() =>
-            {
-                metadataRuleStepEditor.MetadataRule = new MetadataRule()
-                    .ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
-                    .ChangePattern("_([0-9]+)")
-                    .ChangeReplacement("$1")
-                    .ChangeTarget(PropertyPathForAnnotation("BioReplicate"));
-            });
-            WaitForConditionUI(() => ((BindingListSource) metadataRuleStepEditor.PreviewGrid.DataSource).IsComplete);
-            Assert.AreEqual(2, metadataRuleStepEditor.PreviewGrid.RowCount);
-            OkDialog(metadataRuleStepEditor, metadataRuleStepEditor.OkDialog);
-            OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
+                RunUI(() => { documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules); });
+                RunLongDlg<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule, metadataRuleEditor =>
+                {
+                    RunUI(() => metadataRuleEditor.RuleName = "BioReplicate");
+                    RunLongDlg<MetadataRuleEditor>(() => metadataRuleEditor.EditRule(0), metadataRuleStepEditor =>
+                    {
+                        RunUI(() =>
+                        {
+                            metadataRuleStepEditor.MetadataRule = new MetadataRule()
+                                .ChangeSource(PropertyPath.Root.Property(nameof(ResultFile.FileName)))
+                                .ChangePattern("_([0-9]+)")
+                                .ChangeReplacement("$1")
+                                .ChangeTarget(PropertyPathForAnnotation("BioReplicate"));
+                        });
+                        WaitForConditionUI(() =>
+                            ((BindingListSource)metadataRuleStepEditor.PreviewGrid.DataSource).IsComplete);
+                        Assert.AreEqual(2, metadataRuleStepEditor.PreviewGrid.RowCount);
+                        metadataRuleStepEditor.OkDialog();
+                    });
+                    metadataRuleEditor.OkDialog();
+                });
 
-            // Change the "SubjectId" rule so that it has some regular expressions groups in it
-            var metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
-                (documentSettingsDlg.EditMetadataRuleList);
-            RunUI(()=>metadataRuleListEditor.SelectItem("SubjectId"));
-            metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem);
-            RunUI(() =>
-            {
-                var grid = metadataRuleEditor.DataGridViewSteps;
-                grid.CurrentCell = grid.Rows[0].Cells[metadataRuleEditor.ColumnPattern.Index];
-                SetCurrentCellValue(grid, "([DH])_([0-9]+)");
+                // Change the "SubjectId" rule so that it has some regular expressions groups in it
+                RunLongDlg<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
+                (documentSettingsDlg.EditMetadataRuleList, metadataRuleListEditor =>
+                {
+                    RunUI(() => metadataRuleListEditor.SelectItem("SubjectId"));
+                    RunLongDlg<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem,
+                        metadataRuleEditor =>
+                        {
+                            RunUI(() =>
+                            {
+                                var grid = metadataRuleEditor.DataGridViewSteps;
+                                grid.CurrentCell = grid.Rows[0].Cells[metadataRuleEditor.ColumnPattern.Index];
+                                SetCurrentCellValue(grid, "([DH])_([0-9]+)");
+                            });
+                            WaitForConditionUI(() =>
+                                ((BindingListSource)metadataRuleEditor.PreviewGrid.DataSource).IsComplete);
+                            RunUI(() =>
+                            {
+                                var grid = metadataRuleEditor.PreviewGrid;
+                                var colSubjectId = grid.Columns.OfType<DataGridViewColumn>()
+                                    .FirstOrDefault(col => col.HeaderText == "SubjectId");
+                                Assert.IsNotNull(colSubjectId);
+                                Assert.AreEqual("D_102", grid.Rows[0].Cells[colSubjectId.Index].Value);
+                            });
+                            // Change the replacement value so that the "_" is removed from the SubjectId
+                            RunUI(() =>
+                            {
+                                var grid = metadataRuleEditor.DataGridViewSteps;
+                                grid.CurrentCell = grid.Rows[0].Cells[metadataRuleEditor.ColumnReplacement.Index];
+                                SetCurrentCellValue(grid, "$1$2");
+                                grid.CurrentCell = grid.Rows[0].Cells[metadataRuleEditor.ColumnPattern.Index];
+                            });
+                            WaitForConditionUI(() =>
+                                ((BindingListSource)metadataRuleEditor.PreviewGrid.DataSource).IsComplete);
+                            RunUI(() =>
+                            {
+                                var grid = metadataRuleEditor.PreviewGrid;
+                                var colSubjectId = grid.Columns.OfType<DataGridViewColumn>()
+                                    .FirstOrDefault(col => col.HeaderText == "SubjectId");
+                                Assert.IsNotNull(colSubjectId);
+                                Assert.AreEqual("D102", grid.Rows[0].Cells[colSubjectId.Index].Value);
+                            });
+                            metadataRuleEditor.OkDialog();
+                        });
+                    metadataRuleListEditor.OkDialog();
+                });
+                documentSettingsDlg.OkDialog();
             });
-            WaitForConditionUI(() => ((BindingListSource) metadataRuleEditor.PreviewGrid.DataSource).IsComplete);
-            RunUI(() =>
-            {
-                var grid = metadataRuleEditor.PreviewGrid;
-                var colSubjectId = grid.Columns.OfType<DataGridViewColumn>()
-                    .FirstOrDefault(col => col.HeaderText == "SubjectId");
-                Assert.IsNotNull(colSubjectId);
-                Assert.AreEqual("D_102", grid.Rows[0].Cells[colSubjectId.Index].Value);
-            });
-            // Change the replacement value so that the "_" is removed from the SubjectId
-            RunUI(() =>
-            {
-                var grid = metadataRuleEditor.DataGridViewSteps;
-                grid.CurrentCell = grid.Rows[0].Cells[metadataRuleEditor.ColumnReplacement.Index];
-                SetCurrentCellValue(grid, "$1$2");
-                grid.CurrentCell = grid.Rows[0].Cells[metadataRuleEditor.ColumnPattern.Index];
-            });
-            WaitForConditionUI(() => ((BindingListSource)metadataRuleEditor.PreviewGrid.DataSource).IsComplete);
-            RunUI(() =>
-            {
-                var grid = metadataRuleEditor.PreviewGrid;
-                var colSubjectId = grid.Columns.OfType<DataGridViewColumn>()
-                    .FirstOrDefault(col => col.HeaderText == "SubjectId");
-                Assert.IsNotNull(colSubjectId);
-                Assert.AreEqual("D102", grid.Rows[0].Cells[colSubjectId.Index].Value);
-            });
-            OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
-            OkDialog(metadataRuleListEditor, metadataRuleListEditor.OkDialog);
-            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
 
             // Verify the "SubjectId" and "BioReplicate" values on the replicates
             CollectionAssert.AreEqual(new[] { "D102", "H146" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
@@ -180,42 +190,38 @@ namespace pwiz.SkylineTestFunctional
                 .Select(chrom => chrom.Annotations.GetAnnotation(annotationDefBioReplicate)).ToList());
 
             // Modify the "SubjectId" rule so that it also sets "Condition" to either "Diseased" or "Healthy"
-            documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            RunUI(() =>
+            RunLongDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, documentSettingsDlg =>
             {
-                documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules);
+                RunUI(() => { documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules); });
+                RunLongDlg<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
+                (documentSettingsDlg.EditMetadataRuleList, metadataRuleListEditor =>
+                {
+                    RunUI(() => { metadataRuleListEditor.SelectItem("SubjectId"); });
+                    RunDlg<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem, metadataRuleEditor=>{
+                        var grid = metadataRuleEditor.DataGridViewSteps;
+                        var newRow = grid.Rows[grid.RowCount - 1];
+                        Assert.IsTrue(newRow.IsNewRow);
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnPattern.Index];
+                        SetCurrentCellValue(grid, "D_");
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnReplacement.Index];
+                        SetCurrentCellValue(grid, "Diseased");
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnTarget.Index];
+                        SetCurrentCellValue(grid, "Condition");
+                        newRow = grid.Rows[grid.RowCount - 1];
+                        Assert.IsTrue(newRow.IsNewRow);
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnPattern.Index];
+                        SetCurrentCellValue(grid, "H_");
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnReplacement.Index];
+                        SetCurrentCellValue(grid, "Healthy");
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnTarget.Index];
+                        SetCurrentCellValue(grid, "Condition");
+                        grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnSource.Index];
+                        metadataRuleEditor.OkDialog();
+                    });
+                    metadataRuleListEditor.OkDialog();
+                });
+                documentSettingsDlg.OkDialog();
             });
-            metadataRuleListEditor = ShowDialog<EditListDlg<SettingsListBase<MetadataRuleSet>, MetadataRuleSet>>
-                (documentSettingsDlg.EditMetadataRuleList);
-            RunUI(() =>
-            {
-                metadataRuleListEditor.SelectItem("SubjectId");
-            });
-            metadataRuleEditor = ShowDialog<MetadataRuleSetEditor>(metadataRuleListEditor.EditItem);
-            RunUI(() =>
-            {
-                var grid = metadataRuleEditor.DataGridViewSteps;
-                var newRow = grid.Rows[grid.RowCount - 1];
-                Assert.IsTrue(newRow.IsNewRow);
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnPattern.Index];
-                SetCurrentCellValue(grid, "D_");
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnReplacement.Index];
-                SetCurrentCellValue(grid, "Diseased");
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnTarget.Index];
-                SetCurrentCellValue(grid, "Condition");
-                newRow = grid.Rows[grid.RowCount - 1];
-                Assert.IsTrue(newRow.IsNewRow);
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnPattern.Index];
-                SetCurrentCellValue(grid, "H_");
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnReplacement.Index];
-                SetCurrentCellValue(grid, "Healthy");
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnTarget.Index];
-                SetCurrentCellValue(grid, "Condition");
-                grid.CurrentCell = newRow.Cells[metadataRuleEditor.ColumnSource.Index];
-            });
-            OkDialog(metadataRuleEditor, metadataRuleEditor.OkDialog);
-            OkDialog(metadataRuleListEditor, metadataRuleListEditor.OkDialog);
-            OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             CollectionAssert.AreEqual(new[] { "Diseased", "Healthy" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
 

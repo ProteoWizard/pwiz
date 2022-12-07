@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
         }
 
-        protected static TDlg ShowDialog<TDlg>([InstantHandle] Action act, int millis = -1) where TDlg : Form
+        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Brings up a dialog where the Type might be the same as a form which is already open.
         /// </summary>
-        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        protected static TDlg ShowNestedDlg<TDlg>(Action act) where TDlg : Form
         {
             var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
             SkylineBeginInvoke(act);
@@ -262,28 +262,69 @@ namespace pwiz.SkylineTestUtil
                 FindOpenForm<StartPage>().BeginInvoke(act);
             }
         }
-
-        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        protected static void ShowAndCancelDlg<TDlg>([InstantHandle] Action show) where TDlg : Form
         {
-            RunDlg(show, false, act, pause, millis);
+            RunDlg<TDlg>(show, dlg =>
+            {
+                dlg.CancelButton.PerformClick();
+            });
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        protected static void ConfirmAction<TDlg>(Action action, Action<TDlg> confirmAction) where TDlg : Form
+        {
+            TDlg dlgConfirm = ShowDialog<TDlg>( action);
+            OkDialog(dlgConfirm, ()=>confirmAction(dlgConfirm));
+        }
+
+        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] [NotNull] Action<TDlg> act)
+            where TDlg : Form
+        {
+            RunDlg(show, act, false, -1);
+        }
+
+
+        /// <summary>
+        /// Shows a dialog and executes a test action on the dialog.
+        /// </summary>
+        /// <param name="show">Action which causes the dialog to be shown</param>
+        /// <param name="act">Action which exercises the dialog. This action must cause the dialog to become closed at the end.</param>
+        /// <param name="pause">Whether to call PauseTest after the dialog is shown</param>
+        /// <param name="millis">Number of milliseconds to wait for dialog to be shown before failing</param>
+        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] [NotNull] Action<TDlg> act, bool pause = false, int millis = -1) where TDlg : Form
         {
             var doc = SkylineWindow.Document;
-            TDlg dlg = ShowDialog<TDlg>(show, millis);
+            bool dialogClosed = false;
+            TDlg dlg = ShowDialog<TDlg>(()=>
+            {
+                show();
+                dialogClosed = true;
+            }, millis);
             if (pause)
                 PauseTest();
             RunUI(() =>
             {
-                if (act != null)
-                    act(dlg);
-                else
-                    dlg.CancelButton.PerformClick();
+                act(dlg);
             });
+            WaitForConditionUI(() => dialogClosed);
             WaitForClosedForm(dlg);
-            if (waitForDocument)
-                WaitForDocumentChange(doc);
+        }
+
+        /// <summary>
+        /// Shows a dialog and tests the dialog by invoking an action on the test thread.
+        /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
+        /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
+        /// or which for other reasons cannot be tested by RunDlg.
+        /// </summary>
+        protected static void RunLongDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act) where TDlg : Form
+        {
+            bool dialogClosed = false;
+            TDlg dlg = ShowDialog<TDlg>(() =>
+            {
+                show();
+                dialogClosed = true;
+            });
+            act(dlg);
+            WaitForConditionUI(() => dialogClosed);
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)

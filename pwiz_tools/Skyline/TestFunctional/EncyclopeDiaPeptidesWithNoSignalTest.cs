@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ClickNextButton();
             });
             // Go to the "Add Modifications" page and ignore the message about not having selected any chromatogram files
-            RunDlg<MultiButtonMsgDlg>(()=>importPeptideSearchDlg.ClickNextButton(), multiButtonMsgDlg=>multiButtonMsgDlg.ClickYes());
+            ConfirmAction<MultiButtonMsgDlg>(()=>importPeptideSearchDlg.ClickNextButton(), multiButtonMsgDlg=>multiButtonMsgDlg.ClickYes());
             RunUI(() =>
             {
                 // Go to the Transition Settings page
@@ -111,39 +111,33 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(0, goodPeptidePeakBounds.Count);
             CollectionAssert.DoesNotContain(goodPeptidePeakBounds, null);
 
+            const string chromLibName = "chromlib";
             // Add the library "chromlib.elib" and make sure it appears before "quantreport.elib"
-            bool peptideSettingsClosed = false;
-            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(()=>
+            RunLongDlg<PeptideSettingsUI>(() =>
             {
                 SkylineWindow.ShowPeptideSettingsUI();
-                peptideSettingsClosed = true;
-            });
-            RunUI(() =>
+            }, peptideSettingsUi =>
             {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Library;
+                RunUI(() => { peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Library; });
+                var libListDlg =
+                    ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUi
+                        .EditLibraryList);
+                RunDlg<EditLibraryDlg>(libListDlg.AddItem, editLibraryDlg =>
+                {
+                    editLibraryDlg.LibraryName = chromLibName;
+                    editLibraryDlg.LibraryPath = TestFilesDir.GetTestPath("chromlib.elib");
+                    editLibraryDlg.OkDialog();
+                });
+                RunUI(() => { libListDlg.MoveItemUp(); });
+                OkDialog(libListDlg, libListDlg.OkDialog);
+                RunUI(() =>
+                {
+                    Assert.AreEqual(2, peptideSettingsUi.AvailableLibraries.Length);
+                    Assert.AreEqual(chromLibName, peptideSettingsUi.AvailableLibraries[0]);
+                    peptideSettingsUi.PickedLibraries = peptideSettingsUi.AvailableLibraries;
+                });
+                peptideSettingsUi.OkDialog();
             });
-            var libListDlg =
-                ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUi.EditLibraryList);
-            const string chromLibName = "chromlib";
-            RunDlg<EditLibraryDlg>(libListDlg.AddItem, editLibraryDlg =>
-            {
-                editLibraryDlg.LibraryName = chromLibName;
-                editLibraryDlg.LibraryPath = TestFilesDir.GetTestPath("chromlib.elib");
-                editLibraryDlg.OkDialog();
-            });
-            RunUI(() =>
-            {
-                libListDlg.MoveItemUp();
-            });
-            OkDialog(libListDlg, libListDlg.OkDialog);
-            RunUI(() =>
-            {
-                Assert.AreEqual(2, peptideSettingsUi.AvailableLibraries.Length);
-                Assert.AreEqual(chromLibName, peptideSettingsUi.AvailableLibraries[0]);
-                peptideSettingsUi.PickedLibraries = peptideSettingsUi.AvailableLibraries;
-            });
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            WaitForConditionUI(() => peptideSettingsClosed);
             WaitForDocumentLoaded();
             var chromLib = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
             Assert.IsNotNull(chromLib);

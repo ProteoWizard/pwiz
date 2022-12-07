@@ -98,6 +98,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => grid.DataboundGridControl.IsComplete);
             RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
+            // ReSharper disable once AccessToModifiedClosure
             var heatMap = ShowDialog<HeatMapGraph>(() => grid.DataboundGridControl.ShowHeatMap());
             WaitForConditionUI(() => heatMap.IsComplete);
             string expectedHeatMapTitle = DataboundGraph.MakeTitle(Resources.HeatMapGraph_RefreshData_Heat_Map,
