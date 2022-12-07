@@ -527,7 +527,7 @@ namespace DataGridViewAutoFilter
             }
             else if (AutomaticSortingEnabled &&
                 this.DataGridView.SelectionMode != 
-                DataGridViewSelectionMode.ColumnHeaderSelect)
+                DataGridViewSelectionMode.ColumnHeaderSelect && e.Button == MouseButtons.Left)
             {
                 SortByColumn();
             }
@@ -657,7 +657,7 @@ namespace DataGridViewAutoFilter
             // For each formatted value in the filters dictionary Keys collection,
             // add its height to dropDownListBoxHeight and, if it is wider than 
             // all previous values, set dropDownListBoxWidth to its width.
-            using (Graphics graphics = dropDownListBox.CreateGraphics())
+            using (Graphics graphics = DataGridView.CreateGraphics())
             {
                 foreach (String filter in filters.Keys)
                 {
@@ -920,6 +920,7 @@ namespace DataGridViewAutoFilter
             // Initialize an ArrayList to store the values in their original
             // types. This enables the values to be sorted appropriately.  
             ArrayList list = new ArrayList(data.Count);
+            var hashSet = new HashSet<object>();
 
             // Retrieve each value and add it to the ArrayList if it isn't
             // already present. 
@@ -978,7 +979,7 @@ namespace DataGridViewAutoFilter
                 }
 
                 // Add values to the ArrayList if they are not already there.
-                if (!list.Contains(value))
+                if (hashSet.Add(value))
                 {
                     list.Add(value);
                 }
