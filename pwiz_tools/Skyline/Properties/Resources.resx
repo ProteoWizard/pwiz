@@ -688,7 +688,7 @@
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>Exporting {0} report</value>
   </data>
-  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
+  <data name="Error___0_" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
@@ -11909,9 +11909,6 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
       <value>Failed loading MIDAS library {0}.</value>
-  </data>
-  <data name="GenericState_AppendErrorAndUri_Error___0_" xml:space="preserve">
-	  <value>Error: {0}</value>
   </data>
   <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
 	  <value>URL: {0}</value>

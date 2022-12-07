@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Util
             var userState = panoramaClient.IsValidUser(username, password);
             if (!userState.IsValid())
             {
-                throw new PanoramaServerException(userState.getErrorMessage(uriServer));
+                throw new PanoramaServerException(userState.GetErrorMessage(uriServer));
             }
         }
 
@@ -543,7 +543,7 @@ namespace pwiz.Skyline.Util
 
                 if (Error != null)
                 {
-                    sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, Error));
+                    sb.AppendLine(string.Format(Resources.Error___0_, Error));
                 }
 
                 if (Uri != null)
@@ -613,7 +613,7 @@ namespace pwiz.Skyline.Util
             return State == UserStateEnum.valid;
         }
 
-        public string getErrorMessage(Uri serverUri)
+        public string GetErrorMessage(Uri serverUri)
         {
             var stateError = string.Empty;
             switch (State)
@@ -1053,7 +1053,7 @@ namespace pwiz.Skyline.Util
             }
             else
             {
-                throw new PanoramaServerException(userState.getErrorMessage(refServerUri));
+                throw new PanoramaServerException(userState.GetErrorMessage(refServerUri));
             }
         }
 

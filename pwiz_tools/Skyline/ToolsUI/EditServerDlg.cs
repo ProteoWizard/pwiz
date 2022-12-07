@@ -78,7 +78,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             MessageBoxHelper helper = new MessageBoxHelper(this);
             string serverName;
-            if (!helper.ValidateNameTextBox(textServerURL, out serverName))
+            if (!helper.ValidateNotEmptyTextBox(textServerURL, out serverName))
                 return;
 
             Uri uriServer = PanoramaUtil.ServerNameToUri(serverName);
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
 
-            if (!(helper.ValidateNameTextBox(textUsername, out _) && helper.ValidateNameTextBox(textPassword, out _)))
+            if (!(helper.ValidateNotEmptyTextBox(textUsername, out _) && helper.ValidateNotEmptyTextBox(textPassword, out _)))
                 return;
 
             try

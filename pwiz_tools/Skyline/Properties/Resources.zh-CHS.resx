@@ -688,7 +688,7 @@
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>导出{0}报告</value>
   </data>
-  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
+  <data name="Error___0_" xml:space="preserve">
     <value>错误：{0}</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">

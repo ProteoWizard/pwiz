@@ -5956,15 +5956,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: {0}.
-        /// </summary>
-        public static string CommandLine_GeneralException_Error___0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_GeneralException_Error___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Failure reading file information from directory {0}..
         /// </summary>
         public static string CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__ {
@@ -12578,6 +12569,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string Error___0_ {
+            get {
+                return ResourceManager.GetString("Error___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Caused by ---&gt;.
         /// </summary>
         public static string ExceptionDialog_Caused_by_____ {
@@ -15095,15 +15095,6 @@ namespace pwiz.Skyline.Properties {
         public static string GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_ {
             get {
                 return ResourceManager.GetString("GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Error: {0}.
-        /// </summary>
-        public static string GenericState_AppendErrorAndUri_Error___0_ {
-            get {
-                return ResourceManager.GetString("GenericState_AppendErrorAndUri_Error___0_", resourceCulture);
             }
         }
         
