@@ -785,8 +785,8 @@ PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
         else
         {
             generate(sink,
-                    "function=" << int_ << " process=" << int_ << " scan=" << int_ << " merged=" << int_ << "-" << int_,
-                    ie.function + 1, ie.process, ie.scan + 1, startScan + 1, endScan + 1);
+                    "merged=" << int_ << " function=" << int_ << " process=" << int_ << " scans=" << int_ << "-" << int_,
+                    ie.index, ie.function + 1, ie.process, startScan + 1, endScan + 1);
         }
         idToIndexMap_[ie.id] = ie.index;
     }
