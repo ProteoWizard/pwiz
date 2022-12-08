@@ -612,7 +612,7 @@ namespace pwiz.SkylineTestFunctional
                                       messageDlg => messageDlg.Btn1Click()); // keep existing annotations
             WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 5);
             Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleId));
-            ConfirmAction<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
                                       dlg => dlg.Btn0Click());
             {
                 var messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();

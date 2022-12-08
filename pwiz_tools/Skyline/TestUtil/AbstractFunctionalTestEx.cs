@@ -829,7 +829,7 @@ namespace pwiz.SkylineTestUtil
             var viewLibraryDlg = FindOpenForm<ViewLibraryDlg>();
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
-            ConfirmAction<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
+            ShowAndDismissDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
             {
                 var addLibraryMessage =
                     string.Format(
@@ -839,7 +839,7 @@ namespace pwiz.SkylineTestUtil
                 messageDlg.DialogResult = DialogResult.Yes;
             });
             var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
-            ConfirmAction<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
+            ShowAndDismissDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
 
             OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
 

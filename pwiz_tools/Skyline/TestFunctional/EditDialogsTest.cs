@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
             var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() => { transitionSettings.SelectedTab = TransitionSettingsUI.TABS.Prediction; });
 
-            ShowAndCancelDlg<EditDPDlg>(transitionSettings.AddToDPList);
+            ShowAndDismissDlg<EditDPDlg>(transitionSettings.AddToDPList);
 
             // Display full scan tab.
             RunUI(() =>
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettings.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
             });
 
-            ShowAndCancelDlg<EditIsotopeEnrichmentDlg>(transitionSettings.AddToEnrichmentsList);
+            ShowAndDismissDlg<EditIsotopeEnrichmentDlg>(transitionSettings.AddToEnrichmentsList);
 
             // Display filter tab.
             RunUI(() =>
@@ -104,14 +104,14 @@ namespace pwiz.SkylineTestFunctional
 
         private void RunOtherDialogs()
         {
-            ShowAndCancelDlg<ChromatogramRTThresholdDlg>(SkylineWindow.ShowChromatogramRTThresholdDlg);
+            ShowAndDismissDlg<ChromatogramRTThresholdDlg>(SkylineWindow.ShowChromatogramRTThresholdDlg);
 
             var rtReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowRTReplicateGraph);
-            ShowAndCancelDlg<RTChartPropertyDlg>(() => SkylineWindow.ShowRTPropertyDlg(rtReplicateGraph));
+            ShowAndDismissDlg<RTChartPropertyDlg>(() => SkylineWindow.ShowRTPropertyDlg(rtReplicateGraph));
             OkDialog(rtReplicateGraph, rtReplicateGraph.Close);
 
             var areaReplicateGraph = ShowDialog<GraphSummary>(SkylineWindow.ShowPeakAreaReplicateComparison);
-            ShowAndCancelDlg<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
+            ShowAndDismissDlg<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
             OkDialog(areaReplicateGraph, areaReplicateGraph.Close);
         }
     }

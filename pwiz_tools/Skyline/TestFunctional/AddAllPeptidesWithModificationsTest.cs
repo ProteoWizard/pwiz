@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             var addModificationsDlg = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(addModificationsDlg, addModificationsDlg.OkDialogAll);
             var viewLibraryDlg = FindOpenForm<ViewLibraryDlg>();
-            ConfirmAction<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
+            ShowAndDismissDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
             {
                 var addLibraryMessage =
                     string.Format(

@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ClickNextButton();
             });
             // Go to the "Add Modifications" page and ignore the message about not having selected any chromatogram files
-            ConfirmAction<MultiButtonMsgDlg>(()=>importPeptideSearchDlg.ClickNextButton(), multiButtonMsgDlg=>multiButtonMsgDlg.ClickYes());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(()=>importPeptideSearchDlg.ClickNextButton(), multiButtonMsgDlg=>multiButtonMsgDlg.ClickYes());
             RunUI(() =>
             {
                 // Go to the Transition Settings page

@@ -654,7 +654,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("Change static mods", doc => doc.ChangeSettings(phosphoLossSettings)));
 
-            ConfirmAction<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn0Click());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn0Click());
 
             // Again, we should be able to match all peptides since the document settings match use the peptides found 
             // in the library.
@@ -1020,7 +1020,7 @@ namespace pwiz.SkylineTestFunctional
             SelectLibWithAllMods(_libComboBox, 4);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasMatches);
-            ConfirmAction<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => { msgDlg.Btn0Click(); });
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => { msgDlg.Btn0Click(); });
 
             var fmpDlg0 = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             RunUI(() => fmpDlg0.AddFiltered = true);

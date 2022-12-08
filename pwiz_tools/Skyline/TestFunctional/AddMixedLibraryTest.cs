@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             // Wait for the list update caused by adding all modifications to complete
             WaitForConditionUI(() => exploreDlg.IsUpdateComplete);
             // Populate the document from library contents
-            ConfirmAction<MultiButtonMsgDlg>(exploreDlg.AddAllPeptides, messageDlg =>
+            ShowAndDismissDlg<MultiButtonMsgDlg>(exploreDlg.AddAllPeptides, messageDlg =>
             {
                 messageDlg.DialogResult = DialogResult.Yes; // Agree to add lib to document
             });

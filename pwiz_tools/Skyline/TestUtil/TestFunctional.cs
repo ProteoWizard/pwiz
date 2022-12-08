@@ -262,45 +262,24 @@ namespace pwiz.SkylineTestUtil
                 FindOpenForm<StartPage>().BeginInvoke(act);
             }
         }
-        protected static void ShowAndCancelDlg<TDlg>([InstantHandle] Action show) where TDlg : Form
-        {
-            RunDlg<TDlg>(show, dlg =>
-            {
-                dlg.CancelButton.PerformClick();
-            });
-        }
-
-        /// <summary>
-        /// Invoke an action that causes a dialog to appear, and then dismiss that dialog.
-        /// Unlike <see cref="RunDlg{TDlg}"/>, the action which caused the dialog to appear
-        /// is not expected to be completed before this method returns.
-        /// </summary>
-        protected static void ConfirmAction<TDlg>(Action action, Action<TDlg> confirmAction) where TDlg : Form
-        {
-            TDlg dlgConfirm = ShowDialog<TDlg>( action);
-            OkDialog(dlgConfirm, ()=>confirmAction(dlgConfirm));
-        }
 
         /// <summary>
         /// Shows a dialog and executes a test action on the dialog.
         /// </summary>
-        /// <param name="show">Action which causes the dialog to be shown</param>
-        /// <param name="act">Action which exercises the dialog. This action must cause the dialog to become closed at the end.</param>
-        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] [NotNull] Action<TDlg> act)
+        /// <param name="showDlgAction">Action which causes the dialog to be shown</param>
+        /// <param name="exerciseDlgAction">Action which can do some things and then must close the dialog.</param>
+        protected static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction)
             where TDlg : Form
         {
-            bool dialogClosed = false;
-            TDlg dlg = ShowDialog<TDlg>(()=>
+            bool showDlgActionCompleted = false;
+            TDlg dlg = ShowDialog<TDlg>(() =>
             {
-                show();
-                dialogClosed = true;
+                showDlgAction();
+                showDlgActionCompleted = true;
             });
-            RunUI(() =>
-            {
-                act(dlg);
-            });
-            WaitForConditionUI(() => dialogClosed);
-            WaitForClosedForm(dlg);
+            OkDialog(dlg, () => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
         }
 
         /// <summary>
@@ -309,17 +288,45 @@ namespace pwiz.SkylineTestUtil
         /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
         /// or which for other reasons cannot be tested by RunDlg.
         /// </summary>
-        protected static void RunLongDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> testAction, Action<TDlg> closeAction) where TDlg : Form
+        /// <param name="showDlgAction">Action which runs on the UI thread and causes the dialog to be shown</param>
+        /// <param name="exerciseDlgAction">Action which runs on the test thread and interacts with the dialog</param>
+        /// <param name="closeDlgAction">Action which runs on the UI thread and closes the dialog</param>
+        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
         {
-            bool dialogClosed = false;
+            bool showDlgActionCompleted = false;
             TDlg dlg = ShowDialog<TDlg>(() =>
             {
-                show();
-                dialogClosed = true;
+                showDlgAction();
+                showDlgActionCompleted = true;
             });
-            testAction(dlg);
-            OkDialog(dlg, ()=>closeAction(dlg));
-            WaitForConditionUI(() => dialogClosed);
+            exerciseDlgAction(dlg);
+            OkDialog(dlg, ()=>closeDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Invoke an action that causes a dialog to appear, and then dismiss that dialog.
+        /// This method waits for the dialog to be closed, but, unlike <see cref="RunDlg{TDlg}"/>,
+        /// this does not wait until the action which displayed the dialog returns.
+        /// </summary>
+        /// <param name="showAction">Action which causes the dialog to appear</param>
+        /// <param name="dismissAction">Action which dismisses the dialog. If null, the dialog
+        /// will be dismissed by calling PerformClick on its cancel button.</param>
+        protected static void ShowAndDismissDlg<TDlg>(Action showAction,
+            Action<TDlg> dismissAction = null) where TDlg : Form
+        {
+            TDlg dlg = ShowDialog<TDlg>(showAction);
+            OkDialog(dlg, () =>
+            {
+                if (dismissAction == null)
+                {
+                    dlg.CancelButton.PerformClick();
+                }
+                else
+                {
+                    dismissAction(dlg);
+                }
+            });
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
