@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -134,41 +133,16 @@ namespace pwiz.Skyline.FileUI
                     var allServers = Settings.Default.ServerList;
                     var skypServerMatch = skyp.ServerMatch;
 
-                    Server editedServer;
-                    if (skyp.UsernameMismatch())
-                    {
-                        // The username saved for this server in Skyline is not the same as the username in the skyp file.  This can happen,
-                        // for example, if the Panorama server was added to Skyline by one lab member on an instrument computer, but another 
-                        // lab member logs into Panorama on that computer and downloads a skyp file. The DownloadingUser value in the skyp file   
-                        // will be that of the second lab member. If the first lab member does not have permission to view files in the folder  
-                        // that the skyp was downloaded from, then trying to open the skyp file will result in a 403 - Forbidden error because
-                        // first lab member's credentials, that are saved in Skyline, will be used to download the sky.zip. In this case we prompt
-                        // the user to update the saved credentials, and display the username from the skyp file in EditServerDlg.
-                        // Create a new Server object with the same URI as the matching server but with the username from the skyp file.
-                        var editServer = new Server(skypServerMatch.URI, skyp.DownloadingUser, null);
-
-                        // From the list of existing servers, remove the matching server.  Pass this filtered list to EditServerDlg.
-                        // Otherwise, we will get an error that the server already exists because we are not editing an existing item from the list.
-                        var serversForEditServerDlg = allServers.Except(new[] { skypServerMatch });
-                        editedServer = allServers.EditItem(parentWindow, editServer, serversForEditServerDlg, false);
-                    }
-                    else
-                    {
-                        editedServer = allServers.EditItem(parentWindow, skypServerMatch, allServers, false);
-                    }
+                    var editedServer = allServers.EditCredentials(parentWindow, skypServerMatch, allServers,
+                        skyp.DownloadingUser ?? skypServerMatch.Username, // Use the downloading username from the skyp file, if present
+                        string.Empty);
+                    
                     if (editedServer == null)
                         return false;
 
-                    if (!Equals(skypServerMatch.URI, editedServer.URI))
-                    {
-                        allServers.Add(editedServer); // User may have changed the server Uri in the form. Add this as a new server.
-                    }
-                    else
-                    {
-                        var idx = allServers.IndexOf(skypServerMatch);
-                        allServers[idx] = editedServer;
-                    }
-
+                    var idx = allServers.IndexOf(skypServerMatch);
+                    allServers[idx] = editedServer;
+                    
                     return Open(skyp.SkypPath, allServers, parentWindow);
                 }
 
@@ -334,6 +308,7 @@ namespace pwiz.Skyline.FileUI
 
             if (addUpdateCredentialsText)
             {
+                allMessages.Add(string.Empty);
                 allMessages.Add(Resources.SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_);
             }
 

@@ -129,27 +129,25 @@ namespace pwiz.Skyline.Model
             return skyFileUri;
         }
 
+        // Return the URL-decoded name of the sky.zip file
         public string GetSkylineDocName()
         {
-            // Return the name of the .sky.zip file. URI in the skyp is URL_Encoded. Return the decoded file name. 
+            // URI in the skyp file is URL-encoded. Return the decoded file name. 
             return GetDecodedUriFileName(SkylineDocUri);
         }
 
+        // Return the URL-decoded name of the file from the given URI.
         private static string GetDecodedUriFileName(Uri uri)
         {
             return HttpUtility.UrlDecode(Path.GetFileName(uri.AbsolutePath));
         }
 
+        // Return decoded URI of the sky.zip file, excluding '@files' and everything after.
         public string GetDocUrlNoName()
         {
             var decodedUri = HttpUtility.UrlDecode(SkylineDocUri.AbsoluteUri);
             var idx = decodedUri.IndexOf(@"@files", StringComparison.Ordinal);
-            if (idx != -1)
-            {
-                decodedUri = decodedUri.Substring(0, idx);
-            }
-
-            return decodedUri;
+            return idx != -1 ? decodedUri.Substring(0, idx) : decodedUri;
         }
 
         public static string GetNonExistentPath(string dir, string sharedSkyFile)
